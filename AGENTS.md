@@ -39,6 +39,8 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - 通知預設 preview, SMTP 只連線 verify, 禁止在 refresh／業務 API 中同步寄信；秘密由 `.env.local`／伺服器環境提供
 - 每 30 秒更新資料, 有未保存表單時不得把基準 revision 偷換成最新資料版本
 - 任務依賴保存 blockedBy, 只允許同專案執行 Issue 的 DAG, 反向關係推導；未完成前置不能結案, 取消不代表交付, 重開顯示提醒而不級聯修改
+- 常用視圖保存結構化 filters, 只在目前專案生效；私有視圖只回傳作者, 團隊視圖共享但只有作者可改／移除, 不因是管理員就略過作者權限
+- 視圖參照失效時保留條件並提示修正, 不靜默放寬；分享 mine 範圍依閱覽者 userId 計算
 - 本機版本確認前不建立 `.gs`、GAS manifest、GAS build 指令或雲端初始化／部署
 
 1. 讀本文件、`README.md` 及當次工作相關文件, 檢查 `git status` 與既有差異

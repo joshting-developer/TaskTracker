@@ -4,10 +4,12 @@ import { randomUUID } from 'node:crypto';
 import { createSqliteStore } from '../server/repository.js';
 import { createService } from '../src/domain/service.js';
 import { liveBlockers } from '../src/domain/model.js';
+import { filterIssues, missingFilters, normalizeFilters } from '../src/domain/views.js';
 
 const request = (input) => ({ ...input, requestId: randomUUID() });
 function fixture(t) {
   const store = createSqliteStore(':memory:'); t.after(() => store.close());
+  store.transaction(tx => { for (const id of ['alice', 'bob']) tx.put('members', id, { id, name: id, email: `${id}@example.test`, role: id === 'alice' ? 'admin' : 'member' }); });
   const options = { uuid: randomUUID, now: () => new Date().toISOString(), userId: 'alice', actor: 'Alice' };
   const service = createService(store, options);
   const project = service.createProject(request({ name: '工作流程', code: 'FLOW' }));
@@ -31,6 +33,60 @@ test('依賴是同專案 DAG, 拒絕循環、自我、Epic 及其他專案', (t)
   assert.equal(noChange.revision, 1, '相同依賴沒有不必要的異動');
   assert.equal(service.getWorkspace().issues.find(item => item.id === a.id).revision, 1, '無效操作整筆回滾');
   assert.equal(service.getWorkspace().projects.find(item => item.id === project.id).nextNumber, 5);
+});
+test('私有／團隊視圖按使用者隔離, 分享不授權覆寫, 版本與移除重試', (t) => {
+  const { store, service, project, options } = fixture(t);
+  const peer = createService(store, { ...options, userId: 'bob', actor: 'Bob', role: 'member' });
+  const input = request({ projectId: project.id, name: '我的 Bug', filters: { type: 'bug', scope: 'mine', condition: 'open' }, userId: 'bob' });
+  const privateView = service.createSavedView(input);
+  assert.equal(privateView.userId, 'alice'); assert.equal(privateView.visibility, 'private');
+  assert.deepEqual(service.createSavedView(input), privateView);
+  assert.equal(peer.getWorkspace().savedViews.length, 0);
+  assert.throws(() => peer.updateSavedView(request({ id: privateView.id, expectedRevision: 1, name: '竄改', filters: {} })), { code: 'NOT_FOUND' });
+  const shared = service.updateSavedView(request({ id: privateView.id, expectedRevision: 1, name: '團隊的我的 Bug', visibility: 'team', filters: privateView.filters }));
+  assert.equal(peer.getWorkspace().savedViews.length, 1);
+  assert.throws(() => peer.deleteSavedView(request({ id: shared.id, expectedRevision: shared.revision })), { code: 'NOT_FOUND' });
+  assert.throws(() => service.updateSavedView(request({ id: shared.id, expectedRevision: 1, name: '舊版', filters: {} })), { code: 'REVISION_CONFLICT' });
+  const removal = request({ id: shared.id, expectedRevision: shared.revision });
+  assert.deepEqual(service.deleteSavedView(removal), service.deleteSavedView(removal));
+  assert.equal(service.getWorkspace().savedViews.length, 0); assert.equal(peer.getWorkspace().savedViews.length, 0);
+  assert.equal(store.transaction(tx => tx.list('savedViews'))[0].archivedAt.length > 0, true);
+  assert.throws(() => service.updateSavedView(request({ id: shared.id, expectedRevision: 3, name: '復原', filters: {} })), { code: 'NOT_FOUND' });
+});
+test('視圖欄位與參照驗證, 過期選項保留提示, 不可跨專案選 Epic', (t) => {
+  const { service, project, make } = fixture(t);
+  const save = (filters) => service.createSavedView(request({ projectId: project.id, name: '篩選', filters }));
+  for (const filters of [{ state: 'gone' }, { assignee: 'foreign' }, { epicId: 'gone' }, { type: 'epic' }, { query: 'DROP TABLE records' }, { condition: 'eval' }]) assert.throws(() => save(filters), { code: 'INVALID_INPUT' });
+  const other = service.createProject(request({ name: '其他', code: 'OTHER' }));
+  const foreign = service.createIssue(request({ projectId: other.id, title: '其他 Epic', type: 'epic' }));
+  assert.throws(() => save({ epicId: foreign.id }), { code: 'INVALID_INPUT' });
+  const epic = make({ type: 'epic' });
+  service.updateStatuses(request({ projectId: project.id, expectedRevision: 1, statuses: [...project.statuses, { id: 'review', label: '待測試', color: '#aaaaaa', category: 'active' }] }));
+  const view = save({ epicId: epic.id, state: 'review', assignee: 'alice' });
+  const changed = service.updateStatuses(request({ projectId: project.id, expectedRevision: 2, statuses: project.statuses }));
+  assert.equal(service.getWorkspace().savedViews[0].filters.state, 'review');
+  assert.deepEqual(missingFilters(view.filters, changed, service.getWorkspace().members, service.getWorkspace().issues), ['狀態已不存在']);
+  assert.equal(filterIssues(service.getWorkspace().issues, view.filters, { project: changed, userId: 'alice', members: service.getWorkspace().members, today: '2026-10-06' }).length, 0);
+});
+test('篩選採 AND, 我的任務依閱覽者, 阻擋／重開／逾期與取消語意', (t) => {
+  const { service, project, make } = fixture(t);
+  const epic = make({ type: 'epic', title: '目標' });
+  const first = make({ assignee: 'bob', title: '前置' });
+  const bug = make({ type: 'bug', assignee: 'bob', epicId: epic.id, blockedBy: [first.id], dueDate: '2026-10-01', priority: 'high' });
+  const task = make({ title: '未指派', dueDate: '2026-10-01' });
+  const get = (filters, userId = 'alice') => filterIssues(service.getWorkspace().issues, normalizeFilters(filters), { project, userId, members: service.getWorkspace().members, today: '2026-10-06' });
+  assert.equal(get({ type: 'bug', condition: 'blocked', epicId: epic.id, assignee: 'bob', priority: 'high' })[0].id, bug.id);
+  assert.equal(get({ scope: 'mine', type: 'bug' }).length, 0);
+  assert.equal(get({ scope: 'mine', type: 'bug' }, 'bob')[0].id, bug.id);
+  assert.equal(get({ condition: 'overdue' }).length, 2);
+  assert.equal(get({ condition: 'unassigned', epicId: 'unlinked' })[0].id, task.id);
+  assert.equal(get({ search: 'bob', type: 'bug' })[0].id, bug.id);
+  service.updateIssue(request({ id: first.id, expectedRevision: 1, state: 'done' }));
+  service.updateIssue(request({ id: bug.id, expectedRevision: 1, state: 'done' }));
+  service.updateIssue(request({ id: first.id, expectedRevision: 2, state: 'todo' }));
+  assert.equal(get({ condition: 'blocked' }).length, 0);
+  assert.equal(get({ condition: 'review' })[0].id, bug.id);
+  assert.equal(get({ condition: 'overdue' }).length, 1);
 });
 test('前置完成才可結案, 取消不解鎖, 重開保留後續狀態並標示依賴', (t) => {
   const { service, project, make, edit } = fixture(t);

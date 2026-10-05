@@ -47,6 +47,9 @@ test('工作空間隔離、單次限時邀請、身分綁定與成員越權', (t
   const other = serviceFor(auth.resolve(foreign.token));
   assert.equal(other.getWorkspace().projects.length, 0);
   assert.throws(() => other.createIssue(request({ projectId: project.id, title: '跨租戶' })), { code: 'NOT_FOUND' });
+  const savedView = admin.createSavedView(request({ projectId: project.id, name: '團隊 Bug', visibility: 'team', filters: { type: 'bug' } }));
+  assert.equal(other.getWorkspace().savedViews.length, 0);
+  assert.throws(() => other.updateSavedView(request({ id: savedView.id, expectedRevision: 1, name: '跨租戶', filters: {} })), { code: 'NOT_FOUND' });
   const invite = auth.invite(context, { email: 'member@example.test' });
   assert.throws(() => auth.register({ email: 'wrong@example.test', name: 'Wrong', password: 'local-test-password', inviteToken: invite.token }), { code: 'INVALID_INPUT' });
   const member = auth.register({ email: 'member@example.test', name: 'Mei', password: 'local-test-password', inviteToken: invite.token });

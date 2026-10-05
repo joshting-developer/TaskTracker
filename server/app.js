@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 
-const OPERATIONS = ['getWorkspace', 'createProject', 'createIssue', 'updateIssue', 'addComment', 'loadDemo', 'updateStatuses', 'logTime', 'updateTime', 'voidTime', 'inviteMember', 'smtpStatus', 'verifySmtp'];
+const OPERATIONS = ['getWorkspace', 'createProject', 'createIssue', 'updateIssue', 'addComment', 'loadDemo', 'updateStatuses', 'logTime', 'updateTime', 'voidTime', 'inviteMember', 'smtpStatus', 'verifySmtp', 'createSavedView', 'updateSavedView', 'deleteSavedView'];
 const STATUS = { INVALID_INPUT: 400, NOT_FOUND: 404, REVISION_CONFLICT: 409, REQUEST_CONFLICT: 409, DUPLICATE_CODE: 409, DEMO_EXISTS: 409, CONFLICT: 409, UNAUTHENTICATED: 401, FORBIDDEN: 403, RATE_LIMIT: 429, SMTP_ERROR: 502 };
 export function createApiServer(service, { auth = null, serviceFor = null, smtp = null, allowedOrigins = ['http://127.0.0.1:5174', 'http://localhost:5174', 'http://127.0.0.1:4174', 'http://localhost:4174', 'http://127.0.0.1:3002'] } = {}) {
   return createServer(async (req, res) => {

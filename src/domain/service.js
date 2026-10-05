@@ -1,4 +1,5 @@
 import { canonical, categoryFor, dateInTaipei, fail, integer, ISSUE_FIELDS, PROJECT_COLORS, statusesFor, STATES, textField, validDate, validateIssue } from './model.js';
+import { validateFilters } from './views.js';
 
 export function createService(store, { uuid, now, actor = '我', userId = '', role = 'admin', workspace = null, mode = 'local' }) {
   function readRecord(tx, kind, id) {
@@ -83,6 +84,17 @@ export function createService(store, { uuid, now, actor = '我', userId = '', ro
     tx.put('notifications', notification.id, notification);
   }
   function checkAdmin() { if (role !== 'admin') fail('FORBIDDEN', '只有工作空間管理員可以修改專案狀態'); }
+  function ownedView(tx, input) {
+    const view = readRecord(tx, 'savedViews', input.id);
+    if (view.userId !== userId) fail('NOT_FOUND', '找不到可修改的視圖');
+    if (view.revision !== input.expectedRevision) fail('REVISION_CONFLICT', '視圖已更新, 請重新載入');
+    return view;
+  }
+  function viewFields(tx, input, projectId) {
+    if (!['private', 'team'].includes(input.visibility ?? 'private')) fail('INVALID_INPUT', '視圖分享範圍不正確');
+    const project = readRecord(tx, 'projects', projectId);
+    return { name: textField(input.name, '視圖名稱', 60, true), visibility: input.visibility ?? 'private', filters: validateFilters(input.filters, project, tx.list('members'), tx.list('issues')) };
+  }
   function saveTime(tx, input, current = null) {
     if (current && (current.userId !== userId || current.voidedAt)) fail('FORBIDDEN', '只能修改自己的有效工時');
     const issue = readRecord(tx, 'issues', current?.issueId || input.issueId);
@@ -104,11 +116,37 @@ export function createService(store, { uuid, now, actor = '我', userId = '', ro
         issues: tx.list('issues').sort((a, b) => b.updatedAt.localeCompare(a.updatedAt) || a.identifier.localeCompare(b.identifier)),
         members: tx.list('members'), timeEntries: tx.list('timeEntries'),
         notifications: tx.list('notifications').filter((entry) => role === 'admin' || entry.recipientId === userId),
+        savedViews: tx.list('savedViews').filter((view) => !view.archivedAt && (view.userId === userId || view.visibility === 'team')),
         meta: { mode, actor, userId, role, workspace, singleUser: !userId },
       }));
     },
     createProject(input) {
       return mutation('createProject', input, (tx) => addProject(tx, input));
+    },
+    createSavedView(input) {
+      return mutation('createSavedView', input, (tx) => {
+        if (!userId) fail('UNAUTHENTICATED', '請先登入');
+        const view = { id: uuid(), projectId: input.projectId, userId, ...viewFields(tx, input, input.projectId), revision: 1, createdAt: now(), updatedAt: now() };
+        tx.put('savedViews', view.id, view);
+        return view;
+      });
+    },
+    updateSavedView(input) {
+      return mutation('updateSavedView', input, (tx) => {
+        const current = ownedView(tx, input);
+        if (current.archivedAt) fail('NOT_FOUND', '視圖已移除');
+        const view = { ...current, ...viewFields(tx, input, current.projectId), revision: current.revision + 1, updatedAt: now() };
+        tx.put('savedViews', view.id, view);
+        return view;
+      });
+    },
+    deleteSavedView(input) {
+      return mutation('deleteSavedView', input, (tx) => {
+        const current = ownedView(tx, input);
+        const view = { ...current, archivedAt: now(), updatedAt: now(), revision: current.revision + 1 };
+        tx.put('savedViews', view.id, view);
+        return { id: view.id };
+      });
     },
     createIssue(input) {
       return mutation('createIssue', input, (tx) => addIssue(tx, input));
