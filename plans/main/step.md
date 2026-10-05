@@ -5,11 +5,28 @@
 - [x] 確認工作區乾淨、使用者 SaaS 補充, 重新查證官方競品與郵件文件
 - [x] 設計 Epic、狀態、工時、帳號／工作空間隔離與 SMTP adapter, 交付協作設計文件
 - [x] 資料／API 與安全邊界實作、驗證、提交
-- [ ] 畫面與雙使用者／手機驗證、更新使用文件、提交
+- [x] 畫面與雙使用者／手機驗證、更新使用文件、提交
 
-資料階段：新增本機 scrypt 帳號、HttpOnly session、工作空間隔離與七日單次邀請；第一位工作空間承接舊資料, 後续註冊空間為空。Issue 支援 Epic、估時與成員 ID, 專案支援自訂狀態与設定 revision；工時綁 session 身分, 有修正／作廢歷史。指派與留言產生預覽通知, SMTP 僅 verify, 不寄信
+資料階段：新增本機 scrypt 帳號、HttpOnly session、工作空間隔離與七日單次邀請；第一位工作空間承接舊資料, 後續註冊空間為空。Issue 支援 Epic、估時與成員 ID, 專案支援自訂狀態與設定 revision；工時綁 session 身分, 有修正／作廢歷史。指派與留言產生預覽通知, SMTP 僅 verify, 不寄信
 
 `npm test` 9／9 通過, 包含真實 HTTP session、跨工作空間 ID 拒絕、成員越權、重試通知防重複、Epic 完成／重開、狀態刪除保護、工時修正／加總及 SMTP 測試 transport 不寄信。HTTP 測試需要 loopback listener, 以 sandbox escalation 執行。此階段畫面尚未接新登入 API, 下一階段完成
+
+畫面階段：登入／新空間、成員邀請、Epic 卡片與子任務連結、專案狀態設定、工時月曆／明細／成員與 Epic 彙總、通知預覽與 SMTP 設定狀態都已接上。清單與看板只呈現執行 Issue, Epic 獨立顯示。保留開始編輯的 revision, 防止背景更新後舊表單覆蓋同伴；登出也排除尚未完成的舊查詢回應
+
+驗證結果：
+
+- `npm test` 10／10 通過, 新增舊單人資料承接、原始資料保留與邀請／session 到期檢查
+- `npm run build` 通過, 只有本機前端產物, repo 沒有 `.gs`
+- 隔離瀏覽器流程通過：兩個獨立帳號邀請加入同空間、一般成員狀態唯讀、Epic 關聯／完成限制／重開提醒、自訂欄位看板、個人工時修正與團隊 2.5h 彙總、通知預覽及未設定 SMTP 提示
+- 使用同帳號另一分頁的可控 clock, 驗證 30 秒背景刷新後保留本機草稿、舊 revision 寫入遭拒, 重載取得同伴最新內容
+- 舊專案首頁／切換／深連結／返回、搜尋、拖曳、留言、未保存提醒、文字安全顯示與 390px 手機流程通過, 無頁面執行錯誤
+- 桌面檢視：`artifacts/epic-overview.png`、`time-calendar.png`、`notifications.png`；手機：`mobile-time-calendar.png`, 截圖與隔離資料庫不提交
+- 實際 SMTP 未配置／實寄, verify 以注入 transport 測試 TLS、清理及不寄信, 不宣稱真實郵件送達
+- 原試用資料庫未被測試寫入；本機前後端仍在 5174／3002 運作, 等使用者自行建立第一位帳號才承接舊資料
+
+已知界線：本機 HTTP／loopback、一帳號一空間、邀請限新帳號、空間內專案／工時共享, Project ACL、正式身份復原、背景信件寄送及 GAS 尚未實作。正式 SaaS 所需設計與取捨都記入 `docs/collaboration-design.md`
+
+本輪提交：`ac609e9` 規劃、`35eb472` 資料／API, 畫面階段另建第三筆 commit；不推送遠端
 
 日期：2026-10-05（Asia/Taipei）
 

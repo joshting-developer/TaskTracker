@@ -1,14 +1,16 @@
 <script setup>
 import { computed, ref } from 'vue';
 import Icon from './Icon.vue';
+import { categoryFor } from '../domain/model.js';
 
 const props = defineProps({ projects: Array, issues: Array, loading: Boolean, error: String, demoLoading: Boolean });
 defineEmits(['create', 'open', 'demo', 'retry']);
 const search = ref('');
 const cards = computed(() => props.projects.filter((project) => [project.name, project.code, project.description].some((value) => value.toLocaleLowerCase().includes(search.value.trim().toLocaleLowerCase()))).map((project) => {
-  const issues = props.issues.filter((issue) => issue.projectId === project.id);
-  const completed = issues.filter((issue) => issue.state === 'done').length;
-  return { ...project, total: issues.length, completed, progress: issues.length ? Math.round(completed / issues.length * 100) : 0 };
+  const issues = props.issues.filter((issue) => issue.projectId === project.id && issue.type !== 'epic');
+  const completed = issues.filter((issue) => categoryFor(issue, project) === 'done').length;
+  const activeTotal = issues.filter((issue) => categoryFor(issue, project) !== 'canceled').length;
+  return { ...project, total: issues.length, activeTotal, completed, progress: activeTotal ? Math.round(completed / activeTotal * 100) : 0 };
 }));
 </script>
 
@@ -30,7 +32,7 @@ const cards = computed(() => props.projects.filter((project) => [project.name, p
         <button v-for="project in cards" :key="project.id" class="project-card" :aria-label="`進入專案：${project.name}`" @click="$emit('open', project.id)">
           <div class="project-card-top"><span class="project-card-icon" :style="{ color: project.color, background: `${project.color}16` }"><Icon name="folder" :size="23" /></span><span class="project-code">{{ project.code }}</span><Icon name="arrow" :size="19" class="project-enter-icon" /></div>
           <h2>{{ project.name }}</h2><p>{{ project.description || '把相關的事情放在一起, 一步一步完成' }}</p>
-          <div class="project-card-progress"><span>{{ project.total ? `${project.completed} / ${project.total} 件任務已完成` : '準備開始你的第一個任務' }}</span><strong>{{ project.progress }}%</strong></div>
+          <div class="project-card-progress"><span>{{ project.total ? `${project.completed} / ${project.activeTotal} 件任務已完成` : '準備開始你的第一個任務' }}</span><strong>{{ project.progress }}%</strong></div>
           <div class="progress-track"><span :style="{ width: `${project.progress}%`, background: project.color }"></span></div>
           <div class="project-card-bottom"><span>{{ project.total }} 個任務</span><span>進入專案 <Icon name="chevron" :size="13" /></span></div>
         </button>

@@ -47,7 +47,7 @@
 | --- | --- |
 | 新增或改掛 Epic | 父項目必須是同專案 Epic, 一個子項目只能有一個父 Epic |
 | Epic 嵌套 | 第一版禁止 Epic 掛 Epic, 天然避免循環；任意 related／blocks 另用關聯模型, 不混入父子欄位 |
-| 子項目完成 | 重算 Epic 摘要, 不擅自改父項目狀態；由负责人確認驗收 |
+| 子項目完成 | 重算 Epic 摘要, 不擅自改父項目狀態；由負責人確認驗收 |
 | Epic 完成 | 若有未結案子項目則拒絕, 全部完成／取消後允許人工完成；沒有子項目也可人工完成 |
 | 已完成 Epic 子項目重開／新增 | 保留父狀態與異動紀錄, 在 Epic 概覽顯示「需重新確認」, 避免靜默級聯修改 |
 | 已有子項目的 Epic 改類型 | 拒絕, 先解除／移轉子項目；已有工時的普通 Issue 也不能直接變 Epic |
@@ -95,11 +95,11 @@ TimeEntry 獨立於 Issue, 保存 issueId、userId、workDate、minutes、note�
 
 | 項目 | 設計 |
 | --- | --- |
-| 寄送時機 | 指派给他人／留言給負責人, 排除自己；到期摘要需背景排程, 不靠打開網頁触發 |
+| 寄送時機 | 指派給他人／留言給負責人, 排除自己；到期摘要需背景排程, 不靠打開網頁觸發 |
 | SMTP 設定 | host、port、secure、user、password、from 放伺服器環境／secret store, 前端只看到供應方式與設定狀態 |
 | 連線檢查 | 管理員可 verify DNS／TCP／TLS／登入, 不寄信；檢查成功不等於 from 或收件人會被接受 |
 | 寄送可靠性 | eventId＋recipientId＋channel 唯一, worker 領取租約, 有限次數退避重試, 失敗原因與人工重試, 避免每次 refresh 寄信 |
-| 交付語意 | SMTP 接受不等於送達, 正式支援 bounce／suppression／退訂与偏好, 不承諾 exactly once |
+| 交付語意 | SMTP 接受不等於送達, 正式支援 bounce／suppression／退訂與偏好, 不承諾 exactly once |
 | 預設模式 | preview, 保存收件人與信件內容但不外送；本次不要求 SMTP 憑證, 不寄真實郵件 |
 
 [Nodemailer SMTP 文件](https://nodemailer.com/smtp) 說明 465 的直接 TLS、587 的 STARTTLS 及 verify；正式 TLS 憑證必須驗證, 不提供關閉驗證的捷徑
@@ -132,3 +132,9 @@ Google 的[配額文件](https://developers.google.com/apps-script/guides/servic
 驗收例：建立「會員系統」Epic → 加登入 Task 與登入失敗 Bug → 加「待測試」欄位 → 同伴加入並填工時 → 月曆按成員查看 → 完成子項目後驗收 Epic → 重開 Bug, Epic 顯示重新確認提醒 → 查看指派／留言通知, 不外送
 
 下一輪才處理：正式身份與部署、專案 ACL、任意關聯／依賴、工作流程矩陣、工時審核／timer、背景 SMTP 寄送／摘要、付費與資料匯入。這些不應阻止本輪先確認主要畫面與規則
+
+## 本機試作的實際界線
+
+本輪先支援一個帳號的一個工作空間, 邀請限新帳號；多空間切換／既有帳號接受邀請尚未實作。所有成員共享空間內專案與團隊工時, 管理員看所有通知預覽, 成員只看自己的通知
+
+HTTP API 仍只監聽 loopback, cookie 未啟用 Secure 因為本機是 HTTP。SMTP adapter 有 verify, 沒有寄送入口或 worker；指派與留言通知是實際保存的預覽資料, 邀請連結顯示給管理員, 不假裝已寄出。全空間資料每 30 秒重新載入, 目前沒有伺服器分頁／即時推播, 正式 SaaS 須另處理查詢、索引與容量量測

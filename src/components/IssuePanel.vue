@@ -2,9 +2,9 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import Icon from './Icon.vue';
 import { api } from '../api/index.js';
-import { FIELD_LABELS, ISSUE_FIELDS, PRIORITIES, STATES, TYPES } from '../domain/model.js';
+import { FIELD_LABELS, ISSUE_FIELDS, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
-const props = defineProps({ issue: Object, projects: Array, defaultProject: String, defaultState: String });
+const props = defineProps({ issue: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, members: Array, issues: Array });
 const emit = defineEmits(['close', 'saved', 'reload']);
 const dialog = ref(null);
 const form = reactive({});
@@ -14,6 +14,7 @@ const saving = ref(false);
 const error = ref('');
 const conflict = ref(false);
 const savedValues = ref('');
+const baseRevision = ref(0);
 let pending = null;
 let commentRequest = null;
 
@@ -21,8 +22,9 @@ function values() {
   return { ...Object.fromEntries(ISSUE_FIELDS.map((key) => [key, form[key]])), projectId: form.projectId };
 }
 function resetForm() {
+  baseRevision.value = props.issue?.revision || 0;
   Object.assign(form, {
-    title: '', description: '', state: props.defaultState || 'todo', priority: 'normal', type: 'task', assignee: '', dueDate: '',
+    title: '', description: '', state: props.defaultState || 'todo', priority: 'normal', type: props.defaultType || 'task', assignee: '', dueDate: '', epicId: '', estimateMinutes: 0,
     ...(props.issue || {}), projectId: props.issue?.projectId || props.defaultProject || props.projects[0]?.id || '',
   });
   savedValues.value = JSON.stringify(values());
@@ -30,6 +32,10 @@ function resetForm() {
   conflict.value = false;
   pending = null;
 }
+const states = computed(() => statusesFor(props.projects[0]));
+const epics = computed(() => props.issues.filter((issue) => issue.type === 'epic' && issue.id !== props.issue?.id));
+const estimateHours = computed({ get: () => (form.estimateMinutes || 0) / 60, set: (value) => { form.estimateMinutes = Math.round(Number(value) * 60); } });
+watch(() => form.type, (type) => { if (type === 'epic') { form.epicId = ''; form.estimateMinutes = 0; } });
 const dirty = computed(() => JSON.stringify(values()) !== savedValues.value);
 watch(() => props.issue, () => { if (!dirty.value) resetForm(); });
 function close() {
@@ -53,12 +59,13 @@ async function save() {
   if (saving.value) return;
   saving.value = true;
   error.value = '';
-  const payload = { ...values(), ...(props.issue ? { id: props.issue.id, expectedRevision: props.issue.revision } : {}) };
+  const payload = { ...values(), ...(props.issue ? { id: props.issue.id, expectedRevision: baseRevision.value } : {}) };
   const signature = JSON.stringify(payload);
   if (pending?.signature !== signature) pending = { signature, requestId: crypto.randomUUID() };
   try {
     const result = await api[props.issue ? 'updateIssue' : 'createIssue']({ ...payload, requestId: pending.requestId });
     savedValues.value = JSON.stringify(values());
+    baseRevision.value = result.revision;
     pending = null;
     emit('saved', result, !props.issue);
   } catch (failure) {
@@ -88,7 +95,9 @@ function reload() {
   emit('reload', () => resetForm());
 }
 function display(field, value) {
-  const options = { state: STATES, priority: PRIORITIES, type: TYPES }[field];
+  const options = { state: states.value, priority: PRIORITIES, type: TYPES }[field];
+  if (field === 'assignee') return props.members.find((member) => member.id === value)?.name || value || '未指派';
+  if (field === 'epicId') return props.issues.find((issue) => issue.id === value)?.identifier || value || '未連結';
   return options?.find((item) => item.id === value)?.label || value || '未設定';
 }
 function timestamp(value) {
@@ -112,11 +121,14 @@ function timestamp(value) {
           <label class="field">描述<textarea v-model="form.description" name="description" placeholder="寫下背景、下一步或完成條件…" rows="5" maxlength="6000" :disabled="saving" /></label>
           <div class="form-grid">
             <label class="field">專案<select v-model="form.projectId" aria-label="專案" disabled required><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option></select></label>
-            <label class="field">狀態<select v-model="form.state" :disabled="saving"><option v-for="state in STATES" :key="state.id" :value="state.id">{{ state.label }}</option></select></label>
-            <label class="field">類型<select v-model="form.type" :disabled="saving"><option v-for="type in TYPES" :key="type.id" :value="type.id">{{ type.label }}</option></select></label>
-            <label class="field">優先級<select v-model="form.priority" :disabled="saving"><option v-for="priority in PRIORITIES" :key="priority.id" :value="priority.id">{{ priority.label }}</option></select></label>
-            <label class="field">負責人<input v-model="form.assignee" placeholder="未指派（可填「我」）" maxlength="60" :disabled="saving" /></label>
+            <label class="field">狀態<select v-model="form.state" aria-label="狀態" :disabled="saving"><option v-for="state in states" :key="state.id" :value="state.id">{{ state.label }}</option></select></label>
+            <label class="field">類型<select v-model="form.type" aria-label="類型" :disabled="saving"><option v-for="type in TYPES" :key="type.id" :value="type.id">{{ type.label }}</option></select></label>
+            <label class="field">優先級<select v-model="form.priority" aria-label="優先級" :disabled="saving"><option v-for="priority in PRIORITIES" :key="priority.id" :value="priority.id">{{ priority.label }}</option></select></label>
+            <label class="field">負責人<select v-model="form.assignee" aria-label="負責人" :disabled="saving"><option value="">未指派</option><option v-for="member in members" :key="member.id" :value="member.id">{{ member.name }}</option><option v-if="form.assignee && !members.some(member => member.id === form.assignee)" :value="form.assignee">{{ form.assignee }}（舊紀錄）</option></select></label>
             <label class="field">到期日<input v-model="form.dueDate" type="date" :disabled="saving" /></label>
+            <label v-if="form.type !== 'epic'" class="field">所屬 Epic<select v-model="form.epicId" aria-label="所屬 Epic" :disabled="saving"><option value="">不屬於 Epic</option><option v-for="epic in epics" :key="epic.id" :value="epic.id">{{ epic.identifier }} · {{ epic.title }}</option></select></label>
+            <label v-if="form.type !== 'epic'" class="field">預估小時<input v-model="estimateHours" type="number" min="0" max="8760" step="any" :disabled="saving" /></label>
+            <p v-else class="subtle epic-form-note">Epic 的完成率、預估與實際工時由子任務加總, 可到 Epic 概覽查看</p>
           </div>
         </form>
         <section v-if="issue" class="discussion">

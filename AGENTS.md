@@ -2,7 +2,7 @@
 
 ## 專案定位與目前階段
 
-TaskTracker 是專案管理平台 Side Project, 目前已建立第一版本機單人原型, 可建立專案、任務、搜尋／篩選、操作狀態看板、留言與異動紀錄
+TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提供工作空間／帳號、專案入口、Epic、任務與自訂看板、工時月曆及通知預覽
 
 已確認方向：
 
@@ -17,7 +17,7 @@ TaskTracker 是專案管理平台 Side Project, 目前已建立第一版本機�
 
 尚未確認：正式功能範圍、使用人數、團隊登入方式、正式試算表與 Apps Script 專案
 
-2026-10-06 補充：產品按 SaaS 服務規劃, 不限定 Google 群組／帳號；本轮實作 Epic 與子項目、自訂狀態、團隊工時月曆及通知預覽。登入、工作空間與租戶隔離優先, 本機 prototype 不視為正式 SaaS 部署。詳見 `docs/collaboration-design.md`, 任意 SMTP 需獨立後端／HTTP relay, 不假定 MailApp 是 SMTP 客戶端
+2026-10-06 補充：產品按 SaaS 服務規劃, 不限定 Google 群組／帳號；本輪實作 Epic 與子項目、自訂狀態、團隊工時月曆及通知預覽。登入、工作空間與租戶隔離優先, 本機 prototype 不視為正式 SaaS 部署。詳見 `docs/collaboration-design.md`, 任意 SMTP 需獨立後端／HTTP relay, 不假定 MailApp 是 SMTP 客戶端
 
 文件中的 MVP、角色、欄位及目錄設計都是建議, 未經使用者採納前不可視為已確認需求
 
@@ -32,7 +32,12 @@ TaskTracker 是專案管理平台 Side Project, 目前已建立第一版本機�
 - `npm test` 驗證 API／SQLite, `npm run test:e2e` 使用隔離資料庫與 5175 埠的瀏覽器驗證
 - 預設空資料, 使用者可手動載入獨立示範專案；不自動匯入示範內容
 - `#/` 是專案列表, `#/projects/<id>` 是專案工作區, `#/projects/<id>/issues/<id>` 是任務詳細內容；建立專案後先留在列表供使用者選擇
-- 目前為單人原型, 負責人為文字欄位, 填「我」會出現在我的任務；尚未實作團隊帳號及 ACL
+- 本機 scrypt 帳號＋HttpOnly session, Account／Workspace／Member 分離, API 由 session 推導租戶與操作者
+- 工作空間內先共享專案與工時, 管理員可邀請新帳號及改狀態, 一般成員只能填寫／修改自己的工時；Project ACL 尚未實作
+- `server/auth.js` 的 tenantStore 隔離業務資料與使用者重試紀錄, 所有新操作都必須走這個邊界；舊單人資料歸第一個空間, 原始記錄保留
+- 狀態使用專案設定的固定 ID＋category, 不以 `state === 'done'` 或名稱判斷完成；Epic 不重複填估時／工時
+- 通知預設 preview, SMTP 只連線 verify, 禁止在 refresh／業務 API 中同步寄信；秘密由 `.env.local`／伺服器環境提供
+- 每 30 秒更新資料, 有未保存表單時不得把基準 revision 偷換成最新資料版本
 - 本機版本確認前不建立 `.gs`、GAS manifest、GAS build 指令或雲端初始化／部署
 
 1. 讀本文件、`README.md` 及當次工作相關文件, 檢查 `git status` 與既有差異

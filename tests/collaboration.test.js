@@ -10,6 +10,27 @@ import { dateInTaipei, epicSummary } from '../src/domain/model.js';
 
 const now = () => new Date().toISOString();
 const request = (input) => ({ ...input, requestId: randomUUID() });
+test('舊單人資料只歸第一個工作空間, 邀請過期與使用後不可重用', (t) => {
+  const store = createSqliteStore(':memory:'); t.after(() => store.close());
+  const old = createService(store, { uuid: randomUUID, now });
+  const project = old.createProject(request({ name: '舊專案', code: 'OLD' }));
+  old.createIssue(request({ projectId: project.id, title: '保留資料', assignee: '我' }));
+  let timestamp = now();
+  const auth = createAuth(store, { now: () => timestamp });
+  const first = auth.register({ email: 'first@example.test', name: 'First', password: 'local-test-password', workspaceName: 'First' });
+  const context = auth.resolve(first.token);
+  assert.equal(tenantStore(store, context.workspace.id).transaction(tx => tx.list('issues'))[0].assignee, context.user.id);
+  assert.equal(store.transaction(tx => tx.list('issues'))[0].assignee, '我', '保留原始記錄');
+  const next = auth.register({ email: 'next@example.test', name: 'Next', password: 'local-test-password', workspaceName: 'Next' });
+  assert.equal(tenantStore(store, auth.resolve(next.token).workspace.id).transaction(tx => tx.list('issues')).length, 0);
+  const invite = auth.invite(context, { email: 'join@example.test' });
+  auth.register({ email: 'join@example.test', name: 'Join', password: 'local-test-password', inviteToken: invite.token });
+  assert.throws(() => auth.register({ email: 'other@example.test', name: 'Other', password: 'local-test-password', inviteToken: invite.token }), { code: 'INVALID_INPUT' });
+  const expiring = auth.invite(context, { email: 'late@example.test' });
+  timestamp = new Date(Date.parse(timestamp) + 8 * 86400000).toISOString();
+  assert.throws(() => auth.register({ email: 'late@example.test', name: 'Late', password: 'local-test-password', inviteToken: expiring.token }), { code: 'INVALID_INPUT' });
+  assert.throws(() => auth.resolve(first.token), { code: 'UNAUTHENTICATED' });
+});
 function fixture(t) {
   const store = createSqliteStore(':memory:'); t.after(() => store.close());
   const auth = createAuth(store);

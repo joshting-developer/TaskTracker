@@ -2,6 +2,8 @@
 
 日期：2026-10-05（Asia/Taipei）
 
+2026-10-06 協作更新：使用者要求按 SaaS 服務設計, 不限定 Google 網域。已加入本機帳號／工作空間隔離、Epic、自訂狀態、個人工時及通知預覽, 最新規則與 SMTP／GAS 取捨見 [協作設計](collaboration-design.md)。下方保留初次提案, 涉及單人或未決登入的段落是當時的規劃快照, 不覆蓋最新設計
+
 GAS Web App 是使用者已確認的長期方向, 本文件最初為參考 GuildManager 的提案。使用者後續要求先驗證本機版本, 再產生 `.gs`；目前已實作 Vue＋Vite、本機 Node HTTP API＋SQLite 與共用 domain, GAS 功能尚未實作或部署
 
 本機實際實作使用 Node 內建 `node:http`、`node:sqlite`, 原生 CSS 取代 UI 框架。下方 Express、Sheets、GAS 打包與團隊登入仍是後續提案, 不代表目前程式已提供
