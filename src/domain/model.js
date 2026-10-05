@@ -1,8 +1,8 @@
 export const STATES = [
-  { id: 'backlog', label: '待規劃', color: '#9a9da9' },
-  { id: 'todo', label: '待處理', color: '#7b82e8' },
-  { id: 'in_progress', label: '進行中', color: '#e7a443' },
-  { id: 'done', label: '已完成', color: '#4aab8a' },
+  { id: 'backlog', label: '待規劃', color: '#9a9da9', category: 'backlog' },
+  { id: 'todo', label: '待處理', color: '#7b82e8', category: 'active' },
+  { id: 'in_progress', label: '進行中', color: '#e7a443', category: 'active' },
+  { id: 'done', label: '已完成', color: '#4aab8a', category: 'done' },
 ];
 export const PRIORITIES = [
   { id: 'urgent', label: '緊急', color: '#e26669' },
@@ -11,13 +11,14 @@ export const PRIORITIES = [
   { id: 'low', label: '低', color: '#aeb1bd' },
 ];
 export const TYPES = [
+  { id: 'epic', label: 'Epic' },
   { id: 'task', label: '任務' },
   { id: 'feature', label: '功能' },
   { id: 'bug', label: '問題' },
 ];
 export const PROJECT_COLORS = ['#8d83ed', '#64b0a0', '#e5a25c', '#cf82ae', '#71a2d5'];
-export const ISSUE_FIELDS = ['title', 'description', 'state', 'priority', 'type', 'assignee', 'dueDate'];
-export const FIELD_LABELS = { title: '標題', description: '描述', state: '狀態', priority: '優先級', type: '類型', assignee: '負責人', dueDate: '到期日' };
+export const ISSUE_FIELDS = ['title', 'description', 'state', 'priority', 'type', 'assignee', 'dueDate', 'epicId', 'estimateMinutes'];
+export const FIELD_LABELS = { title: '標題', description: '描述', state: '狀態', priority: '優先級', type: '類型', assignee: '負責人', dueDate: '到期日', epicId: 'Epic', estimateMinutes: '預估分鐘' };
 
 export function fail(code, message) {
   throw Object.assign(new Error(message), { code });
@@ -32,7 +33,7 @@ function enumField(value, choices, label) {
   if (!choices.some((item) => item.id === value)) fail('INVALID_INPUT', `${label}選項不正確`);
   return value;
 }
-export function validateIssue(input) {
+export function validateIssue(input, statuses = STATES) {
   if (!input || typeof input !== 'object') fail('INVALID_INPUT', '任務資料格式不正確');
   const dueDate = textField(input.dueDate ?? '', '到期日', 10);
   const parsedDate = dueDate ? new Date(`${dueDate}T00:00:00Z`) : null;
@@ -42,13 +43,37 @@ export function validateIssue(input) {
   return {
     title: textField(input.title, '標題', 180, true),
     description: textField(input.description ?? '', '描述', 6000),
-    state: enumField(input.state ?? 'todo', STATES, '狀態'),
+    state: enumField(input.state ?? statuses.find((state) => !['done', 'canceled'].includes(state.category))?.id, statuses, '狀態'),
     priority: enumField(input.priority ?? 'normal', PRIORITIES, '優先級'),
     type: enumField(input.type ?? 'task', TYPES, '類型'),
     assignee: textField(input.assignee ?? '', '負責人', 60),
     dueDate,
+    epicId: textField(input.epicId ?? '', 'Epic', 100),
+    estimateMinutes: integer(input.estimateMinutes ?? 0, '預估分鐘', 0, 525600),
   };
 }
+export function integer(value, label, min, max) {
+  if (!Number.isSafeInteger(value) || value < min || value > max) fail('INVALID_INPUT', `${label}需為 ${min}–${max} 的整數`);
+  return value;
+}
+export function validDate(value) {
+  const date = textField(value, '工作日期', 10, true);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(new Date(`${date}T00:00:00Z`).getTime()) || new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) !== date) fail('INVALID_INPUT', '工作日期格式不正確');
+  return date;
+}
+export function statusesFor(project) { return project?.statuses || STATES; }
+export function categoryFor(issue, project) { return statusesFor(project).find((state) => state.id === issue.state)?.category || 'active'; }
+export function epicSummary(epic, issues, entries, project) {
+  const children = issues.filter((issue) => issue.epicId === epic.id);
+  const done = children.filter((issue) => categoryFor(issue, project) === 'done').length;
+  const canceled = children.filter((issue) => categoryFor(issue, project) === 'canceled').length;
+  const total = children.length - canceled;
+  return { children, done, canceled, total, percent: total ? Math.round(done / total * 100) : null,
+    estimateMinutes: children.reduce((sum, issue) => sum + (issue.estimateMinutes || 0), 0),
+    spentMinutes: entries.filter((entry) => !entry.voidedAt && children.some((issue) => issue.id === entry.issueId)).reduce((sum, entry) => sum + entry.minutes, 0),
+    needsReview: categoryFor(epic, project) === 'done' && done < total };
+}
+export function hours(minutes) { return `${Number((minutes / 60).toFixed(2))} h`; }
 export function canonical(value) {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
   if (value && typeof value === 'object') return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`).join(',')}}`;

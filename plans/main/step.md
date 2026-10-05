@@ -4,8 +4,12 @@
 
 - [x] 確認工作區乾淨、使用者 SaaS 補充, 重新查證官方競品與郵件文件
 - [x] 設計 Epic、狀態、工時、帳號／工作空間隔離與 SMTP adapter, 交付協作設計文件
-- [ ] 資料／API 與安全邊界實作、驗證、提交
+- [x] 資料／API 與安全邊界實作、驗證、提交
 - [ ] 畫面與雙使用者／手機驗證、更新使用文件、提交
+
+資料階段：新增本機 scrypt 帳號、HttpOnly session、工作空間隔離與七日單次邀請；第一位工作空間承接舊資料, 後续註冊空間為空。Issue 支援 Epic、估時與成員 ID, 專案支援自訂狀態与設定 revision；工時綁 session 身分, 有修正／作廢歷史。指派與留言產生預覽通知, SMTP 僅 verify, 不寄信
+
+`npm test` 9／9 通過, 包含真實 HTTP session、跨工作空間 ID 拒絕、成員越權、重試通知防重複、Epic 完成／重開、狀態刪除保護、工時修正／加總及 SMTP 測試 transport 不寄信。HTTP 測試需要 loopback listener, 以 sandbox escalation 執行。此階段畫面尚未接新登入 API, 下一階段完成
 
 日期：2026-10-05（Asia/Taipei）
 

@@ -15,6 +15,7 @@
     "test:e2e": "node tools/browser-check.js"
   },
   "dependencies": {
+    "nodemailer": "10.0.15",
     "vue": "3.5.43"
   },
   "devDependencies": {
