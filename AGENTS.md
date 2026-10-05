@@ -17,6 +17,8 @@ TaskTracker 是專案管理平台 Side Project, 目前已建立第一版本機�
 
 尚未確認：正式功能範圍、使用人數、團隊登入方式、正式試算表與 Apps Script 專案
 
+2026-10-06 補充：產品按 SaaS 服務規劃, 不限定 Google 群組／帳號；本轮實作 Epic 與子項目、自訂狀態、團隊工時月曆及通知預覽。登入、工作空間與租戶隔離優先, 本機 prototype 不視為正式 SaaS 部署。詳見 `docs/collaboration-design.md`, 任意 SMTP 需獨立後端／HTTP relay, 不假定 MailApp 是 SMTP 客戶端
+
 文件中的 MVP、角色、欄位及目錄設計都是建議, 未經使用者採納前不可視為已確認需求
 
 ## 開始工作

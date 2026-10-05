@@ -58,6 +58,7 @@ npm run test:e2e
 | [AGENTS.md](AGENTS.md) | 本機開發規範、已確認方向、驗證規則 |
 | [競品調研](docs/competitor-survey.md) | YouTrack、OpenProject 為主, Linear、Trello 為輔 |
 | [架構提案](docs/architecture.md) | 本機／GAS 長期方向, 提案不代表全部已實作 |
+| [協作與工時設計](docs/collaboration-design.md) | 新一輪調研, SaaS、Epic、自訂狀態、工時月曆與 SMTP 規劃 |
 | [調研計畫](plans/main/plan.md) | 初次需求與調研範圍 |
 | [原型計畫](plans/main/prototype-plan.md) | 本次功能、使用者補充與驗證方式 |
 | [原型工作紀錄](plans/main/prototype-step.md) | 已完成項目與驗證證據 |
