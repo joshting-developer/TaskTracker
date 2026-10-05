@@ -38,6 +38,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - 狀態使用專案設定的固定 ID＋category, 不以 `state === 'done'` 或名稱判斷完成；Epic 不重複填估時／工時
 - 通知預設 preview, SMTP 只連線 verify, 禁止在 refresh／業務 API 中同步寄信；秘密由 `.env.local`／伺服器環境提供
 - 每 30 秒更新資料, 有未保存表單時不得把基準 revision 偷換成最新資料版本
+- 任務依賴保存 blockedBy, 只允許同專案執行 Issue 的 DAG, 反向關係推導；未完成前置不能結案, 取消不代表交付, 重開顯示提醒而不級聯修改
 - 本機版本確認前不建立 `.gs`、GAS manifest、GAS build 指令或雲端初始化／部署
 
 1. 讀本文件、`README.md` 及當次工作相關文件, 檢查 `git status` 與既有差異

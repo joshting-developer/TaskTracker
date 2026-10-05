@@ -2,12 +2,12 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import Icon from './Icon.vue';
 import { api } from '../api/index.js';
-import { FIELD_LABELS, ISSUE_FIELDS, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
+import { categoryFor, FIELD_LABELS, hours, ISSUE_FIELDS, liveBlockers, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
-const props = defineProps({ issue: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, members: Array, issues: Array });
-const emit = defineEmits(['close', 'saved', 'reload']);
+const props = defineProps({ issue: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, members: Array, issues: Array, entries: Array });
+const emit = defineEmits(['close', 'saved', 'reload', 'open']);
 const dialog = ref(null);
-const form = reactive({});
+const form = reactive({ blockedBy: [] });
 const tab = ref('comments');
 const comment = ref('');
 const saving = ref(false);
@@ -15,6 +15,7 @@ const error = ref('');
 const conflict = ref(false);
 const savedValues = ref('');
 const baseRevision = ref(0);
+const dependencySearch = ref('');
 let pending = null;
 let commentRequest = null;
 
@@ -24,7 +25,7 @@ function values() {
 function resetForm() {
   baseRevision.value = props.issue?.revision || 0;
   Object.assign(form, {
-    title: '', description: '', state: props.defaultState || 'todo', priority: 'normal', type: props.defaultType || 'task', assignee: '', dueDate: '', epicId: '', estimateMinutes: 0,
+    title: '', description: '', state: props.defaultState || 'todo', priority: 'normal', type: props.defaultType || 'task', assignee: '', dueDate: '', epicId: '', estimateMinutes: 0, blockedBy: [],
     ...(props.issue || {}), projectId: props.issue?.projectId || props.defaultProject || props.projects[0]?.id || '',
   });
   savedValues.value = JSON.stringify(values());
@@ -35,13 +36,21 @@ function resetForm() {
 const states = computed(() => statusesFor(props.projects[0]));
 const epics = computed(() => props.issues.filter((issue) => issue.type === 'epic' && issue.id !== props.issue?.id));
 const estimateHours = computed({ get: () => (form.estimateMinutes || 0) / 60, set: (value) => { form.estimateMinutes = Math.round(Number(value) * 60); } });
-watch(() => form.type, (type) => { if (type === 'epic') { form.epicId = ''; form.estimateMinutes = 0; } });
+watch(() => form.type, (type) => { if (type === 'epic') { form.epicId = ''; form.estimateMinutes = 0; form.blockedBy = []; } });
+const candidates = computed(() => props.issues.filter((issue) => issue.type !== 'epic' && issue.id !== props.issue?.id && `${issue.identifier} ${issue.title}`.toLowerCase().includes(dependencySearch.value.trim().toLowerCase())));
+const blockers = computed(() => liveBlockers(form, props.issues, props.projects[0]));
+const dependents = computed(() => props.issue ? props.issues.filter((issue) => (issue.blockedBy || []).includes(props.issue.id)) : []);
+const spent = computed(() => props.entries.filter((entry) => !entry.voidedAt && entry.issueId === props.issue?.id).reduce((sum, entry) => sum + entry.minutes, 0));
 const dirty = computed(() => JSON.stringify(values()) !== savedValues.value);
 watch(() => props.issue, () => { if (!dirty.value) resetForm(); });
 function close() {
   if (saving.value) return;
   if ((dirty.value || comment.value.trim()) && !window.confirm('還有未儲存的內容, 確定要關閉嗎？')) return;
   emit('close');
+}
+function jump(issue) {
+  if (saving.value || ((dirty.value || comment.value.trim()) && !window.confirm('還有未儲存的內容, 確定要切換任務嗎？'))) return;
+  emit('open', issue);
 }
 function beforeUnload(event) {
   if (dirty.value || comment.value.trim()) { event.preventDefault(); event.returnValue = ''; }
@@ -95,6 +104,7 @@ function reload() {
   emit('reload', () => resetForm());
 }
 function display(field, value) {
+  if (field === 'blockedBy') return (value || []).map((id) => props.issues.find((issue) => issue.id === id)?.identifier || id).join('、') || '無';
   const options = { state: states.value, priority: PRIORITIES, type: TYPES }[field];
   if (field === 'assignee') return props.members.find((member) => member.id === value)?.name || value || '未指派';
   if (field === 'epicId') return props.issues.find((issue) => issue.id === value)?.identifier || value || '未連結';
@@ -131,6 +141,15 @@ function timestamp(value) {
             <p v-else class="subtle epic-form-note">Epic 的完成率、預估與實際工時由子任務加總, 可到 Epic 概覽查看</p>
           </div>
         </form>
+        <section v-if="form.type !== 'epic'" class="dependency-section" aria-label="任務依賴">
+          <header><h3>前置任務</h3><span>{{ form.blockedBy?.length || 0 }} / 20</span></header>
+          <p class="subtle">這些任務完成後才能結案。取消不當作交付, 儲存時會檢查循環依賴</p>
+          <label class="field"><span class="sr-only">搜尋前置任務</span><input v-model="dependencySearch" placeholder="用編號或標題找前置任務…" :disabled="saving" /></label>
+          <div class="dependency-picker"><label v-for="item in candidates" :key="item.id"><input v-model="form.blockedBy" type="checkbox" :value="item.id" :aria-label="`前置 ${item.identifier}`" :disabled="saving || (form.blockedBy.length >= 20 && !form.blockedBy.includes(item.id))" /><span class="identifier">{{ item.identifier }}</span><span>{{ item.title }}</span><small>{{ states.find(state => state.id === item.state)?.label }}</small></label><p v-if="!candidates.length" class="subtle">沒有其他符合條件的執行任務</p></div>
+          <div v-if="blockers.length" class="dependency-warning"><strong>{{ categoryFor(form, projects[0]) === 'done' ? '依賴需要重新確認' : `${blockers.length} 個前置任務尚未完成` }}</strong><button v-for="item in blockers" :key="item.id" class="text-button" @click="jump(item)">{{ item.identifier }} · {{ item.title }}</button></div>
+          <div v-if="dependents.length" class="dependent-list"><h4>這些任務在等待此任務</h4><button v-for="item in dependents" :key="item.id" class="text-button" @click="jump(item)">{{ item.identifier }} · {{ item.title }}</button></div>
+          <p v-if="issue" class="detail-spent"><Icon name="clock" :size="14" />已投入 {{ hours(spent) }} / {{ form.estimateMinutes ? `預估 ${hours(form.estimateMinutes)}` : '尚未估時' }}</p>
+        </section>
         <section v-if="issue" class="discussion">
           <div class="discussion-tabs" role="tablist" aria-label="任務紀錄">
             <button :class="{ active: tab === 'comments' }" role="tab" :aria-selected="tab === 'comments'" @click="tab = 'comments'">留言 <span>{{ issue.comments.length }}</span></button>

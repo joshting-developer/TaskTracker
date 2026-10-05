@@ -46,6 +46,22 @@ export function createService(store, { uuid, now, actor = '我', userId = '', ro
     return issue;
   }
   function validateLinks(tx, project, fields, current) {
+    if (fields.type === 'epic' && fields.blockedBy.length) fail('INVALID_INPUT', 'Epic 使用子任務關係, 前置依賴請設定在執行任務');
+    const graph = new Map(tx.list('issues').filter((issue) => issue.projectId === project.id).map((issue) => [issue.id, issue]));
+    for (const id of fields.blockedBy) {
+      const blocker = readRecord(tx, 'issues', id);
+      if (blocker.projectId !== project.id || blocker.type === 'epic' || id === current?.id) fail('INVALID_INPUT', '前置任務必須是同專案的其他執行任務');
+      const stack = [id], visited = new Set();
+      while (stack.length) {
+        const next = stack.pop();
+        if (next === current?.id) fail('INVALID_INPUT', '前置任務會形成循環依賴, 請調整關係');
+        if (visited.has(next)) continue;
+        visited.add(next);
+        stack.push(...(graph.get(next)?.blockedBy || []));
+      }
+    }
+    const changedDependencies = canonical(fields.blockedBy) !== canonical(current?.blockedBy || []);
+    if (categoryFor(fields, project) === 'done' && (!current || fields.state !== current.state || changedDependencies) && fields.blockedBy.some((id) => categoryFor(graph.get(id), project) !== 'done')) fail('INVALID_INPUT', '還有未完成的前置任務, 請先完成或調整依賴後再結案');
     if (fields.epicId) {
       const parent = readRecord(tx, 'issues', fields.epicId);
       if (parent.projectId !== project.id || parent.type !== 'epic' || fields.type === 'epic' || parent.id === current?.id) fail('INVALID_INPUT', 'Epic 必須是同專案的父項目, 不可巢狀或自我連結');
@@ -54,6 +70,7 @@ export function createService(store, { uuid, now, actor = '我', userId = '', ro
     if (fields.type === 'epic' && fields.estimateMinutes) fail('INVALID_INPUT', 'Epic 的預估工時由子任務加總, 請在子任務填寫');
     if (current) {
       const children = tx.list('issues').filter((issue) => issue.epicId === current.id);
+      if (fields.type === 'epic' && [...graph.values()].some((issue) => (issue.blockedBy || []).includes(current.id))) fail('INVALID_INPUT', '其他任務仍依賴這個任務, 請先移轉依賴再改成 Epic');
       if (fields.type !== 'epic' && children.length) fail('INVALID_INPUT', '請先移轉子任務, 再變更 Epic 類型');
       if (fields.type === 'epic' && current.type !== 'epic' && tx.list('timeEntries').some((entry) => entry.issueId === current.id && !entry.voidedAt)) fail('INVALID_INPUT', '已有工時的任務不可改成 Epic');
       if (fields.type === 'epic' && fields.state !== current.state && categoryFor(fields, project) === 'done' && children.some((issue) => !['done', 'canceled'].includes(categoryFor(issue, project)))) fail('INVALID_INPUT', '還有未結案子任務, 請先完成或取消後再驗收 Epic');
@@ -103,7 +120,7 @@ export function createService(store, { uuid, now, actor = '我', userId = '', ro
         const project = readRecord(tx, 'projects', current.projectId);
         const next = validateIssue({ ...current, ...input }, statusesFor(project));
         validateLinks(tx, project, next, current);
-        const changes = ISSUE_FIELDS.filter((field) => current[field] !== next[field]).map((field) => ({ field, before: current[field], after: next[field] }));
+        const changes = ISSUE_FIELDS.filter((field) => canonical(field === 'blockedBy' ? current[field] || [] : current[field]) !== canonical(next[field])).map((field) => ({ field, before: field === 'blockedBy' ? current[field] || [] : current[field], after: next[field] }));
         if (!changes.length) return current;
         const issue = { ...current, ...next, revision: current.revision + 1, updatedAt: now(), history: [...current.history, { id: uuid(), kind: 'updated', actor, at: now(), changes }] };
         tx.put('issues', issue.id, issue);

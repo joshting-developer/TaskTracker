@@ -199,3 +199,30 @@ dialog{border:0;padding:0;color:inherit}dialog::backdrop{background:#19162255;ba
   .notification-card { padding: 19px; }
   .notification-card header { flex-wrap: wrap; gap: 10px; }
 }
+
+/* Issue dependencies and context */
+.issue-context { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 13px; margin-top: 10px; font-size: 10px; color: #9e90aa; }
+.issue-context > button, .context-hours { display: inline-flex; align-items: center; gap: 5px; padding: 0; min-width: 0; }
+.context-hours { white-space: nowrap; }
+.context-hours > span { color: #b4a9bc; }
+.issue-context .context-epic { color: #927ab1; text-align: left; max-width: 260px; }
+.issue-context .context-blocked { color: #b08a4b; background: #fbf2e4; padding: 4px 6px; border-radius: 4px; }
+.issue-card .issue-context { margin: 13px 0 6px; font-size: 9px; }
+.dependency-section { margin: 28px 0; border-top: 1px solid #eae5f1; padding-top: 22px; }
+.dependency-section > header { display: flex; justify-content: space-between; align-items: center; }
+.dependency-section h3 { font-size: 15px; font-weight: 550; margin: 0; }
+.dependency-section > header span { font-size: 10px; color: #b3a7bd; }
+.dependency-section > p { margin: 12px 0; font-size: 11px; }
+.dependency-section .field { margin: 14px 0 10px; }
+.dependency-picker { border: 1px solid #e9e1f2; border-radius: 7px; max-height: 175px; overflow-y: auto; }
+.dependency-picker > label { display: flex; align-items: center; gap: 9px; padding: 11px 12px; border-bottom: 1px solid #f1edf6; font-size: 11px; cursor: pointer; }
+.dependency-picker input { accent-color: #8f79b4; width: 14px; height: 14px; flex-shrink: 0; }
+.dependency-picker > label > span:not(.identifier) { overflow-wrap: anywhere; }
+.dependency-picker small { margin-left: auto; color: #a894b9; white-space: nowrap; }
+.dependency-picker > p { padding: 15px; font-size: 11px; }
+.dependency-warning { margin-top: 15px; background: #fbf4e9; padding: 15px; border-radius: 7px; font-size: 11px; color: #b48b4e; }
+.dependency-warning strong { font-weight: 550; }
+.dependency-warning .text-button, .dependent-list .text-button { display: block; text-align: left; overflow-wrap: anywhere; margin-top: 8px; font-size: 11px; padding: 0; line-height: 1.9; }
+.dependent-list { margin-top: 18px; }
+.dependent-list h4 { font-size: 11px; font-weight: 550; color: #a290b3; margin: 0; }
+.detail-spent { display: flex; align-items: center; gap: 6px; color: #a290b3; }
