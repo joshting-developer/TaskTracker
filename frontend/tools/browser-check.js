@@ -203,12 +203,14 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.getByLabel('TEST-1 的狀態').selectOption(reviewState);
   await page.locator(`[data-state="${reviewState}"] [data-issue="TEST-1"]`).waitFor();
 
+  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await page.getByRole('button', { name: '工作空間成員', exact: true }).click();
   await page.getByLabel('受邀者 Email', { exact: true }).fill('mei@example.test');
   await page.getByRole('button', { name: '建立邀請連結' }).click();
   await page.getByLabel('邀請連結', { exact: true }).waitFor();
   const inviteUrl = await page.getByLabel('邀請連結', { exact: true }).inputValue();
   await page.getByRole('button', { name: '關閉成員' }).click();
+  await page.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).click();
   const teammate = await browser.newPage({ viewport: { width: 1440, height: 1050 } });
   teammate.setDefaultTimeout(15000);
   teammate.on('pageerror', error => failures.push(error.message));
@@ -320,11 +322,18 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.getByRole('button', { name: '狀態設定', exact: true }).click();
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
   await page.getByLabel('狀態 5 名稱', { exact: true }).fill('待驗收');
+  const settingsUrl = page.url();
+  await page.getByRole('button', { name: '開啟導覽' }).click();
+  assert.equal(await page.locator('.sidebar').getByRole('button', { name: '工作空間成員', exact: true }).count(), 0);
   page.once('dialog', dialog => dialog.dismiss());
-  await page.getByRole('button', { name: '返回專案列表', exact: true }).click();
+  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  assert.equal(page.url(), settingsUrl, '取消離開時保留目前專案');
   assert.equal(await page.getByLabel('狀態 5 名稱', { exact: true }).inputValue(), '待驗收');
-  await page.getByRole('button', { name: '捨棄修改' }).click();
-  await page.getByRole('button', { name: '返回專案列表', exact: true }).click();
+  await page.getByRole('button', { name: '開啟導覽' }).click();
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await page.getByRole('heading', { name: '我的專案.', exact: true }).waitFor();
+  await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
   await teammate.close();
   console.log('PASS: two accounts, invitation, role checks, Epic links/acceptance/reopen, custom board state, personal time edits/team rollup/calendar, notifications without sending, background-refresh revision conflict, mobile calendar/settings and unsaved guard');
 }
@@ -397,7 +406,15 @@ try {
   page.once('dialog', (dialog) => dialog.accept());
   await editor.getByRole('button', { name: '關閉任務' }).click();
 
-  await page.getByRole('button', { name: '新增專案', exact: true }).click();
+  const projectSidebar = page.locator('.sidebar');
+  assert.equal(await projectSidebar.getByRole('navigation', { name: '專案', exact: true }).count(), 0, '專案內不列出其他專案');
+  assert.equal(await projectSidebar.getByRole('navigation', { name: '工作空間', exact: true }).count(), 0, '專案內不混入工作空間導覽');
+  assert.equal(await projectSidebar.getByRole('button', { name: '工作空間成員', exact: true }).count(), 0);
+  assert.equal(await projectSidebar.getByRole('button', { name: /建立.*專案|新增專案/ }).count(), 0);
+  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await page.getByRole('heading', { name: '我的專案.', exact: true }).waitFor();
+  assert.equal(await projectSidebar.getByRole('navigation', { name: '專案任務', exact: true }).count(), 0);
+  await page.getByRole('button', { name: '建立專案', exact: true }).click();
   const projectDialog = page.getByRole('dialog', { name: '給下一個計畫一個家' });
   await projectDialog.getByLabel(/專案名稱/).fill('我的測試專案');
   await projectDialog.getByLabel(/專案代碼/).fill('TEST');
@@ -406,6 +423,8 @@ try {
   assert.equal(await page.getByRole('tab', { name: '狀態看板' }).count(), 0);
   await page.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).click();
   await page.getByRole('heading', { name: /我的測試專案/ }).waitFor();
+  await page.getByLabel('目前專案', { exact: true }).getByText('我的測試專案', { exact: true }).waitFor();
+  assert.equal(await page.locator('.sidebar').getByRole('button', { name: /產品第一版/ }).count(), 0);
   assert.equal(await page.locator('.issue-card').count(), 0);
   assert.equal(await page.getByRole('button', { name: '搜尋流程已完成', exact: true }).count(), 0);
   await page.getByRole('button', { name: '新增任務', exact: false }).first().click();

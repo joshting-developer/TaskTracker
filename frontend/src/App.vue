@@ -288,14 +288,14 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
   <div v-else class="app-shell">
     <button v-if="sidebarOpen" class="sidebar-scrim" aria-label="收起導覽" @click="sidebarOpen = false"></button>
     <aside class="sidebar" :class="{ open: sidebarOpen }">
-      <a class="brand" href="#/" @click.prevent="goHome()"><span class="brand-mark"><span></span><span></span><span></span></span>TaskTracker<span class="brand-dot">.</span></a>
-      <button class="workspace-switch" aria-label="工作空間成員" @click="teamOpen = true"><span class="workspace-avatar">{{ workspace.meta.workspace?.name.slice(0, 1) }}</span><div><strong>{{ workspace.meta.workspace?.name }}</strong><span>{{ workspace.members.length }} 位成員 · 管理與邀請</span></div><span class="workspace-chevron">⌄</span></button>
-      <p class="nav-label">工作空間</p>
-      <nav aria-label="工作空間">
-        <button class="nav-item" :class="{ active: !selectedProject }" @click="goHome()"><Icon name="folder" :size="18" />專案列表<span class="nav-count">{{ projects.length }}</span></button>
-      </nav>
+      <a class="brand" href="#/" aria-label="TaskTracker 返回首頁" title="返回首頁" @click.prevent="goHome()"><span class="brand-mark"><span></span><span></span><span></span></span>TaskTracker<span class="brand-dot">.</span></a>
       <template v-if="selectedProject">
-        <p class="nav-label projects-label">目前專案 · {{ selectedProject.code }}</p>
+        <div class="project-context" aria-label="目前專案">
+          <span class="project-context-code" :style="{ color: selectedProject.color }">{{ selectedProject.code }}</span>
+          <strong>{{ selectedProject.name }}</strong>
+          <span class="project-context-workspace">{{ workspace.meta.workspace?.name }}</span>
+        </div>
+        <p class="nav-label">專案功能</p>
         <nav aria-label="專案任務">
           <button class="nav-item" :class="{ active: section === 'tasks' && scope === 'all' }" @click="navigate('all')"><Icon name="grid" :size="18" />所有任務<span class="nav-count">{{ projectIssues.length }}</span></button>
           <button class="nav-item" :class="{ active: section === 'tasks' && scope === 'mine' }" @click="navigate('mine')"><Icon name="user" :size="18" />我的任務<span class="nav-count">{{ projectIssues.filter(i => i.assignee === currentUserId).length }}</span></button>
@@ -306,12 +306,13 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
           <button class="nav-item" :class="{ active: section === 'notifications' }" @click="changeSection('notifications')"><Icon name="message" :size="18" />通知預覽</button>
         </nav>
       </template>
-      <div class="nav-label projects-label">專案<button class="sidebar-add" aria-label="新增專案" @click="creatingProject = true"><Icon name="plus" :size="16" /></button></div>
-      <nav class="project-nav" aria-label="專案">
-        <button v-for="project in projects" :key="project.id" class="nav-item" :class="{ active: projectId === project.id }" @click="navigate('all', project.id)"><span class="project-dot" :style="{ background: project.color }"></span><span class="project-name">{{ project.name }}</span><span class="nav-count">{{ issues.filter(i => i.projectId === project.id && i.type !== 'epic').length }}</span></button>
-        <p v-if="!projects.length" class="sidebar-empty">你的下一個計畫會在這裡</p>
-        <button class="nav-item add-project" @click="creatingProject = true"><Icon name="plus" :size="17" />建立新專案</button>
-      </nav>
+      <template v-else>
+        <button class="workspace-switch" aria-label="工作空間成員" @click="teamOpen = true"><span class="workspace-avatar">{{ workspace.meta.workspace?.name.slice(0, 1) }}</span><div><strong>{{ workspace.meta.workspace?.name }}</strong><span>{{ workspace.members.length }} 位成員 · 管理與邀請</span></div><span class="workspace-chevron">⌄</span></button>
+        <p class="nav-label">工作空間</p>
+        <nav aria-label="工作空間">
+          <button class="nav-item active" @click="goHome()"><Icon name="folder" :size="18" />專案列表<span class="nav-count">{{ projects.length }}</span></button>
+        </nav>
+      </template>
       <div class="sidebar-bottom"><div class="sidebar-note"><span class="spark">✦</span><strong>小步前進, 也算進步</strong><p>先記下下一步<br />再把一件事情完成</p></div><div class="profile"><div class="avatar">{{ workspace.meta.actor?.slice(0, 1) }}</div><div><strong>{{ workspace.meta.actor }}</strong><span>{{ workspace.meta.permissions?.includes('workspace.invite') ? '工作空間管理員' : '團隊成員' }}</span></div><button class="text-button" @click="logout">登出</button></div></div>
     </aside>
 

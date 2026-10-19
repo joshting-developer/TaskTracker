@@ -18,6 +18,11 @@ dialog{border:0;padding:0;color:inherit}dialog::backdrop{background:#19162255;ba
 /* Team collaboration */
 .sidebar { overflow-y: auto; padding-top: 25px; }
 .sidebar .workspace-switch { width: 100%; text-align: left; margin: 24px 0; }
+.brand:focus-visible { outline: 2px solid #b8a5ed; outline-offset: 6px; border-radius: 4px; }
+.project-context { display: flex; flex-direction: column; gap: 8px; margin: 26px 0; padding: 16px 12px; background: #ffffff05; border: 1px solid #ffffff12; border-radius: 10px; min-width: 0; }
+.project-context-code { font-size: 11px; font-weight: 600; letter-spacing: 1px; overflow-wrap: anywhere; }
+.project-context strong { color: #eeebf3; font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
+.project-context-workspace { color: #96939f; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
 .workspace-switch div { min-width: 0; }
 .workspace-switch strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sidebar .projects-label { margin-top: 22px; }
