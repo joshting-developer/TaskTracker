@@ -89,23 +89,75 @@ class WorkspaceApiTest extends TestCase
         $this->rpc('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => $states])->assertStatus(409);
     }
 
-    public function test_dependency_dag_canceled_blocking_and_cross_project_rejection(): void
+    public function test_subtasks_related_links_revision_retries_and_no_completion_blocking(): void
     {
         $this->register();
         $project = $this->project();
         $other = $this->project('OTHER');
-        $first = $this->issue($project);
-        $second = $this->issue($project, ['blockedBy' => [$first['id']]]);
-        $external = $this->issue($other);
         $epic = $this->issue($project, ['type' => 'epic']);
-        foreach ([[$second['id']], [$first['id']], [$external['id']], [$epic['id']]] as $ids) $this->rpc('updateIssue', ['id' => $first['id'], 'expectedRevision' => 1, 'blockedBy' => $ids])->assertStatus(400);
-        $this->rpc('updateIssue', ['id' => $second['id'], 'expectedRevision' => 1, 'state' => 'done'])->assertStatus(400);
-        $states = [...Fields::STATES, ['id' => 'cancel', 'label' => '取消', 'color' => '#123456', 'category' => 'canceled']];
-        $this->rpc('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => $states])->assertOk();
-        $this->rpc('updateIssue', ['id' => $first['id'], 'expectedRevision' => 1, 'state' => 'cancel'])->assertOk();
-        $this->rpc('updateIssue', ['id' => $second['id'], 'expectedRevision' => 1, 'state' => 'done'])->assertStatus(400);
-        $this->rpc('updateIssue', ['id' => $first['id'], 'expectedRevision' => 2, 'state' => 'done'])->assertOk();
-        $this->rpc('updateIssue', ['id' => $second['id'], 'expectedRevision' => 1, 'state' => 'done'])->assertOk();
+        $parent = $this->issue($project, ['epicId' => $epic['id']]);
+        $child = $this->issue($project, ['parentIssueId' => $parent['id'], 'estimateMinutes' => 60]);
+        $this->assertSame($epic['id'], $child['epicId']);
+        $external = $this->issue($other);
+        foreach ([$child['id'], $parent['id'], $external['id'], $epic['id']] as $id) $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 1, 'parentIssueId' => $id])->assertStatus(400);
+        $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => '孫任務', 'parentIssueId' => $child['id']])->assertStatus(400);
+        $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 1, 'type' => 'epic', 'epicId' => ''])->assertStatus(400);
+        $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 1, 'state' => 'done'])->assertOk();
+        $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 2, 'epicId' => ''])->assertOk();
+        $this->rpc('updateIssue', ['id' => $child['id'], 'expectedRevision' => 1, 'title' => '舊表單'])->assertStatus(409);
+        $input = ['id' => $child['id'], 'expectedRevision' => 2, 'relatedIssueIds' => [$parent['id']], 'requestId' => 'link-retry'];
+        $this->rpc('updateIssue', $input)->assertJsonPath('data.revision', 3);
+        $this->rpc('updateIssue', $input)->assertJsonPath('data.revision', 3);
+        $items = collect($this->rpc('getWorkspace')->assertOk()->json('data.issues'))->keyBy('id');
+        $this->assertSame('', $items[$child['id']]['epicId']);
+        $this->assertSame($child['state'], $items[$child['id']]['state']);
+        $this->assertSame('done', $items[$parent['id']]['state']);
+        $this->assertSame([$child['id']], $items[$parent['id']]['relatedIssueIds']);
+        $this->assertSame(4, $items[$parent['id']]['revision']);
+        $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 3, 'title' => '舊表單'])->assertStatus(409);
+        $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 4, 'relatedIssueIds' => [$external['id']]])->assertStatus(400);
+        $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 4, 'relatedIssueIds' => [$parent['id']]])->assertStatus(400);
+        $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 4, 'relatedIssueIds' => []])->assertOk();
+        $this->rpc('updateIssue', ['id' => $child['id'], 'expectedRevision' => 4, 'state' => 'done'])->assertOk();
+        $this->rpc('updateIssue', ['id' => $child['id'], 'expectedRevision' => 5, 'state' => 'todo'])->assertOk();
+        $this->rpc('updateIssue', ['id' => $child['id'], 'expectedRevision' => 6, 'blockedBy' => [$parent['id']]])->assertStatus(400);
+        $this->rpc('createSavedView', ['projectId' => $project['id'], 'name' => '舊依賴篩選', 'filters' => ['condition' => 'blocked']])->assertStatus(400);
+        $this->rpc('logTime', ['issueId' => $parent['id'], 'workDate' => '2026-01-01', 'minutes' => 30])->assertOk();
+        $this->rpc('logTime', ['issueId' => $child['id'], 'workDate' => '2026-01-01', 'minutes' => 60])->assertOk();
+        $this->register('other@example.test');
+        $this->rpc('createIssue', ['projectId' => $this->project('TENANT')['id'], 'title' => '跨空間', 'parentIssueId' => $parent['id']])->assertStatus(404);
+    }
+
+    public function test_dependency_upgrade_is_symmetric_idempotent_and_preserves_history_and_views(): void
+    {
+        $context = $this->register();
+        $project = $this->project();
+        $first = $this->issue($project);
+        $second = $this->issue($project);
+        $store = (new RecordStore)->forWorkspace($context['workspace']['id']);
+        foreach ([[$first, []], [$second, [$first['id']]]] as [$issue, $ids]) {
+            unset($issue['parentIssueId'], $issue['relatedIssueIds']);
+            $store->put('issues', $issue['id'], [...$issue, 'blockedBy' => $ids]);
+        }
+        $store->put('savedViews', 'old-view', ['id' => 'old-view', 'filters' => ['condition' => 'review']]);
+        $store->put('timeEntries', 'old-time', ['id' => 'old-time', 'issueId' => $first['id'], 'minutes' => 30]);
+        $otherStore = (new RecordStore)->forWorkspace('other-workspace');
+        $otherStore->put('issues', $first['id'], [...$first, 'blockedBy' => [$second['id']]]);
+        $migration = require database_path('migrations/2026_10_20_000000_replace_issue_dependencies.php');
+        $migration->up();
+        $converted = $store->require('issues', $second['id']);
+        $this->assertArrayNotHasKey('blockedBy', $converted);
+        $this->assertSame([$first['id']], $converted['relatedIssueIds']);
+        $this->assertSame([$second['id']], $store->require('issues', $first['id'])['relatedIssueIds']);
+        $this->assertSame(2, $converted['revision']);
+        $this->assertSame($second['history'][0], $converted['history'][0]);
+        $this->assertSame([$first['id']], $converted['history'][1]['changes'][1]['before']);
+        $this->assertSame([], $otherStore->require('issues', $first['id'])['relatedIssueIds']);
+        $this->assertSame('review', $store->require('savedViews', 'old-view')['filters']['condition']);
+        $this->assertSame(30, $store->require('timeEntries', 'old-time')['minutes']);
+        $migration->up();
+        $this->assertSame($converted, $store->require('issues', $second['id']));
+        $this->rpc('updateIssue', ['id' => $second['id'], 'expectedRevision' => 2, 'state' => 'done'])->assertOk();
     }
 
     public function test_invite_member_author_permissions_private_views_and_revocation(): void

@@ -11,7 +11,7 @@ class Fields
         ['id' => 'done', 'label' => '已完成', 'color' => '#4aab8a', 'category' => 'done'],
     ];
 
-    public const ISSUE_FIELDS = ['title', 'description', 'state', 'priority', 'type', 'assignee', 'dueDate', 'epicId', 'estimateMinutes', 'blockedBy'];
+    public const ISSUE_FIELDS = ['title', 'description', 'state', 'priority', 'type', 'assignee', 'dueDate', 'epicId', 'estimateMinutes', 'parentIssueId', 'relatedIssueIds'];
 
     public const FILTERS = ['search' => '', 'scope' => 'all', 'state' => '', 'priority' => '', 'assignee' => '', 'epicId' => '', 'type' => '', 'condition' => '', 'sort' => 'updated', 'view' => 'list'];
 
@@ -56,10 +56,11 @@ class Fields
         $statuses = $project['statuses'] ?? self::STATES;
         $dueDate = self::text($input['dueDate'] ?? '', '到期日', 10);
         if ($dueDate !== '') self::date($dueDate);
-        $ids = $input['blockedBy'] ?? [];
-        if (!is_array($ids) || !array_is_list($ids) || count($ids) > 20) DomainError::fail('INVALID_INPUT', '前置任務最多 20 項');
-        $ids = array_map(fn ($id) => self::text($id, '前置任務', 100, true), $ids);
-        if (count(array_unique($ids)) !== count($ids)) DomainError::fail('INVALID_INPUT', '前置任務不可重複');
+        if (array_key_exists('blockedBy', $input)) DomainError::fail('INVALID_INPUT', '前置任務已停用, 請重新整理後使用子任務或關聯任務');
+        $ids = $input['relatedIssueIds'] ?? [];
+        if (!is_array($ids) || !array_is_list($ids) || count($ids) > 200) DomainError::fail('INVALID_INPUT', '關聯任務最多 200 項');
+        $ids = array_map(fn ($id) => self::text($id, '關聯任務', 100, true), $ids);
+        if (count(array_unique($ids)) !== count($ids)) DomainError::fail('INVALID_INPUT', '關聯任務不可重複');
         sort($ids);
         $defaultState = array_values(array_filter($statuses, fn ($s) => !in_array($s['category'], ['done', 'canceled'], true)))[0]['id'];
         return [
@@ -72,7 +73,8 @@ class Fields
             'dueDate' => $dueDate,
             'epicId' => self::text($input['epicId'] ?? '', 'Epic', 100),
             'estimateMinutes' => self::integer($input['estimateMinutes'] ?? 0, '預估分鐘', 0, 525600),
-            'blockedBy' => $ids,
+            'parentIssueId' => self::text($input['parentIssueId'] ?? '', '父任務', 100),
+            'relatedIssueIds' => $ids,
         ];
     }
 }

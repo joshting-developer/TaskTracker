@@ -91,44 +91,65 @@ class WorkspaceService
         $issue = ['id' => $this->id(), 'projectId' => $project['id'], 'identifier' => $project['code'].'-'.$project['nextNumber'], ...$fields, 'revision' => 1, 'createdAt' => $this->now(), 'updatedAt' => $this->now(), 'comments' => [], 'history' => [['id' => $this->id(), 'kind' => 'created', 'actor' => $this->context['user']['name'], 'at' => $this->now(), 'changes' => []]]];
         $this->store->put('projects', $project['id'], [...$project, 'nextNumber' => $project['nextNumber'] + 1]);
         $this->store->put('issues', $issue['id'], $issue);
+        $this->syncRelations($issue, []);
         $this->notify($issue, '指派任務', $this->context['user']['name'].' 將任務指派給你', $issue['assignee']);
         return $issue;
     }
 
-    private function validateLinks(array $project, array $fields, ?array $current = null): void
+    private function validateLinks(array $project, array &$fields, ?array $current = null): void
     {
-        if ($fields['type'] === 'epic' && $fields['blockedBy']) DomainError::fail('INVALID_INPUT', 'Epic 使用子任務關係, 前置依賴請設定在執行任務');
         $issues = $this->store->all('issues');
-        $graph = array_column(array_filter($issues, fn ($i) => $i['projectId'] === $project['id']), null, 'id');
-        foreach ($fields['blockedBy'] as $id) {
-            $blocker = $this->store->require('issues', $id);
-            if ($blocker['projectId'] !== $project['id'] || $blocker['type'] === 'epic' || $id === ($current['id'] ?? null)) DomainError::fail('INVALID_INPUT', '前置任務必須是同專案的其他執行任務');
-            $stack = [$id]; $visited = [];
-            while ($stack) {
-                $next = array_pop($stack);
-                if ($next === ($current['id'] ?? null)) DomainError::fail('INVALID_INPUT', '前置任務會形成循環依賴, 請調整關係');
-                if (isset($visited[$next])) continue;
-                $visited[$next] = true;
-                array_push($stack, ...($graph[$next]['blockedBy'] ?? []));
-            }
+        $children = array_filter($issues, fn ($i) => ($i['parentIssueId'] ?? '') === ($current['id'] ?? null));
+        if ($fields['parentIssueId']) {
+            $parent = $this->store->require('issues', $fields['parentIssueId']);
+            if ($parent['projectId'] !== $project['id'] || $parent['type'] === 'epic' || $fields['type'] === 'epic' || $parent['id'] === ($current['id'] ?? null) || !empty($parent['parentIssueId']) || $children) DomainError::fail('INVALID_INPUT', '子任務限同專案一層, 請選擇其他一般任務作為父任務');
+            if (($current['parentIssueId'] ?? '') === $fields['parentIssueId'] && $fields['epicId'] !== $parent['epicId']) DomainError::fail('INVALID_INPUT', '子任務所屬 Epic 隨父任務, 請從父任務調整');
+            $fields['epicId'] = $parent['epicId'];
         }
-        $changedDependencies = $fields['blockedBy'] !== ($current['blockedBy'] ?? []);
-        if (Fields::category($fields, $project) === 'done' && (!$current || $fields['state'] !== $current['state'] || $changedDependencies)) {
-            foreach ($fields['blockedBy'] as $id) if (Fields::category($graph[$id], $project) !== 'done') DomainError::fail('INVALID_INPUT', '還有未完成的前置任務, 請先完成或調整依賴後再結案');
+        foreach ($fields['relatedIssueIds'] as $id) {
+            $target = $this->store->require('issues', $id);
+            if ($target['projectId'] !== $project['id'] || $id === ($current['id'] ?? null)) DomainError::fail('INVALID_INPUT', '只能關聯同專案的其他任務');
+            if (!in_array($current['id'] ?? '', $target['relatedIssueIds'] ?? [], true) && count($target['relatedIssueIds'] ?? []) >= 200) DomainError::fail('INVALID_INPUT', '目標的關聯任務已達上限');
         }
         if ($fields['epicId']) {
-            $parent = $this->store->require('issues', $fields['epicId']);
-            if ($parent['projectId'] !== $project['id'] || $parent['type'] !== 'epic' || $fields['type'] === 'epic' || $parent['id'] === ($current['id'] ?? null)) DomainError::fail('INVALID_INPUT', 'Epic 必須是同專案的父項目, 不可巢狀或自我連結');
+            $epic = $this->store->require('issues', $fields['epicId']);
+            if ($epic['projectId'] !== $project['id'] || $epic['type'] !== 'epic' || $fields['type'] === 'epic' || $epic['id'] === ($current['id'] ?? null)) DomainError::fail('INVALID_INPUT', 'Epic 必須是同專案的父項目, 不可巢狀或自我連結');
         }
         if ($fields['assignee'] && $fields['assignee'] !== ($current['assignee'] ?? '') && !$this->store->get('members', $fields['assignee'])) DomainError::fail('INVALID_INPUT', '負責人必須是工作空間成員');
         if ($fields['type'] === 'epic' && $fields['estimateMinutes']) DomainError::fail('INVALID_INPUT', 'Epic 的預估工時由子任務加總, 請在子任務填寫');
         if (!$current) return;
-        $children = array_filter($issues, fn ($i) => ($i['epicId'] ?? '') === $current['id']);
+        $epicChildren = array_filter($issues, fn ($i) => ($i['epicId'] ?? '') === $current['id']);
         if ($fields['type'] === 'epic') {
-            foreach ($graph as $issue) if (in_array($current['id'], $issue['blockedBy'] ?? [], true)) DomainError::fail('INVALID_INPUT', '其他任務仍依賴這個任務, 請先移轉依賴再改成 Epic');
+            if ($children) DomainError::fail('INVALID_INPUT', '請先移轉子任務, 再改成 Epic');
             if ($current['type'] !== 'epic') foreach ($this->store->all('timeEntries') as $entry) if ($entry['issueId'] === $current['id'] && empty($entry['voidedAt'])) DomainError::fail('INVALID_INPUT', '已有工時的任務不可改成 Epic');
-            if ($fields['state'] !== $current['state'] && Fields::category($fields, $project) === 'done') foreach ($children as $child) if (!in_array(Fields::category($child, $project), ['done', 'canceled'], true)) DomainError::fail('INVALID_INPUT', '還有未結案子任務, 請先完成或取消後再驗收 Epic');
-        } elseif ($children) DomainError::fail('INVALID_INPUT', '請先移轉子任務, 再變更 Epic 類型');
+            if ($fields['state'] !== $current['state'] && Fields::category($fields, $project) === 'done') foreach ($epicChildren as $child) if (!in_array(Fields::category($child, $project), ['done', 'canceled'], true)) DomainError::fail('INVALID_INPUT', '還有未結案子任務, 請先完成或取消後再驗收 Epic');
+        } elseif ($epicChildren) DomainError::fail('INVALID_INPUT', '請先移轉子任務, 再變更 Epic 類型');
+    }
+
+    // 關聯是雙向資料, 所有端點在同一交易更新 revision／history
+    private function syncRelations(array $issue, array $previous): void
+    {
+        foreach (array_unique([...$previous, ...$issue['relatedIssueIds']]) as $id) {
+            $peer = $this->store->require('issues', $id);
+            $ids = $peer['relatedIssueIds'] ?? [];
+            $next = array_values(array_diff($ids, [$issue['id']]));
+            if (in_array($id, $issue['relatedIssueIds'], true)) $next[] = $issue['id'];
+            sort($next);
+            if ($ids !== $next) $this->writeIssue($peer, ['relatedIssueIds' => $next]);
+        }
+    }
+
+    private function writeIssue(array $current, array $fields): array
+    {
+        $changes = [];
+        foreach ($fields as $field => $value) {
+            $before = $current[$field] ?? ($field === 'relatedIssueIds' ? [] : '');
+            if ($before !== $value) $changes[] = ['field' => $field, 'before' => $before, 'after' => $value];
+        }
+        if (!$changes) return $current;
+        $issue = [...$current, ...$fields, 'revision' => $current['revision'] + 1, 'updatedAt' => $this->now(), 'history' => [...$current['history'], ['id' => $this->id(), 'kind' => 'updated', 'actor' => $this->context['user']['name'], 'at' => $this->now(), 'changes' => $changes]]];
+        $this->store->put('issues', $issue['id'], $issue);
+        return $issue;
     }
 
     private function revision(array $record, array $input, string $label = '任務'): void
@@ -143,14 +164,14 @@ class WorkspaceService
         $project = $this->store->require('projects', $current['projectId']);
         $fields = Fields::issue([...$current, ...$input], $project);
         $this->validateLinks($project, $fields, $current);
-        $changes = [];
-        foreach (Fields::ISSUE_FIELDS as $field) {
-            $before = $current[$field] ?? ($field === 'blockedBy' ? [] : null);
-            if ($before !== $fields[$field]) $changes[] = ['field' => $field, 'before' => $before, 'after' => $fields[$field]];
+        $issue = $this->writeIssue($current, $fields);
+        if ($issue['revision'] === $current['revision']) return $issue;
+        $this->syncRelations($issue, $current['relatedIssueIds'] ?? []);
+        if ($issue['epicId'] !== $current['epicId']) {
+            foreach ($this->store->all('issues') as $child) {
+                if (($child['parentIssueId'] ?? '') === $issue['id']) $this->writeIssue($child, ['epicId' => $issue['epicId']]);
+            }
         }
-        if (!$changes) return $current;
-        $issue = [...$current, ...$fields, 'revision' => $current['revision'] + 1, 'updatedAt' => $this->now(), 'history' => [...$current['history'], ['id' => $this->id(), 'kind' => 'updated', 'actor' => $this->context['user']['name'], 'at' => $this->now(), 'changes' => $changes]]];
-        $this->store->put('issues', $issue['id'], $issue);
         if ($issue['assignee'] !== $current['assignee']) $this->notify($issue, '指派任務', $this->context['user']['name'].' 將任務指派給你', $issue['assignee']);
         if ($issue['epicId']) {
             $parent = $this->store->require('issues', $issue['epicId']);
@@ -243,7 +264,7 @@ class WorkspaceService
         if (!is_array($filters) || array_diff(array_keys($filters), array_keys(Fields::FILTERS))) DomainError::fail('INVALID_INPUT', '視圖含不支援的篩選欄位');
         $result = [];
         foreach (Fields::FILTERS as $key => $default) $result[$key] = Fields::text($filters[$key] ?? $default, '篩選條件', $key === 'search' ? 180 : 100);
-        foreach (['scope' => ['all', 'mine', 'done'], 'priority' => ['', 'urgent', 'high', 'normal', 'low'], 'type' => ['', 'task', 'bug', 'feature'], 'condition' => ['', 'open', 'blocked', 'review', 'overdue', 'unassigned'], 'sort' => ['updated', 'priority', 'due'], 'view' => ['list', 'board']] as $key => $allowed) Fields::choice($result[$key], $allowed, '視圖篩選');
+        foreach (['scope' => ['all', 'mine', 'done'], 'priority' => ['', 'urgent', 'high', 'normal', 'low'], 'type' => ['', 'task', 'bug', 'feature'], 'condition' => ['', 'open', 'overdue', 'unassigned'], 'sort' => ['updated', 'priority', 'due'], 'view' => ['list', 'board']] as $key => $allowed) Fields::choice($result[$key], $allowed, '視圖篩選');
         if ($result['state'] && !in_array($result['state'], array_column($project['statuses'] ?? Fields::STATES, 'id'), true)) DomainError::fail('INVALID_INPUT', '篩選的狀態不存在');
         if ($result['assignee'] && !$this->store->get('members', $result['assignee'])) DomainError::fail('INVALID_INPUT', '篩選的成員不存在');
         if ($result['epicId'] && $result['epicId'] !== 'unlinked') {

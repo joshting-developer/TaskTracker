@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\User;
 use App\Repositories\RecordStore;
+use App\Services\IssueRelationsUpgrade;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -39,6 +40,7 @@ class ImportLegacy extends Command
                         $store->put($row['kind'], $row['id'], $value);
                     }
                 }
+                IssueRelationsUpgrade::run();
             });
         } catch (\Throwable $error) {
             $this->error($error->getMessage());
