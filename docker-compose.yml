@@ -1,0 +1,56 @@
+x-app: &app
+  build:
+    context: .
+  init: true
+
+services:
+  api:
+    <<: *app
+    command: ["node", "--watch", "server/index.js"]
+    environment:
+      TZ: Asia/Taipei
+      API_HOST: 0.0.0.0
+      DATABASE_PATH: /app/data/tasktracker.sqlite
+      ALLOWED_ORIGINS: http://127.0.0.1:${TASKTRACKER_PORT:-5174},http://localhost:${TASKTRACKER_PORT:-5174}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+    volumes:
+      - ./server:/app/server:ro
+      - ./src/domain:/app/src/domain:ro
+      - tasktracker-data:/app/data
+    healthcheck:
+      test: ["CMD", "node", "--input-type=module", "-e", "const response = await fetch('http://127.0.0.1:3002/api/health'); if (!response.ok) process.exit(1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  frontend:
+    <<: *app
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+    environment:
+      TZ: Asia/Taipei
+      API_PROXY_TARGET: http://api:3002
+      VITE_USE_POLLING: 'true'
+    ports:
+      - "127.0.0.1:${TASKTRACKER_PORT:-5174}:5174"
+    volumes:
+      - ./src:/app/src:ro
+      - ./index.html:/app/index.html:ro
+      - ./vite.config.js:/app/vite.config.js:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "--input-type=module", "-e", "const response = await fetch('http://127.0.0.1:5174/api/health'); if (!response.ok) process.exit(1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  tasktracker-data:

@@ -12,7 +12,9 @@ mkdirSync(dirname(filename), { recursive: true });
 const store = createSqliteStore(filename);
 const server = createApiServer(null, {
   auth: createAuth(store), smtp: createSmtp(),
+  allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',').map((origin) => origin.trim()).filter(Boolean),
   serviceFor: (context) => createService(tenantStore(store, context.workspace.id), { uuid: randomUUID, now: () => new Date().toISOString(), actor: context.user.name, userId: context.user.id, role: context.role, workspace: context.workspace }),
 });
-server.listen(3002, '127.0.0.1', () => console.log('TaskTracker API: http://127.0.0.1:3002'));
+const host = process.env.API_HOST || '127.0.0.1';
+server.listen(3002, host, () => console.log(`TaskTracker API: http://${host}:3002`));
 for (const signal of ['SIGTERM', 'SIGINT']) process.on(signal, () => server.close(() => { store.close(); process.exit(0); }));
