@@ -4,7 +4,7 @@ import Icon from './Icon.vue';
 import { api } from '../api/index.js';
 import { categoryFor, FIELD_LABELS, hours, ISSUE_FIELDS, liveBlockers, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
-const props = defineProps({ issue: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, members: Array, issues: Array, entries: Array });
+const props = defineProps({ issue: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, defaultEpicId: String, members: Array, issues: Array, entries: Array });
 const emit = defineEmits(['close', 'saved', 'reload', 'open']);
 const dialog = ref(null);
 const form = reactive({ blockedBy: [] });
@@ -25,7 +25,7 @@ function values() {
 function resetForm() {
   baseRevision.value = props.issue?.revision || 0;
   Object.assign(form, {
-    title: '', description: '', state: props.defaultState || 'todo', priority: 'normal', type: props.defaultType || 'task', assignee: '', dueDate: '', epicId: '', estimateMinutes: 0, blockedBy: [],
+    title: '', description: '', state: props.defaultState || 'todo', priority: 'normal', type: props.defaultType || 'task', assignee: '', dueDate: '', epicId: props.defaultEpicId || '', estimateMinutes: 0, blockedBy: [],
     ...(props.issue || {}), projectId: props.issue?.projectId || props.defaultProject || props.projects[0]?.id || '',
   });
   savedValues.value = JSON.stringify(values());

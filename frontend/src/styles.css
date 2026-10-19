@@ -272,3 +272,11 @@ dialog{border:0;padding:0;color:inherit}dialog::backdrop{background:#19162255;ba
 .auth-card .v-input, .project-dialog .v-input { margin-top: 12px; }
 .v-btn .v-btn__content { text-transform: none; letter-spacing: normal; }
 @media (max-width: 700px) { .auth-card.v-card { padding: 30px 22px; } }
+
+.task-feature-title { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #827491; font-weight: 600; margin: 0; }
+.board-workspace { padding-top: 22px; }
+.board-workspace .back-to-projects { margin-bottom: 14px; }
+.board-workspace .page-heading { margin-bottom: 18px; }
+.board-workspace .page-heading .eyebrow { display: none; }
+.board-workspace .page-heading h1 { font-size: 23px; }
+.board-workspace .saved-views-bar { padding: 10px 18px; }
