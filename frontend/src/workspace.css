@@ -12,6 +12,7 @@
 .topbar { height: 56px; padding: 0 24px; }
 .breadcrumbs, .breadcrumb-home, .local-indicator { font-size: 13px; color: var(--text-secondary); }
 .breadcrumbs strong { color: var(--text-primary); font-weight: 600; }
+.mobile-feature-context { display: none; }
 .icon-button { color: #626b7c; }
 .workspace-content { max-width: none; padding: 24px; }
 .page-heading { margin-bottom: 20px; }
@@ -31,15 +32,7 @@
 .data-workspace .page-heading .eyebrow { display: none; }
 .data-workspace .page-heading h1 { font-size: 24px; margin: 0; }
 .data-workspace .page-heading p { margin-top: 5px; font-size: 13px; line-height: 1.5; }
-.data-workspace .task-workspace { border: 0; border-radius: 0; box-shadow: none; min-height: 0; overflow: hidden; }
-.task-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 24px; padding: 10px 24px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: #f8f9fb; color: var(--text-secondary); font-size: 13px; }
-.task-summary > span { display: inline-flex; align-items: center; gap: 8px; }
-.task-summary strong { color: var(--text-primary); font-size: 15px; font-weight: 650; }
-.task-summary .summary-progress { margin-left: auto; }
-.task-summary small { font-size: 12px; }
-.data-workspace .view-toolbar { height: 44px; padding: 0 24px; }
-.task-feature-title { font-size: 14px; color: #343b49; }
-.result-count { font-size: 12px; color: var(--text-secondary); background: #f0f2f6; }
+.data-workspace .task-workspace { border: 0; border-top: 1px solid var(--border); border-radius: 0; box-shadow: none; min-height: 0; overflow: hidden; }
 .data-workspace .page-footer { display: none; }
 
 .saved-views-bar, .board-workspace .saved-views-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; padding: 10px 24px; background: #fff; border-bottom: 1px solid var(--border); }
@@ -121,10 +114,11 @@
 @media (max-width: 900px) {
   .filter-toolbar { flex-wrap: wrap; }
   .filters { flex-wrap: wrap; }
-  .task-summary .summary-progress { margin-left: 0; }
 }
 @media (max-width: 700px) {
   .topbar { padding: 0 14px; }
+  .has-mobile-context .project-breadcrumb { display: none; }
+  .mobile-feature-context { display: inline; }
   .local-indicator { font-size: 12px; }
   .workspace-content { padding: 18px 14px; }
   .data-workspace > .back-to-projects { margin-left: 14px; }
@@ -132,10 +126,8 @@
   .data-workspace .page-heading h1 { font-size: 22px; }
   .data-workspace .page-heading p { font-size: 13px; }
   .page-heading .button { font-size: 13px; padding: 8px 10px; }
-  .task-summary { padding: 10px 14px; gap: 8px 16px; }
   .saved-views-bar, .board-workspace .saved-views-bar { padding: 10px 14px; }
   .view-actions { gap: 10px; }
-  .data-workspace .view-toolbar { padding: 0 14px; }
   .filter-toolbar { padding: 10px 14px; flex-direction: column; }
   .search-field { width: 100%; min-width: 0; flex: auto; }
   .filters { width: 100%; }
