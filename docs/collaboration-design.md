@@ -28,6 +28,7 @@
 - Account 是登入身分；Workspace 是資料與成員的租戶邊界；Project 屬於一個 Workspace
 - 使用 email＋密碼試作本機登入, 正式可接 OIDC／其他供應商, 不以 Google 群組判斷會員
 - 工作空間管理員可邀請成員與管理狀態, 一般成員可建立／修改 Issue、留言及登記自己的工時
+- 2026-10-19 已確認邀請須有權限。建議將授權定義為帳號在目標 Workspace 的邀請成員權限, 由後端檢查；目前僅 admin 可邀請, 正式角色及 Workspace 是否另有邀請開關／方案資格仍待確認, 詳見 [產品討論紀錄](產品討論紀錄.md)
 - 試作先採工作空間內專案共享, 所有成員能看到團隊的工時；私人專案與 Project Owner／Editor／Viewer 的 ACL 留到下一階段
 - 正式 SaaS 須支援一個 Account 加入多個 Workspace、切換空間、成員停用／撤銷、最後一位管理員保護與帳號復原
 - 每次 API 操作由 session 推導 workspaceId／userId, 不接受前端傳入角色或租戶 ID 作授權
