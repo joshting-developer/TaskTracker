@@ -1,5 +1,7 @@
 # Epic、工作流程與多人協作設計
 
+2026-10-19 最新實作：原始碼已拆分為 `frontend/`（Vue＋Vuetify）與 `backend/`（Laravel JSON API）, 不用 Inertia, Node API 由 PHP 取代。Compose 提供 API／前端／Queue／Reverb／Redis, 詳見[根 README](../README.md)及[產品討論紀錄](產品討論紀錄.md)。下方 Node／GAS 舊提案及當時功能界線保留作歷史參考, 不覆蓋最新選型；Project ACL 與真實寄信仍待後續完成
+
 調研日期：2026-10-06, 產品定位依使用者補充採 SaaS 服務, 不限定 Google 帳號或網域
 
 ## 本次方向

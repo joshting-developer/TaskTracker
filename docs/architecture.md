@@ -1,5 +1,7 @@
 # TaskTracker 架構提案
 
+2026-10-19 最新實作：原始碼已拆分為 `frontend/`（Vue＋Vuetify）與 `backend/`（Laravel JSON API）, 不用 Inertia, Node API 由 PHP 取代。Compose 提供 API／前端／Queue／Reverb／Redis, 詳見[根 README](../README.md)及[產品討論紀錄](產品討論紀錄.md)。下方 Node／GAS 舊提案及當時功能界線保留作歷史參考, 不覆蓋最新選型；Project ACL 與真實寄信仍待後續完成
+
 日期：2026-10-05（Asia/Taipei）
 
 2026-10-19 產品方向補充：目前已確認 Workspace → Project → Issue 的層級, 並將方便 SaaS／自建版交付列為設計目標。建議共用核心程式與空間隔離, 依部署設定處理註冊、郵件與外部服務差異；具體版本規格待確認, 見 [產品討論紀錄](產品討論紀錄.md)。目前 Compose 僅是本機開發配置, 不代表正式自建版已完成, GAS 產檔仍暫緩

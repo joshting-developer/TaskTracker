@@ -8,7 +8,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 
 - 使用者過去使用過 YouTrack 且喜歡, 產品設計優先研究其任務管理與操作方式
 - 競品調研至少包含 YouTrack、OpenProject, 以官方文件為主要來源
-- 參考相鄰專案 `../GuildManager` 的 Google Apps Script Web App 架構
+- 初期參考 `../GuildManager` 的 GAS 架構；2026-10-19 已改選 Vue＋Vuetify／Laravel 前後端分離, 舊方向留沿革
 - 介面、文件與操作訊息預設使用繁體中文, 顯示時區採 `Asia/Taipei`
 
 使用者已要求先做本機第一版, 以任務清單與看板試用；甘特圖暫不製作。GAS `.gs` 產檔、雲端儲存與部署等本機版本確認後再處理
@@ -25,27 +25,25 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 
 使用者已要求邊討論邊更新 `docs/產品討論紀錄.md`。後續產品討論先讀該文件, 每輪將新增需求、選項、決策理由與待討論問題同步整理, 更新日期。明確區分使用者已確認、助理建議與目前實作；不把追問、沉默或已試作當成採納。變更決策時保留沿革, 確認後同步受影響的設計文件
 
-已確認的目標授權原則：角色只是權限組合, 由有效 permission ID、Workspace／Project scope 及資源條件決定能看與能做。新授權設計的 policy／API／畫面不得以角色顯示名稱或角色 ID 作放行捷徑, roleId 只用於查角色的權限映射。現有原型的 admin／member 直接判斷仍待統一遷移, 不代表已符合新原則
+已確認的目標授權原則：角色只是權限組合, 由有效 permission ID、Workspace／Project scope 及資源條件決定能看與能做。新授權設計的 policy／API／畫面不得以角色顯示名稱或角色 ID 作放行捷徑, roleId 只用於查角色的權限映射。Laravel 已建立集中權限入口, 完整 Project ACL 與預設矩陣仍待遷移, 不代表已符合最終原則
 
-目前本機實作：
+目前本機實作（2026-10-19 已改為前後端分離）：
 
-- Vue 3＋Vite, 原生 CSS 與 SVG 圖示, 不使用額外 UI 框架
-- Node.js 內建 HTTP API 與 `node:sqlite`, SQLite 保存在忽略的 `data/tasktracker.sqlite`
-- 前端 `http://127.0.0.1:5174`, API `http://127.0.0.1:3002`, 只監聽 loopback
-- `npm run dev`／`npm run server` 分別啟動前後端, `npm run build` 編譯前端
-- `npm test` 驗證 API／SQLite, `npm run test:e2e` 使用隔離資料庫與 5175 埠的瀏覽器驗證
-- 預設空資料, 使用者可手動載入獨立示範專案；不自動匯入示範內容
-- `#/` 是專案列表, `#/projects/<id>` 是專案工作區, `#/projects/<id>/issues/<id>` 是任務詳細內容；建立專案後先留在列表供使用者選擇
-- 本機 scrypt 帳號＋HttpOnly session, Account／Workspace／Member 分離, API 由 session 推導租戶與操作者
-- 工作空間內先共享專案與工時, 管理員可邀請新帳號及改狀態, 一般成員只能填寫／修改自己的工時；Project ACL 尚未實作
-- `server/auth.js` 的 tenantStore 隔離業務資料與使用者重試紀錄, 所有新操作都必須走這個邊界；舊單人資料歸第一個空間, 原始記錄保留
-- 狀態使用專案設定的固定 ID＋category, 不以 `state === 'done'` 或名稱判斷完成；Epic 不重複填估時／工時
-- 通知預設 preview, SMTP 只連線 verify, 禁止在 refresh／業務 API 中同步寄信；秘密由 `.env.local`／伺服器環境提供
-- 每 30 秒更新資料, 有未保存表單時不得把基準 revision 偷換成最新資料版本
-- 任務依賴保存 blockedBy, 只允許同專案執行 Issue 的 DAG, 反向關係推導；未完成前置不能結案, 取消不代表交付, 重開顯示提醒而不級聯修改
-- 常用視圖保存結構化 filters, 只在目前專案生效；私有視圖只回傳作者, 團隊視圖共享但只有作者可改／移除, 不因是管理員就略過作者權限
-- 視圖參照失效時保留條件並提示修正, 不靜默放寬；分享 mine 範圍依閱覽者 userId 計算
-- 本機版本確認前不建立 `.gs`、GAS manifest、GAS build 指令或雲端初始化／部署
+- `frontend/`：Vue 3＋Vuetify 4＋Vite, 登入／專案表單已使用 Vuetify, 既有清單／看板保留專用元件與 CSS
+- `backend/`：Laravel 13 JSON API, PHP 8.5 Docker, SQLite 與 Laravel session／CSRF；不使用 Inertia, Node 僅用前端工具鏈
+- 根目錄 Compose 提供 frontend（5174）、backend（3002）、queue、websocket／Reverb（8080）與 Redis。主機接口只監聽 loopback, Redis 只在容器網路
+- `cd frontend && npm run dev`／`npm run build`；`docker compose exec backend php artisan test` 驗證 Laravel API／隔離 SQLite
+- `frontend/tools/browser-check.js` 以 `E2E_API_URL` 接隔離 Laravel 服務, 使用 5175 埠, 不使用業務 mock 或使用者資料庫
+- 預設空資料, 可手動載入示範專案；首頁先建／選 Project, 點入才有任務功能, 所有操作保留目前專案上下文
+- `backend/app/Repositories/RecordStore.php` 由伺服器限定 Workspace namespace；`AccountService` 從 Laravel session 推導操作者與空間, 不信任前端身分
+- 租戶間隔離, 空間內專案及工時暫沿用共享原型；`WorkspacePermissions` 集中權限, 但完整 Project ACL／預設角色矩陣尚未落地, 不宣稱符合最終授權規格
+- 舊 Node API／測試由 PHP 取代, 原 SQLite 與舊 Docker volume 保留；匯入指令只接受空目標、不覆蓋來源, 保留作者歷史, 舊帳號登入後升級雜湊
+- 狀態用固定 ID＋category 判斷完成, Epic 估時／工時只加總子項目。依賴 blockedBy 限同專案執行 Issue 的 DAG, 未完成前置不能結案, 取消不是交付, 重開不級聯修改
+- 工時只能修改自己有效紀錄, 作者限制不因管理者而略過；每人每日最多 24 小時, 工作日採 Asia/Taipei
+- 視圖使用結構化 filters, 私有只回作者、團隊共用但只有作者可改／移除；失效參照保留並提示, mine 依閱覽者 userId 計算
+- 每 30 秒更新, 未保存表單不得偷換基準 revision。Reverb 接口與 Redis Queue 已準備, 任務推播及 Project 私有頻道授權另做
+- SMTP 只 verify, 通知 preview, 不在業務 API 同步寄信；秘密由環境或忽略的持久化 volume 提供, 不進前端或 image
+- 本機確認前不產 `.gs`／GAS manifest／雲端 build 或部署指令
 
 1. 讀本文件、`README.md` 及當次工作相關文件, 檢查 `git status` 與既有差異
 2. 多步驟工作先更新 `plans/<目前分支>/plan.md` 與 `step.md`, 記錄需求、假設、步驟、驗證與待確認事項
@@ -56,16 +54,14 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 
 ## 架構方向
 
-參考 `../GuildManager/Architecture.md` 與實際原始碼, 詳細提案見 `docs/architecture.md`
+使用者已選 `frontend` Vue＋Vuetify、`backend` Laravel 的前後端分離架構, 取代原 Node／GAS 雙後端主方向。根 README 為目前啟動入口, 歷史 GuildManager 參考保留在 `docs/architecture.md`, GAS 不同步開發
 
-- 正式執行環境採 Google Apps Script Web App, 由 `doGet()` 與 HTML Service 提供頁面
-- 建議沿用 Vue＋Vite 前端, 本機 Express＋SQLite, 雲端 GAS＋Google 試算表的雙平台開發方式；UI 套件另依後續決定
-- 畫面統一透過 `src/api/` 資料介面, 本機 HTTP 與雲端 `google.script.run` adapter 提供相同資料契約
-- 將可共用的驗證與運算放在不依賴 Node 或 Google 服務的 domain 模組
-- SQLite 與 Sheets 使用各自的 repository, 不將 SQL 交易、外鍵或唯一約束視為 Sheets 原生能力
-- GAS 前端編譯為內嵌 JS／CSS 的單一 HTML, 後端來源另外打包；不手改編譯產物
-- 多頁面先考慮 hash 路由, 在 GAS iframe 實測深連結、重新整理與返回行為
-- 不直接複製 GuildManager 的幫會業務、帳號、角色、資料、憑證或部署設定
+- 前端只透過 `frontend/src/api/` 呼叫 JSON API, 不直接操作資料庫或匯入 PHP 業務服務
+- Laravel controller 負責 HTTP 邊界, service 負責規則, repository 負責隔離存取；權限與業務寫入在同一交易驗證
+- 同 origin 反向代理不影響程式與部署分離；如跨 origin 部署須明確設計 Cookie／CSRF／可信來源
+- Reverb、Queue 使用同一 backend image, 各自獨立服務；Redis 用 Queue／Cache, 業務資料以 SQLite 為準
+- 保留 API DTO、revision、requestId、日期與狀態語意, 不用更換框架作為清空資料或放寬權限的理由
+- 不修改或複製 GuildManager 的資料、帳號、憑證與部署設定
 
 ## 開發規則
 
@@ -98,8 +94,8 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 
 - 純文件工作檢查內容一致性、來源、相對連結與差異, 不額外建立測試套件
 - 功能實作驗證實際使用流程, 依風險補權限、版本衝突、防重複提交與資料保存測試
-- 本機與 GAS adapter 必須符合相同契約, Google 服務 mock 不替代真實 GAS 授權及部署驗證
-- 及早以隔離試算表驗證 GAS 完整讀寫, 不等全部功能完成後才處理雲端差異
+- 前後端必須符合相同 API 契約, PHP／SQLite 的 API 測試與瀏覽器整合互補, mock 不取代真實整合驗證
+- 資料遷移以隔離 SQLite 驗證, 不用使用者現有資料做會破壞性的測試
 - 編譯、上傳、初始化資料與更新 Web App 部署是不同動作, 各自記錄驗證結果
 - 本專案依上述規範每階段建立 commit, 不沿用其他專案的推送／部署授權
 - 不刪除 `AGENTS.md`、skill、規劃文件或使用者資料來清理工作區
