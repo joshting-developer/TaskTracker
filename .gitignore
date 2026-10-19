@@ -11,3 +11,6 @@ artifacts/
 .clasp.json
 .clasprc.json
 .DS_Store
+vendor/
+.env
+.phpunit.cache/
