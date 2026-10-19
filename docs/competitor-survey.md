@@ -2,6 +2,8 @@
 
 調研日期：2026-10-05（Asia/Taipei）
 
+補充查閱：2026-10-20, YouTrack Issue links 與依賴／子任務 workflow；其餘比較仍依原調研日期
+
 本次以官方產品及功能文件為來源, 屬於文件調研, 尚未登入各產品進行操作測試。功能事實、產品取捨與 TaskTracker 建議分開記錄；方案與價格可能變動, 不使用過去印象填入目前定價
 
 ## 產品方向
@@ -22,6 +24,14 @@
 表內功能來源：YouTrack 的[搜尋](https://www.jetbrains.com/help/youtrack/cloud/search-and-command-attributes.html)、[儲存搜尋](https://www.jetbrains.com/help/youtrack/cloud/saved-search.html)、[自訂欄位](https://www.jetbrains.com/help/youtrack/cloud/manage-custom-fields-per-project.html)、[敏捷看板](https://www.jetbrains.com/help/youtrack/cloud/configure-agile-board.html)、[Workflow 類型](https://www.jetbrains.com/help/youtrack/cloud/workflow-rules.html)；OpenProject 的[產品介紹](https://www.openproject.org/docs/getting-started/openproject-introduction/)、[Work packages](https://www.openproject.org/docs/user-guide/work-packages/)、[Boards](https://www.openproject.org/docs/user-guide/agile-boards/)；Linear 的[概念模型](https://linear.app/docs/conceptual-model)、[Projects](https://linear.app/docs/projects)、[Cycles](https://linear.app/docs/use-cycles)；Trello 的[卡片與清單文件](https://support.atlassian.com/trello/docs/add-and-customize-cards-and-lists/)
 
 ## YouTrack：主要參考
+
+### 任務關係與前置表單（2026-10-20 補充）
+
+官方將一般關聯（relates to）、父子拆解（subtask of／parent for）、前後依賴（depends on／is required for）分開。Add links 可選類型再找既有 Issue, 也支援直接建立有關係的新 Issue, 包括子任務；不要求以專用「前置任務」欄位承載所有關係。[Link Issues](https://www.jetbrains.com/help/youtrack/cloud/link-issues.html)
+
+禁止未解依賴的 Issue 轉 Fixed 是可附加的 Dependencies workflow（Auto-attached: no）；Subtasks workflow（Auto-attached: yes）則能自動開啟／完成父任務。連結語意與狀態自動化應分別理解, 不把所有關係都當成強制結案條件。[Dependencies](https://www.jetbrains.com/help/youtrack/cloud/workflow-dependencies.html)、[Subtasks](https://www.jetbrains.com/help/youtrack/cloud/workflow-subtasks.html)
+
+TaskTracker 建議：以「新增關聯」「新增子任務」為主要入口, 只顯示已建立的關係, 依賴作可選類型。使用者提出關聯／子卡片偏好, 具體模型與結案政策仍待確認；現有 epicId／blockedBy 並非已提供全部關係。詳見[產品討論紀錄](產品討論紀錄.md#任務關聯子任務與依賴2026-10-20-討論)
 
 ### 搜尋與常用視圖
 
