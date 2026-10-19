@@ -30,6 +30,7 @@
 - 2026-10-19 已確認 Workspace 固定角色為 owner／manager／user：owner 是建立空間者, owner／manager 可操作該空間所有專案；user 必須被加入 Project 並授權, 才能查看或操作。第一版不提供空間內可見途徑, 取代先前 Admin／Member 與空間內可見／私人兩模式提案
 - 邀請須有權限已確認；哪些角色可邀請、可授予哪些角色等細項待定。現有原型仍以 admin／member 運作、空間內專案與工時共享, 新角色與 Project ACL 尚未實作, 既有資料遷移需明定
 - 已採納授權方向：角色映射 permission ID, 業務操作經集中 authorize 檢查資源 Workspace／Project 與操作條件。owner／manager 的全專案操作須展開為明確的範圍權限, 不限於讀取, 也不使用角色名稱全域放行。專案角色、資源作者例外與完整操作矩陣待細定, 詳見 [兩層權限紀錄](產品討論紀錄.md#workspace-與專案的兩層權限)
+- 角色表描述預設權限組合, 可見性與操作一律由有效權限及範圍決定。registry 只把角色指派解析成權限, policy／API／畫面不得另以 owner、manager、PM、開發者、讀者等角色名放行；同權限、同 scope、同條件的授權結果必須一致
 - 正式 SaaS 須支援一個 Account 加入多個 Workspace、切換空間、成員停用／撤銷、最後一位管理員保護與帳號復原
 - 每次 API 操作由 session 推導 workspaceId／userId, 不接受前端傳入角色或租戶 ID 作授權
 - 查詢、異動、關聯、工時、通知、重試紀錄都隔離 Workspace, 知道另一團隊的 ID 也不能讀寫
