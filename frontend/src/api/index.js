@@ -1,7 +1,19 @@
-export async function callApi(operation, input = {}, group = 'rpc') {
+let csrfToken = '';
+async function csrf() {
+  if (!csrfToken) {
+    const response = await fetch('/api/csrf-cookie', { credentials: 'include', headers: { Accept: 'application/json' } });
+    csrfToken = (await response.json()).csrfToken;
+  }
+  return csrfToken;
+}
+
+export async function callApi(operation, input = {}, group = 'rpc', retry = true) {
   let result;
   try {
-    const response = await fetch(`/api/${group}/${operation}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
+    const response = await fetch(`/api/${group}/${operation}`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': await csrf() }, body: JSON.stringify(input) });
+    const rotatedToken = response.headers.get('X-CSRF-TOKEN');
+    if (rotatedToken) csrfToken = rotatedToken;
+    if (response.status === 419 && retry) { csrfToken = ''; return callApi(operation, input, group, false); }
     result = await response.json();
   } catch {
     throw Object.assign(new Error('暫時無法連線, 請確認服務已啟動後重試'), { code: 'NETWORK_ERROR' });

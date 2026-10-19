@@ -31,11 +31,11 @@ async function submit() {
     <form @submit.prevent="submit">
       <div class="modal-top"><span class="modal-icon"><Icon name="folder" :size="24" /></span><button type="button" class="icon-button" aria-label="關閉專案表單" :disabled="saving" @click="close"><Icon name="close" /></button></div>
       <h2 id="project-heading">給下一個計畫一個家</h2><p class="form-intro">把相關任務放在一起, 專心完成一件事</p>
-      <div v-if="error" class="error-box" role="alert">{{ error }}</div>
-      <label class="field">專案名稱 <span class="required">*</span><input v-model="form.name" placeholder="例如：個人網站改版" maxlength="60" required autofocus :disabled="saving" /></label>
-      <label class="field">專案代碼 <span class="required">*</span><input v-model="form.code" placeholder="例如：WEB" minlength="2" maxlength="8" pattern="[A-Za-z][A-Za-z0-9]{1,7}" required class="code-input" :disabled="saving" /><span class="field-hint">2–8 位英文字母或數字, 任務會使用 WEB-1 這樣的編號</span></label>
-      <label class="field">簡短說明<textarea v-model="form.description" placeholder="這個專案想完成什麼？" rows="3" maxlength="500" :disabled="saving" /></label>
-      <button class="button primary full-width" :disabled="saving"><Icon name="plus" :size="18" />{{ saving ? '建立中…' : '建立專案' }}</button>
+      <v-alert v-if="error" type="error" variant="tonal" class="mb-4" role="alert">{{ error }}</v-alert>
+      <v-text-field v-model="form.name" label="專案名稱" aria-label="專案名稱" placeholder="例如：個人網站改版" maxlength="60" required autofocus :disabled="saving" />
+      <v-text-field v-model="form.code" label="專案代碼" aria-label="專案代碼" placeholder="例如：WEB" minlength="2" maxlength="8" pattern="[A-Za-z][A-Za-z0-9]{1,7}" required :disabled="saving" hint="2–8 位英文字母或數字, 任務會使用 WEB-1 這樣的編號" persistent-hint />
+      <v-textarea v-model="form.description" label="簡短說明" placeholder="這個專案想完成什麼？" rows="3" maxlength="500" :disabled="saving" />
+      <v-btn type="submit" color="primary" block :loading="saving" :disabled="saving" prepend-icon="mdi-plus">建立專案</v-btn>
     </form>
   </dialog>
 </template>

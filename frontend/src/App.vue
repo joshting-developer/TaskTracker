@@ -282,6 +282,7 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
 </script>
 
 <template>
+  <v-app>
   <AuthGate v-if="!authenticated && !loading && !error" @authenticated="authenticatedSession" />
   <div v-else-if="!authenticated" class="empty-state"><span class="loader"></span><h2>正在連線工作空間</h2><p v-if="error" role="alert">{{ error }}</p><button v-if="error" class="button secondary" @click="refresh">重試</button></div>
   <div v-else class="app-shell">
@@ -311,7 +312,7 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
         <p v-if="!projects.length" class="sidebar-empty">你的下一個計畫會在這裡</p>
         <button class="nav-item add-project" @click="creatingProject = true"><Icon name="plus" :size="17" />建立新專案</button>
       </nav>
-      <div class="sidebar-bottom"><div class="sidebar-note"><span class="spark">✦</span><strong>小步前進, 也算進步</strong><p>先記下下一步<br />再把一件事情完成</p></div><div class="profile"><div class="avatar">{{ workspace.meta.actor?.slice(0, 1) }}</div><div><strong>{{ workspace.meta.actor }}</strong><span>{{ workspace.meta.role === 'admin' ? '工作空間管理員' : '團隊成員' }}</span></div><button class="text-button" @click="logout">登出</button></div></div>
+      <div class="sidebar-bottom"><div class="sidebar-note"><span class="spark">✦</span><strong>小步前進, 也算進步</strong><p>先記下下一步<br />再把一件事情完成</p></div><div class="profile"><div class="avatar">{{ workspace.meta.actor?.slice(0, 1) }}</div><div><strong>{{ workspace.meta.actor }}</strong><span>{{ workspace.meta.permissions?.includes('workspace.invite') ? '工作空間管理員' : '團隊成員' }}</span></div><button class="text-button" @click="logout">登出</button></div></div>
     </aside>
 
     <main class="main">
@@ -345,8 +346,8 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
         <div v-if="error && section !== 'tasks'" class="error-box" role="alert">{{ error }}</div>
         <EpicOverview v-if="section === 'epics'" :project="selectedProject" :issues="projectAllIssues" :entries="workspace.timeEntries" :members="workspace.members" @open="openIssue" @create="newIssue('', 'epic')" />
         <TimeCalendar v-if="section === 'time'" ref="workspaceTool" :project="selectedProject" :issues="projectAllIssues" :entries="workspace.timeEntries" :members="workspace.members" :user-id="currentUserId" @updated="toolUpdated" @open="openIssue" />
-        <ProjectSettings v-if="section === 'settings'" ref="workspaceTool" :project="selectedProject" :issues="projectAllIssues" :role="workspace.meta.role" @updated="toolUpdated" />
-        <NotificationPreview v-if="section === 'notifications'" :project="selectedProject" :notifications="workspace.notifications" :issues="projectAllIssues" :role="workspace.meta.role" @open="openIssue" />
+        <ProjectSettings v-if="section === 'settings'" ref="workspaceTool" :project="selectedProject" :issues="projectAllIssues" :permissions="workspace.meta.permissions || []" @updated="toolUpdated" />
+        <NotificationPreview v-if="section === 'notifications'" :project="selectedProject" :notifications="workspace.notifications" :issues="projectAllIssues" :permissions="workspace.meta.permissions || []" @open="openIssue" />
         </template>
         <footer class="page-footer"><span><Icon name="sun" :size="14" />保持專注, 也記得休息一下</span><span>TaskTracker <b>v0.2</b></span></footer>
       </div>
@@ -357,4 +358,5 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
     <ProjectDialog v-if="creatingProject" @close="creatingProject = false" @created="createdProject" />
     <Transition name="toast"><div v-if="toast" class="toast-message" role="status"><span><Icon name="check" :size="16" /></span>{{ toast }}</div></Transition>
   </div>
+  </v-app>
 </template>

@@ -259,3 +259,11 @@ dialog{border:0;padding:0;color:inherit}dialog::backdrop{background:#19162255;ba
   .advanced-filters select { flex: 1; min-width: 0; max-width: none; }
   .saved-view-dialog { padding: 22px; }
 }
+
+/* Vuetify 保留既有看板佈局, 表單與新元件採共用主題 */
+.v-application { font-family: inherit; }
+.v-application__wrap { min-height: 100vh; }
+.auth-card.v-card { padding: 48px; align-self: center; overflow: visible; }
+.auth-card .v-input, .project-dialog .v-input { margin-top: 12px; }
+.v-btn .v-btn__content { text-transform: none; letter-spacing: normal; }
+@media (max-width: 700px) { .auth-card.v-card { padding: 30px 22px; } }

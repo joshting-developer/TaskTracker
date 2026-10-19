@@ -1,21 +1,12 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { mkdirSync } from 'node:fs';
 import { createServer as createViteServer } from 'vite';
 import { chromium } from 'playwright';
-import { createSqliteStore } from '../server/repository.js';
-import { createService } from '../src/domain/service.js';
-import { createApiServer } from '../server/app.js';
-import { createAuth, tenantStore } from '../server/auth.js';
-import { createSmtp } from '../server/smtp.js';
 import { dateInTaipei } from '../src/domain/model.js';
 
-const directory = mkdtempSync(join(tmpdir(), 'tasktracker-browser-'));
-const store = createSqliteStore(join(directory, 'test.sqlite'));
-const auth = createAuth(store);
-const apiServer = createApiServer(null, { auth, smtp: createSmtp({}), serviceFor: (context) => createService(tenantStore(store, context.workspace.id), { uuid: randomUUID, now: () => new Date().toISOString(), actor: context.user.name, userId: context.user.id, role: context.role, workspace: context.workspace }), allowedOrigins: ['http://127.0.0.1:5175'] });
+// 由呼叫端啟動隔離 Laravel API, 不使用 Node mock 後端
+const apiTarget = process.env.E2E_API_URL;
+if (!apiTarget) throw new Error('請設定 E2E_API_URL 指向隔離 Laravel 測試服務');
 let vite;
 let browser;
 async function checkSavedViews(page, browser, failures, projectUrl) {
@@ -183,7 +174,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await editor.getByLabel(/任務標題/).fill('會員系統上線');
   await editor.getByRole('button', { name: '建立任務' }).click();
   await page.locator('.epic-card').waitFor();
-  const epicId = await page.evaluate(async () => (await (await fetch('/api/rpc/getWorkspace', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).json()).data.issues.find(issue => issue.type === 'epic').id);
+  const epicId = await page.evaluate(async () => (await (await import('/src/api/index.js')).api.getWorkspace()).issues.find(issue => issue.type === 'epic').id);
   await page.getByRole('button', { name: '所有任務', exact: false }).click();
   await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).click();
   editor = page.getByRole('dialog');
@@ -338,8 +329,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   console.log('PASS: two accounts, invitation, role checks, Epic links/acceptance/reopen, custom board state, personal time edits/team rollup/calendar, notifications without sending, background-refresh revision conflict, mobile calendar/settings and unsaved guard');
 }
 try {
-  await new Promise((resolve) => apiServer.listen(0, '127.0.0.1', resolve));
-  vite = await createViteServer({ server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': `http://127.0.0.1:${apiServer.address().port}` } } });
+  vite = await createViteServer({ server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': apiTarget } } });
   await vite.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const ownerContext = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
@@ -354,8 +344,8 @@ try {
   await page.getByLabel('密碼', { exact: true }).fill('test-local-password');
   await page.getByLabel('工作空間名稱', { exact: true }).fill('產品團隊');
   await page.getByRole('button', { name: '建立工作空間', exact: true }).click();
-  const ownerId = await page.evaluate(async () => (await (await fetch('/api/rpc/getWorkspace', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).json()).data.meta.userId);
   await page.getByRole('heading', { name: '你的下一個計畫, 從這裡開始' }).waitFor();
+  const ownerId = await page.evaluate(async () => (await (await import('/src/api/index.js')).api.getWorkspace()).meta.userId);
   assert.equal(await page.getByRole('tab', { name: '狀態看板' }).count(), 0);
   assert.equal(await page.getByRole('button', { name: /新增任務/ }).count(), 0);
   assert.equal(await page.getByRole('navigation', { name: '專案任務' }).count(), 0);
@@ -493,7 +483,4 @@ try {
 } finally {
   await browser?.close();
   await vite?.close();
-  if (apiServer.listening) await new Promise((resolve) => apiServer.close(resolve));
-  store.close();
-  rmSync(directory, { recursive: true, force: true });
 }
