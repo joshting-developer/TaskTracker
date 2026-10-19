@@ -64,7 +64,7 @@ function drop(event, state, lane) {
           <div v-if="group === 'none' || !collapsed.includes(lane.id)" class="lane-columns">
             <div v-for="state in states" :key="state.id" class="board-cell" :class="{ 'drag-over': dragOver === `${lane.id}:${state.id}` }" :data-column="state.id" @dragover.prevent="dragOver = `${lane.id}:${state.id}`" @dragleave.self="dragOver = ''" @drop.prevent="drop($event, state.id, lane)">
               <article v-for="issue in lane.issues.filter(item => item.state === state.id)" :key="issue.id" class="issue-card" :class="{ moving: moving === issue.id }" :draggable="!moving" :data-issue="issue.identifier" @dragstart="startDrag($event, issue)" @dragend="dragOver = ''">
-                <div class="card-top"><span class="identifier">{{ issue.identifier }}</span><span class="type-tag">{{ option(TYPES, issue.type)?.label }}</span><span class="priority-label" :style="{ color: option(PRIORITIES, issue.priority)?.color }" :title="`優先級：${option(PRIORITIES, issue.priority)?.label}`"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span></span></div>
+                <div class="card-top"><span class="identifier">{{ issue.identifier }}</span><span class="type-tag">{{ option(TYPES, issue.type)?.label }}</span><span class="priority-label" :style="{ '--priority-color': option(PRIORITIES, issue.priority)?.color }" :title="`優先級：${option(PRIORITIES, issue.priority)?.label}`"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span></span></div>
                 <button class="card-title" @click="emit('open', issue)">{{ issue.title }}</button>
                 <p v-if="density === 'comfortable' && issue.description" class="board-card-description">{{ issue.description }}</p>
                 <div class="card-bottom"><span v-if="issue.dueDate" :class="['due-date', { overdue: overdue(issue) }]"><Icon name="clock" :size="12" />{{ issue.dueDate.slice(5).replace('-', '/') }}</span><span v-if="issue.comments.length" class="comment-count"><Icon name="message" :size="13" />{{ issue.comments.length }}</span><span class="board-assignee" :title="memberName(issue.assignee)"><span v-if="issue.assignee" class="avatar small">{{ memberName(issue.assignee).slice(0, 1) }}</span>{{ memberName(issue.assignee) }}</span></div>
@@ -83,37 +83,37 @@ function drop(event, state, lane) {
 
 <style scoped>
 .visual-board { background: #f7f8fb; position: relative; overflow: hidden; min-width: 0; max-width: 100%; }
-.board-tools { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 20px; background: white; border-bottom: 1px solid #e7e9ef; font-size: 11px; color: #878291; }
+.board-tools { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 20px; background: white; border-bottom: 1px solid #e7e9ef; font-size: 13px; color: #5f6673; }
 .board-tools > div, .board-tools label { display: flex; align-items: center; gap: 10px; }
 .board-tools > div { gap: 18px; }
-.board-tools select { border: 1px solid #e0deea; border-radius: 5px; padding: 6px 9px; color: #655c77; background: white; }
-.board-scroll { overflow: auto; max-height: 72vh; outline-offset: -2px; }
+.board-tools select { border: 1px solid #e0deea; border-radius: 5px; padding: 6px 9px; color: #354052; background: white; }
+.board-scroll { overflow: auto; max-height: calc(100vh - 280px); min-height: 240px; outline-offset: -2px; }
 .board-canvas { min-width: max(100%, calc(var(--board-columns) * 250px)); }
 .board-headings, .lane-columns { display: grid; grid-template-columns: repeat(var(--board-columns), minmax(250px, 1fr)); }
 .board-headings { position: sticky; top: 0; z-index: 2; background: #f4f5f9; border-bottom: 1px solid #e0e3eb; }
 .board-headings > div { border-right: 1px solid #e3e5ec; }
 .column-header { padding: 10px 12px; margin: 0; }
 .lane-header { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-bottom: 1px solid #e3e5ec; background: #f0f2f7; min-height: 42px; }
-.lane-toggle { display: flex; align-items: center; gap: 8px; color: #605b70; font-size: 12px; text-align: left; min-width: 0; }
+.lane-toggle { display: flex; align-items: center; gap: 8px; color: #343b49; font-size: 14px; text-align: left; min-width: 0; }
 .lane-toggle strong { overflow-wrap: anywhere; }
 .lane-toggle svg { flex-shrink: 0; transition: transform .15s; }
 .lane-toggle .expanded { transform: rotate(90deg); }
-.lane-epic-link { font-size: 10px; color: #9991ac; white-space: nowrap; }
-.lane-total { margin-left: auto; font-size: 10px; color: #9691a2; white-space: nowrap; }
+.lane-epic-link { font-size: 12px; color: #5f6673; white-space: nowrap; }
+.lane-total { margin-left: auto; font-size: 12px; color: #5f6673; white-space: nowrap; }
 .board-cell { padding: 9px; min-height: 115px; border-right: 1px solid #e3e5ec; border-bottom: 1px solid #e3e5ec; }
 .board-cell.drag-over { background: #eee7fb; box-shadow: inset 0 0 0 2px #b3a0dd; }
 .issue-card { background: white; border: 1px solid #e0e3eb; border-radius: 5px; box-shadow: 0 1px 3px #262b3910; padding: 12px; margin-bottom: 9px; }
-.card-title { font-size: 12px; line-height: 1.7; margin: 8px 0; color: #575367; }
+.card-title { font-size: 14px; line-height: 1.6; margin: 6px 0; color: #242936; }
 .card-top { gap: 8px; }
 .card-top .priority-label { margin-left: auto; }
-.board-card-description { font-size: 10px; line-height: 1.6; color: #9591a2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; margin-bottom: 10px; white-space: pre-wrap; }
-.board-assignee { display: flex; gap: 5px; align-items: center; margin-left: auto; font-size: 10px; color: #9992a8; }
+.board-card-description { font-size: 13px; line-height: 1.6; color: #5f6673; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; margin-bottom: 10px; white-space: pre-wrap; }
+.board-assignee { display: flex; gap: 5px; align-items: center; margin-left: auto; font-size: 12px; color: #5f6673; }
 .compact-cards .issue-card { padding: 9px; }
-.compact-cards .card-title { margin: 5px 0; font-size: 11px; }
+.compact-cards .card-title { margin: 5px 0; font-size: 14px; }
 .compact-cards .card-top { margin-bottom: 5px; }
 .compact-cards .card-bottom { margin-top: 7px; }
-.lane-add { display: flex; align-items: center; gap: 6px; color: #aaa2b9; padding: 4px; font-size: 10px; }
+.lane-add { display: flex; align-items: center; gap: 6px; color: #596276; padding: 7px 4px; font-size: 12px; }
 .lane-add:hover { color: #8670b2; }
-.board-empty-note { padding: 12px 20px; font-size: 11px; color: #948caa; }
-@media (max-width: 700px) { .board-tools { align-items: flex-start; flex-direction: column; padding: 12px; } .board-scroll { max-height: 75vh; } }
+.board-empty-note { padding: 12px 20px; font-size: 13px; color: #5f6673; }
+@media (max-width: 700px) { .board-tools { align-items: flex-start; flex-direction: column; padding: 12px; } .board-scroll { max-height: 65vh; } }
 </style>

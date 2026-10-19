@@ -1,0 +1,155 @@
+/* 資料工作區的視覺規則集中在這裡, 覆蓋早期展示版的小字與卡片留白 */
+:root {
+  --text-primary: #242936;
+  --text-secondary: #5f6673;
+  --border: #daddE5;
+  --muted: var(--text-secondary);
+  --accent: #6654c5;
+  color: var(--text-primary);
+}
+
+.main { background: #fff; }
+.topbar { height: 56px; padding: 0 24px; }
+.breadcrumbs, .breadcrumb-home, .local-indicator { font-size: 13px; color: var(--text-secondary); }
+.breadcrumbs strong { color: var(--text-primary); font-weight: 600; }
+.icon-button { color: #626b7c; }
+.workspace-content { max-width: none; padding: 24px; }
+.page-heading { margin-bottom: 20px; }
+.page-heading h1 { font-size: 26px; color: var(--text-primary); }
+.page-heading p, .subtle, .form-intro { font-size: 14px; color: var(--text-secondary); }
+.eyebrow { font-size: 12px; color: var(--text-secondary); }
+.button { font-size: 14px; padding: 9px 14px; }
+.button.secondary { color: #424b5c; border-color: #cbd0db; }
+.button.primary { background: var(--accent); border-color: var(--accent); }
+.text-button { font-size: 13px; color: #5844a0; }
+.back-to-projects { font-size: 13px; color: var(--text-secondary); }
+
+/* 專案列表／看板使用完整右側畫布, 只以分隔線分區 */
+.workspace-content.data-workspace { padding: 0; margin: 0; min-height: calc(100vh - 56px); }
+.data-workspace > .back-to-projects { margin: 12px 24px 0; }
+.data-workspace > .page-heading { padding: 12px 24px 14px; margin: 0; }
+.data-workspace .page-heading .eyebrow { display: none; }
+.data-workspace .page-heading h1 { font-size: 24px; margin: 0; }
+.data-workspace .page-heading p { margin-top: 5px; font-size: 13px; line-height: 1.5; }
+.data-workspace .task-workspace { border: 0; border-radius: 0; box-shadow: none; min-height: 0; overflow: hidden; }
+.task-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 24px; padding: 10px 24px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: #f8f9fb; color: var(--text-secondary); font-size: 13px; }
+.task-summary > span { display: inline-flex; align-items: center; gap: 8px; }
+.task-summary strong { color: var(--text-primary); font-size: 15px; font-weight: 650; }
+.task-summary .summary-progress { margin-left: auto; }
+.task-summary small { font-size: 12px; }
+.data-workspace .view-toolbar { height: 44px; padding: 0 24px; }
+.task-feature-title { font-size: 14px; color: #343b49; }
+.result-count { font-size: 12px; color: var(--text-secondary); background: #f0f2f6; }
+.data-workspace .page-footer { display: none; }
+
+.saved-views-bar, .board-workspace .saved-views-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; padding: 10px 24px; background: #fff; border-bottom: 1px solid var(--border); }
+.view-actions { margin: 0 0 0 auto; gap: 12px; }
+.view-actions > .button { margin-left: 0; font-size: 13px; padding: 7px 10px; }
+.view-actions .text-button, .view-adjusted { font-size: 12px; }
+.view-chip { font-size: 13px; color: #4a5364; border-color: #d7dce5; background: #fff; }
+.view-chip.active { color: #513c98; border-color: #b7a7e2; background: #f1edfb; }
+.view-chip small { font-size: 12px; color: var(--text-secondary); }
+.view-actions .danger-text { color: #a43142; }
+.filter-toolbar { padding: 10px 24px; border-bottom: 0; gap: 12px; }
+.search-field { width: auto; flex: 1; min-width: 200px; height: 38px; border-color: #bfc6d2; background: #fff; color: #626b7c; }
+.search-field input { font-size: 14px; color: var(--text-primary); }
+.search-field input::placeholder { color: #697181; opacity: 1; }
+.filters { flex-shrink: 0; }
+.filters select { height: 38px; max-width: none; font-size: 13px; color: #424b5c; border-color: #bfc6d2; }
+.advanced-filters { padding: 0 24px 10px; gap: 8px 16px; border-bottom: 1px solid var(--border); }
+.advanced-filters label { font-size: 13px; color: var(--text-secondary); }
+.advanced-filters select { font-size: 13px; padding: 6px 8px; color: #424b5c; border-color: #cbd0db; }
+.advanced-filters .text-button { font-size: 13px; color: #5844a0; }
+
+.issue-table th { font-size: 13px; font-weight: 600; color: #4e586b; background: #f8f9fb; padding-top: 10px; padding-bottom: 10px; }
+.issue-table td { font-size: 14px; color: var(--text-primary); padding-top: 12px; padding-bottom: 12px; height: auto; border-bottom: 1px solid #e6e8ee; }
+.issue-table .type-column { padding-left: 24px; }
+.task-title { font-size: 16px; font-weight: 600; color: #242936; line-height: 1.55; }
+.task-subline { font-size: 12px; color: var(--text-secondary); gap: 8px; margin-top: 4px; }
+.identifier, .task-subline .identifier { font-size: 12px; color: #596276; }
+.status-badge, .status-badge.todo, .status-badge.in_progress, .status-badge.done { font-size: 13px; color: #343b49; background: #f0f2f6; }
+.status-badge i { width: 7px; height: 7px; background: var(--status-color, #778199); }
+.priority-label { font-size: 13px; color: #4e586b; }
+.priority-bars { color: var(--priority-color, #697181); }
+.assignee, .unassigned, .due-date { font-size: 13px; color: var(--text-secondary); }
+.due-date.overdue { color: #a52c3a; }
+.comment-count { font-size: 12px; color: var(--text-secondary); }
+.avatar.small { font-size: 11px; color: #51436f; background: #ece9f4; }
+.row-open { opacity: 1; }
+.issue-context { margin-top: 6px; font-size: 12px; color: var(--text-secondary); }
+.context-hours > span { color: var(--text-secondary); }
+.issue-context .context-epic { color: #66518e; }
+.issue-context .context-blocked { font-size: 12px; color: #79531c; background: #fff2d9; }
+.table-footer { min-height: 44px; font-size: 12px; color: var(--text-secondary); padding: 10px 24px; }
+.table-footer .pagination { font-size: 12px; }
+.page-footer { font-size: 12px; color: var(--text-secondary); }
+.empty-state p { font-size: 14px; color: var(--text-secondary); }
+.empty-state h2 { color: var(--text-primary); }
+
+/* 卡片保留作為可拖曳資料項, 移除的是包住整個工作區的展示卡片 */
+.visual-board .column-header { font-size: 14px; color: #343b49; }
+.visual-board .column-header > span { font-size: 14px; font-weight: 600; }
+.visual-board .column-header b { font-size: 12px; color: #596276; background: #e8ebf1; }
+.visual-board .type-tag { font-size: 12px; color: #596276; }
+.visual-board .card-state select { font-size: 13px; color: #424b5c; }
+.visual-board .card-state { border-top-color: #e2e5ed; }
+.visual-board .issue-context { font-size: 12px; }
+.visual-board .board-tools { padding-left: 24px; padding-right: 24px; }
+.data-workspace .board-scroll { max-height: calc(100vh - 300px); }
+
+/* 導覽和表單的輔助資訊也採可讀字級, 保留清楚的前後景對比 */
+.nav-item { font-size: 14px; color: #d4d7e0; }
+.nav-item.active { color: #f0eaff; }
+.nav-label { font-size: 12px; letter-spacing: .8px; color: #b1b6c4; }
+.nav-count { font-size: 12px; color: #c2c7d4; }
+.project-context-code { font-size: 12px; }
+.project-context strong { font-size: 16px; }
+.project-context-workspace, .workspace-switch div > span, .profile div > span { font-size: 12px; color: #b7bdcb; }
+.workspace-switch strong, .profile strong { font-size: 14px; color: #f0f1f5; }
+.profile .text-button { font-size: 12px; color: #ddd1f5; }
+.field { font-size: 14px; color: #424b5c; }
+.field input, .field textarea, .field select { font-size: 14px; color: var(--text-primary); border-color: #cbd0db; }
+.field small, .field-hint { font-size: 12px; color: var(--text-secondary); }
+.field input::placeholder, .field textarea::placeholder { font-size: 14px; color: #697181; }
+.panel-header .eyebrow, .panel-footer .subtle { font-size: 12px; color: var(--text-secondary); }
+.form-intro { line-height: 1.6; }
+.error-box, .success-box { font-size: 14px; }
+.project-card > p, .project-card-progress, .project-card-bottom, .project-list-count { font-size: 13px; color: var(--text-secondary); }
+.project-code, .new-project-card > span:last-child { font-size: 12px; color: var(--text-secondary); }
+.new-project-card strong { font-size: 14px; color: #424b5c; }
+
+@media (max-width: 900px) {
+  .filter-toolbar { flex-wrap: wrap; }
+  .filters { flex-wrap: wrap; }
+  .task-summary .summary-progress { margin-left: 0; }
+}
+@media (max-width: 700px) {
+  .topbar { padding: 0 14px; }
+  .local-indicator { font-size: 12px; }
+  .workspace-content { padding: 18px 14px; }
+  .data-workspace > .back-to-projects { margin-left: 14px; }
+  .data-workspace > .page-heading { padding: 12px 14px; gap: 12px; }
+  .data-workspace .page-heading h1 { font-size: 22px; }
+  .data-workspace .page-heading p { font-size: 13px; }
+  .page-heading .button { font-size: 13px; padding: 8px 10px; }
+  .task-summary { padding: 10px 14px; gap: 8px 16px; }
+  .saved-views-bar, .board-workspace .saved-views-bar { padding: 10px 14px; }
+  .view-actions { gap: 10px; }
+  .data-workspace .view-toolbar { padding: 0 14px; }
+  .filter-toolbar { padding: 10px 14px; flex-direction: column; }
+  .search-field { width: 100%; min-width: 0; flex: auto; }
+  .filters { width: 100%; }
+  .filters select { min-width: 0; flex: 1; font-size: 13px; }
+  .advanced-filters { padding: 0 14px 10px; gap: 8px 12px; }
+  .advanced-filters label { flex: 1 1 145px; font-size: 13px; }
+  .advanced-filters select { font-size: 13px; min-width: 0; }
+  .task-title { font-size: 15px; }
+  .issue-table .type-column { padding-left: 14px; }
+  .issue-table th:nth-child(3) { width: 94px; }
+  .task-subline { gap: 6px; }
+  .status-badge, .status-badge.todo, .status-badge.in_progress, .status-badge.done { font-size: 12px; padding: 4px 6px; }
+  .table-footer { font-size: 12px; padding: 10px 14px; align-items: flex-start; }
+  .table-footer > span { max-width: 55%; }
+  .visual-board .board-tools { padding-left: 14px; padding-right: 14px; }
+  .data-workspace .board-scroll { max-height: 65vh; }
+}

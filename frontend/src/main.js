@@ -5,10 +5,11 @@ import 'vuetify/styles';
 import '@mdi/font/css/materialdesignicons.css';
 import App from './App.vue';
 import './styles.css';
+import './workspace.css';
 
 const vuetify = createVuetify({
   locale: { locale: 'zhHant', messages: { zhHant } },
-  theme: { defaultTheme: 'tasktracker', themes: { tasktracker: { dark: false, colors: { primary: '#8d76bd', secondary: '#64b0a0', background: '#faf9fd' } } } },
+  theme: { defaultTheme: 'tasktracker', themes: { tasktracker: { dark: false, colors: { primary: '#6654c5', secondary: '#397e71', background: '#ffffff' } } } },
   defaults: { VBtn: { rounded: 'lg', elevation: 0 }, VTextField: { variant: 'outlined', density: 'comfortable' } },
 });
 

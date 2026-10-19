@@ -9,6 +9,27 @@ const apiTarget = process.env.E2E_API_URL;
 if (!apiTarget) throw new Error('請設定 E2E_API_URL 指向隔離 Laravel 測試服務');
 let vite;
 let browser;
+async function checkReadableWorkspace(page) {
+  const metrics = await page.evaluate(() => {
+    const main = document.querySelector('.main').getBoundingClientRect();
+    const workspace = document.querySelector('.data-workspace').getBoundingClientRect();
+    const table = document.querySelector('.issue-table').getBoundingClientRect();
+    const title = getComputedStyle(document.querySelector('.task-title'));
+    const metadata = getComputedStyle(document.querySelector('.task-subline'));
+    const state = getComputedStyle(document.querySelector('.status-badge'));
+    const channel = value => { value /= 255; return value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4; };
+    const luminance = rgb => { const [r, g, b] = rgb.match(/[\d.]+/g).slice(0, 3).map(Number).map(channel); return .2126 * r + .7152 * g + .0722 * b; };
+    const contrast = (color, background) => { const a = luminance(color), b = luminance(background); return (Math.max(a, b) + .05) / (Math.min(a, b) + .05); };
+    return { mainWidth: main.width, workspaceWidth: workspace.width, tableWidth: table.width, tableTop: table.top, titleSize: parseFloat(title.fontSize), metadataSize: parseFloat(metadata.fontSize), titleContrast: contrast(title.color, 'rgb(255,255,255)'), metadataContrast: contrast(metadata.color, 'rgb(255,255,255)'), stateContrast: contrast(state.color, state.backgroundColor) };
+  });
+  assert.ok(metrics.titleSize >= 16, '桌面任務名稱至少 16px');
+  assert.ok(metrics.metadataSize >= 12, '任務輔助資訊至少 12px');
+  assert.ok(metrics.titleContrast >= 4.5 && metrics.metadataContrast >= 4.5 && metrics.stateContrast >= 4.5, '常用資料文字保有清楚的前後景對比');
+  assert.ok(metrics.mainWidth - metrics.workspaceWidth <= 2, '右側使用完整可用寬度');
+  assert.ok(metrics.workspaceWidth - metrics.tableWidth <= 2, '列表無多層卡片留白');
+  assert.ok(metrics.tableTop < 440, '工具與摘要不占去大半個畫面');
+  console.log('PASS: readable task text/metadata/status contrast, full-width workspace and compact toolbars', JSON.stringify(metrics));
+}
 async function checkBoardWorkflow(page) {
   await page.setViewportSize({ width: 1440, height: 1050 });
   const { project, first, second } = await page.evaluate(async () => {
@@ -415,6 +436,7 @@ try {
   await page.getByRole('button', { name: '進入專案：產品第一版 · 示範', exact: true }).click();
   await page.locator('tbody tr').nth(8).waitFor();
   assert.equal(await page.locator('tbody tr').count(), 9);
+  await checkReadableWorkspace(page);
   mkdirSync('artifacts', { recursive: true });
   await page.screenshot({ path: 'artifacts/desktop-list.png', fullPage: true });
 
