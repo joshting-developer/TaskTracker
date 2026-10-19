@@ -27,11 +27,9 @@
 
 - Account 是登入身分；Workspace 是資料與成員的租戶邊界；Project 屬於一個 Workspace
 - 使用 email＋密碼試作本機登入, 正式可接 OIDC／其他供應商, 不以 Google 群組判斷會員
-- 工作空間管理員可邀請成員與管理狀態, 一般成員可建立／修改 Issue、留言及登記自己的工時
-- 2026-10-19 已確認邀請須有權限。建議將授權定義為帳號在目標 Workspace 的邀請成員權限, 由後端檢查；目前僅 admin 可邀請, 正式角色及 Workspace 是否另有邀請開關／方案資格仍待確認, 詳見 [產品討論紀錄](產品討論紀錄.md)
-- 試作先採工作空間內專案共享, 所有成員能看到團隊的工時；私人專案與 Project Owner／Editor／Viewer 的 ACL 留到下一階段
-- 2026-10-19 新需求已確認專案可個別設定可見成員, Workspace admin 可以查看該空間所有專案。原型目前仍是共享, 尚未實作專案 ACL；建議採空間內可見／私人的模式, 一般成員依專案設定判斷, admin 可見性為空間級例外。修改與管理權限、預設及舊資料遷移待定, 詳見 [兩層權限討論](產品討論紀錄.md#workspace-與專案的兩層權限)
-- 授權實作提案：固定角色映射穩定 permission ID, 業務操作一律經集中 authorize, 再檢查資源的 Workspace／Project 歸屬與作者條件；admin 全專案可見性以該空間 project.readAny 明確提供, 不寫全域 admin bypass。目前仍有直接 admin 判斷, 未完成遷移；契約、遷移順序與驗收見 [產品討論紀錄](產品討論紀錄.md), 正式矩陣待採納
+- 2026-10-19 已確認 Workspace 固定角色為 owner／manager／user：owner 是建立空間者, owner／manager 可操作該空間所有專案；user 必須被加入 Project 並授權, 才能查看或操作。第一版不提供空間內可見途徑, 取代先前 Admin／Member 與空間內可見／私人兩模式提案
+- 邀請須有權限已確認；哪些角色可邀請、可授予哪些角色等細項待定。現有原型仍以 admin／member 運作、空間內專案與工時共享, 新角色與 Project ACL 尚未實作, 既有資料遷移需明定
+- 已採納授權方向：角色映射 permission ID, 業務操作經集中 authorize 檢查資源 Workspace／Project 與操作條件。owner／manager 的全專案操作須展開為明確的範圍權限, 不限於讀取, 也不使用角色名稱全域放行。專案角色、資源作者例外與完整操作矩陣待細定, 詳見 [兩層權限紀錄](產品討論紀錄.md#workspace-與專案的兩層權限)
 - 正式 SaaS 須支援一個 Account 加入多個 Workspace、切換空間、成員停用／撤銷、最後一位管理員保護與帳號復原
 - 每次 API 操作由 session 推導 workspaceId／userId, 不接受前端傳入角色或租戶 ID 作授權
 - 查詢、異動、關聯、工時、通知、重試紀錄都隔離 Workspace, 知道另一團隊的 ID 也不能讀寫
