@@ -12,9 +12,8 @@ export const PRIORITIES = [
 ];
 export const TYPES = [
   { id: 'epic', label: 'Epic' },
-  { id: 'task', label: '任務' },
-  { id: 'feature', label: '功能' },
-  { id: 'bug', label: '問題' },
+  { id: 'task', label: 'Task' },
+  { id: 'bug', label: 'Bug' },
 ];
 export const PROJECT_COLORS = ['#8d83ed', '#64b0a0', '#e5a25c', '#cf82ae', '#71a2d5'];
 export const ISSUE_FIELDS = ['title', 'description', 'state', 'priority', 'type', 'assignee', 'dueDate', 'epicId', 'estimateMinutes', 'parentIssueId', 'relatedIssueIds'];

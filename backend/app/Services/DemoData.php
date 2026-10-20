@@ -48,7 +48,7 @@ class DemoData
                 $api = $create($index ? '檢查 API 健康狀態' : '實作登入 API', ['parentIssueId' => $parent['id'], 'estimateMinutes' => 120, 'state' => 'review']);
                 $ui = $create($index ? '確認手機畫面' : '完成登入畫面', ['parentIssueId' => $parent['id'], 'estimateMinutes' => 90, 'state' => 'todo']);
                 $bug = $create($index ? '修正通知文案' : '修正表單錯誤提示', ['type' => 'bug', 'epicId' => $epic['id'], 'estimateMinutes' => 30, 'priority' => 'high', 'relatedIssueIds' => [$parent['id']], 'dueDate' => now('Asia/Taipei')->subDay()->toDateString()]);
-                $create($index ? '整理發布說明' : '整理操作說明', ['type' => 'feature', 'state' => 'done', 'epicId' => $epic['id'], 'estimateMinutes' => 60]);
+                $create($index ? '整理發布說明' : '整理操作說明', ['type' => 'task', 'state' => 'done', 'epicId' => $epic['id'], 'estimateMinutes' => 60]);
                 $create('討論下一次迭代範圍', ['state' => 'backlog', 'assignee' => '']);
                 foreach ([[$parent, 30, 2], [$api, 90, 1], [$ui, 45, 0]] as [$issue, $minutes, $daysAgo]) {
                     $run('logTime', ['issueId' => $issue['id'], 'workDate' => now('Asia/Taipei')->subDays($daysAgo)->toDateString(), 'minutes' => $minutes, 'note' => 'Seed 示範工時']);

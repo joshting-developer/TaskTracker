@@ -67,7 +67,7 @@ class Fields
             'description' => self::text($input['description'] ?? '', '描述', 6000),
             'state' => self::choice($input['state'] ?? $defaultState, array_column($statuses, 'id'), '狀態'),
             'priority' => self::choice($input['priority'] ?? 'normal', ['urgent', 'high', 'normal', 'low'], '優先級'),
-            'type' => self::choice($input['type'] ?? 'task', ['epic', 'task', 'feature', 'bug'], '類型'),
+            'type' => self::choice($input['type'] ?? 'task', ['epic', 'task', 'bug'], '類型'),
             'assignee' => self::text($input['assignee'] ?? '', '負責人', 60),
             'dueDate' => $dueDate,
             'epicId' => self::text($input['epicId'] ?? '', 'Epic', 100),

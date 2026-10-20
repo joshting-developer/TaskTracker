@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\User;
 use App\Repositories\RecordStore;
 use App\Services\IssueRelationsUpgrade;
+use App\Services\IssueTypesUpgrade;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -41,6 +42,7 @@ class ImportLegacy extends Command
                     }
                 }
                 IssueRelationsUpgrade::run();
+                IssueTypesUpgrade::run();
             });
         } catch (\Throwable $error) {
             $this->error($error->getMessage());

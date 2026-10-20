@@ -74,7 +74,7 @@ async function checkProjectDetails(page, browser) {
 async function checkReadableWorkspace(page) {
   assert.equal(await page.locator('.issue-table th').first().innerText(), '類型');
   assert.equal(await page.locator('.issue-table .type-column svg').count(), 0, '類型直接用文字辨識');
-  for (const type of ['任務', '問題', '功能']) {
+  for (const type of ['Task', 'Bug']) {
     assert.ok(await page.locator('.issue-type-label').filter({ hasText: type }).count() > 0);
   }
 
@@ -153,6 +153,7 @@ async function checkTaskFilters(page, projectUrl) {
   await openTaskFilters(page);
   assert.equal(await page.getByLabel('套用常用篩選', { exact: true }).count(), 0);
   assert.equal(await page.getByRole('button', { name: /儲存常用篩選|存為視圖/ }).count(), 0);
+  assert.deepEqual(await page.getByLabel('篩選類型').locator('option').allTextContents(), ['所有類型', 'Task', 'Bug']);
   await page.getByLabel('篩選類型').selectOption('bug');
   await page.getByLabel('篩選 Epic').selectOption({ label: '會員系統上線' });
   await page.getByLabel('篩選情況').selectOption('open');
@@ -192,6 +193,7 @@ async function checkIssueRelations(page, projectUrl) {
   await page.getByRole('button', { name: '新增任務', exact: false }).first().click();
   editor = page.getByRole('dialog');
   await editor.getByLabel(/任務標題/).fill('付款流程');
+  assert.deepEqual(await editor.getByLabel('類型', { exact: true }).locator('option').allTextContents(), ['Epic', 'Task', 'Bug']);
   await editor.getByLabel('類型', { exact: true }).selectOption('bug');
   await editor.getByLabel('所屬 Epic', { exact: true }).selectOption({ label: 'TEST-2 · 會員系統上線' });
   await editor.getByLabel('預估小時', { exact: true }).fill('2');

@@ -67,6 +67,45 @@ class WorkspaceApiTest extends TestCase
         $this->rpc('addComment', ['id' => $issue['id'], 'expectedRevision' => 2, 'content' => '<script>unsafe</script>'])->assertJsonPath('data.comments.0.content', '<script>unsafe</script>');
     }
 
+    public function test_three_issue_types_and_feature_upgrade_preserve_data_and_revisions(): void
+    {
+        $context = $this->register();
+        $project = $this->project();
+        $epic = $this->issue($project, ['type' => 'epic']);
+        $task = $this->issue($project, ['type' => 'task', 'epicId' => $epic['id']]);
+        $bug = $this->issue($project, ['type' => 'bug', 'epicId' => $epic['id'], 'parentIssueId' => $task['id']]);
+        $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => '不再提供', 'type' => 'feature'])->assertStatus(400);
+        $this->rpc('updateIssue', ['id' => $bug['id'], 'expectedRevision' => 1, 'type' => 'feature'])->assertStatus(400);
+        $this->rpc('updateIssue', ['id' => $task['id'], 'expectedRevision' => 1, 'relatedIssueIds' => [$bug['id']]])->assertOk();
+        $this->rpc('addComment', ['id' => $task['id'], 'expectedRevision' => 2, 'content' => '保留留言'])->assertOk();
+        $this->rpc('logTime', ['issueId' => $task['id'], 'workDate' => '2026-01-01', 'minutes' => 30])->assertOk();
+        $store = (new RecordStore)->forWorkspace($context['workspace']['id']);
+        $legacy = [...$store->require('issues', $task['id']), 'type' => 'feature'];
+        $store->put('issues', $task['id'], $legacy);
+        $other = (new RecordStore)->forWorkspace('another-workspace');
+        $other->put('issues', $task['id'], [...$legacy, 'title' => '另一空間']);
+        $untouched = $store->require('issues', $bug['id']);
+        $time = $store->all('timeEntries');
+        $migration = require database_path('migrations/2026_10_20_000001_simplify_issue_types.php');
+        $migration->up();
+        $converted = $store->require('issues', $task['id']);
+        $this->assertSame('task', $converted['type']);
+        $this->assertSame($legacy['revision'] + 1, $converted['revision']);
+        $this->assertSame($legacy['history'], array_slice($converted['history'], 0, count($legacy['history'])));
+        $this->assertSame([['field' => 'type', 'before' => 'feature', 'after' => 'task']], $converted['history'][count($legacy['history'])]['changes']);
+        foreach (array_diff(array_keys($legacy), ['type', 'revision', 'updatedAt', 'history']) as $field) {
+            $this->assertSame($legacy[$field], $converted[$field], $field.' 不變');
+        }
+        $this->assertSame($untouched, $store->require('issues', $bug['id']));
+        $this->assertSame($time, $store->all('timeEntries'));
+        $this->assertSame('task', $other->require('issues', $task['id'])['type']);
+        $this->assertSame('另一空間', $other->require('issues', $task['id'])['title']);
+        $migration->up();
+        $this->assertSame($converted, $store->require('issues', $task['id']));
+        $this->rpc('updateIssue', ['id' => $task['id'], 'expectedRevision' => $legacy['revision'], 'title' => '舊表單'])->assertStatus(409);
+        $this->rpc('updateIssue', ['id' => $task['id'], 'expectedRevision' => $converted['revision'], 'title' => '轉換後可編輯'])->assertOk();
+    }
+
     public function test_project_details_lead_permissions_revisions_and_tenant_boundaries(): void
     {
         $owner = $this->register();

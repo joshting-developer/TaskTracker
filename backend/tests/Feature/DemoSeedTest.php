@@ -25,6 +25,7 @@ class DemoSeedTest extends TestCase
         $this->assertSame(['first', 'second'], array_column($tenant->all('projects'), 'name'));
         $this->assertCount(0, $tenant->all('savedViews'));
         $this->assertCount(14, $tenant->all('issues'));
+        $this->assertSame([], array_diff(array_column($tenant->all('issues'), 'type'), ['epic', 'task', 'bug']));
         $this->assertCount(6, $tenant->all('timeEntries'));
         $this->assertSame(4, count(array_filter($tenant->all('issues'), fn ($issue) => $issue['parentIssueId'] !== '')));
         $this->assertSame(4, count(array_filter($tenant->all('issues'), fn ($issue) => $issue['relatedIssueIds'] !== [])));

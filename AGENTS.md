@@ -38,6 +38,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - `backend/app/Repositories/RecordStore.php` 由伺服器限定 Workspace namespace；`AccountService` 從 Laravel session 推導操作者與空間, 不信任前端身分
 - 租戶間隔離, 空間內專案及工時暫沿用共享原型；`WorkspacePermissions` 集中權限, 但完整 Project ACL／預設角色矩陣尚未落地, 不宣稱符合最終授權規格
 - 舊 Node API／測試由 PHP 取代, 原 SQLite 與舊 Docker volume 保留；匯入指令只接受空目標、不覆蓋來源, 保留作者歷史, 舊帳號登入後升級雜湊
+- 2026-10-20 類型固定 Epic／Task／Bug, feature 透過 migration／匯入共用升級器轉 task 並保留歷史與 revision 保護；自訂類型僅記構想, 不提前實作
 - 狀態用固定 ID＋category 判斷完成, Epic 估時／工時只加總子項目。2026-10-20 改 parentIssueId 一層子任務與 relatedIssueIds 雙向關聯, 移除前置／DAG／結案阻擋；子項跟父項 Epic, 狀態獨立, 舊 blockedBy 透過 migration 轉關聯並保留歷史
 - 工時只能修改自己有效紀錄, 作者限制不因管理者而略過；每人每日最多 24 小時, 工作日採 Asia/Taipei
 - 2026-10-20 使用者要求移除視圖／常用篩選保存：介面與三個 RPC 停用, getWorkspace 不回傳, 舊紀錄原地保留不使用；即時搜尋／篩選保留。首頁個人卡片篩選小清單只記構想, 未要求實作前不製作
