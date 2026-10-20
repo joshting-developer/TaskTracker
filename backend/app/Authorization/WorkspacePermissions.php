@@ -8,7 +8,7 @@ use App\Domain\DomainError;
 class WorkspacePermissions
 {
     private const MEMBER = ['project.read', 'project.create', 'issue.write', 'timeEntry.writeOwn', 'savedView.writeOwn'];
-    private const MANAGE = ['workspace.invite', 'project.statuses.update', 'notification.readTeam', 'smtp.verify'];
+    private const MANAGE = ['workspace.invite', 'project.update', 'project.statuses.update', 'notification.readTeam', 'smtp.verify'];
 
     public static function resolve(string $roleId): array
     {

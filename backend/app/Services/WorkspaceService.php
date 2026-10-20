@@ -28,6 +28,7 @@ class WorkspaceService
             'createProject', 'loadDemo' => 'project.create',
             'createIssue', 'updateIssue', 'addComment' => 'issue.write',
             'updateStatuses' => 'project.statuses.update',
+            'updateProject' => 'project.update',
             'logTime', 'updateTime', 'voidTime' => 'timeEntry.writeOwn',
             'createSavedView', 'updateSavedView', 'deleteSavedView' => 'savedView.writeOwn',
             default => DomainError::fail('NOT_FOUND', '找不到這個操作'),
@@ -78,9 +79,38 @@ class WorkspaceService
         if (!preg_match('/^[A-Z][A-Z0-9]{1,7}$/D', $code)) DomainError::fail('INVALID_INPUT', '專案代碼需為 2–8 位英文字母或數字, 並以英文字母開頭');
         $projects = $this->store->all('projects');
         if (in_array($code, array_column($projects, 'code'), true)) DomainError::fail('DUPLICATE_CODE', '這個專案代碼已使用');
-        $project = ['id' => $this->id(), 'name' => $name, 'code' => $code, 'description' => Fields::text($input['description'] ?? '', '專案說明', 500), 'color' => ['#8d83ed', '#64b0a0', '#e5a25c', '#cf82ae', '#71a2d5'][count($projects) % 5], 'nextNumber' => 1, 'revision' => 1, 'statuses' => Fields::STATES, 'settingsHistory' => [], 'createdAt' => $this->now()];
+        $leadId = $this->projectLead($input['leadId'] ?? $this->context['user']['id']);
+        $project = ['id' => $this->id(), 'name' => $name, 'code' => $code, 'leadId' => $leadId, 'description' => Fields::text($input['description'] ?? '', '專案說明', 500), 'color' => ['#8d83ed', '#64b0a0', '#e5a25c', '#cf82ae', '#71a2d5'][count($projects) % 5], 'nextNumber' => 1, 'revision' => 1, 'statuses' => Fields::STATES, 'settingsHistory' => [], 'createdAt' => $this->now()];
         $this->store->put('projects', $project['id'], $project);
         return $project;
+    }
+
+    private function projectLead(mixed $value): string
+    {
+        $id = Fields::text($value, '專案負責人', 100);
+        if ($id !== '') {
+            $member = $this->store->get('members', $id);
+            if (!$member || !empty($member['disabledAt'])) DomainError::fail('INVALID_INPUT', '專案負責人必須是目前工作空間的有效成員');
+        }
+        return $id;
+    }
+
+    private function updateProject(array $input): array
+    {
+        $project = $this->store->require('projects', $input['id'] ?? '');
+        $this->revision($project, $input, '專案');
+        if (isset($input['code']) && $input['code'] !== $project['code']) DomainError::fail('INVALID_INPUT', '專案代碼建立後不可修改');
+        $fields = [
+            'name' => Fields::text($input['name'] ?? $project['name'], '專案名稱', 60, true),
+            'description' => Fields::text($input['description'] ?? $project['description'] ?? '', '專案介紹', 500),
+            'leadId' => $this->projectLead($input['leadId'] ?? $project['leadId'] ?? ''),
+        ];
+        $changes = [];
+        foreach ($fields as $field => $value) if (($project[$field] ?? '') !== $value) $changes[] = ['field' => $field, 'before' => $project[$field] ?? '', 'after' => $value];
+        if (!$changes) return $project;
+        $next = [...$project, ...$fields, 'revision' => $project['revision'] + 1, 'updatedAt' => $this->now(), 'detailsHistory' => [...($project['detailsHistory'] ?? []), ['actor' => $this->context['user']['name'], 'at' => $this->now(), 'changes' => $changes]]];
+        $this->store->put('projects', $next['id'], $next);
+        return $next;
     }
 
     private function createIssue(array $input): array

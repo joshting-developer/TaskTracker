@@ -67,6 +67,34 @@ class WorkspaceApiTest extends TestCase
         $this->rpc('addComment', ['id' => $issue['id'], 'expectedRevision' => 2, 'content' => '<script>unsafe</script>'])->assertJsonPath('data.comments.0.content', '<script>unsafe</script>');
     }
 
+    public function test_project_details_lead_permissions_revisions_and_tenant_boundaries(): void
+    {
+        $owner = $this->register();
+        $project = $this->project();
+        $this->assertSame($owner['user']['id'], $project['leadId']);
+        $issue = $this->issue($project);
+        $change = ['id' => $project['id'], 'expectedRevision' => 1, 'name' => '長期維護專案', 'description' => '負責產品維護', 'leadId' => '', 'requestId' => 'project-update'];
+        $this->rpc('updateProject', $change)->assertOk()->assertJsonPath('data.revision', 2)->assertJsonPath('data.leadId', '');
+        $this->rpc('updateProject', $change)->assertJsonPath('data.revision', 2);
+        $this->rpc('updateProject', ['id' => $project['id'], 'expectedRevision' => 1, 'name' => '過期修改'])->assertStatus(409);
+        $this->rpc('updateProject', ['id' => $project['id'], 'expectedRevision' => 2, 'leadId' => 'other-member'])->assertStatus(400);
+        $this->rpc('updateProject', ['id' => $project['id'], 'expectedRevision' => 2, 'code' => 'NEW'])->assertStatus(400);
+        $invite = $this->rpc('inviteMember', ['email' => 'lead@example.test'])->assertOk()->json('data');
+        Auth::logout();
+        $member = $this->postJson('/api/auth/register', ['name' => 'Lead', 'email' => 'lead@example.test', 'password' => 'test-local-password', 'inviteToken' => $invite['token']])->assertOk()->json('data');
+        $this->postJson('/api/auth/login', ['email' => 'josh@example.test', 'password' => 'test-local-password'])->assertOk();
+        $this->rpc('updateProject', ['id' => $project['id'], 'expectedRevision' => 2, 'leadId' => $member['user']['id']])->assertOk()->assertJsonPath('data.revision', 3);
+        $this->postJson('/api/auth/login', ['email' => 'lead@example.test', 'password' => 'test-local-password'])->assertOk();
+        $this->rpc('updateProject', ['id' => $project['id'], 'expectedRevision' => 3, 'description' => '負責人也不能繞過權限'])->assertStatus(403);
+        $this->register('other@example.test');
+        $this->rpc('updateProject', ['id' => $project['id'], 'expectedRevision' => 3, 'name' => '越權'])->assertStatus(404);
+        $this->rpc('createProject', ['name' => '別的空間', 'code' => 'OTHER', 'leadId' => $owner['user']['id']])->assertStatus(400);
+        $this->postJson('/api/auth/login', ['email' => 'josh@example.test', 'password' => 'test-local-password'])->assertOk();
+        $data = $this->rpc('getWorkspace')->assertOk()->json('data');
+        $this->assertSame($issue, $data['issues'][0]);
+        $this->assertSame('TEST', $data['projects'][0]['code']);
+    }
+
     public function test_epic_status_categories_and_time_rules(): void
     {
         $this->register();
