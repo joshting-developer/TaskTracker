@@ -145,3 +145,6 @@
   .visual-board .board-tools { padding-left: 14px; padding-right: 14px; }
   .data-workspace .board-scroll { max-height: 65vh; }
 }
+
+.context-parent, .context-related { display: inline-flex; align-items: center; gap: 5px; color: #5844a0; font-size: 12px; padding: 0; text-align: left; overflow-wrap: anywhere; }
+.detail-spent { margin-top: 16px; font-size: 13px; color: var(--text-secondary); }

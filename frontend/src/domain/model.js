@@ -17,8 +17,8 @@ export const TYPES = [
   { id: 'bug', label: '問題' },
 ];
 export const PROJECT_COLORS = ['#8d83ed', '#64b0a0', '#e5a25c', '#cf82ae', '#71a2d5'];
-export const ISSUE_FIELDS = ['title', 'description', 'state', 'priority', 'type', 'assignee', 'dueDate', 'epicId', 'estimateMinutes', 'blockedBy'];
-export const FIELD_LABELS = { title: '標題', description: '描述', state: '狀態', priority: '優先級', type: '類型', assignee: '負責人', dueDate: '到期日', epicId: 'Epic', estimateMinutes: '預估分鐘', blockedBy: '前置任務' };
+export const ISSUE_FIELDS = ['title', 'description', 'state', 'priority', 'type', 'assignee', 'dueDate', 'epicId', 'estimateMinutes', 'parentIssueId', 'relatedIssueIds'];
+export const FIELD_LABELS = { title: '標題', description: '描述', state: '狀態', priority: '優先級', type: '類型', assignee: '負責人', dueDate: '到期日', epicId: 'Epic', estimateMinutes: '預估分鐘', parentIssueId: '父任務', relatedIssueIds: '關聯任務', blockedBy: '舊前置任務（已停用）' };
 
 export function fail(code, message) {
   throw Object.assign(new Error(message), { code });
@@ -50,7 +50,8 @@ export function validateIssue(input, statuses = STATES) {
     dueDate,
     epicId: textField(input.epicId ?? '', 'Epic', 100),
     estimateMinutes: integer(input.estimateMinutes ?? 0, '預估分鐘', 0, 525600),
-    blockedBy: idList(input.blockedBy ?? [], '前置任務', 20),
+    parentIssueId: textField(input.parentIssueId ?? '', '父任務', 100),
+    relatedIssueIds: idList(input.relatedIssueIds ?? [], '關聯任務', 200),
   };
 }
 export function idList(value, label, max) {
@@ -58,9 +59,6 @@ export function idList(value, label, max) {
   const ids = value.map((id) => textField(id, label, 100, true));
   if (new Set(ids).size !== ids.length) fail('INVALID_INPUT', `${label}不可重複`);
   return ids.sort();
-}
-export function liveBlockers(issue, issues, project) {
-  return (issue.blockedBy || []).map((id) => issues.find((item) => item.id === id)).filter((item) => item && categoryFor(item, project) !== 'done');
 }
 export function integer(value, label, min, max) {
   if (!Number.isSafeInteger(value) || value < min || value > max) fail('INVALID_INPUT', `${label}需為 ${min}–${max} 的整數`);

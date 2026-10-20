@@ -1,9 +1,8 @@
-import { categoryFor, fail, liveBlockers, PRIORITIES, statusesFor, textField } from './model.js';
+import { categoryFor, fail, PRIORITIES, statusesFor, textField } from './model.js';
 
 export const VIEW_DEFAULTS = { search: '', scope: 'all', state: '', priority: '', assignee: '', epicId: '', type: '', condition: '', sort: 'updated', view: 'list' };
 export const CONDITIONS = [
   { id: '', label: '所有情況' }, { id: 'open', label: '尚未結案' },
-  { id: 'blocked', label: '被阻擋' }, { id: 'review', label: '依賴需確認' },
   { id: 'overdue', label: '已逾期' }, { id: 'unassigned', label: '尚未指派' },
 ];
 export function normalizeFilters(input = {}) {
@@ -17,6 +16,7 @@ export function normalizeFilters(input = {}) {
 }
 export function missingFilters(filters, project, members, issues) {
   const messages = [];
+  if (['blocked', 'review'].includes(filters.condition)) messages.push('前置任務篩選已停用, 請改選情況並更新視圖');
   if (filters.state && !statusesFor(project).some((state) => state.id === filters.state)) messages.push('狀態已不存在');
   if (filters.assignee && !members.some((member) => member.id === filters.assignee)) messages.push('成員已不存在');
   if (filters.epicId && filters.epicId !== 'unlinked' && !issues.some((issue) => issue.id === filters.epicId && issue.type === 'epic' && issue.projectId === project.id)) messages.push('Epic 已不存在');
@@ -40,8 +40,7 @@ export function filterIssues(issues, filters, { project, userId, members, today 
     if (filters.type && issue.type !== filters.type) return false;
     if (filters.epicId && (filters.epicId === 'unlinked' ? Boolean(issue.epicId) : issue.epicId !== filters.epicId)) return false;
     if (filters.condition === 'open' && closed) return false;
-    if (filters.condition === 'blocked' && (closed || !liveBlockers(issue, issues, project).length)) return false;
-    if (filters.condition === 'review' && (category !== 'done' || !liveBlockers(issue, issues, project).length)) return false;
+    if (!CONDITIONS.some(condition => condition.id === filters.condition)) return false;
     if (filters.condition === 'overdue' && (closed || !issue.dueDate || issue.dueDate >= today)) return false;
     if (filters.condition === 'unassigned' && issue.assignee) return false;
     const name = members.find((member) => member.id === issue.assignee)?.name || issue.assignee;
