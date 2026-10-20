@@ -29,6 +29,7 @@ class WorkspaceService
             'createIssue', 'updateIssue', 'addComment' => 'issue.write',
             'updateStatuses' => 'project.statuses.update',
             'updateProject' => 'project.update',
+            'createBoard', 'updateBoard', 'archiveBoard' => 'board.manage',
             'logTime', 'updateTime', 'voidTime' => 'timeEntry.writeOwn',
             default => DomainError::fail('NOT_FOUND', '找不到這個操作'),
         };
@@ -64,11 +65,16 @@ class WorkspaceService
         $userId = $this->context['user']['id'];
         return [
             'projects' => $this->store->all('projects'), 'issues' => $issues,
+            'boards' => (new ProjectBoards($this->store, $this->context))->listing(),
             'members' => $this->store->all('members'), 'timeEntries' => $this->store->all('timeEntries'),
             'notifications' => array_values(array_filter($this->store->all('notifications'), fn ($n) => in_array('notification.readTeam', $this->context['permissions'], true) || $n['recipientId'] === $userId)),
             'meta' => ['mode' => 'local', 'actor' => $this->context['user']['name'], 'userId' => $userId, 'role' => $this->context['role'], 'permissions' => $this->context['permissions'], 'workspace' => $this->context['workspace'], 'singleUser' => false],
         ];
     }
+
+    private function createBoard(array $input): array { return (new ProjectBoards($this->store, $this->context))->create($input); }
+    private function updateBoard(array $input): array { return (new ProjectBoards($this->store, $this->context))->update($input); }
+    private function archiveBoard(array $input): array { return (new ProjectBoards($this->store, $this->context))->archive($input); }
 
     private function createProject(array $input): array
     {
@@ -120,6 +126,9 @@ class WorkspaceService
         $this->store->put('projects', $project['id'], [...$project, 'nextNumber' => $project['nextNumber'] + 1]);
         $this->store->put('issues', $issue['id'], $issue);
         $this->syncRelations($issue, []);
+        if (!empty($input['boardId']) && $input['boardId'] !== 'default') {
+            (new ProjectBoards($this->store, $this->context))->includeCreatedIssue(Fields::text($input['boardId'], '看板', 100, true), $issue);
+        }
         $this->notify($issue, '指派任務', $this->context['user']['name'].' 將任務指派給你', $issue['assignee']);
         return $issue;
     }
