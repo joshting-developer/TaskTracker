@@ -13,7 +13,6 @@ class Fields
 
     public const ISSUE_FIELDS = ['title', 'description', 'state', 'priority', 'type', 'assignee', 'dueDate', 'epicId', 'estimateMinutes', 'parentIssueId', 'relatedIssueIds'];
 
-    public const FILTERS = ['search' => '', 'scope' => 'all', 'state' => '', 'priority' => '', 'assignee' => '', 'epicId' => '', 'type' => '', 'condition' => '', 'sort' => 'updated', 'view' => 'list'];
 
     public static function text(mixed $value, string $label, int $max, bool $required = false): string
     {

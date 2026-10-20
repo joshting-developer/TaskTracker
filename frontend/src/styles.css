@@ -215,26 +215,15 @@ dialog{border:0;padding:0;color:inherit}dialog::backdrop{background:#19162255;ba
 .issue-card .issue-context { margin: 13px 0 6px; font-size: 9px; }
 .detail-spent { display: flex; align-items: center; gap: 6px; color: #a290b3; }
 
-/* Project saved views */
-.view-adjusted { color: #b89e73; font-size: 10px; }
 .advanced-filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 0 21px 16px; }
 .advanced-filters label { display: flex; align-items: center; gap: 7px; font-size: 10px; color: #a493b2; }
 .advanced-filters select { color: #9583a8; background: #fff; border: 1px solid #e5ddec; border-radius: 5px; padding: 7px 8px; font-size: 10px; max-width: 175px; text-overflow: ellipsis; }
 .advanced-filters .text-button { font-size: 10px; margin-left: auto; padding: 0; }
 .filter-warning { padding: 12px 18px; background: #fdf5e8; color: #b09160; font-size: 11px; line-height: 1.9; border-top: 1px solid #f1e5cd; }
-.saved-view-dialog { border: 1px solid #e5dfee; border-radius: 12px; width: min(480px, calc(100% - 30px)); max-height: 90vh; padding: 27px; color: #494253; }
-.saved-view-dialog::backdrop { background: #24203175; }
-.saved-view-dialog form { margin-top: 22px; }
-.saved-view-dialog .error-box { margin-top: 16px; }
-.saved-view-dialog .section-title { margin-bottom: 15px; }
-.saved-view-dialog .subtle { font-size: 12px; }
-.saved-view-dialog .button.primary { width: 100%; }
-.view-share-note { color: #a492b4; font-size: 11px; line-height: 1.9; margin: 15px 0 23px; }
 @media (max-width: 700px) {
   .advanced-filters { padding: 0 15px 15px; gap: 10px; }
   .advanced-filters label { flex: 1 1 125px; min-width: 0; }
   .advanced-filters select { flex: 1; min-width: 0; max-width: none; }
-  .saved-view-dialog { padding: 22px; }
 }
 
 /* Vuetify 保留既有看板佈局, 表單與新元件採共用主題 */

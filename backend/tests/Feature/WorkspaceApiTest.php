@@ -149,7 +149,6 @@ class WorkspaceApiTest extends TestCase
         $this->rpc('updateIssue', ['id' => $child['id'], 'expectedRevision' => 4, 'state' => 'done'])->assertOk();
         $this->rpc('updateIssue', ['id' => $child['id'], 'expectedRevision' => 5, 'state' => 'todo'])->assertOk();
         $this->rpc('updateIssue', ['id' => $child['id'], 'expectedRevision' => 6, 'blockedBy' => [$parent['id']]])->assertStatus(400);
-        $this->rpc('createSavedView', ['projectId' => $project['id'], 'name' => '舊依賴篩選', 'filters' => ['condition' => 'blocked']])->assertStatus(400);
         $this->rpc('logTime', ['issueId' => $parent['id'], 'workDate' => '2026-01-01', 'minutes' => 30])->assertOk();
         $this->rpc('logTime', ['issueId' => $child['id'], 'workDate' => '2026-01-01', 'minutes' => 60])->assertOk();
         $this->register('other@example.test');
@@ -188,20 +187,15 @@ class WorkspaceApiTest extends TestCase
         $this->rpc('updateIssue', ['id' => $second['id'], 'expectedRevision' => 2, 'state' => 'done'])->assertOk();
     }
 
-    public function test_invite_member_author_permissions_private_views_and_revocation(): void
+    public function test_invite_member_author_permissions_and_revocation(): void
     {
         $owner = $this->register();
         $project = $this->project();
         $task = $this->issue($project);
-        $private = $this->rpc('createSavedView', ['projectId' => $project['id'], 'name' => '私有', 'filters' => []])->assertOk()->json('data');
-        $team = $this->rpc('createSavedView', ['projectId' => $project['id'], 'name' => '共用', 'visibility' => 'team', 'filters' => []])->assertOk()->json('data');
         $time = $this->rpc('logTime', ['issueId' => $task['id'], 'workDate' => '2026-01-01', 'minutes' => 30])->assertOk()->json('data');
         $invite = $this->rpc('inviteMember', ['email' => 'mei@example.test'])->assertOk()->json('data');
         Auth::logout();
         $member = $this->postJson('/api/auth/register', ['name' => 'Mei', 'email' => 'mei@example.test', 'password' => 'test-local-password', 'inviteToken' => $invite['token']])->assertOk()->json('data');
-        $this->rpc('getWorkspace')->assertJsonCount(1, 'data.savedViews')->assertJsonPath('data.savedViews.0.id', $team['id']);
-        $this->rpc('updateSavedView', ['id' => $team['id'], 'expectedRevision' => 1, 'name' => '覆寫', 'filters' => []])->assertStatus(404);
-        $this->rpc('deleteSavedView', ['id' => $private['id'], 'expectedRevision' => 1])->assertStatus(404);
         $this->rpc('voidTime', ['id' => $time['id'], 'expectedRevision' => 1])->assertStatus(403);
         $this->rpc('inviteMember', ['email' => 'new@example.test'])->assertStatus(403);
         $this->rpc('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => Fields::STATES])->assertStatus(403);
@@ -210,6 +204,25 @@ class WorkspaceApiTest extends TestCase
         $this->rpc('createIssue', $retry)->assertOk();
         DB::table('records')->where('kind', 'w:'.$owner['workspace']['id'].':members')->where('id', $member['user']['id'])->delete();
         $this->rpc('createIssue', $retry)->assertStatus(401);
+    }
+
+    public function test_saved_views_are_unavailable_and_existing_records_are_preserved(): void
+    {
+        $context = $this->register();
+        $project = $this->project();
+        $store = (new RecordStore)->forWorkspace($context['workspace']['id']);
+        $legacy = ['id' => 'old-view', 'userId' => $context['user']['id'], 'projectId' => $project['id'], 'name' => '保留的舊視圖', 'visibility' => 'team', 'filters' => ['condition' => 'open'], 'revision' => 1];
+        $store->put('savedViews', $legacy['id'], $legacy);
+        // 即使舊操作已留有去重結果, 停用後也不可從快取重播成功回應
+        $input = ['id' => $legacy['id'], 'expectedRevision' => 1, 'requestId' => 'retired-view'];
+        $store->put('requests', $context['user']['id'].':retired-view', ['signature' => 'old-signature', 'result' => $legacy]);
+        foreach (['createSavedView', 'updateSavedView', 'deleteSavedView'] as $operation) {
+            $this->rpc($operation, $input)->assertStatus(404)->assertJsonPath('error.code', 'NOT_FOUND');
+        }
+        $data = $this->rpc('getWorkspace')->assertOk()->json('data');
+        $this->assertArrayNotHasKey('savedViews', $data);
+        $this->assertNotContains('savedView.writeOwn', $data['meta']['permissions']);
+        $this->assertSame($legacy, $store->require('savedViews', $legacy['id']));
     }
 
     public function test_invalid_input_boundary_demo_and_unknown_role_deny(): void

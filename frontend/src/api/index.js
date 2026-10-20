@@ -40,7 +40,4 @@ export const api = {
   inviteMember: (input) => callApi('inviteMember', input),
   smtpStatus: () => callApi('smtpStatus'),
   verifySmtp: () => callApi('verifySmtp'),
-  createSavedView: (input) => callApi('createSavedView', input),
-  updateSavedView: (input) => callApi('updateSavedView', input),
-  deleteSavedView: (input) => callApi('deleteSavedView', input),
 };

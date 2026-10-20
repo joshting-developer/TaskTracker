@@ -30,7 +30,6 @@ class WorkspaceService
             'updateStatuses' => 'project.statuses.update',
             'updateProject' => 'project.update',
             'logTime', 'updateTime', 'voidTime' => 'timeEntry.writeOwn',
-            'createSavedView', 'updateSavedView', 'deleteSavedView' => 'savedView.writeOwn',
             default => DomainError::fail('NOT_FOUND', '找不到這個操作'),
         };
         Permissions::authorize($this->context, $permission);
@@ -67,7 +66,6 @@ class WorkspaceService
             'projects' => $this->store->all('projects'), 'issues' => $issues,
             'members' => $this->store->all('members'), 'timeEntries' => $this->store->all('timeEntries'),
             'notifications' => array_values(array_filter($this->store->all('notifications'), fn ($n) => in_array('notification.readTeam', $this->context['permissions'], true) || $n['recipientId'] === $userId)),
-            'savedViews' => array_values(array_filter($this->store->all('savedViews'), fn ($v) => empty($v['archivedAt']) && ($v['userId'] === $userId || $v['visibility'] === 'team'))),
             'meta' => ['mode' => 'local', 'actor' => $this->context['user']['name'], 'userId' => $userId, 'role' => $this->context['role'], 'permissions' => $this->context['permissions'], 'workspace' => $this->context['workspace'], 'singleUser' => false],
         ];
     }
@@ -287,54 +285,6 @@ class WorkspaceService
         return $next;
     }
 
-    private function viewFields(array $input, string $projectId): array
-    {
-        $project = $this->store->require('projects', $projectId);
-        $filters = $input['filters'] ?? [];
-        if (!is_array($filters) || array_diff(array_keys($filters), array_keys(Fields::FILTERS))) DomainError::fail('INVALID_INPUT', '視圖含不支援的篩選欄位');
-        $result = [];
-        foreach (Fields::FILTERS as $key => $default) $result[$key] = Fields::text($filters[$key] ?? $default, '篩選條件', $key === 'search' ? 180 : 100);
-        foreach (['scope' => ['all', 'mine', 'done'], 'priority' => ['', 'urgent', 'high', 'normal', 'low'], 'type' => ['', 'task', 'bug', 'feature'], 'condition' => ['', 'open', 'overdue', 'unassigned'], 'sort' => ['updated', 'priority', 'due'], 'view' => ['list', 'board']] as $key => $allowed) Fields::choice($result[$key], $allowed, '視圖篩選');
-        if ($result['state'] && !in_array($result['state'], array_column($project['statuses'] ?? Fields::STATES, 'id'), true)) DomainError::fail('INVALID_INPUT', '篩選的狀態不存在');
-        if ($result['assignee'] && !$this->store->get('members', $result['assignee'])) DomainError::fail('INVALID_INPUT', '篩選的成員不存在');
-        if ($result['epicId'] && $result['epicId'] !== 'unlinked') {
-            $epic = $this->store->get('issues', $result['epicId']);
-            if (!$epic || $epic['type'] !== 'epic' || $epic['projectId'] !== $projectId) DomainError::fail('INVALID_INPUT', '篩選的 Epic 不存在');
-        }
-        return ['name' => Fields::text($input['name'] ?? null, '視圖名稱', 60, true), 'visibility' => Fields::choice($input['visibility'] ?? 'private', ['private', 'team'], '分享範圍'), 'filters' => $result];
-    }
-
-    private function createSavedView(array $input): array
-    {
-        $projectId = Fields::text($input['projectId'] ?? null, '專案', 100, true);
-        $view = ['id' => $this->id(), 'projectId' => $projectId, 'userId' => $this->context['user']['id'], ...$this->viewFields($input, $projectId), 'revision' => 1, 'createdAt' => $this->now(), 'updatedAt' => $this->now()];
-        $this->store->put('savedViews', $view['id'], $view);
-        return $view;
-    }
-
-    private function ownedView(array $input): array
-    {
-        $view = $this->store->require('savedViews', $input['id'] ?? '');
-        if ($view['userId'] !== $this->context['user']['id'] || !empty($view['archivedAt'])) DomainError::fail('NOT_FOUND', '找不到可修改的視圖');
-        $this->revision($view, $input, '視圖');
-        return $view;
-    }
-
-    private function updateSavedView(array $input): array
-    {
-        $current = $this->ownedView($input);
-        $view = [...$current, ...$this->viewFields($input, $current['projectId']), 'revision' => $current['revision'] + 1, 'updatedAt' => $this->now()];
-        $this->store->put('savedViews', $view['id'], $view);
-        return $view;
-    }
-
-    private function deleteSavedView(array $input): array
-    {
-        $current = $this->ownedView($input);
-        $this->store->put('savedViews', $current['id'], [...$current, 'archivedAt' => $this->now(), 'updatedAt' => $this->now(), 'revision' => $current['revision'] + 1]);
-        return ['id' => $current['id']];
-    }
-
     private function loadDemo(array $input): array
     {
         if (in_array('DEMO', array_column($this->store->all('projects'), 'code'), true)) DomainError::fail('DEMO_EXISTS', '示範專案已存在, 不會重複載入');
@@ -343,7 +293,7 @@ class WorkspaceService
             ['整理第一版需求與使用流程', 'done', 'high', 'task'], ['建立專案與任務資料結構', 'done', 'normal', 'task'],
             ['設計任務清單的搜尋與篩選', 'in_progress', 'high', 'feature'], ['讓看板拖曳與任務狀態同步', 'in_progress', 'normal', 'feature'],
             ['手機上的表單需要更好操作', 'todo', 'high', 'bug'], ['補上任務留言與異動紀錄', 'todo', 'normal', 'feature'],
-            ['確認 Laravel API 部署方式', 'todo', 'normal', 'task'], ['討論下一版的常用視圖', 'backlog', 'low', 'feature'], ['研究適合團隊的登入流程', 'backlog', 'normal', 'task'],
+            ['確認 Laravel API 部署方式', 'todo', 'normal', 'task'], ['討論下一次迭代範圍', 'backlog', 'low', 'feature'], ['研究適合團隊的登入流程', 'backlog', 'normal', 'task'],
         ];
         foreach ($rows as $index => [$title, $state, $priority, $type]) $this->createIssue(['projectId' => $project['id'], 'title' => $title, 'state' => $state, 'priority' => $priority, 'type' => $type, 'assignee' => in_array($index, [4, 6, 7, 8], true) ? '' : $this->context['user']['id']]);
         return ['projectId' => $project['id']];

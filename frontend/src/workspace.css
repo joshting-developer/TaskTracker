@@ -35,12 +35,6 @@
 .data-workspace .task-workspace { border: 0; border-top: 1px solid var(--border); border-radius: 0; box-shadow: none; min-height: 0; overflow: hidden; }
 .data-workspace .page-footer { display: none; }
 
-.saved-filter-tools { flex: 1 1 100%; min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; padding-top: 10px; border-top: 1px solid var(--border); }
-.saved-filter-picker { max-width: 100%; }
-.saved-filter-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; }
-.saved-filter-actions .text-button { display: inline-flex; align-items: center; gap: 5px; }
-.saved-filter-actions .danger-text { color: #a43142; }
-.view-adjusted { font-size: 12px; color: var(--text-secondary); }
 .filter-toolbar { padding: 10px 24px; border-bottom: 1px solid var(--border); gap: 12px; }
 .search-field { width: auto; flex: 1; min-width: 200px; height: 38px; border-color: #bfc6d2; background: #fff; color: #626b7c; }
 .search-field input { font-size: 14px; color: var(--text-primary); }

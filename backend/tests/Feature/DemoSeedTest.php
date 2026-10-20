@@ -23,6 +23,7 @@ class DemoSeedTest extends TestCase
         $seed->seed(password: 'seed-test-password');
         $tenant = $store->forWorkspace(DemoData::WORKSPACE_ID);
         $this->assertSame(['first', 'second'], array_column($tenant->all('projects'), 'name'));
+        $this->assertCount(0, $tenant->all('savedViews'));
         $this->assertCount(14, $tenant->all('issues'));
         $this->assertCount(6, $tenant->all('timeEntries'));
         $this->assertSame(4, count(array_filter($tenant->all('issues'), fn ($issue) => $issue['parentIssueId'] !== '')));

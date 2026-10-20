@@ -55,7 +55,6 @@ class DemoData
                 }
                 $latest = $tenant->require('issues', $bug['id']);
                 $run('addComment', ['id' => $bug['id'], 'expectedRevision' => $latest['revision'], 'content' => '已補上重現步驟, 請協助確認']);
-                $run('createSavedView', ['projectId' => $project['id'], 'name' => '尚未結案', 'visibility' => 'team', 'filters' => ['condition' => 'open']]);
             }
             $store->put('demoSeeds', self::WORKSPACE_ID, ['id' => self::WORKSPACE_ID, 'version' => 1, 'seededAt' => now()->utc()->toISOString()]);
             return ['created' => true, 'workspaceId' => self::WORKSPACE_ID];
