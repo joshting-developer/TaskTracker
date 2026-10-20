@@ -57,6 +57,7 @@
 .issue-table th { font-size: 13px; font-weight: 600; color: #4e586b; background: #f8f9fb; padding-top: 10px; padding-bottom: 10px; }
 .issue-table td { font-size: 14px; color: var(--text-primary); padding-top: 12px; padding-bottom: 12px; height: auto; border-bottom: 1px solid #e6e8ee; }
 .issue-table .type-column { padding-left: 24px; }
+.task-title:hover { color: var(--accent); }
 .task-title { font-size: 16px; font-weight: 600; color: #242936; line-height: 1.55; }
 .task-subline { font-size: 12px; color: var(--text-secondary); gap: 8px; margin-top: 4px; }
 .identifier, .task-subline .identifier { font-size: 12px; color: #596276; }
@@ -107,7 +108,7 @@
 .panel-header .eyebrow, .panel-footer .subtle { font-size: 12px; color: var(--text-secondary); }
 .form-intro { line-height: 1.6; }
 .error-box, .success-box { font-size: 14px; }
-.project-card > p, .project-card-progress, .project-card-bottom, .project-list-count { font-size: 13px; color: var(--text-secondary); }
+.project-card > p, .project-card-bottom, .project-list-count { font-size: 13px; color: var(--text-secondary); }
 .project-code, .new-project-card > span:last-child { font-size: 12px; color: var(--text-secondary); }
 .new-project-card strong { font-size: 14px; color: #424b5c; }
 
@@ -148,3 +149,15 @@
 
 .context-parent, .context-related { display: inline-flex; align-items: center; gap: 5px; color: #5844a0; font-size: 12px; padding: 0; text-align: left; overflow-wrap: anywhere; }
 .detail-spent { margin-top: 16px; font-size: 13px; color: var(--text-secondary); }
+
+/* 首頁是專案入口, 顯示責任歸屬與介紹 */
+.project-card-shell { position: relative; min-width: 0; }
+.project-card-shell .project-card { width: 100%; height: 100%; min-height: 245px; }
+.project-card-shell .project-card-top { margin-bottom: 14px; }
+.project-card-shell .project-card > p { margin-bottom: 16px; }
+.project-lead { display: flex; align-items: center; gap: 7px; margin-top: auto; font-size: 13px; color: var(--text-secondary); }
+.project-lead strong { font-weight: 500; color: var(--text-primary); overflow-wrap: anywhere; }
+.project-card-shell .project-card-bottom { margin-top: 16px; padding-top: 12px; justify-content: flex-end; }
+.project-card-bottom > span:last-child { color: var(--accent); }
+.project-edit { position: absolute; bottom: 24px; left: 24px; font-size: 13px; padding: 0; }
+@media (max-width: 700px) { .project-edit { bottom: 21px; left: 21px; } }

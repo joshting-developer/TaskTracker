@@ -42,6 +42,7 @@ const selectedId = ref('');
 const creatingIssue = ref(false);
 const defaultState = ref('todo');
 const creatingProject = ref(false);
+const editingProject = ref(null);
 const sidebarOpen = ref(false);
 const toast = ref('');
 const demoLoading = ref(false);
@@ -99,7 +100,7 @@ async function refresh() {
     }
     if (projectId.value && !data.projects.some((item) => item.id === projectId.value)) { notify('找不到這個專案'); goHome(true); }
     if (selectedId.value && !selectedIssue.value) { notify('找不到這個專案內的任務'); history.replaceState(null, '', projectHash(projectId.value)); readHash(); }
-  } catch (failure) { if (generation === refreshGeneration) { if (failure.code === 'UNAUTHENTICATED') { authenticated.value = false; teamOpen.value = false; creatingProject.value = false; creatingIssue.value = false; savedViewDialog.value = null; selectedId.value = ''; } else error.value = failure.message; } }
+  } catch (failure) { if (generation === refreshGeneration) { if (failure.code === 'UNAUTHENTICATED') { authenticated.value = false; teamOpen.value = false; creatingProject.value = false; editingProject.value = null; creatingIssue.value = false; savedViewDialog.value = null; selectedId.value = ''; } else error.value = failure.message; } }
   finally { if (generation === refreshGeneration) loading.value = false; }
 }
 function notify(message) {
@@ -217,10 +218,13 @@ async function savedIssue(issue, isNew) {
 }
 async function createdProject(project) {
   ++refreshGeneration;
-  workspace.value = { ...workspace.value, projects: [...projects.value, project] };
+  workspace.value = { ...workspace.value, projects: [...projects.value.filter(item => item.id !== project.id), project] };
+  const wasEditing = Boolean(editingProject.value);
   creatingProject.value = false;
+  editingProject.value = null;
   goHome();
-  notify(`已建立「${project.name}」`);
+  await refresh();
+  notify(wasEditing ? '專案設定已儲存' : `已建立「${project.name}」`);
 }
 async function loadDemo() {
   if (demoLoading.value) return;
@@ -309,7 +313,7 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
       <div class="workspace-content" :class="{ 'board-workspace': section === 'tasks' && view === 'board', 'data-workspace': selectedProject && section === 'tasks' }">
         <button v-if="selectedProject" class="back-to-projects" @click="goHome()"><Icon name="chevron" :size="14" />返回專案列表</button>
         <div class="page-heading"><div><div class="eyebrow">{{ selectedProject ? 'YOUR PROJECT, IN FOCUS' : 'A SPACE FOR EVERY PROJECT' }}</div><h1>{{ title }}<span class="heading-dot">.</span></h1><p v-if="!selectedProject || selectedProject.description">{{ selectedProject ? selectedProject.description : '先選一個專案, 再專心處理裡面的事' }}</p></div><button v-if="selectedProject" class="button primary" :disabled="loading" @click="newIssue"><Icon name="plus" :size="18" />新增任務<span class="button-key">＋</span></button><button v-else class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div>
-        <ProjectHome v-if="!selectedProject" :projects="projects" :issues="issues" :loading="loading" :error="error" :demo-loading="demoLoading" @create="creatingProject = true" @open="id => navigate('all', id)" @demo="loadDemo" @retry="refresh" />
+        <ProjectHome v-if="!selectedProject" :projects="projects" :members="workspace.members" :can-edit="workspace.meta.permissions?.includes('project.update')" :loading="loading" :error="error" :demo-loading="demoLoading" @create="creatingProject = true" @edit="editingProject = $event" @open="id => navigate('all', id)" @demo="loadDemo" @retry="refresh" />
         <template v-else>
 
         <section v-if="section === 'tasks'" class="task-workspace" aria-label="任務工作區">
@@ -337,7 +341,7 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
     <IssuePanel v-if="creatingIssue || selectedIssue" :key="selectedIssue?.id || 'new'" :issue="selectedIssue" :projects="selectedProject ? [selectedProject] : []" :default-project="projectId" :default-state="defaultState" :default-type="defaultType" :default-epic-id="defaultEpicId" :members="workspace.members" :issues="projectAllIssues" :entries="workspace.timeEntries" @open="openIssue" @close="closeIssue" @saved="savedIssue" @reload="reloadEditor" />
     <SavedViewDialog v-if="savedViewDialog" :project="selectedProject" :filters="savedViewDialog.filters" :saved-view="savedViewDialog.savedView" @close="savedViewDialog = null" @saved="savedViewSaved" />
     <TeamDialog v-if="teamOpen" :members="workspace.members" :meta="workspace.meta" @close="teamOpen = false" />
-    <ProjectDialog v-if="creatingProject" @close="creatingProject = false" @created="createdProject" />
+    <ProjectDialog v-if="creatingProject || editingProject" :project="editingProject" :members="workspace.members" :user-id="currentUserId" @close="creatingProject = false; editingProject = null" @created="createdProject" />
     <Transition name="toast"><div v-if="toast" class="toast-message" role="status"><span><Icon name="check" :size="16" /></span>{{ toast }}</div></Transition>
   </div>
   </v-app>

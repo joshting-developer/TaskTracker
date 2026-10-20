@@ -1,17 +1,15 @@
 <script setup>
 import { computed, ref } from 'vue';
 import Icon from './Icon.vue';
-import { categoryFor } from '../domain/model.js';
 
-const props = defineProps({ projects: Array, issues: Array, loading: Boolean, error: String, demoLoading: Boolean });
-defineEmits(['create', 'open', 'demo', 'retry']);
+const props = defineProps({ projects: Array, members: Array, canEdit: Boolean, loading: Boolean, error: String, demoLoading: Boolean });
+defineEmits(['create', 'edit', 'open', 'demo', 'retry']);
 const search = ref('');
-const cards = computed(() => props.projects.filter((project) => [project.name, project.code, project.description].some((value) => value.toLocaleLowerCase().includes(search.value.trim().toLocaleLowerCase()))).map((project) => {
-  const issues = props.issues.filter((issue) => issue.projectId === project.id && issue.type !== 'epic');
-  const completed = issues.filter((issue) => categoryFor(issue, project) === 'done').length;
-  const activeTotal = issues.filter((issue) => categoryFor(issue, project) !== 'canceled').length;
-  return { ...project, total: issues.length, activeTotal, completed, progress: activeTotal ? Math.round(completed / activeTotal * 100) : 0 };
-}));
+const cards = computed(() => props.projects.filter(project => [project.name, project.code, project.description].some(value => (value || '').toLocaleLowerCase().includes(search.value.trim().toLocaleLowerCase()))));
+function leadName(project) {
+  if (!project.leadId) return '未設定';
+  return props.members.find(member => member.id === project.leadId && !member.disabledAt)?.name || '成員已無法使用';
+}
 </script>
 
 <template>
@@ -29,13 +27,12 @@ const cards = computed(() => props.projects.filter((project) => [project.name, p
     <template v-else>
       <div class="project-home-toolbar"><label class="search-field"><Icon name="search" :size="18" /><input v-model="search" placeholder="搜尋專案名稱或代碼…" aria-label="搜尋專案" /><button v-if="search" class="icon-button" aria-label="清除專案搜尋" @click="search = ''"><Icon name="close" :size="15" /></button></label><span class="project-list-count">{{ cards.length }} 個專案</span></div>
       <div class="project-grid">
-        <button v-for="project in cards" :key="project.id" class="project-card" :aria-label="`進入專案：${project.name}`" @click="$emit('open', project.id)">
+        <article v-for="project in cards" :key="project.id" class="project-card-shell"><button class="project-card" :aria-label="`進入專案：${project.name}`" @click="$emit('open', project.id)">
           <div class="project-card-top"><span class="project-card-icon" :style="{ color: project.color, background: `${project.color}16` }"><Icon name="folder" :size="23" /></span><span class="project-code">{{ project.code }}</span><Icon name="arrow" :size="19" class="project-enter-icon" /></div>
-          <h2>{{ project.name }}</h2><p>{{ project.description || '把相關的事情放在一起, 一步一步完成' }}</p>
-          <div class="project-card-progress"><span>{{ project.total ? `${project.completed} / ${project.activeTotal} 件任務已完成` : '準備開始你的第一個任務' }}</span><strong>{{ project.progress }}%</strong></div>
-          <div class="progress-track"><span :style="{ width: `${project.progress}%`, background: project.color }"></span></div>
-          <div class="project-card-bottom"><span>{{ project.total }} 個任務</span><span>進入專案 <Icon name="chevron" :size="13" /></span></div>
-        </button>
+          <h2>{{ project.name }}</h2><p>{{ project.description || '尚未填寫專案介紹' }}</p>
+          <div class="project-lead"><Icon name="user" :size="16" /><span>負責人</span><strong>{{ leadName(project) }}</strong></div>
+          <div class="project-card-bottom"><span>進入專案 <Icon name="chevron" :size="13" /></span></div>
+        </button><button v-if="canEdit" class="text-button project-edit" :aria-label="`編輯專案：${project.name}`" @click="$emit('edit', project)">編輯專案</button></article>
         <button v-if="!search" class="project-card new-project-card" @click="$emit('create')"><span class="new-project-icon"><Icon name="plus" :size="25" /></span><strong>建立新專案</strong><span>給下一個計畫一個專屬空間</span></button>
       </div>
       <div v-if="!cards.length" class="empty-state"><span class="empty-icon"><Icon name="search" :size="30" /></span><h2>沒有找到這個專案</h2><p>換個關鍵字, 或建立一個新的專案</p><button class="button secondary" @click="search = ''">清除搜尋</button></div>

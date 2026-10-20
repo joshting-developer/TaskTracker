@@ -9,6 +9,63 @@ const apiTarget = process.env.E2E_API_URL;
 if (!apiTarget) throw new Error('請設定 E2E_API_URL 指向隔離 Laravel 測試服務');
 let vite;
 let browser;
+async function checkProjectDetails(page, browser) {
+  await page.setViewportSize({ width: 1440, height: 1050 });
+  const project = await page.evaluate(async () => {
+    const { api } = await import('/src/api/index.js');
+    return api.createProject({ name: '入口資訊測試', code: 'INFO', description: '說明這個專案的用途', requestId: crypto.randomUUID() });
+  });
+  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await page.reload();
+  await page.getByLabel('搜尋專案').fill('INFO');
+  const card = page.locator('.project-card-shell').filter({ has: page.getByRole('button', { name: '進入專案：入口資訊測試', exact: true }) });
+  await card.locator('.project-lead').getByText('Josh', { exact: true }).waitFor();
+  assert.equal(await card.getByText(/%|件任務已完成|個任務/).count(), 0, '專案入口不顯示累計任務統計');
+  await card.getByRole('button', { name: '編輯專案：入口資訊測試', exact: true }).click();
+  let editor = page.getByRole('dialog', { name: '編輯專案', exact: true });
+  assert.equal(await editor.getByLabel('專案代碼', { exact: true }).getAttribute('readonly'), '');
+  await editor.getByLabel('專案介紹', { exact: true }).fill('長期維護的產品與服務');
+  await editor.getByLabel('專案負責人', { exact: true }).selectOption({ label: 'Mei' });
+  await editor.getByRole('button', { name: '儲存專案', exact: true }).click();
+  await card.locator('.project-lead').getByText('Mei', { exact: true }).waitFor();
+  await page.reload();
+  await page.getByLabel('搜尋專案').fill('INFO');
+  await card.getByText('長期維護的產品與服務', { exact: true }).waitFor();
+  await card.getByRole('button', { name: '編輯專案：入口資訊測試', exact: true }).click();
+  editor = page.getByRole('dialog', { name: '編輯專案', exact: true });
+  await page.evaluate(async (id) => {
+    const { api } = await import('/src/api/index.js');
+    const current = (await api.getWorkspace()).projects.find(item => item.id === id);
+    await api.updateProject({ id, expectedRevision: current.revision, description: '另一筆修改', requestId: crypto.randomUUID() });
+  }, project.id);
+  await editor.getByLabel('專案介紹', { exact: true }).fill('尚未送出的設定');
+  await editor.getByRole('button', { name: '儲存專案', exact: true }).click();
+  await editor.getByRole('alert').filter({ hasText: '專案已被更新' }).waitFor();
+  assert.equal(await editor.getByLabel('專案介紹', { exact: true }).inputValue(), '尚未送出的設定');
+  page.once('dialog', dialog => dialog.accept());
+  await editor.getByRole('button', { name: '關閉專案表單', exact: true }).click();
+  await page.reload();
+  await page.getByLabel('搜尋專案').fill('INFO');
+  await card.getByText('另一筆修改', { exact: true }).waitFor();
+  await page.screenshot({ path: 'artifacts/project-entry-details.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await card.getByRole('button', { name: '編輯專案：入口資訊測試', exact: true }).click();
+  await page.getByRole('dialog', { name: '編輯專案', exact: true }).getByLabel('專案負責人', { exact: true }).waitFor();
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await page.screenshot({ path: 'artifacts/mobile-project-details.png', fullPage: true });
+  await page.getByRole('button', { name: '關閉專案表單', exact: true }).click();
+  const lead = await browser.newPage({ viewport: { width: 1440, height: 1050 } });
+  await lead.goto('http://127.0.0.1:5175');
+  await lead.getByLabel('Email', { exact: true }).fill('mei@example.test');
+  await lead.getByLabel('密碼', { exact: true }).fill('test-local-password');
+  await lead.getByRole('button', { name: '登入', exact: true }).click();
+  await lead.getByLabel('搜尋專案').fill('INFO');
+  await lead.getByRole('button', { name: '進入專案：入口資訊測試', exact: true }).waitFor();
+  assert.equal(await lead.getByRole('button', { name: '編輯專案：入口資訊測試', exact: true }).count(), 0, '負責人欄位不提供額外編輯權限');
+  await lead.close();
+  console.log('PASS: project entry identity/lead/description, persistent edits, immutable code, conflict draft retention, mobile layout and permission-based editing');
+}
 async function checkReadableWorkspace(page) {
   const metrics = await page.evaluate(() => {
     const main = document.querySelector('.main').getBoundingClientRect();
@@ -612,6 +669,7 @@ try {
   await checkIssueRelations(page, testProjectUrl);
   await checkSavedViews(page, browser, failures, testProjectUrl);
   await checkBoardWorkflow(page);
+  await checkProjectDetails(page, browser);
   assert.deepEqual(failures, []);
   console.log('PASS: project-first home/create, scoped tasks and creation, project switching, hash links/reload/back/legacy links, search/filter, board dropdown/drag, edits, comments/history, unsaved protection, safe text, mobile navigation/layout');
   console.log('Screenshots: artifacts/desktop-list.png, desktop-board.png, issue-detail.png, mobile-list.png, mobile-editor.png');

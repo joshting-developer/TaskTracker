@@ -28,6 +28,7 @@ export const api = {
   logout: () => callApi('logout', {}, 'auth'),
   getWorkspace: () => callApi('getWorkspace'),
   createProject: (input) => callApi('createProject', input),
+  updateProject: (input) => callApi('updateProject', input),
   createIssue: (input) => callApi('createIssue', input),
   updateIssue: (input) => callApi('updateIssue', input),
   addComment: (input) => callApi('addComment', input),
