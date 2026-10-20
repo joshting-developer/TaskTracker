@@ -57,7 +57,8 @@
 
 .issue-table th { font-size: 13px; font-weight: 600; color: #4e586b; background: #f8f9fb; padding-top: 10px; padding-bottom: 10px; }
 .issue-table td { font-size: 14px; color: var(--text-primary); padding-top: 12px; padding-bottom: 12px; height: auto; border-bottom: 1px solid #e6e8ee; }
-.issue-table .type-column { padding-left: 24px; }
+.issue-table .type-column { width: 82px; padding-left: 24px; padding-right: 12px; }
+.issue-type-label { font-size: 13px; color: #424b5c; white-space: nowrap; }
 .task-title:hover { color: var(--accent); }
 .task-title { font-size: 16px; font-weight: 600; color: #242936; line-height: 1.55; }
 .task-subline { font-size: 12px; color: var(--text-secondary); gap: 8px; margin-top: 4px; }
@@ -137,7 +138,7 @@
   .advanced-filters label { flex: 1 1 145px; font-size: 13px; }
   .advanced-filters select { font-size: 13px; min-width: 0; }
   .task-title { font-size: 15px; }
-  .issue-table .type-column { padding-left: 14px; }
+  .issue-table .type-column { width: 64px; padding-left: 14px; padding-right: 8px; }
   .issue-table th:nth-child(3) { width: 94px; }
   .task-subline { gap: 6px; }
   .status-badge, .status-badge.todo, .status-badge.in_progress, .status-badge.done { font-size: 12px; padding: 4px 6px; }

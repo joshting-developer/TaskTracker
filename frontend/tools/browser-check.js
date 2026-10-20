@@ -72,6 +72,12 @@ async function checkProjectDetails(page, browser) {
   console.log('PASS: project entry identity/lead/description, persistent edits, immutable code, conflict draft retention, mobile layout and permission-based editing');
 }
 async function checkReadableWorkspace(page) {
+  assert.equal(await page.locator('.issue-table th').first().innerText(), '類型');
+  assert.equal(await page.locator('.issue-table .type-column svg').count(), 0, '類型直接用文字辨識');
+  for (const type of ['任務', '問題', '功能']) {
+    assert.ok(await page.locator('.issue-type-label').filter({ hasText: type }).count() > 0);
+  }
+
   const metrics = await page.evaluate(() => {
     const main = document.querySelector('.main').getBoundingClientRect();
     const workspace = document.querySelector('.data-workspace').getBoundingClientRect();
