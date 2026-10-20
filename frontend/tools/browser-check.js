@@ -9,6 +9,11 @@ const apiTarget = process.env.E2E_API_URL;
 if (!apiTarget) throw new Error('請設定 E2E_API_URL 指向隔離 Laravel 測試服務');
 let vite;
 let browser;
+async function openTaskFilters(page) {
+  const toggle = page.getByRole('button', { name: '任務篩選', exact: true });
+  if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
+}
+
 async function checkProjectDetails(page, browser) {
   await page.setViewportSize({ width: 1440, height: 1050 });
   const project = await page.evaluate(async () => {
@@ -146,11 +151,15 @@ async function checkSavedViews(page, browser, failures, projectUrl) {
   await editor.getByRole('button', { name: '儲存修改' }).click();
   await editor.getByText(new RegExp(`版本 ${paymentVersion + 1} · 已儲存`)).waitFor();
   await editor.getByRole('button', { name: '關閉任務' }).click();
+  await openTaskFilters(page);
   await page.getByLabel('篩選類型').selectOption('bug');
   await page.getByRole('button', { name: '任務列表', exact: true }).click();
   assert.equal(await page.getByLabel('篩選類型').inputValue(), '', '導覽切換清除進階篩選');
+  await openTaskFilters(page);
   await page.getByLabel('篩選類型').selectOption('bug');
+  await openTaskFilters(page);
   await page.getByLabel('篩選 Epic').selectOption({ label: '會員系統上線' });
+  await openTaskFilters(page);
   await page.getByLabel('篩選情況').selectOption('open');
   assert.equal(await page.locator('tbody tr').count(), 1);
   await page.getByRole('button', { name: '存為視圖', exact: true }).click();
@@ -165,10 +174,13 @@ async function checkSavedViews(page, browser, failures, projectUrl) {
   await page.getByRole('button', { name: '套用視圖 個人的付款 Bug', exact: true }).waitFor();
   assert.equal(await page.getByLabel('篩選類型').inputValue(), 'bug');
   assert.equal(await page.getByLabel('篩選情況').inputValue(), 'open');
+  assert.equal(await page.getByRole('button', { name: '任務篩選', exact: true }).getAttribute('aria-expanded'), 'false');
+  assert.equal(await page.getByLabel('已套用篩選').getByRole('button').count(), 4, '重整常用視圖後, 收合仍顯示三項條件及清除入口');
   assert.equal(await page.locator('tbody tr').count(), 1);
   await page.getByRole('button', { name: '付款流程', exact: true }).click();
   await page.getByRole('button', { name: '關閉任務' }).click();
   assert.equal(page.url(), privateUrl, '關閉任務保留视圖連結');
+  await openTaskFilters(page);
   await page.getByLabel('篩選情況').selectOption('');
   await page.getByText('篩選已調整', { exact: true }).waitFor();
   await page.getByRole('button', { name: '更新視圖', exact: true }).click();
@@ -176,6 +188,7 @@ async function checkSavedViews(page, browser, failures, projectUrl) {
   await dialog.getByRole('button', { name: '儲存視圖更新' }).click();
   await page.getByRole('status').filter({ hasText: '常用視圖已儲存' }).waitFor();
   await page.getByRole('button', { name: '我的任務', exact: false }).click();
+  await openTaskFilters(page);
   await page.getByLabel('篩選類型').selectOption('bug');
   await page.getByRole('button', { name: '存為視圖', exact: true }).click();
   dialog = page.getByRole('dialog', { name: '保存常用視圖' });
@@ -215,6 +228,7 @@ async function checkSavedViews(page, browser, failures, projectUrl) {
   await page.getByRole('button', { name: '儲存狀態設定' }).click();
   await page.getByRole('status').filter({ hasText: '狀態設定已儲存' }).waitFor();
   await page.getByRole('button', { name: '任務列表', exact: true }).click();
+  await openTaskFilters(page);
   await page.getByLabel('篩選狀態').selectOption({ label: '等待客戶' });
   await page.getByRole('button', { name: '存為視圖', exact: true }).click();
   dialog = page.getByRole('dialog', { name: '保存常用視圖' });
@@ -522,14 +536,34 @@ try {
   await page.locator('tbody tr').nth(8).waitFor();
   assert.equal(await page.locator('tbody tr').count(), 9);
   await checkReadableWorkspace(page);
+  const filterToggle = page.getByRole('button', { name: '任務篩選', exact: true });
+  assert.equal(await filterToggle.getAttribute('aria-expanded'), 'false');
+  assert.equal(await page.getByLabel('篩選狀態', { exact: true }).isVisible(), false);
+  assert.equal(await page.locator('.data-workspace > .back-to-projects').count(), 0);
+  assert.equal(await page.locator('.data-workspace > .page-heading p').count(), 0);
+  await openTaskFilters(page);
+  await page.getByLabel('篩選類型').selectOption('bug');
+  await page.getByLabel('篩選優先級').selectOption('high');
+  await filterToggle.click();
+  assert.equal(await page.getByLabel('篩選類型').isVisible(), false);
+  assert.equal(await page.getByLabel('已套用篩選').getByRole('button').count(), 3);
+  await page.getByRole('button', { name: /^移除篩選：類型：/ }).click();
+  assert.equal(await page.getByLabel('篩選類型').inputValue(), '');
+  assert.equal(await page.getByLabel('篩選優先級').inputValue(), 'high');
+  await page.getByRole('button', { name: '清除全部篩選', exact: true }).click();
+  assert.equal(await filterToggle.getAttribute('aria-expanded'), 'false');
+  assert.equal(await page.locator('tbody tr').count(), 9);
+
   mkdirSync('artifacts', { recursive: true });
   await page.screenshot({ path: 'artifacts/desktop-list.png', fullPage: true });
 
   await page.getByRole('textbox', { name: '搜尋任務' }).fill('手機');
   assert.equal(await page.locator('tbody tr').count(), 1);
   await page.getByRole('button', { name: '清除搜尋' }).click();
+  await openTaskFilters(page);
   await page.getByLabel('篩選狀態').selectOption('in_progress');
   assert.equal(await page.locator('tbody tr').count(), 2);
+  await openTaskFilters(page);
   await page.getByLabel('篩選狀態').selectOption('');
   await page.getByRole('button', { name: '任務看板', exact: true }).click();
   await page.getByLabel('DEMO-3 的狀態').selectOption('done');
@@ -620,7 +654,7 @@ try {
   await page.getByRole('button', { name: '我的任務', exact: false }).click();
   assert.equal(await page.locator('.issue-card, tbody tr').count(), 1);
   const testProjectUrl = page.url();
-  await page.getByRole('button', { name: '返回專案列表', exact: true }).click();
+  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await page.getByRole('heading', { name: '我的專案.', exact: true }).waitFor();
   assert.equal(await page.getByRole('button', { name: '任務看板', exact: true }).count(), 0);
   assert.equal(await page.locator('.issue-card, tbody tr').count(), 0);
@@ -633,10 +667,10 @@ try {
   assert.equal(await page.getByRole('button', { name: '任務看板', exact: true }).count(), 0);
   await page.goto(testProjectUrl);
   await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).waitFor();
-  await page.getByRole('button', { name: '返回專案列表', exact: true }).click();
+  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await page.goBack();
   await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).waitFor();
-  await page.getByRole('button', { name: '返回專案列表', exact: true }).click();
+  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await page.getByRole('button', { name: '進入專案：產品第一版 · 示範', exact: true }).click();
   assert.equal(await page.locator('.issue-card, tbody tr').count(), 9);
   assert.equal(await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).count(), 0);
@@ -657,11 +691,19 @@ try {
   await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
   await page.screenshot({ path: 'artifacts/mobile-list.png', fullPage: true });
+  await openTaskFilters(page);
+  await page.getByLabel('篩選類型').selectOption('bug');
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, '手機展開篩選不超出畫面');
+  await page.screenshot({ path: 'artifacts/mobile-filters.png', fullPage: true });
+  await page.getByRole('button', { name: '任務篩選', exact: true }).click();
+  await page.getByRole('button', { name: /^移除篩選：類型：/ }).click();
+  assert.equal(await page.getByLabel('篩選類型').isVisible(), false);
+
   await page.getByRole('button', { name: '新增任務', exact: false }).first().click();
   await page.getByRole('dialog', { name: '新增一個任務' }).waitFor();
   await page.screenshot({ path: 'artifacts/mobile-editor.png', fullPage: true });
   await page.getByRole('button', { name: '關閉任務' }).click();
-  await page.getByRole('button', { name: '返回專案列表', exact: true }).click();
+  await page.getByRole('button', { name: '專案', exact: true }).click();
   await page.screenshot({ path: 'artifacts/mobile-projects.png', fullPage: true });
   assert.equal(await page.getByRole('button', { name: '任務看板', exact: true }).count(), 0);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);

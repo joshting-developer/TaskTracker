@@ -37,6 +37,7 @@ const assigneeFilter = ref(''), epicFilter = ref(''), typeFilter = ref(''), cond
 const savedViewId = ref(''), appliedViewRevision = ref(0), savedViewDialog = ref(null);
 let pendingViewRoute = false;
 const sort = ref('updated');
+const filtersOpen = ref(false);
 const page = ref(1);
 const selectedId = ref('');
 const creatingIssue = ref(false);
@@ -77,9 +78,19 @@ const currentFeature = computed(() => section.value === 'tasks'
   ? view.value === 'board' ? '任務看板' : scope.value === 'mine' ? '我的任務' : scope.value === 'done' ? '已完成' : '任務列表'
   : { epics: 'Epic 概覽', time: '工時月曆', settings: '狀態設定', notifications: '通知預覽' }[section.value]);
 const filterActive = computed(() => search.value || stateFilter.value || priorityFilter.value || assigneeFilter.value || epicFilter.value || typeFilter.value || conditionFilter.value);
+const filterFields = { state: stateFilter, priority: priorityFilter, assignee: assigneeFilter, epicId: epicFilter, type: typeFilter, condition: conditionFilter };
+const activeFilterChips = computed(() => [
+  { key: 'state', label: '狀態', value: stateFilter.value, name: projectStates.value.find(item => item.id === stateFilter.value)?.label || '已移除' },
+  { key: 'priority', label: '優先級', value: priorityFilter.value, name: PRIORITIES.find(item => item.id === priorityFilter.value)?.label },
+  { key: 'assignee', label: '負責人', value: assigneeFilter.value, name: workspace.value.members.find(item => item.id === assigneeFilter.value)?.name || '已移除' },
+  { key: 'epicId', label: 'Epic', value: epicFilter.value, name: epicFilter.value === 'unlinked' ? '尚未掛入 Epic' : projectAllIssues.value.find(item => item.id === epicFilter.value)?.title || '已移除' },
+  { key: 'type', label: '類型', value: typeFilter.value, name: TYPES.find(item => item.id === typeFilter.value)?.label },
+  { key: 'condition', label: '情況', value: conditionFilter.value, name: CONDITIONS.find(item => item.id === conditionFilter.value)?.label || '已停用' },
+].filter(item => item.value));
 
 watch([search, stateFilter, priorityFilter, assigneeFilter, epicFilter, typeFilter, conditionFilter, sort, scope, projectId], () => { page.value = 1; });
 watch(pageCount, (count) => { if (page.value > count) page.value = count; });
+watch([projectId, view], () => { filtersOpen.value = false; });
 
 async function refresh() {
   const generation = ++refreshGeneration;
@@ -311,16 +322,33 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
     <main class="main">
       <header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" aria-label="開啟導覽" :aria-expanded="sidebarOpen" @click="sidebarOpen = !sidebarOpen"><Icon name="menu" /></button><Icon name="folder" :size="17" /><button class="breadcrumb-home" @click="goHome()">專案</button><Icon name="chevron" :size="13" /><strong :class="{ 'has-mobile-context': selectedProject }"><span class="project-breadcrumb">{{ selectedProject?.code || '專案列表' }}</span><span v-if="selectedProject" class="mobile-feature-context">{{ currentFeature }}</span></strong></div><div class="topbar-end"><span class="local-indicator"><i></i>本機協作試用</span><button class="icon-button" aria-label="重新整理工作空間" :disabled="loading || Boolean(moving)" @click="refresh"><Icon name="refresh" :size="18" /></button><div class="avatar tiny">{{ workspace.meta.actor?.slice(0, 1) }}</div></div></header>
       <div class="workspace-content" :class="{ 'board-workspace': section === 'tasks' && view === 'board', 'data-workspace': selectedProject && section === 'tasks' }">
-        <button v-if="selectedProject" class="back-to-projects" @click="goHome()"><Icon name="chevron" :size="14" />返回專案列表</button>
-        <div class="page-heading"><div><div class="eyebrow">{{ selectedProject ? 'YOUR PROJECT, IN FOCUS' : 'A SPACE FOR EVERY PROJECT' }}</div><h1>{{ title }}<span class="heading-dot">.</span></h1><p v-if="!selectedProject || selectedProject.description">{{ selectedProject ? selectedProject.description : '先選一個專案, 再專心處理裡面的事' }}</p></div><button v-if="selectedProject" class="button primary" :disabled="loading" @click="newIssue"><Icon name="plus" :size="18" />新增任務<span class="button-key">＋</span></button><button v-else class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div>
+        <button v-if="selectedProject && section !== 'tasks'" class="back-to-projects" @click="goHome()"><Icon name="chevron" :size="14" />返回專案列表</button>
+        <div class="page-heading"><div><div class="eyebrow">{{ selectedProject ? 'YOUR PROJECT, IN FOCUS' : 'A SPACE FOR EVERY PROJECT' }}</div><h1>{{ title }}<span class="heading-dot">.</span></h1><p v-if="!selectedProject || (section !== 'tasks' && selectedProject.description)">{{ selectedProject ? selectedProject.description : '先選一個專案, 再專心處理裡面的事' }}</p></div><button v-if="selectedProject" class="button primary" :disabled="loading" @click="newIssue"><Icon name="plus" :size="18" />新增任務<span class="button-key">＋</span></button><button v-else class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div>
         <ProjectHome v-if="!selectedProject" :projects="projects" :members="workspace.members" :can-edit="workspace.meta.permissions?.includes('project.update')" :loading="loading" :error="error" :demo-loading="demoLoading" @create="creatingProject = true" @edit="editingProject = $event" @open="id => navigate('all', id)" @demo="loadDemo" @retry="refresh" />
         <template v-else>
 
         <section v-if="section === 'tasks'" class="task-workspace" aria-label="任務工作區">
           <SavedViewsBar :views="projectSavedViews" :active-id="savedViewId" :user-id="currentUserId" :filters="currentFilters" :applied-revision="appliedViewRevision" @select="selectSavedView" @create="openViewDialog()" @update="openViewDialog" @remove="removeSavedView" @reapply="applySavedView" />
           <h2 class="sr-only">{{ currentFeature }}</h2>
-          <div class="filter-toolbar"><label class="search-field"><Icon name="search" :size="18" /><input v-model="search" placeholder="搜尋任務、編號或負責人…" aria-label="搜尋任務" maxlength="180" /><button v-if="search" class="icon-button" aria-label="清除搜尋" @click="search = ''"><Icon name="close" :size="15" /></button></label><div class="filters"><Icon name="filter" :size="17" class="filter-icon" /><select v-model="stateFilter" aria-label="篩選狀態"><option value="">所有狀態</option><option v-if="stateFilter && !projectStates.some(state => state.id === stateFilter)" :value="stateFilter" disabled>狀態已移除（需修正）</option><option v-for="state in projectStates" :key="state.id" :value="state.id">{{ state.label }}</option></select><select v-model="priorityFilter" aria-label="篩選優先級"><option value="">所有優先級</option><option v-for="priority in PRIORITIES" :key="priority.id" :value="priority.id">{{ priority.label }}</option></select><select v-model="sort" aria-label="排序方式"><option value="updated">最近更新</option><option value="priority">優先級排序</option><option value="due">到期日排序</option></select></div></div>
-          <div class="advanced-filters"><label>負責人<select v-model="assigneeFilter" aria-label="篩選負責人"><option value="">所有成員</option><option v-if="assigneeFilter && !workspace.members.some(member => member.id === assigneeFilter)" :value="assigneeFilter" disabled>成員已移除（需修正）</option><option v-for="member in workspace.members" :key="member.id" :value="member.id">{{ member.name }}</option></select></label><label>Epic<select v-model="epicFilter" aria-label="篩選 Epic"><option value="">所有 Epic</option><option value="unlinked">尚未掛入 Epic</option><option v-if="epicFilter && epicFilter !== 'unlinked' && !projectAllIssues.some(issue => issue.id === epicFilter && issue.type === 'epic')" :value="epicFilter" disabled>Epic 已移除（需修正）</option><option v-for="epic in projectAllIssues.filter(issue => issue.type === 'epic')" :key="epic.id" :value="epic.id">{{ epic.title }}</option></select></label><label>類型<select v-model="typeFilter" aria-label="篩選類型"><option value="">所有類型</option><option v-for="type in TYPES.filter(type => type.id !== 'epic')" :key="type.id" :value="type.id">{{ type.label }}</option></select></label><label>情況<select v-model="conditionFilter" aria-label="篩選情況"><option v-if="conditionFilter && !CONDITIONS.some(condition => condition.id === conditionFilter)" :value="conditionFilter" disabled>舊前置篩選已停用（需修正）</option><option v-for="condition in CONDITIONS" :key="condition.id" :value="condition.id">{{ condition.label }}</option></select></label><button v-if="filterActive" class="text-button" @click="clearFilters">清除篩選條件</button></div>
+          <div class="filter-toolbar">
+            <label class="search-field"><Icon name="search" :size="18" /><input v-model="search" placeholder="搜尋任務、編號或負責人…" aria-label="搜尋任務" maxlength="180" /><button v-if="search" class="icon-button" aria-label="清除搜尋" @click="search = ''"><Icon name="close" :size="15" /></button></label>
+            <div class="filters">
+              <button class="button secondary filter-toggle" :class="{ active: filtersOpen || activeFilterChips.length }" aria-label="任務篩選" :aria-expanded="filtersOpen" aria-controls="task-filters" @click="filtersOpen = !filtersOpen"><Icon name="filter" :size="17" />篩選<span v-if="activeFilterChips.length" class="filter-count">{{ activeFilterChips.length }}</span></button>
+              <select v-model="sort" aria-label="排序方式"><option value="updated">最近更新</option><option value="priority">優先級排序</option><option value="due">到期日排序</option></select>
+            </div>
+          </div>
+          <div id="task-filters" v-show="filtersOpen" class="advanced-filters" role="group" aria-label="任務篩選條件">
+            <label>狀態<select v-model="stateFilter" aria-label="篩選狀態"><option value="">所有狀態</option><option v-if="stateFilter && !projectStates.some(state => state.id === stateFilter)" :value="stateFilter" disabled>狀態已移除（需修正）</option><option v-for="state in projectStates" :key="state.id" :value="state.id">{{ state.label }}</option></select></label>
+            <label>優先級<select v-model="priorityFilter" aria-label="篩選優先級"><option value="">所有優先級</option><option v-for="priority in PRIORITIES" :key="priority.id" :value="priority.id">{{ priority.label }}</option></select></label>
+            <label>負責人<select v-model="assigneeFilter" aria-label="篩選負責人"><option value="">所有成員</option><option v-if="assigneeFilter && !workspace.members.some(member => member.id === assigneeFilter)" :value="assigneeFilter" disabled>成員已移除（需修正）</option><option v-for="member in workspace.members" :key="member.id" :value="member.id">{{ member.name }}</option></select></label>
+            <label>Epic<select v-model="epicFilter" aria-label="篩選 Epic"><option value="">所有 Epic</option><option value="unlinked">尚未掛入 Epic</option><option v-if="epicFilter && epicFilter !== 'unlinked' && !projectAllIssues.some(issue => issue.id === epicFilter && issue.type === 'epic')" :value="epicFilter" disabled>Epic 已移除（需修正）</option><option v-for="epic in projectAllIssues.filter(issue => issue.type === 'epic')" :key="epic.id" :value="epic.id">{{ epic.title }}</option></select></label>
+            <label>類型<select v-model="typeFilter" aria-label="篩選類型"><option value="">所有類型</option><option v-for="type in TYPES.filter(type => type.id !== 'epic')" :key="type.id" :value="type.id">{{ type.label }}</option></select></label>
+            <label>情況<select v-model="conditionFilter" aria-label="篩選情況"><option v-if="conditionFilter && !CONDITIONS.some(condition => condition.id === conditionFilter)" :value="conditionFilter" disabled>舊前置篩選已停用（需修正）</option><option v-for="condition in CONDITIONS" :key="condition.id" :value="condition.id">{{ condition.label }}</option></select></label>
+          </div>
+          <div v-if="activeFilterChips.length" class="active-filter-chips" aria-label="已套用篩選">
+            <button v-for="chip in activeFilterChips" :key="chip.key" class="active-filter-chip" :aria-label="`移除篩選：${chip.label}：${chip.name}`" @click="filterFields[chip.key].value = ''"><span>{{ chip.label }}：{{ chip.name }}</span><Icon name="close" :size="13" /></button>
+            <button class="text-button" @click="clearFilters">清除全部篩選</button>
+          </div>
           <div v-if="filterWarnings.length" class="filter-warning" role="alert">{{ filterWarnings.join('、') }}, 請重新選擇篩選並更新視圖。原條件保留, 沒有放寬搜尋</div>
           <div v-if="error" class="error-box workspace-error" role="alert">{{ error }}<button class="text-button" @click="refresh">重新載入</button></div>
           <div v-if="loading" class="empty-state"><span class="loader"></span><h2>正在整理你的工作空間</h2></div>
