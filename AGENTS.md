@@ -32,13 +32,13 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - `frontend/`：Vue 3＋Vuetify 4＋Vite, 登入／專案表單已使用 Vuetify, 既有清單／看板保留專用元件與 CSS
 - `backend/`：Laravel 13 JSON API, PHP 8.5 Docker, SQLite 與 Laravel session／CSRF；不使用 Inertia, Node 僅用前端工具鏈
 - 根目錄 Compose 提供 frontend（5174）、backend（3002）、queue、websocket／Reverb（8080）與 Redis。主機接口只監聽 loopback, Redis 只在容器網路
-- `cd frontend && npm run dev`／`npm run build`；`docker compose exec backend php artisan test` 驗證 Laravel API／隔離 SQLite
+- `cd frontend && npm run dev`／`npm run build`；`docker compose exec backend php artisan test --do-not-cache-result` 驗證 Laravel API／隔離 SQLite
 - `frontend/tools/browser-check.js` 以 `E2E_API_URL` 接隔離 Laravel 服務, 使用 5175 埠, 不使用業務 mock 或使用者資料庫
-- 預設空資料, 可手動載入示範專案；首頁先建／選 Project, 點入才有任務功能, 所有操作保留目前專案上下文
+- 預設空資料, 可手動載入示範專案或 `tasktracker:seed-demo`；指定 Seed 建 Jack／f-ws／first／second, 密碼只讀本機 TASKTRACKER_SEED_PASSWORD, --reset 只重設此 seed namespace；首頁先建／選 Project, 點入才有任務功能, 所有操作保留目前專案上下文
 - `backend/app/Repositories/RecordStore.php` 由伺服器限定 Workspace namespace；`AccountService` 從 Laravel session 推導操作者與空間, 不信任前端身分
 - 租戶間隔離, 空間內專案及工時暫沿用共享原型；`WorkspacePermissions` 集中權限, 但完整 Project ACL／預設角色矩陣尚未落地, 不宣稱符合最終授權規格
 - 舊 Node API／測試由 PHP 取代, 原 SQLite 與舊 Docker volume 保留；匯入指令只接受空目標、不覆蓋來源, 保留作者歷史, 舊帳號登入後升級雜湊
-- 狀態用固定 ID＋category 判斷完成, Epic 估時／工時只加總子項目。依賴 blockedBy 限同專案執行 Issue 的 DAG, 未完成前置不能結案, 取消不是交付, 重開不級聯修改
+- 狀態用固定 ID＋category 判斷完成, Epic 估時／工時只加總子項目。2026-10-20 改 parentIssueId 一層子任務與 relatedIssueIds 雙向關聯, 移除前置／DAG／結案阻擋；子項跟父項 Epic, 狀態獨立, 舊 blockedBy 透過 migration 轉關聯並保留歷史
 - 工時只能修改自己有效紀錄, 作者限制不因管理者而略過；每人每日最多 24 小時, 工作日採 Asia/Taipei
 - 視圖使用結構化 filters, 私有只回作者、團隊共用但只有作者可改／移除；失效參照保留並提示, mine 依閱覽者 userId 計算
 - 每 30 秒更新, 未保存表單不得偷換基準 revision。Reverb 接口與 Redis Queue 已準備, 任務推播及 Project 私有頻道授權另做
@@ -95,7 +95,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - 純文件工作檢查內容一致性、來源、相對連結與差異, 不額外建立測試套件
 - 功能實作驗證實際使用流程, 依風險補權限、版本衝突、防重複提交與資料保存測試
 - 前後端必須符合相同 API 契約, PHP／SQLite 的 API 測試與瀏覽器整合互補, mock 不取代真實整合驗證
-- 資料遷移以隔離 SQLite 驗證, 不用使用者現有資料做會破壞性的測試
+- 資料遷移以隔離 SQLite 驗證, 不用使用者現有資料做會破壞性的測試；TestCase 在 bootstrap 前強制 putenv／SERVER／ENV 及 memory config, 不只依賴 phpunit.xml。隔離 Docker helper 必須覆寫 com.docker.compose.project／service 標籤, 避免繼承映像的正式服務標籤
 - 編譯、上傳、初始化資料與更新 Web App 部署是不同動作, 各自記錄驗證結果
 - 本專案依上述規範每階段建立 commit, 不沿用其他專案的推送／部署授權
 - 不刪除 `AGENTS.md`、skill、規劃文件或使用者資料來清理工作區

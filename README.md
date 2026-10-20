@@ -25,6 +25,10 @@ docker compose up -d --build
 
 專案內「任務列表」提供表格、篩選與分頁；「任務看板」是獨立功能, 用狀態欄與 Epic 泳道呈現, 支援收合、卡片密度、欄內新增及跨欄／泳道拖曳。兩邊共用同一批 Issue, 看板網址為 `#/projects/<id>/board`, 列表為 `#/projects/<id>`, 詳細頁保留來源。卡片密度／泳道偏好只保存在目前瀏覽器, 常用視圖則保存篩選及列表／看板功能
 
+任務詳細內容提供「新增子任務」及「新增關聯」。子任務各有負責人、狀態與工時, 父項顯示完成數但不自動連動狀態；關聯為雙向追蹤。子任務跟隨父任務的 Epic, 工時按實際 Issue 各計一次。已移除前置任務與其結案阻擋
+
+既有資料啟動時透過 Laravel migration 將前置連結轉成一般關聯並保留歷史；建議升級前備份 SQLite。舊 blocked／review 常用視圖會提示條件已停用, 須明確修正後再保存。細節見[日常流程](docs/workflow-design.md)
+
 右側採平整全寬的資料工作區, 以分隔線區分工具列與內容, 提高文字大小與對比。列表只保留目前篩選結果筆數, 移除總計／完成率與重複功能標題；手機在頂端顯示目前功能。狀態／優先級顏色保留於色點與圖示, 文字使用深色, 避免自訂淺色狀態難以辨識
 
 | 服務 | 用途 | 本機接口 |
@@ -53,6 +57,19 @@ TASKTRACKER_PORT=5176 TASKTRACKER_API_PORT=3004 TASKTRACKER_WS_PORT=8082 docker 
 ```
 
 前端 `frontend/src/` 與後端 app／routes／config 掛載至容器。前端 index／Vite 設定、後端 bootstrap／Composer 與依賴變更後需重建；修改後端類別後重啟長駐的 queue／websocket 以載入新程式
+
+## 本機示範 Seed
+
+```sh
+# 第一次建立；重跑保留目前資料
+docker compose exec backend php artisan tasktracker:seed-demo
+# 只還原這組 seed 的 f-ws, 會取代該空間內的修改
+docker compose exec backend php artisan tasktracker:seed-demo --reset
+```
+
+登入信箱為 `jack100398@gmail.com`, 工作空間 `f-ws`, 專案 `first`／`second`。密碼使用你指定的本機設定, 存在忽略的 volume 環境檔, 不進 Git。新環境先在 backend 的被忽略 `.env` 或容器環境設定 `TASKTRACKER_SEED_PASSWORD`（至少 10 字）
+
+每個專案有 1 個 Epic、6 張一般卡片, 包含一組父子任務、雙向關聯、不同狀態／優先級、留言及工時。Seed 只允許 local／testing, 預設冪等, `--reset` 不修改其他工作空間；若信箱已被其他帳號使用則拒絕覆蓋。Laravel 的 `php artisan db:seed` 也呼叫相同的非重設流程
 
 ## 資料與設定
 
@@ -106,12 +123,12 @@ npm run dev
 ## 驗證
 
 ```sh
-docker compose exec backend php artisan test
+docker compose exec backend php artisan test --do-not-cache-result
 cd frontend
 npm run build
 ```
 
-Laravel 測試使用記憶體 SQLite, 覆蓋租戶隔離、權限／作者限制、Epic、依賴 DAG、狀態、工時、版本衝突、防重複提交與舊資料匯入
+Laravel 測試在 framework bootstrap 前強制 testing 環境及記憶體 SQLite, 覆寫 Compose 的程序環境並檢查隔離, 覆蓋租戶隔離、權限／作者限制、Epic、子任務／雙向關聯、狀態、工時、版本衝突、防重複提交、Seed 重跑／局部還原及舊資料匯入
 
 瀏覽器回歸用 `frontend/tools/browser-check.js`, 須將 `E2E_API_URL` 指向**另一組空白、隔離的 Laravel 測試服務**, 不要指向使用者資料庫。會建立測試帳號、專案與工時, 前端使用 5175 埠：
 
@@ -127,6 +144,6 @@ E2E_API_URL=http://127.0.0.1:13004 npm run test:e2e
 
 - [產品討論紀錄](docs/產品討論紀錄.md)：已確認決策、待確認事項及選型沿革
 - [協作與工時設計](docs/collaboration-design.md)：Epic、狀態、工時與通知
-- [日常流程](docs/workflow-design.md)：任務依賴與常用視圖
+- [日常流程](docs/workflow-design.md)：子任務／關聯與常用視圖
 - [架構提案](docs/architecture.md)：最新方向與 GuildManager／GAS 參考沿革
 - [競品調研](docs/competitor-survey.md)：YouTrack、OpenProject 等比較
