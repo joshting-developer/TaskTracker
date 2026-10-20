@@ -4,14 +4,14 @@ import Icon from './Icon.vue';
 import IssueContext from './IssueContext.vue';
 import { categoryFor, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
-const props = defineProps({ project: Object, issues: Array, visibleIssues: Array, entries: Array, members: Array, userId: String, moving: String, today: String });
+const props = defineProps({ project: Object, issues: Array, visibleIssues: Array, entries: Array, members: Array, userId: String, moving: String, today: String, boardKey: String, includedEpicIds: Array });
 const emit = defineEmits(['open', 'move', 'create']);
 const group = ref('epic');
 const density = ref('comfortable');
 const collapsed = ref([]);
 const dragOver = ref('');
 const states = computed(() => statusesFor(props.project));
-const preferenceKey = computed(() => `tasktracker-board:${props.userId}:${props.project.id}`);
+const preferenceKey = computed(() => `tasktracker-board:${props.userId}:${props.project.id}${props.boardKey && props.boardKey !== 'default' ? `:${props.boardKey}` : ''}`);
 watch(preferenceKey, () => {
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(preferenceKey.value) || '{}'); } catch {}
@@ -24,7 +24,7 @@ watch([group, density, collapsed], () => {
 });
 const lanes = computed(() => {
   if (group.value === 'none') return [{ id: '', label: '全部任務', issues: props.visibleIssues }];
-  const epics = props.issues.filter(issue => issue.type === 'epic');
+  const epics = props.issues.filter(issue => issue.type === 'epic' && (!props.includedEpicIds || props.includedEpicIds.includes(issue.id)));
   const rows = epics.map(epic => ({ id: epic.id, label: epic.title, epic, issues: props.visibleIssues.filter(issue => issue.epicId === epic.id) }));
   rows.push({ id: '', label: '未歸類到 Epic', issues: props.visibleIssues.filter(issue => !issue.epicId || !epics.some(epic => epic.id === issue.epicId)) });
   return rows;

@@ -36,3 +36,12 @@ API：getWorkspace.boards 包含每個可讀 Project 的虛擬 Default（id=defa
 原型 board.manage 映射目前可編輯任務的成員權限組合, 目前專案內共用, 具備該權限的成員可一起維護看板；不以 createdBy 作管理捷徑。後端以 permission authorize, 不用角色名放行。完整 Project ACL 仍待落地, 不能把本輪的共享原型視為最終權限矩陣
 
 自訂看板內新增 Issue 可帶 boardId：同交易檢查看板、額外 board.manage 權限, 若已有 Epic 覆蓋則不展開快照, 否則明確收錄新卡並增加看板 revision。失敗會連同卡片寫入回滾, 重試沿用 createIssue 的 requestId。不修改任務歸屬以迎合看板
+
+
+## 介面與路由
+
+專案側欄「任務看板」開啟 `#/projects/<projectId>/boards` 列表, Default 固定第一張, 其餘自訂看板顯示名稱、明確選取數及目前執行卡數。`/board` 保留為 Default 舊深連結, `/board/<boardId>` 是自訂看板；後面可接 `/issues/<issueId>`, 開啟／關閉詳細頁或重整不遺失看板位置。看板被其他人移除時回該專案列表並提示, 不靜默改看其他專案
+
+「新增看板／編輯收錄」搜尋目前專案的卡片並多選, 顯示 Epic 動態收錄說明及目前執行卡預覽。保存衝突保留草稿, 背景刷新不換基準 revision, 關閉重開才使用新版。清除收錄可留下空看板, 不刪除任何卡片。手機表單及列表換行, 卡片仍在看板局部橫向捲動
+
+每個人／專案／自訂看板各有本機泳道、密度及收合偏好；Default 延用先前的瀏覽器偏好。自訂看板只顯示已收錄 Epic 或收錄卡片所屬 Epic 的泳道；原始卡片關聯資訊仍可開啟。跨泳道拖曳沿用變更原卡 Epic 的既有規則, 移出收錄範圍會離開該看板

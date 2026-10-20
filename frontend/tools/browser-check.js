@@ -136,6 +136,7 @@ async function checkBoardWorkflow(page) {
   await page.getByRole('button', { name: '任務列表', exact: true }).click();
   await page.locator('tbody [data-issue="VISUAL-3"]').waitFor();
   await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByLabel('看板卡片密度').selectOption('compact');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, '手機頁面不被看板撐寬');
@@ -144,6 +145,110 @@ async function checkBoardWorkflow(page) {
   await secondLane.locator('[data-column="done"] [data-issue="VISUAL-3"]').waitFor();
   await page.screenshot({ path: 'artifacts/mobile-swimlane-board.png', fullPage: true });
   console.log('PASS: separate list/board URLs, Epic swimlanes/create/atomic move, card preferences, retired view links, deep links and mobile scrolling');
+}
+async function checkCustomBoards(page) {
+  await page.setViewportSize({ width: 1440, height: 1050 });
+  const fixture = await page.evaluate(async () => {
+    const { api } = await import('/src/api/index.js');
+    const project = await api.createProject({ name: '收錄測試', code: 'CURATE', requestId: crypto.randomUUID() });
+    const create = input => api.createIssue({ projectId: project.id, requestId: crypto.randomUUID(), ...input });
+    const epic = await create({ title: '本次交付', type: 'epic' });
+    const otherEpic = await create({ title: '之後交付', type: 'epic' });
+    const task = await create({ title: '父工作', epicId: epic.id });
+    const child = await create({ title: '子工作', parentIssueId: task.id });
+    const bug = await create({ title: '獨立 Bug', type: 'bug' });
+    return { project, epic, otherEpic, task, child, bug };
+  });
+  const root = `http://127.0.0.1:5175/#/projects/${fixture.project.id}`;
+  await page.goto(`${root}/boards`);
+  await page.reload();
+  await page.getByRole('button', { name: '開啟看板 Default', exact: true }).waitFor();
+  assert.equal(await page.locator('.board-summary-card').count(), 1);
+  await page.getByRole('button', { name: '新增看板', exact: true }).click();
+  let dialog = page.getByRole('dialog', { name: '新增看板', exact: true });
+  await dialog.getByLabel('看板名稱', { exact: true }).fill('交付看板');
+  await dialog.getByLabel(`收錄 ${fixture.epic.identifier}`, { exact: true }).check();
+  await dialog.getByLabel(`收錄 ${fixture.task.identifier}`, { exact: true }).check();
+  await dialog.getByRole('status').filter({ hasText: '目前包含 2 張卡片' }).waitFor();
+  await dialog.getByRole('button', { name: '儲存看板', exact: true }).click();
+  await page.locator('.selected-board-heading h3').getByText('交付看板', { exact: true }).waitFor();
+  const customUrl = page.url();
+  assert.equal(await page.locator('.issue-card').count(), 2, 'Epic 與明確單卡去重');
+  await page.reload(); await page.locator('.issue-card').nth(1).waitFor();
+  await page.getByRole('button', { name: '父工作', exact: true }).click(); await page.reload();
+  await page.getByRole('dialog', { name: '任務詳細內容', exact: true }).waitFor();
+  await page.getByRole('button', { name: '關閉任務', exact: true }).click();
+  assert.equal(page.url(), customUrl, '詳細頁重整關閉保留看板');
+  await page.evaluate(async ({ project, epic }) => (await import('/src/api/index.js')).api.createIssue({ projectId: project.id, title: '後來加入 Epic', epicId: epic.id, requestId: crypto.randomUUID() }), fixture);
+  await page.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
+  await page.getByRole('button', { name: '後來加入 Epic', exact: true }).waitFor();
+  assert.equal(await page.locator('.issue-card').count(), 3);
+  await page.evaluate(async ({ task, otherEpic }) => {
+    const { api } = await import('/src/api/index.js');
+    const current = (await api.getWorkspace()).issues.find(item => item.id === task.id);
+    await api.updateIssue({ id: current.id, expectedRevision: current.revision, epicId: otherEpic.id, requestId: crypto.randomUUID() });
+  }, fixture);
+  await page.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
+  await page.waitForFunction(() => document.querySelectorAll('.issue-card').length === 2);
+  assert.equal(await page.getByRole('button', { name: '父工作', exact: true }).count(), 1, '明確收錄不隨 Epic 移除');
+  assert.equal(await page.getByRole('button', { name: '子工作', exact: true }).count(), 0);
+  await page.getByRole('button', { name: '編輯收錄', exact: true }).click();
+  dialog = page.getByRole('dialog', { name: '編輯看板', exact: true });
+  await dialog.getByLabel(`收錄 ${fixture.epic.identifier}`, { exact: true }).uncheck();
+  await dialog.getByRole('button', { name: '儲存看板', exact: true }).click();
+  await page.waitForFunction(() => document.querySelectorAll('.issue-card').length === 1);
+  await page.getByLabel(`${fixture.task.identifier} 的狀態`, { exact: true }).selectOption('in_progress');
+  await page.locator(`[data-column="in_progress"] [data-issue="${fixture.task.identifier}"]`).waitFor();
+  await page.getByRole('button', { name: /新增任務/ }).first().click();
+  const editor = page.getByRole('dialog', { name: '新增一個任務', exact: true });
+  await editor.getByLabel(/任務標題/).fill('由自訂看板建立');
+  await editor.getByRole('button', { name: '建立任務', exact: true }).click();
+  await page.getByRole('button', { name: '由自訂看板建立', exact: true }).waitFor();
+  assert.equal(await page.locator('.issue-card').count(), 2, '新卡原子收錄');
+  await openTaskFilters(page); await page.getByLabel('篩選類型').selectOption('bug');
+  assert.equal(await page.locator('.issue-card').count(), 0);
+  await page.getByRole('button', { name: '清除全部篩選', exact: true }).click();
+  assert.equal(await page.locator('.issue-card').count(), 2);
+  await page.getByRole('button', { name: '任務篩選', exact: true }).click();
+  await page.getByRole('button', { name: '編輯收錄', exact: true }).click();
+  dialog = page.getByRole('dialog', { name: '編輯看板', exact: true });
+  await dialog.getByLabel('看板名稱', { exact: true }).fill('未儲存草稿');
+  page.once('dialog', event => event.dismiss());
+  await dialog.getByRole('button', { name: '關閉看板設定', exact: true }).click();
+  assert.equal(await dialog.isVisible(), true);
+  await page.evaluate(async () => {
+    const { api } = await import('/src/api/index.js');
+    const board = (await api.getWorkspace()).boards.find(item => item.name === '交付看板');
+    await api.updateBoard({ ...board, name: '另一分頁命名', expectedRevision: board.revision, requestId: crypto.randomUUID() });
+  });
+  await dialog.getByRole('button', { name: '儲存看板', exact: true }).click(); await dialog.getByRole('alert').waitFor();
+  assert.equal(await dialog.getByLabel('看板名稱', { exact: true }).inputValue(), '未儲存草稿');
+  page.once('dialog', event => event.accept());
+  await dialog.getByRole('button', { name: '關閉看板設定', exact: true }).click();
+  await page.getByRole('button', { name: '編輯收錄', exact: true }).click();
+  dialog = page.getByRole('dialog', { name: '編輯看板', exact: true });
+  assert.equal(await dialog.getByLabel('看板名稱', { exact: true }).inputValue(), '另一分頁命名');
+  await dialog.getByRole('button', { name: '關閉看板設定', exact: true }).click();
+  await page.screenshot({ path: 'artifacts/custom-board-desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
+  await page.getByRole('button', { name: '返回看板列表', exact: true }).click();
+  await page.getByRole('button', { name: '開啟看板 Default', exact: true }).waitFor();
+  await page.screenshot({ path: 'artifacts/board-list-mobile.png', fullPage: true });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await page.getByRole('button', { name: '開啟看板 另一分頁命名', exact: true }).click();
+  await page.getByRole('button', { name: '編輯收錄', exact: true }).click();
+  dialog = page.getByRole('dialog', { name: '編輯看板', exact: true });
+  assert.equal(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth), true);
+  await page.screenshot({ path: 'artifacts/board-picker-mobile.png', fullPage: true });
+  await dialog.getByRole('button', { name: '關閉看板設定', exact: true }).click();
+  page.once('dialog', event => event.accept()); await page.getByRole('button', { name: '移除看板', exact: true }).click();
+  await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
+  await page.getByRole('button', { name: '由自訂看板建立', exact: true }).waitFor();
+  assert.equal(await page.locator('.issue-card').count(), 5, '移除看板保留卡片');
+  await page.goto(customUrl); await page.getByRole('button', { name: '開啟看板 Default', exact: true }).waitFor();
+  assert.ok(page.url().endsWith('/boards'));
+  console.log('PASS: project board index/default, Epic dynamic inclusion/dedup, explicit card override, atomic creation, filter intersection, deep links, conflict drafts, archive and mobile');
 }
 async function checkTaskFilters(page, projectUrl) {
   await page.setViewportSize({ width: 1440, height: 1050 });
@@ -248,6 +353,7 @@ async function checkIssueRelations(page, projectUrl) {
   await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
   await page.locator('[data-issue="TEST-5"] .context-parent').waitFor();
   await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await page.locator('.board-cell [data-issue="TEST-5"] .context-parent').waitFor();
   const summary = await page.evaluate(async () => {
     const { api } = await import('/src/api/index.js');
@@ -301,6 +407,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.getByRole('status').filter({ hasText: '狀態設定已儲存' }).waitFor();
   await page.getByRole('button', { name: '任務列表', exact: true }).click();
   await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await page.locator('[data-state]').nth(4).waitFor();
   const reviewState = await page.locator('[data-state]').nth(4).getAttribute('data-state');
   await page.getByLabel('TEST-1 的狀態').selectOption(reviewState);
@@ -559,6 +666,7 @@ try {
   await openTaskFilters(page);
   await page.getByLabel('篩選狀態').selectOption('');
   await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await page.getByLabel('DEMO-3 的狀態').selectOption('done');
   await page.locator('.board-cell[data-column="done"] [data-issue="DEMO-3"]').waitFor();
   await page.locator('[data-issue="DEMO-4"][draggable="true"]').dragTo(page.locator('.board-cell[data-column="todo"]'), { sourcePosition: { x: 10, y: 10 }, targetPosition: { x: 5, y: 5 } });
@@ -584,6 +692,7 @@ try {
   await page.locator('tbody [data-issue="DEMO-3"]').waitFor();
   assert.equal(await page.locator('[data-issue="DEMO-3"] .status-badge').textContent(), '已完成');
   await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
 
 
   await page.getByRole('button', { name: '設計任務清單的搜尋與篩選', exact: true }).click();
@@ -704,6 +813,7 @@ try {
   await checkIssueRelations(page, testProjectUrl);
   await checkTaskFilters(page, testProjectUrl);
   await checkBoardWorkflow(page);
+  await checkCustomBoards(page);
   await checkProjectDetails(page, browser);
   assert.deepEqual(failures, []);
   console.log('PASS: project-first home/create, scoped tasks and creation, project switching, hash links/reload/back/legacy links, search/filter, board dropdown/drag, edits, comments/history, unsaved protection, safe text, mobile navigation/layout');

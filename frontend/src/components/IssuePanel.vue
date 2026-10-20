@@ -5,7 +5,7 @@ import IssueRelations from './IssueRelations.vue';
 import { api } from '../api/index.js';
 import { FIELD_LABELS, hours, ISSUE_FIELDS, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
-const props = defineProps({ issue: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, defaultEpicId: String, members: Array, issues: Array, entries: Array });
+const props = defineProps({ issue: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, defaultEpicId: String, defaultBoardId: String, members: Array, issues: Array, entries: Array });
 const emit = defineEmits(['close', 'saved', 'reload', 'open']);
 const dialog = ref(null);
 const form = reactive({ parentIssueId: '', relatedIssueIds: [] });
@@ -69,7 +69,7 @@ async function save() {
   if (saving.value) return;
   saving.value = true;
   error.value = '';
-  const payload = { ...values(), ...(props.issue ? { id: props.issue.id, expectedRevision: baseRevision.value } : {}) };
+  const payload = { ...values(), ...(props.issue ? { id: props.issue.id, expectedRevision: baseRevision.value } : { boardId: props.defaultBoardId || 'default' }) };
   const signature = JSON.stringify(payload);
   if (pending?.signature !== signature) pending = { signature, requestId: crypto.randomUUID() };
   try {

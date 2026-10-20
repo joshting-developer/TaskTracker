@@ -6,6 +6,9 @@ import IssueContext from './components/IssueContext.vue';
 import ProjectDialog from './components/ProjectDialog.vue';
 import ProjectHome from './components/ProjectHome.vue';
 import ProjectBoard from './components/ProjectBoard.vue';
+import BoardList from './components/BoardList.vue';
+import BoardDialog from './components/BoardDialog.vue';
+import { includedIssues } from './domain/boards.js';
 import AuthGate from './components/AuthGate.vue';
 import TeamDialog from './components/TeamDialog.vue';
 import EpicOverview from './components/EpicOverview.vue';
@@ -26,6 +29,7 @@ const defaultEpicId = ref('');
 const loading = ref(true);
 const error = ref('');
 const view = ref('list');
+const boardId = ref('default'), boardEditor = ref(null), boardEditorTool = ref(null);
 const scope = ref('all');
 const projectId = ref('');
 const search = ref('');
@@ -59,18 +63,22 @@ const selectedProject = computed(() => projects.value.find((item) => item.id ===
 const selectedIssue = computed(() => issues.value.find((item) => item.id === selectedId.value && item.projectId === projectId.value));
 const projectAllIssues = computed(() => issues.value.filter((item) => item.projectId === projectId.value));
 const projectIssues = computed(() => projectAllIssues.value.filter((item) => item.type !== 'epic'));
+const projectBoards = computed(() => (workspace.value.boards || []).filter(board => board.projectId === projectId.value));
+const selectedBoard = computed(() => projectBoards.value.find(board => board.id === boardId.value));
+const boardIssues = computed(() => includedIssues(selectedBoard.value, projectAllIssues.value));
+const boardEpicIds = computed(() => [...new Set([...boardIssues.value.filter(issue => issue.type === 'epic').map(issue => issue.id), ...boardIssues.value.map(issue => issue.epicId).filter(Boolean)])]);
 const projectStates = computed(() => statusesFor(selectedProject.value));
 const currentUserId = computed(() => workspace.value.meta.userId);
 const currentFilters = computed(() => ({ search: search.value, scope: scope.value, state: stateFilter.value, priority: priorityFilter.value, assignee: assigneeFilter.value, epicId: epicFilter.value, type: typeFilter.value, condition: conditionFilter.value, sort: sort.value, view: view.value }));
 const filterWarnings = computed(() => selectedProject.value ? missingFilters(currentFilters.value, selectedProject.value, workspace.value.members, projectAllIssues.value) : []);
 function memberName(id) { return workspace.value.members.find((member) => member.id === id)?.name || id || ''; }
 function done(issue) { return categoryFor(issue, selectedProject.value) === 'done'; }
-const visibleIssues = computed(() => selectedProject.value ? filterIssues(projectAllIssues.value, currentFilters.value, { project: selectedProject.value, userId: currentUserId.value, members: workspace.value.members, today: today.value }) : []);
+const visibleIssues = computed(() => selectedProject.value ? filterIssues(view.value === 'board' ? boardIssues.value : projectAllIssues.value, currentFilters.value, { project: selectedProject.value, userId: currentUserId.value, members: workspace.value.members, today: today.value }) : []);
 const pageCount = computed(() => Math.max(1, Math.ceil(visibleIssues.value.length / pageSize)));
 const pagedIssues = computed(() => visibleIssues.value.slice((page.value - 1) * pageSize, page.value * pageSize));
 const title = computed(() => selectedProject.value?.name || '我的專案');
 const currentFeature = computed(() => section.value === 'tasks'
-  ? view.value === 'board' ? '任務看板' : scope.value === 'mine' ? '我的任務' : scope.value === 'done' ? '已完成' : '任務列表'
+  ? view.value === 'boards' ? '看板列表' : view.value === 'board' ? '任務看板' : scope.value === 'mine' ? '我的任務' : scope.value === 'done' ? '已完成' : '任務列表'
   : { epics: 'Epic 概覽', time: '工時月曆', settings: '狀態設定', notifications: '通知預覽' }[section.value]);
 const filterActive = computed(() => search.value || stateFilter.value || priorityFilter.value || assigneeFilter.value || epicFilter.value || typeFilter.value || conditionFilter.value);
 const filterFields = { state: stateFilter, priority: priorityFilter, assignee: assigneeFilter, epicId: epicFilter, type: typeFilter, condition: conditionFilter };
@@ -101,8 +109,9 @@ async function refresh() {
       else { notify('找不到這個任務'); goHome(true); }
     }
     if (projectId.value && !data.projects.some((item) => item.id === projectId.value)) { notify('找不到這個專案'); goHome(true); }
+    if (projectId.value && view.value === 'board' && !selectedBoard.value) { notify('看板不存在或已移除'); navigate('all', projectId.value, 'boards'); }
     if (selectedId.value && !selectedIssue.value) { notify('找不到這個專案內的任務'); history.replaceState(null, '', projectHash(projectId.value)); readHash(); }
-  } catch (failure) { if (generation === refreshGeneration) { if (failure.code === 'UNAUTHENTICATED') { authenticated.value = false; teamOpen.value = false; creatingProject.value = false; editingProject.value = null; creatingIssue.value = false; selectedId.value = ''; } else error.value = failure.message; } }
+  } catch (failure) { if (generation === refreshGeneration) { if (failure.code === 'UNAUTHENTICATED') { authenticated.value = false; teamOpen.value = false; creatingProject.value = false; editingProject.value = null; boardEditor.value = null; creatingIssue.value = false; selectedId.value = ''; } else error.value = failure.message; } }
   finally { if (generation === refreshGeneration) loading.value = false; }
 }
 function notify(message) {
@@ -110,10 +119,10 @@ function notify(message) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { toast.value = ''; }, 3500);
 }
-function projectHash(id, issueId = '', mode = view.value) {
-  return id ? `#/projects/${encodeURIComponent(id)}${mode === 'board' ? '/board' : ''}${issueId ? `/issues/${encodeURIComponent(issueId)}` : ''}` : '#/';
+function projectHash(id, issueId = '', mode = view.value, selectedBoardId = boardId.value) {
+  return id ? `#/projects/${encodeURIComponent(id)}${mode === 'boards' ? '/boards' : mode === 'board' ? `/board${selectedBoardId === 'default' ? '' : `/${encodeURIComponent(selectedBoardId)}`}` : ''}${issueId ? `/issues/${encodeURIComponent(issueId)}` : ''}` : '#/';
 }
-function canLeave() { return !workspaceTool.value?.dirty || window.confirm('還有未儲存的內容, 確定要離開嗎？'); }
+function canLeave() { return (!workspaceTool.value?.dirty && !boardEditorTool.value?.dirty) || window.confirm('還有未儲存的內容, 確定要離開嗎？'); }
 function changeSection(value) { if (value !== section.value && canLeave()) { section.value = value; sidebarOpen.value = false; } }
 async function logout() { if (!canLeave()) return; try { await api.logout(); ++refreshGeneration; authenticated.value = false; workspace.value = { projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} }; history.replaceState(null, '', '#/'); readHash(true); } catch (failure) { notify(failure.message); } }
 async function authenticatedSession() { loading.value = true; readHash(); await refresh(); }
@@ -127,6 +136,23 @@ function navigate(nextScope, id = projectId.value, mode = 'list') {
   clearFilters();
   sidebarOpen.value = false;
 }
+function openBoard(id) {
+  if (!canLeave()) return;
+  location.hash = projectHash(projectId.value, '', 'board', id); readHash(true); sidebarOpen.value = false;
+}
+async function boardSaved(board) {
+  workspace.value = { ...workspace.value, boards: [...(workspace.value.boards || []).filter(item => item.id !== board.id), board] };
+  boardEditor.value = null; await nextTick(); openBoard(board.id); await refresh(); notify('看板已儲存');
+}
+const boardArchiveRequests = new Map();
+async function archiveBoard() {
+  const board = selectedBoard.value;
+  if (!board || board.isDefault || !window.confirm(`移除看板「${board.name}」？卡片與工時都會保留`)) return;
+  const key = `${board.id}:${board.revision}`;
+  if (!boardArchiveRequests.has(key)) boardArchiveRequests.set(key, crypto.randomUUID());
+  try { await api.archiveBoard({ id: board.id, expectedRevision: board.revision, requestId: boardArchiveRequests.get(key) }); boardArchiveRequests.delete(key); navigate('all', projectId.value, 'boards'); await refresh(); notify('看板已移除, 卡片保留'); }
+  catch (failure) { error.value = failure.message; if (failure.code === 'REVISION_CONFLICT') await refresh(); }
+}
 function goHome(replace = false) {
   if (replace) { history.replaceState(null, '', '#/'); readHash(); }
   else navigate('all', '');
@@ -139,33 +165,35 @@ function openIssue(issue) {
 }
 function readHash(skipGuard = false) {
   const [path, query = ''] = location.hash.split('?');
-  const route = path.match(/^#\/projects\/([^/]+)(\/board)?(?:\/issues\/([^/]+))?$/);
+  const route = path.match(/^#\/projects\/([^/]+)(?:\/(board|boards)(?:\/((?!issues(?:\/|$))[^/]+))?)?(?:\/issues\/([^/]+))?$/);
   const legacyId = path.match(/^#\/issue\/([^/]+)$/)?.[1];
   const retiredView = route && new URLSearchParams(query).has('view');
-  let nextProject = '', nextIssue = '';
+  let nextProject = '', nextIssue = '', nextBoard = 'default';
   try {
     nextProject = route ? decodeURIComponent(route[1]) : '';
-    nextIssue = route?.[3] ? decodeURIComponent(route[3]) : legacyId ? decodeURIComponent(legacyId) : '';
+    nextIssue = route?.[4] ? decodeURIComponent(route[4]) : legacyId ? decodeURIComponent(legacyId) : '';
+    if (route?.[2] === 'board' && route[3]) nextBoard = decodeURIComponent(route[3]);
     if (legacyId) {
       const issue = issues.value.find((item) => item.id === nextIssue);
       if (issue) { nextProject = issue.projectId; history.replaceState(null, '', projectHash(nextProject, nextIssue, 'list')); }
     }
   } catch { history.replaceState(null, '', '#/'); }
-  const nextMode = route?.[2] ? 'board' : 'list';
-  const projectChanged = projectId.value !== nextProject, modeChanged = view.value !== nextMode;
-  if (projectChanged || modeChanged || retiredView) {
+  const nextMode = route?.[2] || 'list';
+  const projectChanged = projectId.value !== nextProject, modeChanged = view.value !== nextMode, boardChanged = boardId.value !== nextBoard;
+  if (projectChanged || modeChanged || boardChanged || retiredView) {
     if (skipGuard !== true && !canLeave()) { history.replaceState(null, '', projectHash(projectId.value, selectedId.value)); return; }
-    section.value = 'tasks'; scope.value = 'all'; clearFilters();
+    section.value = 'tasks'; scope.value = 'all'; boardEditor.value = null; clearFilters();
   }
   projectId.value = nextProject;
-  view.value = nextMode;
+  view.value = nextMode; boardId.value = nextBoard;
   selectedId.value = nextIssue;
   if (retiredView) {
-    history.replaceState(null, '', projectHash(nextProject, nextIssue, nextMode));
+    history.replaceState(null, '', projectHash(nextProject, nextIssue, nextMode, nextBoard));
     notify('視圖功能已移除, 已開啟原專案頁面');
   }
   creatingIssue.value = false;
   sidebarOpen.value = false;
+  if (authenticated.value && ((projectChanged && nextProject) || (nextMode === 'board' && !selectedBoard.value))) refresh();
 }
 async function closeIssue() {
   creatingIssue.value = false;
@@ -262,7 +290,7 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
         <p class="nav-label">專案功能</p>
         <nav aria-label="專案任務">
           <button class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'all' }" :aria-current="section === 'tasks' && view === 'list' && scope === 'all' ? 'page' : undefined" aria-label="任務列表" @click="navigate('all')"><Icon name="list" :size="18" />任務列表<span class="nav-count">{{ projectIssues.length }}</span></button>
-          <button class="nav-item" :class="{ active: section === 'tasks' && view === 'board' }" :aria-current="section === 'tasks' && view === 'board' ? 'page' : undefined" aria-label="任務看板" @click="navigate('all', projectId, 'board')"><Icon name="board" :size="18" />任務看板</button>
+          <button class="nav-item" :class="{ active: section === 'tasks' && (view === 'board' || view === 'boards') }" :aria-current="section === 'tasks' && (view === 'board' || view === 'boards') ? 'page' : undefined" aria-label="任務看板" @click="navigate('all', projectId, 'boards')"><Icon name="board" :size="18" />任務看板</button>
           <button class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'mine' }" @click="navigate('mine')"><Icon name="user" :size="18" />我的任務<span class="nav-count">{{ projectIssues.filter(i => i.assignee === currentUserId).length }}</span></button>
           <button class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'done' }" @click="navigate('done')"><Icon name="check" :size="18" />已完成<span class="nav-count">{{ projectIssues.filter(i => done(i)).length }}</span></button>
           <button class="nav-item" :class="{ active: section === 'epics' }" @click="changeSection('epics')"><Icon name="diamond" :size="18" />Epic 概覽<span class="nav-count">{{ projectAllIssues.filter(i => i.type === 'epic').length }}</span></button>
@@ -285,12 +313,14 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
       <header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" aria-label="開啟導覽" :aria-expanded="sidebarOpen" @click="sidebarOpen = !sidebarOpen"><Icon name="menu" /></button><Icon name="folder" :size="17" /><button class="breadcrumb-home" @click="goHome()">專案</button><Icon name="chevron" :size="13" /><strong :class="{ 'has-mobile-context': selectedProject }"><span class="project-breadcrumb">{{ selectedProject?.code || '專案列表' }}</span><span v-if="selectedProject" class="mobile-feature-context">{{ currentFeature }}</span></strong></div><div class="topbar-end"><span class="local-indicator"><i></i>本機協作試用</span><button class="icon-button" aria-label="重新整理工作空間" :disabled="loading || Boolean(moving)" @click="refresh"><Icon name="refresh" :size="18" /></button><div class="avatar tiny">{{ workspace.meta.actor?.slice(0, 1) }}</div></div></header>
       <div class="workspace-content" :class="{ 'board-workspace': section === 'tasks' && view === 'board', 'data-workspace': selectedProject && section === 'tasks' }">
         <button v-if="selectedProject && section !== 'tasks'" class="back-to-projects" @click="goHome()"><Icon name="chevron" :size="14" />返回專案列表</button>
-        <div class="page-heading"><div><div class="eyebrow">{{ selectedProject ? 'YOUR PROJECT, IN FOCUS' : 'A SPACE FOR EVERY PROJECT' }}</div><h1>{{ title }}<span class="heading-dot">.</span></h1><p v-if="!selectedProject || (section !== 'tasks' && selectedProject.description)">{{ selectedProject ? selectedProject.description : '先選一個專案, 再專心處理裡面的事' }}</p></div><button v-if="selectedProject" class="button primary" :disabled="loading" @click="newIssue"><Icon name="plus" :size="18" />新增任務<span class="button-key">＋</span></button><button v-else class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div>
+        <div class="page-heading"><div><div class="eyebrow">{{ selectedProject ? 'YOUR PROJECT, IN FOCUS' : 'A SPACE FOR EVERY PROJECT' }}</div><h1>{{ title }}<span class="heading-dot">.</span></h1><p v-if="!selectedProject || (section !== 'tasks' && selectedProject.description)">{{ selectedProject ? selectedProject.description : '先選一個專案, 再專心處理裡面的事' }}</p></div><button v-if="selectedProject && !(section === 'tasks' && view === 'boards')" class="button primary" :disabled="loading" @click="newIssue"><Icon name="plus" :size="18" />新增任務<span class="button-key">＋</span></button><button v-else-if="!selectedProject" class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div>
         <ProjectHome v-if="!selectedProject" :projects="projects" :members="workspace.members" :can-edit="workspace.meta.permissions?.includes('project.update')" :loading="loading" :error="error" :demo-loading="demoLoading" @create="creatingProject = true" @edit="editingProject = $event" @open="id => navigate('all', id)" @demo="loadDemo" @retry="refresh" />
         <template v-else>
 
-        <section v-if="section === 'tasks'" class="task-workspace" aria-label="任務工作區">
+        <BoardList v-if="section === 'tasks' && view === 'boards'" :boards="projectBoards" :issues="projectAllIssues" :can-manage="workspace.meta.permissions?.includes('board.manage')" :loading="loading" @open="openBoard" @create="boardEditor = { board: null }" @edit="boardEditor = { board: $event }" />
+        <section v-if="section === 'tasks' && view !== 'boards'" class="task-workspace" aria-label="任務工作區">
           <h2 class="sr-only">{{ currentFeature }}</h2>
+          <header v-if="view === 'board' && selectedBoard" class="selected-board-heading"><div><button class="text-button" @click="navigate('all', projectId, 'boards')">返回看板列表</button><h3>{{ selectedBoard.name }}</h3><span class="subtle">{{ selectedBoard.isDefault ? '目前專案全部卡片' : '依收錄項目及 Epic 自動更新' }}</span></div><div v-if="!selectedBoard.isDefault && workspace.meta.permissions?.includes('board.manage')" class="selected-board-actions"><button class="button secondary" @click="boardEditor = { board: selectedBoard }">編輯收錄</button><button class="text-button danger-text" @click="archiveBoard">移除看板</button></div></header>
           <div class="filter-toolbar">
             <label class="search-field"><Icon name="search" :size="18" /><input v-model="search" placeholder="搜尋任務、編號或負責人…" aria-label="搜尋任務" maxlength="180" /><button v-if="search" class="icon-button" aria-label="清除搜尋" @click="search = ''"><Icon name="close" :size="15" /></button></label>
             <div class="filters">
@@ -315,7 +345,7 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
           <div v-if="loading" class="empty-state"><span class="loader"></span><h2>正在整理你的工作空間</h2></div>
           <div v-else-if="!visibleIssues.length && view === 'list'" class="empty-state"><span class="empty-icon"><Icon :name="filterActive ? 'search' : 'check'" :size="32" /></span><h2>{{ filterActive ? '沒有符合條件的任務' : scope === 'done' ? '每件完成的事, 都會出現在這裡' : scope === 'mine' ? '目前沒有指派給你的任務' : '這裡準備好迎接第一個任務了' }}</h2><p>{{ filterActive ? '換個關鍵字, 或放寬篩選條件試試看' : scope === 'mine' ? '把任務指派給自己, 就能在這裡集中查看' : '把需要做的事情寫下來, 就是很好的開始' }}</p><button v-if="filterActive" class="button secondary" @click="clearFilters">清除篩選</button><button v-else class="button secondary" @click="newIssue"><Icon name="plus" :size="17" />新增任務</button></div>
           <div v-else-if="view === 'list'" class="table-scroll"><table class="issue-table"><thead><tr><th class="type-column" scope="col">類型</th><th>任務</th><th>狀態</th><th>優先級</th><th>負責人</th><th>到期日</th><th class="end-column"></th></tr></thead><tbody><tr v-for="issue in pagedIssues" :key="issue.id" :data-issue="issue.identifier"><td class="type-column"><span class="issue-type-label">{{ option(TYPES, issue.type)?.label || '未知類型' }}</span></td><td class="task-title-cell"><button class="task-title" @click="openIssue(issue)">{{ issue.title }}</button><div class="task-subline"><span class="identifier">{{ issue.identifier }}</span><span class="project-mini-dot" :style="{ background: projectFor(issue)?.color }"></span><span>{{ projectFor(issue)?.name }}</span><span v-if="issue.comments.length" class="comment-count"><Icon name="message" :size="12" />{{ issue.comments.length }}</span></div><IssueContext :issue="issue" :issues="projectAllIssues" :entries="workspace.timeEntries" :project="selectedProject" @open="openIssue" /></td><td><span class="status-badge" :class="issue.state" :style="{ '--status-color': option(projectStates, issue.state)?.color }"><i></i>{{ option(projectStates, issue.state)?.label }}</span></td><td><span class="priority-label" :style="{ '--priority-color': option(PRIORITIES, issue.priority)?.color }"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span>{{ option(PRIORITIES, issue.priority)?.label }}</span></td><td><span v-if="issue.assignee" class="assignee"><span class="avatar small">{{ memberName(issue.assignee).slice(0, 1) }}</span>{{ memberName(issue.assignee) }}</span><span v-else class="unassigned">未指派</span></td><td><span :class="['due-date', { overdue: overdue(issue) }]">{{ shortDate(issue.dueDate) || '—' }}<span v-if="overdue(issue)" class="overdue-dot" title="已過期"></span></span></td><td><button class="icon-button row-open" :aria-label="`開啟 ${issue.identifier}`" @click="openIssue(issue)"><Icon name="chevron" :size="17" /></button></td></tr></tbody></table></div>
-          <ProjectBoard v-else :key="`${currentUserId}:${projectId}`" :project="selectedProject" :issues="projectAllIssues" :visible-issues="visibleIssues" :entries="workspace.timeEntries" :members="workspace.members" :user-id="currentUserId" :moving="moving" :today="today" @open="openIssue" @move="moveIssue" @create="input => newIssue(input.state, 'task', input.epicId)" />
+          <ProjectBoard v-else :key="`${currentUserId}:${projectId}:${boardId}`" :board-key="boardId" :included-epic-ids="boardEpicIds" :project="selectedProject" :issues="projectAllIssues" :visible-issues="visibleIssues" :entries="workspace.timeEntries" :members="workspace.members" :user-id="currentUserId" :moving="moving" :today="today" @open="openIssue" @move="moveIssue" @create="input => newIssue(input.state, 'task', input.epicId)" />
           <footer v-if="projects.length && !loading" class="table-footer"><span v-if="view === 'list'" role="status">{{ visibleIssues.length }} 筆結果</span><span v-else>拖曳卡片或使用卡片狀態選單更新進度</span><div v-if="view === 'list' && pageCount > 1" class="pagination"><span>{{ (page - 1) * pageSize + 1 }}–{{ Math.min(page * pageSize, visibleIssues.length) }} / {{ visibleIssues.length }}</span><button class="icon-button previous" aria-label="上一頁" :disabled="page === 1" @click="page--"><Icon name="chevron" :size="15" /></button><button class="icon-button" aria-label="下一頁" :disabled="page === pageCount" @click="page++"><Icon name="chevron" :size="15" /></button></div></footer>
         </section>
         <div v-if="error && section !== 'tasks'" class="error-box" role="alert">{{ error }}</div>
@@ -327,7 +357,8 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
         <footer class="page-footer"><span><Icon name="sun" :size="14" />保持專注, 也記得休息一下</span><span>TaskTracker <b>v0.2</b></span></footer>
       </div>
     </main>
-    <IssuePanel v-if="creatingIssue || selectedIssue" :key="selectedIssue?.id || 'new'" :issue="selectedIssue" :projects="selectedProject ? [selectedProject] : []" :default-project="projectId" :default-state="defaultState" :default-type="defaultType" :default-epic-id="defaultEpicId" :members="workspace.members" :issues="projectAllIssues" :entries="workspace.timeEntries" @open="openIssue" @close="closeIssue" @saved="savedIssue" @reload="reloadEditor" />
+    <IssuePanel v-if="creatingIssue || selectedIssue" :key="selectedIssue?.id || 'new'" :issue="selectedIssue" :projects="selectedProject ? [selectedProject] : []" :default-project="projectId" :default-state="defaultState" :default-type="defaultType" :default-epic-id="defaultEpicId" :default-board-id="view === 'board' ? boardId : 'default'" :members="workspace.members" :issues="projectAllIssues" :entries="workspace.timeEntries" @open="openIssue" @close="closeIssue" @saved="savedIssue" @reload="reloadEditor" />
+    <BoardDialog v-if="boardEditor" ref="boardEditorTool" :project="selectedProject" :issues="projectAllIssues" :board="boardEditor.board" @close="boardEditor = null" @saved="boardSaved" @reload="refresh" />
     <TeamDialog v-if="teamOpen" :members="workspace.members" :meta="workspace.meta" @close="teamOpen = false" />
     <ProjectDialog v-if="creatingProject || editingProject" :project="editingProject" :members="workspace.members" :user-id="currentUserId" @close="creatingProject = false; editingProject = null" @created="createdProject" />
     <Transition name="toast"><div v-if="toast" class="toast-message" role="status"><span><Icon name="check" :size="16" /></span>{{ toast }}</div></Transition>
