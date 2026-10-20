@@ -102,7 +102,7 @@ async function refresh() {
     authenticated.value = true;
     if (pendingViewRoute && projectId.value) resolveViewRoute();
     else if (savedViewId.value && !projectSavedViews.value.some((savedView) => savedView.id === savedViewId.value)) {
-      notify('找不到可使用的視圖'); savedViewId.value = ''; clearFilters(); scope.value = 'all'; history.replaceState(null, '', projectHash(projectId.value, selectedId.value));
+      notify('找不到可使用的常用篩選'); savedViewId.value = ''; clearFilters(); scope.value = 'all'; history.replaceState(null, '', projectHash(projectId.value, selectedId.value));
     }
     if (selectedId.value && !projectId.value) {
       const legacyIssue = data.issues.find((item) => item.id === selectedId.value);
@@ -132,7 +132,7 @@ function resolveViewRoute() {
   pendingViewRoute = false;
   const savedView = (workspace.value.savedViews || []).find((item) => item.projectId === projectId.value && item.id === savedViewId.value);
   if (savedView) { applySavedView(savedView); history.replaceState(null, '', projectHash(projectId.value, selectedId.value, savedView.id)); }
-  else { savedViewId.value = ''; clearFilters(); scope.value = 'all'; notify('找不到可使用的視圖'); history.replaceState(null, '', projectHash(projectId.value, selectedId.value)); }
+  else { savedViewId.value = ''; clearFilters(); scope.value = 'all'; notify('找不到可使用的常用篩選'); history.replaceState(null, '', projectHash(projectId.value, selectedId.value)); }
 }
 function selectSavedView(savedView) {
   if (!savedView) { navigate('all', projectId.value, view.value); return; }
@@ -142,14 +142,14 @@ function selectSavedView(savedView) {
 function openViewDialog(savedView = null) { savedViewDialog.value = { savedView, filters: JSON.parse(JSON.stringify(currentFilters.value)) }; }
 async function savedViewSaved(savedView) {
   workspace.value = { ...workspace.value, savedViews: [savedView, ...(workspace.value.savedViews || []).filter((item) => item.id !== savedView.id)] };
-  savedViewDialog.value = null; selectSavedView(savedView); await refresh(); notify('常用視圖已儲存');
+  savedViewDialog.value = null; selectSavedView(savedView); await refresh(); notify('常用篩選已儲存');
 }
 const deleteViewRequests = new Map();
 async function removeSavedView(savedView) {
-  if (!window.confirm(`移除「${savedView.name}」常用視圖？任務資料會保留`)) return;
+  if (!window.confirm(`移除「${savedView.name}」常用篩選？任務資料會保留`)) return;
   const key = `${savedView.id}:${savedView.revision}`;
   if (!deleteViewRequests.has(key)) deleteViewRequests.set(key, crypto.randomUUID());
-  try { await api.deleteSavedView({ id: savedView.id, expectedRevision: savedView.revision, requestId: deleteViewRequests.get(key) }); deleteViewRequests.delete(key); navigate('all', projectId.value, view.value); await refresh(); notify('視圖已移除'); }
+  try { await api.deleteSavedView({ id: savedView.id, expectedRevision: savedView.revision, requestId: deleteViewRequests.get(key) }); deleteViewRequests.delete(key); navigate('all', projectId.value, view.value); await refresh(); notify('常用篩選已移除'); }
   catch (failure) { if (failure.code === 'REVISION_CONFLICT') await refresh(); error.value = failure.message; }
 }
 function canLeave() { return !workspaceTool.value?.dirty || window.confirm('還有未儲存的內容, 確定要離開嗎？'); }
@@ -328,7 +328,6 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
         <template v-else>
 
         <section v-if="section === 'tasks'" class="task-workspace" aria-label="任務工作區">
-          <SavedViewsBar :views="projectSavedViews" :active-id="savedViewId" :user-id="currentUserId" :filters="currentFilters" :applied-revision="appliedViewRevision" @select="selectSavedView" @create="openViewDialog()" @update="openViewDialog" @remove="removeSavedView" @reapply="applySavedView" />
           <h2 class="sr-only">{{ currentFeature }}</h2>
           <div class="filter-toolbar">
             <label class="search-field"><Icon name="search" :size="18" /><input v-model="search" placeholder="搜尋任務、編號或負責人…" aria-label="搜尋任務" maxlength="180" /><button v-if="search" class="icon-button" aria-label="清除搜尋" @click="search = ''"><Icon name="close" :size="15" /></button></label>
@@ -344,12 +343,13 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
             <label>Epic<select v-model="epicFilter" aria-label="篩選 Epic"><option value="">所有 Epic</option><option value="unlinked">尚未掛入 Epic</option><option v-if="epicFilter && epicFilter !== 'unlinked' && !projectAllIssues.some(issue => issue.id === epicFilter && issue.type === 'epic')" :value="epicFilter" disabled>Epic 已移除（需修正）</option><option v-for="epic in projectAllIssues.filter(issue => issue.type === 'epic')" :key="epic.id" :value="epic.id">{{ epic.title }}</option></select></label>
             <label>類型<select v-model="typeFilter" aria-label="篩選類型"><option value="">所有類型</option><option v-for="type in TYPES.filter(type => type.id !== 'epic')" :key="type.id" :value="type.id">{{ type.label }}</option></select></label>
             <label>情況<select v-model="conditionFilter" aria-label="篩選情況"><option v-if="conditionFilter && !CONDITIONS.some(condition => condition.id === conditionFilter)" :value="conditionFilter" disabled>舊前置篩選已停用（需修正）</option><option v-for="condition in CONDITIONS" :key="condition.id" :value="condition.id">{{ condition.label }}</option></select></label>
+            <SavedViewsBar :views="projectSavedViews" :active-id="savedViewId" :user-id="currentUserId" :filters="currentFilters" :applied-revision="appliedViewRevision" @select="selectSavedView" @create="openViewDialog()" @update="openViewDialog" @remove="removeSavedView" @reapply="applySavedView" />
           </div>
           <div v-if="activeFilterChips.length" class="active-filter-chips" aria-label="已套用篩選">
             <button v-for="chip in activeFilterChips" :key="chip.key" class="active-filter-chip" :aria-label="`移除篩選：${chip.label}：${chip.name}`" @click="filterFields[chip.key].value = ''"><span>{{ chip.label }}：{{ chip.name }}</span><Icon name="close" :size="13" /></button>
             <button class="text-button" @click="clearFilters">清除全部篩選</button>
           </div>
-          <div v-if="filterWarnings.length" class="filter-warning" role="alert">{{ filterWarnings.join('、') }}, 請重新選擇篩選並更新視圖。原條件保留, 沒有放寬搜尋</div>
+          <div v-if="filterWarnings.length" class="filter-warning" role="alert">{{ filterWarnings.join('、') }}, 請重新選擇篩選並更新常用篩選。原條件保留, 沒有放寬搜尋</div>
           <div v-if="error" class="error-box workspace-error" role="alert">{{ error }}<button class="text-button" @click="refresh">重新載入</button></div>
           <div v-if="loading" class="empty-state"><span class="loader"></span><h2>正在整理你的工作空間</h2></div>
           <div v-else-if="!visibleIssues.length && view === 'list'" class="empty-state"><span class="empty-icon"><Icon :name="filterActive ? 'search' : 'check'" :size="32" /></span><h2>{{ filterActive ? '沒有符合條件的任務' : scope === 'done' ? '每件完成的事, 都會出現在這裡' : scope === 'mine' ? '目前沒有指派給你的任務' : '這裡準備好迎接第一個任務了' }}</h2><p>{{ filterActive ? '換個關鍵字, 或放寬篩選條件試試看' : scope === 'mine' ? '把任務指派給自己, 就能在這裡集中查看' : '把需要做的事情寫下來, 就是很好的開始' }}</p><button v-if="filterActive" class="button secondary" @click="clearFilters">清除篩選</button><button v-else class="button secondary" @click="newIssue"><Icon name="plus" :size="17" />新增任務</button></div>

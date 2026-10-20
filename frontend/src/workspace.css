@@ -35,14 +35,12 @@
 .data-workspace .task-workspace { border: 0; border-top: 1px solid var(--border); border-radius: 0; box-shadow: none; min-height: 0; overflow: hidden; }
 .data-workspace .page-footer { display: none; }
 
-.saved-views-bar, .board-workspace .saved-views-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; padding: 10px 24px; background: #fff; border-bottom: 1px solid var(--border); }
-.view-actions { margin: 0 0 0 auto; gap: 12px; }
-.view-actions > .button { margin-left: 0; font-size: 13px; padding: 7px 10px; }
-.view-actions .text-button, .view-adjusted { font-size: 12px; }
-.view-chip { font-size: 13px; color: #4a5364; border-color: #d7dce5; background: #fff; }
-.view-chip.active { color: #513c98; border-color: #b7a7e2; background: #f1edfb; }
-.view-chip small { font-size: 12px; color: var(--text-secondary); }
-.view-actions .danger-text { color: #a43142; }
+.saved-filter-tools { flex: 1 1 100%; min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; padding-top: 10px; border-top: 1px solid var(--border); }
+.saved-filter-picker { max-width: 100%; }
+.saved-filter-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; }
+.saved-filter-actions .text-button { display: inline-flex; align-items: center; gap: 5px; }
+.saved-filter-actions .danger-text { color: #a43142; }
+.view-adjusted { font-size: 12px; color: var(--text-secondary); }
 .filter-toolbar { padding: 10px 24px; border-bottom: 1px solid var(--border); gap: 12px; }
 .search-field { width: auto; flex: 1; min-width: 200px; height: 38px; border-color: #bfc6d2; background: #fff; color: #626b7c; }
 .search-field input { font-size: 14px; color: var(--text-primary); }
@@ -136,8 +134,6 @@
   .data-workspace .page-heading h1 { font-size: 22px; }
   .data-workspace .page-heading p { font-size: 13px; }
   .page-heading .button { font-size: 13px; padding: 8px 10px; }
-  .saved-views-bar, .board-workspace .saved-views-bar { padding: 10px 14px; }
-  .view-actions { gap: 10px; }
   .filter-toolbar { padding: 10px 14px; flex-direction: column; }
   .search-field { width: 100%; min-width: 0; flex: auto; }
   .filters { width: 100%; }

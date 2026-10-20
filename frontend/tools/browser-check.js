@@ -14,6 +14,16 @@ async function openTaskFilters(page) {
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
 }
 
+function savedFilterOption(page, name) {
+  return page.locator('.saved-filter-select option').filter({ hasText: name });
+}
+async function applySavedFilter(page, name) {
+  await openTaskFilters(page);
+  const option = savedFilterOption(page, name);
+  await option.waitFor({ state: 'attached' });
+  await page.getByLabel('套用常用篩選', { exact: true }).selectOption(await option.getAttribute('value'));
+}
+
 async function checkProjectDetails(page, browser) {
   await page.setViewportSize({ width: 1440, height: 1050 });
   const project = await page.evaluate(async () => {
@@ -122,7 +132,7 @@ async function checkBoardWorkflow(page) {
   const savedView = await page.evaluate(async (projectId) => (await import('/src/api/index.js')).api.createSavedView({ projectId, name: '泳道工作看板', filters: { search: '從泳道新增', view: 'board' }, requestId: crypto.randomUUID() }), project.id);
   await page.goto('about:blank');
   await page.goto(`http://127.0.0.1:5175/#/projects/${project.id}?view=${savedView.id}`);
-  await page.getByRole('button', { name: '套用視圖 泳道工作看板', exact: true }).waitFor();
+  await savedFilterOption(page, '泳道工作看板').waitFor({ state: 'attached' });
   assert.ok(page.url().includes('/board?view='), '舊視圖網址依保存的功能導向看板');
   const viewUrl = page.url();
   await page.getByRole('button', { name: '從泳道新增的工作', exact: true }).click();
@@ -132,7 +142,7 @@ async function checkBoardWorkflow(page) {
   assert.equal(page.url(), viewUrl, '詳細頁重整及關閉保留看板與視圖');
   await page.getByRole('button', { name: '任務列表', exact: true }).click();
   await page.locator('tbody [data-issue="VISUAL-3"]').waitFor();
-  assert.equal(await page.getByRole('button', { name: '套用視圖 泳道工作看板', exact: true }).count(), 0, '列表不混入看板視圖');
+  assert.equal(await savedFilterOption(page, '泳道工作看板').count(), 0, '列表不混入看板視圖');
   await page.getByRole('button', { name: '任務看板', exact: true }).click();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByLabel('看板卡片密度').selectOption('compact');
@@ -162,16 +172,16 @@ async function checkSavedViews(page, browser, failures, projectUrl) {
   await openTaskFilters(page);
   await page.getByLabel('篩選情況').selectOption('open');
   assert.equal(await page.locator('tbody tr').count(), 1);
-  await page.getByRole('button', { name: '存為視圖', exact: true }).click();
-  let dialog = page.getByRole('dialog', { name: '保存常用視圖' });
-  await dialog.getByLabel('視圖名稱').fill('個人的付款 Bug');
-  assert.equal(await dialog.getByLabel('視圖分享範圍').inputValue(), 'private');
-  await dialog.getByRole('button', { name: '儲存視圖', exact: true }).click();
-  await page.getByRole('button', { name: '套用視圖 個人的付款 Bug', exact: true }).waitFor();
+  await page.getByRole('button', { name: '儲存常用篩選', exact: true }).click();
+  let dialog = page.getByRole('dialog', { name: '保存常用篩選' });
+  await dialog.getByLabel('篩選名稱').fill('個人的付款 Bug');
+  assert.equal(await dialog.getByLabel('篩選分享範圍').inputValue(), 'private');
+  await dialog.getByRole('button', { name: '儲存篩選', exact: true }).click();
+  await savedFilterOption(page, '個人的付款 Bug').waitFor({ state: 'attached' });
   const privateUrl = page.url();
   assert.ok(privateUrl.includes('?view='));
   await page.reload();
-  await page.getByRole('button', { name: '套用視圖 個人的付款 Bug', exact: true }).waitFor();
+  await savedFilterOption(page, '個人的付款 Bug').waitFor({ state: 'attached' });
   assert.equal(await page.getByLabel('篩選類型').inputValue(), 'bug');
   assert.equal(await page.getByLabel('篩選情況').inputValue(), 'open');
   assert.equal(await page.getByRole('button', { name: '任務篩選', exact: true }).getAttribute('aria-expanded'), 'false');
@@ -183,20 +193,24 @@ async function checkSavedViews(page, browser, failures, projectUrl) {
   await openTaskFilters(page);
   await page.getByLabel('篩選情況').selectOption('');
   await page.getByText('篩選已調整', { exact: true }).waitFor();
-  await page.getByRole('button', { name: '更新視圖', exact: true }).click();
-  dialog = page.getByRole('dialog', { name: '更新常用視圖' });
-  await dialog.getByRole('button', { name: '儲存視圖更新' }).click();
-  await page.getByRole('status').filter({ hasText: '常用視圖已儲存' }).waitFor();
+  await page.getByRole('button', { name: '更新常用篩選', exact: true }).click();
+  dialog = page.getByRole('dialog', { name: '更新常用篩選' });
+  await dialog.getByRole('button', { name: '儲存篩選更新' }).click();
+  await page.getByRole('status').filter({ hasText: '常用篩選已儲存' }).waitFor();
   await page.getByRole('button', { name: '我的任務', exact: false }).click();
   await openTaskFilters(page);
   await page.getByLabel('篩選類型').selectOption('bug');
-  await page.getByRole('button', { name: '存為視圖', exact: true }).click();
-  dialog = page.getByRole('dialog', { name: '保存常用視圖' });
-  await dialog.getByLabel('視圖名稱').fill('團隊的我的 Bug');
-  await dialog.getByLabel('視圖分享範圍').selectOption('team');
-  await dialog.getByRole('button', { name: '儲存視圖', exact: true }).click();
-  await page.getByRole('button', { name: '套用視圖 團隊的我的 Bug', exact: true }).waitFor();
+  await page.getByRole('button', { name: '儲存常用篩選', exact: true }).click();
+  dialog = page.getByRole('dialog', { name: '保存常用篩選' });
+  await dialog.getByLabel('篩選名稱').fill('團隊的我的 Bug');
+  await dialog.getByLabel('篩選分享範圍').selectOption('team');
+  await dialog.getByRole('button', { name: '儲存篩選', exact: true }).click();
+  await savedFilterOption(page, '團隊的我的 Bug').waitFor({ state: 'attached' });
   const sharedUrl = page.url();
+  await page.getByRole('button', { name: '任務篩選', exact: true }).click();
+  assert.equal(await page.getByLabel('套用常用篩選', { exact: true }).isVisible(), false);
+  await openTaskFilters(page);
+
   assert.equal(await page.locator('tbody tr').count(), 0, '建立者沒有被指派的 Bug');
   await page.screenshot({ path: 'artifacts/saved-views.png', fullPage: true });
   const teammate = await browser.newPage({ viewport: { width: 1440, height: 1050 } });
@@ -205,23 +219,24 @@ async function checkSavedViews(page, browser, failures, projectUrl) {
   await teammate.getByLabel('Email', { exact: true }).fill('mei@example.test');
   await teammate.getByLabel('密碼', { exact: true }).fill('test-local-password');
   await teammate.getByRole('button', { name: '登入', exact: true }).click();
-  await teammate.getByRole('button', { name: '套用視圖 團隊的我的 Bug', exact: true }).waitFor();
-  assert.equal(await teammate.getByRole('button', { name: '套用視圖 個人的付款 Bug', exact: true }).count(), 0);
+  await savedFilterOption(teammate, '團隊的我的 Bug').waitFor({ state: 'attached' });
+  assert.equal(await savedFilterOption(teammate, '個人的付款 Bug').count(), 0);
   assert.ok(!teammate.url().includes('?view='), '私有視圖連結回到專案並提示');
   await teammate.goto(sharedUrl);
   await teammate.getByRole('button', { name: '付款流程', exact: true }).waitFor();
   assert.equal(await teammate.locator('tbody tr').count(), 1, '同伴的我的任務依自己的身分');
-  assert.equal(await teammate.getByRole('button', { name: '更新視圖', exact: true }).count(), 0);
-  assert.equal(await teammate.getByRole('button', { name: '移除視圖', exact: true }).count(), 0);
+  await openTaskFilters(teammate);
+  assert.equal(await teammate.getByRole('button', { name: '更新常用篩選', exact: true }).count(), 0);
+  assert.equal(await teammate.getByRole('button', { name: '移除常用篩選', exact: true }).count(), 0);
   await teammate.reload();
   await teammate.getByRole('button', { name: '付款流程', exact: true }).waitFor();
   await teammate.screenshot({ path: 'artifacts/team-view.png', fullPage: true });
 
-  await page.getByRole('button', { name: '套用視圖 個人的付款 Bug', exact: true }).click();
+  await applySavedFilter(page, '個人的付款 Bug');
   page.once('dialog', dialog => dialog.accept());
-  await page.getByRole('button', { name: '移除視圖', exact: true }).click();
-  await page.getByRole('status').filter({ hasText: '視圖已移除' }).waitFor();
-  assert.equal(await page.getByRole('button', { name: '套用視圖 個人的付款 Bug', exact: true }).count(), 0);
+  await page.getByRole('button', { name: '移除常用篩選', exact: true }).click();
+  await page.getByRole('status').filter({ hasText: '常用篩選已移除' }).waitFor();
+  assert.equal(await savedFilterOption(page, '個人的付款 Bug').count(), 0);
   await page.getByRole('button', { name: '狀態設定', exact: true }).click();
   await page.getByRole('button', { name: '新增狀態', exact: true }).click();
   await page.getByLabel('狀態 6 名稱', { exact: true }).fill('等待客戶');
@@ -230,22 +245,29 @@ async function checkSavedViews(page, browser, failures, projectUrl) {
   await page.getByRole('button', { name: '任務列表', exact: true }).click();
   await openTaskFilters(page);
   await page.getByLabel('篩選狀態').selectOption({ label: '等待客戶' });
-  await page.getByRole('button', { name: '存為視圖', exact: true }).click();
-  dialog = page.getByRole('dialog', { name: '保存常用視圖' });
-  await dialog.getByLabel('視圖名稱').fill('等待客戶的任務');
-  await dialog.getByRole('button', { name: '儲存視圖', exact: true }).click();
-  await page.getByRole('button', { name: '套用視圖 等待客戶的任務', exact: true }).waitFor();
+  await page.getByRole('button', { name: '儲存常用篩選', exact: true }).click();
+  dialog = page.getByRole('dialog', { name: '保存常用篩選' });
+  await dialog.getByLabel('篩選名稱').fill('等待客戶的任務');
+  await dialog.getByRole('button', { name: '儲存篩選', exact: true }).click();
+  await savedFilterOption(page, '等待客戶的任務').waitFor({ state: 'attached' });
   await page.getByRole('button', { name: '狀態設定', exact: true }).click();
   await page.getByRole('button', { name: '移除狀態 6', exact: true }).click();
   await page.getByRole('button', { name: '儲存狀態設定' }).click();
   await page.getByRole('status').filter({ hasText: '狀態設定已儲存' }).waitFor();
   await page.getByRole('button', { name: '任務列表', exact: true }).click();
-  await page.getByRole('button', { name: '套用視圖 等待客戶的任務', exact: true }).click();
+  await applySavedFilter(page, '等待客戶的任務');
   await page.getByRole('alert').filter({ hasText: '狀態已不存在' }).waitFor();
   assert.equal(await page.locator('tbody tr').count(), 0);
   await page.setViewportSize({ width: 390, height: 844 });
+  await openTaskFilters(page);
+  await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
   await page.screenshot({ path: 'artifacts/mobile-views.png', fullPage: true });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
+  await page.getByRole('button', { name: '重設篩選', exact: true }).click();
+  assert.ok(!page.url().includes('?view='), '重設退出常用篩選連結');
+  assert.equal(await page.getByLabel('篩選狀態').inputValue(), '');
+  assert.equal(await page.getByRole('alert').filter({ hasText: '狀態已不存在' }).count(), 0);
+  assert.equal(await savedFilterOption(page, '等待客戶的任務').count(), 1, '重設不刪除保存條件');
   await teammate.close();
   console.log('PASS: AND filters, private/team saved views, owner-only updates/removal, user-relative mine, view/issue deep links/reload, stale-status warning, mobile filters');
 }
@@ -539,6 +561,11 @@ try {
   const filterToggle = page.getByRole('button', { name: '任務篩選', exact: true });
   assert.equal(await filterToggle.getAttribute('aria-expanded'), 'false');
   assert.equal(await page.getByLabel('篩選狀態', { exact: true }).isVisible(), false);
+  assert.equal(await page.locator('.saved-views-bar, .view-chip').count(), 0, '移除常駐視圖列及全部任務籤');
+  await openTaskFilters(page);
+  assert.equal(await page.getByRole('button', { name: '儲存常用篩選', exact: true }).count(), 0, '尚無條件時不顯示保存動作');
+  await filterToggle.click();
+
   assert.equal(await page.locator('.data-workspace > .back-to-projects').count(), 0);
   assert.equal(await page.locator('.data-workspace > .page-heading p').count(), 0);
   await openTaskFilters(page);
