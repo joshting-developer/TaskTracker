@@ -37,6 +37,7 @@ x-backend: &backend
     - ./backend/routes:/app/routes:ro
     - ./backend/config:/app/config:ro
     - ./backend/database/migrations:/app/database/migrations:ro
+    - ./backend/database/seeders:/app/database/seeders:ro
     - ./backend/tests:/app/tests:ro
     - ./backend/phpunit.xml:/app/phpunit.xml:ro
     - ./data:/legacy:ro
