@@ -5,8 +5,8 @@ import IssueRelations from './IssueRelations.vue';
 import { api } from '../api/index.js';
 import { FIELD_LABELS, hours, ISSUE_FIELDS, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
-const props = defineProps({ issue: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, defaultEpicId: String, defaultBoardId: String, members: Array, issues: Array, entries: Array });
-const emit = defineEmits(['close', 'saved', 'reload', 'open']);
+const props = defineProps({ issue: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, defaultEpicId: String, defaultBoardId: String, members: Array, issues: Array, entries: Array, canExpand: Boolean });
+const emit = defineEmits(['close', 'saved', 'reload', 'open', 'expand']);
 const dialog = ref(null);
 const form = reactive({ parentIssueId: '', relatedIssueIds: [] });
 const relationsTool = ref(null);
@@ -43,6 +43,7 @@ const estimateHours = computed({ get: () => (form.estimateMinutes || 0) / 60, se
 watch(() => form.type, (type) => { if (type === 'epic') { form.epicId = ''; form.estimateMinutes = 0; form.parentIssueId = ''; } });
 const spent = computed(() => props.entries.filter((entry) => !entry.voidedAt && entry.issueId === props.issue?.id).reduce((sum, entry) => sum + entry.minutes, 0));
 const dirty = computed(() => JSON.stringify(values()) !== savedValues.value);
+defineExpose({ dirty: computed(() => dirty.value || Boolean(comment.value.trim()) || Boolean(relationsTool.value?.dirty)), saving });
 watch(() => props.issue, () => { if (!dirty.value) resetForm(); });
 function close() {
   if (saving.value) return;
@@ -137,6 +138,7 @@ function timestamp(value) {
     <div class="panel-shell">
       <header class="panel-header">
         <div class="eyebrow"><Icon name="diamond" :size="16" /> {{ issue?.identifier || 'NEW ISSUE' }} <span class="subtle">/ {{ issue ? '任務詳細內容' : '建立任務' }}</span></div>
+        <button v-if="issue && canExpand" type="button" class="button secondary issue-expand" :disabled="saving" @click="emit('expand')"><Icon name="arrow" :size="16" />開啟完整頁</button>
         <button type="button" class="icon-button" aria-label="關閉任務" :disabled="saving" @click="close"><Icon name="close" /></button>
       </header>
       <div class="panel-content">

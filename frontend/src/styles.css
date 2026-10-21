@@ -240,3 +240,16 @@ dialog{border:0;padding:0;color:inherit}dialog::backdrop{background:#19162255;ba
 .board-workspace .page-heading { margin-bottom: 18px; }
 .board-workspace .page-heading .eyebrow { display: none; }
 .board-workspace .page-heading h1 { font-size: 23px; }
+
+/* Task permalink page reuses the existing quick editor for changes. */
+.workspace-content.detail-workspace { padding: 0; background: #fff; }
+.issue-expand { margin-left: auto; margin-right: 12px; }
+.issue-detail-page .subtle, .issue-detail-page .quiet-message { color: #5f6673; font-size: 13px; }
+.issue-detail-page .discussion-tabs button { font-size: 14px; color: #5f6673; }
+.issue-detail-page .discussion-tabs button.active { color: #5844a0; }
+.issue-detail-page .discussion-tabs span { font-size: 12px; color: #5844a0; }
+.issue-detail-page .comment-meta, .issue-detail-page .comment-meta strong, .issue-detail-page .comment time, .issue-detail-page .history-entry time { font-size: 12px; color: #5f6673; }
+.issue-detail-page .comment p, .issue-detail-page .history-entry p, .issue-detail-page .history-entry strong, .issue-detail-page .history-entry .history-change { font-size: 14px; color: #343b49; }
+.issue-detail-page .field { font-size: 14px; color: #5f6673; }
+.issue-detail-page .field textarea { font-size: 14px; color: #242936; border-color: #bfc6d2; }
+@media(max-width:700px) { .issue-expand { font-size: 12px; padding: 8px 10px; margin-right: 6px; } }

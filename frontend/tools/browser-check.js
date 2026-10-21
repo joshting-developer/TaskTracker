@@ -14,6 +14,134 @@ async function openTaskFilters(page) {
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
 }
 
+async function checkIssueDetailPage(page) {
+  await page.setViewportSize({ width: 1440, height: 1050 });
+  const fixture = await page.evaluate(async () => {
+    const { api } = await import('/src/api/index.js');
+    let project = await api.createProject({ name: '任務閱讀頁', code: 'DETAIL', requestId: crypto.randomUUID() });
+    project = await api.updateStatuses({ projectId: project.id, expectedRevision: project.revision, statuses: [...project.statuses, { id: 'detail_review', label: '待驗收', category: 'active', color: '#8761b5' }], requestId: crypto.randomUUID() });
+    const create = input => api.createIssue({ projectId: project.id, requestId: crypto.randomUUID(), ...input });
+    const epic = await create({ title: '完整頁交付', type: 'epic' });
+    const task = await create({ title: '整理任務完整頁', description: '驗收條件\n<script>不可執行</script>', epicId: epic.id, estimateMinutes: 120 });
+    const child = await create({ title: '確認手機閱讀', parentIssueId: task.id, estimateMinutes: 60 });
+    const related = await create({ title: '修正通知', type: 'bug', relatedIssueIds: [task.id] });
+    await api.logTime({ issueId: child.id, workDate: '2026-10-20', minutes: 30, note: '檢查看板返回位置', requestId: crypto.randomUUID() });
+    const board = await api.createBoard({ projectId: project.id, name: '閱讀頁看板', selectedIssueIds: [epic.id, related.id], requestId: crypto.randomUUID() });
+    for (let index = 0; index < 21; index++) await create({ title: `分頁驗證 ${index + 1}` });
+    return { project, epic, task, child, related, board };
+  });
+  const root = `http://127.0.0.1:5175/#/projects/${fixture.project.id}`;
+  const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
+  await page.goto(root); await page.reload();
+  await page.getByLabel('搜尋任務', { exact: true }).fill('整理任務完整頁');
+  await page.getByRole('button', { name: `開啟完整頁 ${fixture.task.identifier}`, exact: true }).click();
+  await detail.getByRole('heading', { name: fixture.task.title, exact: true }).waitFor();
+  assert.equal(await page.getByRole('dialog').count(), 0, '完整頁閱讀不開啟遮罩或表單');
+  assert.ok(page.url().endsWith(`/issues/${fixture.task.id}?detail=1`));
+  await detail.getByText('<script>不可執行</script>', { exact: false }).waitFor();
+  await detail.getByLabel('子任務', { exact: true }).getByRole('button', { name: new RegExp(fixture.child.identifier) }).waitFor();
+  await detail.getByLabel('關聯任務', { exact: true }).getByRole('button', { name: new RegExp(fixture.related.identifier) }).waitFor();
+  const statusTabs = detail.getByRole('group', { name: '任務狀態', exact: true });
+  await detail.getByLabel('新增留言', { exact: true }).fill('切換狀態保留這段留言');
+  await statusTabs.getByRole('button', { name: '待驗收', exact: true }).click();
+  await statusTabs.getByRole('button', { name: '待驗收', pressed: true, exact: true }).waitFor();
+  assert.equal(await detail.getByLabel('新增留言', { exact: true }).inputValue(), '切換狀態保留這段留言');
+  await page.evaluate(async id => {
+    const { api } = await import('/src/api/index.js');
+    const issue = (await api.getWorkspace()).issues.find(item => item.id === id);
+    await api.updateIssue({ id, state: 'in_progress', expectedRevision: issue.revision, requestId: crypto.randomUUID() });
+  }, fixture.task.id);
+  await statusTabs.getByRole('button', { name: '已完成', exact: true }).click();
+  await page.getByRole('alert').filter({ hasText: '任務已被更新' }).waitFor();
+  await statusTabs.getByRole('button', { name: '進行中', pressed: true, exact: true }).waitFor();
+  assert.equal(await detail.getByLabel('新增留言', { exact: true }).inputValue(), '切換狀態保留這段留言', '狀態衝突仍保留留言');
+  await statusTabs.getByRole('button', { name: '待規劃', exact: true }).click();
+  await statusTabs.getByRole('button', { name: '待規劃', pressed: true, exact: true }).waitFor();
+  await detail.getByLabel('新增留言', { exact: true }).fill('');
+  await page.screenshot({ path: 'artifacts/issue-full-page.png', fullPage: true });
+  await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
+  assert.equal(await page.getByLabel('搜尋任務', { exact: true }).inputValue(), '整理任務完整頁', '返回保留原搜尋');
+  assert.equal(await page.locator('tbody tr').count(), 1);
+  await page.getByLabel('搜尋任務', { exact: true }).fill('');
+  await page.getByRole('button', { name: '下一頁', exact: true }).click();
+  const pagination = await page.locator('.pagination').innerText();
+  await page.locator('tbody tr').first().getByRole('button', { name: /^開啟完整頁 / }).click();
+  await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
+  assert.equal(await page.locator('.pagination').innerText(), pagination, '完整頁返回保留列表頁碼');
+  await page.getByLabel('搜尋任務', { exact: true }).fill('整理任務完整頁');
+
+  await page.getByRole('button', { name: fixture.task.title, exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: '開啟完整頁', exact: true }).click();
+  await detail.getByRole('heading', { name: fixture.task.title, exact: true }).waitFor();
+  await detail.getByLabel('新增留言', { exact: true }).fill('閱讀頁未送出草稿');
+  const current = page.url();
+  page.once('dialog', dialog => dialog.dismiss());
+  await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
+  assert.equal(page.url(), current);
+  assert.equal(await detail.getByLabel('新增留言', { exact: true }).inputValue(), '閱讀頁未送出草稿');
+  page.once('dialog', dialog => dialog.dismiss());
+  await page.goBack();
+  await page.waitForURL(current);
+  assert.equal(await detail.getByLabel('新增留言', { exact: true }).inputValue(), '閱讀頁未送出草稿', '瀏覽器返回取消時保留草稿與網址');
+  await page.evaluate(async id => {
+    const { api } = await import('/src/api/index.js');
+    const issue = (await api.getWorkspace()).issues.find(item => item.id === id);
+    await api.updateIssue({ id, description: '同伴修改後的說明', expectedRevision: issue.revision, requestId: crypto.randomUUID() });
+  }, fixture.task.id);
+  await detail.getByRole('button', { name: '送出留言', exact: true }).click();
+  await detail.getByRole('alert').filter({ hasText: '任務已被更新' }).waitFor();
+  assert.equal(await detail.getByLabel('新增留言', { exact: true }).inputValue(), '閱讀頁未送出草稿');
+  await detail.getByRole('button', { name: '更新任務資料（保留留言）', exact: true }).click();
+  await detail.getByText('同伴修改後的說明', { exact: true }).waitFor();
+  await detail.getByRole('button', { name: '送出留言', exact: true }).click();
+  await detail.getByText('閱讀頁未送出草稿', { exact: true }).waitFor();
+  assert.equal(await detail.getByLabel('新增留言', { exact: true }).inputValue(), '');
+  await detail.getByRole('button', { name: '編輯任務', exact: true }).click();
+  const editor = page.getByRole('dialog', { name: '任務詳細內容', exact: true });
+  await editor.getByLabel('描述', { exact: true }).fill('從完整頁編輯並保存');
+  await editor.getByRole('button', { name: '儲存修改', exact: true }).click();
+  await editor.getByText(/版本 .* · 已儲存/).waitFor();
+  await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
+  await detail.getByText('從完整頁編輯並保存', { exact: true }).waitFor();
+  await detail.getByRole('tab', { name: /異動紀錄/ }).click();
+  await detail.getByText('描述：同伴修改後的說明 → 從完整頁編輯並保存', { exact: true }).waitFor();
+  await page.reload();
+  await detail.getByText('閱讀頁未送出草稿', { exact: true }).waitFor();
+  await detail.getByLabel('子任務', { exact: true }).getByRole('button', { name: new RegExp(fixture.child.identifier) }).click();
+  await detail.getByRole('heading', { name: fixture.child.title, exact: true }).waitFor();
+  await detail.getByRole('tab', { name: /^工時/ }).click();
+  await detail.getByText('檢查看板返回位置', { exact: true }).waitFor();
+  await detail.getByLabel('任務屬性').getByText('0.5 h', { exact: true }).waitFor();
+
+  const boardUrl = `${root}/board/${fixture.board.id}`;
+  await page.goto(`${boardUrl}/issues/${fixture.epic.id}?detail=1`);
+  await detail.getByRole('heading', { name: fixture.epic.title, exact: true }).waitFor();
+  await detail.getByLabel('任務屬性').getByText('0.5 h（所屬卡片加總）', { exact: true }).waitFor();
+  await detail.getByRole('button', { name: '返回看板', exact: true }).click();
+  assert.equal(page.url(), boardUrl, '分享／重整後仍返回來源自訂看板');
+  await page.locator('.selected-board-heading h3').getByText(fixture.board.name, { exact: true }).waitFor();
+  await page.locator('.board-scroll').evaluate(element => { element.scrollLeft = 100; });
+  await page.getByRole('button', { name: fixture.task.title, exact: true }).click();
+  const boardScroll = await page.locator('.board-scroll').evaluate(element => element.scrollLeft);
+  await page.getByRole('dialog').getByRole('button', { name: '開啟完整頁', exact: true }).click();
+  await detail.getByRole('button', { name: '返回看板', exact: true }).click();
+  assert.equal(await page.locator('.board-scroll').evaluate(element => element.scrollLeft), boardScroll, '返回保留看板捲動');
+  await page.getByRole('button', { name: fixture.task.title, exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: '開啟完整頁', exact: true }).click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await detail.getByRole('heading', { name: fixture.task.title, exact: true }).waitFor();
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, '手機完整頁不超出畫面');
+  await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
+  assert.ok(await detail.getByRole('heading', { name: fixture.task.title, exact: true }).evaluate(element => element.getBoundingClientRect().top < 240), '手機先看到任務標題');
+  await page.screenshot({ path: 'artifacts/issue-full-page-mobile.png', fullPage: true });
+  await detail.getByRole('button', { name: '返回看板', exact: true }).click();
+  await page.setViewportSize({ width: 1440, height: 1050 });
+  await page.goto(`${root}/issues/missing?detail=1`);
+  await page.getByRole('status').filter({ hasText: '找不到這個專案內的任務' }).waitFor();
+  assert.equal(page.url(), root);
+  console.log('PASS: full task reading page, safe description, child/related links, attributes, time rollup, quick/full editing, custom status tabs/conflicts, comment conflict/draft guards, list filters/pagination/custom board return, share/reload/back and mobile');
+}
+
 async function checkProjectDetails(page, browser) {
   await page.setViewportSize({ width: 1440, height: 1050 });
   const project = await page.evaluate(async () => {
@@ -815,6 +943,7 @@ try {
   await checkBoardWorkflow(page);
   await checkCustomBoards(page);
   await checkProjectDetails(page, browser);
+  await checkIssueDetailPage(page);
   assert.deepEqual(failures, []);
   console.log('PASS: project-first home/create, scoped tasks and creation, project switching, hash links/reload/back/legacy links, search/filter, board dropdown/drag, edits, comments/history, unsaved protection, safe text, mobile navigation/layout');
   console.log('Screenshots: artifacts/desktop-list.png, desktop-board.png, issue-detail.png, mobile-list.png, mobile-editor.png');
