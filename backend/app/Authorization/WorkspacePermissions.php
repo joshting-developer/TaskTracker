@@ -13,7 +13,10 @@ class WorkspacePermissions
     public static function resolve(string $roleId): array
     {
         return match ($roleId) {
-            'owner', 'manager', 'admin' => [...self::MEMBER, ...self::MANAGE],
+            'owner', 'admin' => [...self::MEMBER, ...self::MANAGE],
+            'manager' => array_values(array_diff([...self::MEMBER, ...self::MANAGE], ['smtp.verify'])),
+            'maintainer' => ['project.read', 'project.update', 'project.statuses.update', 'issue.write', 'timeEntry.writeOwn', 'board.manage'],
+            'developer' => ['project.read', 'issue.write', 'timeEntry.writeOwn'],
             'user', 'member' => self::MEMBER,
             default => [],
         };

@@ -14,6 +14,44 @@ async function openTaskFilters(page) {
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
 }
 
+async function checkSeedAccounts(browser, failures) {
+  if (!process.env.E2E_SEED_PASSWORD) return;
+  for (const role of ['owner', 'manager', 'maintainer', 'developer']) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
+    const page = await context.newPage();
+    page.setDefaultTimeout(15000);
+    page.on('pageerror', error => failures.push(error.message));
+    await page.goto('http://127.0.0.1:5175');
+    await page.getByLabel('Email', { exact: true }).fill(`${role}@example.test`);
+    await page.getByLabel('密碼', { exact: true }).fill(process.env.E2E_SEED_PASSWORD);
+    await page.getByRole('button', { name: '登入', exact: true }).click();
+    await page.getByRole('heading', { name: '我的專案.', exact: true }).waitFor();
+    const manager = ['owner', 'manager'].includes(role), maintainer = role !== 'developer';
+    assert.equal(await page.getByRole('button', { name: '建立專案', exact: true }).count(), manager ? 1 : 0);
+    assert.equal(await page.getByRole('button', { name: '建立新專案', exact: false }).count(), manager ? 1 : 0);
+    assert.equal(await page.getByRole('button', { name: '編輯專案：first', exact: true }).count(), maintainer ? 1 : 0);
+    await page.getByRole('button', { name: '工作空間成員', exact: true }).click();
+    const team = page.getByRole('dialog', { name: 'f-ws · 成員', exact: true });
+    for (const name of ['Owner', 'Manager', 'Maintainer', 'Developer']) await team.getByText(name, { exact: true }).waitFor();
+    assert.equal(await team.getByRole('button', { name: '建立邀請連結', exact: true }).count(), manager ? 1 : 0);
+    await team.getByRole('button', { name: '關閉成員', exact: true }).click();
+    await page.getByRole('button', { name: '進入專案：first', exact: true }).click();
+    await page.getByRole('button', { name: '完成登入功能', exact: true }).waitFor();
+    assert.equal(await page.getByRole('button', { name: '狀態設定', exact: true }).count(), maintainer ? 1 : 0);
+    await page.getByRole('button', { name: '我的任務', exact: false }).click();
+    assert.equal(await page.locator('tbody tr').count(), role === 'developer' ? 4 : role === 'maintainer' ? 1 : 0, '個人清單按 userId, 非角色名稱');
+    await page.getByRole('button', { name: '任務看板', exact: true }).click();
+    await page.getByRole('button', { name: '開啟看板 Default', exact: true }).waitFor();
+    assert.equal(await page.getByRole('button', { name: '新增看板', exact: true }).count(), maintainer ? 1 : 0);
+    await page.getByRole('button', { name: '通知預覽', exact: true }).click();
+    await page.getByRole('heading', { name: '通知預覽', exact: true }).waitFor();
+    assert.equal(await page.getByRole('button', { name: '檢查 SMTP 連線', exact: true }).count(), role === 'owner' ? 1 : 0);
+    await page.screenshot({ path: `artifacts/seed-${role}.png`, fullPage: true });
+    await context.close();
+  }
+  console.log('PASS: seeded owner/manager/maintainer/developer logins, project/create/edit/invite/status/board/SMTP UI differences, role labels and personal issue assignment');
+}
+
 async function checkIssueDetailPage(page) {
   await page.setViewportSize({ width: 1440, height: 1050 });
   const fixture = await page.evaluate(async () => {
@@ -559,8 +597,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await teammate.getByRole('button', { name: '加入工作空間', exact: true }).click();
   await teammate.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).waitFor();
   await teammate.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).click();
-  await teammate.getByRole('button', { name: '狀態設定', exact: true }).click();
-  assert.equal(await teammate.getByRole('button', { name: '新增狀態' }).isDisabled(), true);
+  assert.equal(await teammate.getByRole('button', { name: '狀態設定', exact: true }).count(), 0, '沒有設定權限時不顯示管理入口');
   await page.getByRole('button', { name: '重新整理工作空間' }).click();
   await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).click();
   editor = page.getByRole('dialog');
@@ -944,6 +981,7 @@ try {
   await checkCustomBoards(page);
   await checkProjectDetails(page, browser);
   await checkIssueDetailPage(page);
+  await checkSeedAccounts(browser, failures);
   assert.deepEqual(failures, []);
   console.log('PASS: project-first home/create, scoped tasks and creation, project switching, hash links/reload/back/legacy links, search/filter, board dropdown/drag, edits, comments/history, unsaved protection, safe text, mobile navigation/layout');
   console.log('Screenshots: artifacts/desktop-list.png, desktop-board.png, issue-detail.png, mobile-list.png, mobile-editor.png');

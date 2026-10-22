@@ -81,9 +81,20 @@ docker compose exec backend php artisan tasktracker:seed-demo
 docker compose exec backend php artisan tasktracker:seed-demo --reset
 ```
 
-登入信箱為 `jack100398@gmail.com`, 工作空間 `f-ws`, 專案 `first`／`second`。密碼使用你指定的本機設定, 存在忽略的 volume 環境檔, 不進 Git。新環境先在 backend 的被忽略 `.env` 或容器環境設定 `TASKTRACKER_SEED_PASSWORD`（至少 10 字）
+工作空間 `f-ws`, 專案 `first`／`second`, 四組登入 Email：
 
-每個專案有 1 個 Epic、6 張一般卡片, 包含一組父子任務、雙向關聯、不同狀態／優先級、留言及工時。Seed 只允許 local／testing, 預設冪等, `--reset` 不修改其他工作空間；若信箱已被其他帳號使用則拒絕覆蓋。Laravel 的 `php artisan db:seed` 也呼叫相同的非重設流程
+| 帳號 | Email | 權限差異 |
+| --- | --- | --- |
+| owner | owner@example.test | 管理空間／專案／成員及 SMTP 驗證 |
+| manager | manager@example.test | 管理空間／專案／成員, 無 SMTP 驗證 |
+| maintainer | maintainer@example.test | 維護專案資訊／狀態／看板, 不可建專案或邀請 |
+| developer | developer@example.test | 任務／留言／本人工時, 無管理操作 |
+
+四帳號使用同一個你指定的本機密碼, 存在忽略的 volume 環境檔, 不進 Git。新環境先在 backend 的被忽略 `.env` 或容器環境設定 `TASKTRACKER_SEED_PASSWORD`（至少 10 字）。權限由後端 permission ID 檢查, 名稱不作放行依據；四者目前仍看得到空間內所有專案, **Project ACL 尚未實作**。owner／manager 可看團隊通知, 其他兩者只看本人；所有人都只能修改自己的工時
+
+新建／重設時每個專案有 1 個 Epic、6 張一般卡片, 包含父子任務、雙向關聯、不同狀態／優先級、留言及按不同帳號填報的工時。Epic 指派 manager、父 Task 指派 maintainer、執行卡指派 developer。舊 Seed 重跑會非破壞地加入四帳號, **保留 Jack 與既有卡片、指派和工時**；所以既有資料的「我的任務」可能仍是空的, 可自行指派試用。v2 再重跑保留修改及帳密；明確 --reset 才重建此 seed 空間與四帳號密碼, 不修改其他空間。Email／ID 被外部帳號占用時拒絕覆蓋
+
+Seed 只允許 local／testing。Laravel 的 `php artisan db:seed` 也呼叫相同非重設流程。完整權限矩陣及暫時限制見[產品討論紀錄](docs/產品討論紀錄.md#四帳號權限試用-seed2026-10-22)
 
 ## 資料與設定
 
@@ -151,6 +162,8 @@ cd frontend
 npx playwright install chromium
 E2E_API_URL=http://127.0.0.1:13004 npm run test:e2e
 ```
+
+若隔離 API 已執行四帳號 Seed, 可加 `E2E_SEED_PASSWORD` 執行四角色登入／畫面權限比較, 僅使用隔離測試密碼。
 
 可設定 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` 使用現有 Chromium。回歸截圖位於忽略的 `frontend/artifacts/`, 不提交 Git
 
