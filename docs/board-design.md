@@ -1,6 +1,6 @@
 # 看板列表與收錄設計
 
-更新：2026-10-20（Asia/Taipei）
+更新：2026-10-30（Asia/Taipei）
 
 ## 使用者確認
 
@@ -22,7 +22,7 @@
 
 自訂看板包含固定 ID、所屬範圍、名稱、明確選取 ID、revision、建立者與時間。Default 可由伺服器產生, 避免新舊專案漏建或重建重複資料。自訂看板提供建立、編輯收錄及移除入口；移除看板保留 Issue
 
-設定變更透過 Laravel API, 交易內檢查有效 permission、目標範圍、ID 與 revision, requestId 防重複。只有前端隱藏選項不構成授權。跨 Workspace 一律拒絕；最終 Project ACL 與角色矩陣目前尚未完成, 本輪不可藉看板授予新的卡片讀寫權
+設定變更透過 Laravel API, 交易內檢查有效 permission、目標範圍、ID 與 revision, requestId 防重複。只有前端隱藏選項不構成授權。跨 Workspace／未加入 Project 一律拒絕；可讀 Project 但缺 board.manage 不可管理收錄, 看板不能授予額外卡片讀寫權
 
 這是明確收錄卡片的看板, 不恢復已移除的命名篩選／視圖功能, 也不實作首頁個人小清單。看板獨立網址需保留卡片深連結、重整、返回與未儲存表單保護
 
@@ -33,7 +33,7 @@ Default 全部範圍、空看板、Epic 動態收錄與未來新增卡片、單�
 
 API：getWorkspace.boards 包含每個可讀 Project 的虛擬 Default（id=default、revision=0、isDefault=true）與未封存自訂看板。createBoard／updateBoard 使用 name、projectId、selectedIssueIds；更新及 archiveBoard 帶 id、expectedRevision、requestId。明確收錄上限 1000 項, Epic 動態子卡不計入上限。不需要新 migration, 延用 Workspace namespace 下 boards payload。Default 不寫入資料庫
 
-原型 board.manage 映射目前可編輯任務的成員權限組合, 目前專案內共用, 具備該權限的成員可一起維護看板；不以 createdBy 作管理捷徑。後端以 permission authorize, 不用角色名放行。完整 Project ACL 仍待落地, 不能把本輪的共享原型視為最終權限矩陣
+2026-10-30 已加入 Project ACL：board.manage 由專案負責人／管理者及 Workspace Any permission 提供, 開發者只有 issue.write, 讀者只能看。卡片拖曳／欄內建立依 issue.write, 自訂看板內新建另需 board.manage。後端依 permission＋scope 判斷, 不以角色名、createdBy 或收錄 ID 放行；見 [ACL 契約](project-acl.md)
 
 自訂看板內新增 Issue 可帶 boardId：同交易檢查看板、額外 board.manage 權限, 若已有 Epic 覆蓋則不展開快照, 否則明確收錄新卡並增加看板 revision。失敗會連同卡片寫入回滾, 重試沿用 createIssue 的 requestId。不修改任務歸屬以迎合看板
 

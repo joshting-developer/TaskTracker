@@ -18,7 +18,10 @@ export async function callApi(operation, input = {}, group = 'rpc', retry = true
   } catch {
     throw Object.assign(new Error('暫時無法連線, 請確認服務已啟動後重試'), { code: 'NETWORK_ERROR' });
   }
-  if (!result.ok) throw Object.assign(new Error(result.error?.message || '操作失敗'), { code: result.error?.code });
+  if (!result.ok) {
+    if (operation !== 'getWorkspace' && ['FORBIDDEN', 'NOT_FOUND', 'UNAUTHENTICATED'].includes(result.error?.code)) window.dispatchEvent(new Event('tasktracker:access-changed'));
+    throw Object.assign(new Error(result.error?.message || '操作失敗'), { code: result.error?.code });
+  }
   return result.data;
 }
 
@@ -27,6 +30,9 @@ export const api = {
   login: (input) => callApi('login', input, 'auth'),
   logout: () => callApi('logout', {}, 'auth'),
   getWorkspace: () => callApi('getWorkspace'),
+  getProjectMembers: (input) => callApi('getProjectMembers', input),
+  setProjectMember: (input) => callApi('setProjectMember', input),
+  removeProjectMember: (input) => callApi('removeProjectMember', input),
   createBoard: (input) => callApi('createBoard', input),
   updateBoard: (input) => callApi('updateBoard', input),
   archiveBoard: (input) => callApi('archiveBoard', input),

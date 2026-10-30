@@ -4,7 +4,7 @@ import Icon from './Icon.vue';
 import IssueContext from './IssueContext.vue';
 import { categoryFor, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
-const props = defineProps({ project: Object, issues: Array, visibleIssues: Array, entries: Array, members: Array, userId: String, moving: String, today: String, boardKey: String, includedEpicIds: Array });
+const props = defineProps({ project: Object, issues: Array, visibleIssues: Array, entries: Array, members: Array, userId: String, moving: String, today: String, boardKey: String, includedEpicIds: Array, canWrite: { type: Boolean, default: true }, canCreate: { type: Boolean, default: true } });
 const emit = defineEmits(['open', 'move', 'create']);
 const group = ref('epic');
 const density = ref('comfortable');
@@ -36,7 +36,7 @@ function overdue(issue) { return issue.dueDate && issue.dueDate < props.today &&
 function startDrag(event, issue) { event.dataTransfer.setData('text/plain', issue.id); event.dataTransfer.effectAllowed = 'move'; }
 function drop(event, state, lane) {
   dragOver.value = '';
-  if (props.moving) return;
+  if (props.moving || !props.canWrite) return;
   const issue = props.visibleIssues.find(item => item.id === event.dataTransfer.getData('text/plain'));
   if (issue) emit('move', issue, { state, ...(group.value === 'epic' ? { epicId: lane.id } : {}) });
 }
@@ -52,7 +52,7 @@ function drop(event, state, lane) {
       <div class="board-canvas" :style="{ '--board-columns': states.length }">
         <div class="board-headings">
           <div v-for="state in states" :key="state.id" :data-state="state.id">
-            <header class="column-header"><span><i :style="{ background: state.color }"></i>{{ state.label }}<b>{{ visibleIssues.filter(issue => issue.state === state.id).length }}</b></span><button class="icon-button" :aria-label="`新增${state.label}任務`" :disabled="Boolean(moving)" @click="emit('create', { state: state.id, epicId: '' })"><Icon name="plus" :size="16" /></button></header>
+            <header class="column-header"><span><i :style="{ background: state.color }"></i>{{ state.label }}<b>{{ visibleIssues.filter(issue => issue.state === state.id).length }}</b></span><button v-if="canCreate" class="icon-button" :aria-label="`新增${state.label}任務`" :disabled="Boolean(moving) || !canWrite" @click="emit('create', { state: state.id, epicId: '' })"><Icon name="plus" :size="16" /></button></header>
           </div>
         </div>
         <section v-for="lane in lanes" :key="lane.id" class="board-lane" :aria-label="`泳道 ${lane.label}`">
@@ -63,15 +63,15 @@ function drop(event, state, lane) {
           </header>
           <div v-if="group === 'none' || !collapsed.includes(lane.id)" class="lane-columns">
             <div v-for="state in states" :key="state.id" class="board-cell" :class="{ 'drag-over': dragOver === `${lane.id}:${state.id}` }" :data-column="state.id" @dragover.prevent="dragOver = `${lane.id}:${state.id}`" @dragleave.self="dragOver = ''" @drop.prevent="drop($event, state.id, lane)">
-              <article v-for="issue in lane.issues.filter(item => item.state === state.id)" :key="issue.id" class="issue-card" :class="{ moving: moving === issue.id }" :draggable="!moving" :data-issue="issue.identifier" @dragstart="startDrag($event, issue)" @dragend="dragOver = ''">
+              <article v-for="issue in lane.issues.filter(item => item.state === state.id)" :key="issue.id" class="issue-card" :class="{ moving: moving === issue.id }" :draggable="canWrite && !moving" :data-issue="issue.identifier" @dragstart="startDrag($event, issue)" @dragend="dragOver = ''">
                 <div class="card-top"><span class="identifier">{{ issue.identifier }}</span><span class="type-tag">{{ option(TYPES, issue.type)?.label }}</span><span class="priority-label" :style="{ '--priority-color': option(PRIORITIES, issue.priority)?.color }" :title="`優先級：${option(PRIORITIES, issue.priority)?.label}`"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span></span></div>
                 <button class="card-title" @click="emit('open', issue)">{{ issue.title }}</button>
                 <p v-if="density === 'comfortable' && issue.description" class="board-card-description">{{ issue.description }}</p>
                 <div class="card-bottom"><span v-if="issue.dueDate" :class="['due-date', { overdue: overdue(issue) }]"><Icon name="clock" :size="12" />{{ issue.dueDate.slice(5).replace('-', '/') }}</span><span v-if="issue.comments.length" class="comment-count"><Icon name="message" :size="13" />{{ issue.comments.length }}</span><span class="board-assignee" :title="memberName(issue.assignee)"><span v-if="issue.assignee" class="avatar small">{{ memberName(issue.assignee).slice(0, 1) }}</span>{{ memberName(issue.assignee) }}</span></div>
-                <IssueContext :issue="issue" :issues="issues" :entries="entries" :project="project" @open="emit('open', $event)" />
-                <label class="card-state"><span class="sr-only">{{ issue.identifier }} 的狀態</span><select :value="issue.state" :disabled="Boolean(moving)" :aria-label="`${issue.identifier} 的狀態`" @change="emit('move', issue, { state: $event.target.value })"><option v-for="next in states" :key="next.id" :value="next.id">{{ next.label }}</option></select></label>
+                <IssueContext :issue="issue" :issues="issues" :entries="entries" :project="project" :can-read-time="project.permissions?.includes('timeEntry.readOwn')" @open="emit('open', $event)" />
+                <label class="card-state"><span class="sr-only">{{ issue.identifier }} 的狀態</span><select :value="issue.state" :disabled="Boolean(moving) || !canWrite" :aria-label="`${issue.identifier} 的狀態`" @change="emit('move', issue, { state: $event.target.value })"><option v-for="next in states" :key="next.id" :value="next.id">{{ next.label }}</option></select></label>
               </article>
-              <button class="lane-add" :aria-label="`在${lane.label}新增${state.label}任務`" :disabled="Boolean(moving)" @click="emit('create', { state: state.id, epicId: group === 'epic' ? lane.id : '' })"><Icon name="plus" :size="15" /><span>新增卡片</span></button>
+              <button v-if="canCreate" class="lane-add" :aria-label="`在${lane.label}新增${state.label}任務`" :disabled="Boolean(moving) || !canWrite" @click="emit('create', { state: state.id, epicId: group === 'epic' ? lane.id : '' })"><Icon name="plus" :size="15" /><span>新增卡片</span></button>
             </div>
           </div>
         </section>

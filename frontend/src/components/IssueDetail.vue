@@ -1,14 +1,16 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import Icon from './Icon.vue';
 import { api } from '../api/index.js';
 import { FIELD_LABELS, hours, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
-const props = defineProps({ issue: Object, project: Object, issues: Array, members: Array, entries: Array, returnLabel: String, busy: Boolean });
+const props = defineProps({ issue: Object, project: Object, issues: Array, members: Array, entries: Array, returnLabel: String, busy: Boolean, canWrite: { type: Boolean, default: true }, canReadTime: { type: Boolean, default: true } });
 const emit = defineEmits(['close', 'open', 'edit', 'saved', 'reload', 'state']);
 const tab = ref('comments'), comment = ref(''), saving = ref(false), error = ref(''), conflict = ref(false);
 const heading = ref(null);
 let pending;
+watch(() => props.canWrite, allowed => { if (!allowed) { comment.value = ''; pending = null; error.value = ''; conflict.value = false; } });
+watch(() => props.canReadTime, allowed => { if (!allowed && tab.value === 'time') tab.value = 'comments'; });
 const dirty = computed(() => Boolean(comment.value.trim()));
 defineExpose({ dirty, saving, focus: () => heading.value?.focus() });
 const states = computed(() => statusesFor(props.project));
@@ -31,7 +33,7 @@ function display(field, value) {
   return ({ state: states.value, priority: PRIORITIES, type: TYPES }[field])?.find(item => item.id === value)?.label || value || '未設定';
 }
 async function sendComment() {
-  if (saving.value || props.busy || !dirty.value) return;
+  if (!props.canWrite || saving.value || props.busy || !dirty.value) return;
   saving.value = true; error.value = ''; conflict.value = false;
   const payload = { id: props.issue.id, content: comment.value, expectedRevision: props.issue.revision };
   const signature = JSON.stringify(payload);
@@ -49,10 +51,10 @@ async function sendComment() {
     <header class="issue-detail-toolbar">
       <button class="button secondary" :disabled="saving || busy" @click="emit('close')"><Icon name="chevron" :size="16" class="back-icon" />{{ returnLabel }}</button>
       <span class="identifier">{{ issue.identifier }}</span>
-      <button class="button primary" :disabled="saving || busy" @click="emit('edit')">編輯任務</button>
+      <button v-if="canWrite" class="button primary" :disabled="saving || busy" @click="emit('edit')">編輯任務</button>
     </header>
     <div class="issue-state-tabs" role="group" aria-label="任務狀態">
-      <button v-for="item in states" :key="item.id" type="button" :class="{ active: issue.state === item.id }" :aria-pressed="issue.state === item.id" :style="{ '--status-color': item.color }" :disabled="saving || busy" @click="emit('state', item.id)">{{ item.label }}</button>
+      <button v-for="item in states" :key="item.id" type="button" :class="{ active: issue.state === item.id }" :aria-pressed="issue.state === item.id" :style="{ '--status-color': item.color }" :disabled="saving || busy || !canWrite" @click="emit('state', item.id)">{{ item.label }}</button>
       <span v-if="busy" class="subtle" role="status">更新中…</span>
     </div>
     <div class="issue-detail-layout">
@@ -69,7 +71,7 @@ async function sendComment() {
           <div class="discussion-tabs" role="tablist" aria-label="任務紀錄">
             <button id="detail-comments-tab" role="tab" aria-controls="detail-activity" :aria-selected="tab === 'comments'" :class="{ active: tab === 'comments' }" @click="tab = 'comments'">留言 <span>{{ issue.comments.length }}</span></button>
             <button id="detail-history-tab" role="tab" aria-controls="detail-activity" :aria-selected="tab === 'history'" :class="{ active: tab === 'history' }" @click="tab = 'history'">異動紀錄 <span>{{ issue.history.length }}</span></button>
-            <button id="detail-time-tab" role="tab" aria-controls="detail-activity" :aria-selected="tab === 'time'" :class="{ active: tab === 'time' }" @click="tab = 'time'">工時 <span>{{ work.length }}</span></button>
+            <button v-if="canReadTime" id="detail-time-tab" role="tab" aria-controls="detail-activity" :aria-selected="tab === 'time'" :class="{ active: tab === 'time' }" @click="tab = 'time'">工時 <span>{{ work.length }}</span></button>
           </div>
           <div id="detail-activity" role="tabpanel" :aria-labelledby="`detail-${tab}-tab`">
             <template v-if="tab === 'comments'">
@@ -85,7 +87,7 @@ async function sendComment() {
               <p class="subtle">{{ issue.type === 'epic' ? '加總所屬卡片, 不重複計算子任務' : '依目前任務的有效紀錄計算' }} · 工作日採 Asia/Taipei</p>
             </template>
           </div>
-          <form v-show="tab === 'comments'" class="comment-form" @submit.prevent="sendComment">
+          <form v-if="canWrite" v-show="tab === 'comments'" class="comment-form" @submit.prevent="sendComment">
             <div v-if="error" class="error-box" role="alert">{{ error }}<button v-if="conflict" class="text-button" type="button" :disabled="saving || busy" @click="emit('reload')">更新任務資料（保留留言）</button></div>
             <label class="field">新增留言<textarea v-model="comment" rows="3" maxlength="2000" placeholder="留下想法或進度…" :disabled="saving || busy" /></label>
             <button class="button secondary" :disabled="saving || busy || !dirty">{{ saving ? '送出中…' : '送出留言' }}</button>
@@ -101,7 +103,7 @@ async function sendComment() {
           <div v-if="epic"><dt>所屬 Epic</dt><dd><button @click="emit('open', epic)">{{ epic.identifier }} · {{ epic.title }}</button></dd></div>
           <div v-if="parent"><dt>父任務</dt><dd><button @click="emit('open', parent)">{{ parent.identifier }} · {{ parent.title }}</button></dd></div>
           <div><dt>預估工時</dt><dd>{{ estimate ? hours(estimate) : '尚未估時' }}</dd></div>
-          <div><dt>已投入工時</dt><dd>{{ hours(spent) }}{{ issue.type === 'epic' ? '（所屬卡片加總）' : '' }}</dd></div>
+          <div v-if="canReadTime"><dt>已投入工時</dt><dd>{{ hours(spent) }}{{ issue.type === 'epic' ? '（所屬卡片加總）' : '' }}</dd></div>
         </dl>
         <p class="subtle">版本 {{ issue.revision }} · 已儲存</p>
       </aside>

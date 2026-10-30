@@ -24,7 +24,7 @@ async function copy() {
 <template>
   <dialog ref="dialog" class="team-dialog" aria-labelledby="team-heading" @cancel.prevent="!busy && emit('close')">
     <header class="section-title"><div><div class="eyebrow">YOUR TEAM</div><h2 id="team-heading">{{ meta.workspace?.name }} · 成員</h2></div><button class="icon-button" aria-label="關閉成員" :disabled="busy" @click="emit('close')"><Icon name="close" /></button></header>
-    <p class="subtle">工作空間內的專案共享, 每位成員使用自己的帳號填報工時</p>
+    <p class="subtle">加入工作空間後仍需專案授權；此處顯示你有權查看的成員</p>
     <ul class="member-list"><li v-for="member in members" :key="member.id"><span class="avatar small">{{ member.name.slice(0, 1) }}</span><div><strong>{{ member.name }}</strong><small>{{ member.email }}</small></div><span class="type-tag">{{ roleLabels[member.role] || member.role }}</span></li></ul>
     <template v-if="meta.permissions?.includes('workspace.invite')"><h3>邀請同伴</h3><form @submit.prevent="invite" class="invite-form"><label class="field">受邀者 Email<input v-model="email" type="email" required :disabled="busy" /></label><button class="button primary" :disabled="busy">{{ busy ? '建立中…' : '建立邀請連結' }}</button></form><div v-if="link" class="invite-result"><label class="field">邀請連結<input :value="link" readonly @focus="$event.target.select()" /></label><button class="button secondary" @click="copy">{{ copied ? '已複製' : '複製連結' }}</button></div><p class="subtle">連結 7 日有效, 限該 Email 的新帳號使用一次。先複製給同伴試用, 目前沒有寄出邀請信；既有帳號加入其他空間將在後續支援</p></template>
     <div v-if="error" class="error-box" role="alert">{{ error }}</div>

@@ -15,6 +15,7 @@ import TeamDialog from './components/TeamDialog.vue';
 import EpicOverview from './components/EpicOverview.vue';
 import TimeCalendar from './components/TimeCalendar.vue';
 import ProjectSettings from './components/ProjectSettings.vue';
+import ProjectMembers from './components/ProjectMembers.vue';
 import NotificationPreview from './components/NotificationPreview.vue';
 import { api } from './api/index.js';
 import { categoryFor, dateInTaipei, PRIORITIES, statusesFor, TYPES } from './domain/model.js';
@@ -63,7 +64,14 @@ const demoRequestId = crypto.randomUUID();
 const projects = computed(() => workspace.value.projects);
 const issues = computed(() => workspace.value.issues);
 const selectedProject = computed(() => projects.value.find((item) => item.id === projectId.value));
+function projectCan(project, permission) { return Boolean(project?.permissions?.includes(permission)); }
+const can = permission => projectCan(selectedProject.value, permission);
+const canWrite = computed(() => can('issue.write'));
+const creationBoardId = computed(() => section.value === 'tasks' && view.value === 'board' ? boardId.value : 'default');
+const canCreateIssue = computed(() => canWrite.value && (creationBoardId.value === 'default' || can('board.manage')));
+const projectMembers = computed(() => workspace.value.members.filter(member => selectedProject.value?.memberIds?.includes(member.id) && !member.disabledAt));
 const selectedIssue = computed(() => issues.value.find((item) => item.id === selectedId.value && item.projectId === projectId.value));
+const showIssuePage = computed(() => Boolean(selectedIssue.value && (detailPage.value || !canWrite.value)));
 const projectAllIssues = computed(() => issues.value.filter((item) => item.projectId === projectId.value));
 const projectIssues = computed(() => projectAllIssues.value.filter((item) => item.type !== 'epic'));
 const projectBoards = computed(() => (workspace.value.boards || []).filter(board => board.projectId === projectId.value));
@@ -82,7 +90,7 @@ const pagedIssues = computed(() => visibleIssues.value.slice((page.value - 1) * 
 const title = computed(() => selectedProject.value?.name || '我的專案');
 const currentFeature = computed(() => section.value === 'tasks'
   ? view.value === 'boards' ? '看板列表' : view.value === 'board' ? '任務看板' : scope.value === 'mine' ? '我的任務' : scope.value === 'done' ? '已完成' : '任務列表'
-  : { epics: 'Epic 概覽', time: '工時月曆', settings: '狀態設定', notifications: '通知預覽' }[section.value]);
+  : { epics: 'Epic 概覽', time: '工時月曆', settings: '狀態設定', members: '專案成員', notifications: '通知預覽' }[section.value]);
 const filterActive = computed(() => search.value || stateFilter.value || priorityFilter.value || assigneeFilter.value || epicFilter.value || typeFilter.value || conditionFilter.value);
 const filterFields = { state: stateFilter, priority: priorityFilter, assignee: assigneeFilter, epicId: epicFilter, type: typeFilter, condition: conditionFilter };
 const activeFilterChips = computed(() => [
@@ -106,6 +114,17 @@ async function refresh() {
     if (generation !== refreshGeneration) return;
     workspace.value = data;
     authenticated.value = true;
+    if (!data.meta.permissions?.includes('project.create')) creatingProject.value = false;
+    if (editingProject.value && !projectCan(data.projects.find(item => item.id === editingProject.value.id), 'project.update')) editingProject.value = null;
+    if (projectId.value && !selectedProject.value) {
+      selectedId.value = ''; detailPage.value = false; editingDetail.value = false; creatingIssue.value = false; boardEditor.value = null; issueReturn = null;
+      section.value = 'tasks'; projectId.value = ''; view.value = 'list'; boardId.value = 'default';
+      clearFilters(); history.replaceState(null, '', '#/'); notify('專案不存在或你的存取權限已變更');
+    }
+    if (!canWrite.value) { creatingIssue.value = false; editingDetail.value = false; }
+    if (!can('board.manage')) boardEditor.value = null;
+    const sectionPermission = { settings: 'project.statuses.update', members: 'project.members.manage', time: 'timeEntry.readOwn' }[section.value];
+    if (sectionPermission && !can(sectionPermission)) section.value = 'tasks';
     if (selectedId.value && !projectId.value) {
       const legacyIssue = data.issues.find((item) => item.id === selectedId.value);
       if (legacyIssue) { history.replaceState(null, '', projectHash(legacyIssue.projectId, legacyIssue.id)); readHash(); }
@@ -114,7 +133,7 @@ async function refresh() {
     if (projectId.value && !data.projects.some((item) => item.id === projectId.value)) { notify('找不到這個專案'); goHome(true); }
     if (projectId.value && view.value === 'board' && !selectedBoard.value) { notify('看板不存在或已移除'); navigate('all', projectId.value, 'boards'); }
     if (selectedId.value && !selectedIssue.value) { notify('找不到這個專案內的任務'); history.replaceState(null, '', projectHash(projectId.value)); readHash(); }
-  } catch (failure) { if (generation === refreshGeneration) { if (failure.code === 'UNAUTHENTICATED') { authenticated.value = false; teamOpen.value = false; creatingProject.value = false; editingProject.value = null; boardEditor.value = null; creatingIssue.value = false; selectedId.value = ''; } else error.value = failure.message; } }
+  } catch (failure) { if (generation === refreshGeneration) { if (failure.code === 'UNAUTHENTICATED') { authenticated.value = false; teamOpen.value = false; creatingProject.value = false; editingProject.value = null; boardEditor.value = null; creatingIssue.value = false; selectedId.value = ''; detailPage.value = false; editingDetail.value = false; workspace.value = { projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} }; } else error.value = failure.message; } }
   finally { if (generation === refreshGeneration) loading.value = false; }
 }
 function notify(message) {
@@ -172,6 +191,7 @@ function goHome(replace = false) {
   sidebarOpen.value = false;
 }
 function openIssue(issue, fullPage = detailPage.value, approved = false) {
+  fullPage = fullPage || !projectCan(projects.value.find(project => project.id === issue.projectId), 'issue.write');
   if (!approved && !canLeave()) return;
   if (!selectedId.value) {
     opener = document.activeElement;
@@ -251,6 +271,7 @@ async function closeIssue() {
   if (scroll !== undefined) window.scrollTo(0, scroll);
 }
 function newIssue(state = '', type = 'task', epicId = '') {
+  if (!canCreateIssue.value) return;
   defaultType.value = type;
   defaultEpicId.value = epicId;
   defaultState.value = typeof state === 'string' && state ? state : projectStates.value.find((item) => item.category === 'active')?.id || projectStates.value[0].id;
@@ -287,6 +308,7 @@ async function loadDemo() {
   finally { demoLoading.value = false; }
 }
 async function moveIssue(issue, fields) {
+  if (!canWrite.value) return;
   if (moving.value || Object.entries(fields).every(([key, value]) => issue[key] === value)) return;
   moving.value = issue.id;
   const signature = `${issue.id}:${issue.revision}:${JSON.stringify(fields)}`;
@@ -315,10 +337,11 @@ onMounted(async () => {
   window.addEventListener('hashchange', readHash);
   window.addEventListener('keydown', keydown);
   window.addEventListener('beforeunload', beforeUnload);
+  window.addEventListener('tasktracker:access-changed', refresh);
   dateTimer = setInterval(() => { today.value = dateInTaipei(); if (authenticated.value) refresh(); }, 30000);
   await refresh();
 });
-onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); window.removeEventListener('keydown', keydown); window.removeEventListener('beforeunload', beforeUnload); clearTimeout(toastTimer); clearInterval(dateTimer); });
+onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); window.removeEventListener('keydown', keydown); window.removeEventListener('beforeunload', beforeUnload); window.removeEventListener('tasktracker:access-changed', refresh); clearTimeout(toastTimer); clearInterval(dateTimer); });
 </script>
 
 <template>
@@ -342,8 +365,9 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
           <button class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'mine' }" @click="navigate('mine')"><Icon name="user" :size="18" />我的任務<span class="nav-count">{{ projectIssues.filter(i => i.assignee === currentUserId).length }}</span></button>
           <button class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'done' }" @click="navigate('done')"><Icon name="check" :size="18" />已完成<span class="nav-count">{{ projectIssues.filter(i => done(i)).length }}</span></button>
           <button class="nav-item" :class="{ active: section === 'epics' }" @click="changeSection('epics')"><Icon name="diamond" :size="18" />Epic 概覽<span class="nav-count">{{ projectAllIssues.filter(i => i.type === 'epic').length }}</span></button>
-          <button class="nav-item" :class="{ active: section === 'time' }" @click="changeSection('time')"><Icon name="clock" :size="18" />工時月曆</button>
-          <button v-if="workspace.meta.permissions?.includes('project.statuses.update')" class="nav-item" :class="{ active: section === 'settings' }" @click="changeSection('settings')"><Icon name="filter" :size="18" />狀態設定</button>
+          <button v-if="can('timeEntry.readOwn')" class="nav-item" :class="{ active: section === 'time' }" @click="changeSection('time')"><Icon name="clock" :size="18" />工時月曆</button>
+          <button v-if="can('project.statuses.update')" class="nav-item" :class="{ active: section === 'settings' }" @click="changeSection('settings')"><Icon name="filter" :size="18" />狀態設定</button>
+          <button v-if="can('project.members.manage')" class="nav-item" :class="{ active: section === 'members' }" aria-label="專案成員" @click="changeSection('members')"><Icon name="user" :size="18" />專案成員</button>
           <button class="nav-item" :class="{ active: section === 'notifications' }" @click="changeSection('notifications')"><Icon name="message" :size="18" />通知預覽</button>
         </nav>
       </template>
@@ -359,18 +383,18 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
 
     <main class="main">
       <header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" aria-label="開啟導覽" :aria-expanded="sidebarOpen" @click="sidebarOpen = !sidebarOpen"><Icon name="menu" /></button><Icon name="folder" :size="17" /><button class="breadcrumb-home" @click="goHome()">專案</button><Icon name="chevron" :size="13" /><strong :class="{ 'has-mobile-context': selectedProject }"><span class="project-breadcrumb">{{ selectedProject?.code || '專案列表' }}</span><span v-if="selectedProject" class="mobile-feature-context">{{ currentFeature }}</span></strong></div><div class="topbar-end"><span class="local-indicator"><i></i>本機協作試用</span><button class="icon-button" aria-label="重新整理工作空間" :disabled="loading || Boolean(moving)" @click="refresh"><Icon name="refresh" :size="18" /></button><div class="avatar tiny">{{ workspace.meta.actor?.slice(0, 1) }}</div></div></header>
-      <div class="workspace-content" :class="{ 'board-workspace': section === 'tasks' && view === 'board', 'data-workspace': selectedProject && section === 'tasks', 'detail-workspace': detailPage }">
+      <div class="workspace-content" :class="{ 'board-workspace': section === 'tasks' && view === 'board', 'data-workspace': selectedProject && section === 'tasks', 'detail-workspace': showIssuePage }">
         <button v-if="selectedProject && section !== 'tasks'" class="back-to-projects" @click="goHome()"><Icon name="chevron" :size="14" />返回專案列表</button>
-        <div v-if="detailPage && error" class="error-box workspace-error" role="alert">{{ error }}<button class="text-button" @click="refresh">重新載入</button></div>
-        <IssueDetail v-if="detailPage && selectedIssue" ref="detailTool" :key="selectedIssue.id" :issue="selectedIssue" :project="selectedProject" :issues="projectAllIssues" :members="workspace.members" :entries="workspace.timeEntries" :return-label="issueReturnLabel()" :busy="Boolean(moving)" @state="state => moveIssue(selectedIssue, { state })" @close="closeIssue" @edit="editingDetail = true" @open="issue => openIssue(issue, true)" @saved="savedIssue" @reload="refresh" />
-        <div v-show="!detailPage" class="page-heading"><div><div class="eyebrow">{{ selectedProject ? 'YOUR PROJECT, IN FOCUS' : 'A SPACE FOR EVERY PROJECT' }}</div><h1>{{ title }}<span class="heading-dot">.</span></h1><p v-if="!selectedProject || (section !== 'tasks' && selectedProject.description)">{{ selectedProject ? selectedProject.description : '先選一個專案, 再專心處理裡面的事' }}</p></div><button v-if="selectedProject && !(section === 'tasks' && view === 'boards')" class="button primary" :disabled="loading" @click="newIssue"><Icon name="plus" :size="18" />新增任務<span class="button-key">＋</span></button><button v-else-if="!selectedProject && workspace.meta.permissions?.includes('project.create')" class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div>
-        <ProjectHome v-if="!selectedProject" :projects="projects" :members="workspace.members" :can-edit="workspace.meta.permissions?.includes('project.update')" :can-create="workspace.meta.permissions?.includes('project.create')" :loading="loading" :error="error" :demo-loading="demoLoading" @create="creatingProject = true" @edit="editingProject = $event" @open="id => navigate('all', id)" @demo="loadDemo" @retry="refresh" />
+        <div v-if="showIssuePage && error" class="error-box workspace-error" role="alert">{{ error }}<button class="text-button" @click="refresh">重新載入</button></div>
+        <IssueDetail v-if="showIssuePage" ref="detailTool" :key="selectedIssue.id" :issue="selectedIssue" :project="selectedProject" :issues="projectAllIssues" :members="projectMembers" :entries="workspace.timeEntries" :return-label="issueReturnLabel()" :busy="Boolean(moving)" :can-write="canWrite" :can-read-time="can('timeEntry.readOwn')" @state="state => moveIssue(selectedIssue, { state })" @close="closeIssue" @edit="canWrite && (editingDetail = true)" @open="issue => openIssue(issue, true)" @saved="savedIssue" @reload="refresh" />
+        <div v-show="!showIssuePage" class="page-heading"><div><div class="eyebrow">{{ selectedProject ? 'YOUR PROJECT, IN FOCUS' : 'A SPACE FOR EVERY PROJECT' }}</div><h1>{{ title }}<span class="heading-dot">.</span></h1><p v-if="!selectedProject || (section !== 'tasks' && selectedProject.description)">{{ selectedProject ? selectedProject.description : '先選一個專案, 再專心處理裡面的事' }}</p></div><button v-if="selectedProject && canCreateIssue && !(section === 'tasks' && view === 'boards')" class="button primary" :disabled="loading" @click="newIssue"><Icon name="plus" :size="18" />新增任務<span class="button-key">＋</span></button><button v-else-if="!selectedProject && workspace.meta.permissions?.includes('project.create')" class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div>
+        <ProjectHome v-if="!selectedProject" :projects="projects" :members="workspace.members" :can-create="workspace.meta.permissions?.includes('project.create')" :loading="loading" :error="error" :demo-loading="demoLoading" @create="creatingProject = true" @edit="editingProject = $event" @open="id => navigate('all', id)" @demo="loadDemo" @retry="refresh" />
         <template v-else>
 
-        <BoardList v-show="!detailPage" v-if="section === 'tasks' && view === 'boards'" :boards="projectBoards" :issues="projectAllIssues" :can-manage="workspace.meta.permissions?.includes('board.manage')" :loading="loading" @open="openBoard" @create="boardEditor = { board: null }" @edit="boardEditor = { board: $event }" />
-        <section v-show="!detailPage" v-if="section === 'tasks' && view !== 'boards'" class="task-workspace" aria-label="任務工作區">
+        <BoardList v-show="!showIssuePage" v-if="section === 'tasks' && view === 'boards'" :boards="projectBoards" :issues="projectAllIssues" :can-manage="can('board.manage')" :loading="loading" @open="openBoard" @create="boardEditor = { board: null }" @edit="boardEditor = { board: $event }" />
+        <section v-show="!showIssuePage" v-if="section === 'tasks' && view !== 'boards'" class="task-workspace" aria-label="任務工作區">
           <h2 class="sr-only">{{ currentFeature }}</h2>
-          <header v-if="view === 'board' && selectedBoard" class="selected-board-heading"><div><button class="text-button" @click="navigate('all', projectId, 'boards')">返回看板列表</button><h3>{{ selectedBoard.name }}</h3><span class="subtle">{{ selectedBoard.isDefault ? '目前專案全部卡片' : '依收錄項目及 Epic 自動更新' }}</span></div><div v-if="!selectedBoard.isDefault && workspace.meta.permissions?.includes('board.manage')" class="selected-board-actions"><button class="button secondary" @click="boardEditor = { board: selectedBoard }">編輯收錄</button><button class="text-button danger-text" @click="archiveBoard">移除看板</button></div></header>
+          <header v-if="view === 'board' && selectedBoard" class="selected-board-heading"><div><button class="text-button" @click="navigate('all', projectId, 'boards')">返回看板列表</button><h3>{{ selectedBoard.name }}</h3><span class="subtle">{{ selectedBoard.isDefault ? '目前專案全部卡片' : '依收錄項目及 Epic 自動更新' }}</span></div><div v-if="!selectedBoard.isDefault && can('board.manage')" class="selected-board-actions"><button class="button secondary" @click="boardEditor = { board: selectedBoard }">編輯收錄</button><button class="text-button danger-text" @click="archiveBoard">移除看板</button></div></header>
           <div class="filter-toolbar">
             <label class="search-field"><Icon name="search" :size="18" /><input v-model="search" placeholder="搜尋任務、編號或負責人…" aria-label="搜尋任務" maxlength="180" /><button v-if="search" class="icon-button" aria-label="清除搜尋" @click="search = ''"><Icon name="close" :size="15" /></button></label>
             <div class="filters">
@@ -393,24 +417,25 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
           <div v-if="filterWarnings.length" class="filter-warning" role="alert">{{ filterWarnings.join('、') }}, 請重新選擇或清除條件。原條件保留, 沒有放寬搜尋</div>
           <div v-if="error" class="error-box workspace-error" role="alert">{{ error }}<button class="text-button" @click="refresh">重新載入</button></div>
           <div v-if="loading" class="empty-state"><span class="loader"></span><h2>正在整理你的工作空間</h2></div>
-          <div v-else-if="!visibleIssues.length && view === 'list'" class="empty-state"><span class="empty-icon"><Icon :name="filterActive ? 'search' : 'check'" :size="32" /></span><h2>{{ filterActive ? '沒有符合條件的任務' : scope === 'done' ? '每件完成的事, 都會出現在這裡' : scope === 'mine' ? '目前沒有指派給你的任務' : '這裡準備好迎接第一個任務了' }}</h2><p>{{ filterActive ? '換個關鍵字, 或放寬篩選條件試試看' : scope === 'mine' ? '把任務指派給自己, 就能在這裡集中查看' : '把需要做的事情寫下來, 就是很好的開始' }}</p><button v-if="filterActive" class="button secondary" @click="clearFilters">清除篩選</button><button v-else class="button secondary" @click="newIssue"><Icon name="plus" :size="17" />新增任務</button></div>
-          <div v-else-if="view === 'list'" class="table-scroll"><table class="issue-table"><thead><tr><th class="type-column" scope="col">類型</th><th>任務</th><th>狀態</th><th>優先級</th><th>負責人</th><th>到期日</th><th class="end-column"></th></tr></thead><tbody><tr v-for="issue in pagedIssues" :key="issue.id" :data-issue="issue.identifier"><td class="type-column"><span class="issue-type-label">{{ option(TYPES, issue.type)?.label || '未知類型' }}</span></td><td class="task-title-cell"><button class="task-title" @click="openIssue(issue)">{{ issue.title }}</button><div class="task-subline"><span class="identifier">{{ issue.identifier }}</span><span class="project-mini-dot" :style="{ background: projectFor(issue)?.color }"></span><span>{{ projectFor(issue)?.name }}</span><span v-if="issue.comments.length" class="comment-count"><Icon name="message" :size="12" />{{ issue.comments.length }}</span></div><IssueContext :issue="issue" :issues="projectAllIssues" :entries="workspace.timeEntries" :project="selectedProject" @open="openIssue" /></td><td><span class="status-badge" :class="issue.state" :style="{ '--status-color': option(projectStates, issue.state)?.color }"><i></i>{{ option(projectStates, issue.state)?.label }}</span></td><td><span class="priority-label" :style="{ '--priority-color': option(PRIORITIES, issue.priority)?.color }"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span>{{ option(PRIORITIES, issue.priority)?.label }}</span></td><td><span v-if="issue.assignee" class="assignee"><span class="avatar small">{{ memberName(issue.assignee).slice(0, 1) }}</span>{{ memberName(issue.assignee) }}</span><span v-else class="unassigned">未指派</span></td><td><span :class="['due-date', { overdue: overdue(issue) }]">{{ shortDate(issue.dueDate) || '—' }}<span v-if="overdue(issue)" class="overdue-dot" title="已過期"></span></span></td><td><button class="icon-button row-open" :aria-label="`開啟完整頁 ${issue.identifier}`" title="開啟完整頁" @click="openIssue(issue, true)"><Icon name="chevron" :size="17" /></button></td></tr></tbody></table></div>
-          <ProjectBoard v-else :key="`${currentUserId}:${projectId}:${boardId}`" :board-key="boardId" :included-epic-ids="boardEpicIds" :project="selectedProject" :issues="projectAllIssues" :visible-issues="visibleIssues" :entries="workspace.timeEntries" :members="workspace.members" :user-id="currentUserId" :moving="moving" :today="today" @open="openIssue" @move="moveIssue" @create="input => newIssue(input.state, 'task', input.epicId)" />
-          <footer v-if="projects.length && !loading" class="table-footer"><span v-if="view === 'list'" role="status">{{ visibleIssues.length }} 筆結果</span><span v-else>拖曳卡片或使用卡片狀態選單更新進度</span><div v-if="view === 'list' && pageCount > 1" class="pagination"><span>{{ (page - 1) * pageSize + 1 }}–{{ Math.min(page * pageSize, visibleIssues.length) }} / {{ visibleIssues.length }}</span><button class="icon-button previous" aria-label="上一頁" :disabled="page === 1" @click="page--"><Icon name="chevron" :size="15" /></button><button class="icon-button" aria-label="下一頁" :disabled="page === pageCount" @click="page++"><Icon name="chevron" :size="15" /></button></div></footer>
+          <div v-else-if="!visibleIssues.length && view === 'list'" class="empty-state"><span class="empty-icon"><Icon :name="filterActive ? 'search' : 'check'" :size="32" /></span><h2>{{ filterActive ? '沒有符合條件的任務' : scope === 'done' ? '每件完成的事, 都會出現在這裡' : scope === 'mine' ? '目前沒有指派給你的任務' : '這裡準備好迎接第一個任務了' }}</h2><p>{{ filterActive ? '換個關鍵字, 或放寬篩選條件試試看' : scope === 'mine' ? '把任務指派給自己, 就能在這裡集中查看' : '把需要做的事情寫下來, 就是很好的開始' }}</p><button v-if="filterActive" class="button secondary" @click="clearFilters">清除篩選</button><button v-else-if="canWrite" class="button secondary" @click="newIssue"><Icon name="plus" :size="17" />新增任務</button></div>
+          <div v-else-if="view === 'list'" class="table-scroll"><table class="issue-table"><thead><tr><th class="type-column" scope="col">類型</th><th>任務</th><th>狀態</th><th>優先級</th><th>負責人</th><th>到期日</th><th class="end-column"></th></tr></thead><tbody><tr v-for="issue in pagedIssues" :key="issue.id" :data-issue="issue.identifier"><td class="type-column"><span class="issue-type-label">{{ option(TYPES, issue.type)?.label || '未知類型' }}</span></td><td class="task-title-cell"><button class="task-title" @click="openIssue(issue)">{{ issue.title }}</button><div class="task-subline"><span class="identifier">{{ issue.identifier }}</span><span class="project-mini-dot" :style="{ background: projectFor(issue)?.color }"></span><span>{{ projectFor(issue)?.name }}</span><span v-if="issue.comments.length" class="comment-count"><Icon name="message" :size="12" />{{ issue.comments.length }}</span></div><IssueContext :issue="issue" :issues="projectAllIssues" :entries="workspace.timeEntries" :project="selectedProject" :can-read-time="can('timeEntry.readOwn')" @open="openIssue" /></td><td><span class="status-badge" :class="issue.state" :style="{ '--status-color': option(projectStates, issue.state)?.color }"><i></i>{{ option(projectStates, issue.state)?.label }}</span></td><td><span class="priority-label" :style="{ '--priority-color': option(PRIORITIES, issue.priority)?.color }"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span>{{ option(PRIORITIES, issue.priority)?.label }}</span></td><td><span v-if="issue.assignee" class="assignee"><span class="avatar small">{{ memberName(issue.assignee).slice(0, 1) }}</span>{{ memberName(issue.assignee) }}</span><span v-else class="unassigned">未指派</span></td><td><span :class="['due-date', { overdue: overdue(issue) }]">{{ shortDate(issue.dueDate) || '—' }}<span v-if="overdue(issue)" class="overdue-dot" title="已過期"></span></span></td><td><button class="icon-button row-open" :aria-label="`開啟完整頁 ${issue.identifier}`" title="開啟完整頁" @click="openIssue(issue, true)"><Icon name="chevron" :size="17" /></button></td></tr></tbody></table></div>
+          <ProjectBoard v-else :key="`${currentUserId}:${projectId}:${boardId}`" :board-key="boardId" :included-epic-ids="boardEpicIds" :project="selectedProject" :issues="projectAllIssues" :visible-issues="visibleIssues" :entries="workspace.timeEntries" :members="projectMembers" :user-id="currentUserId" :can-write="canWrite" :can-create="canCreateIssue" :moving="moving" :today="today" @open="openIssue" @move="moveIssue" @create="input => newIssue(input.state, 'task', input.epicId)" />
+          <footer v-if="projects.length && !loading" class="table-footer"><span v-if="view === 'list'" role="status">{{ visibleIssues.length }} 筆結果</span><span v-else>{{ canWrite ? '拖曳卡片或使用卡片狀態選單更新進度' : '目前為唯讀看板, 點擊卡片查看內容' }}</span><div v-if="view === 'list' && pageCount > 1" class="pagination"><span>{{ (page - 1) * pageSize + 1 }}–{{ Math.min(page * pageSize, visibleIssues.length) }} / {{ visibleIssues.length }}</span><button class="icon-button previous" aria-label="上一頁" :disabled="page === 1" @click="page--"><Icon name="chevron" :size="15" /></button><button class="icon-button" aria-label="下一頁" :disabled="page === pageCount" @click="page++"><Icon name="chevron" :size="15" /></button></div></footer>
         </section>
         <div v-if="error && section !== 'tasks'" class="error-box" role="alert">{{ error }}</div>
-        <EpicOverview v-if="section === 'epics'" :project="selectedProject" :issues="projectAllIssues" :entries="workspace.timeEntries" :members="workspace.members" @open="openIssue" @create="newIssue('', 'epic')" />
-        <TimeCalendar v-if="section === 'time'" ref="workspaceTool" :project="selectedProject" :issues="projectAllIssues" :entries="workspace.timeEntries" :members="workspace.members" :user-id="currentUserId" @updated="toolUpdated" @open="openIssue" />
-        <ProjectSettings v-if="section === 'settings'" ref="workspaceTool" :project="selectedProject" :issues="projectAllIssues" :permissions="workspace.meta.permissions || []" @updated="toolUpdated" />
+        <EpicOverview :can-write="canWrite" :can-read-time="can('timeEntry.readOwn')" v-if="section === 'epics'" :project="selectedProject" :issues="projectAllIssues" :entries="workspace.timeEntries" :members="projectMembers" @open="openIssue" @create="newIssue('', 'epic')" />
+        <TimeCalendar v-if="section === 'time' && can('timeEntry.readOwn')" ref="workspaceTool" :project="selectedProject" :issues="projectAllIssues" :entries="workspace.timeEntries" :members="projectMembers" :user-id="currentUserId" @updated="toolUpdated" @open="openIssue" />
+        <ProjectSettings v-if="section === 'settings' && can('project.statuses.update')" ref="workspaceTool" :project="selectedProject" :issues="projectAllIssues" :permissions="selectedProject.permissions || []" @updated="toolUpdated" />
+        <ProjectMembers v-if="section === 'members' && can('project.members.manage')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" />
         <NotificationPreview v-if="section === 'notifications'" :project="selectedProject" :notifications="workspace.notifications" :issues="projectAllIssues" :permissions="workspace.meta.permissions || []" @open="openIssue" />
         </template>
-        <footer v-show="!detailPage" class="page-footer"><span><Icon name="sun" :size="14" />保持專注, 也記得休息一下</span><span>TaskTracker <b>v0.2</b></span></footer>
+        <footer v-show="!showIssuePage" class="page-footer"><span><Icon name="sun" :size="14" />保持專注, 也記得休息一下</span><span>TaskTracker <b>v0.2</b></span></footer>
       </div>
     </main>
-    <IssuePanel v-if="creatingIssue || (selectedIssue && (!detailPage || editingDetail))" ref="issueTool" :can-expand="!detailPage" :key="selectedIssue?.id || 'new'" :issue="selectedIssue" :projects="selectedProject ? [selectedProject] : []" :default-project="projectId" :default-state="defaultState" :default-type="defaultType" :default-epic-id="defaultEpicId" :default-board-id="view === 'board' ? boardId : 'default'" :members="workspace.members" :issues="projectAllIssues" :entries="workspace.timeEntries" @expand="expandIssue" @open="jumpFromEditor" @close="closeIssue" @saved="savedIssue" @reload="reloadEditor" />
+    <IssuePanel v-if="canWrite && (creatingIssue || (selectedIssue && (!detailPage || editingDetail)))" ref="issueTool" :can-expand="!detailPage" :key="selectedIssue?.id || 'new'" :issue="selectedIssue" :projects="selectedProject ? [selectedProject] : []" :default-project="projectId" :default-state="defaultState" :default-type="defaultType" :default-epic-id="defaultEpicId" :default-board-id="creationBoardId" :members="projectMembers" :issues="projectAllIssues" :entries="workspace.timeEntries" @expand="expandIssue" @open="jumpFromEditor" @close="closeIssue" @saved="savedIssue" @reload="reloadEditor" />
     <BoardDialog v-if="boardEditor" ref="boardEditorTool" :project="selectedProject" :issues="projectAllIssues" :board="boardEditor.board" @close="boardEditor = null" @saved="boardSaved" @reload="refresh" />
     <TeamDialog v-if="teamOpen" :members="workspace.members" :meta="workspace.meta" @close="teamOpen = false" />
-    <ProjectDialog v-if="creatingProject || editingProject" :project="editingProject" :members="workspace.members" :user-id="currentUserId" @close="creatingProject = false; editingProject = null" @created="createdProject" />
+    <ProjectDialog v-if="creatingProject || editingProject" :project="editingProject" :members="editingProject ? workspace.members.filter(member => editingProject.memberIds?.includes(member.id)) : workspace.members.filter(member => workspace.meta.projectLeadIds?.includes(member.id))" :user-id="currentUserId" @close="creatingProject = false; editingProject = null" @created="createdProject" />
     <Transition name="toast"><div v-if="toast" class="toast-message" role="status"><span><Icon name="check" :size="16" /></span>{{ toast }}</div></Transition>
   </div>
   </v-app>

@@ -29,7 +29,7 @@ docker compose up -d --build
 
 目前類型固定為 Epic、Task、Bug, 暫不提供自訂類型。既有 Feature 透過 migration 轉為 Task, 保留內容／關聯／工時並增加版本與歷史；舊版匯入也會轉換。升級前請備份 SQLite, 不需重設 Seed
 
-可在看板列表新增／編輯收錄, 或在自訂看板內新增卡片（會自動收錄）。移除看板保留卡片、留言與工時。管理入口依 board.manage 權限, 原型仍沿用工作空間內共享專案, 完整 Project ACL 尚未完成。詳見[看板設計](docs/board-design.md)
+可在看板列表新增／編輯收錄, 或在自訂看板內新增卡片（會自動收錄）。移除看板保留卡片、留言與工時。管理入口依目前專案的 board.manage 權限；看板不擴張卡片存取範圍。詳見[看板設計](docs/board-design.md)
 
 任務可快速查看或開啟完整頁：點任務標題維持右側編輯面板, 面板的「開啟完整頁」或列表右側箭頭進入完整閱讀頁。上方狀態 tab 可直接更新此任務, 自動包含專案自訂狀態；中間顯示描述、子任務、關聯及留言／異動／工時, 右側顯示其他任務屬性；「編輯任務」沿用既有表單。完整頁在 Issue 網址加 `?detail=1`, 可分享與重新整理, 返回保留原列表篩選或來源看板；新開／重整後返回網址所屬列表或看板。未送留言與編輯草稿受離開保護, 衝突不清空內容
 
@@ -87,14 +87,24 @@ docker compose exec backend php artisan tasktracker:seed-demo --reset
 | --- | --- | --- |
 | owner | owner@example.test | 管理空間／專案／成員及 SMTP 驗證 |
 | manager | manager@example.test | 管理空間／專案／成員, 無 SMTP 驗證 |
-| maintainer | maintainer@example.test | 維護專案資訊／狀態／看板, 不可建專案或邀請 |
-| developer | developer@example.test | 任務／留言／本人工時, 無管理操作 |
+| maintainer | maintainer@example.test | first／second 的專案管理者, 可管理成員／資訊／狀態／看板, 不可建專案或邀請 |
+| developer | developer@example.test | 只加入 first 為開發者, 可處理任務／留言／本人工時, 看不到 second |
 
-四帳號使用同一個你指定的本機密碼, 存在忽略的 volume 環境檔, 不進 Git。新環境先在 backend 的被忽略 `.env` 或容器環境設定 `TASKTRACKER_SEED_PASSWORD`（至少 10 字）。權限由後端 permission ID 檢查, 名稱不作放行依據；四者目前仍看得到空間內所有專案, **Project ACL 尚未實作**。owner／manager 可看團隊通知, 其他兩者只看本人；所有人都只能修改自己的工時
+四帳號使用同一個你指定的本機密碼, 存在忽略的 volume 環境檔, 不進 Git。新環境先在 backend 的被忽略 `.env` 或容器環境設定 `TASKTRACKER_SEED_PASSWORD`（至少 10 字）。權限由後端 permission ID 檢查, 名稱不作放行依據；owner／manager 可存取所有專案；maintainer／developer 的 Workspace role 是 user, 必須有各專案授權才看得到。owner／manager 及所屬專案的管理者可看團隊通知, 開發者／讀者只看本人；所有人都只能修改自己的工時
 
-新建／重設時每個專案有 1 個 Epic、6 張一般卡片, 包含父子任務、雙向關聯、不同狀態／優先級、留言及按不同帳號填報的工時。Epic 指派 manager、父 Task 指派 maintainer、執行卡指派 developer。舊 Seed 重跑會非破壞地加入四帳號, **保留 Jack 與既有卡片、指派和工時**；所以既有資料的「我的任務」可能仍是空的, 可自行指派試用。v2 再重跑保留修改及帳密；明確 --reset 才重建此 seed 空間與四帳號密碼, 不修改其他空間。Email／ID 被外部帳號占用時拒絕覆蓋
+新建／重設時每個專案有 1 個 Epic、6 張一般卡片, 包含父子任務、雙向關聯、不同狀態／優先級、留言及按不同帳號填報的工時。Epic 指派 manager、父 Task 指派 maintainer；first 執行卡指派 developer, second 執行卡指派 maintainer。舊 Seed 重跑會非破壞地加入四帳號, **保留 Jack 與既有卡片、指派和工時**；所以既有資料的「我的任務」可能仍是空的, 可自行指派試用。v2 再重跑保留修改及帳密；明確 --reset 才重建此 seed 空間與四帳號密碼, 不修改其他空間。Email／ID 被外部帳號占用時拒絕覆蓋
 
-Seed 只允許 local／testing。Laravel 的 `php artisan db:seed` 也呼叫相同非重設流程。完整權限矩陣及暫時限制見[產品討論紀錄](docs/產品討論紀錄.md#四帳號權限試用-seed2026-10-22)
+Seed 只允許 local／testing。Laravel 的 `php artisan db:seed` 也呼叫相同非重設流程。目前權限矩陣及限制見[Project ACL 契約](docs/project-acl.md)；[四帳號舊紀錄](docs/產品討論紀錄.md#四帳號權限試用-seed2026-10-22)保留沿革
+
+## 專案成員與 ACL
+
+Workspace owner／manager 以明列的全專案 permission 管理空間內所有 Project；一般 user 加入 Workspace 後預設看不到任何專案。管理者進入專案, 從側欄「專案成員」選擇既有 Workspace 成員及角色, 可加入、更換角色或移除, 並查看授權異動紀錄。成員表單有獨立版本檢查, 衝突時保留草稿再重新載入
+
+固定 Project 角色為負責人、專案管理者、開發者、讀者；前兩者本版共用管理權限。讀者可查看任務完整頁及看板, 不能編輯、留言、拖曳或查看實際工時；開發者可查看團隊工時, 仍只能修改本人工時。專案負責人欄位僅作責任資訊, 不會自動給權限。所有授權依有效 permission＋Project scope＋資源條件判斷, 不以角色名稱放行
+
+清單、深連結、Epic／關聯、看板、工時與通知都受相同後端範圍限制。撤權／降權於下個 API 請求生效, 舊 requestId 重試也重查權限；畫面於重新整理、拒絕回應或現有 30 秒輪詢更新。撤去專案資格後清除該頁與編輯草稿, 已有任務指派、留言、工時及歷史保留
+
+升級前備份 SQLite（含正在使用的 WAL, 建議 SQLite backup 或 VACUUM INTO）。啟動 migration 將舊 member／maintainer／developer 空間角色改為 user, **不把所有一般成員自動加入全部專案**；原 owner／manager 保有管理入口, 再逐案加入成員。Seed 只為明確示範 namespace 加入上述 first／second 資格, 不改既有卡片／工時／帳密；重跑不恢復已撤回的資格。無需 reset, 回舊版應還原備份。完整契約見 [Project ACL](docs/project-acl.md)
 
 ## 資料與設定
 
@@ -104,7 +114,7 @@ Seed 只允許 local／testing。Laravel 的 `php artisan db:seed` 也呼叫相�
 - `docker compose down` 保留 volume, `down -v` 會刪除上述資料及秘密
 - 舊版 `data/` 與 `tasktracker-data` volume 保持原狀, 不會自動匯入或覆蓋
 
-工作空間之間隔離, 空間內專案／工時暫沿用原型共享行為。權限入口已集中, 但文件約定的 Project 成員 ACL 與完整角色矩陣仍待實作, 不把原型視為正式 SaaS 授權完成
+工作空間及專案存取皆由後端授權, 目前提供固定角色與 Project scope ACL。正式 SaaS 的註冊政策、既有帳號加入多空間、管理角色任命／移轉、自訂角色及即時推播仍須分階段完成
 
 SMTP 預設 preview, 只有連線／TLS／登入驗證, 不寄真實郵件。可參考根目錄 `.env.example` 填寫被忽略的 `.env.local`, 再執行 `docker compose --env-file .env.local up -d --build`；SMTP 設定只供後端使用
 
@@ -153,7 +163,7 @@ cd frontend
 npm run build
 ```
 
-Laravel 測試在 framework bootstrap 前強制 testing 環境及記憶體 SQLite, 覆寫 Compose 的程序環境並檢查隔離, 覆蓋租戶隔離、權限／作者限制、Epic、子任務／雙向關聯、狀態、工時、版本衝突、防重複提交、Seed 重跑／局部還原及舊資料匯入
+Laravel 測試在 framework bootstrap 前強制 testing 環境及記憶體 SQLite, 覆寫 Compose 的程序環境並檢查隔離, 覆蓋租戶隔離、Project ACL／固定矩陣／撤權重試／授權衝突／作者限制、Epic、子任務／雙向關聯、狀態、工時、版本衝突、防重複提交、Seed 重跑／局部還原及舊資料匯入
 
 瀏覽器回歸用 `frontend/tools/browser-check.js`, 須將 `E2E_API_URL` 指向**另一組空白、隔離的 Laravel 測試服務**, 不要指向使用者資料庫。會建立測試帳號、專案與工時, 前端使用 5175 埠：
 
@@ -170,6 +180,7 @@ E2E_API_URL=http://127.0.0.1:13004 npm run test:e2e
 ## 文件
 
 - [競品使用流程與功能缺口研究（2026-10-30）](docs/競品使用流程與功能缺口研究-2026-10-30.md)：五家競品的日常流程、公開回饋及分階段功能建議
+- [Project ACL 契約](docs/project-acl.md)：固定角色矩陣、permission／scope、成員 API 與資料升級
 - [產品討論紀錄](docs/產品討論紀錄.md)：已確認決策、待確認事項及選型沿革
 - [協作與工時設計](docs/collaboration-design.md)：Epic、狀態、工時與通知
 - [日常流程](docs/workflow-design.md)：子任務／關聯與常用視圖

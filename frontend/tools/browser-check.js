@@ -30,9 +30,11 @@ async function checkSeedAccounts(browser, failures) {
     assert.equal(await page.getByRole('button', { name: '建立專案', exact: true }).count(), manager ? 1 : 0);
     assert.equal(await page.getByRole('button', { name: '建立新專案', exact: false }).count(), manager ? 1 : 0);
     assert.equal(await page.getByRole('button', { name: '編輯專案：first', exact: true }).count(), maintainer ? 1 : 0);
+    assert.equal(await page.getByRole('button', { name: '進入專案：second', exact: true }).count(), role === 'developer' ? 0 : 1, 'Project 資格限制首頁範圍');
     await page.getByRole('button', { name: '工作空間成員', exact: true }).click();
     const team = page.getByRole('dialog', { name: 'f-ws · 成員', exact: true });
-    for (const name of ['Owner', 'Manager', 'Maintainer', 'Developer']) await team.getByText(name, { exact: true }).waitFor();
+    for (const account of ['owner', 'manager', 'maintainer', 'developer']) await team.getByText(`${account}@example.test`, { exact: true }).waitFor();
+    assert.equal(await team.getByText('成員', { exact: true }).count(), 2, 'Workspace user 與 Project 角色分開呈現');
     assert.equal(await team.getByRole('button', { name: '建立邀請連結', exact: true }).count(), manager ? 1 : 0);
     await team.getByRole('button', { name: '關閉成員', exact: true }).click();
     await page.getByRole('button', { name: '進入專案：first', exact: true }).click();
@@ -180,11 +182,127 @@ async function checkIssueDetailPage(page) {
   console.log('PASS: full task reading page, safe description, child/related links, attributes, time rollup, quick/full editing, custom status tabs/conflicts, comment conflict/draft guards, list filters/pagination/custom board return, share/reload/back and mobile');
 }
 
+async function checkProjectAcl(page, browser, failures) {
+  await page.setViewportSize({ width: 1440, height: 1050 });
+  const fixture = await page.evaluate(async () => {
+    const { api } = await import('/src/api/index.js');
+    const member = (await api.getWorkspace()).members.find(member => member.email === 'mei@example.test');
+    const project = await api.createProject({ name: 'ACL 閱讀專案', code: `AR${crypto.randomUUID().slice(0, 5)}`, requestId: crypto.randomUUID() });
+    const other = await api.createProject({ name: 'ACL 開發專案', code: `AD${crypto.randomUUID().slice(0, 5)}`, requestId: crypto.randomUUID() });
+    const hidden = await api.createProject({ name: 'ACL 未授權專案', code: `AH${crypto.randomUUID().slice(0, 5)}`, requestId: crypto.randomUUID() });
+    const issue = await api.createIssue({ projectId: project.id, title: '受保護的閱讀卡片', requestId: crypto.randomUUID() });
+    const task = await api.createIssue({ projectId: other.id, title: '受保護的開發卡片', requestId: crypto.randomUUID() });
+    await api.createIssue({ projectId: hidden.id, title: '不可洩露的卡片', requestId: crypto.randomUUID() });
+    const board = await api.createBoard({ projectId: other.id, name: '開發者唯讀收錄', selectedIssueIds: [task.id], requestId: crypto.randomUUID() });
+    await api.setProjectMember({ projectId: other.id, userId: member.id, roleId: 'developer', expectedRevision: 0, requestId: crypto.randomUUID() });
+    return { project, other, hidden, issue, task, member, board };
+  });
+  await page.goto(`http://127.0.0.1:5175/#/projects/${fixture.project.id}`);
+  await page.getByRole('button', { name: '專案成員', exact: true }).click();
+  const members = page.getByRole('region', { name: '專案成員與權限', exact: true });
+  await members.getByLabel('加入專案的成員').selectOption(fixture.member.id);
+  await members.getByLabel('專案角色').selectOption('reader');
+  // 另一管理者先改名單, 舊表單必須衝突並保留草稿
+  await page.evaluate(async ({ project, member }) => {
+    const { api } = await import('/src/api/index.js');
+    await api.setProjectMember({ projectId: project.id, userId: member.id, roleId: 'developer', expectedRevision: 0, requestId: crypto.randomUUID() });
+  }, fixture);
+  await members.getByRole('button', { name: '儲存專案成員', exact: true }).click();
+  await members.getByRole('alert').filter({ hasText: '專案成員已被更新' }).waitFor();
+  assert.equal(await members.getByLabel('專案角色').inputValue(), 'reader');
+  assert.equal(await members.getByLabel('加入專案的成員').inputValue(), fixture.member.id);
+  page.once('dialog', dialog => dialog.accept());
+  await members.getByRole('button', { name: '載入最新成員版本', exact: true }).click();
+  await members.getByRole('button', { name: '編輯成員 Mei', exact: true }).click();
+  await members.getByLabel('專案角色').selectOption('reader');
+  await members.getByRole('button', { name: '儲存專案成員', exact: true }).click();
+  await members.getByText('成員設定版本 2', { exact: false }).waitFor();
+  await members.getByText('讀者', { exact: true }).last().waitFor();
+  await page.screenshot({ path: 'artifacts/project-members-acl.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, '成員管理手機版不溢出');
+  await page.screenshot({ path: 'artifacts/mobile-project-members-acl.png', fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 1050 });
+
+  const teammate = await browser.newPage({ viewport: { width: 1440, height: 1050 } });
+  teammate.setDefaultTimeout(15000);
+  teammate.on('pageerror', error => failures.push(error.message));
+  await teammate.goto('http://127.0.0.1:5175');
+  await teammate.getByLabel('Email', { exact: true }).fill('mei@example.test');
+  await teammate.getByLabel('密碼', { exact: true }).fill('test-local-password');
+  await teammate.getByRole('button', { name: '登入', exact: true }).click();
+  await teammate.getByRole('button', { name: '進入專案：ACL 閱讀專案', exact: true }).click();
+  assert.equal(await teammate.getByRole('button', { name: '新增任務', exact: true }).count(), 0);
+  for (const name of ['專案成員', '狀態設定', '工時月曆']) assert.equal(await teammate.getByRole('button', { name, exact: true }).count(), 0);
+  await teammate.getByRole('button', { name: '受保護的閱讀卡片', exact: true }).click();
+  const detail = teammate.getByRole('region', { name: '任務完整頁', exact: true });
+  await detail.getByRole('heading', { name: '受保護的閱讀卡片', exact: true }).waitFor();
+  assert.equal(await detail.getByRole('button', { name: '編輯任務', exact: true }).count(), 0);
+  assert.equal(await detail.getByLabel('新增留言').count(), 0);
+  assert.equal(await detail.getByRole('tab', { name: /^工時/ }).count(), 0);
+  assert.equal(await detail.getByRole('group', { name: '任務狀態' }).locator('button:enabled').count(), 0);
+  await teammate.getByRole('button', { name: '返回任務列表', exact: true }).click();
+  await teammate.getByRole('button', { name: '任務看板', exact: true }).click();
+  assert.equal(await teammate.getByRole('button', { name: '新增看板', exact: true }).count(), 0);
+  await teammate.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
+  assert.equal(await teammate.locator('[draggable="true"]').count(), 0);
+  assert.equal(await teammate.getByLabel(`${fixture.issue.identifier} 的狀態`).isDisabled(), true);
+  await teammate.screenshot({ path: 'artifacts/reader-board-acl.png', fullPage: true });
+
+  // 同一人另一個 Project 為 developer, 不可把權限攤平給唯讀 Project
+  await teammate.goto(`http://127.0.0.1:5175/#/projects/${fixture.other.id}`);
+  await teammate.getByRole('button', { name: '受保護的開發卡片', exact: true }).waitFor();
+  await teammate.getByRole('button', { name: '新增任務', exact: false }).first().waitFor();
+  const snapshot = await teammate.evaluate(async () => (await import('/src/api/index.js')).api.getWorkspace());
+  assert.equal(snapshot.projects.some(project => project.id === fixture.hidden.id), false);
+  assert.equal(snapshot.issues.some(issue => issue.title === '不可洩露的卡片'), false);
+  await teammate.goto(`http://127.0.0.1:5175/#/projects/${fixture.hidden.id}`);
+  await teammate.getByRole('heading', { name: '我的專案.', exact: true }).waitFor();
+  assert.equal(await teammate.getByRole('button', { name: '進入專案：ACL 未授權專案', exact: true }).count(), 0);
+
+  await teammate.goto(`http://127.0.0.1:5175/#/projects/${fixture.other.id}/board/${fixture.board.id}`);
+  await teammate.getByLabel(`${fixture.task.identifier} 的狀態`).waitFor();
+  assert.equal(await teammate.getByLabel(`${fixture.task.identifier} 的狀態`).isDisabled(), false);
+  assert.equal(await teammate.getByRole('button', { name: /新增任務|新增卡片|編輯收錄|移除看板/ }).count(), 0, '開發者可移動既有卡片, 但不可修改自訂收錄或新增並收錄');
+
+  // 撤權時已開啟、未儲存的任務也必須卸載
+  await teammate.goto(`http://127.0.0.1:5175/#/projects/${fixture.other.id}`);
+  await teammate.getByRole('button', { name: '受保護的開發卡片', exact: true }).click();
+  const editor = teammate.getByRole('dialog');
+  await editor.getByLabel(/任務標題/).fill('撤權前未儲存的私有草稿');
+  await page.evaluate(async ({ other, member }) => {
+    const { api } = await import('/src/api/index.js');
+    const acl = await api.getProjectMembers({ projectId: other.id });
+    await api.removeProjectMember({ projectId: other.id, userId: member.id, expectedRevision: acl.revision, requestId: crypto.randomUUID() });
+  }, fixture);
+  // 失權寫入回應觸發 refresh, 不等背景輪詢
+  await editor.getByRole('button', { name: '儲存修改', exact: true }).click();
+  await teammate.getByRole('heading', { name: '我的專案.', exact: true }).waitFor();
+  assert.equal(await teammate.getByRole('dialog').count(), 0);
+  assert.equal(await teammate.getByText('受保護的開發卡片', { exact: true }).count(), 0);
+  assert.equal(await teammate.getByRole('button', { name: '進入專案：ACL 開發專案', exact: true }).count(), 0);
+  assert.equal(await teammate.evaluate(() => location.hash), '#/');
+  // 管理者從介面移除, 不會改掉 Issue 及歷史
+  page.once('dialog', dialog => dialog.accept());
+  await members.getByRole('button', { name: '移除成員 Mei', exact: true }).click();
+  await members.getByText('成員設定版本 3', { exact: false }).waitFor();
+  assert.equal(await members.getByRole('button', { name: '編輯成員 Mei', exact: true }).count(), 0);
+  const preserved = await page.evaluate(async id => (await (await import('/src/api/index.js')).api.getWorkspace()).issues.find(issue => issue.id === id), fixture.task.id);
+  assert.equal(preserved.title, '受保護的開發卡片');
+  await teammate.close();
+  console.log('PASS: Project ACL member UI, revision conflict/draft, mobile, per-project reader/developer capabilities, hidden deep links, read-only board/detail, revocation during dirty editing and history preservation');
+}
+
 async function checkProjectDetails(page, browser) {
   await page.setViewportSize({ width: 1440, height: 1050 });
   const project = await page.evaluate(async () => {
     const { api } = await import('/src/api/index.js');
-    return api.createProject({ name: '入口資訊測試', code: 'INFO', description: '說明這個專案的用途', requestId: crypto.randomUUID() });
+    const project = await api.createProject({ name: '入口資訊測試', code: 'INFO', description: '說明這個專案的用途', requestId: crypto.randomUUID() });
+    const member = (await api.getWorkspace()).members.find(member => member.email === 'mei@example.test');
+    const acl = await api.getProjectMembers({ projectId: project.id });
+    await api.setProjectMember({ projectId: project.id, userId: member.id, roleId: 'reader', expectedRevision: acl.revision, requestId: crypto.randomUUID() });
+    return project;
   });
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await page.reload();
@@ -595,6 +713,17 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await teammate.getByLabel('Email', { exact: true }).fill('mei@example.test');
   await teammate.getByLabel('密碼', { exact: true }).fill('test-local-password');
   await teammate.getByRole('button', { name: '加入工作空間', exact: true }).click();
+  await teammate.getByRole('heading', { name: '尚未加入任何專案', exact: true }).waitFor();
+  assert.equal(await teammate.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).count(), 0);
+  await page.getByRole('button', { name: '專案成員', exact: true }).click();
+  const membership = page.getByRole('region', { name: '專案成員與權限', exact: true });
+  await membership.getByRole('button', { name: '重新載入成員', exact: true }).click();
+  await membership.getByLabel('加入專案的成員').selectOption({ label: 'Mei · mei@example.test' });
+  await membership.getByLabel('專案角色').selectOption('developer');
+  await membership.getByRole('button', { name: '儲存專案成員', exact: true }).click();
+  await membership.getByRole('button', { name: '編輯成員 Mei', exact: true }).waitFor();
+  await page.getByRole('button', { name: '任務列表', exact: true }).click();
+  await teammate.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
   await teammate.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).waitFor();
   await teammate.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).click();
   assert.equal(await teammate.getByRole('button', { name: '狀態設定', exact: true }).count(), 0, '沒有設定權限時不顯示管理入口');
@@ -981,6 +1110,7 @@ try {
   await checkCustomBoards(page);
   await checkProjectDetails(page, browser);
   await checkIssueDetailPage(page);
+  await checkProjectAcl(page, browser, failures);
   await checkSeedAccounts(browser, failures);
   assert.deepEqual(failures, []);
   console.log('PASS: project-first home/create, scoped tasks and creation, project switching, hash links/reload/back/legacy links, search/filter, board dropdown/drag, edits, comments/history, unsaved protection, safe text, mobile navigation/layout');
