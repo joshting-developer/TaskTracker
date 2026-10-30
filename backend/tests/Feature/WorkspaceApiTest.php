@@ -122,6 +122,7 @@ class WorkspaceApiTest extends TestCase
         Auth::logout();
         $member = $this->postJson('/api/auth/register', ['name' => 'Lead', 'email' => 'lead@example.test', 'password' => 'test-local-password', 'inviteToken' => $invite['token']])->assertOk()->json('data');
         $this->postJson('/api/auth/login', ['email' => 'josh@example.test', 'password' => 'test-local-password'])->assertOk();
+        $this->rpc('setProjectMember', ['projectId' => $project['id'], 'userId' => $member['user']['id'], 'roleId' => 'reader', 'expectedRevision' => 0])->assertOk();
         $this->rpc('updateProject', ['id' => $project['id'], 'expectedRevision' => 2, 'leadId' => $member['user']['id']])->assertOk()->assertJsonPath('data.revision', 3);
         $this->postJson('/api/auth/login', ['email' => 'lead@example.test', 'password' => 'test-local-password'])->assertOk();
         $this->rpc('updateProject', ['id' => $project['id'], 'expectedRevision' => 3, 'description' => '負責人也不能繞過權限'])->assertStatus(403);
@@ -235,6 +236,10 @@ class WorkspaceApiTest extends TestCase
         $invite = $this->rpc('inviteMember', ['email' => 'mei@example.test'])->assertOk()->json('data');
         Auth::logout();
         $member = $this->postJson('/api/auth/register', ['name' => 'Mei', 'email' => 'mei@example.test', 'password' => 'test-local-password', 'inviteToken' => $invite['token']])->assertOk()->json('data');
+        $this->rpc('getWorkspace')->assertJsonCount(0, 'data.projects');
+        $this->postJson('/api/auth/login', ['email' => 'josh@example.test', 'password' => 'test-local-password'])->assertOk();
+        $this->rpc('setProjectMember', ['projectId' => $project['id'], 'userId' => $member['user']['id'], 'roleId' => 'developer', 'expectedRevision' => 0])->assertOk();
+        $this->postJson('/api/auth/login', ['email' => 'mei@example.test', 'password' => 'test-local-password'])->assertOk();
         $this->rpc('voidTime', ['id' => $time['id'], 'expectedRevision' => 1])->assertStatus(403);
         $this->rpc('inviteMember', ['email' => 'new@example.test'])->assertStatus(403);
         $this->rpc('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => Fields::STATES])->assertStatus(403);

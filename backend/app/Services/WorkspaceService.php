@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Authorization\WorkspacePermissions as Permissions;
+use App\Authorization\ProjectAccess;
 use App\Domain\DomainError;
 use App\Domain\Fields;
 use App\Repositories\RecordStore;
@@ -12,10 +13,12 @@ use Illuminate\Support\Str;
 class WorkspaceService
 {
     private RecordStore $store;
+    private ProjectAccess $access;
 
     public function __construct(private array $context)
     {
         $this->store = (new RecordStore)->forWorkspace($context['workspace']['id']);
+        $this->access = new ProjectAccess($this->store, $context);
     }
 
     private function now(): string { return now()->utc()->toISOString(); }
@@ -23,18 +26,9 @@ class WorkspaceService
 
     public function execute(string $operation, array $input): array
     {
-        $permission = match ($operation) {
-            'getWorkspace' => 'project.read',
-            'createProject', 'loadDemo' => 'project.create',
-            'createIssue', 'updateIssue', 'addComment' => 'issue.write',
-            'updateStatuses' => 'project.statuses.update',
-            'updateProject' => 'project.update',
-            'createBoard', 'updateBoard', 'archiveBoard' => 'board.manage',
-            'logTime', 'updateTime', 'voidTime' => 'timeEntry.writeOwn',
-            default => DomainError::fail('NOT_FOUND', '找不到這個操作'),
-        };
-        Permissions::authorize($this->context, $permission);
+        $this->authorizeOperation($operation, $input);
         if ($operation === 'getWorkspace') return $this->workspace();
+        if ($operation === 'getProjectMembers') return (new ProjectMembers($this->store, $this->context))->listing($input['projectId']);
         $requestId = Fields::text($input['requestId'] ?? null, '操作識別碼', 100, true);
         $key = $this->context['user']['id'].':'.$requestId;
         $signature = hash('sha256', $this->canonical([$operation, $input]));
@@ -49,6 +43,35 @@ class WorkspaceService
         return $result;
     }
 
+    private function authorizeOperation(string $operation, array $input): void
+    {
+        Permissions::authorize($this->context, 'workspace.read');
+        if ($operation === 'getWorkspace') return;
+        if (in_array($operation, ['createProject', 'loadDemo'], true)) { Permissions::authorize($this->context, 'project.create'); return; }
+        [$kind, $key, $permission] = match ($operation) {
+            'createIssue' => ['projects', 'projectId', 'issue.write'],
+            'updateIssue', 'addComment' => ['issues', 'id', 'issue.write'],
+            'updateProject' => ['projects', 'id', 'project.update'],
+            'updateStatuses' => ['projects', 'projectId', 'project.statuses.update'],
+            'createBoard' => ['projects', 'projectId', 'board.manage'],
+            'updateBoard', 'archiveBoard' => ['boards', 'id', 'board.manage'],
+            'logTime' => ['issues', 'issueId', 'timeEntry.writeOwn'],
+            'updateTime', 'voidTime' => ['timeEntries', 'id', 'timeEntry.writeOwn'],
+            'getProjectMembers', 'setProjectMember', 'removeProjectMember' => ['projects', 'projectId', 'project.members.manage'],
+            default => DomainError::fail('NOT_FOUND', '找不到這個操作'),
+        };
+        if ($kind === 'boards' && ($input[$key] ?? '') === 'default') DomainError::fail('INVALID_INPUT', 'Default 是固定看板, 不可修改或移除');
+        $resource = $this->store->require($kind, Fields::text($input[$key] ?? null, '資料識別碼', 100, true));
+        $projectId = $kind === 'projects' ? $resource['id'] : $resource['projectId'];
+        $this->access->require($projectId, $permission);
+        if ($kind === 'timeEntries' && $resource['userId'] !== $this->context['user']['id']) DomainError::fail('FORBIDDEN', '只能修改自己的工時');
+        if ($operation === 'createIssue' && !empty($input['boardId']) && $input['boardId'] !== 'default') $this->access->require($projectId, 'board.manage');
+        // 同一 requestId 的快取也必須在當次資源授權後才讀取
+    }
+
+    private function setProjectMember(array $input): array { return (new ProjectMembers($this->store, $this->context))->change($input, false); }
+    private function removeProjectMember(array $input): array { return (new ProjectMembers($this->store, $this->context))->change($input, true); }
+
     private function canonical(mixed $value): string
     {
         if (is_array($value)) {
@@ -60,15 +83,28 @@ class WorkspaceService
 
     private function workspace(): array
     {
-        $issues = $this->store->all('issues');
+        $projects = [];
+        $memberIds = [$this->context['user']['id']];
+        foreach ($this->store->all('projects') as $project) {
+            if (!$this->access->can($project['id'], 'project.read')) continue;
+            $eligible = array_column($this->access->eligibleMembers($project['id']), 'id');
+            $memberIds = [...$memberIds, ...$eligible];
+            // capabilities 是此操作者目前的 scope 結果, 不存回原 Project
+            $projects[] = [...$project, 'permissions' => $this->access->permissions($project['id']), 'accessSource' => $this->access->source($project['id']), 'memberIds' => $eligible];
+        }
+        $issueProjects = array_column(array_filter($projects, fn ($p) => $this->access->can($p['id'], 'issue.read')), 'id');
+        $issues = array_values(array_filter($this->store->all('issues'), fn ($i) => in_array($i['projectId'], $issueProjects, true)));
         usort($issues, fn ($a, $b) => strcmp($b['updatedAt'], $a['updatedAt']) ?: strcmp($a['identifier'], $b['identifier']));
+        $issueIds = array_column($issues, 'id');
         $userId = $this->context['user']['id'];
+        $teamMembers = in_array('workspace.members.read', $this->context['permissions'], true);
         return [
-            'projects' => $this->store->all('projects'), 'issues' => $issues,
-            'boards' => (new ProjectBoards($this->store, $this->context))->listing(),
-            'members' => $this->store->all('members'), 'timeEntries' => $this->store->all('timeEntries'),
-            'notifications' => array_values(array_filter($this->store->all('notifications'), fn ($n) => in_array('notification.readTeam', $this->context['permissions'], true) || $n['recipientId'] === $userId)),
-            'meta' => ['mode' => 'local', 'actor' => $this->context['user']['name'], 'userId' => $userId, 'role' => $this->context['role'], 'permissions' => $this->context['permissions'], 'workspace' => $this->context['workspace'], 'singleUser' => false],
+            'projects' => $projects, 'issues' => $issues,
+            'boards' => array_values(array_filter((new ProjectBoards($this->store, $this->context))->listing(), fn ($b) => in_array($b['projectId'], $issueProjects, true))),
+            'members' => array_values(array_filter($this->store->all('members'), fn ($m) => $teamMembers || in_array($m['id'], $memberIds, true))),
+            'timeEntries' => array_values(array_filter($this->store->all('timeEntries'), fn ($e) => in_array($e['issueId'], $issueIds, true) && ($this->access->can($e['projectId'], 'timeEntry.readTeam') || ($e['userId'] === $userId && $this->access->can($e['projectId'], 'timeEntry.readOwn'))))),
+            'notifications' => array_values(array_filter($this->store->all('notifications'), fn ($n) => in_array($n['issueId'], $issueIds, true) && ($this->access->can($n['projectId'], 'notification.readTeam') || $n['recipientId'] === $userId))),
+            'meta' => ['mode' => 'local', 'actor' => $this->context['user']['name'], 'userId' => $userId, 'role' => $this->context['role'], 'permissions' => $this->context['permissions'], 'workspace' => $this->context['workspace'], 'singleUser' => false, 'projectLeadIds' => !in_array('project.create', $this->context['permissions'], true) ? [] : array_column(array_filter($this->store->all('members'), fn ($m) => empty($m['disabledAt']) && in_array('project.readAny', Permissions::resolve($m['role']), true)), 'id')],
         ];
     }
 
@@ -86,15 +122,16 @@ class WorkspaceService
         $leadId = $this->projectLead($input['leadId'] ?? $this->context['user']['id']);
         $project = ['id' => $this->id(), 'name' => $name, 'code' => $code, 'leadId' => $leadId, 'description' => Fields::text($input['description'] ?? '', '專案說明', 500), 'color' => ['#8d83ed', '#64b0a0', '#e5a25c', '#cf82ae', '#71a2d5'][count($projects) % 5], 'nextNumber' => 1, 'revision' => 1, 'statuses' => Fields::STATES, 'settingsHistory' => [], 'createdAt' => $this->now()];
         $this->store->put('projects', $project['id'], $project);
+        if ($leadId && !$this->access->forUser($leadId)->can($project['id'], 'project.read')) DomainError::fail('INVALID_INPUT', '請先將一般成員加入專案, 再指派為專案負責人');
         return $project;
     }
 
-    private function projectLead(mixed $value): string
+    private function projectLead(mixed $value, ?string $projectId = null): string
     {
         $id = Fields::text($value, '專案負責人', 100);
         if ($id !== '') {
             $member = $this->store->get('members', $id);
-            if (!$member || !empty($member['disabledAt'])) DomainError::fail('INVALID_INPUT', '專案負責人必須是目前工作空間的有效成員');
+            if (!$member || !empty($member['disabledAt']) || ($projectId && !$this->access->forUser($id)->can($projectId, 'project.read'))) DomainError::fail('INVALID_INPUT', '專案負責人必須是可存取目前專案的有效成員');
         }
         return $id;
     }
@@ -107,7 +144,7 @@ class WorkspaceService
         $fields = [
             'name' => Fields::text($input['name'] ?? $project['name'], '專案名稱', 60, true),
             'description' => Fields::text($input['description'] ?? $project['description'] ?? '', '專案介紹', 500),
-            'leadId' => $this->projectLead($input['leadId'] ?? $project['leadId'] ?? ''),
+            'leadId' => $this->projectLead($input['leadId'] ?? $project['leadId'] ?? '', isset($input['leadId']) && $input['leadId'] !== ($project['leadId'] ?? '') ? $project['id'] : null),
         ];
         $changes = [];
         foreach ($fields as $field => $value) if (($project[$field] ?? '') !== $value) $changes[] = ['field' => $field, 'before' => $project[$field] ?? '', 'after' => $value];
@@ -152,7 +189,7 @@ class WorkspaceService
             $epic = $this->store->require('issues', $fields['epicId']);
             if ($epic['projectId'] !== $project['id'] || $epic['type'] !== 'epic' || $fields['type'] === 'epic' || $epic['id'] === ($current['id'] ?? null)) DomainError::fail('INVALID_INPUT', 'Epic 必須是同專案的父項目, 不可巢狀或自我連結');
         }
-        if ($fields['assignee'] && $fields['assignee'] !== ($current['assignee'] ?? '') && !$this->store->get('members', $fields['assignee'])) DomainError::fail('INVALID_INPUT', '負責人必須是工作空間成員');
+        if ($fields['assignee'] && $fields['assignee'] !== ($current['assignee'] ?? '') && !$this->access->forUser($fields['assignee'])->can($project['id'], 'project.read')) DomainError::fail('INVALID_INPUT', '負責人必須有目前專案的存取權');
         if ($fields['type'] === 'epic' && $fields['estimateMinutes']) DomainError::fail('INVALID_INPUT', 'Epic 的預估工時由子任務加總, 請在子任務填寫');
         if (!$current) return;
         $epicChildren = array_filter($issues, fn ($i) => ($i['epicId'] ?? '') === $current['id']);
@@ -220,7 +257,7 @@ class WorkspaceService
     private function notify(array $issue, string $subject, string $body, string $recipientId): void
     {
         $member = $recipientId ? $this->store->get('members', $recipientId) : null;
-        if (!$member || $recipientId === $this->context['user']['id']) return;
+        if (!$member || $recipientId === $this->context['user']['id'] || !$this->access->forUser($recipientId)->can($issue['projectId'], 'issue.read')) return;
         $notification = ['id' => $this->id(), 'issueId' => $issue['id'], 'projectId' => $issue['projectId'], 'recipientId' => $recipientId, 'email' => $member['email'], 'subject' => '['.$issue['identifier'].'] '.$subject, 'body' => $body."\n".$issue['title'], 'status' => 'preview', 'createdAt' => $this->now()];
         $this->store->put('notifications', $notification['id'], $notification);
     }

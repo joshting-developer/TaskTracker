@@ -68,7 +68,7 @@ class DemoSeedTest extends TestCase
         $collision->delete();
         $this->assertTrue(app(DemoData::class)->seed(password: 'seed-test-password')['upgraded']);
         $this->assertCount(5, $tenant->all('members'));
-        $this->assertSame($snapshot, DB::table('records')->where('kind', 'like', 'w:'.DemoData::WORKSPACE_ID.':%')->whereNotIn('id', array_column(DemoData::ACCOUNTS, 'id'))->orderBy('kind')->orderBy('id')->get()->toJson());
+        $this->assertSame($snapshot, DB::table('records')->where('kind', 'like', 'w:'.DemoData::WORKSPACE_ID.':%')->whereNotIn('id', array_column(DemoData::ACCOUNTS, 'id'))->where('kind', 'not like', '%:upgrades')->orderBy('kind')->orderBy('id')->get()->toJson());
         $this->assertTrue(Hash::check('legacy-test-password', $jack->fresh()->password));
         $hash = User::find(DemoData::USER_ID)->password;
         $this->assertFalse(app(DemoData::class)->seed()['upgraded']);
@@ -83,12 +83,13 @@ class DemoSeedTest extends TestCase
         $rpc = fn ($operation, $input = []) => $this->postJson('/api/rpc/'.$operation, ['requestId' => (string) Str::uuid(), ...$input]);
         foreach (DemoData::ACCOUNTS as $role => $account) {
             Auth::logout();
-            $login = $this->postJson('/api/auth/login', ['email' => $account['email'], 'password' => 'seed-test-password'])->assertOk()->assertJsonPath('data.user.name', $role)->assertJsonPath('data.role', $role)->json('data');
-            $this->assertSame(WorkspacePermissions::resolve($role), $login['permissions']);
+            $login = $this->postJson('/api/auth/login', ['email' => $account['email'], 'password' => 'seed-test-password'])->assertOk()->assertJsonPath('data.user.name', $role)->assertJsonPath('data.role', in_array($role, ['maintainer', 'developer']) ? 'user' : $role)->json('data');
+            $this->assertSame(WorkspacePermissions::resolve($login['role']), $login['permissions']);
             $data = $rpc('getWorkspace')->assertOk()->json('data');
             $this->assertContains('first', array_column($data['projects'], 'name'));
-            $this->assertContains('second', array_column($data['projects'], 'name'));
-            foreach ($data['notifications'] as $notification) if (!in_array('notification.readTeam', $login['permissions'], true)) $this->assertSame($account['id'], $notification['recipientId']);
+            if ($role === 'developer') $this->assertNotContains('second', array_column($data['projects'], 'name'));
+            else $this->assertContains('second', array_column($data['projects'], 'name'));
+            foreach ($data['notifications'] as $notification) if (!in_array('notification.readTeamAny', $login['permissions'], true) && $role === 'developer') $this->assertSame($account['id'], $notification['recipientId']);
             $project = $data['projects'][0];
             $canManage = $role !== 'developer';
             $rpc('createProject', ['name' => '帳號測試', 'code' => strtoupper(substr($role, 0, 4))])->assertStatus(in_array($role, ['owner', 'manager']) ? 200 : 403);

@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Authorization\WorkspacePermissions;
+use App\Authorization\ProjectAccess;
 use App\Domain\DomainError;
 use App\Domain\Fields;
 use App\Repositories\RecordStore;
@@ -69,7 +69,7 @@ class ProjectBoards
 
     public function includeCreatedIssue(string $boardId, array $issue): void
     {
-        WorkspacePermissions::authorize($this->context, 'board.manage');
+        (new ProjectAccess($this->store, $this->context))->require($issue['projectId'], 'board.manage');
         $board = $this->store->require('boards', $boardId);
         if (!empty($board['archivedAt']) || $board['projectId'] !== $issue['projectId']) DomainError::fail('NOT_FOUND', '找不到這個專案的看板');
         if (in_array($issue['epicId'], $board['selectedIssueIds'], true)) return;

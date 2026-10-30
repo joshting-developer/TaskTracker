@@ -28,7 +28,7 @@ class DemoData
         return DB::transaction(function () use ($reset, $password) {
             $store = new RecordStore;
             $marker = $store->get('demoSeeds', self::WORKSPACE_ID);
-            if (($marker['version'] ?? 0) >= 2 && !$reset) return ['created' => false, 'upgraded' => false, 'workspaceId' => self::WORKSPACE_ID];
+            if (($marker['version'] ?? 0) >= 2 && !$reset) { ProjectAclUpgrade::run(); return ['created' => false, 'upgraded' => false, 'workspaceId' => self::WORKSPACE_ID]; }
             foreach (self::ACCOUNTS as $account) {
                 $existing = User::where('email', $account['email'])->orWhere('id', $account['id'])->first();
                 $member = $store->forWorkspace(self::WORKSPACE_ID)->get('members', $account['id']);
@@ -52,6 +52,8 @@ class DemoData
                 $services[$role] = new WorkspaceService(['user' => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email], 'workspace' => $workspace, 'role' => $role, 'permissions' => WorkspacePermissions::resolve($role)]);
             }
             if ($marker && !$reset) {
+                ProjectAclUpgrade::seedAssignments($tenant);
+                ProjectAclUpgrade::run();
                 $store->put('demoSeeds', self::WORKSPACE_ID, [...$marker, 'version' => 2, 'upgradedAt' => now()->utc()->toISOString()]);
                 return ['created' => false, 'upgraded' => true, 'workspaceId' => self::WORKSPACE_ID];
             }
@@ -60,7 +62,9 @@ class DemoData
             foreach (['first', 'second'] as $index => $name) {
                 $project = $run('createProject', ['name' => $name, 'code' => strtoupper($name), 'description' => $name.' 的示範工作, 可自由修改；重設 seed 可還原']);
                 $run('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => [...$project['statuses'], ['id' => 'review', 'label' => '待驗收', 'category' => 'active', 'color' => '#8757b3']]]);
-                $create = fn ($title, $fields = []) => $run('createIssue', ['projectId' => $project['id'], 'title' => $title, 'assignee' => self::ACCOUNTS['developer']['id'], ...$fields]);
+                ProjectAclUpgrade::seedAssignments($tenant);
+                // 非開發者成員不能在 second 被指派新工作
+                $create = fn ($title, $fields = []) => $run('createIssue', ['projectId' => $project['id'], 'title' => $title, 'assignee' => self::ACCOUNTS[$index ? 'maintainer' : 'developer']['id'], ...$fields]);
                 $epic = $create($index ? '正式上線準備' : '會員功能第一版', ['type' => 'epic', 'assignee' => self::ACCOUNTS['manager']['id']]);
                 $parent = $create($index ? '完成上線前檢查' : '完成登入功能', ['epicId' => $epic['id'], 'estimateMinutes' => 60, 'state' => 'in_progress', 'assignee' => self::ACCOUNTS['maintainer']['id']]);
                 $api = $create($index ? '檢查 API 健康狀態' : '實作登入 API', ['parentIssueId' => $parent['id'], 'estimateMinutes' => 120, 'state' => 'review']);
@@ -68,12 +72,16 @@ class DemoData
                 $bug = $create($index ? '修正通知文案' : '修正表單錯誤提示', ['type' => 'bug', 'epicId' => $epic['id'], 'estimateMinutes' => 30, 'priority' => 'high', 'relatedIssueIds' => [$parent['id']], 'dueDate' => now('Asia/Taipei')->subDay()->toDateString()]);
                 $create($index ? '整理發布說明' : '整理操作說明', ['type' => 'task', 'state' => 'done', 'epicId' => $epic['id'], 'estimateMinutes' => 60]);
                 $create('討論下一次迭代範圍', ['state' => 'backlog', 'assignee' => '']);
-                foreach ([[$parent, 30, 2, 'maintainer'], [$api, 90, 1, 'developer'], [$ui, 45, 0, 'developer']] as [$issue, $minutes, $daysAgo, $role]) {
-                    $services[$role]->execute('logTime', ['requestId' => (string) Str::uuid(), 'issueId' => $issue['id'], 'workDate' => now('Asia/Taipei')->subDays($daysAgo)->toDateString(), 'minutes' => $minutes, 'note' => 'Seed 示範工時']);
+                foreach ([[$parent, 30, 2, 'maintainer'], [$api, 90, 1, $index ? 'maintainer' : 'developer'], [$ui, 45, 0, $index ? 'maintainer' : 'developer']] as [$issue, $minutes, $daysAgo, $role]) {
+                    $account = self::ACCOUNTS[$role];
+                    $member = $tenant->require('members', $account['id']);
+                    $worker = new WorkspaceService(['user' => ['id' => $account['id'], 'name' => $role], 'workspace' => $workspace, 'role' => $member['role'], 'permissions' => WorkspacePermissions::resolve($member['role'])]);
+                    $worker->execute('logTime', ['requestId' => (string) Str::uuid(), 'issueId' => $issue['id'], 'workDate' => now('Asia/Taipei')->subDays($daysAgo)->toDateString(), 'minutes' => $minutes, 'note' => 'Seed 示範工時']);
                 }
                 $latest = $tenant->require('issues', $bug['id']);
                 $run('addComment', ['id' => $bug['id'], 'expectedRevision' => $latest['revision'], 'content' => '已補上重現步驟, 請協助確認']);
             }
+            ProjectAclUpgrade::run();
             $store->put('demoSeeds', self::WORKSPACE_ID, ['id' => self::WORKSPACE_ID, 'version' => 2, 'seededAt' => now()->utc()->toISOString()]);
             return ['created' => true, 'upgraded' => false, 'workspaceId' => self::WORKSPACE_ID];
         });
