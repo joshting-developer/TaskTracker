@@ -19,7 +19,7 @@ export async function callApi(operation, input = {}, group = 'rpc', retry = true
     throw Object.assign(new Error('暫時無法連線, 請確認服務已啟動後重試'), { code: 'NETWORK_ERROR' });
   }
   if (!result.ok) {
-    if (operation !== 'getWorkspace' && ['FORBIDDEN', 'NOT_FOUND', 'UNAUTHENTICATED'].includes(result.error?.code)) window.dispatchEvent(new Event('tasktracker:access-changed'));
+    if ((result.error?.code === 'UNAUTHENTICATED' && operation !== 'getWorkspace') || (!['getWorkspace', 'getTodos'].includes(operation) && ['FORBIDDEN', 'NOT_FOUND'].includes(result.error?.code))) window.dispatchEvent(new Event('tasktracker:access-changed'));
     throw Object.assign(new Error(result.error?.message || '操作失敗'), { code: result.error?.code });
   }
   return result.data;
@@ -30,6 +30,15 @@ export const api = {
   login: (input) => callApi('login', input, 'auth'),
   logout: () => callApi('logout', {}, 'auth'),
   getWorkspace: () => callApi('getWorkspace'),
+  getTodos: () => callApi('getTodos'),
+  createTodo: input => callApi('createTodo', input),
+  updateTodo: input => callApi('updateTodo', input),
+  completeTodo: input => callApi('completeTodo', input),
+  reopenTodo: input => callApi('reopenTodo', input),
+  returnTodo: input => callApi('returnTodo', input),
+  cancelTodo: input => callApi('cancelTodo', input),
+  convertTodo: input => callApi('convertTodo', input),
+  readTodoNotification: input => callApi('readTodoNotification', input),
   getProjectMembers: (input) => callApi('getProjectMembers', input),
   setProjectMember: (input) => callApi('setProjectMember', input),
   removeProjectMember: (input) => callApi('removeProjectMember', input),

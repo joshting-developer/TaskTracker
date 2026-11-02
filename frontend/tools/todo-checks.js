@@ -1,0 +1,165 @@
+import assert from 'node:assert/strict';
+
+export async function checkTodoWorkflow(browser, failures) {
+  const token = crypto.randomUUID().slice(0, 8);
+  const ownerContext = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
+  const memberContext = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
+  const owner = await ownerContext.newPage(), member = await memberContext.newPage();
+  for (const page of [owner, member]) { page.setDefaultTimeout(15000); page.on('pageerror', error => failures.push(error.message)); }
+  await owner.goto('http://127.0.0.1:5175');
+  await owner.getByRole('button', { name: '第一次使用？建立工作空間' }).click();
+  await owner.getByLabel('你的名字').fill('Todo Owner');
+  await owner.getByLabel('Email', { exact: true }).fill(`todo-owner-${token}@example.test`);
+  await owner.getByLabel('密碼', { exact: true }).fill('todo-test-password');
+  await owner.getByLabel('工作空間名稱', { exact: true }).fill('小待辦測試');
+  await owner.getByRole('button', { name: '建立工作空間', exact: true }).click();
+  await owner.getByRole('region', { name: '首頁小待辦', exact: true }).waitFor();
+  const invite = await owner.evaluate(async email => (await import('/src/api/index.js')).api.inviteMember({ email }), `todo-member-${token}@example.test`);
+  await member.goto(`http://127.0.0.1:5175/#/invite?token=${invite.token}`);
+  await member.getByLabel('你的名字').fill('Todo Member');
+  await member.getByLabel('Email', { exact: true }).fill(`todo-member-${token}@example.test`);
+  await member.getByLabel('密碼', { exact: true }).fill('todo-test-password');
+  await member.getByRole('button', { name: '加入工作空間', exact: true }).click();
+  await member.getByRole('heading', { name: '尚未加入任何專案', exact: true }).waitFor();
+  const personal = member.getByRole('region', { name: '首頁小待辦', exact: true });
+  await personal.getByLabel('快速新增待辦').fill('準備 613 快照 <script>不執行</script>');
+  await personal.getByRole('button', { name: '補充說明', exact: true }).click();
+  await personal.getByLabel('待辦補充說明', { exact: true }).fill('等同事整合完再開測\n第二行補充');
+  await personal.getByRole('button', { name: '加入待辦', exact: true }).click();
+  let row = personal.locator('.todo-row').filter({ hasText: '準備 613 快照 <script>不執行</script>' });
+  await row.waitFor();
+  await row.locator('.todo-content > summary').click();
+  await row.getByText('等同事整合完再開測', { exact: false }).waitFor();
+  await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
+  await owner.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
+  await owner.waitForFunction(() => !document.querySelector('[aria-label="重新整理工作空間"]').disabled);
+  const ownerPrivate = await owner.evaluate(async () => (await import('/src/api/index.js')).api.getTodos());
+  assert.equal(ownerPrivate.todos.some(todo => todo.title.includes('613')), false, 'Workspace owner 不能讀成員私人速記');
+  await row.getByLabel('待辦操作').click();
+  const id = await row.getAttribute('data-todo-id');
+  await row.getByRole('button', { name: '編輯', exact: true }).click();
+  row = personal.locator(`[data-todo-id="${id}"]`);
+  await row.getByLabel('編輯待辦內容').fill('保留的待辦草稿');
+  await member.evaluate(async id => {
+    const { api } = await import('/src/api/index.js');
+    const item = (await api.getTodos()).todos.find(todo => todo.id === id);
+    await api.updateTodo({ id, expectedRevision: item.revision, title: '另一個視窗修改', requestId: crypto.randomUUID() });
+  }, id);
+  await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
+  await row.getByRole('button', { name: '儲存待辦修改', exact: true }).click();
+  await personal.getByRole('alert').filter({ hasText: '待辦已被更新' }).waitFor();
+  assert.equal(await row.getByLabel('編輯待辦內容').inputValue(), '保留的待辦草稿');
+  member.once('dialog', dialog => dialog.accept());
+  await personal.getByRole('button', { name: '載入最新待辦', exact: true }).click();
+  await personal.getByLabel('編輯待辦內容').fill('準備 613 快照');
+  await personal.getByRole('button', { name: '儲存待辦修改', exact: true }).click();
+  row = personal.locator('.todo-row').filter({ hasText: '準備 613 快照' });
+  await row.getByRole('checkbox', { name: '完成待辦 準備 613 快照', exact: true }).check();
+  await row.waitFor({ state: 'hidden' });
+  await personal.getByRole('button', { name: /顯示已完成/ }).click();
+  await row.getByRole('checkbox', { name: '重新開啟 準備 613 快照', exact: true }).uncheck();
+  await row.getByRole('checkbox', { name: '完成待辦 準備 613 快照', exact: true }).waitFor();
+
+  // 普通成員交給 owner, 直接加入而非等待接受
+  await personal.getByLabel('快速新增待辦').fill('幫忙確認 614 範圍');
+  await personal.getByLabel('待辦交給誰').selectOption({ label: `Todo Owner · todo-owner-${token}@example.test` });
+  await personal.getByRole('button', { name: '交辦', exact: true }).click();
+  await personal.getByRole('tab', { name: /我交辦的/ }).click();
+  const outgoing = personal.locator('.todo-row').filter({ hasText: '幫忙確認 614 範圍' });
+  await outgoing.waitFor();
+  assert.equal(await outgoing.getByRole('checkbox').count(), 0);
+  await owner.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
+  await owner.getByRole('button', { name: /待辦通知（1 則未讀）/ }).waitFor();
+  await owner.getByRole('button', { name: /待辦通知/ }).click();
+  await owner.getByRole('dialog', { name: '待辦通知', exact: true }).getByRole('button', { name: /交給你一件待辦/ }).click();
+  const ownerTodos = owner.getByRole('region', { name: '首頁小待辦', exact: true });
+  const received = ownerTodos.locator('.todo-row').filter({ hasText: '幫忙確認 614 範圍' });
+  await received.waitFor();
+  assert.equal(await received.getByRole('checkbox').count(), 1);
+  await received.getByLabel('待辦操作').click();
+  owner.once('dialog', dialog => dialog.accept());
+  await received.getByRole('button', { name: '退回給交辦者', exact: true }).click();
+  await received.waitFor({ state: 'hidden' });
+  await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
+  await personal.getByRole('tab', { name: /我的待辦/ }).click();
+  await personal.locator('.todo-row').filter({ hasText: '幫忙確認 614 範圍' }).getByText(/已退回/).waitFor();
+  await member.getByRole('button', { name: /待辦通知/ }).click();
+  await member.getByRole('dialog', { name: '待辦通知', exact: true }).getByRole('button', { name: /退回給你/ }).click();
+  const read = await member.evaluate(async () => (await import('/src/api/index.js')).api.getTodos());
+  assert.equal(read.notifications.filter(note => !note.readAt).length, 0);
+
+  // 交給沒有專案資格的成員, 再加入 Project 後才可單向轉卡
+  await owner.evaluate(async () => {
+    const { api } = await import('/src/api/index.js');
+    const target = (await api.getTodos()).members.find(member => member.name === 'Todo Member');
+    await api.createTodo({ title: '把小事變成大事', note: '轉換時保留這段背景', assigneeId: target.id, requestId: crypto.randomUUID() });
+  });
+  await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
+  const converting = personal.locator('.todo-row').filter({ hasText: '把小事變成大事' });
+  await converting.getByLabel('待辦操作').click();
+  assert.equal(await converting.getByRole('button', { name: '轉成正式卡片', exact: true }).isDisabled(), true);
+  const project = await owner.evaluate(async () => {
+    const { api } = await import('/src/api/index.js');
+    const project = await api.createProject({ name: '待辦正式專案', code: 'TODOPROJ', requestId: crypto.randomUUID() });
+    await api.updateStatuses({ projectId: project.id, expectedRevision: project.revision, statuses: [...project.statuses, { id: 'todo_review', label: '待討論', category: 'active', color: '#8757b3' }], requestId: crypto.randomUUID() });
+    const target = (await api.getTodos()).members.find(member => member.name === 'Todo Member');
+    await api.setProjectMember({ projectId: project.id, userId: target.id, roleId: 'developer', expectedRevision: 0, requestId: crypto.randomUUID() });
+    return project;
+  });
+  await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
+  await converting.getByRole('button', { name: '轉成正式卡片', exact: true }).click();
+  let panel = member.getByRole('dialog', { name: '轉成正式卡片', exact: true });
+  assert.equal(await panel.getByLabel(/任務標題/).inputValue(), '把小事變成大事');
+  assert.equal(await panel.getByLabel('描述', { exact: true }).inputValue(), '轉換時保留這段背景');
+  assert.equal(await panel.getByRole('button', { name: '建立卡片並完成轉換', exact: true }).isDisabled(), true);
+  await panel.getByLabel('專案', { exact: true }).selectOption(project.id);
+  await panel.getByLabel('類型', { exact: true }).selectOption('bug');
+  await panel.getByLabel('狀態', { exact: true }).selectOption('todo_review');
+  await panel.getByLabel(/任務標題/).fill('正式追蹤 614 整合');
+  // 轉卡表單保留離開保護
+  member.once('dialog', dialog => dialog.dismiss());
+  await panel.getByRole('button', { name: '關閉任務', exact: true }).click();
+  assert.equal(await panel.isVisible(), true);
+  // 同一待辦被另一視窗修改, 轉卡不能偷換基準版本
+  const convertingId = await converting.getAttribute('data-todo-id');
+  await owner.evaluate(async id => {
+    const { api } = await import('/src/api/index.js');
+    const item = (await api.getTodos()).todos.find(todo => todo.id === id);
+    await api.updateTodo({ id, expectedRevision: item.revision, note: '交辦者補充的背景', requestId: crypto.randomUUID() });
+  }, convertingId);
+  await member.getByRole('button', { name: '重新整理工作空間', exact: true }).evaluate(button => button.click());
+  await panel.getByRole('button', { name: '建立卡片並完成轉換', exact: true }).click();
+  await panel.getByRole('alert').filter({ hasText: '待辦已被更新' }).waitFor();
+  assert.equal(await panel.getByLabel(/任務標題/).inputValue(), '正式追蹤 614 整合');
+  member.once('dialog', dialog => dialog.accept());
+  await panel.getByRole('button', { name: '重新載入最新版本', exact: true }).click();
+  await panel.getByLabel('專案', { exact: true }).selectOption(project.id);
+  await panel.getByLabel('類型', { exact: true }).selectOption('bug');
+  await panel.getByLabel('狀態', { exact: true }).selectOption('todo_review');
+  await panel.getByLabel(/任務標題/).fill('正式追蹤 614 整合');
+  await panel.getByRole('button', { name: '建立卡片並完成轉換', exact: true }).click();
+  await member.getByRole('region', { name: '任務完整頁', exact: true }).getByRole('heading', { name: '正式追蹤 614 整合', exact: true }).waitFor();
+  const issueData = await member.evaluate(async () => (await import('/src/api/index.js')).api.getWorkspace());
+  assert.equal(issueData.issues.filter(issue => issue.title === '正式追蹤 614 整合').length, 1);
+  assert.equal(issueData.issues[0].type, 'bug'); assert.equal(issueData.issues[0].state, 'todo_review');
+  await member.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await personal.getByRole('button', { name: /顯示已完成/ }).click();
+  await personal.getByRole('button', { name: 'TODOPROJ-1 ↗', exact: true }).waitFor();
+  await owner.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
+  await owner.getByRole('button', { name: /待辦通知/ }).click();
+  await owner.getByRole('dialog', { name: '待辦通知', exact: true }).getByRole('button', { name: /轉成正式卡片/ }).click();
+  await ownerTodos.getByRole('button', { name: 'TODOPROJ-1 ↗', exact: true }).waitFor();
+  await owner.screenshot({ path: 'artifacts/todos-desktop.png', fullPage: true });
+  await member.setViewportSize({ width: 390, height: 844 });
+  await member.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
+  assert.equal(await member.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await member.screenshot({ path: 'artifacts/todos-mobile.png', fullPage: true });
+  // 未儲存速記離開首頁須確認
+  await personal.getByLabel('快速新增待辦').fill('還沒存的速記');
+  member.once('dialog', dialog => dialog.dismiss());
+  await member.getByRole('button', { name: '進入專案：待辦正式專案', exact: true }).click();
+  assert.equal(await personal.getByLabel('快速新增待辦').inputValue(), '還沒存的速記');
+  await personal.getByLabel('快速新增待辦').fill('');
+  await memberContext.close(); await ownerContext.close();
+  console.log('PASS: personal quick TODO without Project, private notes, editing/conflicts, completion/reopen, member→owner direct assignment/return, unread notifications/read/navigation, ACL-scoped one-way issue conversion with source/version/draft/atomic fields, mobile and unsaved navigation');
+}

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { createServer as createViteServer } from 'vite';
 import { chromium } from 'playwright';
+import { checkTodoWorkflow } from './todo-checks.js';
 import { dateInTaipei } from '../src/domain/model.js';
 
 // 由呼叫端啟動隔離 Laravel API, 不使用 Node mock 後端
@@ -277,6 +278,8 @@ async function checkProjectAcl(page, browser, failures) {
     await api.removeProjectMember({ projectId: other.id, userId: member.id, expectedRevision: acl.revision, requestId: crypto.randomUUID() });
   }, fixture);
   // 失權寫入回應觸發 refresh, 不等背景輪詢
+  // 獨立待辦 API 故障也不能擋住 Project 撤權清除
+  await teammate.route('**/api/rpc/getTodos', route => route.abort(), { times: 1 });
   await editor.getByRole('button', { name: '儲存修改', exact: true }).click();
   await teammate.getByRole('heading', { name: '我的專案.', exact: true }).waitFor();
   assert.equal(await teammate.getByRole('dialog').count(), 0);
@@ -1112,6 +1115,7 @@ try {
   await checkIssueDetailPage(page);
   await checkProjectAcl(page, browser, failures);
   await checkSeedAccounts(browser, failures);
+  await checkTodoWorkflow(browser, failures);
   assert.deepEqual(failures, []);
   console.log('PASS: project-first home/create, scoped tasks and creation, project switching, hash links/reload/back/legacy links, search/filter, board dropdown/drag, edits, comments/history, unsaved protection, safe text, mobile navigation/layout');
   console.log('Screenshots: artifacts/desktop-list.png, desktop-board.png, issue-detail.png, mobile-list.png, mobile-editor.png');

@@ -11,7 +11,7 @@
 
 ## 第一版實作選擇
 
-小待辦獨立於 Issue, 不要求先選專案。首頁上方顯示「小待辦」, 下方保留原專案入口。「我的待辦」列出目前由我處理的項目, 「我交辦的」追蹤我交給別人的項目；已完成／已取消預設收合。快速輸入一行按 Enter 即新增給自己, 選同空間成員則直接交辦；補充說明為選填, 不要求狀態、優先級或估時
+小待辦獨立於 Issue, 不要求先選專案。首頁上方顯示「小待辦」, 下方保留原專案入口。「我的待辦」列出目前由我處理的項目, 「我交辦的」追蹤我交給別人的項目；已完成／已取消／已轉卡預設收合。快速輸入一行按 Enter 即新增給自己, 選同空間成員則直接交辦；補充說明為選填, 不要求狀態、優先級或估時
 
 角色只映射 permission：有效 Workspace 成員預設都有 `todo.read`、`todo.writeOwn`、`todo.assign`。成員沒有加入任何 Project 也可使用, 但不因此獲得 Project／Issue 的存取權。交辦選單另由後端提供同空間有效成員的最小目錄（ID、姓名、Email）, 不擴張原 `getWorkspace.members` 或回傳專案資料
 
@@ -21,7 +21,7 @@
 
 ## 通知
 
-提供專用站內待辦通知入口／未讀數, 包含收到交辦、內容更新、完成、重新開啟、退回及取消；自己的操作不通知自己。通知寫入與待辦更新同交易, 重試不重複發生。讀取時重新檢查目前待辦存取資格, 不保留可繞過資格的內容快照；已讀只可由收件人設定。跨專案頁也可查看待辦通知, 點擊回首頁定位有權查看的待辦
+提供專用站內待辦通知入口／未讀數, 包含收到交辦、內容更新、完成、重新開啟、退回、取消及轉卡；自己的操作不通知自己。通知寫入與待辦更新同交易, 重試不重複發生。讀取時重新檢查目前待辦存取資格, 不保留可繞過資格的內容快照；已讀只可由收件人設定。跨專案頁也可查看待辦通知, 點擊回首頁定位有權查看的待辦
 
 第一版使用目前 30 秒輪詢與手動刷新, 不宣稱 WebSocket 即時推播。站內通知不呼叫 SMTP、不發送真實郵件或瀏覽器推播
 
@@ -35,6 +35,25 @@
 - 與 2026-10-20 暫緩的「首頁既有卡片篩選小清單」分開：這次是新增輕量待辦資料, 不恢復儲存視圖
 - 管理者能看全專案不等於能看全員待辦。此隱私選擇、作者與承辦者操作分工是本輪試作方案, 可依試用調整, 非使用者逐項指定
 
+## API 與保存
+
+Project ACL 先更新再載入個人待辦；即使待辦讀取暫時失敗, 仍先清除已失去資格的專案內容。
+
+資料沿用 Workspace RecordStore namespace, 新增 `todos`／`todoNotifications`／`todoRequests`, 不改寫既有 Project、Issue 或舊郵件預覽。API 由 Laravel session 決定操作者與 Workspace, 不接收前端自稱的作者或角色
+
+| RPC | 主要輸入 | 回傳／條件 |
+| --- | --- | --- |
+| getTodos | 無 | 僅本人參與的待辦、本人可讀通知、最小交辦成員目錄, 待辦各附 capabilities |
+| createTodo | title、note 選填、assigneeId 預設自己、requestId | id、revision；交給別人另需 todo.assign |
+| updateTodo | id、title／note、expectedRevision、requestId | 原建立者, 僅未完成 |
+| completeTodo／reopenTodo | id、expectedRevision、requestId | 目前承辦者, 分別 open→done／done→open |
+| returnTodo | id、expectedRevision、requestId | 非原作者的目前承辦者, 僅未完成；改由原作者承辦 |
+| cancelTodo | id、expectedRevision、requestId | 原建立者, 僅未完成；留歷史不刪除 |
+| convertTodo | id、expectedRevision、issue（正式建卡欄位）、requestId | 目前承辦者＋目標 Project issue.write；回 id／revision, 不快取新卡內容 |
+| readTodoNotification | id、requestId | 收件人且仍可讀來源待辦, 僅設定本人 readAt |
+
+轉卡的專案候選、狀態、成員、Epic／父子／關聯與正式建立 Issue 使用相同來源及後端驗證。轉卡失敗回滾 Issue、編號、通知、待辦狀態及去重紀錄；成功後來源 `converted` 不再有完成／重開／再次轉卡操作。原待辦不自動跟隨正式卡片後續狀態, 保留原小事的文字與歷程
+
 ## 驗收
 
 1. 未加入 Project 的成員仍可快速自記、修改、勾選與重開, 不改變專案可見性
@@ -42,5 +61,12 @@
 3. 第三人（含 Workspace owner）及外部空間不能讀寫此待辦／通知, 不能偽造作者或承辦者
 4. 版本衝突保留輸入, 重試不新增重複待辦／通知；失效成員及返還後舊承辦者的 requestId 不繞過資格
 5. 通知未讀／已讀僅影響本人, 導航與手機版可用, 已有 Project ACL／任務流程不退化
-
 6. 轉卡可補正式欄位, 未授權 Project 不可選且 API 拒絕；失敗保留待辦且不留新卡, 重試只產一張卡, 原交辦者不因轉卡看到私有專案資訊
+
+## 本輪驗證結果
+
+- 隔離 Laravel／記憶體 SQLite：30 項測試、700 個斷言通過, 含無 Project 使用、跨空間／第三人拒絕、作者與承辦者限制、版本、去重、資格失效、轉卡交易回滾／單向狀態、私有 Project 連結過濾
+- 真實隔離 Laravel＋Chromium：完整舊流程與新增待辦流程通過。涵蓋快記／純文字、編輯與背景刷新衝突、勾選／重開、Member→Owner 直接交辦及退回、通知已讀／定位、Project 資格變化、轉卡帶入／補欄位／衝突、草稿離開保護及手機版
+- 前端 build、文件相對連結及 Git diff 空白檢查通過；桌面／手機截圖已檢視, 產物不提交
+- 本機四 Seed 帳號的待辦 API 可讀, 原 Project 範圍仍為 owner／manager／maintainer→first＋second、developer→first。唯讀檢查前後業務 records 完全一致, 無 schema migration／Seed reset, 本機服務維持正常
+- 本輪沒有 SMTP 寄信、瀏覽器推播或 Reverb 業務事件；30 秒輪詢的更新延遲仍存在

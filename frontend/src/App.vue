@@ -16,6 +16,8 @@ import EpicOverview from './components/EpicOverview.vue';
 import TimeCalendar from './components/TimeCalendar.vue';
 import ProjectSettings from './components/ProjectSettings.vue';
 import ProjectMembers from './components/ProjectMembers.vue';
+import TodoHome from './components/TodoHome.vue';
+import TodoNotifications from './components/TodoNotifications.vue';
 import NotificationPreview from './components/NotificationPreview.vue';
 import { api } from './api/index.js';
 import { categoryFor, dateInTaipei, PRIORITIES, statusesFor, TYPES } from './domain/model.js';
@@ -23,6 +25,10 @@ import { CONDITIONS, filterIssues, missingFilters } from './domain/filters.js';
 
 const workspace = ref({ projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} });
 const authenticated = ref(false);
+const todoData = ref({ todos: [], notifications: [], members: [] });
+const todoTool = ref(null), conversionTool = ref(null), convertingTodo = ref(null), todoNotificationsOpen = ref(false);
+const todoUnread = computed(() => todoData.value.notifications.filter(item => !item.readAt).length);
+const convertibleProjects = computed(() => workspace.value.projects.filter(project => project.permissions?.includes('issue.write')));
 const teamOpen = ref(false);
 const section = ref('tasks');
 const workspaceTool = ref(null);
@@ -133,7 +139,14 @@ async function refresh() {
     if (projectId.value && !data.projects.some((item) => item.id === projectId.value)) { notify('找不到這個專案'); goHome(true); }
     if (projectId.value && view.value === 'board' && !selectedBoard.value) { notify('看板不存在或已移除'); navigate('all', projectId.value, 'boards'); }
     if (selectedId.value && !selectedIssue.value) { notify('找不到這個專案內的任務'); history.replaceState(null, '', projectHash(projectId.value)); readHash(); }
-  } catch (failure) { if (generation === refreshGeneration) { if (failure.code === 'UNAUTHENTICATED') { authenticated.value = false; teamOpen.value = false; creatingProject.value = false; editingProject.value = null; boardEditor.value = null; creatingIssue.value = false; selectedId.value = ''; detailPage.value = false; editingDetail.value = false; workspace.value = { projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} }; } else error.value = failure.message; } }
+    // 專案撤權先反映, 待辦 API 暫時失敗不能阻擋私有專案的清除
+    if (convertingTodo.value && !convertibleProjects.value.length) convertingTodo.value = null;
+    const personal = data.meta.permissions?.includes('todo.read') ? await api.getTodos() : { todos: [], notifications: [], members: [] };
+    if (generation !== refreshGeneration) return;
+    todoData.value = personal;
+    if (convertingTodo.value && !personal.todos.some(item => item.id === convertingTodo.value.id && item.capabilities.convert)) { convertingTodo.value = null; notify('待辦資格已改變, 已關閉轉卡表單'); }
+
+  } catch (failure) { if (generation === refreshGeneration) { if (failure.code === 'UNAUTHENTICATED') { authenticated.value = false; todoData.value = { todos: [], notifications: [], members: [] }; convertingTodo.value = null; todoNotificationsOpen.value = false; teamOpen.value = false; creatingProject.value = false; editingProject.value = null; boardEditor.value = null; creatingIssue.value = false; selectedId.value = ''; detailPage.value = false; editingDetail.value = false; workspace.value = { projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} }; } else error.value = failure.message; } }
   finally { if (generation === refreshGeneration) loading.value = false; }
 }
 function notify(message) {
@@ -145,8 +158,8 @@ function projectHash(id, issueId = '', mode = view.value, selectedBoardId = boar
   return id ? `#/projects/${encodeURIComponent(id)}${mode === 'boards' ? '/boards' : mode === 'board' ? `/board${selectedBoardId === 'default' ? '' : `/${encodeURIComponent(selectedBoardId)}`}` : ''}${issueId ? `/issues/${encodeURIComponent(issueId)}${fullPage ? '?detail=1' : ''}` : ''}` : '#/';
 }
 function canLeave() {
-  if (detailTool.value?.saving || issueTool.value?.saving) return false;
-  return (!workspaceTool.value?.dirty && !boardEditorTool.value?.dirty && !detailTool.value?.dirty && !issueTool.value?.dirty) || window.confirm('還有未儲存的內容, 確定要離開嗎？');
+  if (detailTool.value?.saving || issueTool.value?.saving || todoTool.value?.saving || conversionTool.value?.saving) return false;
+  return (!todoTool.value?.dirty && !conversionTool.value?.dirty && !workspaceTool.value?.dirty && !boardEditorTool.value?.dirty && !detailTool.value?.dirty && !issueTool.value?.dirty) || window.confirm('還有未儲存的內容, 確定要離開嗎？');
 }
 function changeSection(value) {
   if ((value !== section.value || selectedId.value) && canLeave()) {
@@ -154,8 +167,44 @@ function changeSection(value) {
     history.replaceState(null, '', projectHash(projectId.value));
   }
 }
-async function logout() { if (!canLeave()) return; try { await api.logout(); ++refreshGeneration; authenticated.value = false; workspace.value = { projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} }; history.replaceState(null, '', '#/'); readHash(true); } catch (failure) { notify(failure.message); } }
+async function logout() { if (!canLeave()) return; try { await api.logout(); ++refreshGeneration; authenticated.value = false; todoData.value = { todos: [], notifications: [], members: [] }; convertingTodo.value = null; todoNotificationsOpen.value = false; workspace.value = { projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} }; history.replaceState(null, '', '#/'); readHash(true); } catch (failure) { notify(failure.message); } }
 async function authenticatedSession() { loading.value = true; readHash(); await refresh(); }
+function convertTodo(item) {
+  if (!canLeave()) return;
+  convertingTodo.value = { ...item };
+}
+async function reloadConversion(callback, settled = () => {}) {
+  try {
+    await refresh();
+    const current = todoData.value.todos.find(item => item.id === convertingTodo.value?.id);
+    if (!error.value && current) { convertingTodo.value = { ...current }; await nextTick(); callback(); }
+  } finally { settled(); }
+}
+async function convertedTodo(result) {
+  convertingTodo.value = null;
+  await refresh();
+  const link = todoData.value.todos.find(item => item.id === result.id)?.convertedIssue;
+  notify('已轉成正式卡片, 原待辦保留轉卡紀錄');
+  if (link) openTodoIssue(link);
+}
+function openTodoIssue(link) {
+  const issue = workspace.value.issues.find(item => item.id === link.id && item.projectId === link.projectId);
+  if (issue) openIssue(issue, true); else notify('目前無法存取這張卡片');
+}
+function jumpFromConversion(issue) {
+  convertingTodo.value = null;
+  nextTick(() => openTodoIssue(issue));
+}
+async function openTodoNotification(item) {
+  if (!canLeave()) return;
+  try {
+    await api.readTodoNotification({ id: item.id, requestId: crypto.randomUUID() });
+    todoNotificationsOpen.value = false;
+    await refresh();
+    history.pushState(null, '', '#/'); readHash(true);
+    await nextTick(); await todoTool.value?.focus(item.todoId);
+  } catch (failure) { notify(failure.message); await refresh(); }
+}
 async function toolUpdated(message) { await refresh(); if (!error.value) notify(message); }
 function navigate(nextScope, id = projectId.value, mode = 'list') {
   if (!canLeave()) return;
@@ -327,8 +376,8 @@ function overdue(issue) { return issue.dueDate && issue.dueDate < today.value &&
 function shortDate(value) { return value ? `${Number(value.slice(5, 7))}/${Number(value.slice(8))}` : ''; }
 function option(items, id) { return items.find((item) => item.id === id); }
 function projectFor(issue) { return projects.value.find((item) => item.id === issue.projectId); }
-async function reloadEditor(callback) { await refresh(); if (!error.value) { await nextTick(); callback(); } }
-function beforeUnload(event) { if (workspaceTool.value?.dirty || detailTool.value?.dirty) { event.preventDefault(); event.returnValue = ''; } }
+async function reloadEditor(callback, settled = () => {}) { try { await refresh(); if (!error.value) { await nextTick(); callback(); } } finally { settled(); } }
+function beforeUnload(event) { if (todoTool.value?.dirty || conversionTool.value?.dirty || workspaceTool.value?.dirty || detailTool.value?.dirty) { event.preventDefault(); event.returnValue = ''; } }
 function keydown(event) {
   if (event.key === 'Escape') sidebarOpen.value = false;
 }
@@ -382,11 +431,12 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
     </aside>
 
     <main class="main">
-      <header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" aria-label="開啟導覽" :aria-expanded="sidebarOpen" @click="sidebarOpen = !sidebarOpen"><Icon name="menu" /></button><Icon name="folder" :size="17" /><button class="breadcrumb-home" @click="goHome()">專案</button><Icon name="chevron" :size="13" /><strong :class="{ 'has-mobile-context': selectedProject }"><span class="project-breadcrumb">{{ selectedProject?.code || '專案列表' }}</span><span v-if="selectedProject" class="mobile-feature-context">{{ currentFeature }}</span></strong></div><div class="topbar-end"><span class="local-indicator"><i></i>本機協作試用</span><button class="icon-button" aria-label="重新整理工作空間" :disabled="loading || Boolean(moving)" @click="refresh"><Icon name="refresh" :size="18" /></button><div class="avatar tiny">{{ workspace.meta.actor?.slice(0, 1) }}</div></div></header>
+      <header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" aria-label="開啟導覽" :aria-expanded="sidebarOpen" @click="sidebarOpen = !sidebarOpen"><Icon name="menu" /></button><Icon name="folder" :size="17" /><button class="breadcrumb-home" @click="goHome()">專案</button><Icon name="chevron" :size="13" /><strong :class="{ 'has-mobile-context': selectedProject }"><span class="project-breadcrumb">{{ selectedProject?.code || '專案列表' }}</span><span v-if="selectedProject" class="mobile-feature-context">{{ currentFeature }}</span></strong></div><div class="topbar-end"><button v-if="workspace.meta.permissions?.includes('todo.read')" class="button secondary todo-notification-toggle" :aria-label="`待辦通知${todoUnread ? `（${todoUnread} 則未讀）` : ''}`" @click="todoNotificationsOpen = true"><Icon name="bell" :size="17" /><span>待辦通知</span><b v-if="todoUnread">{{ todoUnread }}</b></button><span class="local-indicator"><i></i>本機協作試用</span><button class="icon-button" aria-label="重新整理工作空間" :disabled="loading || Boolean(moving)" @click="refresh"><Icon name="refresh" :size="18" /></button><div class="avatar tiny">{{ workspace.meta.actor?.slice(0, 1) }}</div></div></header>
       <div class="workspace-content" :class="{ 'board-workspace': section === 'tasks' && view === 'board', 'data-workspace': selectedProject && section === 'tasks', 'detail-workspace': showIssuePage }">
         <button v-if="selectedProject && section !== 'tasks'" class="back-to-projects" @click="goHome()"><Icon name="chevron" :size="14" />返回專案列表</button>
         <div v-if="showIssuePage && error" class="error-box workspace-error" role="alert">{{ error }}<button class="text-button" @click="refresh">重新載入</button></div>
         <IssueDetail v-if="showIssuePage" ref="detailTool" :key="selectedIssue.id" :issue="selectedIssue" :project="selectedProject" :issues="projectAllIssues" :members="projectMembers" :entries="workspace.timeEntries" :return-label="issueReturnLabel()" :busy="Boolean(moving)" :can-write="canWrite" :can-read-time="can('timeEntry.readOwn')" @state="state => moveIssue(selectedIssue, { state })" @close="closeIssue" @edit="canWrite && (editingDetail = true)" @open="issue => openIssue(issue, true)" @saved="savedIssue" @reload="refresh" />
+        <TodoHome v-if="!selectedProject && workspace.meta.permissions?.includes('todo.read')" ref="todoTool" :data="todoData" :user-id="currentUserId" :can-write="workspace.meta.permissions?.includes('todo.writeOwn')" :can-assign="workspace.meta.permissions?.includes('todo.assign')" :can-convert="Boolean(convertibleProjects.length)" :refresh="refresh" @convert="convertTodo" @open-issue="openTodoIssue" />
         <div v-show="!showIssuePage" class="page-heading"><div><div class="eyebrow">{{ selectedProject ? 'YOUR PROJECT, IN FOCUS' : 'A SPACE FOR EVERY PROJECT' }}</div><h1>{{ title }}<span class="heading-dot">.</span></h1><p v-if="!selectedProject || (section !== 'tasks' && selectedProject.description)">{{ selectedProject ? selectedProject.description : '先選一個專案, 再專心處理裡面的事' }}</p></div><button v-if="selectedProject && canCreateIssue && !(section === 'tasks' && view === 'boards')" class="button primary" :disabled="loading" @click="newIssue"><Icon name="plus" :size="18" />新增任務<span class="button-key">＋</span></button><button v-else-if="!selectedProject && workspace.meta.permissions?.includes('project.create')" class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div>
         <ProjectHome v-if="!selectedProject" :projects="projects" :members="workspace.members" :can-create="workspace.meta.permissions?.includes('project.create')" :loading="loading" :error="error" :demo-loading="demoLoading" @create="creatingProject = true" @edit="editingProject = $event" @open="id => navigate('all', id)" @demo="loadDemo" @retry="refresh" />
         <template v-else>
@@ -434,6 +484,8 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
     </main>
     <IssuePanel v-if="canWrite && (creatingIssue || (selectedIssue && (!detailPage || editingDetail)))" ref="issueTool" :can-expand="!detailPage" :key="selectedIssue?.id || 'new'" :issue="selectedIssue" :projects="selectedProject ? [selectedProject] : []" :default-project="projectId" :default-state="defaultState" :default-type="defaultType" :default-epic-id="defaultEpicId" :default-board-id="creationBoardId" :members="projectMembers" :issues="projectAllIssues" :entries="workspace.timeEntries" @expand="expandIssue" @open="jumpFromEditor" @close="closeIssue" @saved="savedIssue" @reload="reloadEditor" />
     <BoardDialog v-if="boardEditor" ref="boardEditorTool" :project="selectedProject" :issues="projectAllIssues" :board="boardEditor.board" @close="boardEditor = null" @saved="boardSaved" @reload="refresh" />
+    <IssuePanel v-if="convertingTodo" ref="conversionTool" :key="`convert:${convertingTodo.id}`" :todo="convertingTodo" :projects="convertibleProjects" :members="workspace.members" :issues="workspace.issues" :entries="workspace.timeEntries" @close="convertingTodo = null" @converted="convertedTodo" @reload="reloadConversion" @open="jumpFromConversion" />
+    <TodoNotifications v-if="todoNotificationsOpen" :notifications="todoData.notifications" @close="todoNotificationsOpen = false" @open="openTodoNotification" />
     <TeamDialog v-if="teamOpen" :members="workspace.members" :meta="workspace.meta" @close="teamOpen = false" />
     <ProjectDialog v-if="creatingProject || editingProject" :project="editingProject" :members="editingProject ? workspace.members.filter(member => editingProject.memberIds?.includes(member.id)) : workspace.members.filter(member => workspace.meta.projectLeadIds?.includes(member.id))" :user-id="currentUserId" @close="creatingProject = false; editingProject = null" @created="createdProject" />
     <Transition name="toast"><div v-if="toast" class="toast-message" role="status"><span><Icon name="check" :size="16" /></span>{{ toast }}</div></Transition>

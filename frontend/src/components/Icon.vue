@@ -1,6 +1,7 @@
 <script setup>
 defineProps({ name: String, size: { type: Number, default: 20 } });
 const paths = {
+  bell: 'M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9 M10 21h4',
   grid: 'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
   list: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
   board: 'M3 4h18v16H3z M9 4v16M15 4v16M6 8v3M12 8v6M18 8v2',

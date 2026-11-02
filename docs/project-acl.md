@@ -5,7 +5,7 @@
 ## 授權範圍
 
 - Workspace owner／manager 經明列的 Any permission 存取同空間所有專案, 不要求逐案加入；owner 另保留目前本機 SMTP verify, manager 無此權限
-- Workspace user 只有 `workspace.read`, 加入空間後可登入及看自己的身分, 不自動看任何 Project
+- Workspace user 不含 Project Any permission, 加入空間後不自動看任何 Project。2026-11-02 另加入個人小待辦的 `todo.read`／`todo.writeOwn`／`todo.assign`, 仍按作者／承辦者條件限制, 不提升 Project 權限
 - Project grant 只在該專案有效, 也要求仍為有效 Workspace 成員。移出專案、降權或失去空間資格, 下一個 API 及舊 requestId 重試都重新判斷
 - `roleId` 只查 registry 的 permission 組合, 所有業務呼叫依 permission 授權。沒有星號、角色排序、帳號名稱放行或個人 deny 覆寫
 
@@ -31,7 +31,7 @@ Project permissions：`project.read`、`issue.read`、`issue.write`、`project.u
 
 對應的 Workspace Any IDs：`project.readAny`、`issue.readAny`、`issue.writeAny`、`project.updateAny`、`project.statuses.updateAny`、`project.members.manageAny`、`board.manageAny`、`timeEntry.readOwnAny`、`timeEntry.readTeamAny`、`timeEntry.writeOwnAny`、`notification.readTeamAny`
 
-Workspace 專屬 IDs：`workspace.read`、`workspace.members.read`、`workspace.invite`、`project.create`、`smtp.verify`。Project 成員管理不授予 Workspace 邀請或升權能力；可授予的角色須是操作者在目標 Project 有效權限的子集合, 調整／撤回既有角色也檢查此條件
+Workspace 專屬 IDs（2026-11-02 新增待辦, 詳見 [小待辦設計](todo-design.md)）：`todo.read`、`todo.writeOwn`、`todo.assign`、`workspace.read`、`workspace.members.read`、`workspace.invite`、`project.create`、`smtp.verify`。Project 成員管理不授予 Workspace 邀請或升權能力；可授予的角色須是操作者在目標 Project 有效權限的子集合, 調整／撤回既有角色也檢查此條件
 
 ## API 與可見資料
 

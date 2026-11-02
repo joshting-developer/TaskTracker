@@ -221,3 +221,7 @@
   .board-list-grid { grid-template-columns: minmax(0, 1fr); }
   .board-dialog { padding: 20px 16px; }
 }
+
+.todo-notification-toggle { font-size: 12px; padding: 6px 9px; }
+.todo-notification-toggle b { border-radius: 10px; background: #6653bd; color: #fff; padding: 1px 6px; font-size: 11px; }
+@media (max-width: 700px) { .todo-notification-toggle > span { display: none; } .topbar-end { gap: 5px; } .todo-notification-toggle { padding: 5px; } }

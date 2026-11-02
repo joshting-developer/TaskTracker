@@ -96,6 +96,16 @@ docker compose exec backend php artisan tasktracker:seed-demo --reset
 
 Seed 只允許 local／testing。Laravel 的 `php artisan db:seed` 也呼叫相同非重設流程。目前權限矩陣及限制見[Project ACL 契約](docs/project-acl.md)；[四帳號舊紀錄](docs/產品討論紀錄.md#四帳號權限試用-seed2026-10-22)保留沿革
 
+## 首頁小待辦
+
+首頁上方提供不屬於 Project Issue 的輕量待辦：輸入一行按 Enter 記給自己, 可加選填說明, 選同空間成員即可直接交辦。所有有效 Workspace 成員都可互相交辦, 包含一般成員交給 Manager／Owner；收到後直接進「我的待辦」, 可完成、重新開啟或退回交辦者。「我交辦的」用來追蹤自己交出去的項目, 完成／取消／轉卡預設收合
+
+待辦僅交辦者及目前承辦者可讀, Workspace 管理權限不會打開他人的私人速記。首頁即使尚未加入任何 Project 也可使用小待辦；成員選單是獨立的同空間最小交辦目錄, 不改 Project ACL。建立者可修改未完成內容或取消, 承辦者可處理進度及退回, 退回後交辦者重新成為承辦者
+
+待辦「更多 → 轉成正式卡片」開啟原建卡側欄, 帶入標題／說明, 選擇有任務編輯權的專案並補類型、狀態、負責人、Epic 等欄位。建立卡片和標記待辦轉卡在同交易完成, 重試不重複建卡；來源待辦保留, 卡片連結只對具該專案讀取資格的人顯示。只有目前承辦者可轉換, 本版沒有卡片轉回待辦接口
+
+頂端「待辦通知」提供未讀數, 收到交辦、內容更新、完成／重開／退回／取消／轉卡會通知另一方, 點擊標已讀並回首頁定位。這是實際保存在伺服器的站內通知, 與原專案郵件 preview 分開；依現有 30 秒輪詢或手動刷新更新, 尚無即時推播／寄信。新增資料沿用 RecordStore, 不需要重設 Seed 或遷移既有卡片。詳見 [小待辦設計](docs/todo-design.md)
+
 ## 專案成員與 ACL
 
 Workspace owner／manager 以明列的全專案 permission 管理空間內所有 Project；一般 user 加入 Workspace 後預設看不到任何專案。管理者進入專案, 從側欄「專案成員」選擇既有 Workspace 成員及角色, 可加入、更換角色或移除, 並查看授權異動紀錄。成員表單有獨立版本檢查, 衝突時保留草稿再重新載入
@@ -180,6 +190,7 @@ E2E_API_URL=http://127.0.0.1:13004 npm run test:e2e
 ## 文件
 
 - [競品使用流程與功能缺口研究（2026-10-30）](docs/競品使用流程與功能缺口研究-2026-10-30.md)：五家競品的日常流程、公開回饋及分階段功能建議
+- [首頁小待辦設計](docs/todo-design.md)：速記、互相交辦、通知、隱私與單向轉卡
 - [Project ACL 契約](docs/project-acl.md)：固定角色矩陣、permission／scope、成員 API 與資料升級
 - [產品討論紀錄](docs/產品討論紀錄.md)：已確認決策、待確認事項及選型沿革
 - [協作與工時設計](docs/collaboration-design.md)：Epic、狀態、工時與通知
