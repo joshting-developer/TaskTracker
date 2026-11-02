@@ -6,6 +6,7 @@ use App\Authorization\WorkspacePermissions;
 use App\Domain\DomainError;
 use App\Services\AccountService;
 use App\Services\SmtpService;
+use App\Services\Todos;
 use App\Services\WorkspaceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,6 +34,7 @@ class ApiController extends Controller
         $input = $this->input($request);
         $data = DB::transaction(function () use ($request, $operation, $accounts, $input, $smtp) {
             $context = $accounts->context($request);
+            if (in_array($operation, Todos::OPERATIONS, true)) return (new Todos($context))->execute($operation, $input);
             if ($operation === 'inviteMember') return $accounts->invite($context, $input);
             if (in_array($operation, ['smtpStatus', 'verifySmtp'], true)) {
                 WorkspacePermissions::authorize($context, 'smtp.verify');
