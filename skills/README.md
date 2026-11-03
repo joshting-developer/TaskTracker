@@ -2,7 +2,7 @@
 
 查詢與下載日期：2026-11-03（Asia/Taipei）
 
-這裡保存兩個上游 skill 的完整副本, 供 Josh 選擇或討論如何融合成 TaskTracker 的 UI／UX 審查流程。**本輪只下載、研究及寫介紹, 沒有審查或修改產品畫面, 也沒有建立融合 skill**
+這裡保存兩個上游 skill 的完整副本, 供 Josh 選擇或討論如何融合成 TaskTracker 的 UI／UX 審查流程。初次收錄僅下載與介紹；同日使用者追加要求啟用兩者並審查專案。現在已建立 [.agents/skills 入口](../.agents/skills/README.md), 原文仍維持固定版本, 不另建融合 skill。審查與 UI 改版分開處理。
 
 ## 先讀這兩份
 
@@ -11,7 +11,7 @@
 | UI UX Pro Max | 144,294 | [介紹與 TaskTracker 適用性](ui-ux-pro-max-介紹.md) | [SKILL.md](vendor/ui-ux-pro-max/SKILL.md) |
 | Taste Skill v2 | 108,756 | [介紹與 TaskTracker 適用性](taste-skill-介紹.md) | [SKILL.md](vendor/taste-skill/SKILL.md) |
 
-初步建議：Pro Max 提供可查證的可用性與實作檢查項目, Taste 的 app-screen 章節補視覺層級、資訊密度與實際渲染觀察。若之後融合, 應先訂共用審查輸出與衝突優先序, 不把兩份原文直接接在一起。這是助理建議, 尚未指定採用或實際審查
+初步建議：Pro Max 提供可查證的可用性與實作檢查項目, Taste 的 app-screen 章節補視覺層級、資訊密度與實際渲染觀察。若之後融合, 應先訂共用審查輸出與衝突優先序, 不把兩份原文直接接在一起。使用者已指定兩者搭配審查；下列分工採本專案需求優先
 
 ## 「星數前兩名」的口徑
 
@@ -46,7 +46,7 @@ skills/
 
 UI UX Pro Max 固定 `713eef51b04efc98d6fa565323b495f7c9c89fd4`, 上游路徑 `.claude/skills/ui-ux-pro-max`；Taste 固定 `12af471f627f866411b4bd785b19646d3672784c`, 上游路徑 `skills/taste-skill`。兩者各補原 repository 根目錄的 MIT LICENSE, 原內容未改寫；前者 75 檔, 後者 40 檔, 合計約 6 MB, 包含必要資料與原有測試／參考, 沒有複製整個 repository 或建立巢狀 Git
 
-副本放在 `skills/vendor` 供評估, **沒有寫入全域 skills 或 `.agents/skills` 的自動發現位置**。下回合可直接指定讀取本機 SKILL 路徑使用；此資料夾存在不代表已自動註冊到目前 agent 的技能清單。Taste 的 frontmatter 名稱是 `design-taste-frontend`, 本機保留較好辨認的資料夾名 `taste-skill`
+副本放在 `skills/vendor`, 已用相對 symlink 加入 `.agents/skills/ui-ux-pro-max` 與 `.agents/skills/design-taste-frontend`；沒有寫入全域 skills。當次對話明確讀取原文使用, 不宣稱已熱更新 agent 技能清單。Taste 的 frontmatter 名稱是 `design-taste-frontend`, 本機保留較好辨認的資料夾名 `taste-skill`
 
 上游程式、規則、研究結論及 style 禁用名單都是待評估的第三方內容, 不覆蓋使用者需求或本專案規範。原文中的插件路徑、全域安裝、下載圖片或套用樣式流程沒有自動執行。外部圖片與字型各有其來源條件, 上游 MIT 授權不代表所有外部資產都使用 MIT
 
@@ -62,9 +62,9 @@ UI UX Pro Max 固定 `713eef51b04efc98d6fa565323b495f7c9c89fd4`, 上游路徑 `.
 
 若採融合流程, 建議先用同一份隔離資料, 分開產出兩份審查結果, 再去重。每個問題固定記錄「畫面與角色 → 重現步驟 → 證據 → 使用者影響 → 嚴重度 → 規則來源 → 最小修改建議」。衝突時先處理資訊可見性與誤操作, 接著可用性／無障礙, 最後才是審美偏好。原 Skill 的數值門檻與掃描分數不能直接等同 WCAG 符合性或使用者滿意度
 
-建議首批情境是首頁速記／交辦、待辦轉正式卡片、Project 清單與看板、讀者任務詳情及工時填報。保留我們已確認的專案入口、角色只是權限組合、視圖／甘特圖暫緩等產品決策；這些是下一輪審查範圍建議, **本輪未執行**
+建議首批情境是首頁速記／交辦、待辦轉正式卡片、Project 清單與看板、讀者任務詳情及工時填報。保留我們已確認的專案入口、角色只是權限組合、視圖／甘特圖暫緩等產品決策；這些是本輪審查範圍；結果另記日期報告, 不把工具規則當成已驗證事實
 
-## 本輪驗證與更新方式
+## 初次收錄的驗證與更新方式
 
 - 115 個上游檔案的 Git blob SHA-1 與固定 tree 一致, 另記 SHA-256；沒有漏檔、額外產物或 symlink
 - Pro Max 的 UX 查詢與 Vue stack 查詢可讀本機資料, 分別有 3／1 個結果

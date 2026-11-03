@@ -983,5 +983,19 @@
     "application_ui_audited": false,
     "upstream_whitespace_findings_preserved": 46,
     "whitespace_note": "Only unchanged upstream vendor files contain the staged whitespace findings; authored files are checked separately."
+  },
+  "registrations": {
+    "date": "2026-11-03",
+    "method": "relative symlink; vendor unchanged; no global installation",
+    "entries": [
+      {
+        "path": ".agents/skills/ui-ux-pro-max",
+        "target": "../../skills/vendor/ui-ux-pro-max"
+      },
+      {
+        "path": ".agents/skills/design-taste-frontend",
+        "target": "../../skills/vendor/taste-skill"
+      }
+    ]
   }
 }
