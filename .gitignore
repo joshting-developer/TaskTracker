@@ -14,3 +14,8 @@ artifacts/
 vendor/
 .env
 .phpunit.cache/
+
+# UI/UX skill 的上游原始碼副本需納入版本控制, 不屬於 Composer vendor 或使用者 data
+!skills/vendor/
+!skills/vendor/ui-ux-pro-max/data/
+!skills/vendor/ui-ux-pro-max/data/**
