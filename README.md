@@ -189,7 +189,8 @@ E2E_API_URL=http://127.0.0.1:13004 npm run test:e2e
 
 ## 文件
 
-- [UI／UX skills 評估副本](skills/README.md)：兩個高星專用 skill 的原文、個別介紹、星數口徑與融合建議, 尚未套用審查
+- [UI／UX skills 與來源](skills/README.md)：兩個固定版本已加入 `.agents/skills`, 保留原文與個別介紹
+- [UI／UX 審查報告（2026-11-03）](docs/UIUX審查報告-2026-11-03.md)：兩個 skill 搭配真實隔離 API、44 組畫面量測, 問題與改善優先級；本輪未修改 UI
 - [競品使用流程與功能缺口研究（2026-10-30）](docs/競品使用流程與功能缺口研究-2026-10-30.md)：五家競品的日常流程、公開回饋及分階段功能建議
 - [首頁小待辦設計](docs/todo-design.md)：速記、互相交辦、通知、隱私與單向轉卡
 - [Project ACL 契約](docs/project-acl.md)：固定角色矩陣、permission／scope、成員 API 與資料升級
