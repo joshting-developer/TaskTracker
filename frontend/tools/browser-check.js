@@ -663,7 +663,12 @@ async function checkIssueRelations(page, projectUrl) {
   await editor.getByRole('button', { name: '儲存修改', exact: true }).click();
   await editor.getByText(/版本 5 · 已儲存/).waitFor();
   await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
-  await page.locator('[data-issue="TEST-5"] .context-parent').waitFor();
+  const childRow = page.locator('tr[data-issue="TEST-5"]');
+  await childRow.getByRole('button', { name: '付款畫面', exact: true }).click();
+  const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
+  await detail.getByRole('heading', { name: '付款畫面', exact: true }).waitFor();
+  await detail.getByRole('button', { name: 'TEST-4 · 付款流程', exact: true }).waitFor();
+  await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
   await page.getByRole('button', { name: '任務看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await page.locator('.board-cell [data-issue="TEST-5"] .context-parent').waitFor();
