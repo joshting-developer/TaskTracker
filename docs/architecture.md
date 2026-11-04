@@ -1,5 +1,7 @@
 # TaskTracker 架構提案
 
+2026-11-04後端整理：核心流程已拆成明確HTTP入口、共用Request／Resource、交易／授權／重試與各領域服務，保留RPC及records資料契約；目前實際程式導覽與限制見 [Laravel後端程式導覽](backend-development.md)。
+
 2026-10-30 最新權限實作：固定 Workspace／Project 角色映射集中 permission, 由 ProjectAccess 判斷 scope、有效成員及資源條件；Project 成員獨立 revision／授權歷史, 所有衍生資料及 requestId 重試均授權。已取代下方歷史共享原型, 見 [ACL 契約](project-acl.md)。真實寄信、自訂角色與即時私有推播仍待後續
 
 2026-10-19 最新實作：原始碼已拆分為 `frontend/`（Vue＋Vuetify）與 `backend/`（Laravel JSON API）, 不用 Inertia, Node API 由 PHP 取代。Compose 提供 API／前端／Queue／Reverb／Redis, 詳見[根 README](../README.md)及[產品討論紀錄](產品討論紀錄.md)。下方 Node／GAS 舊提案及當時功能界線保留作歷史參考, 不覆蓋最新選型；當時 Project ACL 與真實寄信待完成, ACL 現況見上方 2026-10-30 更新

@@ -226,3 +226,5 @@ F01–F04 可用性修正另有 `E2E_API_URL=http://127.0.0.1:13004 node tools/u
 手機／平板首頁首屏提供「記小事」，直接定位並聚焦待辦輸入欄；首頁內定位會保留既有速記內容，專案區排列維持不變。
 
 版本與維護：見[前端後續改善與PHP版本檢查](docs/前端後續改善與PHP版本檢查-2026-11-04.md)。本機PHP若遇到Homebrew／ICU錯誤，先使用`docker compose exec backend php artisan ...`，本專案不要求修改主機共用PHP。PHP映像修補後需重建並重新建立backend／queue／websocket，單純restart不會換映像。
+
+後端程式閱讀：2026-11-04已拆分明確HTTP入口、Project／Issue／TimeEntry服務及授權／重試邊界，見[Laravel後端程式導覽](docs/backend-development.md)。既有API與資料契約保留，尚未遷移完整關聯式業務表。

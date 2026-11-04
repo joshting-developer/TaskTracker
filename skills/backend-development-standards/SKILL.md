@@ -20,7 +20,7 @@ description: Implement or review TaskTracker Laravel/PHP backend code and tests 
 - 權限以有效permission ID＋Workspace／Project scope＋資源條件判斷；角色僅查權限映射。操作者與權限由後端重新取得，不能比較角色名稱放行；重試快取亦須先授權。
 - 保留既有JSON API DTO、DomainError錯誤碼／HTTP語意、revision與requestId；CLM錯誤碼與translation key不搬入產品。診斷細節只進受控log，不能回傳SQL、憑證或exception原文。
 - 保留SQLite記憶體測試隔離及TestCase在bootstrap前的環境覆寫，不因reference中的DatabaseTransactions範例改用業務資料庫。
-- 新增／修改class與function依coding reference補中文docblock；既有原型不視為已符合規範，也不因引入skill整批重排、改名或重構。使用者已暫緩後端架構整理。
+- 新增／修改class與function依coding reference補中文docblock；既有原型不視為已符合規範，也不因引入skill整批重排、改名或重構。2026-11-04使用者後續已要求調整，核心流程已分層；後續只整理當次授權範圍，不自行變更schema或無關工具。
 - CLM的Kibana、Report／PDF、安裝包與Carbon macro名稱僅為來源專案例子；TaskTracker依實際相依判斷，使用既有ISO時間／Asia/Taipei工作日語意，不新增不存在的系統。
 
 ## 按需讀取
