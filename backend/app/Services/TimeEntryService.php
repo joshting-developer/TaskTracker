@@ -70,20 +70,28 @@ class TimeEntryService
             DomainError::fail('INVALID_INPUT', '不能填報未來日期的工時');
         }
         $minutes = Fields::integer($input['minutes'] ?? null, '工時分鐘', 1, 1440);
-        $daily = array_sum(array_column(array_filter($this->store->all('timeEntries'), fn ($e) => empty($e['voidedAt']) && $e['userId'] === $userId && $e['workDate'] === $date && $e['id'] !== ($current['id'] ?? '')), 'minutes'));
+        $otherDailyEntries = array_filter($this->store->all('timeEntries'), function ($entry) use ($userId, $date, $current) {
+            $isEffective = empty($entry['voidedAt']);
+            $isSameUserAndDate = $entry['userId'] === $userId && $entry['workDate'] === $date;
+            $isOtherEntry = $entry['id'] !== ($current['id'] ?? '');
+
+            return $isEffective && $isSameUserAndDate && $isOtherEntry;
+        });
+        $daily = array_sum(array_column($otherDailyEntries, 'minutes'));
         if ($daily + $minutes > 1440) {
             DomainError::fail('INVALID_INPUT', '同一人同一天的工時不能超過 24 小時');
         }
         $note = Fields::text($input['note'] ?? '', '工時說明', 1000);
+        $baseEntry = $current ?? [
+            'id' => $this->id(),
+            'issueId' => $issue['id'],
+            'projectId' => $issue['projectId'],
+            'userId' => $userId,
+            'createdAt' => $this->now(),
+            'history' => [],
+        ];
         $entry = [
-            ...$current ?? [
-                'id' => $this->id(),
-                'issueId' => $issue['id'],
-                'projectId' => $issue['projectId'],
-                'userId' => $userId,
-                'createdAt' => $this->now(),
-                'history' => [],
-            ],
+            ...$baseEntry,
             'workDate' => $date,
             'minutes' => $minutes,
             'note' => $note,

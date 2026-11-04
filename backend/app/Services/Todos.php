@@ -178,11 +178,18 @@ class Todos
         }
         usort($notifications, fn ($a, $b) => strcmp($b['createdAt'], $a['createdAt']) ?: strcmp($a['id'], $b['id']));
         $canAssign = in_array('todo.assign', $this->workspaceSession['permissions'], true);
-        $members = array_values(array_map(fn ($m) => [
-            'id' => $m['id'],
-            'name' => $m['name'],
-            'email' => $m['email'],
-        ], array_filter($this->store->all('members'), fn ($m) => empty($m['disabledAt']) && ($canAssign || $m['id'] === $this->userId) && in_array('todo.writeOwn', WorkspacePermissions::resolve($m['role'] ?? ''), true))));
+        $eligibleMembers = array_filter($this->store->all('members'), function ($member) use ($canAssign) {
+            $isActive = empty($member['disabledAt']);
+            $canChooseMember = $canAssign || $member['id'] === $this->userId;
+            $canReceiveTodo = in_array('todo.writeOwn', WorkspacePermissions::resolve($member['role'] ?? ''), true);
+
+            return $isActive && $canChooseMember && $canReceiveTodo;
+        });
+        $members = array_values(array_map(fn ($member) => [
+            'id' => $member['id'],
+            'name' => $member['name'],
+            'email' => $member['email'],
+        ], $eligibleMembers));
         $write = in_array('todo.writeOwn', $this->workspaceSession['permissions'], true);
         $access = new ProjectAccess($this->store, $this->workspaceSession);
         $todos = array_map(function ($t) use ($write, $access) {
