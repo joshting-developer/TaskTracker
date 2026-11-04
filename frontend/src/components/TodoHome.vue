@@ -4,6 +4,7 @@ import { api } from '../api/index.js';
 import { onTabKeydown } from '../ui/tabs.js';
 const props = defineProps({ data: Object, userId: String, canWrite: Boolean, canAssign: Boolean, canConvert: Boolean, refresh: Function });
 const emit = defineEmits(['convert', 'open-issue']);
+const quickInput = ref(null);
 const title = ref(''), note = ref(''), assigneeId = ref(props.userId), expanded = ref(false), tab = ref('mine');
 const successMessage = ref('');
 const tabId = useId(), showAllOpen = ref(false);
@@ -43,7 +44,8 @@ async function returnToDraft() {
   await focus(draft.value.id);
   document.getElementById(`todo-${draft.value.id}`)?.querySelector('input[aria-label="編輯待辦內容"]')?.focus();
 }
-defineExpose({ dirty, saving: busy, focus });
+function focusQuickEntry() { quickInput.value?.scrollIntoView({ block: 'center' }); quickInput.value?.focus({ preventScroll: true }); }
+defineExpose({ dirty, saving: busy, focus, focusQuickEntry });
 function edit(item) {
   if (busy.value || (draft.value && !window.confirm('捨棄尚未儲存的待辦修改？'))) return;
   draft.value = { id: item.id, title: item.title, note: item.note, expectedRevision: item.revision }; error.value = ''; conflict.value = false;
@@ -75,7 +77,7 @@ async function action(item, operation) {
   <section class="todo-home" aria-label="首頁小待辦">
     <header class="todo-heading"><div><h2>小待辦</h2><p>先記下來, 一件一件完成</p></div><span class="todo-private">只對交辦者與承辦者可見</span></header>
     <form v-if="canWrite" class="todo-create" @submit.prevent="create">
-      <div class="todo-quick"><input v-model="title" aria-label="快速新增待辦" placeholder="記一件小事, Enter 加入…" maxlength="180" required :disabled="busy" @keydown.enter="$event.isComposing && $event.preventDefault()" /><select v-if="canAssign" v-model="assigneeId" aria-label="待辦交給誰" :disabled="busy"><option :value="userId">自己</option><option v-for="member in data.members.filter(member => member.id !== userId)" :key="member.id" :value="member.id">{{ member.name }} · {{ member.email }}</option></select><button class="button primary" :disabled="busy || !title.trim()">{{ assigneeId === userId ? '加入待辦' : '交辦' }}</button></div>
+      <div class="todo-quick"><input ref="quickInput" v-model="title" aria-label="快速新增待辦" placeholder="記一件小事, Enter 加入…" maxlength="180" required :disabled="busy" @keydown.enter="$event.isComposing && $event.preventDefault()" /><select v-if="canAssign" v-model="assigneeId" aria-label="待辦交給誰" :disabled="busy"><option :value="userId">自己</option><option v-for="member in data.members.filter(member => member.id !== userId)" :key="member.id" :value="member.id">{{ member.name }} · {{ member.email }}</option></select><button class="button primary" :disabled="busy || !title.trim()">{{ assigneeId === userId ? '加入待辦' : '交辦' }}</button></div>
       <button type="button" class="text-button todo-note-toggle" :aria-expanded="expanded" @click="expanded = !expanded">{{ expanded ? '收起說明' : '補充說明' }}</button>
       <label v-show="expanded" class="field">待辦補充說明<textarea v-model="note" aria-label="待辦補充說明" rows="2" maxlength="2000" :disabled="busy" placeholder="背景、溝通重點或完成條件（選填）" /></label>
     </form>

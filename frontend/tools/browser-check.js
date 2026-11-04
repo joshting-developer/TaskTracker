@@ -10,6 +10,15 @@ const apiTarget = process.env.E2E_API_URL;
 if (!apiTarget) throw new Error('請設定 E2E_API_URL 指向隔離 Laravel 測試服務');
 let vite;
 let browser;
+// 編輯情境用明確快速編輯入口；閱讀情境仍直接點標題。
+async function openQuickIssue(page, name) {
+  const title = page.getByRole('button', { name, exact: true });
+  await title.waitFor();
+  const card = page.locator('tr[data-issue], article.issue-card').filter({ has: title });
+  if (await card.count()) await card.getByRole('button', { name: /^快速編輯 / }).click();
+  else await title.click(); // Epic／工時明細等既有來源入口
+}
+
 async function openTaskFilters(page) {
   const toggle = page.getByRole('button', { name: '任務篩選', exact: true });
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
@@ -111,7 +120,7 @@ async function checkIssueDetailPage(page) {
   assert.equal(await page.locator('.pagination').innerText(), pagination, '完整頁返回保留列表頁碼');
   await page.getByLabel('搜尋任務', { exact: true }).fill('整理任務完整頁');
 
-  await page.getByRole('button', { name: fixture.task.title, exact: true }).click();
+  await openQuickIssue(page, fixture.task.title);
   await page.getByRole('dialog').getByRole('button', { name: '開啟完整頁', exact: true }).click();
   await detail.getByRole('heading', { name: fixture.task.title, exact: true }).waitFor();
   await detail.getByLabel('新增留言', { exact: true }).fill('閱讀頁未送出草稿');
@@ -162,12 +171,12 @@ async function checkIssueDetailPage(page) {
   assert.equal(page.url(), boardUrl, '分享／重整後仍返回來源自訂看板');
   await page.locator('.selected-board-heading h3').getByText(fixture.board.name, { exact: true }).waitFor();
   await page.locator('.board-scroll').evaluate(element => { element.scrollLeft = 100; });
-  await page.getByRole('button', { name: fixture.task.title, exact: true }).click();
+  await openQuickIssue(page, fixture.task.title);
   const boardScroll = await page.locator('.board-scroll').evaluate(element => element.scrollLeft);
   await page.getByRole('dialog').getByRole('button', { name: '開啟完整頁', exact: true }).click();
   await detail.getByRole('button', { name: '返回看板', exact: true }).click();
   assert.equal(await page.locator('.board-scroll').evaluate(element => element.scrollLeft), boardScroll, '返回保留看板捲動');
-  await page.getByRole('button', { name: fixture.task.title, exact: true }).click();
+  await openQuickIssue(page, fixture.task.title);
   await page.getByRole('dialog').getByRole('button', { name: '開啟完整頁', exact: true }).click();
   await page.setViewportSize({ width: 390, height: 844 });
   await detail.getByRole('heading', { name: fixture.task.title, exact: true }).waitFor();
@@ -269,7 +278,7 @@ async function checkProjectAcl(page, browser, failures) {
 
   // 撤權時已開啟、未儲存的任務也必須卸載
   await teammate.goto(`http://127.0.0.1:5175/#/projects/${fixture.other.id}`);
-  await teammate.getByRole('button', { name: '受保護的開發卡片', exact: true }).click();
+  await openQuickIssue(teammate, '受保護的開發卡片');
   const editor = teammate.getByRole('dialog');
   await editor.getByLabel(/任務標題/).fill('撤權前未儲存的私有草稿');
   await page.evaluate(async ({ other, member }) => {
@@ -415,7 +424,7 @@ async function checkBoardWorkflow(page) {
   await page.goto(`http://127.0.0.1:5175/#/projects/${project.id}/board?view=retired-board`);
   await page.getByRole('status').filter({ hasText: '視圖功能已移除' }).waitFor();
   assert.ok(page.url().endsWith('/board'), '舊參數移除後保留看板位置');
-  await secondLane.getByRole('button', { name: '從泳道新增的工作', exact: true }).click();
+  await openQuickIssue(page, '從泳道新增的工作');
   await page.reload();
   await page.getByRole('dialog', { name: '任務詳細內容' }).waitFor();
   await page.getByRole('button', { name: '關閉任務' }).click();
@@ -462,7 +471,7 @@ async function checkCustomBoards(page) {
   const customUrl = page.url();
   assert.equal(await page.locator('.issue-card').count(), 2, 'Epic 與明確單卡去重');
   await page.reload(); await page.locator('.issue-card').nth(1).waitFor();
-  await page.getByRole('button', { name: '父工作', exact: true }).click(); await page.reload();
+  await openQuickIssue(page, '父工作'); await page.reload();
   await page.getByRole('dialog', { name: '任務詳細內容', exact: true }).waitFor();
   await page.getByRole('button', { name: '關閉任務', exact: true }).click();
   assert.equal(page.url(), customUrl, '詳細頁重整關閉保留看板');
@@ -593,7 +602,7 @@ async function checkIssueRelations(page, projectUrl) {
   await editor.getByLabel('搜尋關聯任務', { exact: true }).fill('付款 API');
   await editor.getByRole('button', { name: '關聯 TEST-3', exact: true }).click();
   await editor.getByRole('button', { name: '建立任務', exact: true }).click();
-  await page.getByRole('button', { name: '付款流程', exact: true }).click();
+  await openQuickIssue(page, '付款流程');
   editor = page.getByRole('dialog');
   await editor.getByRole('button', { name: '新增子任務', exact: true }).click();
   await editor.getByLabel('子任務標題', { exact: true }).fill('付款畫面');
@@ -619,13 +628,13 @@ async function checkIssueRelations(page, projectUrl) {
   await editor.getByRole('button', { name: '儲存修改', exact: true }).click();
   await editor.getByText(/版本 3 · 已儲存/).waitFor();
   await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
-  await page.getByRole('button', { name: '付款流程', exact: true }).click();
+  await openQuickIssue(page, '付款流程');
   assert.equal(await editor.getByRole('button', { name: '開啟關聯任務 TEST-3', exact: true }).count(), 0, '從另一端解除後同步');
   await editor.getByLabel('狀態', { exact: true }).selectOption('todo');
   await editor.getByRole('button', { name: '儲存修改', exact: true }).click();
   await editor.getByText(/版本 4 · 已儲存/).waitFor();
   await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
-  await page.getByRole('button', { name: '付款 API', exact: true }).click();
+  await openQuickIssue(page, '付款 API');
   await editor.getByRole('button', { name: '設定父任務', exact: true }).click();
   await editor.getByLabel('搜尋父任務', { exact: true }).fill('付款流程');
   await editor.getByRole('button', { name: '選為父任務 TEST-4', exact: true }).click();
@@ -651,7 +660,7 @@ async function checkIssueRelations(page, projectUrl) {
   });
   assert.equal(summary.estimateMinutes, 360, 'Epic 各 Issue 估時只計一次（原任務 3h＋父項 2h＋子項 1h）');
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('button', { name: '付款流程', exact: true }).click();
+  await openQuickIssue(page, '付款流程');
   await editor.getByRole('button', { name: '新增關聯', exact: true }).click();
   await editor.getByLabel('搜尋關聯任務', { exact: true }).fill('付款');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
@@ -672,7 +681,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.locator('.epic-card').waitFor();
   const epicId = await page.evaluate(async () => (await (await import('/src/api/index.js')).api.getWorkspace()).issues.find(issue => issue.type === 'epic').id);
   await page.getByRole('button', { name: '任務列表', exact: true }).click();
-  await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).click();
+  await openQuickIssue(page, '我建立的任務 <script>alert(1)</script>');
   editor = page.getByRole('dialog');
   await editor.getByLabel('所屬 Epic', { exact: true }).selectOption(epicId);
   await editor.getByLabel('預估小時', { exact: true }).fill('3');
@@ -731,7 +740,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await teammate.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).click();
   assert.equal(await teammate.getByRole('button', { name: '狀態設定', exact: true }).count(), 0, '沒有設定權限時不顯示管理入口');
   await page.getByRole('button', { name: '重新整理工作空間' }).click();
-  await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).click();
+  await openQuickIssue(page, '我建立的任務 <script>alert(1)</script>');
   editor = page.getByRole('dialog');
   await editor.getByLabel('負責人', { exact: true }).selectOption({ label: 'Mei' });
   await editor.getByRole('button', { name: '儲存修改' }).click();
@@ -748,12 +757,12 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   concurrent.on('pageerror', error => failures.push(error.message));
   await concurrent.clock.install();
   await concurrent.goto(projectUrl);
-  await concurrent.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).click();
+  await openQuickIssue(concurrent, '我建立的任務 <script>alert(1)</script>');
   const staleEditor = concurrent.getByRole('dialog');
   await staleEditor.getByLabel(/任務標題/).fill('本機尚未儲存的修改');
   await teammate.getByRole('button', { name: '任務列表', exact: true }).click();
   await teammate.getByRole('button', { name: '重新整理工作空間' }).click();
-  await teammate.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).click();
+  await openQuickIssue(teammate, '我建立的任務 <script>alert(1)</script>');
   const teammateEditor = teammate.getByRole('dialog');
   await teammateEditor.getByLabel('描述', { exact: true }).fill('同伴已更新, 舊表單不能覆蓋');
   await teammateEditor.getByRole('button', { name: '儲存修改' }).click();
@@ -838,7 +847,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.getByRole('button', { name: 'Epic 概覽', exact: false }).click();
   await page.locator('.epic-hours').getByText('2.5 h', { exact: true }).waitFor();
   await page.screenshot({ path: 'artifacts/epic-overview.png', fullPage: true });
-  await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).click();
+  await openQuickIssue(page, '我建立的任務 <script>alert(1)</script>');
   editor = page.getByRole('dialog');
   await editor.getByLabel('狀態', { exact: true }).selectOption('done');
   await editor.getByRole('button', { name: '儲存修改' }).click();
@@ -851,7 +860,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await editor.getByRole('button', { name: '儲存修改' }).click();
   await editor.getByText(/版本 2 · 已儲存/).waitFor();
   await editor.getByRole('button', { name: '關閉任務' }).click();
-  await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).click();
+  await openQuickIssue(page, '我建立的任務 <script>alert(1)</script>');
   editor = page.getByRole('dialog');
   await editor.getByLabel('狀態', { exact: true }).selectOption('todo');
   await editor.getByRole('button', { name: '儲存修改' }).click();
@@ -992,7 +1001,7 @@ try {
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
 
 
-  await page.getByRole('button', { name: '設計任務清單的搜尋與篩選', exact: true }).click();
+  await openQuickIssue(page, '設計任務清單的搜尋與篩選');
   let editor = page.getByRole('dialog', { name: '任務詳細內容' });
   await editor.getByLabel(/任務標題/).fill('搜尋流程已完成');
   await editor.getByLabel('到期日', { exact: true }).fill('2026-10-20');
@@ -1007,7 +1016,7 @@ try {
   await editor.getByRole('button', { name: '關閉任務' }).click();
   await page.reload();
   await page.getByRole('button', { name: '搜尋流程已完成', exact: true }).waitFor();
-  await page.getByRole('button', { name: '搜尋流程已完成', exact: true }).click();
+  await openQuickIssue(page, '搜尋流程已完成');
   editor = page.getByRole('dialog', { name: '任務詳細內容' });
   assert.ok(page.url().includes('/board/issues/'), '看板詳細頁保留來源路由');
   assert.equal(await editor.getByLabel('到期日', { exact: true }).inputValue(), '2026-10-20');
@@ -1073,7 +1082,7 @@ try {
   await page.getByRole('button', { name: '進入專案：產品第一版 · 示範', exact: true }).click();
   assert.equal(await page.locator('.issue-card, tbody tr').count(), 9);
   assert.equal(await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).count(), 0);
-  await page.getByRole('button', { name: '搜尋流程已完成', exact: true }).click();
+  await openQuickIssue(page, '搜尋流程已完成');
   const issueUrl = page.url();
   await page.reload();
   await page.getByRole('dialog', { name: '任務詳細內容' }).waitFor();

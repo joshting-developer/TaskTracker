@@ -1,6 +1,6 @@
 # TaskTracker 可用性 findings：任務流程與卡點
 
-日期：2026-11-04（Asia/Taipei）。使用 [usability-testing](../../skills/vendor/usability-testing/SKILL.md) 整理任務、觀察、程度與報告, 搭配 [Cognitive Walkthrough 逐步結果](cognitive-walkthrough.md)。**這是 AI 輔助走查報告, 真人參與者為0。** 本輪沒有修改 UI。
+日期：2026-11-04（Asia/Taipei）。使用 [usability-testing](../../skills/vendor/usability-testing/SKILL.md) 整理任務、觀察、程度與報告, 搭配 [Cognitive Walkthrough 逐步結果](cognitive-walkthrough.md)。**這是 AI 輔助走查報告, 真人參與者為0。** 初次走查沒有修改 UI；使用者後續授權修正，結果見下方修正紀錄。
 
 ## 摘要
 
@@ -117,3 +117,30 @@
 建議優先用 T2 的跨 tab 草稿、T1／T5 的中斷續作、手機 T1＋T2 三組題目做少量試跑。使用 [腳本](usability-test-plan-2026-11-04.md) 的觀察表, 分開記獨立完成／協助完成／未完成。先解釋較少的任務, 不告訴對方「按哪裡」, 再比較改善前後的具體行為。尚未招募或聯絡任何人。
 
 本機資料：`frontend/artifacts/usability-audit-2026-11-04/observations.json`、`summary.json` 與對應圖片；build log `/tmp/tasktracker-usability-build.log`。原有產品 UI／資料、四份 skill 原文與設定均未更動。未驗證所有狀態、真機／讀屏器、其他瀏覽器、多人同時編輯／所有重試、SMTP寄送或正式部署。
+
+
+## 2026-11-04 修正與工程驗收
+
+使用者確認「先調吧，問題點都蠻合理的」後完成以下調整。上文保留初次觀察，不把改善前的截圖改寫成改善後證據。
+
+| 發現 | 目前行為 | 已做的驗證 |
+| --- | --- | --- |
+| F03 | 跨 tab 保留草稿，常駐提示並提供返回／取消；其他項目的更多操作與展開可用，要換編輯另一筆才確認取代 | 編輯本人待辦 → 切交辦 → 展開並取消另一筆 → 返回草稿且聚焦 → 拒絕取代 → 保存，API 核對內容；編輯中的勾選先停用避免自己覆寫 |
+| F01 | sessionStorage 按帳號／Workspace／Project 保存全部／我的／已完成，以及工時月份／成員／選取日；無效條件安全回退，失效成員有提示 | 我的任務與已完成重整不變，歷史月份＋全團隊重整不變，另一專案不繼承；函式邊界測試帳號分隔、錯誤 JSON／日期／月份／移除成員及禁用 storage |
+| F02 | 手機／平板首頁「記小事」直接捲至並聚焦速記欄，不改專案排列；頁內定位保留已輸入內容 | 390×844、768×1024 首屏入口及44px高度、點擊焦點、未提交速記保留、無水平溢出；production另看1440／768／390 |
+| F04 | 列表／看板標題直接閱讀；有寫入權限提供「快速編輯」，手機列表從閱讀頁「編輯任務」 | 列表與Default看板的標題閱讀／快速編輯／返回來源；完整回歸包含reader、撤權時卸載私有草稿、留言與版本衝突、來源自訂看板／列表篩選與頁碼 |
+
+F01 的實作選擇是**目前分頁續作**，沒有命名、分享或管理視圖；分享網址不攜帶分頁選項，新分頁／其他帳號使用自己的預設。搜尋與其他即時篩選仍不保存。禁用瀏覽器儲存時可繼續操作，但無法保證重整續作；未儲存表單不寫入storage，既有離開保護保留。
+
+### 驗證與畫面證據
+
+- `npm run build` 成功。
+- `frontend/tools/usability-fixes-check.js`：F01–F04 針對性真實 API 回歸，另含記憶體storage邊界測試。
+- `frontend/tools/browser-check.js`：完整整合回歸通過，編輯情境改走明示快速編輯入口，保留原有保存、衝突、ACL、轉卡、工時、看板與手機斷言。
+- `frontend/tools/uiux-check.js`：前輪 U01–U08 可讀性、路由、tab鍵盤、工時驗證、草稿與手機檢查通過。
+- production build 接隔離 Laravel，以新假帳號登入後檢查1440／768／390首頁、手機速記及完整閱讀頁；人工檢視手機／平板首頁、桌面列表及手機閱讀頁。首頁兩個專案仍可辨識，速記入口在首屏，主要閱讀內容不被表單蓋住，無水平溢出。
+- Taste 的probe／frame／layout／app量測器亦用於登入後production首頁，數據保存為`production-probe-1440/768/390.json`；三種尺寸水平溢出皆為0、實際可見emoji為0。手機14px頁緣提示是既有內容邊距，畫面未截字。
+- 本機證據：`frontend/artifacts/usability-fixes-2026-11-04/`（ignored），包括 `draft-other-tab.png`、`time-context.png`、`production-home-*.png`、`production-list-1440.png`、`production-detail-*.png`。日誌位於 `/tmp/tasktracker-flow-check.log`、`tasktracker-full-flow.log`、`tasktracker-uiux-flow.log`、`tasktracker-production-flow.log`，build位於`tasktracker-flow-build.log`。
+- Taste 的來源lint指出既有隱藏sidebar-note裝飾字元、eyebrow、陰影及overlay樣式；字元所在區塊已有`display:none`，不是本輪引入或畫面可用性失敗。保留既有品牌及必要抽屜／拖曳回饋，不宣稱所有house-style規則通過。實際登入畫面與互動證據優先。
+
+測試只使用獨立容器13024的臨時SQLite，不掛業務資料volume、不重設使用者seed。未更動後端權限規則或原始skill副本。這些結果證明工程行為符合本輪修正，**仍沒有真人試跑、SUS、滿意度或使用者成功率**；尤其F02入口是否易發現、F04閱讀預設是否更順，需以原T1／T2腳本試用確認。

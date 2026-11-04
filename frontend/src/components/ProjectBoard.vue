@@ -65,10 +65,11 @@ function drop(event, state, lane) {
             <div v-for="state in states" :key="state.id" class="board-cell" :class="{ 'drag-over': dragOver === `${lane.id}:${state.id}` }" :data-column="state.id" @dragover.prevent="dragOver = `${lane.id}:${state.id}`" @dragleave.self="dragOver = ''" @drop.prevent="drop($event, state.id, lane)">
               <article v-for="issue in lane.issues.filter(item => item.state === state.id)" :key="issue.id" class="issue-card" :class="{ moving: moving === issue.id }" :draggable="canWrite && !moving" :data-issue="issue.identifier" @dragstart="startDrag($event, issue)" @dragend="dragOver = ''">
                 <div class="card-top"><span class="identifier">{{ issue.identifier }}</span><span class="type-tag">{{ option(TYPES, issue.type)?.label }}</span><span class="priority-label" :style="{ '--priority-color': option(PRIORITIES, issue.priority)?.color }" :title="`優先級：${option(PRIORITIES, issue.priority)?.label}`"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span></span></div>
-                <button class="card-title" @click="emit('open', issue)">{{ issue.title }}</button>
+                <button class="card-title" @click="emit('open', issue, true)">{{ issue.title }}</button>
                 <p v-if="density === 'comfortable' && issue.description" class="board-card-description">{{ issue.description }}</p>
                 <div class="card-bottom"><span v-if="issue.dueDate" :class="['due-date', { overdue: overdue(issue) }]"><Icon name="clock" :size="12" />{{ issue.dueDate.slice(5).replace('-', '/') }}</span><span v-if="issue.comments.length" class="comment-count"><Icon name="message" :size="13" />{{ issue.comments.length }}</span><span class="board-assignee" :title="memberName(issue.assignee)"><span v-if="issue.assignee" class="avatar small">{{ memberName(issue.assignee).slice(0, 1) }}</span>{{ memberName(issue.assignee) }}</span></div>
                 <IssueContext :issue="issue" :issues="issues" :entries="entries" :project="project" :can-read-time="project.permissions?.includes('timeEntry.readOwn')" @open="emit('open', $event)" />
+                <button v-if="canWrite" class="text-button board-quick-edit" :aria-label="`快速編輯 ${issue.identifier}`" @click="emit('open', issue, false)">快速編輯</button>
                 <label class="card-state"><span class="sr-only">{{ issue.identifier }} 的狀態</span><select :value="issue.state" :disabled="Boolean(moving) || !canWrite" :aria-label="`${issue.identifier} 的狀態`" @change="emit('move', issue, { state: $event.target.value })"><option v-for="next in states" :key="next.id" :value="next.id">{{ next.label }}</option></select></label>
               </article>
               <button v-if="canCreate" class="lane-add" :aria-label="`在${lane.label}新增${state.label}任務`" :disabled="Boolean(moving) || !canWrite" @click="emit('create', { state: state.id, epicId: group === 'epic' ? lane.id : '' })"><Icon name="plus" :size="15" /><span>新增卡片</span></button>
@@ -103,6 +104,7 @@ function drop(event, state, lane) {
 .board-cell { padding: 9px; min-height: 115px; border-right: 1px solid #e3e5ec; border-bottom: 1px solid #e3e5ec; }
 .board-cell.drag-over { background: #eee7fb; box-shadow: inset 0 0 0 2px #b3a0dd; }
 .issue-card { background: white; border: 1px solid #e0e3eb; border-radius: 5px; box-shadow: 0 1px 3px #262b3910; padding: 12px; margin-bottom: 9px; }
+.board-quick-edit { min-height: 44px; font-size: 13px; }
 .card-title { font-size: 14px; line-height: 1.6; margin: 6px 0; color: #242936; }
 .card-top { gap: 8px; }
 .card-top .priority-label { margin-left: auto; }

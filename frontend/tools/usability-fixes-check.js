@@ -117,8 +117,45 @@ try {
   await page.getByRole('button', { name: '任務列表', exact: true }).click();
   await page.reload(); await page.locator('tbody tr').first().waitFor();
   assert.equal(await page.locator('tbody tr').count(), 2);
+  // F04：標題閱讀、顯式快速編輯、返回保留來源。
+  await page.getByRole('button', { name: fixture.issue.title, exact: true }).click();
+  const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
+  await detail.getByRole('heading', { name: fixture.issue.title, exact: true }).waitFor();
+  assert.equal(await page.getByRole('dialog').count(), 0);
+  await page.screenshot({ path: `${artifacts}/reading-1440.png` });
+  await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
+  await page.getByRole('button', { name: `快速編輯 ${fixture.issue.identifier}`, exact: true }).click();
+  await page.getByRole('dialog').getByLabel(/任務標題/).waitFor();
+  await page.getByRole('button', { name: '關閉任務', exact: true }).click();
+  await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
+  await page.getByRole('button', { name: fixture.issue.title, exact: true }).click();
+  await detail.getByRole('heading', { name: fixture.issue.title, exact: true }).waitFor();
+  await detail.getByRole('button', { name: '返回看板', exact: true }).click();
+  await page.getByRole('button', { name: `快速編輯 ${fixture.issue.identifier}`, exact: true }).click();
+  await page.getByRole('dialog').getByLabel(/任務標題/).waitFor();
+  await page.getByRole('button', { name: '關閉任務', exact: true }).click();
+  // F02：兩個專案的手機首頁首屏有入口，不丟速記內容。
+  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  for (const width of [390, 768]) {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 1024 });
+    await page.evaluate(() => scrollTo(0, 0));
+    if (width < 700) await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
+    const shortcut = page.getByRole('button', { name: '記小事', exact: true });
+    const box = await shortcut.boundingBox();
+    assert.ok(box.y >= 0 && box.y + box.height < (width === 390 ? 844 : 1024));
+    assert.ok(box.height >= 44);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await page.screenshot({ path: `${artifacts}/home-${width}.png` });
+    await shortcut.click();
+    assert.equal(await page.getByLabel('快速新增待辦', { exact: true }).evaluate(el => el === document.activeElement), true);
+    await page.getByLabel('快速新增待辦', { exact: true }).fill('手機未送出的速記');
+    await shortcut.click();
+    assert.equal(await page.getByLabel('快速新增待辦', { exact: true }).inputValue(), '手機未送出的速記');
+    await page.getByLabel('快速新增待辦', { exact: true }).fill('');
+  }
   assert.deepEqual(failures, []);
-  console.log('PASS: F01 重整續作、專案／帳號分隔與無效條件回退；F03 跨 tab 草稿提示、其他操作與展開可用、取消別筆仍保留草稿、返回焦點、拒絕取代及保存');
+  console.log('PASS: F02 手機首屏入口／焦點／草稿；F04 列表與看板閱讀／快速編輯；F01 重整續作、專案／帳號分隔與無效條件回退；F03 跨 tab 草稿提示、其他操作與展開可用、取消別筆仍保留草稿、返回焦點、拒絕取代及保存');
 } finally {
   await browser?.close();
   await vite?.close();

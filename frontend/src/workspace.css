@@ -257,3 +257,9 @@
 @media (max-width: 1199px) {
   .home-layout .todo-home { border-top: 1px solid var(--border); padding-top: 24px; }
 }
+
+.heading-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.home-todo-shortcut { min-height: 44px; }
+.issue-row-actions { white-space: nowrap; }
+.quick-edit { min-height: 44px; font-size: 13px; margin-right: 8px; }
+@media (min-width: 1200px) { .home-todo-shortcut { display: none; } }
