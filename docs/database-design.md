@@ -91,6 +91,8 @@ Epic／Task／Bug 共用 `issues`；`epic_id` 與 `parent_issue_id` 是不同關
 - 38 項 Laravel 測試／796 個斷言通過，使用強制隔離的記憶體 SQLite。新增關聯讀取、FK 拒絕越界、回填／回退／再升級、舊快取沒有 payload.id、失敗回滾及查詢數上限。
 - 真實瀏覽器全流程回歸通過：獨立 13024 API、臨時 SQLite／假帳號，涵蓋 ACL／撤權、列表／看板／任務、工時、待辦／通知／轉卡、版本衝突與手機。未用業務資料庫做測試。
 - 本機備份副本預演：逐欄比對 69 筆原紀錄；1 Workspace、5 Member、2 Project、14 Issue、6 TimeEntry，以及 ACL、升級、舊視圖與重試結果全部保留。原 records 與帳號雜湊一致，外鍵及 integrity check 通過。
-- 本機套用結果：待最終升級後記錄。
+- 本機已套用：停寫後再次備份／副本預演，再套用原資料庫 migration。原69筆紀錄逐欄一致，records／帳號雜湊未改，外鍵與integrity通過；14張卡片、6筆工時與2個專案保留，未reset Seed。API／queue／websocket已使用重建映像恢復服務。
+- 重建服務後Redis連線、Queue測試工作收送、WebSocket握手通過；所有app／migration PHP語法及Composer環境需求檢查通過，前端／API／WebSocket／Redis healthy。
+- 升級前備份保存在忽略的Docker volume `/data/backups/before-relational-final-20261104.sqlite`；含帳號及資料，不能提交Git。前一次預演備份亦保留。
 
-測試與預演日誌在 `/tmp/tasktracker-relational-{tests,browser,preview}.log`，不提交資料庫、備份、截圖或產物。
+測試與預演日誌在 `/tmp/tasktracker-relational-{tests,browser,preview,preview-final,migration}.log`，重建與語法／環境檢查在同prefix的build／services／lint／platform.log；隔離API容器已移除。不提交資料庫、備份、截圖或產物。

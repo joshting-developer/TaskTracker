@@ -25,7 +25,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 
 使用者已要求邊討論邊更新 `docs/產品討論紀錄.md`。後續產品討論先讀該文件, 每輪將新增需求、選項、決策理由與待討論問題同步整理, 更新日期。明確區分使用者已確認、助理建議與目前實作；不把追問、沉默或已試作當成採納。變更決策時保留沿革, 確認後同步受影響的設計文件
 
-已確認的目標授權原則：角色只是權限組合, 由有效 permission ID、Workspace／Project scope 及資源條件決定能看與能做。新授權設計的 policy／API／畫面不得以角色顯示名稱或角色 ID 作放行捷徑, roleId 只用於查角色的權限映射。Laravel 已建立集中權限入口, 完整 Project ACL 與預設矩陣仍待遷移, 不代表已符合最終原則
+已確認的目標授權原則：角色只是權限組合, 由有效 permission ID、Workspace／Project scope 及資源條件決定能看與能做。新授權設計的 policy／API／畫面不得以角色顯示名稱或角色 ID 作放行捷徑, roleId 只用於查角色的權限映射。Laravel 已建立集中權限入口，Project ACL與固定矩陣已落地；自訂角色／權限編輯及正式部署另行設計
 
 目前本機實作（2026-10-19 已改為前後端分離）：
 
@@ -35,8 +35,8 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - `cd frontend && npm run dev`／`npm run build`；`docker compose exec backend php artisan test --do-not-cache-result` 驗證 Laravel API／隔離 SQLite
 - `frontend/tools/browser-check.js` 以 `E2E_API_URL` 接隔離 Laravel 服務, 使用 5175 埠, 不使用業務 mock 或使用者資料庫
 - 預設空資料, 可手動載入示範專案或 `tasktracker:seed-demo`；指定 Seed 建 Jack／f-ws／first／second, 密碼只讀本機 TASKTRACKER_SEED_PASSWORD, --reset 只重設此 seed namespace；首頁先建／選 Project, 點入才有任務功能, 所有操作保留目前專案上下文
-- `backend/app/Repositories/RecordStore.php` 由伺服器限定 Workspace namespace；`AccountService` 從 Laravel session 推導操作者與空間, 不信任前端身分
-- 租戶間隔離, 空間內專案及工時暫沿用共享原型；`WorkspacePermissions` 集中權限, 但完整 Project ACL／預設角色矩陣尚未落地, 不宣稱符合最終授權規格
+- `backend/app/Repositories/RecordStore.php` 由伺服器選定Workspace，經RelationalRecords／Children寫入明確業務表；AccountService從Laravel session推導操作者與空間，不信任前端身分。2026-11-04新增22張關聯表、Eloquent模型及FK／索引，舊records只供歷史遷移／回退／匯入；見docs/database-design.md
+- 租戶間隔離，ProjectAccess逐案檢查有效permission／scope及作者條件；Project ACL／固定角色矩陣已落地。新關聯表以複合外鍵再限制同Workspace／Project，不以FK取代權限檢查
 - 舊 Node API／測試由 PHP 取代, 原 SQLite 與舊 Docker volume 保留；匯入指令只接受空目標、不覆蓋來源, 保留作者歷史, 舊帳號登入後升級雜湊
 - 2026-10-20 類型固定 Epic／Task／Bug, feature 透過 migration／匯入共用升級器轉 task 並保留歷史與 revision 保護；自訂類型僅記構想, 不提前實作
 - 狀態用固定 ID＋category 判斷完成, Epic 估時／工時只加總子項目。2026-10-20 改 parentIssueId 一層子任務與 relatedIssueIds 雙向關聯, 移除前置／DAG／結案阻擋；子項跟父項 Epic, 狀態獨立, 舊 blockedBy 透過 migration 轉關聯並保留歷史
@@ -108,6 +108,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - `README.md`：專案入口與目前狀態
 - `docs/competitor-survey.md`：競品比較與功能取捨
 - `docs/architecture.md`：GuildManager 參考結果與本專案架構提案
+- `docs/database-design.md`：現行關聯式資料表、Eloquent關聯、外鍵／索引與遷移／回退保護
 - `plans/<分支>/plan.md`、`step.md`：當次工作範圍與續接紀錄
 
 ## UI／UX skills

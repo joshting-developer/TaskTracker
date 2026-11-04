@@ -1,6 +1,6 @@
 # Laravel後端程式導覽與重構紀錄
 
-更新：2026-11-04（Asia/Taipei）。本輪重點為可讀性、責任分層及既有契約相容；對應提交`705d2b5`、`9f51ba7`、`f3cde29`。
+更新：2026-11-04（Asia/Taipei）。核心流程先完成可讀性／分層（`705d2b5`、`9f51ba7`、`f3cde29`），同日再依使用者要求完成關聯式儲存（`fb6e468`）。
 
 ## 從哪裡開始讀
 
@@ -14,7 +14,7 @@ flowchart TD
   Execution --> Operation["WorkspaceOperationAccess：permission與scope"]
   Operation --> Replay["RequestReplay：比對原簽章／讀取重試"]
   Replay --> Issue["IssueService::updateIssue：版本、關聯與歷史"]
-  Issue --> Store["RecordStore → StoredRecord → records表"]
+  Issue --> Store["RecordStore → RelationalRecords／Children → Eloquent業務表"]
   Execution --> Response["ApiResponse：ok／data"]
 ```
 
@@ -35,7 +35,9 @@ flowchart TD
 | `Services/ProjectBoards.php`、`ProjectMembers.php` | 看板收錄與Project授權／ACL歷史 |
 | `Services/RequestReplay.php` | 共用原簽章算法與防重複提交；呼叫前必須完成當次授權 |
 | `Authorization/*` | 角色映射、有效permission ID、Workspace／Project scope及作者條件 |
-| `Repositories/RecordStore.php`、`Models/StoredRecord.php` | 封裝既有records表與伺服器限定namespace；不判斷角色或組合API回應 |
+| `Repositories/RecordStore.php`、`RelationalRecords.php`、`RelationalChildren.php` | 受Workspace限制的DTO／關聯欄位及子表映射，不判斷角色或組合API回應 |
+| `Models/Project.php`、`Issue.php` 等 | 明確業務欄位及Eloquent關聯；資料庫外鍵另限制同空間／專案 |
+| `Repositories/LegacyRecordStore.php`、`Models/StoredRecord.php` | 僅供歷史migration、匯入staging與回退使用的records封存入口 |
 
 複雜條件改成具名判斷，主要class／function補中文docblock及參數／回傳說明。`backend/pint.json`採Laravel preset，保留規範要求的docblock標籤；沒有新增formatter依賴。
 
@@ -45,7 +47,7 @@ flowchart TD
 - JSON傳輸與業務欄位驗證分開：FormRequest處理傳輸；`Fields`及領域服務繼續負責allowlist、型別、狀態與關聯規則，保留錯誤碼、中文訊息與HTTP status。不是宣稱所有驗證都已移到各別FormRequest。
 - AccountService／ApiExecution是與Laravel Auth／Session相接的應用邊界；Project／Issue／Time等領域服務接收重新驗證的工作空間身分，不自行讀全域HTTP Session。
 - 每次操作先重新授權，再讀requestId快取；舊簽章排序及`requests`／`todoRequests` namespace保留。轉卡、關聯兩端、通知與編號仍在同一交易。
-- 既有records資料、主鍵、順序及payload保留；`StoredRecord`代表此資料表，**不是已完成Project／Issue等關聯式領域模型**。完整關聯式schema需另做資料契約與遷移設計，不以本輪整理清空資料。
+- 關聯式表保留原公開ID、順序、DTO與版本；原records不雙寫。`StoredRecord`僅代表歷史封存，Project／Issue等另有Eloquent模型。主鍵／外鍵及快照JSON邊界見[關聯式資料設計](database-design.md)。
 - 原匯入、歷史資料升級器與Seed操作契約保留，沒有順便全面改寫工具。SMTP仍只驗證、通知仍preview，Reverb仍未發布業務事件。
 
 ## 驗證
@@ -60,3 +62,9 @@ flowchart TD
 - Docker映像已完成重建，backend／queue／websocket已使用新映像；API／WebSocket與未重建的frontend／Redis均healthy，Queue為running且測試工作已消費。前端代理health、Redis連線、Queue收送及WebSocket握手檢查通過。保留舊映像標籤before-architecture-refactor供本機回退；資料volume及seed未重設。
 
 測試在強制記憶體SQLite或無業務volume的獨立API容器執行。日誌：`/tmp/tasktracker-backend-refactor-baseline.log`、`tasktracker-backend-refactor-services.log`、`tasktracker-backend-refactor-http.log`、`tasktracker-backend-refactor-browser.log`。重建與本機服務log另在`/tmp/tasktracker-backend-refactor-build.log`、`tasktracker-backend-refactor-services-recreate.log`。暫存格式化工具未加入Git；實際格式化使用既有PHP parser與Pint，不修改共用skill來源或主機PHP。
+
+## 關聯儲存追加驗收
+
+同日使用者要求將集中 payload 改為關聯式表。新增22張表、Eloquent關聯、複合外鍵與索引，正常業務改寫入欄位／子表；Seed局部重設及舊Node匯入同步適配。既有歷史migration仍可處理舊records，回退先匯出最新關聯資料。
+
+完整38項／796斷言、隔離真實瀏覽器回歸通過；本機備份副本逐欄比對69筆舊資料通過。實際升級／資料完整性與剩餘邊界見[資料設計驗收](database-design.md#本輪驗證)。上方34項驗證屬前階段分層紀錄，並非最新儲存架構的全部驗收。

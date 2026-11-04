@@ -13,6 +13,12 @@ docs/               產品決策與設計紀錄
 
 前端只透過 HTTP API 存取後端, 不直接存取資料庫或依賴 Laravel 頁面渲染。Node 僅用於前端工具鏈, 舊 Node API 已由 Laravel 取代。先前 GAS 架構保留在歷史文件, 目前不產 `.gs`
 
+## 資料儲存
+
+業務資料使用關聯式 SQLite：Workspace／Member、Project／Status／ACL、Issue／Comment／Relation、Board／收錄、工時、Todo／通知各有獨立資料表，含外鍵與索引。Laravel Eloquent 模型提供關聯；歷史事件與重試結果保留快照 JSON。
+
+舊 `records.payload` 已改為歷史封存，正常業務不再寫入。升級會保留現有帳號、公開 ID、revision 與內容；啟動前先備份 SQLite，無需重設 Seed。資料表、ER 圖及升級／回退方式見[關聯式資料設計](docs/database-design.md)。
+
 ## Docker 開始試用
 
 ```sh
@@ -110,7 +116,7 @@ Seed 只允許 local／testing。Laravel 的 `php artisan db:seed` 也呼叫相�
 
 待辦「更多 → 轉成正式卡片」開啟原建卡側欄, 帶入標題／說明, 選擇有任務編輯權的專案並補類型、狀態、負責人、Epic 等欄位。建立卡片和標記待辦轉卡在同交易完成, 重試不重複建卡；來源待辦保留, 卡片連結只對具該專案讀取資格的人顯示。只有目前承辦者可轉換, 本版沒有卡片轉回待辦接口
 
-頂端「待辦通知」提供未讀數, 收到交辦、內容更新、完成／重開／退回／取消／轉卡會通知另一方, 點擊標已讀並回首頁定位。這是實際保存在伺服器的站內通知, 與原專案郵件 preview 分開；依現有 30 秒輪詢或手動刷新更新, 尚無即時推播／寄信。新增資料沿用 RecordStore, 不需要重設 Seed 或遷移既有卡片。詳見 [小待辦設計](docs/todo-design.md)
+頂端「待辦通知」提供未讀數, 收到交辦、內容更新、完成／重開／退回／取消／轉卡會通知另一方, 點擊標已讀並回首頁定位。這是實際保存在伺服器的站內通知, 與原專案郵件 preview 分開；依現有 30 秒輪詢或手動刷新更新, 尚無即時推播／寄信。新增資料經 RecordStore 寫入獨立的待辦／通知表，無需重設 Seed。詳見 [小待辦設計](docs/todo-design.md)
 
 ## 專案成員與 ACL
 

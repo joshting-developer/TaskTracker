@@ -1,5 +1,7 @@
 # TaskTracker 架構提案
 
+2026-11-04 儲存更新：業務改為22張明確關聯表及Eloquent模型／外鍵／索引，保留DTO及原資料；records僅作歷史封存。此更新取代下方records主儲存描述，詳見[關聯式資料設計](database-design.md)。
+
 2026-11-04後端整理：核心流程已拆成明確HTTP入口、共用Request／Resource、交易／授權／重試與各領域服務，保留RPC及records資料契約；目前實際程式導覽與限制見 [Laravel後端程式導覽](backend-development.md)。
 
 2026-10-30 最新權限實作：固定 Workspace／Project 角色映射集中 permission, 由 ProjectAccess 判斷 scope、有效成員及資源條件；Project 成員獨立 revision／授權歷史, 所有衍生資料及 requestId 重試均授權。已取代下方歷史共享原型, 見 [ACL 契約](project-acl.md)。真實寄信、自訂角色與即時私有推播仍待後續

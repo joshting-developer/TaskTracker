@@ -16,7 +16,7 @@
 - 以 Composer lockfile 鎖定依賴, 容器提供 PHP 8.5.12。主機 PHP 不可用時使用 Docker, 不自動修改主機 PHP 安裝
 - `docker compose exec backend php artisan test --do-not-cache-result` 使用隔離記憶體 SQLite, 不改使用者資料
 - 新授權以有效權限、Workspace／Project scope 與資源條件判斷；roleId 僅在角色映射中使用, 不在 controller 或 service 比較名稱放行
-- RecordStore 的 Workspace namespace 是既有租戶邊界。寫入前在交易內重查成員資格與 revision, requestId 結果也須先授權
+- RecordStore／RelationalRecords 由伺服器選定 Workspace；核心欄位、子集合與關聯寫入明確業務表，複合FK限制Workspace／Project。LegacyRecordStore／StoredRecord僅供歷史migration、匯入staging與回退，不回到records正常雙寫。寫入前仍在交易內重查資格與revision，requestId結果也須先授權
 - Project ACL與固定權限矩陣已落地；逐Project過濾任務、看板、通知及工時。保留撤權清除與重試前授權，不能把加入Workspace視為可讀全部Project
 - SMTP 預設 preview, 只能 verify, 不寄真實郵件。Reverb 目前只提供連線基礎, 不新增未授權公開業務頻道
 - Reverb／Queue 是長駐程序, 程式修改後重啟；秘密來自環境或忽略的 volume, 不寫進 image、Git、前端及測試輸出
@@ -25,3 +25,5 @@
 
 - 2026-10-20 補強：TestCase 在 bootstrap 前覆寫程序環境並強制 memory config, 避免 Compose 環境令 RefreshDatabase 清空本機資料；隔離證據須驗證外部 sentinel SQLite 完全未改
 - `tasktracker:seed-demo` 建指定 Jack／f-ws／first／second, 密碼僅由忽略的 TASKTRACKER_SEED_PASSWORD 設定；預設冪等, --reset 只重設此 seed namespace, 不改其他 Workspace
+
+- 2026-11-04儲存更新：22張關聯式表及Eloquent模型已落地，資料設計／ER／遷移保護見[database-design.md](../docs/database-design.md)。JSON只用於事件／重試快照及未映射歷史欄位；新業務欄位須新增明確欄位／migration。

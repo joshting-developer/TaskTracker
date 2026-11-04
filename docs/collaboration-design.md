@@ -1,5 +1,7 @@
 # Epic、工作流程與多人協作設計
 
+2026-11-04 儲存更新：Workspace／成員、Project／ACL／狀態、Issue／關聯／留言、看板／工時及待辦改用關聯表；原prototype資料保留。最新資料邊界、外鍵及遷移見[關聯式資料設計](database-design.md)，Project ACL已落地，早期共享／Node／GAS內容保留沿革。
+
 2026-10-20 最新類型決策：目前固定 Epic／Task／Bug, 舊 Feature 轉 Task；自訂類型只記未來方向。下方早期 Feature 敘述屬沿革, 現行以[產品討論紀錄](產品討論紀錄.md) D-022 為準
 
 2026-10-20 更新：使用者已確認子任務與雙向關聯, 前置依賴取消。Task／Bug／Feature 可有一層子任務, 各自狀態／工時、繼承父項 Epic；一般父項不自動加上子項工時, Epic 仍按實際 Issue 各計一次。下方早期「子任務」多指 Epic 的執行項目, 新的一般父子關係及升級契約見[日常流程](workflow-design.md)
