@@ -1,10 +1,23 @@
-# UI／UX skills 評估副本
+# UI／UX 與可用性 skills
 
-查詢與下載日期：2026-11-03（Asia/Taipei）
+初次查詢與下載：2026-11-03；流程／可用性補充：2026-11-04（Asia/Taipei）
 
-這裡保存兩個上游 skill 的完整副本, 供 Josh 選擇或討論如何融合成 TaskTracker 的 UI／UX 審查流程。初次收錄僅下載與介紹；同日使用者追加要求啟用兩者並審查專案。現在已建立 [.agents/skills 入口](../.agents/skills/README.md), 原文仍維持固定版本, 不另建融合 skill。審查與 UI 改版分開處理。
+這裡最初保存兩個上游 UI／UX skill 的完整副本, 供 Josh 選擇或討論如何融合成 TaskTracker 的 UI／UX 審查流程。初次收錄僅下載與介紹；同日使用者追加要求啟用兩者並審查專案。現在已建立 [.agents/skills 入口](../.agents/skills/README.md), 原文仍維持固定版本, 不另建融合 skill。審查與 UI 改版分開處理。
 
-## 先讀這兩份
+## 新增的流程／可用性評估副本（尚未啟用）
+
+使用者進一步想知道流程會不會卡住、畫面太雜或功能難找, 本輪選兩個互補 skill：
+
+| Skill | 介紹 | 核心用途 | 狀態 |
+| --- | --- | --- | --- |
+| cognitive-walkthrough | [個別介紹](cognitive-walkthrough-介紹.md) | 沿任務逐步檢查目標、入口、動作意義與回饋 | 僅 [vendor 副本](vendor/cognitive-walkthrough/SKILL.md) |
+| usability-testing | [個別介紹](usability-testing-介紹.md) | 設計真人試用、任務腳本、觀察與報告 | 僅 [vendor 副本](vendor/usability-testing/SKILL.md) |
+
+本輪按任務適配選取, **不宣稱是星數前兩名**。兩者分別來自 19★ 與整庫 1,030★ 的 repo（2026-11-04 官方 API 快照）, 星數不能當使用效果。固定 commit、授權、候選及 7 檔校驗見 [ux-research-sources.json](ux-research-sources.json)。沒有加入 `.agents/skills` 或全域設定, 也沒有執行新一輪 UX 審查／真人測試。
+
+怎麼與現有兩份配合、TaskTracker 建議測哪些任務、AI 與真人證據怎麼區分, 見 [可用性驗證方案](../docs/可用性驗證方案-2026-11-04.md)。
+
+## 已啟用的畫面／介面 skills
 
 | Skill | GitHub stars 快照 | 介紹 | 上游原文 |
 | --- | ---: | --- | --- |
@@ -39,9 +52,12 @@ skills/
   ui-ux-pro-max-介紹.md
   taste-skill-介紹.md
   sources.json
+  ux-research-sources.json
   vendor/
     ui-ux-pro-max/      原 skill、references、Python scripts、CSV／JSON data、上游 LICENSE
     taste-skill/       原 skill、app-screen 規則、Node scripts、library、assets、上游 LICENSE
+    cognitive-walkthrough/  2026-11-04 新增, 尚未啟用
+    usability-testing/      2026-11-04 新增, 尚未啟用
 ```
 
 UI UX Pro Max 固定 `713eef51b04efc98d6fa565323b495f7c9c89fd4`, 上游路徑 `.claude/skills/ui-ux-pro-max`；Taste 固定 `12af471f627f866411b4bd785b19646d3672784c`, 上游路徑 `skills/taste-skill`。兩者各補原 repository 根目錄的 MIT LICENSE, 原內容未改寫；前者 75 檔, 後者 40 檔, 合計約 6 MB, 包含必要資料與原有測試／參考, 沒有複製整個 repository 或建立巢狀 Git

@@ -205,7 +205,8 @@ E2E_API_URL=http://127.0.0.1:13004 node tools/uiux-check.js
 
 ## 文件
 
-- [UI／UX skills 與來源](skills/README.md)：兩個固定版本已加入 `.agents/skills`, 保留原文與個別介紹
+- [使用者流程／可用性驗證方案（2026-11-04）](docs/可用性驗證方案-2026-11-04.md)：兩個新 skill 評估、AI 任務走查與真人試用分工, 目前僅提案
+- [UI／UX skills 與來源](skills/README.md)：原有兩個已加入 `.agents/skills`；新增 cognitive-walkthrough／usability-testing 僅評估副本, 保留原文與介紹
 - [UI／UX 審查報告（2026-11-03）](docs/UIUX審查報告-2026-11-03.md)：兩個 skill 搭配真實隔離 API、44 組畫面量測, 問題與改善優先級；本輪未修改 UI
 - [競品使用流程與功能缺口研究（2026-10-30）](docs/競品使用流程與功能缺口研究-2026-10-30.md)：五家競品的日常流程、公開回饋及分階段功能建議
 - [首頁小待辦設計](docs/todo-design.md)：速記、互相交辦、通知、隱私與單向轉卡

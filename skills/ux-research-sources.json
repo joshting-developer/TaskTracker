@@ -1,0 +1,120 @@
+{
+  "checked_date": "2026-11-04",
+  "timezone": "Asia/Taipei",
+  "selection_scope": "TaskTracker 使用者流程與可用性評估；選 AI 任務走查與真人試用設計兩個互補 skill。不是 GitHub 星數前二排行, 不以 repo 星數代表單一 skill 的成效。",
+  "query_method": "搜尋引擎發現候選；GitHub 官方 API repository metadata + fixed commit recursive tree + raw source 核對, source subtree 由 skill-installer --method download 保存。",
+  "activation": "Evaluation copies in skills/vendor only. No .agents/skills registration or global installation. No audit or real-user testing performed in this research turn.",
+  "selected": [
+    {
+      "skill": "cognitive-walkthrough",
+      "repository": "45ck/hci-review-skill",
+      "repository_url": "https://github.com/45ck/hci-review-skill",
+      "repository_api": "https://api.github.com/repos/45ck/hci-review-skill",
+      "stars_snapshot": 19,
+      "pushed_at_snapshot": "2026-04-11T01:59:25Z",
+      "commit": "970a57d1a2084642252963bfc9e00352bbc39e59",
+      "upstream_skill_path": ".agents/skills/cognitive-walkthrough",
+      "local_path": "skills/vendor/cognitive-walkthrough",
+      "license": "MIT",
+      "copied_file_count": 3,
+      "copied_bytes": 2799,
+      "files": [
+        {
+          "path": "LICENSE",
+          "upstream_path": "LICENSE",
+          "git_blob_sha1": "4b24296aa6de4c6c0e69c75a3abc7c1684749d0f",
+          "sha256": "00da39c61887ac33c015123179c15d35541ae3f73f1a18d5a1f1875369dd33c0",
+          "bytes": 1086
+        },
+        {
+          "path": "SKILL.md",
+          "upstream_path": ".agents/skills/cognitive-walkthrough/SKILL.md",
+          "git_blob_sha1": "0b686737700bf9c7f18bdb875a76d27000850352",
+          "sha256": "f4dd1799007d604bf6e00a790e35d783cf3c265d54cb16b98ad79d2a1a4a9e79",
+          "bytes": 1402
+        },
+        {
+          "path": "agents/openai.yaml",
+          "upstream_path": ".agents/skills/cognitive-walkthrough/agents/openai.yaml",
+          "git_blob_sha1": "bc64ab575be0015c5820df7d177f3aa4677a3639",
+          "sha256": "85acd101b9c2f3f32fda9fccab896c6849d758a786d22a3835e4232c36e44406",
+          "bytes": 311
+        }
+      ]
+    },
+    {
+      "skill": "usability-testing",
+      "repository": "rampstackco/claude-skills",
+      "repository_url": "https://github.com/rampstackco/claude-skills",
+      "repository_api": "https://api.github.com/repos/rampstackco/claude-skills",
+      "stars_snapshot": 1030,
+      "pushed_at_snapshot": "2026-10-27T00:02:48Z",
+      "commit": "9b90db257f7395fab76ff9bfcb808456709f6af3",
+      "upstream_skill_path": "skills/usability-testing",
+      "local_path": "skills/vendor/usability-testing",
+      "license": "MIT",
+      "copied_file_count": 4,
+      "copied_bytes": 21732,
+      "files": [
+        {
+          "path": "LICENSE",
+          "upstream_path": "LICENSE",
+          "git_blob_sha1": "9d5acfd7a3ad1c3c164a15834a06ff101197cae4",
+          "sha256": "7957f4b291988f21be7cb75637d2efb6edd0369a95d3814cac7ef931f7f10b7c",
+          "bytes": 1070
+        },
+        {
+          "path": "README.md",
+          "upstream_path": "skills/usability-testing/README.md",
+          "git_blob_sha1": "d1e15e04cfe787a2898d0c8c4cc9f5f3dc4f8d82",
+          "sha256": "f86f047aa6bd03a004e28c73734b7411a6707dd2ef0b59cf2e6ab1dac8d34eb2",
+          "bytes": 358
+        },
+        {
+          "path": "SKILL.md",
+          "upstream_path": "skills/usability-testing/SKILL.md",
+          "git_blob_sha1": "10a97b648be183802dd54ddbb30907c8be835ad8",
+          "sha256": "98350aa232686167b8ada86f5d40432fb149613f45dde5477536bcd00ded38bd",
+          "bytes": 9553
+        },
+        {
+          "path": "references/task-script-patterns.md",
+          "upstream_path": "skills/usability-testing/references/task-script-patterns.md",
+          "git_blob_sha1": "bcc0cd71b330d816308adea591d233316df090ec",
+          "sha256": "ef6f52b28935f89c671077692dc71c739e6bbff86f572fbd9e49746a3ed60ffc",
+          "bytes": 10751
+        }
+      ]
+    }
+  ],
+  "alternatives": [
+    {
+      "repository": "JacobLinCool/agent-skills",
+      "repository_url": "https://github.com/JacobLinCool/agent-skills",
+      "stars_snapshot": 0,
+      "commit": "e9343c565baf1b518c91448f3f8520af0993a7e6",
+      "license": "MIT",
+      "pushed_at_snapshot": "2026-03-21T18:01:08Z"
+    },
+    {
+      "repository": "sergiobuilds/ux-workflow-check",
+      "repository_url": "https://github.com/sergiobuilds/ux-workflow-check",
+      "stars_snapshot": 0,
+      "commit": "cd1c8fc016c31350ef3ef27f4e295abf6d81cea9",
+      "license": "MIT",
+      "pushed_at_snapshot": "2026-08-15T15:48:46Z"
+    },
+    {
+      "repository": "Rob7850/usability-test-skill",
+      "repository_url": "https://github.com/Rob7850/usability-test-skill",
+      "stars_snapshot": 1,
+      "commit": "c232332a476d35b5ba6913396de5a8fa502ce0fe",
+      "license": "MIT",
+      "pushed_at_snapshot": "2026-07-19T08:25:36Z"
+    }
+  ],
+  "method_sources": [
+    "https://www.nngroup.com/articles/usability-testing-101/",
+    "https://www.nngroup.com/articles/task-scenarios-usability-testing/"
+  ]
+}
