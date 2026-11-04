@@ -113,3 +113,10 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 ## UI／UX skills
 
 使用者已指定 UI／UX 工作使用 `.agents/skills/ui-ux-pro-max/SKILL.md` 及 `.agents/skills/design-taste-frontend/SKILL.md`。後者對 TaskTracker 採 app-screen 流程；保留使用者產品決策與 Vue／Vuetify, 不因 house style 自動換色。審查要有實際登入畫面／操作證據, 區分可用性問題與審美偏好；只要求審查時先交報告, 不直接修改產品 UI。來源與使用邊界見 `.agents/skills/README.md`。
+
+
+## 後端開發 skill
+
+後端Laravel／PHP開發、review與測試設計使用 [backend-development-standards](skills/backend-development-standards/SKILL.md)，由`.agents/skills/backend-development-standards`提供專案入口。這是2026-11-04由workspace共用skills搬入並適配的副本，來源與差異見 [校驗清單](skills/backend-standards-sources.json)；使用細節及現行授權狀態以 [backend/AGENTS.md](backend/AGENTS.md) 為準。
+
+上方2026-10-19的原型狀態保留沿革；2026-10-30已完成Project ACL及固定矩陣，不應再當成空間內共享。引入規範不代表現有程式已全面合規，也不撤銷使用者暫緩後端重構的決定。

@@ -1,8 +1,18 @@
-# UI／UX 與可用性 skills
+# TaskTracker 專案 skills
 
 初次查詢與下載：2026-11-03；流程／可用性補充：2026-11-04（Asia/Taipei）
 
 這裡最初保存兩個上游 UI／UX skill 的完整副本, 供 Josh 選擇或討論如何融合成 TaskTracker 的 UI／UX 審查流程。初次收錄僅下載與介紹；同日使用者追加要求啟用兩者並審查專案。現在已建立 [.agents/skills 入口](../.agents/skills/README.md), 原文仍維持固定版本, 不另建融合 skill。審查與 UI 改版分開處理。
+
+## 後端開發規範（2026-11-04）
+
+已從`/Users/josh/Projects/workspace/skills/backend-development-standards`搬入 [專案適用版](backend-development-standards/SKILL.md)，包含六份references與agents metadata；以`.agents/skills/backend-development-standards`相對symlink註冊，root／backend AGENTS及backend CLAUDE均連到同一份規範。不依賴原共用目錄存在，也未修改共用來源或全域安裝。
+
+主要涵蓋可讀性／命名、中文class與function docblock、分層、API／併發／交易、測試fixture與外部程序生命週期。TaskTracker採permission ID＋scope、DomainError、revision／requestId及SQLite隔離；已修正角色放行範例、批次查詢可能洩露存在性的例子、reference相對連結及PHPUnit attribute示例。CLM專屬系統不自動套用。
+
+來源八個檔案的SHA-256、專案副本SHA-256及調整範圍見 [backend-standards-sources.json](backend-standards-sources.json)。backend-coding-style與clm-backend-structure已合併為相容別名，不額外收錄。更新時先比對來源與本機適配，不直接覆蓋本機規則；先前115＋7個UI／UX原文副本保持不變。
+
+本輪只搬入規範；後端架構重構仍暫緩，現有程式未因此自動合規。後續修改依相關規範逐步落實。
 
 ## 新增的流程／可用性評估副本（尚未啟用）
 

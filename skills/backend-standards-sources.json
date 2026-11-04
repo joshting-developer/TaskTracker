@@ -1,0 +1,68 @@
+{
+  "copied_date": "2026-11-04",
+  "timezone": "Asia/Taipei",
+  "source_path": "/Users/josh/Projects/workspace/skills/backend-development-standards",
+  "local_path": "skills/backend-development-standards",
+  "mode": "Project-scoped adapted copy; shared source unchanged; no dependency on shared absolute paths at runtime.",
+  "excluded_aliases": [
+    "backend-coding-style",
+    "clm-backend-structure"
+  ],
+  "adaptations": [
+    "SKILL.md：TaskTracker用途、權限／契約／測試隔離與CLM範例邊界；不授權立即重構",
+    "agents/openai.yaml：專案顯示與預設prompt",
+    "references/architecture.md：以permission＋scope取代角色放行，修正批次reference相對連結",
+    "references/batch-api-review.md：入口permission與禁止洩露未授權Project存在性",
+    "references/coding-style-and-tests.md：DomainError範例、有效參數docblock及PHPUnit attribute／static provider示例"
+  ],
+  "files": [
+    {
+      "path": "SKILL.md",
+      "source_sha256": "4bb498cd22bd7b4905626a3f9f5db34f70c2a263f1aa3b3ffba1888604fc640b",
+      "local_sha256": "e3890cab15169b160229b0c9d66985281879097b5bc06526f142990e289825ef",
+      "adapted": true
+    },
+    {
+      "path": "agents/openai.yaml",
+      "source_sha256": "a9294ba445c410ae68fd01c826510e304b2e24af04caf0b74ac6514bb065c4f7",
+      "local_sha256": "bb3cc06470c58b991f6da5153623b87fd28044becab96959c797ff4969155bc5",
+      "adapted": true
+    },
+    {
+      "path": "references/api-contract-and-concurrency.md",
+      "source_sha256": "745101a91877b666e986b2e66deca0a1b1f22c5c85ae5c06e7472ee35f02bf3e",
+      "local_sha256": "745101a91877b666e986b2e66deca0a1b1f22c5c85ae5c06e7472ee35f02bf3e",
+      "adapted": false
+    },
+    {
+      "path": "references/architecture.md",
+      "source_sha256": "8991caed1774dee80dda3c567fbe5b787d1a724b2f996ab8e5298359c9cb6405",
+      "local_sha256": "f2c00fac13caf27bd1833a55b054b89dab57968ae6babbef5dc14dc90d3fc2c6",
+      "adapted": true
+    },
+    {
+      "path": "references/batch-api-review.md",
+      "source_sha256": "35605c3a35492866040e0dcb02c5d015af44761d96c945c19722a19a09984606",
+      "local_sha256": "3039b701a691e3445ee529dec4593e64f9bbc1cfdca72c81cad641eb05dc4263",
+      "adapted": true
+    },
+    {
+      "path": "references/coding-style-and-tests.md",
+      "source_sha256": "f052531177bebea2ff03b98442da77ac453e11e2de060712042c43968ae8414f",
+      "local_sha256": "fede19ff555aef8cece3b28644827e78b2faea46530aca12e82c8ed89fff2990",
+      "adapted": true
+    },
+    {
+      "path": "references/external-process-lifecycle.md",
+      "source_sha256": "1dfbdee66f784a94b9a8023b11137da8309cc2d3551a2bc8509676a5476f0fbc",
+      "local_sha256": "1dfbdee66f784a94b9a8023b11137da8309cc2d3551a2bc8509676a5476f0fbc",
+      "adapted": false
+    },
+    {
+      "path": "references/testing-reliability.md",
+      "source_sha256": "78d24da8df4e505f90e5277b3b80040d3bde744131f45a3220fc36b4258a1841",
+      "local_sha256": "78d24da8df4e505f90e5277b3b80040d3bde744131f45a3220fc36b4258a1841",
+      "adapted": false
+    }
+  ]
+}

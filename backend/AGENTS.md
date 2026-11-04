@@ -2,11 +2,22 @@
 
 沿用根 [AGENTS.md](../AGENTS.md) 與[README](../README.md)。後端專案是 Laravel JSON API, 產品頁面只在 `../frontend`, 不加入 Inertia、Blade 產品頁面或後端 npm 工具鏈
 
-- 以 Composer lockfile 鎖定依賴, 容器提供 PHP 8.5。主機 PHP 不可用時使用 Docker, 不自動修改主機 PHP 安裝
+## 後端共用規範
+
+後端程式開發、review及測試設計先讀 [backend-development-standards](../skills/backend-development-standards/SKILL.md)，再按工作選讀六份references；專案入口亦在`.agents/skills/backend-development-standards`。來源與適配校驗見 [來源清單](../skills/backend-standards-sources.json)。
+
+- 新增／修改的class、function使用中文docblock，說清責任、實際參數及回傳；展開流程，避免密集單行及需要心算的布林條件。
+- 只建立有實際用途的Controller／Service／Repository／Resource或Transformer，流程要能從入口理解；不以新增空wrapper代替責任拆分。
+- 規範自後續相關改動採用，未修改的既有原型不視為已合規；使用者已暫緩後端整體重構，不因導入規範整批改程式／重命名測試。
+- TaskTracker既有產品契約與下列授權／隔離規則優先；CLM的時間macro、Kibana、Report／PDF與安裝包只是來源案例，不自動加入本專案。
+
+## 專案限制與驗證
+
+- 以 Composer lockfile 鎖定依賴, 容器提供 PHP 8.5.12。主機 PHP 不可用時使用 Docker, 不自動修改主機 PHP 安裝
 - `docker compose exec backend php artisan test --do-not-cache-result` 使用隔離記憶體 SQLite, 不改使用者資料
 - 新授權以有效權限、Workspace／Project scope 與資源條件判斷；roleId 僅在角色映射中使用, 不在 controller 或 service 比較名稱放行
 - RecordStore 的 Workspace namespace 是既有租戶邊界。寫入前在交易內重查成員資格與 revision, requestId 結果也須先授權
-- 目前仍沿用空間內共享專案, Project ACL／完整矩陣尚待實作；不可將共享原型誤當成正式規格
+- Project ACL與固定權限矩陣已落地；逐Project過濾任務、看板、通知及工時。保留撤權清除與重試前授權，不能把加入Workspace視為可讀全部Project
 - SMTP 預設 preview, 只能 verify, 不寄真實郵件。Reverb 目前只提供連線基礎, 不新增未授權公開業務頻道
 - Reverb／Queue 是長駐程序, 程式修改後重啟；秘密來自環境或忽略的 volume, 不寫進 image、Git、前端及測試輸出
 - 匯入只允許空目標, 不改來源, 測試使用人造資料與暫存 SQLite
