@@ -33,6 +33,12 @@ function display(field, value) {
   if (field === 'epicId' || field === 'parentIssueId') return props.issues.find(issue => issue.id === value)?.identifier || value || '未連結';
   return ({ state: states.value, priority: PRIORITIES, type: TYPES }[field])?.find(item => item.id === value)?.label || value || '未設定';
 }
+function changeState(event) {
+  const nextState = event.target.value;
+  event.target.value = '';
+  if (!props.canWrite || saving.value || props.busy || !nextState || nextState === props.issue.state) return;
+  emit('state', nextState);
+}
 async function sendComment() {
   if (!props.canWrite || saving.value || props.busy || !dirty.value) return;
   saving.value = true; error.value = ''; conflict.value = false;
@@ -54,9 +60,17 @@ async function sendComment() {
       <span class="identifier">{{ issue.identifier }}</span>
       <button v-if="canWrite" class="button primary" :disabled="saving || busy" @click="emit('edit')">編輯任務</button>
     </header>
-    <div class="issue-state-tabs" role="group" aria-label="任務狀態">
-      <button v-for="item in states" v-if="canWrite" :key="item.id" type="button" :class="{ active: issue.state === item.id }" :aria-pressed="issue.state === item.id" :style="{ '--status-color': item.color }" :disabled="saving || busy || !canWrite" @click="emit('state', item.id)">{{ item.label }}</button>
-      <span v-if="!canWrite" class="readonly-state">目前狀態：{{ state(issue)?.label || issue.state }} · 唯讀</span>
+    <div class="issue-state-control" role="group" aria-label="任務狀態" :aria-busy="busy">
+      <span class="state-label">目前狀態</span>
+      <span class="status-badge" :style="{ '--status-color': state(issue)?.color }" aria-live="polite" aria-atomic="true"><i aria-hidden="true"></i>{{ state(issue)?.label || issue.state }}</span>
+      <label v-if="canWrite" class="state-action">
+        <span class="sr-only">變更狀態</span>
+        <select :disabled="saving || busy" @change="changeState">
+          <option value="">變更狀態…</option>
+          <option v-for="item in states" :key="item.id" :value="item.id" :disabled="issue.state === item.id">{{ item.label }}{{ issue.state === item.id ? '（目前）' : '' }}</option>
+        </select>
+      </label>
+      <span v-else class="subtle">唯讀</span>
       <span v-if="busy" class="subtle" role="status">更新中…</span>
     </div>
     <div class="issue-detail-layout">
@@ -121,12 +135,13 @@ async function sendComment() {
 .issue-detail-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding: 18px 24px; border-bottom: 1px solid #daddE5; }
 .issue-detail-toolbar .primary { margin-left: auto; }
 .back-icon { transform: rotate(180deg); }
-.issue-state-tabs { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding: 0 24px; border-bottom: 1px solid #daddE5; }
-.issue-state-tabs button { flex-shrink: 0; font-size: 14px; color: #5f6673; padding: 14px 16px 12px; border-bottom: 3px solid transparent; }
-.issue-state-tabs button.active { color: #242936; font-weight: 600; border-bottom-color: var(--status-color, #6653bd); background: #f7f6fc; }
-.issue-state-tabs button:hover { background: #f7f8fb; }
-.issue-state-tabs .subtle { white-space: nowrap; }
-.readonly-state { padding: 14px 0; font-size: 14px; color: #424b5c; }
+.issue-state-control { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 10px 24px; border-bottom: 1px solid #daddE5; font-size: 14px; }
+.state-label { color: #5f6673; }
+.state-action { min-width: 0; max-width: 100%; }
+.state-action select { appearance: auto; min-height: 44px; width: 100%; max-width: 240px; padding: 8px 32px 8px 12px; font: inherit; color: #424b5c; background-color: #fff; border: 1px solid #8c93a3; border-radius: 6px; cursor: pointer; }
+.state-action select:hover:not(:disabled) { border-color: #6653bd; }
+.state-action select:focus-visible { outline: 2px solid #6653bd; outline-offset: 2px; box-shadow: none; }
+.state-action select:disabled { cursor: wait; opacity: 0.65; }
 .issue-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; }
 .issue-detail-body { min-width: 0; padding: 0 32px 48px; grid-column: 1; }
 h1 { font-size: 26px; line-height: 1.5; font-weight: 650; overflow-wrap: anywhere; margin: 0; padding: 28px 32px 24px; grid-column: 1; }
@@ -154,8 +169,7 @@ dd button { text-align: left; color: #5844a0; }
 .comment-form .field { text-align: left; }
 @media(max-width:1000px) { .issue-detail-layout { grid-template-columns: minmax(0, 1fr) 230px; } .issue-detail-body { padding: 0 24px 40px; } h1 { padding: 24px; } }
 @media(max-width:700px) {
-  .issue-state-tabs { padding: 0 12px; gap: 2px; }
-  .issue-state-tabs button { padding: 12px; }
+  .issue-state-control { padding: 10px 18px; gap: 10px; }
   .issue-detail-layout { display: flex; flex-direction: column; }
   .issue-detail-toolbar { padding: 14px 16px; gap: 10px; }
   .issue-detail-toolbar .button { padding: 9px 10px; font-size: 13px; }

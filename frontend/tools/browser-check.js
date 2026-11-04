@@ -91,22 +91,37 @@ async function checkIssueDetailPage(page) {
   await detail.getByText('<script>不可執行</script>', { exact: false }).waitFor();
   await detail.getByLabel('子任務', { exact: true }).getByRole('button', { name: new RegExp(fixture.child.identifier) }).waitFor();
   await detail.getByLabel('關聯任務', { exact: true }).getByRole('button', { name: new RegExp(fixture.related.identifier) }).waitFor();
-  const statusTabs = detail.getByRole('group', { name: '任務狀態', exact: true });
+  const statusControl = detail.getByRole('group', { name: '任務狀態', exact: true });
+  const changeState = statusControl.getByRole('combobox', { name: '變更狀態', exact: true });
+  assert.equal(await statusControl.getByRole('button').count(), 0, '狀態操作不再使用橫排tab造型');
+  await statusControl.getByText('目前狀態', { exact: true }).waitFor();
   await detail.getByLabel('新增留言', { exact: true }).fill('切換狀態保留這段留言');
-  await statusTabs.getByRole('button', { name: '待驗收', exact: true }).click();
-  await statusTabs.getByRole('button', { name: '待驗收', pressed: true, exact: true }).waitFor();
+  const beforeState = await statusControl.locator('.status-badge').textContent();
+  let releaseState;
+  const stateGate = new Promise(resolve => { releaseState = resolve; });
+  await page.route('**/api/rpc/updateIssue', async route => { await stateGate; await route.continue(); }, { times: 1 });
+  try {
+    await changeState.selectOption('detail_review');
+    await page.waitForFunction(() => document.querySelector('.issue-state-control select')?.disabled);
+    assert.equal(await changeState.isDisabled(), true, '保存中禁止重複操作');
+    assert.equal(await statusControl.locator('.status-badge').textContent(), beforeState, '伺服器完成前仍顯示原狀態');
+    await statusControl.getByRole('status').filter({ hasText: '更新中' }).waitFor();
+  } finally { releaseState(); }
+  await statusControl.locator('.status-badge').filter({ hasText: '待驗收' }).waitFor();
+  assert.equal(await changeState.inputValue(), '', '更新後選單回到明確變更入口');
   assert.equal(await detail.getByLabel('新增留言', { exact: true }).inputValue(), '切換狀態保留這段留言');
   await page.evaluate(async id => {
     const { api } = await import('/src/api/index.js');
     const issue = (await api.getWorkspace()).issues.find(item => item.id === id);
     await api.updateIssue({ id, state: 'in_progress', expectedRevision: issue.revision, requestId: crypto.randomUUID() });
   }, fixture.task.id);
-  await statusTabs.getByRole('button', { name: '已完成', exact: true }).click();
+  await changeState.selectOption('done');
   await page.getByRole('alert').filter({ hasText: '任務已被更新' }).waitFor();
-  await statusTabs.getByRole('button', { name: '進行中', pressed: true, exact: true }).waitFor();
+  await statusControl.locator('.status-badge').filter({ hasText: '進行中' }).waitFor();
+  assert.equal(await changeState.inputValue(), '', '衝突後選單不殘留未儲存狀態');
   assert.equal(await detail.getByLabel('新增留言', { exact: true }).inputValue(), '切換狀態保留這段留言', '狀態衝突仍保留留言');
-  await statusTabs.getByRole('button', { name: '待規劃', exact: true }).click();
-  await statusTabs.getByRole('button', { name: '待規劃', pressed: true, exact: true }).waitFor();
+  await changeState.selectOption('backlog');
+  await statusControl.locator('.status-badge').filter({ hasText: '待規劃' }).waitFor();
   await detail.getByLabel('新增留言', { exact: true }).fill('');
   await page.screenshot({ path: 'artifacts/issue-full-page.png', fullPage: true });
   await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
@@ -189,7 +204,7 @@ async function checkIssueDetailPage(page) {
   await page.goto(`${root}/issues/missing?detail=1`);
   await page.getByRole('status').filter({ hasText: '找不到這個專案內的任務' }).waitFor();
   assert.equal(page.url(), root);
-  console.log('PASS: full task reading page, safe description, child/related links, attributes, time rollup, quick/full editing, custom status tabs/conflicts, comment conflict/draft guards, list filters/pagination/custom board return, share/reload/back and mobile');
+  console.log('PASS: full task reading page, safe description, child/related links, attributes, time rollup, quick/full editing, explicit status action/conflicts, comment conflict/draft guards, list filters/pagination/custom board return, share/reload/back and mobile');
 }
 
 async function checkProjectAcl(page, browser, failures) {
@@ -251,7 +266,8 @@ async function checkProjectAcl(page, browser, failures) {
   assert.equal(await detail.getByRole('button', { name: '編輯任務', exact: true }).count(), 0);
   assert.equal(await detail.getByLabel('新增留言').count(), 0);
   assert.equal(await detail.getByRole('tab', { name: /^工時/ }).count(), 0);
-  assert.equal(await detail.getByRole('group', { name: '任務狀態' }).locator('button:enabled').count(), 0);
+  assert.equal(await detail.getByRole('group', { name: '任務狀態' }).getByRole('combobox').count(), 0);
+  await detail.getByRole('group', { name: '任務狀態' }).getByText('唯讀', { exact: true }).waitFor();
   await teammate.getByRole('button', { name: '返回任務列表', exact: true }).click();
   await teammate.getByRole('button', { name: '任務看板', exact: true }).click();
   assert.equal(await teammate.getByRole('button', { name: '新增看板', exact: true }).count(), 0);
