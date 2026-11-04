@@ -83,9 +83,9 @@ function drop(event, state, lane) {
 
 <style scoped>
 .visual-board { background: #f7f8fb; position: relative; overflow: hidden; min-width: 0; max-width: 100%; }
-.board-tools { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 20px; background: white; border-bottom: 1px solid #e7e9ef; font-size: 13px; color: #5f6673; }
+.board-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 20px; background: white; border-bottom: 1px solid #e7e9ef; font-size: 13px; color: #5f6673; }
 .board-tools > div, .board-tools label { display: flex; align-items: center; gap: 10px; }
-.board-tools > div { gap: 18px; }
+.board-tools > div { gap: 18px; flex-wrap: wrap; }.board-tools label { white-space: nowrap; }
 .board-tools select { border: 1px solid #e0deea; border-radius: 5px; padding: 6px 9px; color: #354052; background: white; }
 .board-scroll { overflow: auto; max-height: calc(100vh - 280px); min-height: 240px; outline-offset: -2px; }
 .board-canvas { min-width: max(100%, calc(var(--board-columns) * 250px)); }

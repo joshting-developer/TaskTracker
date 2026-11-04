@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
+import { onTabKeydown } from '../ui/tabs.js';
 import Icon from './Icon.vue';
 import { api } from '../api/index.js';
 import { FIELD_LABELS, hours, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
@@ -7,7 +8,7 @@ import { FIELD_LABELS, hours, PRIORITIES, statusesFor, TYPES } from '../domain/m
 const props = defineProps({ issue: Object, project: Object, issues: Array, members: Array, entries: Array, returnLabel: String, busy: Boolean, canWrite: { type: Boolean, default: true }, canReadTime: { type: Boolean, default: true } });
 const emit = defineEmits(['close', 'open', 'edit', 'saved', 'reload', 'state']);
 const tab = ref('comments'), comment = ref(''), saving = ref(false), error = ref(''), conflict = ref(false);
-const heading = ref(null);
+const heading = ref(null), propertiesExpanded = ref(false);
 let pending;
 watch(() => props.canWrite, allowed => { if (!allowed) { comment.value = ''; pending = null; error.value = ''; conflict.value = false; } });
 watch(() => props.canReadTime, allowed => { if (!allowed && tab.value === 'time') tab.value = 'comments'; });
@@ -54,7 +55,8 @@ async function sendComment() {
       <button v-if="canWrite" class="button primary" :disabled="saving || busy" @click="emit('edit')">編輯任務</button>
     </header>
     <div class="issue-state-tabs" role="group" aria-label="任務狀態">
-      <button v-for="item in states" :key="item.id" type="button" :class="{ active: issue.state === item.id }" :aria-pressed="issue.state === item.id" :style="{ '--status-color': item.color }" :disabled="saving || busy || !canWrite" @click="emit('state', item.id)">{{ item.label }}</button>
+      <button v-for="item in states" v-if="canWrite" :key="item.id" type="button" :class="{ active: issue.state === item.id }" :aria-pressed="issue.state === item.id" :style="{ '--status-color': item.color }" :disabled="saving || busy || !canWrite" @click="emit('state', item.id)">{{ item.label }}</button>
+      <span v-if="!canWrite" class="readonly-state">目前狀態：{{ state(issue)?.label || issue.state }} · 唯讀</span>
       <span v-if="busy" class="subtle" role="status">更新中…</span>
     </div>
     <div class="issue-detail-layout">
@@ -68,12 +70,12 @@ async function sendComment() {
         </section>
         <section v-if="related.length" class="issue-detail-links" aria-label="關聯任務"><h2>關聯任務 <span>{{ related.length }}</span></h2><div v-for="item in related" :key="item.id" class="issue-detail-link-row"><button @click="emit('open', item)"><span class="identifier">{{ item.identifier }}</span>{{ item.title }}</button><span class="status-badge" :style="{ '--status-color': state(item)?.color }"><i></i>{{ state(item)?.label || item.state }}</span></div></section>
         <section class="issue-detail-activity" aria-label="任務活動">
-          <div class="discussion-tabs" role="tablist" aria-label="任務紀錄">
-            <button id="detail-comments-tab" role="tab" aria-controls="detail-activity" :aria-selected="tab === 'comments'" :class="{ active: tab === 'comments' }" @click="tab = 'comments'">留言 <span>{{ issue.comments.length }}</span></button>
-            <button id="detail-history-tab" role="tab" aria-controls="detail-activity" :aria-selected="tab === 'history'" :class="{ active: tab === 'history' }" @click="tab = 'history'">異動紀錄 <span>{{ issue.history.length }}</span></button>
-            <button v-if="canReadTime" id="detail-time-tab" role="tab" aria-controls="detail-activity" :aria-selected="tab === 'time'" :class="{ active: tab === 'time' }" @click="tab = 'time'">工時 <span>{{ work.length }}</span></button>
+          <div class="discussion-tabs" role="tablist" aria-label="任務紀錄" @keydown="onTabKeydown">
+            <button id="detail-comments-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" :class="{ active: tab === 'comments' }" @click="tab = 'comments'">留言 <span>{{ issue.comments.length }}</span></button>
+            <button id="detail-history-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" :class="{ active: tab === 'history' }" @click="tab = 'history'">異動紀錄 <span>{{ issue.history.length }}</span></button>
+            <button v-if="canReadTime" id="detail-time-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'time' ? 0 : -1" :aria-selected="tab === 'time'" :class="{ active: tab === 'time' }" @click="tab = 'time'">工時 <span>{{ work.length }}</span></button>
           </div>
-          <div id="detail-activity" role="tabpanel" :aria-labelledby="`detail-${tab}-tab`">
+          <div id="detail-activity" role="tabpanel" tabindex="0" :aria-labelledby="`detail-${tab}-tab`">
             <template v-if="tab === 'comments'">
               <p v-if="!issue.comments.length" class="quiet-message">尚無留言</p>
               <article v-for="entry in issue.comments" :key="entry.id" class="comment"><div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><p>{{ entry.content }}</p></div></article>
@@ -95,6 +97,8 @@ async function sendComment() {
         </section>
       </div>
       <aside class="issue-detail-properties" aria-label="任務屬性">
+        <button class="mobile-properties-toggle" :aria-expanded="propertiesExpanded" aria-controls="detail-properties" @click="propertiesExpanded = !propertiesExpanded">任務屬性 · 負責人 {{ memberName(issue.assignee) }} <span>{{ propertiesExpanded ? '收起' : '展開' }}</span></button>
+        <div id="detail-properties" class="property-fields" :class="{ expanded: propertiesExpanded }">
         <dl>
           <div><dt>類型</dt><dd>{{ TYPES.find(item => item.id === issue.type)?.label || issue.type }}</dd></div>
           <div><dt>優先級</dt><dd>{{ PRIORITIES.find(item => item.id === issue.priority)?.label || issue.priority }}</dd></div>
@@ -106,6 +110,7 @@ async function sendComment() {
           <div v-if="canReadTime"><dt>已投入工時</dt><dd>{{ hours(spent) }}{{ issue.type === 'epic' ? '（所屬卡片加總）' : '' }}</dd></div>
         </dl>
         <p class="subtle">版本 {{ issue.revision }} · 已儲存</p>
+        </div>
       </aside>
     </div>
   </section>
@@ -121,6 +126,7 @@ async function sendComment() {
 .issue-state-tabs button.active { color: #242936; font-weight: 600; border-bottom-color: var(--status-color, #6653bd); background: #f7f6fc; }
 .issue-state-tabs button:hover { background: #f7f8fb; }
 .issue-state-tabs .subtle { white-space: nowrap; }
+.readonly-state { padding: 14px 0; font-size: 14px; color: #424b5c; }
 .issue-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; }
 .issue-detail-body { min-width: 0; padding: 0 32px 48px; grid-column: 1; }
 h1 { font-size: 26px; line-height: 1.5; font-weight: 650; overflow-wrap: anywhere; margin: 0; padding: 28px 32px 24px; grid-column: 1; }
@@ -134,6 +140,7 @@ h2 span { color: #5f6673; font-weight: 400; margin-left: 8px; }
 .issue-detail-link-row .identifier { display: inline-block; margin-right: 10px; }
 .issue-detail-link-row .status-badge { flex-shrink: 0; }
 .issue-detail-properties { grid-column: 2; grid-row: 1 / span 2; padding: 30px 24px; border-left: 1px solid #daddE5; background: #fcfcfe; min-width: 0; }
+.mobile-properties-toggle { display: none; }
 dl { margin: 0; }
 dl > div { margin-bottom: 22px; }
 dt { color: #5f6673; font-size: 13px; margin-bottom: 7px; }
@@ -155,9 +162,13 @@ dd button { text-align: left; color: #5844a0; }
   .issue-detail-body { padding: 22px 18px 30px; order: 2; }
   h1 { font-size: 23px; padding: 22px 18px; }
   .issue-detail-properties { order: 1; padding: 18px; border-left: 0; border-bottom: 1px solid #daddE5; }
+  .mobile-properties-toggle { display: flex; width: 100%; gap: 12px; justify-content: space-between; text-align: left; font-size: 14px; min-height: 44px; align-items: center; }
+  .mobile-properties-toggle span { flex-shrink: 0; color: #5844a0; }
+  .property-fields { display: none; }
+  .property-fields.expanded { display: block; padding-top: 16px; }
   dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
   dl > div { margin: 0; }
-  .issue-detail-properties > p { margin-top: 14px; }
+  .property-fields > p { margin-top: 14px; }
   .issue-detail-link-row { flex-wrap: wrap; }
 }
 </style>

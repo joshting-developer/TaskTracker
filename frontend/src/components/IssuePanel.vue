@@ -1,5 +1,6 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, useId, watch } from 'vue';
+import { onTabKeydown } from '../ui/tabs.js';
 import Icon from './Icon.vue';
 import IssueRelations from './IssueRelations.vue';
 import { api } from '../api/index.js';
@@ -11,6 +12,7 @@ const dialog = ref(null);
 const form = reactive({ parentIssueId: '', relatedIssueIds: [] });
 const relationsTool = ref(null);
 const tab = ref('comments');
+const tabId = useId();
 const comment = ref('');
 const saving = ref(false);
 const error = ref('');
@@ -178,10 +180,11 @@ function timestamp(value) {
         <IssueRelations v-if="selectedProject" ref="relationsTool" :issue="issue" :issues="availableIssues" :project="selectedProject" :type="form.type" :parent-id="form.parentIssueId" :related-ids="form.relatedIssueIds" :saving="saving" @parent="form.parentIssueId = $event" @related="form.relatedIssueIds = $event" @open="jump" @create-child="createChild" />
         <p v-if="issue && form.type !== 'epic'" class="detail-spent"><Icon name="clock" :size="14" />已投入 {{ hours(spent) }} / {{ form.estimateMinutes ? `預估 ${hours(form.estimateMinutes)}` : '尚未估時' }}</p>
         <section v-if="issue" class="discussion">
-          <div class="discussion-tabs" role="tablist" aria-label="任務紀錄">
-            <button :class="{ active: tab === 'comments' }" role="tab" :aria-selected="tab === 'comments'" @click="tab = 'comments'">留言 <span>{{ issue.comments.length }}</span></button>
-            <button :class="{ active: tab === 'history' }" role="tab" :aria-selected="tab === 'history'" @click="tab = 'history'">異動紀錄 <span>{{ issue.history.length }}</span></button>
+          <div class="discussion-tabs" role="tablist" aria-label="任務紀錄" @keydown="onTabKeydown">
+            <button :class="{ active: tab === 'comments' }" :id="`${tabId}-comments-tab`" role="tab" :aria-controls="`${tabId}-activity`" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" @click="tab = 'comments'">留言 <span>{{ issue.comments.length }}</span></button>
+            <button :class="{ active: tab === 'history' }" :id="`${tabId}-history-tab`" role="tab" :aria-controls="`${tabId}-activity`" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" @click="tab = 'history'">異動紀錄 <span>{{ issue.history.length }}</span></button>
           </div>
+          <div :id="`${tabId}-activity`" role="tabpanel" :aria-labelledby="`${tabId}-${tab}-tab`" tabindex="0">
           <div v-if="tab === 'comments'" class="comments">
             <p v-if="!issue.comments.length" class="quiet-message">還沒有留言, 留下你的下一步吧</p>
             <article v-for="entry in issue.comments" :key="entry.id" class="comment">
@@ -196,6 +199,7 @@ function timestamp(value) {
             <article v-for="entry in [...issue.history].reverse()" :key="entry.id" class="history-entry">
               <span class="history-dot"></span><div><p><strong>{{ entry.actor }}</strong> {{ entry.kind === 'created' ? '建立了任務' : '更新了任務' }} <time>{{ timestamp(entry.at) }}</time></p><p v-for="change in entry.changes" :key="change.field" class="history-change">{{ FIELD_LABELS[change.field] || change.field }}：{{ display(change.field, change.before) }} → {{ display(change.field, change.after) }}</p></div>
             </article>
+          </div>
           </div>
         </section>
       </div>

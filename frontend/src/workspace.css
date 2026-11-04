@@ -244,3 +244,15 @@
 .todo-notification-toggle { font-size: 12px; padding: 6px 9px; }
 .todo-notification-toggle b { border-radius: 10px; background: #6653bd; color: #fff; padding: 1px 6px; font-size: 11px; }
 @media (max-width: 700px) { .todo-notification-toggle > span { display: none; } .topbar-end { gap: 5px; } .todo-notification-toggle { padding: 5px; } }
+
+/* 首頁專案入口與限量待辦並列, 資料增加不會推走另一區。 */
+.home-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: start; }
+.home-layout > * { min-width: 0; }
+.home-layout .project-grid { grid-template-columns: repeat(auto-fill, minmax(min(270px, 100%), 1fr)); }
+@media (min-width: 1200px) {
+  .home-layout { grid-template-columns: minmax(0, 1.5fr) minmax(340px, 1fr); }
+  .home-layout .todo-home { border-left: 1px solid var(--border); padding-left: 24px; }
+}
+@media (max-width: 1199px) {
+  .home-layout .todo-home { border-top: 1px solid var(--border); padding-top: 24px; }
+}

@@ -30,7 +30,36 @@ try {
     const issue = await api.createIssue({ projectId: project.id, title: '閱讀詳細需求', description: '第一段背景與驗收條件\n確認日期、權限與畫面流程', requestId: crypto.randomUUID() });
     return { project, issue };
   });
+  await page.evaluate(async () => {
+    const { api } = await import('/src/api/index.js');
+    for (let index = 1; index <= 8; index++) await api.createTodo({ title: `小事 ${index}`, requestId: crypto.randomUUID() });
+  });
   await page.reload();
+  const personal = page.getByRole('region', { name: '首頁小待辦', exact: true });
+  await personal.locator('.todo-row').first().waitFor();
+  assert.equal(await personal.locator('.todo-row').count(), 3, '預覽三筆, 不讓待辦量推走專案');
+  const todoTabs = personal.getByRole('tablist');
+  await todoTabs.getByRole('tab').first().focus();
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await todoTabs.getByRole('tab').last().getAttribute('aria-selected'), 'true');
+  assert.equal(await todoTabs.getByRole('tab').first().getAttribute('tabindex'), '-1');
+  await page.keyboard.press('Home');
+  assert.equal(await todoTabs.getByRole('tab').first().getAttribute('aria-selected'), 'true');
+  await personal.getByRole('button', { name: '顯示全部待辦（8）', exact: true }).click();
+  assert.equal(await personal.locator('.todo-row').count(), 8);
+  await personal.getByRole('button', { name: '收起待辦', exact: true }).click();
+  assert.equal(await personal.locator('.todo-row').count(), 3);
+  for (const width of [1440, 768, 390]) {
+    await page.setViewportSize({ width, height: width === 768 ? 1024 : width === 390 ? 844 : 900 });
+    await page.evaluate(() => scrollTo(0, 0));
+    const entry = await page.getByRole('button', { name: '進入專案：UI 驗證專案', exact: true }).boundingBox();
+    assert.ok(entry.y < (width === 390 ? 844 : 900), '專案入口在第一屏');
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await page.screenshot({ path: `${artifacts}/home-${width}.png`, fullPage: true });
+  }
+  const touch = await personal.locator('.todo-check').first().boundingBox();
+  assert.ok(touch.width >= 44 && touch.height >= 44);
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByRole('button', { name: '進入專案：UI 驗證專案', exact: true }).click();
   await page.getByRole('button', { name: '工時月曆', exact: true }).click();
   await page.getByRole('button', { name: new RegExp(`${dateInTaipei()} 工時`) }).click();
@@ -66,7 +95,48 @@ try {
   });
   assert.ok(readable.size >= 13 && readable.contrast >= 4.5, JSON.stringify(readable));
   await page.screenshot({ path: `${artifacts}/notifications-1440.png` });
+  await page.goto(`http://127.0.0.1:5175/#/projects/${fixture.project.id}/issues/${fixture.issue.id}?detail=1`);
+  const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
+  await detail.getByRole('heading', { name: fixture.issue.title, exact: true }).waitFor();
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await detail.locator('.property-fields').isVisible(), false);
+  assert.ok((await detail.getByRole('heading', { name: '描述', exact: true }).boundingBox()).y < 500);
+  const properties = detail.getByRole('button', { name: /任務屬性 · 負責人/ });
+  await properties.click();
+  assert.equal(await detail.locator('.property-fields').isVisible(), true);
+  await properties.click();
+  await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 0);
+  await page.screenshot({ path: `${artifacts}/detail-390.png`, fullPage: true });
+  const activityTabs = detail.getByRole('tablist', { name: '任務紀錄' });
+  await activityTabs.getByRole('tab').first().focus();
+  await page.keyboard.press('End');
+  assert.equal(await activityTabs.getByRole('tab').last().getAttribute('aria-selected'), 'true');
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await activityTabs.getByRole('tab').first().getAttribute('aria-selected'), 'true');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await detail.getByRole('button', { name: '編輯任務', exact: true }).click();
+  const editor = page.getByRole('dialog');
+  const editorTabs = editor.getByRole('tablist', { name: '任務紀錄' });
+  await editorTabs.getByRole('tab').first().focus();
+  await page.keyboard.press('ArrowLeft');
+  assert.equal(await editorTabs.getByRole('tab').last().getAttribute('aria-selected'), 'true');
+  assert.equal(await editor.getByRole('tabpanel').getAttribute('aria-labelledby'), await editorTabs.getByRole('tab').last().getAttribute('id'));
+  await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
+  await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
+  await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
+  for (const width of [768, 1024, 390]) {
+    await page.setViewportSize({ width, height: 1024 });
+    const toolLabels = await page.locator('.board-tools label').evaluateAll(labels => labels.map(label => {
+      const range = document.createRange(); range.selectNode(label.firstChild);
+      return { lines: range.getClientRects().length, width: range.getBoundingClientRect().width };
+    }));
+    assert.ok(toolLabels.every(label => label.lines === 1 && label.width > 20), JSON.stringify(toolLabels));
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await page.screenshot({ path: `${artifacts}/board-${width}.png` });
+  }
   assert.deepEqual(failures, []);
+  console.log('PASS: U02 三筆預覽／展開與首頁首屏；U04 三處 tab 鍵盤；U06 手機閱讀／展開屬性；U07 平板工具列；U08 44px 觸控目標');
   console.log('PASS: U01 文字對比與字級；U05 整數分鐘提示、欄位關聯／焦點／草稿及有效工時保存', readable);
 } finally {
   await browser?.close();
