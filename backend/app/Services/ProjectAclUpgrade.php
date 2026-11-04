@@ -6,12 +6,18 @@ use App\Authorization\ProjectAccess;
 use App\Repositories\RecordStore;
 use Illuminate\Support\Facades\DB;
 
+/** 升級既有空間角色與明確Seed授權，不擴張一般成員權限。 */
 class ProjectAclUpgrade
 {
-    public static function run(): void
+    /**
+     * 以指定儲存模式升級資料；正常業務預設使用關聯表。
+     * @param bool $legacy 是否只操作待匯入的舊records
+     * @return void
+     */
+    public static function run(bool $legacy = false): void
     {
-        DB::transaction(function () {
-            $store = new RecordStore;
+        DB::transaction(function () use ($legacy) {
+            $store = new RecordStore(legacy: $legacy);
             foreach ($store->all('workspaces') as $workspace) {
                 $tenant = $store->forWorkspace($workspace['id']);
                 if ($tenant->get('upgrades', 'project-acl-v1')) continue;

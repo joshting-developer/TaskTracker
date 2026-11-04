@@ -82,7 +82,11 @@ class WorkspaceApiTest extends TestCase
         $store = (new RecordStore)->forWorkspace($context['workspace']['id']);
         $legacy = [...$store->require('issues', $task['id']), 'type' => 'feature'];
         $store->put('issues', $task['id'], $legacy);
+        (new RecordStore)->put('workspaces', 'another-workspace', ['id' => 'another-workspace', 'name' => '另一空間']);
         $other = (new RecordStore)->forWorkspace('another-workspace');
+        $other->put('projects', $project['id'], [...$project, 'leadId' => '']);
+        $other->put('issues', $epic['id'], $epic);
+        $other->put('issues', $bug['id'], [...$bug, 'parentIssueId' => '']);
         $other->put('issues', $task['id'], [...$legacy, 'title' => '另一空間']);
         $untouched = $store->require('issues', $bug['id']);
         $time = $store->all('timeEntries');
@@ -207,8 +211,10 @@ class WorkspaceApiTest extends TestCase
             $store->put('issues', $issue['id'], [...$issue, 'blockedBy' => $ids]);
         }
         $store->put('savedViews', 'old-view', ['id' => 'old-view', 'filters' => ['condition' => 'review']]);
-        $store->put('timeEntries', 'old-time', ['id' => 'old-time', 'issueId' => $first['id'], 'minutes' => 30]);
+        $store->put('timeEntries', 'old-time', ['id' => 'old-time', 'issueId' => $first['id'], 'projectId' => $project['id'], 'userId' => $context['user']['id'], 'workDate' => '2026-10-01', 'minutes' => 30]);
+        (new RecordStore)->put('workspaces', 'other-workspace', ['id' => 'other-workspace', 'name' => 'Other']);
         $otherStore = (new RecordStore)->forWorkspace('other-workspace');
+        $otherStore->put('projects', $project['id'], [...$project, 'leadId' => '']);
         $otherStore->put('issues', $first['id'], [...$first, 'blockedBy' => [$second['id']]]);
         $migration = require database_path('migrations/2026_10_20_000000_replace_issue_dependencies.php');
         $migration->up();
@@ -246,7 +252,7 @@ class WorkspaceApiTest extends TestCase
         $this->rpc('smtpStatus')->assertStatus(403);
         $retry = ['requestId' => 'member-retry', 'projectId' => $project['id'], 'title' => '自己的任務'];
         $this->rpc('createIssue', $retry)->assertOk();
-        DB::table('records')->where('kind', 'w:'.$owner['workspace']['id'].':members')->where('id', $member['user']['id'])->delete();
+        DB::table('workspace_members')->where('user_id', $member['user']['id'])->update(['disabled_at' => now()->toISOString()]);
         $this->rpc('createIssue', $retry)->assertStatus(401);
     }
 

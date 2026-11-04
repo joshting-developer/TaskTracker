@@ -185,17 +185,18 @@ class ProjectAclTest extends TestCase
     {
         $user = $this->member('legacy');
         $this->tenant->put('projects', $this->first['id'], [...$this->first, 'leadId' => $user['id']]);
+        foreach (['old-admin', 'old-member'] as $id) { \App\Models\User::create(['id' => $id, 'name' => $id, 'email' => $id.'@example.test', 'password' => 'legacy-test-password']); }
         $this->tenant->put('members', 'old-admin', ['id' => 'old-admin', 'name' => '舊管理員', 'role' => 'admin']);
         $this->tenant->put('members', 'old-member', ['id' => 'old-member', 'name' => '舊成員', 'role' => 'member']);
-        $before = DB::table('records')->where('kind', 'like', 'w:'.$this->owner['workspace']['id'].':%')->whereNotIn('kind', ['w:'.$this->owner['workspace']['id'].':members'])->orderBy('sequence')->get()->toJson();
+        $before = [$this->tenant->all('projects'), $this->tenant->all('issues'), $this->tenant->all('timeEntries')];
         ProjectAclUpgrade::run();
         $this->assertSame('manager', $this->tenant->require('members', 'old-admin')['role']);
         $this->assertSame('user', $this->tenant->require('members', 'old-member')['role']);
         $this->assertSame([], $this->tenant->all('projectMembers'));
-        $after = DB::table('records')->where('kind', 'like', 'w:'.$this->owner['workspace']['id'].':%')->whereNotIn('kind', ['w:'.$this->owner['workspace']['id'].':members', 'w:'.$this->owner['workspace']['id'].':upgrades'])->orderBy('sequence')->get()->toJson();
+        $after = [$this->tenant->all('projects'), $this->tenant->all('issues'), $this->tenant->all('timeEntries')];
         $this->assertSame($before, $after);
-        $snapshot = DB::table('records')->orderBy('sequence')->get()->toJson(); ProjectAclUpgrade::run();
-        $this->assertSame($snapshot, DB::table('records')->orderBy('sequence')->get()->toJson());
+        $snapshot = $this->tenant->all('upgrades'); ProjectAclUpgrade::run();
+        $this->assertSame($snapshot, $this->tenant->all('upgrades'));
         $this->login($user);
         $this->rpc('getWorkspace')->assertJsonCount(0, 'data.projects');
     }

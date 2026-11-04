@@ -21,7 +21,7 @@ class DemoSeedTest extends TestCase
     {
         $store = new RecordStore;
         $store->put('workspaces', 'personal', ['id' => 'personal', 'name' => '保留']);
-        $store->forWorkspace('personal')->put('projects', 'personal-project', ['id' => 'personal-project', 'name' => '不可刪除']);
+        $store->forWorkspace('personal')->put('projects', 'personal-project', ['id' => 'personal-project', 'name' => '不可刪除', 'code' => 'PERSONAL']);
         $seed = app(DemoData::class);
         $seed->seed(password: 'seed-test-password');
         $tenant = $store->forWorkspace(DemoData::WORKSPACE_ID);
@@ -33,9 +33,9 @@ class DemoSeedTest extends TestCase
         $this->assertSame(4, count(array_filter($tenant->all('issues'), fn ($issue) => $issue['parentIssueId'] !== '')));
         $this->assertSame(4, count(array_filter($tenant->all('issues'), fn ($issue) => $issue['relatedIssueIds'] !== [])));
         $this->assertTrue(Hash::check('seed-test-password', User::find(DemoData::USER_ID)->password));
-        $before = DB::table('records')->count();
+        $before = DB::table('issues')->count();
         $this->assertFalse($seed->seed()['created']);
-        $this->assertSame($before, DB::table('records')->count());
+        $this->assertSame($before, DB::table('issues')->count());
         $project = $tenant->all('projects')[0];
         $tenant->put('projects', $project['id'], [...$project, 'name' => '自行修改']);
         $seed->seed();
@@ -55,10 +55,10 @@ class DemoSeedTest extends TestCase
         $tenant = $store->forWorkspace(DemoData::WORKSPACE_ID);
         $jack = User::create(['id' => '00000000-0000-4000-8000-000000000101', 'name' => 'Jack', 'email' => 'jack100398@gmail.com', 'password' => Hash::make('legacy-test-password')]);
         $tenant->put('members', $jack->id, ['id' => $jack->id, 'name' => 'Jack', 'role' => 'owner']);
-        $tenant->put('projects', 'original', ['id' => 'original', 'name' => '手改保留', 'revision' => 7]);
-        $tenant->put('issues', 'original-issue', ['id' => 'original-issue', 'title' => '保留卡片', 'assignee' => $jack->id, 'history' => [['actor' => 'Jack']]]);
-        $tenant->put('timeEntries', 'original-time', ['id' => 'original-time', 'userId' => $jack->id, 'minutes' => 60]);
-        $snapshot = DB::table('records')->where('kind', 'like', 'w:'.DemoData::WORKSPACE_ID.':%')->orderBy('kind')->orderBy('id')->get()->toJson();
+        $tenant->put('projects', 'original', ['id' => 'original', 'name' => '手改保留', 'code' => 'ORIGINAL', 'revision' => 7]);
+        $tenant->put('issues', 'original-issue', ['id' => 'original-issue', 'projectId' => 'original', 'identifier' => 'ORIGINAL-1', 'state' => 'todo', 'title' => '保留卡片', 'assignee' => $jack->id, 'history' => [['actor' => 'Jack']]]);
+        $tenant->put('timeEntries', 'original-time', ['id' => 'original-time', 'projectId' => 'original', 'issueId' => 'original-issue', 'userId' => $jack->id, 'workDate' => '2026-10-01', 'minutes' => 60]);
+        $snapshot = [$tenant->all('projects'), $tenant->all('issues'), $tenant->all('timeEntries')];
         // 最後一組帳號衝突時, 不可留下前三組或更新 marker
         $collision = User::create(['id' => (string) Str::uuid(), 'name' => '已存在', 'email' => 'developer@example.test', 'password' => Hash::make('other-test-password')]);
         try { app(DemoData::class)->seed(password: 'seed-test-password'); $this->fail('衝突必須拒絕'); }
@@ -68,7 +68,7 @@ class DemoSeedTest extends TestCase
         $collision->delete();
         $this->assertTrue(app(DemoData::class)->seed(password: 'seed-test-password')['upgraded']);
         $this->assertCount(5, $tenant->all('members'));
-        $this->assertSame($snapshot, DB::table('records')->where('kind', 'like', 'w:'.DemoData::WORKSPACE_ID.':%')->whereNotIn('id', array_column(DemoData::ACCOUNTS, 'id'))->where('kind', 'not like', '%:upgrades')->orderBy('kind')->orderBy('id')->get()->toJson());
+        $this->assertSame($snapshot, [$tenant->all('projects'), $tenant->all('issues'), $tenant->all('timeEntries')]);
         $this->assertTrue(Hash::check('legacy-test-password', $jack->fresh()->password));
         $hash = User::find(DemoData::USER_ID)->password;
         $this->assertFalse(app(DemoData::class)->seed()['upgraded']);

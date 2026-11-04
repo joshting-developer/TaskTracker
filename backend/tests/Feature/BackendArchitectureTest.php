@@ -105,17 +105,23 @@ class BackendArchitectureTest extends TestCase
     #[Test]
     public function record_store_success_preserve_payload_and_namespace(): void
     {
-        $first = (new RecordStore)->forWorkspace('first-fixture');
-        $second = (new RecordStore)->forWorkspace('second-fixture');
-        $payload = ['id' => 'same', 'title' => '中文', 'nullable' => null, 'list' => [], 'flag' => false, 'minutes' => 30, 'fraction' => 1.5];
+        $global = new RecordStore;
+        foreach (['first-fixture','second-fixture'] as $workspaceId) {
+            $global->put('workspaces', $workspaceId, ['id' => $workspaceId, 'name' => $workspaceId]);
+            $global->forWorkspace($workspaceId)->put('projects', 'project', ['id' => 'project', 'name' => 'Fixture', 'code' => 'FIXTURE']);
+        }
+        $first = $global->forWorkspace('first-fixture');
+        $second = $global->forWorkspace('second-fixture');
+        $payload = ['id' => 'same', 'projectId' => 'project', 'identifier' => 'FIXTURE-1', ...\App\Domain\Fields::issue(['title' => '中文'], ['statuses' => \App\Domain\Fields::STATES]), 'revision' => 1, 'comments' => [], 'history' => [], 'nullable' => null, 'list' => [], 'flag' => false, 'minutes' => 30, 'fraction' => 1.5];
         $first->put('issues', 'same', $payload);
-        $first->put('issues', 'next', ['id' => 'next']);
-        $second->put('issues', 'same', ['id' => 'same', 'title' => '另一空間']);
+        $first->put('issues', 'next', [...$payload, 'id' => 'next', 'identifier' => 'FIXTURE-2']);
+        $second->put('issues', 'same', [...$payload, 'title' => '另一空間']);
         $this->assertSame($payload, $first->require('issues', 'same'));
         $this->assertSame('另一空間', $second->require('issues', 'same')['title']);
         $this->assertSame(['same', 'next'], array_column($first->all('issues'), 'id'));
         $first->put('issues', 'same', [...$payload, 'revision' => 2]);
         $this->assertSame(['same', 'next'], array_column($first->all('issues'), 'id'));
-        $this->assertDatabaseCount('records', 3);
+        $this->assertDatabaseCount('issues', 3);
+        $this->assertDatabaseCount('records', 0);
     }
 }

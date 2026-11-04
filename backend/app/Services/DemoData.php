@@ -39,7 +39,7 @@ class DemoData
             if (!is_string($password) || strlen($password) < 10) throw new \RuntimeException('請在本機環境設定 TASKTRACKER_SEED_PASSWORD（至少 10 字）, 不將密碼提交 Git');
             if ($reset && $marker) {
                 // 精確限定這組 seed namespace, 不清空資料庫或其他 Workspace
-                DB::table('records')->where('kind', 'like', 'w:'.self::WORKSPACE_ID.':%')->delete();
+                $store->forWorkspace(self::WORKSPACE_ID)->clearWorkspace();
                 DB::table('sessions')->whereIn('user_id', array_column(self::ACCOUNTS, 'id'))->delete();
             }
             $workspace = $store->get('workspaces', self::WORKSPACE_ID) ?? ['id' => self::WORKSPACE_ID, 'name' => 'f-ws', 'createdAt' => now()->utc()->toISOString()];

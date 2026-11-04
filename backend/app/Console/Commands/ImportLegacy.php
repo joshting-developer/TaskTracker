@@ -7,17 +7,23 @@ use App\Repositories\RecordStore;
 use App\Services\IssueRelationsUpgrade;
 use App\Services\IssueTypesUpgrade;
 use App\Services\ProjectAclUpgrade;
+use App\Services\RelationalDataMigration;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use PDO;
 
+/** 唯讀匯入舊Node資料，先套歷史升級再回填空的關聯式目標。 */
 class ImportLegacy extends Command
 {
     protected $signature = 'tasktracker:import-legacy {file : 舊版 Node SQLite 的唯讀來源路徑}';
     protected $description = '只匯入空白 Laravel 資料庫, 保留舊資料及原帳密, 不匯入舊 session／重試快取';
 
+    /**
+     * 在同交易完成帳號、歷史紀錄與關聯表匯入；失敗不保留部分結果。
+     * @return int 命令成功或失敗狀態
+     */
     public function handle(): int
     {
         $path = realpath($this->argument('file'));
@@ -30,8 +36,8 @@ class ImportLegacy extends Command
         $rows = $source->query('SELECT kind,id,payload FROM records ORDER BY rowid')->fetchAll(PDO::FETCH_ASSOC);
         try {
             DB::transaction(function () use ($rows) {
-                if (DB::table('records')->exists() || User::exists()) throw new \RuntimeException('目標已有帳號或業務資料, 拒絕覆蓋；請另用空白資料庫／volume');
-                $store = new RecordStore;
+                if (DB::table('records')->exists() || DB::table('workspaces')->exists() || User::exists()) throw new \RuntimeException('目標已有帳號或業務資料, 拒絕覆蓋；請另用空白資料庫／volume');
+                $store = new RecordStore(legacy: true);
                 foreach ($rows as $row) {
                     $value = json_decode($row['payload'], true, flags: JSON_THROW_ON_ERROR);
                     if ($row['kind'] === 'accounts') {
@@ -42,9 +48,10 @@ class ImportLegacy extends Command
                         $store->put($row['kind'], $row['id'], $value);
                     }
                 }
-                IssueRelationsUpgrade::run();
-                IssueTypesUpgrade::run();
-                ProjectAclUpgrade::run();
+                IssueRelationsUpgrade::run(legacy: true);
+                IssueTypesUpgrade::run(legacy: true);
+                ProjectAclUpgrade::run(legacy: true);
+                RelationalDataMigration::import();
             });
         } catch (\Throwable $error) {
             $this->error($error->getMessage());
