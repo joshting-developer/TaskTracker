@@ -120,11 +120,12 @@
 .notification-meta, .smtp-card small, .smtp-card p,
 .settings-explanation, .settings-explanation p, .settings-explanation h3,
 .report-row, .report-epic > span, .epic-progress-label, .epic-hours,
-.epic-description, .epic-children small, .status-order, .preview-pill { color: var(--text-secondary); }
+.epic-description, .epic-children button small, .status-order, .preview-pill,
+.report-row > div:first-child, .notification-card .type-tag { color: var(--text-secondary); }
 .notification-meta, .smtp-card small, .report-epic > span,
 .epic-progress-label, .epic-hours, .preview-pill { font-size: 13px; }
 .settings-explanation p, .epic-description { font-size: 14px; }
-.epic-children small { font-size: 12px; }
+.epic-children button small, .notification-card .type-tag { font-size: 12px; }
 .report-card .report-row, .report-epic .text-button { font-size: 14px; }
 .calendar-weekdays, .calendar-grid button { color: var(--text-secondary); font-size: 13px; }
 .calendar-grid button.muted { color: #6e6878; }

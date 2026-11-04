@@ -49,6 +49,21 @@ try {
   assert.equal(await personal.locator('.todo-row').count(), 8);
   await personal.getByRole('button', { name: '收起待辦', exact: true }).click();
   assert.equal(await personal.locator('.todo-row').count(), 3);
+  const editingRow = personal.locator('.todo-row').first();
+  const editingId = await editingRow.getAttribute('data-todo-id');
+  await editingRow.getByLabel('待辦操作').click();
+  await editingRow.getByRole('button', { name: '編輯', exact: true }).click();
+  await personal.getByLabel('編輯待辦內容').fill('背景更新仍保留這段草稿');
+  await page.evaluate(async id => {
+    const { api } = await import('/src/api/index.js');
+    for (const todo of (await api.getTodos()).todos.filter(item => item.id !== id)) await api.updateTodo({ id: todo.id, title: todo.title, note: '其他項目的最新更新', expectedRevision: todo.revision, requestId: crypto.randomUUID() });
+  }, editingId);
+  await page.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
+  await page.waitForFunction(() => !document.querySelector('[aria-label="重新整理工作空間"]').disabled);
+  assert.equal(await personal.getByLabel('編輯待辦內容').inputValue(), '背景更新仍保留這段草稿');
+  assert.equal(await personal.getByLabel('編輯待辦內容').isVisible(), true);
+  page.once('dialog', dialog => dialog.accept());
+  await personal.getByRole('button', { name: '取消修改', exact: true }).click();
   for (const width of [1440, 768, 390]) {
     await page.setViewportSize({ width, height: width === 768 ? 1024 : width === 390 ? 844 : 900 });
     await page.evaluate(() => scrollTo(0, 0));
@@ -135,7 +150,86 @@ try {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await page.screenshot({ path: `${artifacts}/board-${width}.png` });
   }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const projectUrl = `http://127.0.0.1:5175/#/projects/${fixture.project.id}`;
+  for (const [name, route] of [['工時月曆', 'time'], ['狀態設定', 'settings'], ['專案成員', 'members'], ['通知預覽', 'notifications'], ['Epic 概覽', 'epics']]) {
+    const nav = page.getByRole('navigation', { name: '專案任務' }).getByRole('button', { name: new RegExp(`^${name}`) });
+    await nav.click();
+    assert.equal(page.url(), `${projectUrl}/${route}`);
+    await page.reload();
+    await nav.waitFor();
+    assert.equal(await nav.getAttribute('aria-current'), 'page', `${name} 重整保留功能`);
+  }
+  await page.getByRole('button', { name: '工時月曆', exact: true }).click();
+  await page.getByRole('button', { name: '狀態設定', exact: true }).click();
+  await page.goBack();
+  assert.equal(page.url(), `${projectUrl}/time`);
+  await page.getByRole('region', { name: '工時月曆', exact: true }).waitFor();
+  await page.goForward();
+  assert.equal(page.url(), `${projectUrl}/settings`);
+  await page.getByRole('button', { name: '工時月曆', exact: true }).click();
+  await page.getByRole('button', { name: new RegExp(`${dateInTaipei()} 工時`) }).click();
+  await drawer.getByLabel('工時任務', { exact: true }).selectOption(fixture.issue.id);
+  await drawer.getByRole('spinbutton').fill('1.5');
+  // URL 直接變更／瀏覽器返回同樣必須保護未存草稿。
+  page.once('dialog', dialog => dialog.dismiss());
+  await page.evaluate(url => { location.hash = url; }, `#/projects/${fixture.project.id}/settings`);
+  await page.waitForTimeout(150);
+  assert.equal(page.url(), `${projectUrl}/time`);
+  assert.equal(await drawer.getByRole('spinbutton').inputValue(), '1.5');
+  page.once('dialog', dialog => dialog.accept());
+  await drawer.getByRole('button', { name: '關閉工時面板', exact: true }).click();
+  // 從工時卡片進任務, 返回仍回原功能與 URL。
+  await page.locator('.time-issue-link').first().click();
+  await page.getByRole('dialog').getByRole('button', { name: '關閉任務', exact: true }).click();
+  assert.equal(page.url(), `${projectUrl}/time`);
+  await page.getByRole('region', { name: '工時月曆', exact: true }).waitFor();
+  const invite = await page.evaluate(async () => (await import('/src/api/index.js')).api.inviteMember({ email: `reader-${crypto.randomUUID()}@example.test` }));
+  const reader = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  reader.on('pageerror', error => failures.push(error.message));
+  await reader.goto(`http://127.0.0.1:5175/#/invite?token=${invite.token}`);
+  await reader.getByLabel('你的名字').fill('UI Reader');
+  await reader.getByLabel('Email', { exact: true }).fill(invite.email);
+  await reader.getByLabel('密碼', { exact: true }).fill('ui-local-test-password');
+  await reader.getByRole('button', { name: '加入工作空間', exact: true }).click();
+  await reader.getByRole('heading', { name: '尚未加入任何專案', exact: true }).waitFor();
+  await page.evaluate(async ({ projectId, email }) => {
+    const { api } = await import('/src/api/index.js');
+    const ws = await api.getWorkspace(), acl = await api.getProjectMembers({ projectId });
+    await api.setProjectMember({ projectId, userId: ws.members.find(member => member.email === email).id, roleId: 'reader', expectedRevision: acl.revision, requestId: crypto.randomUUID() });
+  }, { projectId: fixture.project.id, email: invite.email });
+  for (const route of ['time', 'settings', 'members']) {
+    await reader.goto(`${projectUrl}/${route}`);
+    await reader.reload();
+    await reader.getByLabel('搜尋任務', { exact: true }).waitFor();
+    assert.equal(reader.url(), projectUrl, '未授權功能深連結回任務列表');
+    assert.equal(await reader.getByRole('button', { name: '工時月曆', exact: true }).count(), 0);
+  }
+  await reader.goto(`${projectUrl}/issues/${fixture.issue.id}?detail=1`);
+  const readerDetail = reader.getByRole('region', { name: '任務完整頁', exact: true });
+  await readerDetail.getByText('目前狀態：', { exact: false }).waitFor();
+  assert.equal(await readerDetail.getByRole('button', { name: '編輯任務', exact: true }).count(), 0);
+  const assigned = await page.evaluate(async email => {
+    const { api } = await import('/src/api/index.js');
+    const userId = (await api.getWorkspace()).members.find(member => member.email === email).id;
+    const todos = [];
+    for (let index = 1; index <= 5; index++) todos.push(await api.createTodo({ title: `通知定位 ${index}`, assigneeId: userId, requestId: crypto.randomUUID() }));
+    return todos;
+  }, invite.email);
+  await reader.goto('http://127.0.0.1:5175/#/');
+  await reader.reload();
+  const readerTodos = reader.getByRole('region', { name: '首頁小待辦', exact: true });
+  await readerTodos.locator('.todo-row').first().waitFor();
+  assert.equal(await readerTodos.locator('.todo-row').count(), 3);
+  assert.equal(await readerTodos.locator(`[data-todo-id="${assigned[0].id}"]`).count(), 0);
+  await reader.getByRole('button', { name: /待辦通知/ }).click();
+  await reader.getByRole('dialog', { name: '待辦通知', exact: true }).getByRole('button').filter({ hasText: '通知定位 1' }).click();
+  const focusedTodo = readerTodos.locator(`[data-todo-id="${assigned[0].id}"]`);
+  await focusedTodo.waitFor();
+  assert.equal(await focusedTodo.evaluate(el => el === document.activeElement), true, '通知定位自動展開預覽外項目');
+  await reader.close();
   assert.deepEqual(failures, []);
+  console.log('PASS: U03 五種功能重整／深連結、瀏覽器前後、草稿阻擋、Issue 返回原功能、reader 權限回退');
   console.log('PASS: U02 三筆預覽／展開與首頁首屏；U04 三處 tab 鍵盤；U06 手機閱讀／展開屬性；U07 平板工具列；U08 44px 觸控目標');
   console.log('PASS: U01 文字對比與字級；U05 整數分鐘提示、欄位關聯／焦點／草稿及有效工時保存', readable);
 } finally {

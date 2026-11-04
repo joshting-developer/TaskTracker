@@ -72,6 +72,12 @@ TASKTRACKER_PORT=5176 TASKTRACKER_API_PORT=3004 TASKTRACKER_WS_PORT=8082 docker 
 
 前端 `frontend/src/` 與後端 app／routes／config 掛載至容器。前端 index／Vite 設定、後端 bootstrap／Composer 與依賴變更後需重建；修改後端類別後重啟長駐的 queue／websocket 以載入新程式
 
+## 功能網址與操作
+
+專案內工時、狀態設定、成員、通知預覽與 Epic 分別使用 `#/projects/<id>/time`、`/settings`、`/members`、`/notifications`、`/epics`, 可直接開啟或重整, 瀏覽器上一頁／下一頁可切換功能。既有 Project、board、Issue 網址相容；未授權功能回到任務列表, 專案不可見則回首頁。未保存表單離開前仍會確認。
+
+首頁待辦、任務詳情及快速編輯的活動 tab 支援左右方向鍵與 Home／End；手機任務詳情優先描述, 點「任務屬性」才展開完整欄位。工時以整數分鐘計算, 例如 0.25 小時為 15 分鐘, 0.5 為 30 分鐘；錯誤會標出欄位並保留輸入。修正沿革見 [UI／UX 審查報告](docs/UIUX審查報告-2026-11-03.md)。
+
 ## 本機示範 Seed
 
 ```sh
@@ -98,7 +104,7 @@ Seed 只允許 local／testing。Laravel 的 `php artisan db:seed` 也呼叫相�
 
 ## 首頁小待辦
 
-首頁上方提供不屬於 Project Issue 的輕量待辦：輸入一行按 Enter 記給自己, 可加選填說明, 選同空間成員即可直接交辦。所有有效 Workspace 成員都可互相交辦, 包含一般成員交給 Manager／Owner；收到後直接進「我的待辦」, 可完成、重新開啟或退回交辦者。「我交辦的」用來追蹤自己交出去的項目, 完成／取消／轉卡預設收合
+首頁提供不屬於 Project Issue 的輕量待辦：輸入一行按 Enter 記給自己, 可加選填說明, 選同空間成員即可直接交辦。所有有效 Workspace 成員都可互相交辦, 包含一般成員交給 Manager／Owner；收到後直接進「我的待辦」, 可完成、重新開啟或退回交辦者。「我交辦的」用來追蹤自己交出去的項目, 完成／取消／轉卡預設收合。寬螢幕與專案入口並列, 窄螢幕先顯示專案；未完成待辦預設預覽三筆, 可展開全部, 從通知定位時會自動顯示目標項目
 
 待辦僅交辦者及目前承辦者可讀, Workspace 管理權限不會打開他人的私人速記。首頁即使尚未加入任何 Project 也可使用小待辦；成員選單是獨立的同空間最小交辦目錄, 不改 Project ACL。建立者可修改未完成內容或取消, 承辦者可處理進度及退回, 退回後交辦者重新成為承辦者
 
@@ -182,6 +188,16 @@ cd frontend
 npx playwright install chromium
 E2E_API_URL=http://127.0.0.1:13004 npm run test:e2e
 ```
+
+UI／UX 修正的針對性瀏覽器檢查也使用同一類隔離服務（同樣占用 5175, 請分開執行）：
+
+```sh
+cd frontend
+E2E_API_URL=http://127.0.0.1:13004 node tools/uiux-check.js
+```
+
+涵蓋三筆待辦預覽／通知定位／背景更新草稿、tab 鍵盤、工時錯誤與保存、手機屬性與平板工具列、五種功能路由及 reader 深連結限制。若主機已有 Chromium, 可用 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` 指定執行檔。
+
 
 若隔離 API 已執行四帳號 Seed, 可加 `E2E_SEED_PASSWORD` 執行四角色登入／畫面權限比較, 僅使用隔離測試密碼。
 

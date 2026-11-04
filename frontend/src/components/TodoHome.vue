@@ -14,7 +14,13 @@ const mine = computed(() => props.data.todos.filter(item => item.assigneeId === 
 const sent = computed(() => props.data.todos.filter(item => item.createdBy === props.userId && item.initialAssigneeId !== props.userId));
 const items = computed(() => tab.value === 'mine' ? mine.value : sent.value);
 const openItems = computed(() => items.value.filter(item => item.state === 'open'));
-const displayedOpen = computed(() => showAllOpen.value ? openItems.value : openItems.value.slice(0, previewLimit));
+const displayedOpen = computed(() => {
+  if (showAllOpen.value) return openItems.value;
+  const preview = openItems.value.slice(0, previewLimit);
+  const edited = openItems.value.find(item => item.id === draft.value?.id);
+  // 背景更新重新排序時, 不讓正在編輯的項目掉出預覽。
+  return edited && !preview.includes(edited) ? [...preview.slice(0, previewLimit - 1), edited] : preview;
+});
 watch(tab, () => { showAllOpen.value = false; });
 const closedItems = computed(() => items.value.filter(item => item.state !== 'open'));
 const stateLabels = { open: '待處理', done: '已完成', canceled: '已取消', converted: '已轉卡' };

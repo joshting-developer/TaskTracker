@@ -31,6 +31,7 @@ const todoUnread = computed(() => todoData.value.notifications.filter(item => !i
 const convertibleProjects = computed(() => workspace.value.projects.filter(project => project.permissions?.includes('issue.write')));
 const teamOpen = ref(false);
 const section = ref('tasks');
+const sectionPermissions = { settings: 'project.statuses.update', members: 'project.members.manage', time: 'timeEntry.readOwn' };
 const workspaceTool = ref(null);
 const defaultType = ref('task');
 const defaultEpicId = ref('');
@@ -129,8 +130,7 @@ async function refresh() {
     }
     if (!canWrite.value) { creatingIssue.value = false; editingDetail.value = false; }
     if (!can('board.manage')) boardEditor.value = null;
-    const sectionPermission = { settings: 'project.statuses.update', members: 'project.members.manage', time: 'timeEntry.readOwn' }[section.value];
-    if (sectionPermission && !can(sectionPermission)) section.value = 'tasks';
+    ensureSectionAccess();
     if (selectedId.value && !projectId.value) {
       const legacyIssue = data.issues.find((item) => item.id === selectedId.value);
       if (legacyIssue) { history.replaceState(null, '', projectHash(legacyIssue.projectId, legacyIssue.id)); readHash(); }
@@ -154,17 +154,27 @@ function notify(message) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { toast.value = ''; }, 3500);
 }
-function projectHash(id, issueId = '', mode = view.value, selectedBoardId = boardId.value, fullPage = detailPage.value) {
-  return id ? `#/projects/${encodeURIComponent(id)}${mode === 'boards' ? '/boards' : mode === 'board' ? `/board${selectedBoardId === 'default' ? '' : `/${encodeURIComponent(selectedBoardId)}`}` : ''}${issueId ? `/issues/${encodeURIComponent(issueId)}${fullPage ? '?detail=1' : ''}` : ''}` : '#/';
+function projectHash(id, issueId = '', mode = view.value, selectedBoardId = boardId.value, fullPage = detailPage.value, targetSection = issueId ? 'tasks' : section.value) {
+  const featurePath = targetSection !== 'tasks' ? `/${targetSection}` : mode === 'boards' ? '/boards' : mode === 'board' ? `/board${selectedBoardId === 'default' ? '' : `/${encodeURIComponent(selectedBoardId)}`}` : '';
+  return id ? `#/projects/${encodeURIComponent(id)}${featurePath}${issueId ? `/issues/${encodeURIComponent(issueId)}${fullPage ? '?detail=1' : ''}` : ''}` : '#/';
+}
+function ensureSectionAccess() {
+  const permission = sectionPermissions[section.value];
+  if (selectedProject.value && permission && !can(permission)) {
+    section.value = 'tasks'; view.value = 'list'; boardId.value = 'default';
+    history.replaceState(null, '', projectHash(projectId.value));
+    notify('你沒有此功能的存取權限, 已返回任務列表');
+  }
 }
 function canLeave() {
-  if (detailTool.value?.saving || issueTool.value?.saving || todoTool.value?.saving || conversionTool.value?.saving) return false;
+  if (workspaceTool.value?.saving || detailTool.value?.saving || issueTool.value?.saving || todoTool.value?.saving || conversionTool.value?.saving) return false;
   return (!todoTool.value?.dirty && !conversionTool.value?.dirty && !workspaceTool.value?.dirty && !boardEditorTool.value?.dirty && !detailTool.value?.dirty && !issueTool.value?.dirty) || window.confirm('還有未儲存的內容, 確定要離開嗎？');
 }
 function changeSection(value) {
   if ((value !== section.value || selectedId.value) && canLeave()) {
-    section.value = value; sidebarOpen.value = false; selectedId.value = ''; detailPage.value = false; editingDetail.value = false; issueReturn = null;
-    history.replaceState(null, '', projectHash(projectId.value));
+    issueReturn = null;
+    history.pushState(null, '', projectHash(projectId.value, '', 'list', 'default', false, value));
+    readHash(true);
   }
 }
 async function logout() { if (!canLeave()) return; try { await api.logout(); ++refreshGeneration; authenticated.value = false; todoData.value = { todos: [], notifications: [], members: [] }; convertingTodo.value = null; todoNotificationsOpen.value = false; workspace.value = { projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} }; history.replaceState(null, '', '#/'); readHash(true); } catch (failure) { notify(failure.message); } }
@@ -266,11 +276,12 @@ function expandIssue() {
 function readHash(skipGuard = false) {
   const [path, query = ''] = location.hash.split('?');
   const route = path.match(/^#\/projects\/([^/]+)(?:\/(board|boards)(?:\/((?!issues(?:\/|$))[^/]+))?)?(?:\/issues\/([^/]+))?$/);
+  const featureRoute = path.match(/^#\/projects\/([^/]+)\/(epics|time|settings|members|notifications)$/);
   const legacyId = path.match(/^#\/issue\/([^/]+)$/)?.[1];
   const retiredView = route && new URLSearchParams(query).has('view');
   let nextProject = '', nextIssue = '', nextBoard = 'default';
   try {
-    nextProject = route ? decodeURIComponent(route[1]) : '';
+    nextProject = route || featureRoute ? decodeURIComponent((route || featureRoute)[1]) : '';
     nextIssue = route?.[4] ? decodeURIComponent(route[4]) : legacyId ? decodeURIComponent(legacyId) : '';
     if (route?.[2] === 'board' && route[3]) nextBoard = decodeURIComponent(route[3]);
     if (legacyId) {
@@ -279,11 +290,13 @@ function readHash(skipGuard = false) {
     }
   } catch { history.replaceState(null, '', '#/'); }
   const nextMode = route?.[2] || 'list';
+  const nextSection = featureRoute?.[2] || 'tasks';
   const nextDetail = Boolean(nextIssue && new URLSearchParams(query).get('detail') === '1');
   const issueChanged = selectedId.value !== nextIssue || detailPage.value !== nextDetail;
   const returning = Boolean(selectedId.value && !nextIssue);
   const projectChanged = projectId.value !== nextProject, modeChanged = view.value !== nextMode, boardChanged = boardId.value !== nextBoard;
-  if (skipGuard !== true && (issueChanged || projectChanged || modeChanged || boardChanged || retiredView) && !canLeave()) { history.replaceState(null, '', projectHash(projectId.value, selectedId.value)); return; }
+  const sectionChanged = section.value !== nextSection;
+  if (skipGuard !== true && (sectionChanged || issueChanged || projectChanged || modeChanged || boardChanged || retiredView) && !canLeave()) { history.replaceState(null, '', projectHash(projectId.value, selectedId.value)); return; }
   if (projectChanged || modeChanged || boardChanged || retiredView) {
     section.value = 'tasks'; scope.value = 'all'; boardEditor.value = null; clearFilters();
   }
@@ -291,14 +304,16 @@ function readHash(skipGuard = false) {
   view.value = nextMode; boardId.value = nextBoard;
   selectedId.value = nextIssue;
   detailPage.value = nextDetail;
+  section.value = nextSection;
   if (issueChanged) editingDetail.value = false;
   if (nextDetail) section.value = 'tasks';
-  if (returning && !projectChanged && !modeChanged && !boardChanged && issueReturn) {
+  if (returning && !projectChanged && !modeChanged && !boardChanged && issueReturn?.section === nextSection) {
     section.value = issueReturn.section; scope.value = issueReturn.scope;
     const scroll = issueReturn.scroll; issueReturn = null;
     nextTick(() => { opener?.focus({ preventScroll: true }); window.scrollTo(0, scroll); });
   }
   if (projectChanged || modeChanged || boardChanged) issueReturn = null;
+  if (authenticated.value) ensureSectionAccess();
   if (retiredView) {
     history.replaceState(null, '', projectHash(nextProject, nextIssue, nextMode, nextBoard));
     notify('視圖功能已移除, 已開啟原專案頁面');
@@ -311,8 +326,8 @@ async function closeIssue() {
   if (detailPage.value && !editingDetail.value && !canLeave()) return;
   if (detailPage.value && editingDetail.value) { editingDetail.value = false; await nextTick(); detailTool.value?.focus(); return; }
   creatingIssue.value = false; selectedId.value = ''; detailPage.value = false; editingDetail.value = false;
-  history.replaceState(null, '', projectHash(projectId.value));
   if (issueReturn) { section.value = issueReturn.section; scope.value = issueReturn.scope; }
+  history.replaceState(null, '', projectHash(projectId.value));
   const scroll = issueReturn?.scroll;
   issueReturn = null;
   await nextTick();
@@ -413,11 +428,11 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
           <button class="nav-item" :class="{ active: section === 'tasks' && (view === 'board' || view === 'boards') }" :aria-current="section === 'tasks' && (view === 'board' || view === 'boards') ? 'page' : undefined" aria-label="任務看板" @click="navigate('all', projectId, 'boards')"><Icon name="board" :size="18" />任務看板</button>
           <button class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'mine' }" @click="navigate('mine')"><Icon name="user" :size="18" />我的任務<span class="nav-count">{{ projectIssues.filter(i => i.assignee === currentUserId).length }}</span></button>
           <button class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'done' }" @click="navigate('done')"><Icon name="check" :size="18" />已完成<span class="nav-count">{{ projectIssues.filter(i => done(i)).length }}</span></button>
-          <button class="nav-item" :class="{ active: section === 'epics' }" @click="changeSection('epics')"><Icon name="diamond" :size="18" />Epic 概覽<span class="nav-count">{{ projectAllIssues.filter(i => i.type === 'epic').length }}</span></button>
-          <button v-if="can('timeEntry.readOwn')" class="nav-item" :class="{ active: section === 'time' }" @click="changeSection('time')"><Icon name="clock" :size="18" />工時月曆</button>
-          <button v-if="can('project.statuses.update')" class="nav-item" :class="{ active: section === 'settings' }" @click="changeSection('settings')"><Icon name="filter" :size="18" />狀態設定</button>
-          <button v-if="can('project.members.manage')" class="nav-item" :class="{ active: section === 'members' }" aria-label="專案成員" @click="changeSection('members')"><Icon name="user" :size="18" />專案成員</button>
-          <button class="nav-item" :class="{ active: section === 'notifications' }" @click="changeSection('notifications')"><Icon name="message" :size="18" />通知預覽</button>
+          <button class="nav-item" :class="{ active: section === 'epics' }" :aria-current="section === 'epics' ? 'page' : undefined" @click="changeSection('epics')"><Icon name="diamond" :size="18" />Epic 概覽<span class="nav-count">{{ projectAllIssues.filter(i => i.type === 'epic').length }}</span></button>
+          <button v-if="can('timeEntry.readOwn')" class="nav-item" :class="{ active: section === 'time' }" :aria-current="section === 'time' ? 'page' : undefined" @click="changeSection('time')"><Icon name="clock" :size="18" />工時月曆</button>
+          <button v-if="can('project.statuses.update')" class="nav-item" :class="{ active: section === 'settings' }" :aria-current="section === 'settings' ? 'page' : undefined" @click="changeSection('settings')"><Icon name="filter" :size="18" />狀態設定</button>
+          <button v-if="can('project.members.manage')" class="nav-item" :class="{ active: section === 'members' }" :aria-current="section === 'members' ? 'page' : undefined" aria-label="專案成員" @click="changeSection('members')"><Icon name="user" :size="18" />專案成員</button>
+          <button class="nav-item" :class="{ active: section === 'notifications' }" :aria-current="section === 'notifications' ? 'page' : undefined" @click="changeSection('notifications')"><Icon name="message" :size="18" />通知預覽</button>
         </nav>
       </template>
       <template v-else>
