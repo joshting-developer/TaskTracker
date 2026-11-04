@@ -116,7 +116,7 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(await detail.locator('.property-fields').isVisible(), false);
   assert.ok((await detail.getByRole('heading', { name: '描述', exact: true }).boundingBox()).y < 500);
-  const properties = detail.getByRole('button', { name: /任務屬性 · 負責人/ });
+  const properties = detail.getByRole('button', { name: '屬性與關聯', exact: true });
   await properties.click();
   assert.equal(await detail.locator('.property-fields').isVisible(), true);
   await properties.click();
@@ -207,7 +207,7 @@ try {
   }
   await reader.goto(`${projectUrl}/issues/${fixture.issue.id}?detail=1`);
   const readerDetail = reader.getByRole('region', { name: '任務完整頁', exact: true });
-  await readerDetail.getByText('目前狀態：', { exact: false }).waitFor();
+  await readerDetail.getByRole('group', { name: '任務狀態', exact: true }).getByText('目前狀態', { exact: true }).waitFor();
   assert.equal(await readerDetail.getByRole('button', { name: '編輯任務', exact: true }).count(), 0);
   const assigned = await page.evaluate(async email => {
     const { api } = await import('/src/api/index.js');

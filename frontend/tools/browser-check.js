@@ -89,13 +89,23 @@ async function checkIssueDetailPage(page) {
   assert.equal(await page.getByRole('dialog').count(), 0, '完整頁閱讀不開啟遮罩或表單');
   assert.ok(page.url().endsWith(`/issues/${fixture.task.id}?detail=1`));
   await detail.getByText('<script>不可執行</script>', { exact: false }).waitFor();
+  const sidebarTabs = detail.getByRole('tablist', { name: '任務側欄', exact: true });
+  await sidebarTabs.getByRole('tab', { name: '關聯', exact: true }).click();
+  await detail.getByLabel('所屬 Epic', { exact: true }).getByRole('button', { name: new RegExp(fixture.epic.identifier) }).waitFor();
   await detail.getByLabel('子任務', { exact: true }).getByRole('button', { name: new RegExp(fixture.child.identifier) }).waitFor();
+  assert.equal(await detail.locator('.issue-detail-body').getByLabel('子任務', { exact: true }).count(), 0, '主內容不重複展示關聯清單');
   await detail.getByLabel('關聯任務', { exact: true }).getByRole('button', { name: new RegExp(fixture.related.identifier) }).waitFor();
   const statusControl = detail.getByRole('group', { name: '任務狀態', exact: true });
   const changeState = statusControl.getByRole('combobox', { name: '變更狀態', exact: true });
   assert.equal(await statusControl.getByRole('button').count(), 0, '狀態操作不再使用橫排tab造型');
   await statusControl.getByText('目前狀態', { exact: true }).waitFor();
   await detail.getByLabel('新增留言', { exact: true }).fill('切換狀態保留這段留言');
+  await sidebarTabs.getByRole('tab', { name: '關聯', exact: true }).focus();
+  await page.keyboard.press('Home');
+  assert.equal(await sidebarTabs.getByRole('tab', { name: '屬性', exact: true }).getAttribute('aria-selected'), 'true');
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await sidebarTabs.getByRole('tab', { name: '關聯', exact: true }).getAttribute('aria-selected'), 'true');
+  assert.equal(await detail.getByLabel('新增留言', { exact: true }).inputValue(), '切換狀態保留這段留言', '切換側欄不丟失留言草稿');
   const beforeState = await statusControl.locator('.status-badge').textContent();
   let releaseState;
   const stateGate = new Promise(resolve => { releaseState = resolve; });
@@ -172,16 +182,17 @@ async function checkIssueDetailPage(page) {
   await detail.getByText('描述：同伴修改後的說明 → 從完整頁編輯並保存', { exact: true }).waitFor();
   await page.reload();
   await detail.getByText('閱讀頁未送出草稿', { exact: true }).waitFor();
+  await sidebarTabs.getByRole('tab', { name: '關聯', exact: true }).click();
   await detail.getByLabel('子任務', { exact: true }).getByRole('button', { name: new RegExp(fixture.child.identifier) }).click();
   await detail.getByRole('heading', { name: fixture.child.title, exact: true }).waitFor();
   await detail.getByRole('tab', { name: /^工時/ }).click();
   await detail.getByText('檢查看板返回位置', { exact: true }).waitFor();
-  await detail.getByLabel('任務屬性').getByText('0.5 h', { exact: true }).waitFor();
+  await detail.getByRole('tabpanel', { name: '屬性', exact: true }).getByText('0.5 h', { exact: true }).waitFor();
 
   const boardUrl = `${root}/board/${fixture.board.id}`;
   await page.goto(`${boardUrl}/issues/${fixture.epic.id}?detail=1`);
   await detail.getByRole('heading', { name: fixture.epic.title, exact: true }).waitFor();
-  await detail.getByLabel('任務屬性').getByText('0.5 h（所屬卡片加總）', { exact: true }).waitFor();
+  await detail.getByRole('tabpanel', { name: '屬性', exact: true }).getByText('0.5 h（所屬卡片加總）', { exact: true }).waitFor();
   await detail.getByRole('button', { name: '返回看板', exact: true }).click();
   assert.equal(page.url(), boardUrl, '分享／重整後仍返回來源自訂看板');
   await page.locator('.selected-board-heading h3').getByText(fixture.board.name, { exact: true }).waitFor();
@@ -204,7 +215,7 @@ async function checkIssueDetailPage(page) {
   await page.goto(`${root}/issues/missing?detail=1`);
   await page.getByRole('status').filter({ hasText: '找不到這個專案內的任務' }).waitFor();
   assert.equal(page.url(), root);
-  console.log('PASS: full task reading page, safe description, child/related links, attributes, time rollup, quick/full editing, explicit status action/conflicts, comment conflict/draft guards, list filters/pagination/custom board return, share/reload/back and mobile');
+  console.log('PASS: full task reading page, safe description, child/related links, attributes, time rollup, quick/full editing, explicit status action/conflicts, sidebar relation tabs/keyboard/drafts, comment conflict/draft guards, list filters/pagination/custom board return, share/reload/back and mobile');
 }
 
 async function checkProjectAcl(page, browser, failures) {
@@ -667,7 +678,8 @@ async function checkIssueRelations(page, projectUrl) {
   await childRow.getByRole('button', { name: '付款畫面', exact: true }).click();
   const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
   await detail.getByRole('heading', { name: '付款畫面', exact: true }).waitFor();
-  await detail.getByRole('button', { name: 'TEST-4 · 付款流程', exact: true }).waitFor();
+  await detail.getByRole('tablist', { name: '任務側欄', exact: true }).getByRole('tab', { name: '關聯', exact: true }).click();
+  await detail.getByLabel('父任務', { exact: true }).getByRole('button', { name: /TEST-4.*付款流程/ }).waitFor();
   await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
   await page.getByRole('button', { name: '任務看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();

@@ -8,7 +8,7 @@ import { FIELD_LABELS, hours, PRIORITIES, statusesFor, TYPES } from '../domain/m
 const props = defineProps({ issue: Object, project: Object, issues: Array, members: Array, entries: Array, returnLabel: String, busy: Boolean, canWrite: { type: Boolean, default: true }, canReadTime: { type: Boolean, default: true } });
 const emit = defineEmits(['close', 'open', 'edit', 'saved', 'reload', 'state']);
 const tab = ref('comments'), comment = ref(''), saving = ref(false), error = ref(''), conflict = ref(false);
-const heading = ref(null), propertiesExpanded = ref(false);
+const heading = ref(null), propertiesExpanded = ref(false), sidebarTab = ref('properties');
 let pending;
 watch(() => props.canWrite, allowed => { if (!allowed) { comment.value = ''; pending = null; error.value = ''; conflict.value = false; } });
 watch(() => props.canReadTime, allowed => { if (!allowed && tab.value === 'time') tab.value = 'comments'; });
@@ -21,6 +21,12 @@ const children = computed(() => props.issues.filter(issue => props.issue.type ==
 const related = computed(() => (props.issue.relatedIssueIds || []).map(id => props.issues.find(issue => issue.id === id)).filter(Boolean));
 const epic = computed(() => props.issues.find(issue => issue.id === props.issue.epicId));
 const parent = computed(() => props.issues.find(issue => issue.id === props.issue.parentIssueId));
+const relationGroups = computed(() => [
+  { key: 'epic', label: '所屬 Epic', items: epic.value ? [epic.value] : [] },
+  { key: 'parent', label: '父任務', items: parent.value ? [parent.value] : [] },
+  { key: 'children', label: props.issue.type === 'epic' ? 'Epic 所屬卡片' : '子任務', items: children.value },
+  { key: 'related', label: '關聯任務', items: related.value },
+].filter(group => group.items.length));
 const work = computed(() => props.entries.filter(entry => !entry.voidedAt && (props.issue.type === 'epic' ? children.value.some(issue => issue.id === entry.issueId) : entry.issueId === props.issue.id)).sort((a, b) => b.workDate.localeCompare(a.workDate)));
 const spent = computed(() => work.value.reduce((sum, entry) => sum + entry.minutes, 0));
 const estimate = computed(() => props.issue.type === 'epic' ? children.value.reduce((sum, issue) => sum + (issue.estimateMinutes || 0), 0) : props.issue.estimateMinutes);
@@ -77,12 +83,6 @@ async function sendComment() {
       <h1 ref="heading" tabindex="-1">{{ issue.title }}</h1>
       <div class="issue-detail-body">
         <section class="issue-detail-description" aria-label="任務描述"><h2>描述</h2><p>{{ issue.description || '尚未填寫描述' }}</p></section>
-        <section v-if="children.length || issue.type === 'epic'" class="issue-detail-links" :aria-label="issue.type === 'epic' ? 'Epic 所屬卡片' : '子任務'">
-          <h2>{{ issue.type === 'epic' ? 'Epic 所屬卡片' : '子任務' }} <span>{{ children.length }}</span></h2>
-          <div v-for="item in children" :key="item.id" class="issue-detail-link-row"><button @click="emit('open', item)"><span class="identifier">{{ item.identifier }}</span>{{ item.title }}</button><span class="status-badge" :style="{ '--status-color': state(item)?.color }"><i></i>{{ state(item)?.label || item.state }}</span></div>
-          <p v-if="!children.length" class="subtle">尚無所屬卡片</p>
-        </section>
-        <section v-if="related.length" class="issue-detail-links" aria-label="關聯任務"><h2>關聯任務 <span>{{ related.length }}</span></h2><div v-for="item in related" :key="item.id" class="issue-detail-link-row"><button @click="emit('open', item)"><span class="identifier">{{ item.identifier }}</span>{{ item.title }}</button><span class="status-badge" :style="{ '--status-color': state(item)?.color }"><i></i>{{ state(item)?.label || item.state }}</span></div></section>
         <section class="issue-detail-activity" aria-label="任務活動">
           <div class="discussion-tabs" role="tablist" aria-label="任務紀錄" @keydown="onTabKeydown">
             <button id="detail-comments-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" :class="{ active: tab === 'comments' }" @click="tab = 'comments'">留言 <span>{{ issue.comments.length }}</span></button>
@@ -110,20 +110,36 @@ async function sendComment() {
           </form>
         </section>
       </div>
-      <aside class="issue-detail-properties" aria-label="任務屬性">
-        <button class="mobile-properties-toggle" :aria-expanded="propertiesExpanded" aria-controls="detail-properties" @click="propertiesExpanded = !propertiesExpanded">任務屬性 · 負責人 {{ memberName(issue.assignee) }} <span>{{ propertiesExpanded ? '收起' : '展開' }}</span></button>
-        <div id="detail-properties" class="property-fields" :class="{ expanded: propertiesExpanded }">
-        <dl>
-          <div><dt>類型</dt><dd>{{ TYPES.find(item => item.id === issue.type)?.label || issue.type }}</dd></div>
-          <div><dt>優先級</dt><dd>{{ PRIORITIES.find(item => item.id === issue.priority)?.label || issue.priority }}</dd></div>
-          <div><dt>負責人</dt><dd>{{ memberName(issue.assignee) }}</dd></div>
-          <div><dt>到期日</dt><dd>{{ issue.dueDate || '未設定' }}</dd></div>
-          <div v-if="epic"><dt>所屬 Epic</dt><dd><button @click="emit('open', epic)">{{ epic.identifier }} · {{ epic.title }}</button></dd></div>
-          <div v-if="parent"><dt>父任務</dt><dd><button @click="emit('open', parent)">{{ parent.identifier }} · {{ parent.title }}</button></dd></div>
-          <div><dt>預估工時</dt><dd>{{ estimate ? hours(estimate) : '尚未估時' }}</dd></div>
-          <div v-if="canReadTime"><dt>已投入工時</dt><dd>{{ hours(spent) }}{{ issue.type === 'epic' ? '（所屬卡片加總）' : '' }}</dd></div>
-        </dl>
-        <p class="subtle">版本 {{ issue.revision }} · 已儲存</p>
+      <aside class="issue-detail-sidebar" aria-label="任務資訊">
+        <button class="mobile-properties-toggle" :aria-expanded="propertiesExpanded" aria-controls="detail-sidebar-content" aria-label="屬性與關聯" @click="propertiesExpanded = !propertiesExpanded">
+          屬性與關聯 <span>{{ propertiesExpanded ? '收起' : '展開' }}</span>
+        </button>
+        <div id="detail-sidebar-content" class="sidebar-content" :class="{ expanded: propertiesExpanded }">
+          <div class="sidebar-tabs" role="tablist" aria-label="任務側欄" @keydown="onTabKeydown">
+            <button id="detail-properties-tab" role="tab" aria-controls="detail-properties" :tabindex="sidebarTab === 'properties' ? 0 : -1" :aria-selected="sidebarTab === 'properties'" :class="{ active: sidebarTab === 'properties' }" @click="sidebarTab = 'properties'">屬性</button>
+            <button id="detail-relations-tab" role="tab" aria-controls="detail-relations" :tabindex="sidebarTab === 'relations' ? 0 : -1" :aria-selected="sidebarTab === 'relations'" :class="{ active: sidebarTab === 'relations' }" @click="sidebarTab = 'relations'">關聯</button>
+          </div>
+          <div v-show="sidebarTab === 'properties'" id="detail-properties" class="sidebar-panel property-fields" role="tabpanel" tabindex="0" aria-labelledby="detail-properties-tab">
+            <dl>
+              <div><dt>類型</dt><dd>{{ TYPES.find(item => item.id === issue.type)?.label || issue.type }}</dd></div>
+              <div><dt>優先級</dt><dd>{{ PRIORITIES.find(item => item.id === issue.priority)?.label || issue.priority }}</dd></div>
+              <div><dt>負責人</dt><dd>{{ memberName(issue.assignee) }}</dd></div>
+              <div><dt>到期日</dt><dd>{{ issue.dueDate || '未設定' }}</dd></div>
+              <div><dt>預估工時</dt><dd>{{ estimate ? hours(estimate) : '尚未估時' }}</dd></div>
+              <div v-if="canReadTime"><dt>已投入工時</dt><dd>{{ hours(spent) }}{{ issue.type === 'epic' ? '（所屬卡片加總）' : '' }}</dd></div>
+            </dl>
+            <p class="subtle">版本 {{ issue.revision }} · 已儲存</p>
+          </div>
+          <div v-show="sidebarTab === 'relations'" id="detail-relations" class="sidebar-panel" role="tabpanel" tabindex="0" aria-labelledby="detail-relations-tab">
+            <p v-if="!relationGroups.length" class="subtle">尚無關聯卡片</p>
+            <section v-for="group in relationGroups" :key="group.key" class="relation-group" :aria-label="group.label">
+              <h2>{{ group.label }} <span>{{ group.items.length }}</span></h2>
+              <div v-for="item in group.items" :key="item.id" class="relation-item">
+                <button @click="emit('open', item)"><span class="identifier">{{ item.identifier }}</span><span>{{ item.title }}</span></button>
+                <span class="status-badge" :style="{ '--status-color': state(item)?.color }"><i aria-hidden="true"></i>{{ state(item)?.label || item.state }}</span>
+              </div>
+            </section>
+          </div>
         </div>
       </aside>
     </div>
@@ -142,19 +158,28 @@ async function sendComment() {
 .state-action select:hover:not(:disabled) { border-color: #6653bd; }
 .state-action select:focus-visible { outline: 2px solid #6653bd; outline-offset: 2px; box-shadow: none; }
 .state-action select:disabled { cursor: wait; opacity: 0.65; }
-.issue-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; }
+.issue-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; grid-template-rows: auto 1fr; }
 .issue-detail-body { min-width: 0; padding: 0 32px 48px; grid-column: 1; }
 h1 { font-size: 26px; line-height: 1.5; font-weight: 650; overflow-wrap: anywhere; margin: 0; padding: 28px 32px 24px; grid-column: 1; }
 h1:focus { outline: none; }
 h2 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
 h2 span { color: #5f6673; font-weight: 400; margin-left: 8px; }
 .issue-detail-description p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.9; }
-.issue-detail-links, .issue-detail-activity { margin-top: 28px; border-top: 1px solid #daddE5; padding-top: 18px; }
-.issue-detail-link-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #edf0f5; }
-.issue-detail-link-row button { flex: 1; text-align: left; overflow-wrap: anywhere; font-size: 14px; }
-.issue-detail-link-row .identifier { display: inline-block; margin-right: 10px; }
-.issue-detail-link-row .status-badge { flex-shrink: 0; }
-.issue-detail-properties { grid-column: 2; grid-row: 1 / span 2; padding: 30px 24px; border-left: 1px solid #daddE5; background: #fcfcfe; min-width: 0; }
+.issue-detail-activity { margin-top: 28px; border-top: 1px solid #daddE5; padding-top: 18px; }
+.issue-detail-sidebar { grid-column: 2; grid-row: 1 / span 2; padding: 18px 20px 24px; border-left: 1px solid #daddE5; background: #fcfcfe; min-width: 0; }
+.sidebar-tabs { display: flex; gap: 20px; border-bottom: 1px solid #daddE5; margin-bottom: 20px; }
+.sidebar-tabs button { min-height: 44px; padding: 10px 4px; border-bottom: 2px solid transparent; color: #5f6673; font-size: 14px; }
+.sidebar-tabs button.active { border-bottom-color: #6653bd; color: #5844a0; font-weight: 600; }
+.sidebar-tabs button:hover { color: #5844a0; }
+.sidebar-panel { max-height: max(220px, calc(100dvh - 320px)); overflow-y: auto; scrollbar-gutter: stable; padding: 2px 4px 4px 0; overflow-wrap: anywhere; }
+.sidebar-panel:focus-visible { outline: 2px solid #6653bd; outline-offset: 2px; }
+.relation-group + .relation-group { margin-top: 22px; }
+.relation-group h2 { font-size: 14px; margin-bottom: 6px; }
+.relation-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; column-gap: 10px; padding: 8px 0; border-bottom: 1px solid #e6e8ee; }
+.relation-item button { min-width: 0; min-height: 44px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: 100%; text-align: left; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+.relation-item button:hover { color: #5844a0; }
+.relation-item .status-badge { margin-top: 4px; max-width: 104px; white-space: normal; }
+.relation-item .status-badge i { flex-shrink: 0; }
 .mobile-properties-toggle { display: none; }
 dl { margin: 0; }
 dl > div { margin-bottom: 22px; }
@@ -167,7 +192,7 @@ dd button { text-align: left; color: #5844a0; }
 .issue-detail-work > span { flex-shrink: 0; }
 .issue-detail-work + .subtle { margin-top: 14px; }
 .comment-form .field { text-align: left; }
-@media(max-width:1000px) { .issue-detail-layout { grid-template-columns: minmax(0, 1fr) 230px; } .issue-detail-body { padding: 0 24px 40px; } h1 { padding: 24px; } }
+@media(max-width:1000px) { .issue-detail-layout { grid-template-columns: minmax(0, 1fr) 260px; } .issue-detail-body { padding: 0 24px 40px; } h1 { padding: 24px; } }
 @media(max-width:700px) {
   .issue-state-control { padding: 10px 18px; gap: 10px; }
   .issue-detail-layout { display: flex; flex-direction: column; }
@@ -175,14 +200,14 @@ dd button { text-align: left; color: #5844a0; }
   .issue-detail-toolbar .button { padding: 9px 10px; font-size: 13px; }
   .issue-detail-body { padding: 22px 18px 30px; order: 2; }
   h1 { font-size: 23px; padding: 22px 18px; }
-  .issue-detail-properties { order: 1; padding: 18px; border-left: 0; border-bottom: 1px solid #daddE5; }
+  .issue-detail-sidebar { order: 1; padding: 18px; border-left: 0; border-bottom: 1px solid #daddE5; }
   .mobile-properties-toggle { display: flex; width: 100%; gap: 12px; justify-content: space-between; text-align: left; font-size: 14px; min-height: 44px; align-items: center; }
   .mobile-properties-toggle span { flex-shrink: 0; color: #5844a0; }
-  .property-fields { display: none; }
-  .property-fields.expanded { display: block; padding-top: 16px; }
+  .sidebar-content { display: none; }
+  .sidebar-content.expanded { display: block; padding-top: 12px; }
+  .sidebar-panel { max-height: 55dvh; }
   dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
   dl > div { margin: 0; }
   .property-fields > p { margin-top: 14px; }
-  .issue-detail-link-row { flex-wrap: wrap; }
 }
 </style>
