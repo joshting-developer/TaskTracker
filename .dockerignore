@@ -9,6 +9,7 @@
 !backend/
 !backend/composer.json
 !backend/composer.lock
+!backend/pint.json
 !backend/artisan
 !backend/app/
 !backend/app/**
