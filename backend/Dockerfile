@@ -1,4 +1,4 @@
-FROM php:8.5-cli-bookworm
+FROM php:8.5.12-cli-bookworm
 RUN apt-get update && apt-get install -y --no-install-recommends libicu-dev libsqlite3-dev libzip-dev unzip \
     && docker-php-ext-install -j"$(nproc)" intl pdo_sqlite pcntl bcmath zip \
     && rm -rf /var/lib/apt/lists/*

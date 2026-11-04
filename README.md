@@ -148,7 +148,7 @@ docker compose exec backend php artisan tasktracker:import-legacy /legacy/tasktr
 
 ## 不使用 Docker 的開發方式
 
-需要符合 `backend/composer.lock` 的 PHP 及 Composer（容器已驗證 PHP 8.5）, 前端使用 Node 22.18 以上的 22.x 或 Node 24.12 以上
+需要符合 `backend/composer.lock` 的 PHP 及 Composer；Composer最低需求為PHP8.3，Docker指定PHP8.5.12安全修補版。前端使用 Node 22.18 以上的 22.x 或 Node 24.12 以上
 
 ```sh
 cd backend
@@ -224,3 +224,5 @@ F01–F04 可用性修正另有 `E2E_API_URL=http://127.0.0.1:13004 node tools/u
 查閱續作：任務範圍（全部／我的／已完成）與工時月份、成員、選取日，按帳號／工作空間／專案保存在目前分頁的 sessionStorage；重整保留，分享網址不包含這些條件。搜尋與其他即時篩選不保存，未恢復「存為視圖」。瀏覽器禁用儲存時仍可使用，但不保證重整續作。
 
 手機／平板首頁首屏提供「記小事」，直接定位並聚焦待辦輸入欄；首頁內定位會保留既有速記內容，專案區排列維持不變。
+
+版本與維護：見[前端後續改善與PHP版本檢查](docs/前端後續改善與PHP版本檢查-2026-11-04.md)。本機PHP若遇到Homebrew／ICU錯誤，先使用`docker compose exec backend php artisan ...`，本專案不要求修改主機共用PHP。PHP映像修補後需重建並重新建立backend／queue／websocket，單純restart不會換映像。
