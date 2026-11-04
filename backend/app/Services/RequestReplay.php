@@ -13,7 +13,7 @@ use Closure;
 class RequestReplay
 {
     /**
-     * 驗證操作邊界並執行查詢或受保護的寫入。
+     * 依原始輸入簽章重用已授權操作結果，或保存此次寫入結果。
      *
      * @param  RecordStore  $store  限定工作空間的資料存取入口
      * @param  string  $kind  紀錄種類與重試命名空間

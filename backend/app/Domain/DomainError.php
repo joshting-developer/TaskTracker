@@ -10,7 +10,7 @@ use RuntimeException;
 class DomainError extends RuntimeException
 {
     /**
-     * 設定此服務使用的資料入口與可信任相依。
+     * 設定穩定的業務錯誤碼與對外訊息。
      *
      * @param  string  $errorCode  可對外呈現的穩定錯誤碼
      * @param  string  $message  可對外呈現的錯誤說明

@@ -3,7 +3,7 @@
 namespace App\Repositories;
 
 use App\Domain\DomainError;
-use Illuminate\Support\Facades\DB;
+use App\Models\StoredRecord;
 
 // 保留原型 payload 契約, 由伺服器限定 Workspace namespace
 /**
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 class RecordStore
 {
     /**
-     * 設定此服務使用的資料入口與可信任相依。
+     * 設定伺服器指定的Workspace namespace。
      *
      * @param  string  $prefix  伺服器限定的Workspace namespace
      * @return void
@@ -39,7 +39,7 @@ class RecordStore
      */
     public function get(string $kind, string $id): ?array
     {
-        $value = DB::table('records')->where('kind', $this->prefix.$kind)->where('id', $id)->value('payload');
+        $value = StoredRecord::query()->where('kind', $this->prefix.$kind)->where('id', $id)->value('payload');
 
         return $value === null ? null : json_decode($value, true, flags: JSON_THROW_ON_ERROR);
     }
@@ -64,7 +64,7 @@ class RecordStore
      */
     public function all(string $kind): array
     {
-        return DB::table('records')->where('kind', $this->prefix.$kind)->orderBy('sequence')->pluck('payload')->map(fn ($v) => json_decode($v, true, flags: JSON_THROW_ON_ERROR))->all();
+        return StoredRecord::query()->where('kind', $this->prefix.$kind)->orderBy('sequence')->pluck('payload')->map(fn ($v) => json_decode($v, true, flags: JSON_THROW_ON_ERROR))->all();
     }
 
     /**
@@ -77,7 +77,7 @@ class RecordStore
      */
     public function put(string $kind, string $id, array $value): void
     {
-        DB::table('records')->updateOrInsert([
+        StoredRecord::query()->updateOrInsert([
             'kind' => $this->prefix.$kind,
             'id' => $id,
         ], ['payload' => json_encode($value, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)]);
