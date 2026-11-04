@@ -1,0 +1,74 @@
+import assert from 'node:assert/strict';
+import { mkdirSync } from 'node:fs';
+import { createServer } from 'vite';
+import { chromium } from 'playwright';
+import { dateInTaipei } from '../src/domain/model.js';
+const apiTarget = process.env.E2E_API_URL;
+if (!apiTarget) throw new Error('請設定 E2E_API_URL 指向隔離 Laravel 測試服務');
+const artifacts = 'artifacts/uiux-fixes';
+mkdirSync(artifacts, { recursive: true });
+let vite, browser;
+const failures = [];
+try {
+  vite = await createServer({ server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': apiTarget } } });
+  await vite.listen();
+  browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  page.setDefaultTimeout(12000);
+  page.on('pageerror', error => failures.push(error.message));
+  await page.goto('http://127.0.0.1:5175');
+  await page.getByRole('button', { name: '第一次使用？建立工作空間' }).click();
+  await page.getByLabel('你的名字').fill('UI Review');
+  await page.getByLabel('Email', { exact: true }).fill(`ui-${crypto.randomUUID()}@example.test`);
+  await page.getByLabel('密碼', { exact: true }).fill('ui-local-test-password');
+  await page.getByLabel('工作空間名稱', { exact: true }).fill('UI 驗證空間');
+  await page.getByRole('button', { name: '建立工作空間', exact: true }).click();
+  await page.getByRole('heading', { name: '我的專案.', exact: true }).waitFor();
+  const fixture = await page.evaluate(async () => {
+    const { api } = await import('/src/api/index.js');
+    const project = await api.createProject({ name: 'UI 驗證專案', code: 'UX', requestId: crypto.randomUUID() });
+    const issue = await api.createIssue({ projectId: project.id, title: '閱讀詳細需求', description: '第一段背景與驗收條件\n確認日期、權限與畫面流程', requestId: crypto.randomUUID() });
+    return { project, issue };
+  });
+  await page.reload();
+  await page.getByRole('button', { name: '進入專案：UI 驗證專案', exact: true }).click();
+  await page.getByRole('button', { name: '工時月曆', exact: true }).click();
+  await page.getByRole('button', { name: new RegExp(`${dateInTaipei()} 工時`) }).click();
+  const drawer = page.getByRole('dialog', { name: '填報你的工時', exact: true });
+  await drawer.getByLabel('工時任務', { exact: true }).selectOption(fixture.issue.id);
+  const duration = drawer.getByRole('spinbutton');
+  await duration.fill('0.017');
+  await drawer.getByRole('button', { name: '登記工時', exact: true }).click();
+  await drawer.getByRole('alert').filter({ hasText: '工時以整數分鐘計算' }).waitFor();
+  assert.equal(await duration.getAttribute('aria-invalid'), 'true');
+  assert.match(await duration.getAttribute('aria-describedby'), /time-duration-error/);
+  assert.equal(await duration.evaluate(el => el === document.activeElement), true);
+  assert.equal(await duration.inputValue(), '0.017', '驗證失敗保留輸入');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: `${artifacts}/time-error-390.png` });
+  await duration.fill('0.5');
+  assert.equal(await duration.getAttribute('aria-invalid'), null);
+  await drawer.getByRole('button', { name: '登記工時', exact: true }).click();
+  await drawer.waitFor({ state: 'hidden' });
+  const saved = await page.evaluate(async id => (await (await import('/src/api/index.js')).api.getWorkspace()).timeEntries.filter(entry => entry.issueId === id), fixture.issue.id);
+  assert.equal(saved.length, 1);
+  assert.equal(saved[0].minutes, 30);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.getByRole('button', { name: '通知預覽', exact: true }).click();
+  const readable = await page.locator('.smtp-card small').evaluate(el => {
+    const style = getComputedStyle(el), parent = getComputedStyle(el.closest('.smtp-card'));
+    const luminance = rgb => {
+      const parts = rgb.match(/[\d.]+/g).slice(0, 3).map(Number).map(v => v / 255).map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+      return parts[0] * 0.2126 + parts[1] * 0.7152 + parts[2] * 0.0722;
+    };
+    const a = luminance(style.color), b = luminance(parent.backgroundColor);
+    return { size: parseFloat(style.fontSize), contrast: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) };
+  });
+  assert.ok(readable.size >= 13 && readable.contrast >= 4.5, JSON.stringify(readable));
+  await page.screenshot({ path: `${artifacts}/notifications-1440.png` });
+  assert.deepEqual(failures, []);
+  console.log('PASS: U01 文字對比與字級；U05 整數分鐘提示、欄位關聯／焦點／草稿及有效工時保存', readable);
+} finally {
+  await browser?.close();
+  await vite?.close();
+}

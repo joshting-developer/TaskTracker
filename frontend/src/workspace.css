@@ -114,6 +114,25 @@
 .project-code, .new-project-card > span:last-child { font-size: 12px; color: var(--text-secondary); }
 .new-project-card strong { font-size: 14px; color: #424b5c; }
 
+/* 日常資訊使用共用文字色, 不沿用展示版的淡紫色小字。 */
+.auth-card > p, .auth-card .auth-hint { color: var(--text-secondary); font-size: 14px; }
+.notification-card > p { color: var(--text-secondary); font-size: 14px; }
+.notification-meta, .smtp-card small, .smtp-card p,
+.settings-explanation, .settings-explanation p, .settings-explanation h3,
+.report-row, .report-epic > span, .epic-progress-label, .epic-hours,
+.epic-description, .epic-children small, .status-order, .preview-pill { color: var(--text-secondary); }
+.notification-meta, .smtp-card small, .report-epic > span,
+.epic-progress-label, .epic-hours, .preview-pill { font-size: 13px; }
+.settings-explanation p, .epic-description { font-size: 14px; }
+.epic-children small { font-size: 12px; }
+.report-card .report-row, .report-epic .text-button { font-size: 14px; }
+.calendar-weekdays, .calendar-grid button { color: var(--text-secondary); font-size: 13px; }
+.calendar-grid button.muted { color: #6e6878; }
+.calendar-grid strong, .calendar-grid small { color: #625080; font-size: 12px; }
+.report-row > div > strong { font-variant-numeric: tabular-nums; }
+.field .field-error { display: block; color: #a82e40; font-size: 14px; line-height: 1.6; }
+.field input[aria-invalid="true"] { border-color: #b73548; }
+
 @media (max-width: 900px) {
   .filter-toolbar { flex-wrap: wrap; }
   .filters { flex-wrap: wrap; }
