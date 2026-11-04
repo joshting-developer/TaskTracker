@@ -3,9 +3,12 @@ import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue';
 import { api } from '../api/index.js';
 import { dateInTaipei, epicSummary, hours } from '../domain/model.js';
 import Icon from './Icon.vue';
-const props = defineProps({ project: Object, issues: Array, entries: Array, members: Array, userId: String });
+import { timeSelection, writeContext } from '../ui/workContext.js';
+const props = defineProps({ project: Object, issues: Array, entries: Array, members: Array, userId: String, contextKey: String });
 const emit = defineEmits(['updated', 'open']);
-const month = ref(dateInTaipei().slice(0, 7)), member = ref(props.userId), selectedDate = ref(dateInTaipei());
+const initialSelection = timeSelection(props.contextKey, props.members, props.userId, dateInTaipei());
+const month = ref(initialSelection.month), member = ref(initialSelection.member), selectedDate = ref(initialSelection.date);
+const contextNotice = ref(initialSelection.resetMember ? '先前查看的成員已不在此專案，已重設查看範圍' : '');
 const error = ref(''), busy = ref(false), editing = ref(null);
 const durationError = ref(''), durationInput = ref(null), errorSummary = ref(null);
 const panel = ref(null), panelOpen = ref(false);
@@ -34,6 +37,18 @@ const days = computed(() => {
 const dirty = computed(() => panelOpen.value && JSON.stringify(form) !== initialForm.value);
 defineExpose({ dirty, saving: busy });
 watch(month, () => { selectedDate.value = month.value === dateInTaipei().slice(0, 7) ? dateInTaipei() : `${month.value}-01`; }, { flush: 'sync' });
+watch(() => props.contextKey, () => {
+  const saved = timeSelection(props.contextKey, props.members, props.userId, dateInTaipei());
+  month.value = saved.month; member.value = saved.member; selectedDate.value = saved.date;
+  contextNotice.value = saved.resetMember ? '先前查看的成員已不在此專案，已重設查看範圍' : '';
+}, { flush: 'sync' });
+watch(() => props.members.map(person => person.id).join(','), () => {
+  if (member.value && !props.members.some(person => person.id === member.value)) {
+    member.value = props.members.some(person => person.id === props.userId) ? props.userId : '';
+    contextNotice.value = '先前查看的成員已不在此專案，已重設查看範圍';
+  }
+});
+watch([month, member, selectedDate], () => writeContext(props.contextKey, { time: { month: month.value, member: member.value, date: selectedDate.value } }), { flush: 'post' });
 function moveMonth(direction) {
   const [year, current] = (month.value || dateInTaipei().slice(0, 7)).split('-').map(Number);
   month.value = new Date(Date.UTC(year, current - 1 + direction, 1)).toISOString().slice(0, 7);
@@ -105,6 +120,7 @@ async function voidEntry(entry) {
 <template>
   <section class="time-workspace" aria-label="工時月曆">
     <header class="section-title"><div><div class="eyebrow">TIME, MADE VISIBLE</div><h2>每一天, 一起投入的時間</h2><p class="subtle">點選日期填報工時 · Asia/Taipei · 本月篩選合計 {{ hours(total) }}</p></div><label class="member-filter">查看<select v-model="member" aria-label="工時成員"><option value="">全團隊</option><option v-for="person in members" :key="person.id" :value="person.id">{{ person.name }}{{ person.id === userId ? '（我）' : '' }}</option></select></label></header>
+    <p v-if="contextNotice" class="subtle" role="status">{{ contextNotice }}</p>
     <div class="time-layout">
       <div class="calendar"><header class="calendar-toolbar"><div><button class="icon-button previous" aria-label="上個月" @click="moveMonth(-1)"><Icon name="chevron" /></button><input v-model="month" type="month" aria-label="工時月份" required /><button class="icon-button" aria-label="下個月" @click="moveMonth(1)"><Icon name="chevron" /></button></div><button class="text-button" @click="month = dateInTaipei().slice(0, 7); selectedDate = dateInTaipei()">今天</button></header>
         <div class="calendar-weekdays"><span v-for="day in ['一','二','三','四','五','六','日']" :key="day">{{ day }}</span></div>

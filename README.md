@@ -217,3 +217,5 @@ E2E_API_URL=http://127.0.0.1:13004 node tools/uiux-check.js
 - [日常流程](docs/workflow-design.md)：子任務／關聯與常用視圖
 - [架構提案](docs/architecture.md)：最新方向與 GuildManager／GAS 參考沿革
 - [競品調研](docs/competitor-survey.md)：YouTrack、OpenProject 等比較
+
+查閱續作：任務範圍（全部／我的／已完成）與工時月份、成員、選取日，按帳號／工作空間／專案保存在目前分頁的 sessionStorage；重整保留，分享網址不包含這些條件。搜尋與其他即時篩選不保存，未恢復「存為視圖」。瀏覽器禁用儲存時仍可使用，但不保證重整續作。

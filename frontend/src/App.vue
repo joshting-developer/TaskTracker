@@ -14,6 +14,7 @@ import AuthGate from './components/AuthGate.vue';
 import TeamDialog from './components/TeamDialog.vue';
 import EpicOverview from './components/EpicOverview.vue';
 import TimeCalendar from './components/TimeCalendar.vue';
+import { contextKey, taskScope, writeContext } from './ui/workContext.js';
 import ProjectSettings from './components/ProjectSettings.vue';
 import ProjectMembers from './components/ProjectMembers.vue';
 import TodoHome from './components/TodoHome.vue';
@@ -87,6 +88,11 @@ const boardIssues = computed(() => includedIssues(selectedBoard.value, projectAl
 const boardEpicIds = computed(() => [...new Set([...boardIssues.value.filter(issue => issue.type === 'epic').map(issue => issue.id), ...boardIssues.value.map(issue => issue.epicId).filter(Boolean)])]);
 const projectStates = computed(() => statusesFor(selectedProject.value));
 const currentUserId = computed(() => workspace.value.meta.userId);
+const workContextKey = computed(() => contextKey(currentUserId.value, workspace.value.meta.workspace?.id, selectedProject.value?.id));
+function restoreTaskScope() {
+  if (view.value === 'list' && section.value === 'tasks') scope.value = taskScope(workContextKey.value);
+}
+watch(workContextKey, restoreTaskScope, { flush: 'sync' });
 const currentFilters = computed(() => ({ search: search.value, scope: scope.value, state: stateFilter.value, priority: priorityFilter.value, assignee: assigneeFilter.value, epicId: epicFilter.value, type: typeFilter.value, condition: conditionFilter.value, sort: sort.value, view: view.value }));
 const filterWarnings = computed(() => selectedProject.value ? missingFilters(currentFilters.value, selectedProject.value, workspace.value.members, projectAllIssues.value) : []);
 function memberName(id) { return workspace.value.members.find((member) => member.id === id)?.name || id || ''; }
@@ -223,6 +229,7 @@ function navigate(nextScope, id = projectId.value, mode = 'list') {
   location.hash = projectHash(id, '', mode);
   readHash(true);
   scope.value = nextScope;
+  if (mode === 'list') writeContext(workContextKey.value, { scope: nextScope });
   clearFilters();
   sidebarOpen.value = false;
 }
@@ -314,6 +321,7 @@ function readHash(skipGuard = false) {
   }
   if (projectChanged || modeChanged || boardChanged) issueReturn = null;
   if (authenticated.value) ensureSectionAccess();
+  if (projectChanged || modeChanged || sectionChanged) restoreTaskScope();
   if (retiredView) {
     history.replaceState(null, '', projectHash(nextProject, nextIssue, nextMode, nextBoard));
     notify('視圖功能已移除, 已開啟原專案頁面');
@@ -491,7 +499,7 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
         </section>
         <div v-if="error && section !== 'tasks'" class="error-box" role="alert">{{ error }}</div>
         <EpicOverview :can-write="canWrite" :can-read-time="can('timeEntry.readOwn')" v-if="section === 'epics'" :project="selectedProject" :issues="projectAllIssues" :entries="workspace.timeEntries" :members="projectMembers" @open="openIssue" @create="newIssue('', 'epic')" />
-        <TimeCalendar v-if="section === 'time' && can('timeEntry.readOwn')" ref="workspaceTool" :project="selectedProject" :issues="projectAllIssues" :entries="workspace.timeEntries" :members="projectMembers" :user-id="currentUserId" @updated="toolUpdated" @open="openIssue" />
+        <TimeCalendar v-if="section === 'time' && can('timeEntry.readOwn')" ref="workspaceTool" :context-key="workContextKey" :project="selectedProject" :issues="projectAllIssues" :entries="workspace.timeEntries" :members="projectMembers" :user-id="currentUserId" @updated="toolUpdated" @open="openIssue" />
         <ProjectSettings v-if="section === 'settings' && can('project.statuses.update')" ref="workspaceTool" :project="selectedProject" :issues="projectAllIssues" :permissions="selectedProject.permissions || []" @updated="toolUpdated" />
         <ProjectMembers v-if="section === 'members' && can('project.members.manage')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" />
         <NotificationPreview v-if="section === 'notifications'" :project="selectedProject" :notifications="workspace.notifications" :issues="projectAllIssues" :permissions="workspace.meta.permissions || []" @open="openIssue" />
