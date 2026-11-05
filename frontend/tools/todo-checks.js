@@ -33,7 +33,13 @@ export async function checkTodoWorkflow(browser, failures) {
   await owner.waitForFunction(() => !document.querySelector('[aria-label="重新整理工作空間"]').disabled);
   const ownerPrivate = await owner.evaluate(async () => (await import('/src/api/index.js')).api.getTodos());
   assert.equal(ownerPrivate.todos.some(todo => todo.title.includes('613')), false, 'Workspace owner 不能讀成員私人速記');
+  assert.equal(await row.getByText('自己記下的', { exact: true }).count(), 0);
+  const beforeMenu = await row.boundingBox();
+  const documentHeight = await member.evaluate(() => document.documentElement.scrollHeight);
   await row.getByLabel('待辦操作').click();
+  await row.locator('.todo-options').waitFor();
+  assert.equal((await row.boundingBox()).height, beforeMenu.height, '浮動選單不撐高待辦列');
+  assert.equal(await member.evaluate(() => document.documentElement.scrollHeight), documentHeight, '浮動選單不撐高文件');
   const id = await row.getAttribute('data-todo-id');
   await row.getByRole('button', { name: '編輯', exact: true }).click();
   row = personal.locator(`[data-todo-id="${id}"]`);
@@ -60,6 +66,7 @@ export async function checkTodoWorkflow(browser, failures) {
   await personal.getByRole('button', { name: /顯示已完成/ }).click();
   await row.getByLabel('待辦操作').click();
   await row.getByRole('button', { name: '重新開啟', exact: true }).click();
+  await row.getByLabel('待辦操作').click();
   await row.getByRole('button', { name: '標記為已完成', exact: true }).waitFor();
 
   // 普通成員交給 owner, 直接加入而非等待接受
@@ -110,6 +117,7 @@ export async function checkTodoWorkflow(browser, failures) {
     return project;
   });
   await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
+  await converting.getByLabel('待辦操作').click();
   await converting.getByRole('button', { name: '轉成正式卡片', exact: true }).click();
   let panel = member.getByRole('dialog', { name: '轉成正式卡片', exact: true });
   assert.equal(await panel.getByLabel(/任務標題/).inputValue(), '把小事變成大事');

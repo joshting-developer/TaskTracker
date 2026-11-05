@@ -3,6 +3,7 @@ import { computed, nextTick, ref, useId, watch } from 'vue';
 import { api } from '../api/index.js';
 import { onTabKeydown } from '../ui/tabs.js';
 import MarkdownEditor from './MarkdownEditor.vue';
+import TodoActions from './TodoActions.vue';
 import MarkdownContent from './MarkdownContent.vue';
 import { todoSource } from '../domain/todoContent.js';
 const props = defineProps({ data: Object, userId: String, canWrite: Boolean, canAssign: Boolean, canConvert: Boolean, refresh: Function });
@@ -95,19 +96,16 @@ async function action(item, operation) {
         <div class="todo-body">
           <template v-if="draft?.id === item.id"><form class="todo-edit" @submit.prevent="saveDraft"><MarkdownEditor :ref="setDraftEditor" v-model="draft.content" label="編輯待辦內容" :maxlength="6000" :rows="4" :disabled="busy" required /><div><button class="button primary" :disabled="busy || !draft.content.trim()">儲存待辦修改</button><button type="button" class="text-button" :disabled="busy" @click="discard">取消修改</button></div></form></template>
           <template v-else><details class="todo-content"><summary><span :class="{ 'todo-done-title': item.state === 'done' }">{{ item.title }}</span></summary><MarkdownContent class="todo-note" :source="todoSource(item)" /><ol class="todo-history"><li v-for="(entry, index) in item.history" :key="index">{{ entry.actor }} · {{ events[entry.event] || entry.event }} <time>{{ timestamp(entry.at) }}</time></li></ol></details></template>
-          <p class="todo-meta"><span v-if="item.returnedAt">已退回 · </span>{{ item.createdBy === userId ? item.initialAssigneeId === userId ? '自己記下的' : `交給 ${item.assigneeName}` : `來自 ${item.creatorName}` }}<span v-if="item.state !== 'open'"> · {{ stateLabels[item.state] }}</span><button v-if="item.convertedIssue" class="text-button" @click="emit('open-issue', item.convertedIssue)">{{ item.convertedIssue.identifier }} ↗</button><span v-else-if="item.state === 'converted'"> · 卡片依專案權限開放</span></p>
+          <p v-if="item.returnedAt || item.createdBy !== userId || item.initialAssigneeId !== userId || item.state !== 'open'" class="todo-meta"><span v-if="item.returnedAt">已退回</span><span v-if="item.createdBy !== userId || item.initialAssigneeId !== userId">{{ item.returnedAt ? ' · ' : '' }}{{ item.createdBy === userId ? `交給 ${item.assigneeName}` : `來自 ${item.creatorName}` }}</span><span v-if="item.state !== 'open'">{{ item.returnedAt || item.createdBy !== userId || item.initialAssigneeId !== userId ? ' · ' : '' }}{{ stateLabels[item.state] }}</span><button v-if="item.convertedIssue" class="text-button" @click="emit('open-issue', item.convertedIssue)">{{ item.convertedIssue.identifier }} ↗</button><span v-else-if="item.state === 'converted'"> · 卡片依專案權限開放</span></p>
         </div>
-        <details v-if="(item.state === 'open' || item.capabilities.reopen) && draft?.id !== item.id" class="todo-actions">
-          <summary aria-label="待辦操作">更多</summary>
-          <div>
-            <button v-if="item.capabilities.complete" type="button" :disabled="busy" @click="action(item, 'completeTodo')">標記為已完成</button>
-            <button v-if="item.capabilities.reopen" type="button" :disabled="busy" @click="action(item, 'reopenTodo')">重新開啟</button>
-            <button v-if="item.capabilities.edit" :disabled="busy" @click="edit(item)">編輯</button>
-            <button v-if="item.capabilities.convert" :disabled="busy || !canConvert" :title="canConvert ? '補上專案與卡片欄位' : '需要至少一個專案的任務編輯權限'" @click="emit('convert', item)">轉成正式卡片</button>
-            <button v-if="item.capabilities.return" :disabled="busy" @click="action(item, 'returnTodo')">退回給交辦者</button>
-            <button v-if="item.capabilities.cancel" :disabled="busy" @click="action(item, 'cancelTodo')">取消待辦</button>
-          </div>
-        </details>
+        <TodoActions v-if="(item.state === 'open' || item.capabilities.reopen) && draft?.id !== item.id">
+          <button v-if="item.capabilities.complete" type="button" :disabled="busy" @click="action(item, 'completeTodo')">標記為已完成</button>
+          <button v-if="item.capabilities.reopen" type="button" :disabled="busy" @click="action(item, 'reopenTodo')">重新開啟</button>
+          <button v-if="item.capabilities.edit" :disabled="busy" @click="edit(item)">編輯</button>
+          <button v-if="item.capabilities.convert" :disabled="busy || !canConvert" :title="canConvert ? '補上專案與卡片欄位' : '需要至少一個專案的任務編輯權限'" @click="emit('convert', item)">轉成正式卡片</button>
+          <button v-if="item.capabilities.return" :disabled="busy" @click="action(item, 'returnTodo')">退回給交辦者</button>
+          <button v-if="item.capabilities.cancel" :disabled="busy" @click="action(item, 'cancelTodo')">取消待辦</button>
+        </TodoActions>
       </article>
     </div>
     <button v-if="openItems.length > previewLimit" class="text-button todo-expand" :aria-expanded="showAllOpen" :aria-controls="`${tabId}-panel`" :disabled="busy" @click="showAllOpen = !showAllOpen">{{ showAllOpen ? '收起待辦' : `顯示全部待辦（${openItems.length}）` }}</button>
@@ -126,6 +124,6 @@ async function action(item, operation) {
 .todo-draft-notice button { min-height: 44px; }
 .todo-note-toggle { margin: 10px 0; font-size: 13px; }.todo-tabs { display: flex; gap: 24px; margin-top: 10px; border-bottom: 1px solid #daddE5; }.todo-tabs button { padding: 12px 0; color: #5f6673; border-bottom: 2px solid transparent; }.todo-tabs .active { color: #5844a0; border-color: #6653bd; font-weight: 600; }.todo-tabs span { font-size: 12px; margin-left: 5px; }
 .todo-row { display: flex; gap: 12px; align-items: flex-start; padding: 16px 0; border-bottom: 1px solid #edf0f5; }.todo-row:focus, .todo-focused { outline: 2px solid #8d83ed; outline-offset: 3px; }.todo-body { flex: 1; min-width: 0; }.todo-content > summary { cursor: pointer; overflow-wrap: anywhere; font-size: 15px; font-weight: 550; }.todo-done-title { text-decoration: line-through; color: #5f6673; }.todo-note { overflow-wrap: anywhere; line-height: 1.8; font-size: 14px; margin-top: 12px; }.todo-meta { font-size: 12px; color: #5f6673; margin-top: 7px; line-height: 1.8; }.todo-meta button { margin-left: 8px; }.todo-history { padding-left: 18px; margin-top: 12px; font-size: 12px; color: #5f6673; line-height: 1.8; }.todo-history time { margin-left: 10px; }
-.todo-actions { flex-shrink: 0; font-size: 13px; }.todo-actions summary { min-width: 44px; min-height: 44px; padding: 10px 0; margin-top: -10px; cursor: pointer; color: #5844a0; }.todo-actions > div { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; margin-top: 12px; }.todo-actions button { min-height: 44px; text-align: right; white-space: nowrap; }.todo-expand, .todo-show-closed { display: block; min-height: 44px; }.todo-quick { flex-wrap: wrap; }.todo-quick select { min-width: 0; flex: 1; max-width: none; }.todo-edit .field { margin: 0 0 12px; }.todo-edit .text-button { margin-left: 16px; }.todo-empty { color: #5f6673; font-size: 14px; padding: 22px 0; }.todo-show-closed { margin-top: 14px; font-size: 13px; }
+.todo-expand, .todo-show-closed { display: block; min-height: 44px; }.todo-quick { flex-wrap: wrap; }.todo-quick select { min-width: 0; flex: 1; max-width: none; }.todo-edit .field { margin: 0 0 12px; }.todo-edit .text-button { margin-left: 16px; }.todo-empty { color: #5f6673; font-size: 14px; padding: 22px 0; }.todo-show-closed { margin-top: 14px; font-size: 13px; }
 @media(max-width:700px) { .todo-heading { align-items: flex-start; flex-direction: column; }.todo-quick { flex-wrap: wrap; }.todo-quick select { min-width: 0; flex: 1; max-width: none; }.todo-row { gap: 8px; } }
 </style>
