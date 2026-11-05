@@ -7,12 +7,12 @@ const props = defineProps({ members: Array, meta: Object, initialTab: { type: St
 const emit = defineEmits(['close', 'saved']);
 const roleLabels = { owner: 'Owner', manager: 'Manager', admin: 'Manager', user: '成員', member: '成員', maintainer: '成員', developer: '成員' };
 const dialog = ref(null), tab = ref(props.initialTab), data = ref(null), name = ref(''), loading = ref(true), busy = ref(false), error = ref(''), conflict = ref(false), success = ref('');
-const email = ref(''), link = ref(''), copied = ref(false), memberDraft = ref(null), roleId = ref('');
+const email = ref(''), link = ref(''), copied = ref(false);
 const id = useId();
 const permissions = computed(() => props.meta.permissions || []);
 const canUpdate = computed(() => permissions.value.includes('workspace.update'));
 const canManage = computed(() => permissions.value.includes('workspace.members.manage'));
-const dirty = computed(() => Boolean(data.value && name.value !== data.value.workspace.name || memberDraft.value && roleId.value !== memberDraft.value.roleId || email.value.trim()));
+const dirty = computed(() => Boolean(data.value && name.value !== data.value.workspace.name || email.value.trim()));
 const visibleMembers = computed(() => permissions.value.includes('workspace.members.read') ? data.value?.members || [] : props.members.map(member => ({ ...member, roleId: member.role, canChange: false })));
 const roles = computed(() => (data.value?.roles || []).filter(role => !role.permissions.includes('workspace.ownership') && role.permissions.every(permission => permissions.value.includes(permission))));
 defineExpose({ dirty, saving: busy });
@@ -23,13 +23,13 @@ function switchTab(next) {
   if (next === tab.value) return;
   if (dirty.value && !window.confirm('切換設定分區會捨棄尚未儲存的內容，要繼續嗎？')) return;
   if (data.value) name.value = data.value.workspace.name;
-  memberDraft.value = null; roleId.value = ''; email.value = ''; pending = null;
+  email.value = ''; pending = null;
   tab.value = next; success.value = '';
 }
 async function load(confirm = false) {
   if (confirm && dirty.value && !window.confirm('重新載入會捨棄目前修改，要繼續嗎？')) return;
   loading.value = true; error.value = ''; conflict.value = false;
-  try { data.value = await api.getWorkspaceSettings(); name.value = data.value.workspace.name; memberDraft.value = null; roleId.value = ''; pending = null; if (confirm) email.value = ''; }
+  try { data.value = await api.getWorkspaceSettings(); name.value = data.value.workspace.name; pending = null; if (confirm) email.value = ''; }
   catch (failure) { error.value = failure.message; }
   finally { loading.value = false; }
 }
@@ -43,9 +43,11 @@ async function save(operation, payload) {
   catch (failure) { error.value = failure.message; conflict.value = failure.code === 'REVISION_CONFLICT'; }
   finally { busy.value = false; }
 }
-function edit(member) {
-  if (memberDraft.value && dirty.value && !window.confirm('捨棄尚未儲存的成員角色修改？')) return;
-  memberDraft.value = { ...member }; roleId.value = member.roleId; error.value = ''; conflict.value = false; success.value = '';
+function changeRole(member, event) {
+  const roleId = event.target.value;
+  event.target.value = member.roleId;
+  if (busy.value || loading.value || roleId === member.roleId) return;
+  save('setWorkspaceMemberRole', { userId: member.id, roleId, expectedRevision: member.revision });
 }
 async function invite() {
   if (busy.value) return;
@@ -70,8 +72,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload));
     </section>
     <section v-show="tab === 'members'" :id="`${id}-members-panel`" role="tabpanel" :aria-labelledby="`${id}-members`" tabindex="0">
       <p class="subtle">加入工作空間後仍需專案授權；此處顯示你有權查看的成員。Owner／Manager可操作所有專案，一般成員需要逐專案授權。</p>
-      <ul class="member-list"><li v-for="member in visibleMembers" :key="member.id"><span class="avatar small">{{ member.name.slice(0, 1) }}</span><div><strong>{{ member.name }}</strong><small>{{ member.email }}</small></div><span class="type-tag">{{ roleLabels[member.roleId] || member.roleId }}</span><button v-if="canManage && member.canChange" class="text-button" :aria-label="`調整工作空間角色 ${member.name}`" :disabled="busy || loading" @click="edit(member)">調整角色</button></li></ul>
-      <form v-if="memberDraft && canManage" class="role-form" @submit.prevent="save('setWorkspaceMemberRole', { userId: memberDraft.id, roleId, expectedRevision: memberDraft.revision })"><p>調整 {{ memberDraft.name }} 的工作空間角色</p><label class="field">工作空間角色<select v-model="roleId" aria-label="工作空間角色" :disabled="busy || loading" required><option v-for="role in roles" :key="role.id" :value="role.id">{{ role.label }}</option></select></label><div><button class="button primary" :disabled="busy || loading || !roleId || roleId === memberDraft.roleId">儲存工作空間角色</button><button type="button" class="text-button" :disabled="busy" @click="memberDraft = null">取消角色修改</button></div></form>
+      <ul class="member-list"><li v-for="member in visibleMembers" :key="member.id"><span class="avatar small">{{ member.name.slice(0, 1) }}</span><div><strong>{{ member.name }}</strong><small>{{ member.email }}</small></div><select v-if="canManage && member.canChange" class="member-role" :aria-label="`工作空間身份 ${member.name}`" :value="member.roleId" :disabled="busy || loading" @change="changeRole(member, $event)"><option v-if="!roles.some(role => role.id === member.roleId)" :value="member.roleId" disabled>{{ roleLabels[member.roleId] || member.roleId }}</option><option v-for="role in roles" :key="role.id" :value="role.id">{{ role.label }}</option></select><span v-else class="type-tag">{{ roleLabels[member.roleId] || member.roleId }}</span></li></ul>
       <p class="subtle">個別專案請進入「專案 → 成員與權限」調整負責人、專案管理者、開發者或讀者；工作空間角色不會改寫專案角色。擁有者資格保留，這裡不提供轉移。</p>
       <template v-if="permissions.includes('workspace.invite')"><h3>邀請同伴</h3><form @submit.prevent="invite" class="invite-form"><label class="field">受邀者 Email<input v-model="email" type="email" required :disabled="busy || loading" /></label><button class="button primary" :disabled="busy || loading">{{ busy ? '建立中…' : '建立邀請連結' }}</button></form><div v-if="link" class="invite-result"><label class="field">邀請連結<input :value="link" readonly @focus="$event.target.select()" /></label><button class="button secondary" @click="copy">{{ copied ? '已複製' : '複製連結' }}</button></div><p class="subtle">連結7日有效，限該Email新帳號使用一次。目前沒有寄出邀請信；既有帳號加入其他空間另行支援。</p></template>
     </section>
@@ -90,8 +91,8 @@ h2 { font-size: 22px; } h3 { font-size: 18px; margin: 22px 0 12px; }
 .member-list li > div { flex: 1; min-width: 160px; overflow-wrap: anywhere; }
 .member-list strong, .member-list small { display: block; }.member-list small { color: #5f6673; font-size: 13px; margin-top: 4px; }
 .member-list .type-tag { font-size: 12px; color: #424b5c; border-color: #cbd0db; padding: 4px 6px; }
-.member-list .text-button, .icon-button { min-width: 44px; min-height: 44px; }
-.role-form { padding: 18px; background: #f7f6fb; margin: 18px 0; }.role-form > p { font-size: 14px; margin-bottom: 16px; }.role-form > div { display: flex; flex-wrap: wrap; gap: 16px; }
+.member-role, .icon-button { min-width: 44px; min-height: 44px; }
+.member-role { width: 130px; max-width: 100%; padding: 8px 10px; border: 1px solid #bfc6d2; border-radius: 6px; background: #fff; color: #424b5c; font-size: 14px; }
 .settings-success { color: #286b55; font-size: 14px; margin-bottom: 16px; }
-@media(max-width:700px) { .team-dialog { padding: 18px; }.member-list li > div { min-width: 140px; }.member-list li .text-button { margin-left: auto; } }
+@media(max-width:700px) { .team-dialog { padding: 18px; }.member-list li > div { min-width: 140px; }.member-role { margin-left: auto; } }
 </style>
