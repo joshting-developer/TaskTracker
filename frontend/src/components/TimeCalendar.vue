@@ -12,14 +12,14 @@ const month = ref(initialSelection.month), member = ref(initialSelection.member)
 const contextNotice = ref(initialSelection.resetMember ? '先前查看的成員已不在此專案，已重設查看範圍' : '');
 const error = ref(''), busy = ref(false), editing = ref(null);
 const panel = ref(null), panelOpen = ref(false), formKey = ref(0);
-const leafIssues = computed(() => props.issues.filter((issue) => issue.type !== 'epic'));
+const timeIssues = computed(() => props.issues);
 const allMonth = computed(() => props.entries.filter((entry) => !entry.voidedAt && entry.projectId === props.project.id && entry.workDate.startsWith(month.value)));
 const filtered = computed(() => allMonth.value.filter((entry) => !member.value || entry.userId === member.value));
 const total = computed(() => filtered.value.reduce((sum, entry) => sum + entry.minutes, 0));
 const selectedEntries = computed(() => filtered.value.filter((entry) => entry.workDate === selectedDate.value).sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
 const teamRows = computed(() => props.members.map((person) => ({ ...person, minutes: filtered.value.filter((entry) => entry.userId === person.id).reduce((sum, entry) => sum + entry.minutes, 0) })).filter((person) => !member.value || person.id === member.value));
 const epicRows = computed(() => props.issues.filter((issue) => issue.type === 'epic').map((issue) => ({ ...issue, summary: epicSummary(issue, props.issues, filtered.value, props.project) })));
-const issueRows = computed(() => leafIssues.value.map((issue) => ({ ...issue, spent: filtered.value.filter((entry) => entry.issueId === issue.id).reduce((sum, entry) => sum + entry.minutes, 0) })).filter((issue) => issue.spent > 0).sort((a, b) => b.spent - a.spent));
+const issueRows = computed(() => timeIssues.value.map((issue) => ({ ...issue, spent: filtered.value.filter((entry) => entry.issueId === issue.id).reduce((sum, entry) => sum + entry.minutes, 0) })).filter((issue) => issue.spent > 0).sort((a, b) => b.spent - a.spent));
 const days = computed(() => {
   if (!/^\d{4}-\d{2}$/.test(month.value)) return [];
   const [year, monthNumber] = month.value.split('-').map(Number);
@@ -92,7 +92,7 @@ async function voidEntry(entry) {
       </div>
       <div class="time-day-details"><header class="section-title"><h3>{{ selectedDate }} · 工時明細</h3><span>{{ hours(selectedEntries.reduce((sum, entry) => sum + entry.minutes, 0)) }}</span></header><p v-if="!selectedEntries.length" class="subtle">這天還沒有符合篩選條件的紀錄</p><article v-for="entry in selectedEntries" :key="entry.id" class="time-entry"><div><span class="identifier">{{ issueFor(entry.issueId)?.identifier }} · {{ personName(entry.userId) }}</span><button class="text-button time-issue-link" @click="$emit('open', issueFor(entry.issueId))">{{ issueFor(entry.issueId)?.title }}</button><p>{{ entry.note || '未填說明' }}</p></div><div class="time-entry-end"><strong>{{ hours(entry.minutes) }}</strong><div v-if="canWrite && entry.userId === userId"><button class="text-button" :disabled="busy" :aria-label="`修改工時 ${entry.id}`" @click="edit(entry)">修改</button><button class="text-button danger-text" :disabled="busy" :aria-label="`作廢工時 ${entry.id}`" @click="voidEntry(entry)">作廢</button></div></div></article></div>
     </div>
-    <TimeEntryDrawer v-if="panelOpen && canWrite" ref="panel" :key="formKey" :issues="leafIssues" :default-date="selectedDate" :entry="editing" @close="closePanel" @saved="saved" @conflict="emit('updated', '已重新載入工時, 請取消編輯後再選最新紀錄')" />
+    <TimeEntryDrawer v-if="panelOpen && canWrite" ref="panel" :key="formKey" :issues="timeIssues" :default-date="selectedDate" :entry="editing" @close="closePanel" @saved="saved" @conflict="emit('updated', '已重新載入工時, 請取消編輯後再選最新紀錄')" />
     <div class="time-report-grid"><section class="report-card"><h3>本月成員投入</h3><p class="subtle">依上方成員篩選, 不代表出勤或績效</p><div v-for="person in teamRows" :key="person.id" class="report-row"><div><span>{{ person.name }}</span><strong>{{ hours(person.minutes) }}</strong></div><div class="progress-track"><span :style="{ width: `${total ? person.minutes / total * 100 : 0}%` }"></span></div></div></section><section class="report-card"><h3>Epic 工時</h3><p class="subtle">已投入為本月篩選, 預估為全部子任務</p><div v-for="epic in epicRows" :key="epic.id" class="report-epic"><button class="text-button" @click="$emit('open', epic)">{{ epic.title }}</button><span>{{ hours(epic.summary.spentMinutes) }} / 預估 {{ hours(epic.summary.estimateMinutes) }}</span></div><p v-if="!epicRows.length" class="subtle">建立 Epic 並掛上任務, 就能在這裡比較投入</p></section></div>
     <section class="report-card issue-time-report"><h3>本月任務投入</h3><p v-if="!issueRows.length" class="subtle">尚無符合條件的工時</p><div v-for="issue in issueRows" :key="issue.id" class="report-epic"><button class="text-button" @click="$emit('open', issue)">{{ issue.identifier }} · {{ issue.title }}</button><span>{{ hours(issue.spent) }} / 預估 {{ hours(issue.estimateMinutes || 0) }}</span></div></section>
   </section>

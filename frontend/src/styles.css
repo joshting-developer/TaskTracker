@@ -108,7 +108,6 @@ dialog{border:0;padding:0;color:inherit}dialog::backdrop{background:#19162255;ba
 .time-form-card .button { width: 100%; }
 .time-form-card select { text-overflow: ellipsis; min-width: 0; }
 .time-cancel { display: block; margin: 12px auto 0; }
-.time-form-note { display: block; color: #b0a1bd; line-height: 1.9; margin-top: 20px; font-size: 10px; }
 .time-day-details { margin-top: 23px; padding: 22px; background: #fff; border: 1px solid #e6dfef; border-radius: 11px; }
 .time-day-details .section-title { margin-bottom: 15px; }
 .time-day-details .section-title > span { font-size: 13px; color: #a58dbd; }

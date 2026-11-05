@@ -77,7 +77,7 @@ export function epicSummary(epic, issues, entries, project) {
   const total = children.length - canceled;
   return { children, done, canceled, total, percent: total ? Math.round(done / total * 100) : null,
     estimateMinutes: children.reduce((sum, issue) => sum + (issue.estimateMinutes || 0), 0),
-    spentMinutes: entries.filter((entry) => !entry.voidedAt && children.some((issue) => issue.id === entry.issueId)).reduce((sum, entry) => sum + entry.minutes, 0),
+    spentMinutes: entries.filter((entry) => !entry.voidedAt && (entry.issueId === epic.id || children.some((issue) => issue.id === entry.issueId))).reduce((sum, entry) => sum + entry.minutes, 0),
     needsReview: categoryFor(epic, project) === 'done' && done < total };
 }
 export function hours(minutes) { return `${Number((minutes / 60).toFixed(2))} h`; }

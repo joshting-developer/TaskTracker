@@ -160,7 +160,7 @@ class WorkspaceApiTest extends TestCase
         $epic = $this->issue($project, ['type' => 'epic']);
         $task = $this->issue($project, ['epicId' => $epic['id'], 'estimateMinutes' => 60]);
         $this->rpc('updateIssue', ['id' => $epic['id'], 'expectedRevision' => 1, 'state' => 'done'])->assertStatus(400);
-        $this->rpc('logTime', ['issueId' => $epic['id'], 'workDate' => '2026-01-01', 'minutes' => 30])->assertStatus(400);
+        $this->rpc('logTime', ['issueId' => $epic['id'], 'workDate' => '2026-01-01', 'minutes' => 30])->assertOk();
         $entry = $this->rpc('logTime', ['issueId' => $task['id'], 'workDate' => '2026-01-01', 'minutes' => 60])->assertOk()->json('data');
         $this->rpc('logTime', ['issueId' => $task['id'], 'workDate' => '2026-01-01', 'minutes' => 1400])->assertStatus(400);
         $this->rpc('logTime', ['issueId' => $task['id'], 'workDate' => now()->addYear()->format('Y-m-d'), 'minutes' => 60])->assertStatus(400);
@@ -173,6 +173,119 @@ class WorkspaceApiTest extends TestCase
         $states = [...Fields::STATES, ['id' => 'accepted', 'label' => '驗收', 'color' => '#123456', 'category' => 'done']];
         $this->rpc('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => $states])->assertOk();
         $this->rpc('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => $states])->assertStatus(409);
+    }
+
+    /**
+     * Epic直接工時沿用本人、每日上限、原版本與重試保護。
+     *
+     * @return void
+     */
+    public function test_epic_direct_time_preserves_author_limit_replay_and_revision(): void
+    {
+        $owner = $this->register();
+        $project = $this->project();
+        $epic = $this->issue($project, ['type' => 'epic']);
+        $task = $this->issue($project, ['epicId' => $epic['id']]);
+        $input = [
+            'issueId' => $epic['id'],
+            'workDate' => '2026-01-01',
+            'minutes' => 60,
+            'note' => '規劃與協調',
+            'requestId' => 'direct-epic-time',
+        ];
+        $entry = $this->rpc('logTime', $input)->assertOk()->json('data');
+        $this->assertSame($epic['id'], $entry['issueId']);
+        $this->assertSame($owner['user']['id'], $entry['userId']);
+        $this->rpc('logTime', $input)->assertJsonPath('data.id', $entry['id']);
+        $this->rpc('getWorkspace')->assertJsonCount(1, 'data.timeEntries');
+        $this->rpc('logTime', [
+            'issueId' => $task['id'],
+            'workDate' => '2026-01-01',
+            'minutes' => 1381,
+        ])->assertStatus(400);
+        $this->rpc('logTime', [
+            'issueId' => $epic['id'],
+            'workDate' => '2026-01-01',
+            'minutes' => 1381,
+        ])->assertStatus(400);
+        $this->rpc('logTime', [
+            'issueId' => $epic['id'],
+            'workDate' => now()->addYear()->format('Y-m-d'),
+            'minutes' => 30,
+        ])->assertStatus(400);
+        $this->rpc('updateTime', [
+            'id' => $entry['id'],
+            'issueId' => $task['id'],
+            'expectedRevision' => 1,
+            'workDate' => '2026-01-01',
+            'minutes' => 90,
+        ])->assertOk()->assertJsonPath('data.issueId', $epic['id'])->assertJsonPath('data.revision', 2);
+        $this->rpc('updateTime', [
+            'id' => $entry['id'],
+            'expectedRevision' => 1,
+            'workDate' => '2026-01-01',
+            'minutes' => 120,
+        ])->assertStatus(409);
+        $invite = $this->rpc('inviteMember', ['email' => 'epic-time-member@example.test'])->assertOk()->json('data');
+        Auth::logout();
+        $member = $this->postJson('/api/auth/register', [
+            'name' => '工時成員',
+            'email' => $invite['email'],
+            'password' => 'test-local-password',
+            'inviteToken' => $invite['token'],
+        ])->assertOk()->json('data');
+        $this->rpc('logTime', [
+            'issueId' => $epic['id'],
+            'workDate' => '2026-01-01',
+            'minutes' => 30,
+        ])->assertStatus(404);
+        $this->actingAs(User::findOrFail($owner['user']['id']))->withSession(['workspace_id' => $owner['workspace']['id']]);
+        $this->rpc('setProjectMember', [
+            'projectId' => $project['id'],
+            'userId' => $member['user']['id'],
+            'roleId' => 'developer',
+            'expectedRevision' => 0,
+        ])->assertOk();
+        $this->actingAs(User::findOrFail($member['user']['id']))->withSession(['workspace_id' => $owner['workspace']['id']]);
+        $this->rpc('updateTime', [
+            'id' => $entry['id'],
+            'expectedRevision' => 2,
+            'workDate' => '2026-01-01',
+            'minutes' => 30,
+        ])->assertStatus(403);
+        $this->rpc('voidTime', [
+            'id' => $entry['id'],
+            'expectedRevision' => 2,
+        ])->assertStatus(403);
+        $own = $this->rpc('logTime', [
+            'issueId' => $epic['id'],
+            'workDate' => '2026-01-01',
+            'minutes' => 30,
+        ])->assertOk()->json('data');
+        $this->actingAs(User::findOrFail($owner['user']['id']))->withSession(['workspace_id' => $owner['workspace']['id']]);
+        $this->rpc('updateTime', [
+            'id' => $own['id'],
+            'expectedRevision' => 1,
+            'workDate' => '2026-01-01',
+            'minutes' => 60,
+        ])->assertStatus(403);
+        $this->rpc('voidTime', [
+            'id' => $entry['id'],
+            'expectedRevision' => 2,
+        ])->assertJsonPath('data.revision', 3);
+        $this->rpc('getWorkspace')->assertJsonCount(2, 'data.timeEntries');
+        $this->rpc('updateTime', [
+            'id' => $entry['id'],
+            'expectedRevision' => 3,
+            'workDate' => '2026-01-01',
+            'minutes' => 120,
+        ])->assertStatus(403);
+        $this->register('epic-time-foreign@example.test');
+        $this->rpc('logTime', [
+            'issueId' => $epic['id'],
+            'workDate' => '2026-01-01',
+            'minutes' => 30,
+        ])->assertStatus(404);
     }
 
     public function test_subtasks_related_links_revision_retries_and_no_completion_blocking(): void

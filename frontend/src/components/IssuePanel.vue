@@ -176,7 +176,7 @@ function timestamp(value) {
             <label class="field">到期日<input v-model="form.dueDate" type="date" :disabled="saving" /></label>
             <label v-if="form.type !== 'epic'" class="field">所屬 Epic<select v-model="form.epicId" aria-label="所屬 Epic" :disabled="saving || Boolean(form.parentIssueId)"><option value="">不屬於 Epic</option><option v-for="epic in epics" :key="epic.id" :value="epic.id">{{ epic.identifier }} · {{ epic.title }}</option></select></label>
             <label v-if="form.type !== 'epic'" class="field">預估小時<input v-model="estimateHours" type="number" min="0" max="8760" step="any" :disabled="saving" /></label>
-            <p v-else class="subtle epic-form-note">Epic 的完成率、預估與實際工時由子任務加總, 可到 Epic 概覽查看</p>
+            <p v-else class="subtle epic-form-note">可到 Epic 概覽查看進度與工時</p>
           </div>
         </form>
         <IssueRelations v-if="selectedProject" ref="relationsTool" :issue="issue" :issues="availableIssues" :project="selectedProject" :type="form.type" :parent-id="form.parentIssueId" :related-ids="form.relatedIssueIds" :saving="saving" @parent="form.parentIssueId = $event" @related="form.relatedIssueIds = $event" @open="jump" @create-child="createChild" />

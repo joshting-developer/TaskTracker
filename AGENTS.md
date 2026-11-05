@@ -39,7 +39,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - 租戶間隔離，ProjectAccess逐案檢查有效permission／scope及作者條件；Project ACL／固定角色矩陣已落地。新關聯表以複合外鍵再限制同Workspace／Project，不以FK取代權限檢查
 - 舊 Node API／測試由 PHP 取代, 原 SQLite 與舊 Docker volume 保留；匯入指令只接受空目標、不覆蓋來源, 保留作者歷史, 舊帳號登入後升級雜湊
 - 2026-10-20 類型固定 Epic／Task／Bug, feature 透過 migration／匯入共用升級器轉 task 並保留歷史與 revision 保護；自訂類型僅記構想, 不提前實作
-- 狀態用固定 ID＋category 判斷完成, Epic 估時／工時只加總子項目。2026-10-20 改 parentIssueId 一層子任務與 relatedIssueIds 雙向關聯, 移除前置／DAG／結案阻擋；子項跟父項 Epic, 狀態獨立, 舊 blockedBy 透過 migration 轉關聯並保留歷史
+- 狀態用固定 ID＋category 判斷完成, Epic估時仍加總子項目；2026-11-06使用者改為允許Epic直接填實際工時，總投入為自身與所屬卡片各筆有效紀錄去重加總。2026-10-20 改 parentIssueId 一層子任務與 relatedIssueIds 雙向關聯, 移除前置／DAG／結案阻擋；子項跟父項 Epic, 狀態獨立, 舊 blockedBy 透過 migration 轉關聯並保留歷史
 - 工時只能修改自己有效紀錄, 作者限制不因管理者而略過；每人每日最多 24 小時, 工作日採 Asia/Taipei
 - 2026-10-20 使用者要求移除視圖／常用篩選保存：介面與三個 RPC 停用, getWorkspace 不回傳, 舊紀錄原地保留不使用；即時搜尋／篩選保留。首頁個人卡片篩選小清單只記構想, 未要求實作前不製作
 - 2026-10-20 看板以目前 Project 為範圍：/boards 列表、/board Default、/board/<id> 自訂；selectedIssueIds 明確收錄, Epic 動態展開／去重, 不複製卡片。board.manage 經集中權限檢查, 原型映射任務編輯成員；新增卡片可帶 boardId 同交易收錄, 移除看板不刪 Issue

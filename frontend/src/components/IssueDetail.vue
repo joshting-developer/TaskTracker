@@ -27,7 +27,7 @@ const states = computed(() => statusesFor(props.project));
 const state = issue => states.value.find(item => item.id === issue.state);
 const memberName = id => props.members.find(member => member.id === id)?.name || id || '未指派';
 const children = computed(() => props.issues.filter(issue => props.issue.type === 'epic' ? issue.epicId === props.issue.id : issue.parentIssueId === props.issue.id));
-const timeIssues = computed(() => (props.issue.type === 'epic' ? children.value : [props.issue]).filter(issue => issue.type !== 'epic'));
+const timeIssues = computed(() => props.issue.type === 'epic' ? [props.issue, ...children.value] : [props.issue]);
 const related = computed(() => (props.issue.relatedIssueIds || []).map(id => props.issues.find(issue => issue.id === id)).filter(Boolean));
 const epic = computed(() => props.issues.find(issue => issue.id === props.issue.epicId));
 const parent = computed(() => props.issues.find(issue => issue.id === props.issue.parentIssueId));
@@ -37,7 +37,7 @@ const relationGroups = computed(() => [
   { key: 'children', label: props.issue.type === 'epic' ? 'Epic 所屬卡片' : '子任務', items: children.value },
   { key: 'related', label: '關聯任務', items: related.value },
 ].filter(group => group.items.length));
-const work = computed(() => props.entries.filter(entry => !entry.voidedAt && (props.issue.type === 'epic' ? children.value.some(issue => issue.id === entry.issueId) : entry.issueId === props.issue.id)).sort((a, b) => b.workDate.localeCompare(a.workDate)));
+const work = computed(() => props.entries.filter(entry => !entry.voidedAt && (entry.issueId === props.issue.id || (props.issue.type === 'epic' && children.value.some(issue => issue.id === entry.issueId)))).sort((a, b) => b.workDate.localeCompare(a.workDate)));
 const spent = computed(() => work.value.reduce((sum, entry) => sum + entry.minutes, 0));
 const estimate = computed(() => props.issue.type === 'epic' ? children.value.reduce((sum, issue) => sum + (issue.estimateMinutes || 0), 0) : props.issue.estimateMinutes);
 function timestamp(value) {
@@ -116,8 +116,7 @@ function timeSaved() {
               <article v-for="entry in [...issue.history].reverse()" :key="entry.id" class="history-entry"><span class="history-dot"></span><div><p><strong>{{ entry.actor }}</strong> {{ entry.kind === 'created' ? '建立了任務' : '更新了任務' }} <time>{{ timestamp(entry.at) }}</time></p><p v-for="change in entry.changes" :key="change.field" class="history-change">{{ FIELD_LABELS[change.field] || change.field }}：{{ display(change.field, change.before) }} → {{ display(change.field, change.after) }}</p></div></article>
             </template>
             <template v-else>
-              <div v-if="canLogTime" class="issue-time-toolbar"><button class="button secondary" :disabled="busy || saving || !timeIssues.length" @click="openTime()"><Icon name="plus" :size="16" />{{ issue.type === 'epic' ? '填報子任務工時' : '填報工時' }}</button></div>
-              <p v-if="issue.type === 'epic'" class="subtle">Epic 工時由所屬任務加總，請在 Task 或 Bug 填報。</p>
+              <div v-if="canLogTime" class="issue-time-toolbar"><button class="button secondary" :disabled="busy || saving || !timeIssues.length" @click="openTime()"><Icon name="plus" :size="16" />填報工時</button></div>
               <template v-if="canReadTime">
                 <p v-if="!work.length" class="quiet-message">尚無工時紀錄</p>
                 <article v-for="entry in work" :key="entry.id" class="issue-detail-work"><div><strong>{{ entry.workDate }} · {{ memberName(entry.userId) }}</strong><p>{{ entry.note || '未填說明' }}</p></div><div class="issue-work-actions"><span>{{ hours(entry.minutes) }}</span><button v-if="canLogTime && entry.userId === userId" class="text-button" :disabled="busy || saving" :aria-label="`修改工時 ${entry.id}`" @click="openTime(entry)">修改</button></div></article>
@@ -147,7 +146,7 @@ function timeSaved() {
               <div><dt>負責人</dt><dd>{{ memberName(issue.assignee) }}</dd></div>
               <div><dt>到期日</dt><dd>{{ issue.dueDate || '未設定' }}</dd></div>
               <div><dt>預估工時</dt><dd>{{ estimate ? hours(estimate) : '尚未估時' }}</dd></div>
-              <div v-if="canReadTime"><dt>已投入工時</dt><dd>{{ hours(spent) }}{{ issue.type === 'epic' ? '（所屬卡片加總）' : '' }}</dd></div>
+              <div v-if="canReadTime"><dt>已投入工時</dt><dd>{{ hours(spent) }}{{ issue.type === 'epic' ? '（含所屬卡片）' : '' }}</dd></div>
             </dl>
             <p class="subtle">版本 {{ issue.revision }} · 已儲存</p>
           </div>
@@ -164,7 +163,7 @@ function timeSaved() {
         </div>
       </aside>
     </div>
-    <TimeEntryDrawer v-if="timeOpen && canLogTime" ref="timeDrawer" :key="timeFormKey" :issues="timeIssues" :default-issue-id="issue.type === 'epic' ? '' : issue.id" :lock-issue="issue.type !== 'epic'" :entry="editingTime" @close="timeOpen = false; editingTime = null" @saved="timeSaved" @conflict="emit('reload')" />
+    <TimeEntryDrawer v-if="timeOpen && canLogTime" ref="timeDrawer" :key="timeFormKey" :issues="timeIssues" :default-issue-id="issue.id" lock-issue :entry="editingTime" @close="timeOpen = false; editingTime = null" @saved="timeSaved" @conflict="emit('reload')" />
   </section>
 </template>
 

@@ -1,3 +1,13 @@
+## 2026-11-06 Epic直接填工時與移除重複說明
+
+- 使用者要求移除抽屜底部兩行Epic加總／只能修改自己紀錄的說明，並允許Epic直接填報實際工時。
+- 沿用現有timeEntries與API，不新增schema。後端移除Epic拒寫；本人／Project permission／每日24小時／revision／requestId繼續檢查。Epic估時與類型轉換規則不擴張。
+- 詳細頁一律帶入目前卡片並鎖定，月曆可選Epic／Task／Bug；Epic明細及各總覽計入直接工時與所屬執行卡，總計按entry各計一次、作廢排除。修改Epic自己及子卡自己的紀錄時帶原卡片，不挪動工時。
+- PHP基線11 tests／197 assertions；修改後WorkspaceApiTest12 tests／226 assertions，完整後端50 tests／967 assertions通過。新增Epic新增／本人修改／作廢／固定卡片ID／上限／日期／租戶與Project資格／他人含owner不可修改／重試／revision測試，僅格式化本次新增方法，不重排舊檔。
+- test:issue-time編譯版真實API通過，含Epic直接填報／修改、月曆選Epic、總覽、直接30＋子卡15＝45、作廢排除、月曆再登記15後總投入60、所有原始紀錄總計111無重複、子卡修改不改掛；原草稿／409／重試／撤權及三尺寸通過。已檢視桌面與手機抽屜，底部兩行消失，估時沿用原規則。
+- build通過，完整前端回歸最終通過；舊詳細頁彙總標籤斷言改成含所屬卡片，非放寬加總。README／workflow／collaboration／產品討論及AGENTS同步，舊規則標沿革；本機階段commit、不push，不新增schema／migration或重設seed。
+- 主queue／websocket已重啟載入新後端程式，backend／frontend／Redis／Reverb健康，queue執行；src掛載生效。瀏覽器測試只用專用tmpfs假資料，完成後清理，不測業務資料。
+
 ## 2026-11-05 任務詳細頁直接填報工時
 
 - 使用者在詳細頁工時tab找不到填寫入口，預期這裡能填報；目前需到工時月曆點日期。補詳細頁入口與共用抽屜。

@@ -198,7 +198,7 @@ async function checkIssueDetailPage(page) {
   const boardUrl = `${root}/board/${fixture.board.id}`;
   await page.goto(`${boardUrl}/issues/${fixture.epic.id}?detail=1`);
   await detail.getByRole('heading', { name: fixture.epic.title, exact: true }).waitFor();
-  await detail.getByRole('tabpanel', { name: '屬性', exact: true }).getByText('0.5 h（所屬卡片加總）', { exact: true }).waitFor();
+  await detail.getByRole('tabpanel', { name: '屬性', exact: true }).getByText('0.5 h（含所屬卡片）', { exact: true }).waitFor();
   await detail.getByRole('button', { name: '返回看板', exact: true }).click();
   assert.equal(page.url(), boardUrl, '分享／重整後仍返回來源自訂看板');
   await page.locator('.selected-board-heading h3').getByText(fixture.board.name, { exact: true }).waitFor();

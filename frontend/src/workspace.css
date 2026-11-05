@@ -191,7 +191,7 @@
 .time-entry-drawer .time-form-card form { display: block; margin-top: 20px; }
 .time-entry-drawer .time-form-card .field { margin-bottom: 18px; font-size: 14px; }
 .time-entry-drawer .time-form-card input, .time-entry-drawer .time-form-card select, .time-entry-drawer .time-form-card textarea { font-size: 15px; }
-.time-entry-drawer .time-form-card > p, .time-entry-drawer .time-form-note { font-size: 13px; color: var(--text-secondary); }
+.time-entry-drawer .time-form-card > p { font-size: 13px; color: var(--text-secondary); }
 @keyframes time-drawer-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
 @media (prefers-reduced-motion: reduce) { .time-entry-drawer[open] { animation: none; } }
 @media (max-width: 700px) { .time-entry-drawer { width: 100%; } }

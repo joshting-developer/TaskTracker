@@ -62,9 +62,6 @@ class TimeEntryService
             DomainError::fail('FORBIDDEN', '只能修改自己的有效工時');
         }
         $issue = $this->store->require('issues', $current['issueId'] ?? $input['issueId'] ?? '');
-        if ($issue['type'] === 'epic') {
-            DomainError::fail('INVALID_INPUT', '請將工時登記在 Epic 的子任務');
-        }
         $date = Fields::date($input['workDate'] ?? null);
         if ($date > now('Asia/Taipei')->toDateString()) {
             DomainError::fail('INVALID_INPUT', '不能填報未來日期的工時');
