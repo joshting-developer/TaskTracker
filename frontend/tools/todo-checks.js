@@ -20,7 +20,7 @@ export async function checkTodoWorkflow(browser, failures) {
   await member.getByLabel('Email', { exact: true }).fill(`todo-member-${token}@example.test`);
   await member.getByLabel('密碼', { exact: true }).fill('todo-test-password');
   await member.getByRole('button', { name: '加入工作空間', exact: true }).click();
-  await member.getByRole('heading', { name: '尚未加入任何專案', exact: true }).waitFor();
+  await member.getByRole('region', { name: '首頁小待辦', exact: true }).waitFor();
   const personal = member.getByRole('region', { name: '首頁小待辦', exact: true });
   await personal.getByLabel('快速新增待辦', { exact: true }).fill('準備 613 快照 <script>不執行</script>\n\n等同事整合完再開測\n第二行補充');
   await personal.getByRole('button', { name: '加入待辦', exact: true }).click();
@@ -168,7 +168,8 @@ export async function checkTodoWorkflow(browser, failures) {
   // 未儲存速記離開首頁須確認
   await personal.getByLabel('快速新增待辦', { exact: true }).fill('還沒存的速記');
   member.once('dialog', dialog => dialog.dismiss());
-  await member.getByRole('button', { name: '進入專案：待辦正式專案', exact: true }).click();
+  await member.getByRole('button', { name: '開啟導覽', exact: true }).click();
+  await member.getByRole('button', { name: '專案列表', exact: true }).click();
   assert.equal(await personal.getByLabel('快速新增待辦', { exact: true }).inputValue(), '還沒存的速記');
   await personal.getByLabel('快速新增待辦', { exact: true }).fill('');
   await memberContext.close(); await ownerContext.close();

@@ -1,3 +1,4 @@
+import { openProjectList } from './navigation.js';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'vite';
@@ -31,7 +32,7 @@ async function register(page, email, inviteToken = '') {
   await page.getByLabel('密碼', { exact: true }).fill('flow-test-password');
   if (!inviteToken) await page.getByLabel('工作空間名稱', { exact: true }).fill('流程回驗空間');
   await page.getByRole('button', { name: inviteToken ? '加入工作空間' : '建立工作空間', exact: true }).click();
-  await page.getByRole('heading', { name: '我的專案.', exact: true }).waitFor();
+  await page.getByRole('heading', { name: '首頁', exact: true }).waitFor();
 }
 try {
   vite = await createServer({ server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': apiTarget } } });
@@ -91,6 +92,7 @@ try {
   await draft.waitFor({ state: 'hidden' });
   const saved = await page.evaluate(async id => (await (await import('/src/api/index.js')).api.getTodos()).todos.find(item => item.id === id), editedId);
   assert.equal(saved.title, '切換後保留的草稿');
+  await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：流程 first', exact: true }).click();
   await page.getByRole('button', { name: /^我的任務/ }).click();
   assert.equal(await page.locator('tbody tr').count(), 1);
@@ -141,7 +143,7 @@ try {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 1024 });
     await page.evaluate(() => scrollTo(0, 0));
     if (width < 700) await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
-    const shortcut = page.getByRole('button', { name: '記小事', exact: true });
+    const shortcut = page.getByLabel('快速新增待辦', { exact: true });
     const box = await shortcut.boundingBox();
     assert.ok(box.y >= 0 && box.y + box.height < (width === 390 ? 844 : 1024));
     assert.ok(box.height >= 44);

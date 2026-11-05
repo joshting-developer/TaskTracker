@@ -1,3 +1,4 @@
+import { openProjectList } from './navigation.js';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { createServer, preview } from 'vite';
@@ -53,7 +54,7 @@ try {
   await owner.keyboard.press('ArrowDown'); assert.equal(await menu.getByRole('menuitem', { name: '工作空間設定', exact: true }).evaluate(el => el === document.activeElement), true);
   await screenshots('menu', menu);
   await owner.keyboard.press('Escape'); await menu.waitFor({ state: 'hidden' }); assert.equal(await avatar.evaluate(el => el === document.activeElement), true);
-  await avatar.click(); await owner.getByRole('heading', { name: '我的專案.', exact: true }).click(); await menu.waitFor({ state: 'hidden' });
+  await avatar.click(); await owner.getByRole('heading', { name: '小待辦', exact: true }).click(); await menu.waitFor({ state: 'hidden' });
   await choose('個人資料'); await profile.getByLabel('顯示名稱', { exact: true }).fill('修改後名稱');
   assert.equal(await profile.getByLabel('Email', { exact: true }).getAttribute('readonly'), '');
   owner.once('dialog', dialog => dialog.dismiss()); await owner.keyboard.press('Escape'); assert.equal(await profile.isVisible(), true);
@@ -89,7 +90,7 @@ try {
     await settings.getByRole('button', { name: '調整工作空間角色 Member', exact: true }).click(); await settings.getByLabel('工作空間角色', { exact: true }).selectOption(role);
     if (role === 'user') await screenshots('members', settings);
     owner.once('dialog', dialog => dialog.accept()); await settings.getByRole('button', { name: '儲存工作空間角色', exact: true }).click(); await settings.getByRole('status').filter({ hasText: '工作空間角色已儲存' }).waitFor();
-    await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click(); await member.getByRole('button', { name: '進入專案：權限測試專案', exact: true }).waitFor({ state: role === 'manager' ? 'visible' : 'hidden' });
+    await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click(); await openProjectList(member); await member.getByRole('button', { name: '進入專案：權限測試專案', exact: true }).waitFor({ state: role === 'manager' ? 'visible' : 'hidden' });
   }
   await settings.getByRole('button', { name: '關閉工作空間設定', exact: true }).click();
   await member.getByRole('button', { name: '帳號選單', exact: true }).click(); await member.getByRole('menuitem', { name: '工作空間設定', exact: true }).click();
@@ -101,6 +102,7 @@ try {
   await settings.getByRole('button', { name: '關閉工作空間設定', exact: true }).click();
   await owner.waitForFunction(() => document.activeElement?.getAttribute('aria-label') === '帳號選單');
   await owner.setViewportSize({ width: 1440, height: 1000 });
+  await openProjectList(owner);
   await owner.getByRole('button', { name: '進入專案：權限測試專案', exact: true }).click(); const hash = await owner.evaluate(() => location.hash);
   await choose('工作空間設定'); await settings.getByRole('button', { name: '關閉工作空間設定', exact: true }).click(); assert.equal(await owner.evaluate(() => location.hash), hash);
   await owner.getByRole('button', { name: '專案成員與權限', exact: true }).click(); await owner.getByRole('region', { name: '專案成員與權限', exact: true }).waitFor(); await owner.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();

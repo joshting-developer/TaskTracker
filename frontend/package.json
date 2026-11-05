@@ -14,7 +14,8 @@
     "test:markdown": "node tools/markdown-check.js",
     "test:settings": "node tools/account-settings-check.js",
     "test:board": "node tools/board-ux-check.js",
-    "test:realtime": "node tools/realtime-check.js"
+    "test:realtime": "node tools/realtime-check.js",
+    "test:home": "node tools/home-check.js"
   },
   "dependencies": {
     "@mdi/font": "7.4.47",

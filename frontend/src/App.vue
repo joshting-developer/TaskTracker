@@ -46,6 +46,7 @@ const view = ref('list');
 const boardId = ref('default'), boardEditor = ref(null), boardEditorTool = ref(null);
 const scope = ref('all');
 const projectId = ref('');
+const landing = ref('home');
 const search = ref('');
 const stateFilter = ref('');
 const priorityFilter = ref('');
@@ -111,7 +112,7 @@ function done(issue) { return categoryFor(issue, selectedProject.value) === 'don
 const visibleIssues = computed(() => selectedProject.value ? filterIssues(view.value === 'board' ? boardIssues.value : projectAllIssues.value, currentFilters.value, { project: selectedProject.value, userId: currentUserId.value, members: workspace.value.members, today: today.value, includeEpics: view.value === 'board' }) : []);
 const pageCount = computed(() => Math.max(1, Math.ceil(visibleIssues.value.length / pageSize)));
 const pagedIssues = computed(() => visibleIssues.value.slice((page.value - 1) * pageSize, page.value * pageSize));
-const title = computed(() => selectedProject.value?.name || '我的專案');
+const title = computed(() => selectedProject.value?.name || '專案列表');
 const currentFeature = computed(() => section.value === 'tasks'
   ? view.value === 'boards' ? '看板列表' : view.value === 'board' ? '任務看板' : scope.value === 'mine' ? '我的任務' : scope.value === 'done' ? '已完成' : '任務列表'
   : { epics: 'Epic 概覽', time: '工時月曆', settings: '狀態設定', members: '專案成員', notifications: '通知預覽' }[section.value]);
@@ -173,7 +174,7 @@ function notify(message) {
 }
 function projectHash(id, issueId = '', mode = view.value, selectedBoardId = boardId.value, fullPage = detailPage.value, targetSection = issueId ? 'tasks' : section.value) {
   const featurePath = targetSection !== 'tasks' ? `/${targetSection}` : mode === 'boards' ? '/boards' : mode === 'board' ? `/board${selectedBoardId === 'default' ? '' : `/${encodeURIComponent(selectedBoardId)}`}` : '';
-  return id ? `#/projects/${encodeURIComponent(id)}${featurePath}${issueId ? `/issues/${encodeURIComponent(issueId)}${fullPage ? '?detail=1' : ''}` : ''}` : '#/';
+  return id ? `#/projects/${encodeURIComponent(id)}${featurePath}${issueId ? `/issues/${encodeURIComponent(issueId)}${fullPage ? '?detail=1' : ''}` : ''}` : landing.value === 'projects' ? '#/projects' : '#/';
 }
 function ensureSectionAccess() {
   const permission = sectionPermissions[section.value];
@@ -274,17 +275,15 @@ async function archiveBoard() {
   try { await api.archiveBoard({ id: board.id, expectedRevision: board.revision, requestId: boardArchiveRequests.get(key) }); boardArchiveRequests.delete(key); navigate('all', projectId.value, 'boards'); await refresh(); notify('看板已移除, 卡片保留'); }
   catch (failure) { error.value = failure.message; if (failure.code === 'REVISION_CONFLICT') await refresh(); }
 }
-async function goToTodo() {
-  // 首頁內定位不離開元件, 已輸入的速記／編輯草稿照常保留。
-  if (selectedProject.value) { if (!canLeave()) return; history.pushState(null, '', '#/'); readHash(true); }
-  sidebarOpen.value = false;
-  await nextTick(); todoTool.value?.focusQuickEntry();
-}
-function goHome(replace = false) {
-  if (replace) { history.replaceState(null, '', '#/'); readHash(); }
-  else navigate('all', '');
+function goLanding(page, replace = false) {
+  if (!replace && !projectId.value && landing.value === page) { sidebarOpen.value = false; return; }
+  if (!replace && !canLeave()) { sidebarOpen.value = false; return; }
+  history[replace ? 'replaceState' : 'pushState'](null, '', page === 'projects' ? '#/projects' : '#/');
+  readHash(true);
   sidebarOpen.value = false;
 }
+function goHome(replace = false) { goLanding('home', replace); }
+function goProjects() { goLanding('projects'); }
 function openIssue(issue, fullPage = detailPage.value, approved = false) {
   fullPage = fullPage || !projectCan(projects.value.find(project => project.id === issue.projectId), 'issue.write');
   if (!approved && !canLeave()) return;
@@ -325,6 +324,8 @@ function readHash(skipGuard = false) {
       if (issue) { nextProject = issue.projectId; history.replaceState(null, '', projectHash(nextProject, nextIssue, 'list')); }
     }
   } catch { history.replaceState(null, '', '#/'); }
+  const nextLanding = path === '#/projects' || path === '#/projects/' ? 'projects' : 'home';
+  const landingChanged = landing.value !== nextLanding;
   const nextMode = route?.[2] || 'list';
   const nextSection = featureRoute?.[2] || 'tasks';
   const nextDetail = Boolean(nextIssue && new URLSearchParams(query).get('detail') === '1');
@@ -332,10 +333,11 @@ function readHash(skipGuard = false) {
   const returning = Boolean(selectedId.value && !nextIssue);
   const projectChanged = projectId.value !== nextProject, modeChanged = view.value !== nextMode, boardChanged = boardId.value !== nextBoard;
   const sectionChanged = section.value !== nextSection;
-  if (skipGuard !== true && (sectionChanged || issueChanged || projectChanged || modeChanged || boardChanged || retiredView) && !canLeave()) { history.replaceState(null, '', projectHash(projectId.value, selectedId.value)); return; }
+  if (skipGuard !== true && (landingChanged || sectionChanged || issueChanged || projectChanged || modeChanged || boardChanged || retiredView) && !canLeave()) { history.replaceState(null, '', projectHash(projectId.value, selectedId.value)); return; }
   if (projectChanged || modeChanged || boardChanged || retiredView) {
     section.value = 'tasks'; scope.value = 'all'; boardEditor.value = null; clearFilters();
   }
+  landing.value = nextLanding;
   projectId.value = nextProject;
   view.value = nextMode; boardId.value = nextBoard;
   selectedId.value = nextIssue;
@@ -393,7 +395,7 @@ async function createdProject(project) {
   const wasEditing = Boolean(editingProject.value);
   creatingProject.value = false;
   editingProject.value = null;
-  goHome();
+  goProjects();
   await refresh();
   notify(wasEditing ? '專案設定已儲存' : `已建立「${project.name}」`);
 }
@@ -403,7 +405,7 @@ async function loadDemo() {
   try {
     await api.loadDemo({ requestId: demoRequestId });
     await refresh();
-    goHome();
+    goProjects();
     notify('示範專案已準備好, 點進專案就能開始試用');
   } catch (failure) { error.value = failure.message; }
   finally { demoLoading.value = false; }
@@ -476,21 +478,24 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
         <button class="workspace-switch" aria-label="工作空間成員" @click="openWorkspaceSettings('members')"><span class="workspace-avatar">{{ workspace.meta.workspace?.name.slice(0, 1) }}</span><div><strong>{{ workspace.meta.workspace?.name }}</strong><span>{{ workspace.members.length }} 位可見成員 · {{ workspace.meta.permissions?.includes('workspace.invite') ? '管理與邀請' : '成員' }}</span></div><span class="workspace-chevron">⌄</span></button>
         <p class="nav-label">工作空間</p>
         <nav aria-label="工作空間">
-          <button class="nav-item active" @click="goHome()"><Icon name="folder" :size="18" />專案列表<span class="nav-count">{{ projects.length }}</span></button>
+          <button class="nav-item" :class="{ active: landing === 'home' }" :aria-current="landing === 'home' ? 'page' : undefined" @click="goHome()"><Icon name="grid" :size="18" />首頁</button>
+          <button class="nav-item" :class="{ active: landing === 'projects' }" :aria-current="landing === 'projects' ? 'page' : undefined" aria-label="專案列表" @click="goProjects()"><Icon name="folder" :size="18" />專案列表<span class="nav-count">{{ projects.length }}</span></button>
         </nav>
       </template>
     </aside>
 
     <main class="main">
-      <header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" aria-label="開啟導覽" :aria-expanded="sidebarOpen" @click="sidebarOpen = !sidebarOpen"><Icon name="menu" /></button><Icon name="folder" :size="17" /><button class="breadcrumb-home" @click="goHome()">專案</button><Icon name="chevron" :size="13" /><strong :class="{ 'has-mobile-context': selectedProject }"><span class="project-breadcrumb">{{ selectedProject?.code || '專案列表' }}</span><span v-if="selectedProject" class="mobile-feature-context">{{ currentFeature }}</span></strong></div><div class="topbar-end"><button v-if="workspace.meta.permissions?.includes('todo.read')" class="button secondary todo-notification-toggle" :aria-label="`待辦通知${todoUnread ? `（${todoUnread} 則未讀）` : ''}`" @click="todoNotificationsOpen = true"><Icon name="bell" :size="17" /><span>待辦通知</span><b v-if="todoUnread">{{ todoUnread }}</b></button><span class="local-indicator"><i></i>本機協作試用</span><button class="icon-button" aria-label="重新整理工作空間" :disabled="loading || Boolean(moving)" @click="refresh"><Icon name="refresh" :size="18" /></button><AccountMenu ref="accountMenu" :name="workspace.meta.actor" :email="workspace.members.find(member => member.id === currentUserId)?.email" :workspace-name="workspace.meta.workspace?.name" @profile="openProfile" @workspace="openWorkspaceSettings()" @logout="logout" /></div></header>
+      <header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" aria-label="開啟導覽" :aria-expanded="sidebarOpen" @click="sidebarOpen = !sidebarOpen"><Icon name="menu" /></button><Icon name="folder" :size="17" /><button class="breadcrumb-home" @click="selectedProject ? goProjects() : goHome()">{{ selectedProject ? '專案' : '工作空間' }}</button><Icon name="chevron" :size="13" /><strong :class="{ 'has-mobile-context': selectedProject }"><span class="project-breadcrumb">{{ selectedProject?.code || (landing === 'projects' ? '專案列表' : '首頁') }}</span><span v-if="selectedProject" class="mobile-feature-context">{{ currentFeature }}</span></strong></div><div class="topbar-end"><button v-if="workspace.meta.permissions?.includes('todo.read')" class="button secondary todo-notification-toggle" :aria-label="`待辦通知${todoUnread ? `（${todoUnread} 則未讀）` : ''}`" @click="todoNotificationsOpen = true"><Icon name="bell" :size="17" /><span>待辦通知</span><b v-if="todoUnread">{{ todoUnread }}</b></button><span class="local-indicator"><i></i>本機協作試用</span><button class="icon-button" aria-label="重新整理工作空間" :disabled="loading || Boolean(moving)" @click="refresh"><Icon name="refresh" :size="18" /></button><AccountMenu ref="accountMenu" :name="workspace.meta.actor" :email="workspace.members.find(member => member.id === currentUserId)?.email" :workspace-name="workspace.meta.workspace?.name" @profile="openProfile" @workspace="openWorkspaceSettings()" @logout="logout" /></div></header>
       <div class="workspace-content" :class="{ 'board-workspace': section === 'tasks' && view === 'board', 'data-workspace': selectedProject && section === 'tasks', 'detail-workspace': showIssuePage }">
-        <button v-if="selectedProject && section !== 'tasks'" class="back-to-projects" @click="goHome()"><Icon name="chevron" :size="14" />返回專案列表</button>
+        <button v-if="selectedProject && section !== 'tasks'" class="back-to-projects" @click="goProjects()"><Icon name="chevron" :size="14" />返回專案列表</button>
         <div v-if="showIssuePage && error" class="error-box workspace-error" role="alert">{{ error }}<button class="text-button" @click="refresh">重新載入</button></div>
         <IssueDetail v-if="showIssuePage" ref="detailTool" :key="selectedIssue.id" :issue="selectedIssue" :project="selectedProject" :issues="projectAllIssues" :members="projectMembers" :entries="workspace.timeEntries" :return-label="issueReturnLabel()" :busy="Boolean(moving)" :can-write="canWrite" :can-read-time="can('timeEntry.readOwn')" @state="state => moveIssue(selectedIssue, { state })" @close="closeIssue" @edit="canWrite && (editingDetail = true)" @open="issue => openIssue(issue, true)" @saved="savedIssue" @reload="refresh" />
-        <div v-show="!showIssuePage" class="page-heading"><div><div class="eyebrow">{{ selectedProject ? 'YOUR PROJECT, IN FOCUS' : 'A SPACE FOR EVERY PROJECT' }}</div><h1>{{ title }}<span class="heading-dot">.</span></h1><p v-if="!selectedProject || (section !== 'tasks' && selectedProject.description)">{{ selectedProject ? selectedProject.description : '先選一個專案, 再專心處理裡面的事' }}</p></div><div class="heading-actions"><button v-if="!selectedProject && workspace.meta.permissions?.includes('todo.writeOwn')" class="button secondary home-todo-shortcut" @click="goToTodo">記小事</button><button v-if="selectedProject && canCreateIssue && !(section === 'tasks' && view === 'boards')" class="button primary" :disabled="loading" @click="newIssue"><Icon name="plus" :size="18" />新增任務<span class="button-key">＋</span></button><button v-else-if="!selectedProject && workspace.meta.permissions?.includes('project.create')" class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div></div>
-        <div v-if="!selectedProject" class="home-layout">
-        <ProjectHome :projects="projects" :members="workspace.members" :can-create="workspace.meta.permissions?.includes('project.create')" :loading="loading" :error="error" :demo-loading="demoLoading" @create="creatingProject = true" @edit="editingProject = $event" @open="id => navigate('all', id)" @demo="loadDemo" @retry="refresh" />
-        <TodoHome v-if="workspace.meta.permissions?.includes('todo.read')" ref="todoTool" :data="todoData" :user-id="currentUserId" :can-write="workspace.meta.permissions?.includes('todo.writeOwn')" :can-assign="workspace.meta.permissions?.includes('todo.assign')" :can-convert="Boolean(convertibleProjects.length)" :refresh="refresh" @convert="convertTodo" @open-issue="openTodoIssue" />
+        <div v-if="!showIssuePage && (selectedProject || landing === 'projects')" class="page-heading"><div><div class="eyebrow">{{ selectedProject ? 'YOUR PROJECT, IN FOCUS' : 'A SPACE FOR EVERY PROJECT' }}</div><h1>{{ title }}<span class="heading-dot">.</span></h1><p v-if="!selectedProject || (section !== 'tasks' && selectedProject.description)">{{ selectedProject ? selectedProject.description : '先選一個專案, 再專心處理裡面的事' }}</p></div><div class="heading-actions"><button v-if="selectedProject && canCreateIssue && !(section === 'tasks' && view === 'boards')" class="button primary" :disabled="loading" @click="newIssue"><Icon name="plus" :size="18" />新增任務<span class="button-key">＋</span></button><button v-else-if="!selectedProject && workspace.meta.permissions?.includes('project.create')" class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div></div>
+        <div v-if="!selectedProject" :class="landing === 'home' ? 'home-layout' : 'project-list-page'">
+        <h1 v-if="landing === 'home'" class="sr-only">首頁</h1>
+        <div v-if="landing === 'home' && error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="refresh">重新載入</button></div>
+        <ProjectHome v-if="landing === 'projects'" :projects="projects" :members="workspace.members" :can-create="workspace.meta.permissions?.includes('project.create')" :loading="loading" :error="error" :demo-loading="demoLoading" @create="creatingProject = true" @edit="editingProject = $event" @open="id => navigate('all', id)" @demo="loadDemo" @retry="refresh" />
+        <TodoHome v-if="landing === 'home' && workspace.meta.permissions?.includes('todo.read')" ref="todoTool" :data="todoData" :user-id="currentUserId" :can-write="workspace.meta.permissions?.includes('todo.writeOwn')" :can-assign="workspace.meta.permissions?.includes('todo.assign')" :can-convert="Boolean(convertibleProjects.length)" :refresh="refresh" @convert="convertTodo" @open-issue="openTodoIssue" />
         </div>
         <template v-else>
 

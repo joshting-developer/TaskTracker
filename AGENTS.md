@@ -13,7 +13,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 
 使用者已要求先做本機第一版, 以任務清單與看板試用；甘特圖暫不製作。GAS `.gs` 產檔、雲端儲存與部署等本機版本確認後再處理
 
-使用者已確認以專案作為入口：首頁先建立／選擇專案, 點入專案後才呈現任務清單、看板與進度。任務操作、我的任務與完成任務都限於目前專案, 不自動回到跨專案任務首頁
+使用者已確認任務以專案作為入口；2026-11-05首頁調整為只顯示小待辦，其餘空間保留未來個人小工具（本輪不做自訂配置）。專案列表獨立於#/projects，建立／選擇專案後才呈現任務清單、看板與進度。任務操作、我的任務與完成任務都限於目前專案, 不自動回到跨專案任務首頁
 
 尚未確認：正式功能範圍、使用人數、團隊登入方式、正式試算表與 Apps Script 專案
 
@@ -34,7 +34,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - 根目錄 Compose 提供 frontend（5174）、backend（3002）、queue、websocket／Reverb（8080）與 Redis。主機接口只監聽 loopback, Redis 只在容器網路
 - `cd frontend && npm run dev`／`npm run build`；`docker compose exec backend php artisan test --do-not-cache-result` 驗證 Laravel API／隔離 SQLite
 - `frontend/tools/browser-check.js` 以 `E2E_API_URL` 接隔離 Laravel 服務, 使用 5175 埠, 不使用業務 mock 或使用者資料庫
-- 預設空資料, 可手動載入示範專案或 `tasktracker:seed-demo`；指定 Seed 建 Jack／f-ws／first／second, 密碼只讀本機 TASKTRACKER_SEED_PASSWORD, --reset 只重設此 seed namespace；首頁先建／選 Project, 點入才有任務功能, 所有操作保留目前專案上下文
+- 預設空資料, 可手動載入示範專案或 `tasktracker:seed-demo`；指定 Seed 建 Jack／f-ws／first／second, 密碼只讀本機 TASKTRACKER_SEED_PASSWORD, --reset 只重設此 seed namespace；專案列表先建／選Project，首頁只留小待辦，點入Project才有任務功能, 所有操作保留目前專案上下文
 - `backend/app/Repositories/RecordStore.php` 由伺服器選定Workspace，經RelationalRecords／Children寫入明確業務表；AccountService從Laravel session推導操作者與空間，不信任前端身分。2026-11-04新增22張關聯表、Eloquent模型及FK／索引，舊records只供歷史遷移／回退／匯入；見docs/database-design.md
 - 租戶間隔離，ProjectAccess逐案檢查有效permission／scope及作者條件；Project ACL／固定角色矩陣已落地。新關聯表以複合外鍵再限制同Workspace／Project，不以FK取代權限檢查
 - 舊 Node API／測試由 PHP 取代, 原 SQLite 與舊 Docker volume 保留；匯入指令只接受空目標、不覆蓋來源, 保留作者歷史, 舊帳號登入後升級雜湊

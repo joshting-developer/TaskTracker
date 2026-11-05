@@ -1,3 +1,4 @@
+import { openProjectList } from './navigation.js';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'vite';
@@ -23,7 +24,7 @@ try {
   await page.getByLabel('密碼', { exact: true }).fill('ui-local-test-password');
   await page.getByLabel('工作空間名稱', { exact: true }).fill('UI 驗證空間');
   await page.getByRole('button', { name: '建立工作空間', exact: true }).click();
-  await page.getByRole('heading', { name: '我的專案.', exact: true }).waitFor();
+  await page.getByRole('heading', { name: '首頁', exact: true }).waitFor();
   const fixture = await page.evaluate(async () => {
     const { api } = await import('/src/api/index.js');
     const project = await api.createProject({ name: 'UI 驗證專案', code: 'UX', requestId: crypto.randomUUID() });
@@ -67,14 +68,15 @@ try {
   for (const width of [1440, 768, 390]) {
     await page.setViewportSize({ width, height: width === 768 ? 1024 : width === 390 ? 844 : 900 });
     await page.evaluate(() => scrollTo(0, 0));
-    const entry = await page.getByRole('button', { name: '進入專案：UI 驗證專案', exact: true }).boundingBox();
-    assert.ok(entry.y < (width === 390 ? 844 : 900), '專案入口在第一屏');
+    const entry = await page.getByLabel('快速新增待辦', { exact: true }).boundingBox();
+    assert.ok(entry.y < (width === 390 ? 844 : 900), '首頁待辦輸入在第一屏');
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await page.screenshot({ path: `${artifacts}/home-${width}.png`, fullPage: true });
   }
   const touch = await personal.getByLabel('待辦操作', { exact: true }).first().boundingBox();
   assert.ok(touch.width >= 44 && touch.height >= 44);
   await page.setViewportSize({ width: 1440, height: 900 });
+  await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：UI 驗證專案', exact: true }).click();
   await page.getByRole('button', { name: '工時月曆', exact: true }).click();
   await page.getByRole('button', { name: new RegExp(`${dateInTaipei()} 工時`) }).click();
@@ -192,6 +194,7 @@ try {
   await reader.getByLabel('Email', { exact: true }).fill(invite.email);
   await reader.getByLabel('密碼', { exact: true }).fill('ui-local-test-password');
   await reader.getByRole('button', { name: '加入工作空間', exact: true }).click();
+  await openProjectList(reader);
   await reader.getByRole('heading', { name: '尚未加入任何專案', exact: true }).waitFor();
   await page.evaluate(async ({ projectId, email }) => {
     const { api } = await import('/src/api/index.js');
