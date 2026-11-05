@@ -2,6 +2,8 @@
 import { computed, ref, watch } from 'vue';
 import { onTabKeydown } from '../ui/tabs.js';
 import Icon from './Icon.vue';
+import MarkdownEditor from './MarkdownEditor.vue';
+import MarkdownContent from './MarkdownContent.vue';
 import { api } from '../api/index.js';
 import { FIELD_LABELS, hours, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
@@ -82,7 +84,7 @@ async function sendComment() {
     <div class="issue-detail-layout">
       <h1 ref="heading" tabindex="-1">{{ issue.title }}</h1>
       <div class="issue-detail-body">
-        <section class="issue-detail-description" aria-label="任務描述"><h2>描述</h2><p>{{ issue.description || '尚未填寫描述' }}</p></section>
+        <section class="issue-detail-description" aria-label="任務描述"><h2>描述</h2><MarkdownContent v-if="issue.description" :source="issue.description" /><p v-else>尚未填寫描述</p></section>
         <section class="issue-detail-activity" aria-label="任務活動">
           <div class="discussion-tabs" role="tablist" aria-label="任務紀錄" @keydown="onTabKeydown">
             <button id="detail-comments-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" :class="{ active: tab === 'comments' }" @click="tab = 'comments'">留言 <span>{{ issue.comments.length }}</span></button>
@@ -92,7 +94,7 @@ async function sendComment() {
           <div id="detail-activity" role="tabpanel" tabindex="0" :aria-labelledby="`detail-${tab}-tab`">
             <template v-if="tab === 'comments'">
               <p v-if="!issue.comments.length" class="quiet-message">尚無留言</p>
-              <article v-for="entry in issue.comments" :key="entry.id" class="comment"><div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><p>{{ entry.content }}</p></div></article>
+              <article v-for="entry in issue.comments" :key="entry.id" class="comment"><div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><MarkdownContent :source="entry.content" /></div></article>
             </template>
             <template v-else-if="tab === 'history'">
               <article v-for="entry in [...issue.history].reverse()" :key="entry.id" class="history-entry"><span class="history-dot"></span><div><p><strong>{{ entry.actor }}</strong> {{ entry.kind === 'created' ? '建立了任務' : '更新了任務' }} <time>{{ timestamp(entry.at) }}</time></p><p v-for="change in entry.changes" :key="change.field" class="history-change">{{ FIELD_LABELS[change.field] || change.field }}：{{ display(change.field, change.before) }} → {{ display(change.field, change.after) }}</p></div></article>
@@ -105,7 +107,7 @@ async function sendComment() {
           </div>
           <form v-if="canWrite" v-show="tab === 'comments'" class="comment-form" @submit.prevent="sendComment">
             <div v-if="error" class="error-box" role="alert">{{ error }}<button v-if="conflict" class="text-button" type="button" :disabled="saving || busy" @click="emit('reload')">更新任務資料（保留留言）</button></div>
-            <label class="field">新增留言<textarea v-model="comment" rows="3" maxlength="2000" placeholder="留下想法或進度…" :disabled="saving || busy" /></label>
+            <MarkdownEditor v-model="comment" label="新增留言" :rows="3" :maxlength="2000" placeholder="留下想法或進度…" :disabled="saving || busy" />
             <button class="button secondary" :disabled="saving || busy || !dirty">{{ saving ? '送出中…' : '送出留言' }}</button>
           </form>
         </section>

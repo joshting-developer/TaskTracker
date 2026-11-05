@@ -3,6 +3,8 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, useId, w
 import { onTabKeydown } from '../ui/tabs.js';
 import Icon from './Icon.vue';
 import IssueRelations from './IssueRelations.vue';
+import MarkdownEditor from './MarkdownEditor.vue';
+import MarkdownContent from './MarkdownContent.vue';
 import { api } from '../api/index.js';
 import { FIELD_LABELS, hours, ISSUE_FIELDS, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
@@ -32,7 +34,7 @@ function resetForm() {
   todoRevision.value = props.todo?.revision || 0;
   Object.assign(form, {
     title: '', description: '', state: props.defaultState || 'todo', priority: 'normal', type: props.defaultType || 'task', assignee: '', dueDate: '', epicId: props.defaultEpicId || '', estimateMinutes: 0, parentIssueId: '', relatedIssueIds: [],
-    ...(props.todo ? { title: props.todo.title, description: props.todo.note } : {}),
+    ...(props.todo ? { title: props.todo.title, description: props.todo.content ?? props.todo.note } : {}),
     ...(props.issue || {}), projectId: props.issue?.projectId || props.defaultProject || (props.todo ? '' : props.projects[0]?.id) || '',
   });
   savedValues.value = JSON.stringify(values());
@@ -164,7 +166,7 @@ function timestamp(value) {
         <div v-if="error" class="error-box" role="alert">{{ error }} <button v-if="conflict" type="button" class="text-button" :disabled="saving" @click="reload">重新載入最新版本</button></div>
         <form id="issue-form" @submit.prevent="save">
           <label class="field">任務標題 <span class="required">*</span><input v-model="form.title" name="title" placeholder="要完成什麼？" maxlength="180" required :disabled="saving" /></label>
-          <label class="field">描述<textarea v-model="form.description" name="description" placeholder="寫下背景、下一步或完成條件…" rows="5" maxlength="6000" :disabled="saving" /></label>
+          <MarkdownEditor v-model="form.description" label="描述" name="description" placeholder="寫下背景、下一步或完成條件…" :rows="5" :maxlength="6000" :disabled="saving" />
           <div class="form-grid">
             <label class="field">專案<select v-model="form.projectId" aria-label="專案" :disabled="!todo || saving" required><option v-if="todo" value="" disabled>選擇所屬專案</option><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option></select></label>
             <label class="field">狀態<select v-model="form.state" aria-label="狀態" :disabled="saving"><option v-for="state in states" :key="state.id" :value="state.id">{{ state.label }}</option></select></label>
@@ -188,10 +190,10 @@ function timestamp(value) {
           <div v-if="tab === 'comments'" class="comments">
             <p v-if="!issue.comments.length" class="quiet-message">還沒有留言, 留下你的下一步吧</p>
             <article v-for="entry in issue.comments" :key="entry.id" class="comment">
-              <div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><p>{{ entry.content }}</p></div>
+              <div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><MarkdownContent :source="entry.content" /></div>
             </article>
             <form @submit.prevent="sendComment" class="comment-form">
-              <label class="field"><span class="sr-only">新增留言</span><textarea v-model="comment" placeholder="留下想法或進度…" maxlength="2000" rows="3" :disabled="saving" /></label>
+              <MarkdownEditor v-model="comment" label="新增留言" placeholder="留下想法或進度…" :maxlength="2000" :rows="3" :disabled="saving" />
               <button class="button secondary" :disabled="saving || !comment.trim()">送出留言 <Icon name="arrow" :size="16" /></button>
             </form>
           </div>

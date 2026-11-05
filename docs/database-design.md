@@ -45,7 +45,7 @@ Epic／Task／Bug 共用 `issues`；`epic_id` 與 `parent_issue_id` 是不同關
 | 看板 | `boards`、`board_issues` | 看板資訊／封存、明確收錄的卡片與排序 |
 | 工時 | `time_entries` | 任務、填報人、工作日、整數分鐘、說明、revision／作廢時間 |
 | 通知預覽 | `issue_notifications` | 卡片／收件人、Email／標題／內文快照及 preview 狀態 |
-| 小待辦 | `todos`、`todo_notifications` | 建立者、交辦對象、原交辦對象、狀態、轉卡目標及通知／已讀時間 |
+| 小待辦 | `todos`、`todo_notifications` | 建立者、交辦對象、原交辦對象、Markdown全文content、摘要title、舊note、狀態、轉卡目標及通知／已讀時間 |
 | 異動歷史 | `audit_events` | 工作空間、實體種類／內部 ID、歷史 stream、順序、事件快照 |
 | 防重複提交 | `operation_receipts`、`todo_operation_receipts` | 原操作者＋requestId、簽章、已完成操作的結果快照 |
 | 升級／示範資料 | `workspace_upgrades`、`demo_seed_states` | 已套用的升級及示範 namespace 版本 |

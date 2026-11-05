@@ -38,7 +38,7 @@ try {
   const personal = page.getByRole('region', { name: '首頁小待辦', exact: true });
   await personal.locator('.todo-row').first().waitFor();
   assert.equal(await personal.locator('.todo-row').count(), 3, '預覽三筆, 不讓待辦量推走專案');
-  const todoTabs = personal.getByRole('tablist');
+  const todoTabs = personal.getByRole('tablist', { name: '待辦範圍', exact: true });
   await todoTabs.getByRole('tab').first().focus();
   await page.keyboard.press('ArrowRight');
   assert.equal(await todoTabs.getByRole('tab').last().getAttribute('aria-selected'), 'true');
@@ -53,15 +53,15 @@ try {
   const editingId = await editingRow.getAttribute('data-todo-id');
   await editingRow.getByLabel('待辦操作').click();
   await editingRow.getByRole('button', { name: '編輯', exact: true }).click();
-  await personal.getByLabel('編輯待辦內容').fill('背景更新仍保留這段草稿');
+  await personal.getByLabel('編輯待辦內容', { exact: true }).fill('背景更新仍保留這段草稿');
   await page.evaluate(async id => {
     const { api } = await import('/src/api/index.js');
     for (const todo of (await api.getTodos()).todos.filter(item => item.id !== id)) await api.updateTodo({ id: todo.id, title: todo.title, note: '其他項目的最新更新', expectedRevision: todo.revision, requestId: crypto.randomUUID() });
   }, editingId);
   await page.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
   await page.waitForFunction(() => !document.querySelector('[aria-label="重新整理工作空間"]').disabled);
-  assert.equal(await personal.getByLabel('編輯待辦內容').inputValue(), '背景更新仍保留這段草稿');
-  assert.equal(await personal.getByLabel('編輯待辦內容').isVisible(), true);
+  assert.equal(await personal.getByLabel('編輯待辦內容', { exact: true }).inputValue(), '背景更新仍保留這段草稿');
+  assert.equal(await personal.getByLabel('編輯待辦內容', { exact: true }).isVisible(), true);
   page.once('dialog', dialog => dialog.accept());
   await personal.getByRole('button', { name: '取消修改', exact: true }).click();
   for (const width of [1440, 768, 390]) {
@@ -135,7 +135,7 @@ try {
   await editorTabs.getByRole('tab').first().focus();
   await page.keyboard.press('ArrowLeft');
   assert.equal(await editorTabs.getByRole('tab').last().getAttribute('aria-selected'), 'true');
-  assert.equal(await editor.getByRole('tabpanel').getAttribute('aria-labelledby'), await editorTabs.getByRole('tab').last().getAttribute('id'));
+  assert.equal(await editor.locator(`[id="${await editorTabs.getByRole('tab').last().getAttribute('aria-controls')}"]`).getAttribute('aria-labelledby'), await editorTabs.getByRole('tab').last().getAttribute('id'));
   await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
   await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
   await page.getByRole('button', { name: '任務看板', exact: true }).click();

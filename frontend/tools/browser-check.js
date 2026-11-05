@@ -275,7 +275,7 @@ async function checkProjectAcl(page, browser, failures) {
   const detail = teammate.getByRole('region', { name: '任務完整頁', exact: true });
   await detail.getByRole('heading', { name: '受保護的閱讀卡片', exact: true }).waitFor();
   assert.equal(await detail.getByRole('button', { name: '編輯任務', exact: true }).count(), 0);
-  assert.equal(await detail.getByLabel('新增留言').count(), 0);
+  assert.equal(await detail.getByLabel('新增留言', { exact: true }).count(), 0);
   assert.equal(await detail.getByRole('tab', { name: /^工時/ }).count(), 0);
   assert.equal(await detail.getByRole('group', { name: '任務狀態' }).getByRole('combobox').count(), 0);
   await detail.getByRole('group', { name: '任務狀態' }).getByText('唯讀', { exact: true }).waitFor();
@@ -1040,7 +1040,7 @@ try {
   await editor.getByLabel('到期日', { exact: true }).fill('2026-10-20');
   await editor.getByRole('button', { name: '儲存修改' }).click();
   await page.getByRole('status').filter({ hasText: '已儲存' }).waitFor();
-  await editor.getByLabel('新增留言').fill('清單與看板現在可以一起使用');
+  await editor.getByLabel('新增留言', { exact: true }).fill('清單與看板現在可以一起使用');
   await editor.getByRole('button', { name: '送出留言' }).click();
   await editor.getByText('清單與看板現在可以一起使用', { exact: true }).waitFor();
   await editor.getByRole('tab', { name: /異動紀錄/ }).click();

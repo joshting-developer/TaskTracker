@@ -37,6 +37,9 @@ CKEditor也有Markdown輸出能力；本輪依速記及既有表單流程採原�
 
 - 後端42項／839個斷言通過，全部使用隔離記憶體SQLite；新增全文保存、長首行摘要、舊摘要寫入、版本／重試／隱私、轉卡預設、縮排與硬換行、欄位及完整儲存往返遷移。
 - 專用真實API瀏覽器檢查已通過：格式工具／復原／重做／中文組字、Enter換行、待辦多行內容保存／重載／修改／轉卡、描述及留言、安全HTML／URL、沒有自動外部圖片請求，1440／768／390px無整頁溢位。
-- 完整既有瀏覽器、UIUX與本機升級結果待收尾補記。使用獨立API／暫存SQLite及假帳號，不在業務資料庫寫測試內容。
+- 完整browser-check、UIUX及F01–F04可用性回歸通過，包含交辦／退回／通知、草稿／背景更新／版本衝突、卡片／看板／ACL、手機入口。production build及前後端Docker映像重建通過。
+- 已人工檢視1440／768／390px速記與詳細頁、390px編輯／預覽截圖；保留現有TaskTracker配色、產品及導覽。工具列可換行、按鈕44px、長程式碼／表格在內容區捲動，無整頁溢位。此為兩個UI／UX skill的單元件／app-screen檢查，沒有宣稱上游inspector全部規則通過，也不代表真人可用性研究。
+- 測試使用獨立API／暫存SQLite及假帳號，不在業務資料庫寫測試內容。本機先停止寫入，備份到`/data/backups/before-markdown-final-20261105.sqlite`，在副本預演後升級；前後業務DTO、帳號及records歷史雜湊一致，既有3筆待辦保留，SQLite外鍵／integrity均正常，沒有Seed reset。備份只留本機volume，不提交。
+- 本機frontend／backend／Redis／WebSocket健康，queue運行，Markdown來源編譯與API健康檢查200；前端入口仍為`http://127.0.0.1:5174`。
 
 驗證入口：`frontend/tools/markdown-check.js`（需E2E_API_URL）、既有browser-check／uiux-check及Laravel Feature測試。暫存日誌以`/tmp/tasktracker-markdown-`為前綴；畫面在忽略的`frontend/artifacts/markdown/`，不提交產物或資料庫。

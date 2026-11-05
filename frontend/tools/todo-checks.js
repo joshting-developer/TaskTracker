@@ -22,9 +22,7 @@ export async function checkTodoWorkflow(browser, failures) {
   await member.getByRole('button', { name: '加入工作空間', exact: true }).click();
   await member.getByRole('heading', { name: '尚未加入任何專案', exact: true }).waitFor();
   const personal = member.getByRole('region', { name: '首頁小待辦', exact: true });
-  await personal.getByLabel('快速新增待辦').fill('準備 613 快照 <script>不執行</script>');
-  await personal.getByRole('button', { name: '補充說明', exact: true }).click();
-  await personal.getByLabel('待辦補充說明', { exact: true }).fill('等同事整合完再開測\n第二行補充');
+  await personal.getByLabel('快速新增待辦', { exact: true }).fill('準備 613 快照 <script>不執行</script>\n\n等同事整合完再開測\n第二行補充');
   await personal.getByRole('button', { name: '加入待辦', exact: true }).click();
   let row = personal.locator('.todo-row').filter({ hasText: '準備 613 快照 <script>不執行</script>' });
   await row.waitFor();
@@ -39,7 +37,7 @@ export async function checkTodoWorkflow(browser, failures) {
   const id = await row.getAttribute('data-todo-id');
   await row.getByRole('button', { name: '編輯', exact: true }).click();
   row = personal.locator(`[data-todo-id="${id}"]`);
-  await row.getByLabel('編輯待辦內容').fill('保留的待辦草稿');
+  await row.getByLabel('編輯待辦內容', { exact: true }).fill('保留的待辦草稿');
   await member.evaluate(async id => {
     const { api } = await import('/src/api/index.js');
     const item = (await api.getTodos()).todos.find(todo => todo.id === id);
@@ -48,10 +46,10 @@ export async function checkTodoWorkflow(browser, failures) {
   await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
   await row.getByRole('button', { name: '儲存待辦修改', exact: true }).click();
   await personal.getByRole('alert').filter({ hasText: '待辦已被更新' }).waitFor();
-  assert.equal(await row.getByLabel('編輯待辦內容').inputValue(), '保留的待辦草稿');
+  assert.equal(await row.getByLabel('編輯待辦內容', { exact: true }).inputValue(), '保留的待辦草稿');
   member.once('dialog', dialog => dialog.accept());
   await personal.getByRole('button', { name: '載入最新待辦', exact: true }).click();
-  await personal.getByLabel('編輯待辦內容').fill('準備 613 快照');
+  await personal.getByLabel('編輯待辦內容', { exact: true }).fill('準備 613 快照');
   await personal.getByRole('button', { name: '儲存待辦修改', exact: true }).click();
   row = personal.locator('.todo-row').filter({ hasText: '準備 613 快照' });
   await row.getByRole('checkbox', { name: '完成待辦 準備 613 快照', exact: true }).check();
@@ -61,7 +59,7 @@ export async function checkTodoWorkflow(browser, failures) {
   await row.getByRole('checkbox', { name: '完成待辦 準備 613 快照', exact: true }).waitFor();
 
   // 普通成員交給 owner, 直接加入而非等待接受
-  await personal.getByLabel('快速新增待辦').fill('幫忙確認 614 範圍');
+  await personal.getByLabel('快速新增待辦', { exact: true }).fill('幫忙確認 614 範圍');
   await personal.getByLabel('待辦交給誰').selectOption({ label: `Todo Owner · todo-owner-${token}@example.test` });
   await personal.getByRole('button', { name: '交辦', exact: true }).click();
   await personal.getByRole('tab', { name: /我交辦的/ }).click();
@@ -155,11 +153,11 @@ export async function checkTodoWorkflow(browser, failures) {
   assert.equal(await member.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   await member.screenshot({ path: 'artifacts/todos-mobile.png', fullPage: true });
   // 未儲存速記離開首頁須確認
-  await personal.getByLabel('快速新增待辦').fill('還沒存的速記');
+  await personal.getByLabel('快速新增待辦', { exact: true }).fill('還沒存的速記');
   member.once('dialog', dialog => dialog.dismiss());
   await member.getByRole('button', { name: '進入專案：待辦正式專案', exact: true }).click();
-  assert.equal(await personal.getByLabel('快速新增待辦').inputValue(), '還沒存的速記');
-  await personal.getByLabel('快速新增待辦').fill('');
+  assert.equal(await personal.getByLabel('快速新增待辦', { exact: true }).inputValue(), '還沒存的速記');
+  await personal.getByLabel('快速新增待辦', { exact: true }).fill('');
   await memberContext.close(); await ownerContext.close();
   console.log('PASS: personal quick TODO without Project, private notes, editing/conflicts, completion/reopen, member→owner direct assignment/return, unread notifications/read/navigation, ACL-scoped one-way issue conversion with source/version/draft/atomic fields, mobile and unsaved navigation');
 }

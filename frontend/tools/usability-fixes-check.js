@@ -63,7 +63,7 @@ try {
   const editedId = await first.getAttribute('data-todo-id');
   await first.getByLabel('待辦操作').click();
   await first.getByRole('button', { name: '編輯', exact: true }).click();
-  await todos.getByLabel('編輯待辦內容').fill('切換後保留的草稿');
+  await todos.getByLabel('編輯待辦內容', { exact: true }).fill('切換後保留的草稿');
   await todos.getByRole('tab', { name: /我交辦的/ }).click();
   await todos.getByRole('status').filter({ hasText: '切換清單會保留草稿' }).waitFor();
   assert.equal(await todos.locator('.todo-actions').count(), 3, '其他 tab 操作仍可用');
@@ -77,7 +77,7 @@ try {
   await todos.getByRole('status').filter({ hasText: '待辦已取消' }).waitFor();
   await page.screenshot({ path: `${artifacts}/draft-other-tab.png` });
   await todos.getByRole('button', { name: '返回草稿', exact: true }).click();
-  const draft = todos.getByLabel('編輯待辦內容');
+  const draft = todos.getByLabel('編輯待辦內容', { exact: true });
   assert.equal(await draft.inputValue(), '切換後保留的草稿');
   assert.equal(await draft.evaluate(el => el === document.activeElement), true);
   assert.equal(await todos.locator(`[data-todo-id="${editedId}"]`).getByRole('checkbox').isDisabled(), true);

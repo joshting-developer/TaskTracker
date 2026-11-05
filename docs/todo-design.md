@@ -1,6 +1,6 @@
 # 首頁小待辦設計
 
-日期：2026-11-02（Asia/Taipei）
+建立：2026-11-02／更新：2026-11-05（Asia/Taipei）
 
 ## 使用者已確認
 
@@ -8,10 +8,11 @@
 - 可自己速記, Manager 可交辦；也希望成員彼此及成員交給 Manager／Owner
 - 在自己的首頁顯示, 有通知回饋
 - 他人交辦 **直接加入對方待辦, 可退回給交辦者**, 不先走接受流程
+- 2026-11-05：速記改為一整塊 Markdown，不另填標題及補充說明；卡片描述／留言也共用編輯方式
 
 ## 第一版實作選擇
 
-小待辦獨立於 Issue, 不要求先選專案。首頁上方顯示「小待辦」, 下方保留原專案入口。「我的待辦」列出目前由我處理的項目, 「我交辦的」追蹤我交給別人的項目；已完成／已取消／已轉卡預設收合。快速輸入一行按 Enter 即新增給自己, 選同空間成員則直接交辦；補充說明為選填, 不要求狀態、優先級或估時
+小待辦獨立於 Issue, 不要求先選專案。「我的待辦」列出目前由我處理的項目, 「我交辦的」追蹤我交給別人的項目；已完成／已取消／已轉卡預設收合。寬螢幕與專案入口並列，窄螢幕保留「記小事」直達入口。直接輸入一整塊 Markdown，Enter 換行，按加入待辦／交辦才保存；不要求狀態、優先級或估時。首行自動產生摘要，展開閱讀全文，編輯時保留原稿。原先一行 Enter 新增＋選填說明的方案自2026-11-05被整塊速記取代。
 
 角色只映射 permission：有效 Workspace 成員預設都有 `todo.read`、`todo.writeOwn`、`todo.assign`。成員沒有加入任何 Project 也可使用, 但不因此獲得 Project／Issue 的存取權。交辦選單另由後端提供同空間有效成員的最小目錄（ID、姓名、Email）, 不擴張原 `getWorkspace.members` 或回傳專案資料
 
@@ -44,8 +45,8 @@ Project ACL 先更新再載入個人待辦；即使待辦讀取暫時失敗, 仍
 | RPC | 主要輸入 | 回傳／條件 |
 | --- | --- | --- |
 | getTodos | 無 | 僅本人參與的待辦、本人可讀通知、最小交辦成員目錄, 待辦各附 capabilities |
-| createTodo | title、note 選填、assigneeId 預設自己、requestId | id、revision；交給別人另需 todo.assign |
-| updateTodo | id、title／note、expectedRevision、requestId | 原建立者, 僅未完成 |
+| createTodo | content、assigneeId 預設自己、requestId；相容舊 title／note | id、revision；交給別人另需 todo.assign |
+| updateTodo | id、content、expectedRevision、requestId；相容舊 title／note | 原建立者, 僅未完成 |
 | completeTodo／reopenTodo | id、expectedRevision、requestId | 目前承辦者, 分別 open→done／done→open |
 | returnTodo | id、expectedRevision、requestId | 非原作者的目前承辦者, 僅未完成；改由原作者承辦 |
 | cancelTodo | id、expectedRevision、requestId | 原建立者, 僅未完成；留歷史不刪除 |
@@ -53,6 +54,8 @@ Project ACL 先更新再載入個人待辦；即使待辦讀取暫時失敗, 仍
 | readTodoNotification | id、requestId | 收件人且仍可讀來源待辦, 僅設定本人 readAt |
 
 轉卡的專案候選、狀態、成員、Epic／父子／關聯與正式建立 Issue 使用相同來源及後端驗證。轉卡失敗回滾 Issue、編號、通知、待辦狀態及去重紀錄；成功後來源 `converted` 不再有完成／重開／再次轉卡操作。原待辦不自動跟隨正式卡片後續狀態, 保留原小事的文字與歷程
+
+2026-11-05新增 `todos.content` TEXT 保存完整原稿，`title` 為180字摘要、`note` 保留舊格式相容。轉卡預設以原稿填入描述；舊待辦不自動改寫，首次以新編輯器保存才合併內容。工具列、長度、安全呈現及升降版保護見 [Markdown編輯](markdown-editing.md)。
 
 ## 驗收
 
@@ -64,6 +67,8 @@ Project ACL 先更新再載入個人待辦；即使待辦讀取暫時失敗, 仍
 6. 轉卡可補正式欄位, 未授權 Project 不可選且 API 拒絕；失敗保留待辦且不留新卡, 重試只產一張卡, 原交辦者不因轉卡看到私有專案資訊
 
 ## 本輪驗證結果
+
+下列為2026-11-02初版紀錄；2026-11-05 Markdown 升級的42項後端測試、瀏覽器回歸及本機資料保護驗收見 [Markdown編輯](markdown-editing.md#驗證與進度)。
 
 - 隔離 Laravel／記憶體 SQLite：30 項測試、700 個斷言通過, 含無 Project 使用、跨空間／第三人拒絕、作者與承辦者限制、版本、去重、資格失效、轉卡交易回滾／單向狀態、私有 Project 連結過濾
 - 真實隔離 Laravel＋Chromium：完整舊流程與新增待辦流程通過。涵蓋快記／純文字、編輯與背景刷新衝突、勾選／重開、Member→Owner 直接交辦及退回、通知已讀／定位、Project 資格變化、轉卡帶入／補欄位／衝突、草稿離開保護及手機版
