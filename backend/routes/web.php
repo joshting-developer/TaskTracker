@@ -70,3 +70,14 @@ Route::post('/api/rpc/verifySmtp', [SmtpController::class, 'verify']);
 
 // 相容舊客戶端的未知／已停用操作，維持身分驗證及JSON錯誤契約。
 Route::post('/api/rpc/{operation}', [ApiController::class, 'unknown'])->where('operation', '[A-Za-z]+');
+
+foreach (['workspaces', 'switchWorkspace', 'acceptWorkspaceInvite', 'invitation'] as $operation) {
+    Route::post('/api/auth/'.$operation, [AuthController::class, 'workspace'])->defaults('operation', $operation)->middleware('throttle:60,1');
+}
+
+// 同一Session的切換與業務請求依序處理，避免舊Session覆寫新工作區。
+foreach (Route::getRoutes() as $route) {
+    if (str_starts_with($route->uri(), 'api/rpc/') || str_starts_with($route->uri(), 'api/auth/') || str_starts_with($route->uri(), 'api/realtime/')) {
+        $route->block(10, 10);
+    }
+}

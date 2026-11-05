@@ -163,14 +163,11 @@ class AccountService
         if (! $valid) {
             DomainError::fail('UNAUTHENTICATED', 'Email 或密碼不正確');
         }
-        $workspaceId = null;
-        $store = new RecordStore;
-        foreach ($store->all('workspaces') as $workspace) {
-            $member = $store->forWorkspace($workspace['id'])->get('members', $user->id);
-            if ($member && empty($member['disabledAt'])) {
-                $workspaceId = $workspace['id'];
-                break;
-            }
+        $memberships = new WorkspaceMemberships;
+        if (! empty($input['inviteToken'])) {
+            $workspaceId = $memberships->accept($user, $input);
+        } else {
+            $workspaceId = $memberships->listing($user)[0]['id'] ?? null;
         }
         if (! $workspaceId) {
             DomainError::fail('UNAUTHENTICATED', '找不到工作空間資格');
@@ -193,8 +190,9 @@ class AccountService
     {
         WorkspacePermissions::authorize($context, 'workspace.invite');
         $email = $this->email($input['email'] ?? null);
-        if (User::where('email', $email)->exists()) {
-            DomainError::fail('CONFLICT', '目前邀請限未註冊的新帳號');
+        $existing = User::where('email', $email)->first();
+        if ($existing && (new RecordStore)->forWorkspace($context['workspace']['id'])->get('members', $existing->id)) {
+            DomainError::fail('CONFLICT', '此帳號已是工作空間成員');
         }
         $token = bin2hex(random_bytes(32));
         $id = hash('sha256', $token);

@@ -63,4 +63,17 @@ class AuthController extends Controller
     {
         return new ApiResponse($execution->authenticate($request, 'logout'), true);
     }
+
+    /**
+     * 處理工作區清單、切換與邀請，資格由Session及單次token驗證。
+     *
+     * @param  JsonOperationRequest  $request  JSON輸入及登入Session
+     * @param  string  $operation  固定路由操作
+     * @param  ApiExecution  $execution  交易與資格重驗服務
+     * @return ApiResponse 公開資格或邀請資訊
+     */
+    public function workspace(JsonOperationRequest $request, string $operation, ApiExecution $execution): ApiResponse
+    {
+        return new ApiResponse($execution->authenticate($request, $operation, $request->payload()), true);
+    }
 }

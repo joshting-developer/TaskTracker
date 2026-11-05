@@ -40,6 +40,23 @@ class ApiExecution
 
                 return null;
             }
+            if ($operation === 'invitation') {
+                return (new WorkspaceMemberships)->preview($input);
+            }
+            if (in_array($operation, ['workspaces', 'switchWorkspace', 'acceptWorkspaceInvite'], true)) {
+                $user = $request->user()?->fresh();
+                if (! $user) {
+                    DomainError::fail('UNAUTHENTICATED', '請先登入');
+                }
+                $memberships = new WorkspaceMemberships;
+                if ($operation === 'workspaces') {
+                    return ['workspaces' => $memberships->listing($user)];
+                }
+                $workspaceId = $operation === 'acceptWorkspaceInvite' ? $memberships->accept($user, $input) : $memberships->target($user, $input);
+                $request->session()->put('workspace_id', $workspaceId);
+
+                return $this->accounts->context($request);
+            }
 
             return match ($operation) {
                 'current' => $this->accounts->context($request),
@@ -62,6 +79,10 @@ class ApiExecution
     {
         return DB::transaction(function () use ($request, $operation, $input) {
             $workspaceSession = $this->accounts->context($request);
+            $expectedWorkspace = $request->header('X-Workspace-ID');
+            if ($operation !== 'getWorkspace' && $expectedWorkspace !== null && $expectedWorkspace !== $workspaceSession['workspace']['id']) {
+                DomainError::fail('WORKSPACE_CHANGED', '工作空間已在其他分頁切換，請重新載入後操作');
+            }
             if (in_array($operation, AccountSettings::OPERATIONS, true)) {
                 return (new AccountSettings($workspaceSession))->execute($operation, $input);
             }

@@ -18,7 +18,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (\App\Domain\DomainError $error, Request $request) {
             $status = match ($error->errorCode) {
                 'UNAUTHENTICATED' => 401, 'FORBIDDEN' => 403, 'NOT_FOUND' => 404,
-                'REVISION_CONFLICT', 'REQUEST_CONFLICT', 'DUPLICATE_CODE', 'DEMO_EXISTS', 'CONFLICT' => 409,
+                'WORKSPACE_CHANGED', 'REVISION_CONFLICT', 'REQUEST_CONFLICT', 'DUPLICATE_CODE', 'DEMO_EXISTS', 'CONFLICT' => 409,
                 'SMTP_ERROR' => 502, default => 400,
             };
             return response()->json(['ok' => false, 'error' => ['code' => $error->errorCode, 'message' => $error->getMessage()]], $status)->header('Cache-Control', 'no-store');
