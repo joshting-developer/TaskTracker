@@ -65,25 +65,6 @@ dialog{border:0;padding:0;color:inherit}dialog::backdrop{background:#19162255;ba
 .invite-form .field { flex: 1; margin: 0; }
 .invite-result { padding: 18px; background: #f6f3fc; border-radius: 8px; margin-bottom: 16px; }
 .invite-result input { font-size: 11px; }
-.epic-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); gap: 22px; }
-.epic-card { padding: 25px; border-radius: 12px; border: 1px solid #e6e0ef; background: #fff; min-width: 0; }
-.epic-card-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.epic-title { display: block; text-align: left; font-size: 20px; font-weight: 600; margin: 18px 0 8px; padding: 0; overflow-wrap: anywhere; }
-.epic-title:hover { color: var(--accent); }
-.epic-description { color: #a195ad; font-size: 12px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
-.epic-progress-label { display: flex; justify-content: space-between; align-items: baseline; margin: 25px 0 12px; font-size: 11px; color: #aa9ab5; gap: 10px; }
-.epic-progress-label strong { color: #827093; font-size: 22px; font-weight: 550; }
-.epic-hours { display: flex; flex-wrap: wrap; gap: 15px; font-size: 11px; color: #a493b1; padding: 20px 0; }
-.epic-hours strong { color: #7d6c8d; font-weight: 550; margin-left: 4px; }
-.epic-hours > span:last-child { margin-left: auto; }
-.epic-children { border-top: 1px solid #f0eaf6; padding-top: 10px; }
-.epic-children button { display: flex; width: 100%; text-align: left; align-items: center; gap: 8px; padding: 10px 0; font-size: 12px; }
-.epic-children button > span:not(.identifier) { overflow-wrap: anywhere; }
-.epic-children button i { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.epic-children button small { margin-left: auto; color: #baabc5; font-size: 10px; }
-.epic-footnote { margin-top: 24px; font-size: 11px; }
-.review-note { padding: 10px 12px; background: #fff4e6; color: #b37c40; font-size: 11px; border-radius: 6px; margin-top: 15px; }
-.epic-form-note { grid-column: 1 / -1; margin: 12px 0; font-size: 11px; }
 .time-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 22px; align-items: start; }
 .calendar { background: #fff; border: 1px solid #e5deef; border-radius: 11px; overflow: hidden; }
 .calendar-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #eee8f5; }
@@ -175,9 +156,6 @@ dialog{border:0;padding:0;color:inherit}dialog::backdrop{background:#19162255;ba
   .section-title p { font-size: 11px; }
   .team-dialog { padding: 20px; }
   .invite-form { flex-direction: column; align-items: stretch; }
-  .epic-card { padding: 20px; }
-  .epic-title { font-size: 18px; }
-  .epic-children button { flex-wrap: wrap; }
   .time-report-grid { grid-template-columns: 1fr; gap: 16px; }
   .time-form-card form { display: block; }
   .time-form-card .field { margin-bottom: 15px; }

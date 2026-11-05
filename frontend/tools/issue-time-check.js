@@ -31,6 +31,29 @@ try {
   const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
   const drawer = page.locator('.time-entry-drawer');
   async function openIssue(issue) { await page.goto(url(issue)); await page.reload(); await detail.getByRole('tab', { name: /^工時/ }).click(); }
+  await page.goto(`http://127.0.0.1:5175/#/projects/${project.id}/epics`);
+  await page.reload();
+  await page.locator(`tr[data-issue="${epic.identifier}"]`).waitFor();
+  assert.equal(new URL(page.url()).hash, `#/projects/${project.id}`, '舊概覽網址返回原專案列表');
+  assert.equal(await page.getByRole('button', { name: /^Epic 概覽/ }).count(), 0);
+  assert.equal(await page.locator('tr[data-issue]').count(), 3, '三種類型共用列表');
+  await page.getByRole('button', { name: '任務篩選', exact: true }).click();
+  await page.getByLabel('篩選類型', { exact: true }).selectOption('epic');
+  assert.equal(await page.locator('tr[data-issue]').count(), 1);
+  await page.locator(`tr[data-issue="${epic.identifier}"]`).getByRole('button', { name: epic.title, exact: true }).click();
+  await detail.getByRole('heading', { name: epic.title, exact: true }).waitFor();
+  await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
+  assert.equal(await page.getByLabel('篩選類型', { exact: true }).inputValue(), 'epic', '詳細頁返回保留類型篩選');
+  await page.getByLabel('篩選類型', { exact: true }).selectOption('');
+  mkdirSync('artifacts/epic-optional', { recursive: true });
+  for (const width of [1440, 768, 390]) {
+    await page.setViewportSize({ width, height: 1000 });
+    if (width === 390) await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await page.screenshot({ path: `artifacts/epic-optional/list-${width}.png`, fullPage: true });
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  console.log('PASS: 移除Epic入口、舊網址回專案、列表包含三種類型、Epic篩選與完整頁返回、三尺寸');
   await openIssue(task);
   await detail.getByRole('button', { name: '填報工時', exact: true }).click();
   assert.equal(await drawer.getByLabel('工時任務').inputValue(), task.id); assert.equal(await drawer.getByLabel('工時任務').isDisabled(), true);
@@ -108,8 +131,8 @@ try {
   assert.equal(epicSummary(epic, workspace.issues, workspace.timeEntries, workspace.projects[0]).spentMinutes, 60);
   const totalMinutes = workspace.timeEntries.filter(item => !item.voidedAt).reduce((sum, item) => sum + item.minutes, 0);
   assert.equal(totalMinutes, 111, '個人當日總計只累計原始entry');
-  await page.getByRole('button', { name: /^Epic 概覽/ }).click();
-  await page.locator(`[data-epic="${epic.identifier}"]`).getByText('1 h', { exact: true }).waitFor();
+  await openIssue(epic);
+  await detail.getByText('1 h（含所屬卡片）', { exact: true }).waitFor();
   console.log('PASS: 每日上限、遺失回應重試不重複、Epic詳細頁與月曆直接填報、本人修改、子卡不改掛、總覽／加總去重／作廢排除');
 
   const invite = await call(page, 'inviteMember', { email: `time-member-${token}@example.test` });
