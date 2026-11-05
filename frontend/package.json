@@ -13,12 +13,14 @@
     "test:e2e": "node tools/browser-check.js",
     "test:markdown": "node tools/markdown-check.js",
     "test:settings": "node tools/account-settings-check.js",
-    "test:board": "node tools/board-ux-check.js"
+    "test:board": "node tools/board-ux-check.js",
+    "test:realtime": "node tools/realtime-check.js"
   },
   "dependencies": {
     "@mdi/font": "7.4.47",
     "dompurify": "3.4.17",
     "marked": "18.1.3",
+    "pusher-js": "8.6.0",
     "vue": "3.5.43",
     "vuetify": "4.2.6"
   },

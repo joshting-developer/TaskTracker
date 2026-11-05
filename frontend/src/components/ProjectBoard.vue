@@ -4,7 +4,7 @@ import Icon from './Icon.vue';
 import IssueContext from './IssueContext.vue';
 import { categoryFor, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
-const props = defineProps({ project: Object, issues: Array, visibleIssues: Array, entries: Array, members: Array, userId: String, moving: String, today: String, boardKey: String, includedEpicIds: Array, canWrite: { type: Boolean, default: true }, canCreate: { type: Boolean, default: true } });
+const props = defineProps({ syncState: { type: String, default: 'polling' }, project: Object, issues: Array, visibleIssues: Array, entries: Array, members: Array, userId: String, moving: String, today: String, boardKey: String, includedEpicIds: Array, canWrite: { type: Boolean, default: true }, canCreate: { type: Boolean, default: true } });
 const emit = defineEmits(['open', 'move', 'create']);
 const group = ref('none');
 const density = ref('comfortable');
@@ -65,7 +65,7 @@ function drop(event, state, lane) {
   <div class="visual-board" :class="{ 'compact-cards': density === 'compact' }" aria-label="任務看板">
     <div class="board-tools">
       <p>{{ canWrite ? (group === 'epic' ? '拖曳更新狀態或歸類 · 雙擊卡片編輯' : '拖曳更新狀態 · 雙擊卡片編輯') : '點擊標題查看完整內容' }}</p>
-      <div><label>泳道<select v-model="group" aria-label="看板泳道"><option value="epic">依 Epic 分組</option><option value="none">不分組</option></select></label><label>卡片<select v-model="density" aria-label="看板卡片密度"><option value="comfortable">詳細</option><option value="compact">精簡</option></select></label></div>
+      <div><span class="board-sync" :class="{ live: syncState === 'live' }" role="status" aria-label="看板同步狀態"><i></i>{{ syncState === 'live' ? '即時同步' : syncState === 'connecting' ? '連線中…' : '定期更新' }}</span><label>泳道<select v-model="group" aria-label="看板泳道"><option value="epic">依 Epic 分組</option><option value="none">不分組</option></select></label><label>卡片<select v-model="density" aria-label="看板卡片密度"><option value="comfortable">詳細</option><option value="compact">精簡</option></select></label></div>
     </div>
     <div class="board-scroll" tabindex="0" aria-label="看板橫向捲動區">
       <div class="board-canvas" :style="{ '--board-columns': states.length }">
@@ -105,6 +105,9 @@ function drop(event, state, lane) {
 .board-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 20px; background: white; border-bottom: 1px solid #e7e9ef; font-size: 13px; color: #5f6673; }
 .board-tools > div, .board-tools label { display: flex; align-items: center; gap: 10px; }
 .board-tools > div { gap: 18px; flex-wrap: wrap; }.board-tools label { white-space: nowrap; }
+.board-sync { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #5f6673; }
+.board-sync i { width: 6px; height: 6px; border-radius: 50%; background: #959ca8; }
+.board-sync.live { color: #286b55; }.board-sync.live i { background: #397e71; }
 .board-tools select { border: 1px solid #e0deea; border-radius: 5px; padding: 6px 9px; color: #354052; background: white; }
 .board-scroll { overflow-x: auto; overflow-y: hidden; min-height: 240px; outline-offset: -2px; }
 .board-canvas { min-width: max(100%, calc(var(--board-columns) * 250px)); }

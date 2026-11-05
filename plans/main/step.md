@@ -7,6 +7,15 @@
 - 隔離PHP測試先baseline，新增授權／交易／重試測試；獨立Compose三程序API／Queue／Reverb＋Redis與SQLite假資料，真實雙瀏覽器同步／斷線／拒絕權限／草稿驗證。分階段本機commit含plans，重建全部Compose並完整重啟，保留volume／資料及備份。
 - 使用專案內backend-development-standards及外部程序／契約reference，查Laravel13官方Broadcasting／Reverb文件與已安裝vendor來源；不載入外部skill。
 
+## 2026-11-05 看板即時同步交付完成
+
+- API階段commit：936c310。前端以pusher-js 8.6.0連同origin /reverb代理，Session／CSRF自訂簽章；只在目前看板訂閱，離開／撤權清連線，重連補讀，200ms合併事件，30秒輪詢備援。狀態列提供即時同步／連線中／定期更新，保留Vue／Vuetify及既有介面。
+- 完整Laravel49 tests／938 assertions，Realtime3 tests／42 assertions；production build、完整browser-check通過。獨立Compose＋真實Redis Queue／Reverb＋兩個瀏覽器驗證新增Epic／Task、標題／狀態、無內容訊號、草稿保留／409、實際斷線恢復／補讀、撤權清頁／斷線、HTTP缺CSRF拒絕。
+- 依兩個專案UI／UX skill檢視1440／768／390登入後畫面；手機待側欄動畫完成再截圖，沒有頁面橫向溢位，同步文字不擠壓控制列。未宣稱完整上游inspector全綠或真人研究。
+- 已重建映像並docker compose down／up -d --no-build --wait整組重啟；本機Compose2.15不支援wait-timeout，採相容--wait。frontend／backend／websocket／Redis健康、Queue執行；主站登入頁與同origin WebSocket握手通過。
+- SQLite先備份/data/backups/before-realtime-20261105.sqlite；重啟後比對26張非暫態表完全相同，帳號／密碼及業務資料未改，FK／integrity正常。不reset Seed、不刪業務volume、不push；測試專案volume獨立並清理。
+- README／產品討論／board-design／同步契約／AGENTS及plans同步。事件非保證送達、舊訂閱僅無內容訊號／撤權靠API重查與輪詢收斂、非看板仍輪詢等限制已記docs/board-realtime.md。瀏覽器斷線測試中的ECONNREFUSED屬預期，重連後通過。
+
 ## 2026-11-05 WebSocket API階段驗證
 
 - RealtimeController以Session／CSRF／origin及有效Project讀取permission簽固定私有頻道；回傳公開key，不回secret；Reverb拒client events。

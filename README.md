@@ -70,7 +70,7 @@ docker compose exec backend php artisan tasktracker:check-infrastructure
 docker compose down
 ```
 
-基礎設施檢查會實際送入／消費一筆 Redis 測試工作並完成 WebSocket 握手, 不寄信或發布任務事件。Reverb 接口已準備, Issue 即時推播與 Project 私有頻道授權尚未接上, 畫面仍每 30 秒更新
+基礎設施檢查會實際送入／消費一筆 Redis 測試工作並完成 WebSocket 握手, 不寄信或發布任務事件。看板已接上 Reverb 私有 Project 頻道及 Redis Queue，新增／編輯／狀態／看板設定等變更即時重讀 API；重連補抓並保留30秒輪詢備援。詳見[看板即時同步](docs/board-realtime.md)
 
 若本機埠被占用, 三個埠可分別調整；後續 Compose 指令須沿用相同設定：
 
@@ -138,7 +138,7 @@ Workspace owner／manager 以明列的全專案 permission 管理空間內所有
 
 固定 Project 角色為負責人、專案管理者、開發者、讀者；前兩者本版共用管理權限。讀者可查看任務完整頁及看板, 不能編輯、留言、拖曳或查看實際工時；開發者可查看團隊工時, 仍只能修改本人工時。專案負責人欄位僅作責任資訊, 不會自動給權限。所有授權依有效 permission＋Project scope＋資源條件判斷, 不以角色名稱放行
 
-清單、深連結、Epic／關聯、看板、工時與通知都受相同後端範圍限制。撤權／降權於下個 API 請求生效, 舊 requestId 重試也重查權限；畫面於重新整理、拒絕回應或現有 30 秒輪詢更新。撤去專案資格後清除該頁與編輯草稿, 已有任務指派、留言、工時及歷史保留
+清單、深連結、Epic／關聯、看板、工時與通知都受相同後端範圍限制。撤權／降權於下個 API 請求生效, 舊 requestId 重試也重查權限；畫面於重新整理、拒絕回應或30秒輪詢更新；看板另以私有頻道訊號觸發重查與清除。撤去專案資格後清除該頁與編輯草稿, 已有任務指派、留言、工時及歷史保留
 
 升級前備份 SQLite（含正在使用的 WAL, 建議 SQLite backup 或 VACUUM INTO）。啟動 migration 將舊 member／maintainer／developer 空間角色改為 user, **不把所有一般成員自動加入全部專案**；原 owner／manager 保有管理入口, 再逐案加入成員。Seed 只為明確示範 namespace 加入上述 first／second 資格, 不改既有卡片／工時／帳密；重跑不恢復已撤回的資格。無需 reset, 回舊版應還原備份。完整契約見 [Project ACL](docs/project-acl.md)
 

@@ -17,6 +17,7 @@ x-backend: &backend
     SESSION_LIFETIME: 480
     CACHE_STORE: redis
     QUEUE_CONNECTION: redis
+    BROADCAST_CONNECTION: reverb
     REDIS_CLIENT: predis
     REDIS_HOST: redis
     REVERB_SERVER_HOST: 0.0.0.0
@@ -70,6 +71,8 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+      websocket:
+        condition: service_healthy
 
   websocket:
     <<: *backend
@@ -103,6 +106,7 @@ services:
     init: true
     environment:
       API_PROXY_TARGET: http://backend:3002
+      REVERB_PROXY_TARGET: http://websocket:8080
       VITE_USE_POLLING: 'true'
     ports:
       - "127.0.0.1:${TASKTRACKER_PORT:-5174}:5174"
@@ -110,6 +114,8 @@ services:
       - ./frontend/src:/app/src:ro
     depends_on:
       backend:
+        condition: service_healthy
+      websocket:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "--input-type=module", "-e", "const r = await fetch('http://127.0.0.1:5174/api/health'); if (!r.ok) process.exit(1)"]

@@ -67,6 +67,13 @@ E2E_API_URL=http://127.0.0.1:13024 E2E_REALTIME_PROJECT=tasktracker-realtime-tes
 
 可用`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`指定現有Chromium。測試會暫停／重啟**上述獨立專案**的websocket；退出時恢復服務。驗證兩個帳號的卡片同步、無內容payload、草稿與409、斷線後補抓、撤權清除／斷線、真實HTTP CSRF及1440／768／390三尺寸。截圖於忽略的`frontend/artifacts/realtime/`。
 
+## 本輪驗收結果
+
+- Laravel完整49 tests／938 assertions；RealtimeTest三項／42 assertions，包含派送故障仍保存成功寫入。
+- production build及完整browser-check通過；雙瀏覽器真實Queue／Reverb測試通過，含斷線恢復、草稿衝突、撤權及CSRF。1440／768／390畫面已檢視，同步文字及手機排版正常；不是正式容量測試或真人研究。
+- 主Compose已重建映像、完整down／up後恢復五個服務；主站登入頁、同origin WebSocket握手、資料庫FK／integrity正常。
+- 重啟前備份`/data/backups/before-realtime-20261105.sqlite`；重啟後比對26張非暫態表（含帳號與業務資料）完全相同。不做migration變更、Seed reset或業務volume移除。
+
 ## 參考
 
 查核日期2026-11-05。交易後派送與私有頻道採[Laravel 13 Broadcasting官方文件](https://laravel.com/framework/docs/13.x/broadcasting)；Reverb設定、長駐服務與代理參考[Laravel Reverb官方文件](https://laravel.com/framework/docs/13.x/reverb)。實際簽章／client events選項另外核對本專案lockfile安裝的Laravel／Reverb原始碼。
