@@ -72,7 +72,7 @@ try {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await page.screenshot({ path: `${artifacts}/home-${width}.png`, fullPage: true });
   }
-  const touch = await personal.locator('.todo-check').first().boundingBox();
+  const touch = await personal.getByLabel('待辦操作', { exact: true }).first().boundingBox();
   assert.ok(touch.width >= 44 && touch.height >= 44);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByRole('button', { name: '進入專案：UI 驗證專案', exact: true }).click();

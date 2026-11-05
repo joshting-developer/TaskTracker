@@ -8,13 +8,13 @@
   color: var(--text-primary);
 }
 
-.main { background: #fff; }
-.topbar { height: 56px; padding: 0 24px; }
+.main { background: #fff; display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+.topbar { height: 56px; padding: 0 24px; flex-shrink: 0; }
 .breadcrumbs, .breadcrumb-home, .local-indicator { font-size: 13px; color: var(--text-secondary); }
 .breadcrumbs strong { color: var(--text-primary); font-weight: 600; }
 .mobile-feature-context { display: none; }
 .icon-button { color: #626b7c; }
-.workspace-content { max-width: none; padding: 24px; }
+.workspace-content { max-width: none; padding: 24px; width: 100%; flex: 1; display: flex; flex-direction: column; }
 .page-heading { margin-bottom: 20px; }
 .page-heading h1 { font-size: 26px; color: var(--text-primary); }
 .page-heading p, .subtle, .form-intro { font-size: 14px; color: var(--text-secondary); }
@@ -78,7 +78,7 @@
 .issue-context .context-blocked { font-size: 12px; color: #79531c; background: #fff2d9; }
 .table-footer { min-height: 44px; font-size: 12px; color: var(--text-secondary); padding: 10px 24px; }
 .table-footer .pagination { font-size: 12px; }
-.page-footer { font-size: 12px; color: var(--text-secondary); }
+.page-footer { font-size: 12px; color: var(--text-secondary); margin-top: auto; padding-top: 22px; }
 .empty-state p { font-size: 14px; color: var(--text-secondary); }
 .empty-state h2 { color: var(--text-primary); }
 

@@ -1,3 +1,16 @@
+## 2026-11-05 Footer驗收
+
+- 共用.main直向flex並以100vh／100dvh撐滿，topbar不縮小；workspace-content flex:1，footer margin-top:auto並留內容間距。短頁置底，長頁自然排在資料後，不用fixed遮蓋內容。
+- 隔離API編譯版空首頁1440／768／390與16筆待辦長頁量測通過；桌面1000高footer.bottom由725.73移至976（24px底部padding），三尺寸無橫向溢位，瀏覽器無錯誤。前後畫面與長頁底部已檢視。
+- UIUX回歸發現前輪已移除.todo-check但舊觸控測試仍指向它，改量測「待辦操作」summary的44px目標並重跑。不為測試加回checkbox；U01–U08回歸已通過。
+- 日誌 /tmp/tasktracker-footer-{before,after,build,uiux}.log；量測／截圖 /tmp/tasktracker-footer-{before,after}/。不提交產物、不寫入業務DB、不改後端。產品討論及plans隨本輪commit；不push。
+
+## 2026-11-05 Footer置底修正
+
+- 使用者指出右下footer隨短內容上移，希望維持最下面。實作短內容貼齊畫面底端、長內容排在內容後方的版型，避免浮動遮住資料。
+- 查核.main／workspace-content目前未垂直撐滿，footer只是22px上間距。只調整共用外框CSS，不改資料／API／頁面導覽。
+- 使用專案內兩個UI／UX skill單元件流程，保留配色；以隔離API假帳號驗證短頁／長待辦、桌面／平板／手機與production build，更新產品討論並連plans一起本機commit，不push。
+
 ## 2026-11-05 待辦文字完成入口交付
 
 - 移除列首完成／重開checkbox及重複狀態，更多提供「標記為已完成」／「重新開啟」，保留狀態文字、刪除線、capabilities與busy／同筆草稿保護。手機動作不拆行。
