@@ -24,7 +24,7 @@
 - 接受邀請只建立目標Workspace的`user`資格，不授予專案ACL，不改動原工作區角色、個人資料、密碼或既有內容。
 - 不同Email回403；過期／未知token回400，停用資格不可透過邀請重新啟用。
 - 重試已使用的token，僅在同Email且已有有效資格時成功；不重複插入或把既有Manager／Owner降成一般成員。未加入者不能重用已消耗token。
-- 接受與消耗token在既有DB交易內完成；同Session的auth／rpc／realtime請求使用Laravel Session blocking，避免舊Session存回覆蓋選擇。
+- 接受與消耗token在既有DB交易內完成；同Session的auth／rpc／realtime與CSRF請求使用Laravel Session blocking，避免舊Session存回覆蓋選擇。
 - 前端以`X-Workspace-ID`表示畫面所屬scope。後端在業務授權及重試快取之前比對Session，不符回409 `WORKSPACE_CHANGED`，避免其他分頁切換後舊表單寫進新工作區。此header不是授權來源，未帶時仍使用Session與原資源授權；`getWorkspace`用於重新取得可信scope。
 - 普通登入選本人第一個有效資格，這輪不新增「上次登入工作區」持久化偏好或建立第二工作區功能。
 
@@ -36,4 +36,4 @@ Owner設定入口以`workspace.ownership` permission呈現，不以role字串判
 
 ## 階段驗證
 
-後端階段已完成：隔離SQLite完整53 tests／1073 assertions通過，含既有帳號登入接受、Email錯誤、過期、單次重試、身份不降級、停用拒絕、成員目錄範圍、原私有專案不可見與舊scope拒寫。前端整合與三尺寸操作驗證在下一階段完成。
+後端階段已完成：隔離SQLite完整53 tests／1073 assertions通過，含既有帳號登入接受、Email錯誤、過期、單次重試、身份不降級、停用拒絕、成員目錄範圍、原私有專案不可見與舊scope拒寫。前端階段也已完成：編譯版多工作區測試、帳號設定與完整browser-check通過。包含切換網路失敗／重試、草稿取消／確認、其他分頁409拒寫／重讀、Email不符換帳號保留邀請、新帳號註冊與未登入既有帳號登入接受；切換器及邀請面板1440／768／390尺寸已量測並檢視。後端新映像已套用，現有volume及資料保留。

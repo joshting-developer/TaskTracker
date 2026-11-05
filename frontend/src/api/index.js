@@ -1,4 +1,6 @@
 let csrfToken = '';
+let workspaceId = '', workspaceGeneration = 0;
+export function setWorkspaceContext(id) { if (workspaceId !== id) { workspaceId = id; workspaceGeneration++; } }
 async function csrf() {
   if (!csrfToken) {
     const response = await fetch('/api/csrf-cookie', { credentials: 'include', headers: { Accept: 'application/json' } });
@@ -9,16 +11,20 @@ async function csrf() {
 
 export async function callApi(operation, input = {}, group = 'rpc', retry = true) {
   let result;
+  const generation = workspaceGeneration;
+  const scopeHeaders = group !== 'auth' && operation !== 'getWorkspace' && workspaceId ? { 'X-Workspace-ID': workspaceId } : {};
   try {
-    const response = await fetch(`/api/${group}/${operation}`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': await csrf() }, body: JSON.stringify(input) });
+    const response = await fetch(`/api/${group}/${operation}`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...scopeHeaders, 'X-CSRF-TOKEN': await csrf() }, body: JSON.stringify(input) });
     const rotatedToken = response.headers.get('X-CSRF-TOKEN');
     if (rotatedToken) csrfToken = rotatedToken;
-    if (response.status === 419 && retry) { csrfToken = ''; return callApi(operation, input, group, false); }
+    if (response.status === 419 && retry) { if (group !== 'auth' && generation !== workspaceGeneration) throw new Error('工作空間已切換'); csrfToken = ''; return callApi(operation, input, group, false); }
     result = await response.json();
   } catch {
     throw Object.assign(new Error('暫時無法連線, 請確認服務已啟動後重試'), { code: 'NETWORK_ERROR' });
   }
+  if (group !== 'auth' && generation !== workspaceGeneration) throw Object.assign(new Error('工作空間已切換，已捨棄舊回應'), { code: 'STALE_RESPONSE' });
   if (!result.ok) {
+    if (result.error?.code === 'WORKSPACE_CHANGED') window.dispatchEvent(new Event('tasktracker:access-changed'));
     if ((result.error?.code === 'UNAUTHENTICATED' && operation !== 'getWorkspace') || (!['getWorkspace', 'getTodos'].includes(operation) && ['FORBIDDEN', 'NOT_FOUND'].includes(result.error?.code))) window.dispatchEvent(new Event('tasktracker:access-changed'));
     throw Object.assign(new Error(result.error?.message || '操作失敗'), { code: result.error?.code });
   }
@@ -26,6 +32,10 @@ export async function callApi(operation, input = {}, group = 'rpc', retry = true
 }
 
 export const api = {
+  listWorkspaces: () => callApi('workspaces', {}, 'auth'),
+  switchWorkspace: input => callApi('switchWorkspace', input, 'auth'),
+  acceptWorkspaceInvite: input => callApi('acceptWorkspaceInvite', input, 'auth'),
+  invitation: input => callApi('invitation', input, 'auth'),
   register: (input) => callApi('register', input, 'auth'),
   login: (input) => callApi('login', input, 'auth'),
   logout: () => callApi('logout', {}, 'auth'),

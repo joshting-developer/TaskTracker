@@ -77,7 +77,7 @@ foreach (['workspaces', 'switchWorkspace', 'acceptWorkspaceInvite', 'invitation'
 
 // 同一Session的切換與業務請求依序處理，避免舊Session覆寫新工作區。
 foreach (Route::getRoutes() as $route) {
-    if (str_starts_with($route->uri(), 'api/rpc/') || str_starts_with($route->uri(), 'api/auth/') || str_starts_with($route->uri(), 'api/realtime/')) {
+    if ($route->uri() === 'api/csrf-cookie' || str_starts_with($route->uri(), 'api/rpc/') || str_starts_with($route->uri(), 'api/auth/') || str_starts_with($route->uri(), 'api/realtime/')) {
         $route->block(10, 10);
     }
 }

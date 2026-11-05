@@ -17,7 +17,8 @@
     "test:realtime": "node tools/realtime-check.js",
     "test:home": "node tools/home-check.js",
     "test:issue-time": "node tools/issue-time-check.js",
-    "test:time-analysis": "node tools/time-analysis-check.js"
+    "test:time-analysis": "node tools/time-analysis-check.js",
+    "test:workspaces": "node tools/workspace-switch-check.js"
   },
   "dependencies": {
     "@mdi/font": "7.4.47",

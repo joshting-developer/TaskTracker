@@ -1,3 +1,12 @@
+## 2026-11-06 工作區導覽與邀請介面完成
+
+- Owner側欄以ownership permission提供工作空間設定；帳號選單只留個人資料與登出，上方切換器在首頁及專案內皆可選本人有效工作區。
+- 已登入可確認Email接受邀請，Email不符可登出並保留邀請換帳號；未登入可登入接受或新註冊。預覽Email不覆蓋已輸入內容。
+- 自主切換先檢查所有saving／草稿，成功回首頁、以Workspace key卸載待辦／報表並清空專案、通知、表單與原篩選；其他分頁scope變更同樣清除，API模組以workspace generation捨棄舊回應。419重試不能跨scope重送原操作。
+- production build、test:workspaces（真實API／編譯版）、test:settings及完整browser-check通過。切換器／邀請1440／768／390已檢視，44px關閉控制、長Email換行與局部捲動正常，無整頁溢位。含切換失敗／重試、草稿取消／確認、既有帳號／新註冊／錯帳號換登、私有資料隔離、跨分頁舊表單409與重讀。
+- 本機新後端映像已重建並更新API／Queue／Reverb，保留volume與使用者資料；本機新映像完整後端53 tests／1073 assertions通過。測試使用強制memory SQLite與獨立tmpfs API，不重設業務資料。
+- 文件及README／AGENTS已同步；沿革保留，Manager原API權限不撤銷。設定與完整回歸更新入口斷言，seed角色檢查依新Owner入口調整；測試容器完成後清理。本階段本機commit、不push。
+
 ## 2026-11-06 多工作空間與既有帳號邀請
 
 - 使用者確認Owner側欄設工作空間設定，上方工作區區塊改切換；同一既有帳號可受邀加入其他Workspace。

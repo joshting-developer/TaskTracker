@@ -46,12 +46,14 @@ async function checkSeedAccounts(browser, failures) {
     assert.equal(await page.getByRole('button', { name: '編輯專案：first', exact: true }).count(), maintainer ? 1 : 0);
   await openProjectList(page);
     assert.equal(await page.getByRole('button', { name: '進入專案：second', exact: true }).count(), role === 'developer' ? 0 : 1, 'Project 資格限制首頁範圍');
-    await page.getByRole('button', { name: '工作空間成員', exact: true }).click();
-    const team = page.getByRole('dialog', { name: 'f-ws · 成員', exact: true });
-    for (const account of ['owner', 'manager', 'maintainer', 'developer']) await team.getByText(`${account}@example.test`, { exact: true }).waitFor();
-    assert.equal(await team.getByText('成員', { exact: true }).count(), 2, 'Workspace user 與 Project 角色分開呈現');
-    assert.equal(await team.getByRole('button', { name: '建立邀請連結', exact: true }).count(), manager ? 1 : 0);
-    await team.getByRole('button', { name: '關閉工作空間設定', exact: true }).click();
+    if (role === 'owner') {
+      await page.getByRole('button', { name: '工作空間設定', exact: true }).click();
+      await page.getByRole('tab', { name: '成員與權限', exact: true }).click();
+      const team = page.getByRole('dialog', { name: 'f-ws · 成員', exact: true });
+      for (const account of ['owner', 'manager', 'maintainer', 'developer']) await team.getByText(`${account}@example.test`, { exact: true }).waitFor();
+      assert.ok(await team.getByRole('combobox', { name: /^工作空間身份 / }).count() > 0);
+      await team.getByRole('button', { name: '關閉工作空間設定', exact: true }).click();
+    } else assert.equal(await page.getByRole('button', { name: '工作空間設定', exact: true }).count(), 0);
   await openProjectList(page);
     await page.getByRole('button', { name: '進入專案：first', exact: true }).click();
     await page.getByRole('button', { name: '完成登入功能', exact: true }).waitFor();
@@ -765,7 +767,8 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.locator(`.board-cell[data-column="${reviewState}"] [data-issue="TEST-1"]`).waitFor();
 
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
-  await page.getByRole('button', { name: '工作空間成員', exact: true }).click();
+  await page.getByRole('button', { name: '工作空間設定', exact: true }).click();
+  await page.getByRole('tab', { name: '成員與權限', exact: true }).click();
   await page.getByLabel('受邀者 Email', { exact: true }).fill('mei@example.test');
   await page.getByRole('button', { name: '建立邀請連結' }).click();
   await page.getByLabel('邀請連結', { exact: true }).waitFor();
@@ -953,7 +956,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.getByLabel('狀態 5 名稱', { exact: true }).fill('待驗收');
   const settingsUrl = page.url();
   await page.getByRole('button', { name: '開啟導覽' }).click();
-  assert.equal(await page.locator('.sidebar').getByRole('button', { name: '工作空間成員', exact: true }).count(), 0);
+  assert.equal(await page.locator('.sidebar').getByRole('button', { name: '工作空間設定', exact: true }).count(), 1);
   page.once('dialog', dialog => dialog.dismiss());
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   assert.equal(page.url(), settingsUrl, '取消離開時保留目前專案');
@@ -1093,7 +1096,7 @@ try {
   const projectSidebar = page.locator('.sidebar');
   assert.equal(await projectSidebar.getByRole('navigation', { name: '專案', exact: true }).count(), 0, '專案內不列出其他專案');
   assert.equal(await projectSidebar.getByRole('navigation', { name: '工作空間', exact: true }).count(), 0, '專案內不混入工作空間導覽');
-  assert.equal(await projectSidebar.getByRole('button', { name: '工作空間成員', exact: true }).count(), 0);
+  assert.equal(await projectSidebar.getByRole('button', { name: '工作空間設定', exact: true }).count(), 1);
   assert.equal(await projectSidebar.getByRole('button', { name: /建立.*專案|新增專案/ }).count(), 0);
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await openProjectList(page);

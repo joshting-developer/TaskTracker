@@ -32,7 +32,7 @@ try {
   const menu = owner.getByRole('menu', { name: '帳號選項', exact: true });
   const profile = owner.getByRole('dialog', { name: '個人資料', exact: true });
   const settings = owner.locator('.team-dialog');
-  async function choose(name) { await avatar.click(); await menu.getByRole('menuitem', { name, exact: true }).click(); }
+  async function choose(name) { if (name === '工作空間設定') { await owner.getByRole('button', { name, exact: true }).click(); return; } await avatar.click(); await menu.getByRole('menuitem', { name, exact: true }).click(); }
   async function screenshots(label, target) {
     for (const width of [1440, 768, 390]) {
       await owner.setViewportSize({ width, height: width === 390 ? 844 : 1000 });
@@ -51,7 +51,7 @@ try {
   const touch = await avatar.boundingBox(); assert.ok(touch.width >= 44 && touch.height >= 44);
   await avatar.focus(); await owner.keyboard.press('ArrowDown'); await menu.waitFor();
   assert.equal(await menu.getByRole('menuitem', { name: '個人資料', exact: true }).evaluate(el => el === document.activeElement), true);
-  await owner.keyboard.press('ArrowDown'); assert.equal(await menu.getByRole('menuitem', { name: '工作空間設定', exact: true }).evaluate(el => el === document.activeElement), true);
+  await owner.keyboard.press('ArrowDown'); assert.equal(await menu.getByRole('menuitem', { name: '登出', exact: true }).evaluate(el => el === document.activeElement), true);
   await screenshots('menu', menu);
   await owner.keyboard.press('Escape'); await menu.waitFor({ state: 'hidden' }); assert.equal(await avatar.evaluate(el => el === document.activeElement), true);
   await avatar.click(); await owner.getByRole('heading', { name: '小待辦', exact: true }).click(); await menu.waitFor({ state: 'hidden' });
@@ -109,12 +109,13 @@ try {
     await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click(); await openProjectList(member); await member.getByRole('button', { name: '進入專案：權限測試專案', exact: true }).waitFor({ state: role === 'manager' ? 'visible' : 'hidden' });
   }
   await settings.getByRole('button', { name: '關閉工作空間設定', exact: true }).click();
-  await member.getByRole('button', { name: '帳號選單', exact: true }).click(); await member.getByRole('menuitem', { name: '工作空間設定', exact: true }).click();
-  const readonly = member.locator('.team-dialog'); await readonly.getByLabel('工作空間名稱', { exact: true }).waitFor(); assert.equal(await readonly.getByLabel('工作空間名稱', { exact: true }).getAttribute('readonly'), ''); assert.equal(await readonly.getByRole('button', { name: '儲存工作空間名稱', exact: true }).count(), 0);
-  await readonly.getByRole('tab', { name: '成員與權限', exact: true }).click(); assert.equal(await readonly.getByRole('button', { name: /調整工作空間角色|建立邀請連結/ }).count(), 0); assert.equal(await readonly.getByRole('combobox', { name: /^工作空間身份 / }).count(), 0); await readonly.getByRole('button', { name: '關閉工作空間設定', exact: true }).click();
+  assert.equal(await member.getByRole('button', { name: '工作空間設定', exact: true }).count(), 0, '一般成員無設定入口');
+  await member.getByRole('button', { name: '帳號選單', exact: true }).click();
+  assert.equal(await member.getByRole('menuitem', { name: '工作空間設定', exact: true }).count(), 0);
+  await member.keyboard.press('Escape');
   await owner.setViewportSize({ width: 390, height: 844 });
   await owner.getByRole('button', { name: '開啟導覽', exact: true }).click();
-  await owner.getByRole('button', { name: '工作空間成員', exact: true }).click();
+  await owner.getByRole('button', { name: '工作空間設定', exact: true }).click();
   await settings.getByRole('button', { name: '關閉工作空間設定', exact: true }).click();
   await owner.waitForFunction(() => document.activeElement?.getAttribute('aria-label') === '帳號選單');
   await owner.setViewportSize({ width: 1440, height: 1000 });
