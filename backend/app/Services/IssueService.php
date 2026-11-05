@@ -311,7 +311,7 @@ class IssueService
         RecordRevision::assertCurrent($current, $input);
         $comment = [
             'id' => $this->id(),
-            'content' => Fields::text($input['content'] ?? null, '留言', 2000, true),
+            'content' => Fields::markdown($input['content'] ?? null, '留言', 2000, true),
             'author' => $this->workspaceSession['user']['name'],
             'createdAt' => $this->now(),
         ];

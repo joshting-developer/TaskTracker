@@ -59,6 +59,27 @@ class Fields
     }
 
     /**
+     * 驗證Markdown原稿但保留縮排、硬換行及首尾內容。
+     *
+     * @param  mixed  $value  原稿
+     * @param  string  $label  對外欄位名稱
+     * @param  int  $max  字數上限
+     * @param  bool  $required  是否要求有可見內容
+     * @return string 完整原稿
+     */
+    public static function markdown(mixed $value, string $label, int $max, bool $required = false): string
+    {
+        if (! is_string($value)) {
+            DomainError::fail('INVALID_INPUT', $label.'格式不正確');
+        }
+        if (mb_strlen($value, 'UTF-8') > $max || $required && trim($value) === '') {
+            DomainError::fail('INVALID_INPUT', $label.'必填或超過字數限制');
+        }
+
+        return $value;
+    }
+
+    /**
      * 驗證整數型別與允許範圍。
      *
      * @param  mixed  $value  待驗證或正規化的值
@@ -158,7 +179,7 @@ class Fields
 
         return [
             'title' => self::text($input['title'] ?? null, '標題', 180, true),
-            'description' => self::text($input['description'] ?? '', '描述', 6000),
+            'description' => self::markdown($input['description'] ?? '', '描述', 6000),
             'state' => self::choice($input['state'] ?? $defaultState, array_column($statuses, 'id'), '狀態'),
             'priority' => self::choice($input['priority'] ?? 'normal', ['urgent', 'high', 'normal', 'low'], '優先級'),
             'type' => self::choice($input['type'] ?? 'task', ['epic', 'task', 'bug'], '類型'),

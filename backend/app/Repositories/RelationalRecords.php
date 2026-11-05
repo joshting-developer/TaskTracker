@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /** 將既有API DTO映射到真正欄位與外鍵，業務資料不再寫入records payload。 */
 class RelationalRecords
@@ -14,6 +15,8 @@ class RelationalRecords
     private array $identities = [];
 
     private array $users = [];
+
+    private ?bool $hasTodoContent = null;
 
     private RelationalChildren $children;
 
@@ -107,6 +110,23 @@ class RelationalRecords
         return $this->identities[$kind];
     }
 
+    /**
+     * 歷史關聯表先於Markdown欄位建立，尚未升級時保留原稿於遷移相容資料。
+     *
+     * @param  string  $kind  實體種類
+     * @return array 目前schema可使用的欄位映射
+     */
+    private function fields(string $kind): array
+    {
+        $fields = EntityDefinitions::ENTITIES[$kind]['fields'];
+        if ($kind !== 'todos') {
+            return $fields;
+        }
+        $this->hasTodoContent ??= Schema::hasColumn('todos', 'content');
+
+        return $this->hasTodoContent ? $fields : array_values(array_filter($fields, fn ($field) => $field[1] !== 'content'));
+    }
+
     /** 由內部外鍵取得公開ID。
      * @param  string  $kind  實體種類
      * @param  ?int  $id  資料庫主鍵
@@ -155,8 +175,11 @@ class RelationalRecords
                 'email' => $user->email,
             ];
         }
-        foreach (EntityDefinitions::ENTITIES[$kind]['fields'] as [$field, $column, $type, $default, $reference]) {
+        foreach ($this->fields($kind) as [$field, $column, $type, $default, $reference]) {
             $raw = $row->{$column};
+            if ($type === 'optionalText' && $raw === null) {
+                continue;
+            }
             if ($type === 'ref') {
                 if ($raw === null && in_array($field, ['convertedIssueId', 'convertedProjectId'], true)) {
                     continue;
@@ -224,7 +247,7 @@ class RelationalRecords
             if ($kind === 'members') {
                 $handled = [...$handled, 'name', 'email'];
             }
-            foreach ($definition['fields'] as [$field, $column, $type, $default, $reference]) {
+            foreach ($this->fields($kind) as [$field, $column, $type, $default, $reference]) {
                 $handled[] = $field;
                 $raw = $value[$field] ?? $default;
                 if ($type === 'ref') {

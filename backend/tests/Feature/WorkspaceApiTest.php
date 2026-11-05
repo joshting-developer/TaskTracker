@@ -37,6 +37,20 @@ class WorkspaceApiTest extends TestCase
         return $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => '登入任務', ...$fields])->assertOk()->json('data');
     }
 
+    /** Markdown縮排與硬換行不可被一般文字trim改寫。
+     * @return void
+     */
+    public function test_markdown_description_and_comments_preserve_whitespace(): void
+    {
+        $this->register();
+        $project = $this->project();
+        $source = "    echo '縮排';\n\n第一行  \n第二行\n";
+        $issue = $this->issue($project, ['description' => $source]);
+        $this->assertSame($source, $issue['description']);
+        $this->rpc('addComment', ['id' => $issue['id'], 'expectedRevision' => 1, 'content' => $source])->assertOk()->assertJsonPath('data.comments.0.content', $source);
+        $this->rpc('getWorkspace')->assertJsonPath('data.issues.0.description', $source);
+    }
+
     public function test_authentication_session_logout_and_tenant_isolation(): void
     {
         $this->rpc('getWorkspace')->assertStatus(401);

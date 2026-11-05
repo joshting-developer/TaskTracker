@@ -37,6 +37,69 @@ class TodoTest extends TestCase
     private function rpc(string $op, array $input = []) { return $this->postJson('/api/rpc/'.$op, ['requestId' => (string) Str::uuid(), ...$input]); }
     private function todo(string $title = '小事', ?string $to = null): array { return $this->rpc('createTodo', ['title' => $title, ...($to ? ['assigneeId' => $to] : [])])->assertOk()->json('data'); }
 
+    /** 完整速記獨立保存，摘要不截斷原稿，沿用權限／版本／重試。
+     * @return void
+     */
+    public function test_markdown_content_preserves_source_and_existing_write_guards(): void
+    {
+        $this->login($this->alice);
+        $content = '# '.str_repeat('原稿', 120)."\n\n- [ ] 補測試\n- [x] 準備快照\n\n```php\necho 1;\n```\n保留換行  \n下一行\n";
+        $payload = ['content' => $content, 'requestId' => 'markdown-create'];
+        $created = $this->rpc('createTodo', $payload)->assertOk()->json('data');
+        $this->rpc('createTodo', $payload)->assertJsonPath('data.id', $created['id']);
+        $item = $this->rpc('getTodos')->assertJsonCount(1, 'data.todos')->json('data.todos.0');
+        $this->assertSame($content, $item['content']);
+        $this->assertSame(180, mb_strlen($item['title']));
+        $this->assertSame('', $item['note']);
+        $this->assertDatabaseHas('todos', ['public_id' => $item['id'], 'content' => $content]);
+        $update = ['id' => $item['id'], 'expectedRevision' => 1, 'content' => "## 新內容\n\n**已確認**", 'requestId' => 'markdown-edit'];
+        $this->rpc('updateTodo', $update)->assertJsonPath('data.revision', 2);
+        $this->rpc('updateTodo', $update)->assertJsonPath('data.revision', 2);
+        $this->rpc('updateTodo', [...$update, 'requestId' => 'markdown-stale'])->assertStatus(409);
+        $this->assertSame('新內容', $this->tenant->require('todos', $item['id'])['title']);
+        $this->rpc('updateTodo', ['id' => $item['id'], 'expectedRevision' => 2, 'title' => '僅改摘要'])->assertOk();
+        $this->assertSame($update['content'], $this->tenant->require('todos', $item['id'])['content']);
+        foreach (['', " \n ", null, [], str_repeat('字', 6001)] as $invalid) {
+            $this->rpc('createTodo', ['content' => $invalid])->assertStatus(400);
+        }
+        $this->login($this->bob);
+        $this->rpc('getTodos')->assertJsonCount(0, 'data.todos');
+        $this->rpc('updateTodo', ['id' => $item['id'], 'expectedRevision' => 2, 'content' => '越權'])->assertStatus(404);
+    }
+
+    /** 轉卡未另外改寫描述時，預設帶完整Markdown而非摘要。
+     * @return void
+     */
+    public function test_markdown_conversion_defaults_to_full_source(): void
+    {
+        $this->login($this->owner);
+        $content = "# 交付檢查\n\n- [ ] 手機驗收\n\n    echo '保留縮排';\n";
+        $todo = $this->rpc('createTodo', ['content' => $content])->assertOk()->json('data');
+        $project = $this->rpc('createProject', ['name' => '驗收', 'code' => 'MD'])->assertOk()->json('data');
+        $this->rpc('convertTodo', ['id' => $todo['id'], 'expectedRevision' => 1, 'issue' => ['projectId' => $project['id']]])->assertOk();
+        $this->assertSame($content, $this->tenant->all('issues')[0]['description']);
+        $this->assertSame($content, $this->tenant->require('todos', $todo['id'])['content']);
+    }
+
+    /** 舊資料不改，欄位回退及整體儲存往返都保留新原稿。
+     * @return void
+     */
+    public function test_markdown_migration_round_trip_preserves_legacy_and_new_content(): void
+    {
+        $this->login($this->alice);
+        $old = $this->rpc('createTodo', ['title' => '舊標題', 'note' => '舊補充'])->assertOk()->json('data');
+        $new = $this->rpc('createTodo', ['content' => "# 新速記\n\n- [ ] 一起確認"])->assertOk()->json('data');
+        $before = [$this->tenant->require('todos', $old['id']), $this->tenant->require('todos', $new['id'])];
+        $markdown = require database_path('migrations/2026_11_05_000000_add_todo_markdown_content.php');
+        $relational = require database_path('migrations/2026_11_04_000000_create_relational_business_tables.php');
+        $markdown->down();
+        $relational->down();
+        $relational->up();
+        $markdown->up();
+        $this->assertSame($before, [$this->tenant->require('todos', $old['id']), $this->tenant->require('todos', $new['id'])]);
+        $this->assertSame([], json_decode(\Illuminate\Support\Facades\DB::table('todos')->where('public_id', $new['id'])->value('legacy_attributes'), true));
+    }
+
     public function test_self_notes_need_no_project_and_protect_versions_identity_and_state(): void
     {
         $this->login($this->alice);

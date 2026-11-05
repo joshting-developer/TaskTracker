@@ -6,6 +6,7 @@ use App\Authorization\ProjectAccess;
 use App\Authorization\WorkspacePermissions;
 use App\Domain\DomainError;
 use App\Domain\Fields;
+use App\Domain\TodoContent;
 use App\Repositories\RecordStore;
 use Illuminate\Support\Str;
 
@@ -240,8 +241,7 @@ class Todos
         $assigneeId = $this->assignee($input['assigneeId'] ?? $this->userId);
         $todo = [
             'id' => $id,
-            'title' => Fields::text($input['title'] ?? null, '待辦內容', 180, true),
-            'note' => Fields::text($input['note'] ?? '', '補充說明', 2000),
+            ...TodoContent::fields($input),
             'createdBy' => $this->userId,
             'creatorName' => $this->workspaceSession['user']['name'],
             'assigneeId' => $assigneeId,
@@ -294,6 +294,8 @@ class Todos
             }
             // 與待辦狀態同交易, 失敗不留半張卡；衍生 requestId 不與業務操作共用
             $issue = (new WorkspaceService($this->workspaceSession))->execute('createIssue', [
+                'title' => $todo['title'],
+                'description' => $todo['content'] ?? $todo['note'],
                 ...$fields,
                 'requestId' => 'todo-convert:'.hash('sha256', $todo['id'].':'.$input['requestId']),
             ]);
@@ -307,10 +309,7 @@ class Todos
             'convertTodo' => 'converted',
         };
         $changes = match ($operation) {
-            'updateTodo' => [
-                'title' => Fields::text($input['title'] ?? $todo['title'], '待辦內容', 180, true),
-                'note' => Fields::text($input['note'] ?? $todo['note'], '補充說明', 2000),
-            ],
+            'updateTodo' => TodoContent::fields($input, $todo),
             'completeTodo' => [
                 'state' => 'done',
                 'completedAt' => $at,

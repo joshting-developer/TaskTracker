@@ -142,6 +142,7 @@ class EntityDefinitions
             'fields' => [
                 ['title', 'title', 'string', null, null],
                 ['note', 'note', 'text', '', null],
+                ['content', 'content', 'optionalText', null, null],
                 ['createdBy', 'created_by_id', 'ref', null, 'members'],
                 ['creatorName', 'creator_name', 'string', null, null],
                 ['assigneeId', 'assignee_id', 'ref', null, 'members'],
