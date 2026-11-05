@@ -1,3 +1,16 @@
+## 2026-11-06 工作空間工時分析
+
+- 使用者授權選三個分析角度並實作，Owner／Manager側欄提供工時分析入口，先三個入口再進報表。
+- 本輪選擇：成員投入（由誰填報／跨專案分布）、專案投入（資源分布）、時間趨勢（每日投入）。這是本輪實作選擇，不將工時當績效或完成率。
+- workspace.timeReports.read映射管理身份，以有效permission檢查；後端專用唯讀API逐專案確認團隊工時可讀，限定目前Workspace。
+- 日期含首尾、Asia/Taipei工作日、最多366日；只計有效原始紀錄，Epic與子卡各筆一次，含已結案卡／歷史成員，不以估時或交付比例混算。
+- 前端新增獨立#/time-analysis列表及/members、/projects、/trend，日期與成員／專案篩選、空／錯誤／載入／撤權與手機狀態。
+- baseline AccountSettingsTest 4 tests／57 assertions通過；新增TimeReportTest驗證加總、租戶／逐Project隔離、偽造角色、升降與撤權、366日、控制字元與無效日期。完整後端51 tests通過，強制隔離SQLite。
+- production build、test:time-analysis編譯版真實API及完整browser-check均通過；涵蓋三入口／深連結／返回、各維度210分鐘一致、原始entry去重／作廢排除、篩選交集、空資料、連線失敗／重試、背景重讀沿用已套用條件、一般成員403、Manager撤權回首頁。
+- 已檢視三入口及三報表在1440／768／390畫面：保留既有品牌，標題26／24px，表格14px，手機局部橫向捲動且可鍵盤聚焦；趨勢日期／上限移到SVG外維持13px可讀，三入口標題對齊。無整頁橫向溢位與瀏覽器錯誤。
+- README／產品討論／ACL／工時分析契約及AGENTS同步；不新增schema／依賴，不匯出、不計費，不把填報當績效。RecordStore批次讀取的量級限制已記文件。
+- 主queue／websocket已重啟載入程式，API新路由與主服務健康已確認；測試只用專用tmpfs假資料、完成後容器已清理，不重設業務資料。本機階段commit、不push。
+
 ## 2026-11-06 工作空間身份下拉選單
 
 - 使用者要求成員列直接下拉選身份，移除調整角色按鈕及第二份表單。

@@ -15,6 +15,8 @@ docs/               產品決策與設計紀錄
 
 首頁 `#/` 目前只顯示小待辦，保留空間供未來個人小工具；專案搜尋、建立與進入改在獨立的「專案列表」`#/projects`。品牌回首頁，專案麵包屑返回列表，小工具配置功能尚未實作。
 
+Owner／Manager可從側欄「工時分析」選擇成員投入、專案投入或時間趨勢；提供期間、專案、成員篩選，預設本月。權限由後端permission與專案scope判斷，Epic與子卡各筆工時不重複加總。詳見[工時分析](docs/time-analysis.md)。
+
 ## 資料儲存
 
 業務資料使用關聯式 SQLite：Workspace／Member、Project／Status／ACL、Issue／Comment／Relation、Board／收錄、工時、Todo／通知各有獨立資料表，含外鍵與索引。Laravel Eloquent 模型提供關聯；歷史事件與重試結果保留快照 JSON。

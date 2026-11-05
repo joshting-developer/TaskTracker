@@ -36,6 +36,11 @@ class WorkspaceOperationAccess
     public function authorize(string $operation, array $input): void
     {
         Permissions::authorize($this->workspaceSession, 'workspace.read');
+        if ($operation === 'getTimeReport') {
+            Permissions::authorize($this->workspaceSession, 'workspace.timeReports.read');
+
+            return;
+        }
         if ($operation === 'getWorkspace') {
             return;
         }

@@ -1,5 +1,7 @@
 # Project ACL 契約
 
+2026-11-06新增工作空間權限`workspace.timeReports.read`，固定映射Owner／Manager；用於跨專案工時分析，仍逐專案檢查`project.read`及`timeEntry.readTeam`，Project管理者／開發者不因此取得入口。詳見[工時分析](time-analysis.md)。
+
 2026-10-30, 本輪沿用使用者已確認的 Workspace owner／manager／user 與「角色提供權限, 依有效 permission＋scope＋資源條件授權」原則。以下是這次選定的最小實作矩陣, 非完整企業權限系統
 
 ## 授權範圍

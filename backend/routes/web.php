@@ -42,6 +42,7 @@ Route::post('/api/rpc/createIssue', [IssueController::class, 'store']);
 Route::post('/api/rpc/updateIssue', [IssueController::class, 'update']);
 Route::post('/api/rpc/addComment', [IssueController::class, 'comment']);
 
+Route::post('/api/rpc/getTimeReport', [TimeEntryController::class, 'report']);
 Route::post('/api/rpc/logTime', [TimeEntryController::class, 'store']);
 Route::post('/api/rpc/updateTime', [TimeEntryController::class, 'update']);
 Route::post('/api/rpc/voidTime', [TimeEntryController::class, 'invalidate']);

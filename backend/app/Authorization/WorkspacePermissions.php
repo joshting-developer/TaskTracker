@@ -18,7 +18,7 @@ class WorkspacePermissions
     public static function resolve(string $roleId): array
     {
         $personal = ['workspace.read', 'todo.read', 'todo.writeOwn', 'todo.assign'];
-        $manage = [...$personal, 'workspace.members.read', 'workspace.members.manage', 'workspace.update', 'workspace.invite', 'project.create', ...array_values(ProjectAccess::ANY)];
+        $manage = [...$personal, 'workspace.timeReports.read', 'workspace.members.read', 'workspace.members.manage', 'workspace.update', 'workspace.invite', 'project.create', ...array_values(ProjectAccess::ANY)];
 
         return match ($roleId) {
             'owner' => [...$manage, 'workspace.ownership', 'smtp.verify'],

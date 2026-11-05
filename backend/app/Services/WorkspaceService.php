@@ -37,6 +37,9 @@ class WorkspaceService
     public function execute(string $operation, array $input): array
     {
         $this->authorization->authorize($operation, $input);
+        if ($operation === 'getTimeReport') {
+            return (new WorkspaceTimeReport($this->store, $this->workspaceSession))->get($input);
+        }
         if ($operation === 'getWorkspace') {
             return (new WorkspaceQuery($this->store, $this->workspaceSession))->getWorkspace();
         }

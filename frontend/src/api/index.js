@@ -30,6 +30,7 @@ export const api = {
   login: (input) => callApi('login', input, 'auth'),
   logout: () => callApi('logout', {}, 'auth'),
   getWorkspace: () => callApi('getWorkspace'),
+  getTimeReport: input => callApi('getTimeReport', input),
   realtimeConfig: () => callApi('config', {}, 'realtime'),
   authorizeRealtime: input => callApi('authorize', input, 'realtime'),
   getProfile: () => callApi('getProfile'),
