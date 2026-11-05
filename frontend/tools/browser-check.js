@@ -1,3 +1,4 @@
+import { moveBoardCard, changeBoardCardStateInDetail } from './board-actions.js';
 import { openProjectList } from './navigation.js';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
@@ -289,8 +290,9 @@ async function checkProjectAcl(page, browser, failures) {
   await teammate.getByRole('button', { name: '任務看板', exact: true }).click();
   assert.equal(await teammate.getByRole('button', { name: '新增看板', exact: true }).count(), 0);
   await teammate.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
+  await teammate.locator(`[data-issue="${fixture.issue.identifier}"]`).waitFor();
   assert.equal(await teammate.locator('[draggable="true"]').count(), 0);
-  assert.equal(await teammate.getByLabel(`${fixture.issue.identifier} 的狀態`).isDisabled(), true);
+  assert.equal(await teammate.locator('.issue-card select').count(), 0);
   await teammate.screenshot({ path: 'artifacts/reader-board-acl.png', fullPage: true });
 
   // 同一人另一個 Project 為 developer, 不可把權限攤平給唯讀 Project
@@ -307,8 +309,8 @@ async function checkProjectAcl(page, browser, failures) {
   assert.equal(await teammate.getByRole('button', { name: '進入專案：ACL 未授權專案', exact: true }).count(), 0);
 
   await teammate.goto(`http://127.0.0.1:5175/#/projects/${fixture.other.id}/board/${fixture.board.id}`);
-  await teammate.getByLabel(`${fixture.task.identifier} 的狀態`).waitFor();
-  assert.equal(await teammate.getByLabel(`${fixture.task.identifier} 的狀態`).isDisabled(), false);
+  await teammate.locator(`[data-issue="${fixture.task.identifier}"][draggable="true"]`).waitFor();
+  assert.equal(await teammate.locator('.issue-card select').count(), 0);
   assert.equal(await teammate.getByRole('button', { name: /新增任務|新增卡片|編輯收錄|移除看板/ }).count(), 0, '開發者可移動既有卡片, 但不可修改自訂收錄或新增並收錄');
 
   // 撤權時已開啟、未儲存的任務也必須卸載
@@ -483,7 +485,7 @@ async function checkBoardWorkflow(page) {
   await page.getByLabel('看板卡片密度').selectOption('compact');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, '手機頁面不被看板撐寬');
   assert.equal(await page.locator('.board-scroll').evaluate(element => element.scrollWidth > element.clientWidth), true, '手機在看板內橫向捲動');
-  await page.getByLabel('VISUAL-3 的狀態').selectOption('done');
+  await changeBoardCardStateInDetail(page, 'VISUAL-3', 'done');
   await secondLane.locator('[data-column="done"] [data-issue="VISUAL-3"]').waitFor();
   await page.screenshot({ path: 'artifacts/mobile-swimlane-board.png', fullPage: true });
   console.log('PASS: separate list/board URLs, Epic swimlanes/create/atomic move, card preferences, retired view links, deep links and mobile scrolling');
@@ -539,7 +541,7 @@ async function checkCustomBoards(page) {
   await dialog.getByLabel(`收錄 ${fixture.epic.identifier}`, { exact: true }).uncheck();
   await dialog.getByRole('button', { name: '儲存看板', exact: true }).click();
   await page.waitForFunction(() => document.querySelectorAll('.issue-card').length === 1);
-  await page.getByLabel(`${fixture.task.identifier} 的狀態`, { exact: true }).selectOption('in_progress');
+  await moveBoardCard(page, fixture.task.identifier, 'in_progress');
   await page.locator(`[data-column="in_progress"] [data-issue="${fixture.task.identifier}"]`).waitFor();
   await page.getByRole('button', { name: /新增任務/ }).first().click();
   const editor = page.getByRole('dialog', { name: '新增一個任務', exact: true });
@@ -758,7 +760,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await page.locator('[data-state]').nth(4).waitFor();
   const reviewState = await page.locator('[data-state]').nth(4).getAttribute('data-state');
-  await page.getByLabel('TEST-1 的狀態').selectOption(reviewState);
+  await moveBoardCard(page, 'TEST-1', reviewState);
   await page.locator(`.board-cell[data-column="${reviewState}"] [data-issue="TEST-1"]`).waitFor();
 
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
@@ -1034,7 +1036,7 @@ try {
   await page.getByLabel('篩選狀態').selectOption('');
   await page.getByRole('button', { name: '任務看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
-  await page.getByLabel('DEMO-3 的狀態').selectOption('done');
+  await moveBoardCard(page, 'DEMO-3', 'done');
   await page.locator('.board-cell[data-column="done"] [data-issue="DEMO-3"]').waitFor();
   await page.locator('[data-issue="DEMO-4"][draggable="true"]').dragTo(page.locator('.board-cell[data-column="todo"]'), { sourcePosition: { x: 10, y: 10 }, targetPosition: { x: 5, y: 5 } });
   await page.locator('.board-cell[data-column="todo"] [data-issue="DEMO-4"]').waitFor();

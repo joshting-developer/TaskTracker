@@ -87,8 +87,6 @@
 .visual-board .column-header > span { font-size: 14px; font-weight: 600; }
 .visual-board .column-header b { font-size: 12px; color: #596276; background: #e8ebf1; }
 .visual-board .type-tag { font-size: 12px; color: #596276; }
-.visual-board .card-state select { font-size: 13px; color: #424b5c; }
-.visual-board .card-state { border-top-color: #e2e5ed; }
 .visual-board .issue-context { font-size: 12px; }
 .visual-board .board-tools { padding-left: 24px; padding-right: 24px; }
 .board-workspace .task-workspace { flex-shrink: 0; }

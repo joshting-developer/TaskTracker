@@ -1,3 +1,4 @@
+import { moveBoardCard, changeBoardCardStateInDetail } from './board-actions.js';
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createServer, preview } from 'vite';
@@ -78,7 +79,7 @@ try {
     await page.getByLabel('看板卡片密度').selectOption('compact');
     const compact = await first.boundingBox(); assert.ok(compact.height < detailed.height * .78, JSON.stringify({ compact, detailed }));
     assert.equal(await first.locator('.issue-context, .board-card-description, .due-date, .comment-count').count(), 0);
-    await first.getByRole('combobox', { name: `${tasks[0].identifier} 的狀態`, exact: true }).waitFor();
+    assert.equal(await board.locator('.issue-card select, .card-state').count(), 0, '卡片不提供重複的狀態控制');
     await page.reload(); assert.equal(await page.getByLabel('看板卡片密度').inputValue(), 'compact');
     assert.equal(await board.getByText('快速編輯', { exact: true }).count(), 0);
     await first.locator('.card-title').dblclick();
@@ -92,9 +93,10 @@ try {
     for (const density of ['comfortable', 'compact']) { await page.getByLabel('看板卡片密度').selectOption(density); await first.screenshot({ path: `${artifacts}/card-${density}.png` }); }
     await page.setViewportSize({ width: 390, height: 844 });
     await first.getByRole('button', { name: `編輯 ${tasks[0].identifier}`, exact: true }).click(); await editor.waitFor(); await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
+    await changeBoardCardStateInDetail(page, tasks[0].identifier, 'in_progress');
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.getByLabel('看板泳道').selectOption('epic');
-    await page.getByLabel(`${epic.identifier} 的狀態`).selectOption('in_progress');
+    await moveBoardCard(page, epic.identifier, 'in_progress');
     await board.locator(`[data-column="in_progress"] [data-issue="${epic.identifier}"]`).waitFor();
     const saved = (await call(page, 'getWorkspace')).issues.find(issue => issue.id === epic.id); assert.equal(saved.epicId, ''); assert.equal(saved.state, 'in_progress');
     const custom = await call(page, 'createBoard', { projectId: project.id, name: '單卡收錄', selectedIssueIds: [tasks[0].id], requestId: crypto.randomUUID() });

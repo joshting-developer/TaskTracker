@@ -51,7 +51,8 @@ try {
   const changed = await call(owner, 'updateIssue', { id: issue.id, expectedRevision: issue.revision, title: '跨使用者即時更新', state: 'in_progress' });
   const card = reader.locator(`[data-issue="${issue.identifier}"]`);
   await card.getByText('跨使用者即時更新', { exact: true }).waitFor({ timeout: 8000 });
-  assert.equal(await card.locator('select').inputValue(), 'in_progress');
+  assert.equal(await card.evaluate(el => el.closest('[data-column]').dataset.column), 'in_progress');
+  assert.equal(await card.locator('select').count(), 0);
   const signalDeadline = Date.now() + 8000;
   while (!signals.length && Date.now() < signalDeadline) await new Promise(resolve => setTimeout(resolve, 50));
   assert.ok(signals.length > 0); assert.deepEqual(signals[0], { changed: true });

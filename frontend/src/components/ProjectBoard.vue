@@ -82,13 +82,12 @@ function drop(event, state, lane) {
           </header>
           <div v-if="group === 'none' || !collapsed.includes(lane.id)" class="lane-columns">
             <div v-for="state in states" :key="state.id" class="board-cell" :class="{ 'drag-over': dragOver === `${lane.id}:${state.id}` }" :data-column="state.id" @dragover.prevent="dragOver = `${lane.id}:${state.id}`" @dragleave.self="dragOver = ''" @drop.prevent="drop($event, state.id, lane)">
-              <article v-for="issue in lane.issues.filter(item => item.state === state.id)" :key="issue.id" class="issue-card" :class="{ moving: moving === issue.id }" :draggable="canWrite && !moving" :data-issue="issue.identifier" tabindex="0" :aria-label="`${issue.identifier} ${issue.title}`" @dblclick="edit(issue, $event)" @keydown.f2="keyboardEdit(issue, $event)" @dragstart="startDrag($event, issue)" @dragend="dragOver = ''">
+              <article v-for="issue in lane.issues.filter(item => item.state === state.id)" :key="issue.id" class="issue-card" :class="{ moving: moving === issue.id }" :draggable="canWrite && !moving" :data-issue="issue.identifier" tabindex="0" :aria-label="`${issue.identifier} ${issue.title} · ${state.label}`" @dblclick="edit(issue, $event)" @keydown.f2="keyboardEdit(issue, $event)" @dragstart="startDrag($event, issue)" @dragend="dragOver = ''">
                 <div class="card-top"><span class="identifier">{{ issue.identifier }}</span><span class="type-tag">{{ option(TYPES, issue.type)?.label }}</span><span v-if="density === 'comfortable'" class="priority-label" :style="{ '--priority-color': option(PRIORITIES, issue.priority)?.color }" :title="`優先級：${option(PRIORITIES, issue.priority)?.label}`"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span></span><button v-if="canWrite" type="button" class="icon-button card-edit" :aria-label="`編輯 ${issue.identifier}`" title="編輯任務（也可雙擊卡片或按 F2）" :disabled="Boolean(moving)" @click="clearReading(); emit('open', issue, false)"><Icon name="edit" :size="15" /></button></div>
                 <button class="card-title" @click="read(issue, $event)">{{ issue.title }}</button>
                 <p v-if="density === 'comfortable' && issue.description" class="board-card-description">{{ issue.description }}</p>
                 <div class="card-bottom"><span v-if="density === 'comfortable' && issue.dueDate" :class="['due-date', { overdue: overdue(issue) }]"><Icon name="clock" :size="12" />{{ issue.dueDate.slice(5).replace('-', '/') }}</span><span v-if="density === 'comfortable' && issue.comments.length" class="comment-count"><Icon name="message" :size="13" />{{ issue.comments.length }}</span><span class="board-assignee" :title="memberName(issue.assignee)"><span v-if="issue.assignee" class="avatar small">{{ memberName(issue.assignee).slice(0, 1) }}</span>{{ memberName(issue.assignee) }}</span></div>
                 <IssueContext v-if="density === 'comfortable'" :issue="issue" :issues="issues" :entries="entries" :project="project" :can-read-time="project.permissions?.includes('timeEntry.readOwn')" @open="emit('open', $event)" />
-                <label class="card-state"><span class="sr-only">{{ issue.identifier }} 的狀態</span><select :value="issue.state" :disabled="Boolean(moving) || !canWrite" :aria-label="`${issue.identifier} 的狀態`" @change="emit('move', issue, { state: $event.target.value })"><option v-for="next in states" :key="next.id" :value="next.id">{{ next.label }}</option></select></label>
               </article>
               <button v-if="canCreate" class="lane-add" :aria-label="`在${lane.label}新增${state.label}任務`" :disabled="Boolean(moving) || !canWrite" @click="emit('create', { state: state.id, epicId: group === 'epic' ? lane.id : '' })"><Icon name="plus" :size="15" /><span>新增卡片</span></button>
             </div>
@@ -136,8 +135,6 @@ function drop(event, state, lane) {
 .compact-cards .card-title { margin: 4px 0; font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .compact-cards .card-top { margin-bottom: 5px; }
 .compact-cards .card-bottom { margin-top: 4px; }
-.compact-cards .card-state { margin-top: 7px; padding-top: 5px; }
-.compact-cards .card-state select { min-height: 44px; }
 .lane-add { display: flex; align-items: center; gap: 6px; color: #596276; padding: 7px 4px; font-size: 12px; }
 .lane-add:hover { color: #8670b2; }
 .board-empty-note { padding: 12px 20px; font-size: 13px; color: #5f6673; }
