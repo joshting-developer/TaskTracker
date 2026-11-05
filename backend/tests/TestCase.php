@@ -9,7 +9,7 @@ abstract class TestCase extends BaseTestCase
     public function createApplication()
     {
         // Compose 的真實程序環境優先於 PHPUnit env；在 framework bootstrap 前強制隔離
-        foreach (['APP_ENV' => 'testing', 'DB_CONNECTION' => 'sqlite', 'DB_DATABASE' => ':memory:', 'DB_URL' => '', 'SESSION_DRIVER' => 'array', 'CACHE_STORE' => 'array', 'QUEUE_CONNECTION' => 'sync'] as $key => $value) {
+        foreach (['APP_ENV' => 'testing', 'DB_CONNECTION' => 'sqlite', 'DB_DATABASE' => ':memory:', 'DB_URL' => '', 'SESSION_DRIVER' => 'array', 'CACHE_STORE' => 'array', 'QUEUE_CONNECTION' => 'sync', 'BROADCAST_CONNECTION' => 'null'] as $key => $value) {
             putenv($key.'='.$value);
             $_ENV[$key] = $_SERVER[$key] = $value;
         }
@@ -18,9 +18,11 @@ abstract class TestCase extends BaseTestCase
         $app['config']->set('database.connections.sqlite.database', ':memory:');
         $app['config']->set('database.connections.sqlite.url', null);
         $app['db']->purge('sqlite');
-        if (!$app->environment('testing') || $app['config']->get('database.connections.sqlite.database') !== ':memory:') {
+        $app['config']->set('broadcasting.default', 'null');
+        if (! $app->environment('testing') || $app['config']->get('database.connections.sqlite.database') !== ':memory:') {
             throw new \RuntimeException('測試未隔離, 拒絕執行資料庫重設');
         }
+
         return $app;
     }
 }

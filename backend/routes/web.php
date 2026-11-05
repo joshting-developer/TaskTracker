@@ -7,6 +7,7 @@ use App\Http\Controllers\BoardController;
 use App\Http\Controllers\IssueController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
+use App\Http\Controllers\RealtimeController;
 use App\Http\Controllers\SmtpController;
 use App\Http\Controllers\SystemController;
 use App\Http\Controllers\TimeEntryController;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/api/health', [SystemController::class, 'health']);
 Route::get('/api/csrf-cookie', [SystemController::class, 'csrf']);
+Route::post('/api/realtime/config', [RealtimeController::class, 'config']);
+Route::post('/api/realtime/authorize', [RealtimeController::class, 'authorizeChannel'])->middleware('throttle:120,1');
 
 Route::post('/api/auth/register', [AuthController::class, 'register'])->middleware('throttle:20,1');
 Route::post('/api/auth/login', [AuthController::class, 'login'])->middleware('throttle:20,1');

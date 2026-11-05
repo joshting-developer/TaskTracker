@@ -183,6 +183,7 @@ class AccountSettings
         if (! $saved) {
             DomainError::fail('REVISION_CONFLICT', '設定已被更新，請重新載入後再修改');
         }
+        (new ProjectSignals($this->context))->workspaceChanged();
 
         return $result;
     }

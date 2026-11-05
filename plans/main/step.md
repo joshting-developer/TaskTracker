@@ -1,3 +1,19 @@
+## 2026-11-05 看板WebSocket即時協作
+
+- 使用者要求看板加入WebSocket、調整Laravel／Docker，完成後整套Compose重啟，已明確授權本機重啟，不推送／部署。
+- Reverb／Redis已有但原broadcast=log且無客戶端。採私有Workspace／Project頻道，只推changed訊號，不推任務內容；Session＋有效project.read／issue.read授權，API持續負責資料權限。
+- 寫入成功且交易commit後才Queue廣播，重試／rollback不重複；任務／看板／狀態／ACL／工時及轉卡涵蓋，空間角色異動通知相關專案刷新。舊訂閱收到的仍僅無內容訊號，refresh後失權清畫面並離開頻道。
+- pusher-js採官方Reverb相容協定處理重連／heartbeat，執行期從authenticated API取公鑰與同origin /reverb 路徑，Vite proxy轉Reverb；secret只在backend volume。前端只在看板頁訂閱，去抖／合併刷新、離開／登出清連線，不更新編輯中的基準revision；30秒輪詢備援。
+- 隔離PHP測試先baseline，新增授權／交易／重試測試；獨立Compose三程序API／Queue／Reverb＋Redis與SQLite假資料，真實雙瀏覽器同步／斷線／拒絕權限／草稿驗證。分階段本機commit含plans，重建全部Compose並完整重啟，保留volume／資料及備份。
+- 使用專案內backend-development-standards及外部程序／契約reference，查Laravel13官方Broadcasting／Reverb文件與已安裝vendor來源；不載入外部skill。
+
+## 2026-11-05 WebSocket API階段驗證
+
+- RealtimeController以Session／CSRF／origin及有效Project讀取permission簽固定私有頻道；回傳公開key，不回secret；Reverb拒client events。
+- ProjectSignals於交易commit後Queue廣播無內容訊號，rollback／requestId重放不送；派送故障不改成功API。Issue／工時／看板／ACL與空間設定覆蓋，待辦轉卡沿用Issue寫入。
+- 最終完整PHP為49 tests／938 assertions通過；RealtimeTest為3 tests／42 assertions，另覆核事件映射與測試禁廣播設定通過。真實雙瀏覽器即時同步、草稿409、停止／啟動Reverb補抓與撤權／CSRF已通過；前端最終回歸與整組主Compose重啟下一階段交付。
+- 後端與契約先本機commit，前端／Compose／README／產品討論及剩餘驗收於下一階段提交。不push、不重設Seed，不觸碰其他專案。
+
 ## 2026-11-05 看板互動交付驗收
 
 - 已修單一頁面垂直捲動、局部橫向；取消board-scroll max-height與外層flex收縮，三尺寸最後卡片／新增入口完整可見。Epic未刪，原先前端filters排除；Board允許Epic，列表仍Task／Bug。

@@ -62,7 +62,7 @@ class WorkspaceService
         $boards = new ProjectBoards($this->store, $this->workspaceSession);
         $members = new ProjectMembers($this->store, $this->workspaceSession);
 
-        return match ($operation) {
+        $result = match ($operation) {
             'createProject' => $projects->createProject($input),
             'updateProject' => $projects->updateProject($input),
             'updateStatuses' => $projects->updateStatuses($input),
@@ -80,5 +80,13 @@ class WorkspaceService
             'loadDemo' => (new DemoService($this->store, $this->workspaceSession, $projects, $issues))->loadDemo($input),
             default => DomainError::fail('NOT_FOUND', '找不到這個操作'),
         };
+        $projectId = match ($operation) {
+            'createProject', 'updateProject', 'updateStatuses' => $result['id'],
+            'archiveBoard' => $this->store->require('boards', $result['id'])['projectId'],
+            default => $result['projectId'] ?? '',
+        };
+        (new ProjectSignals($this->workspaceSession))->changed($projectId);
+
+        return $result;
     }
 }

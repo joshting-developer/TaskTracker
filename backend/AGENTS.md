@@ -18,7 +18,7 @@
 - 新授權以有效權限、Workspace／Project scope 與資源條件判斷；roleId 僅在角色映射中使用, 不在 controller 或 service 比較名稱放行
 - RecordStore／RelationalRecords 由伺服器選定 Workspace；核心欄位、子集合與關聯寫入明確業務表，複合FK限制Workspace／Project。LegacyRecordStore／StoredRecord僅供歷史migration、匯入staging與回退，不回到records正常雙寫。寫入前仍在交易內重查資格與revision，requestId結果也須先授權
 - Project ACL與固定權限矩陣已落地；逐Project過濾任務、看板、通知及工時。保留撤權清除與重試前授權，不能把加入Workspace視為可讀全部Project
-- SMTP 預設 preview, 只能 verify, 不寄真實郵件。Reverb 目前只提供連線基礎, 不新增未授權公開業務頻道
+- SMTP 預設 preview, 只能 verify, 不寄真實郵件。Reverb已接看板私有Project頻道，commit後Queue只發無內容訊號，訂閱與API重讀依有效permission／scope授權；不新增公開業務頻道，見[同步契約](../docs/board-realtime.md)
 - Reverb／Queue 是長駐程序, 程式修改後重啟；秘密來自環境或忽略的 volume, 不寫進 image、Git、前端及測試輸出
 - 匯入只允許空目標, 不改來源, 測試使用人造資料與暫存 SQLite
 - 不自動安裝額外 agent 工具或修改全域環境；新增套件須與當次任務相關
