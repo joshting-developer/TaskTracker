@@ -108,6 +108,14 @@ docker compose exec backend php artisan tasktracker:seed-demo --reset
 
 Seed 只允許 local／testing。Laravel 的 `php artisan db:seed` 也呼叫相同非重設流程。目前權限矩陣及限制見[Project ACL 契約](docs/project-acl.md)；[四帳號舊紀錄](docs/產品討論紀錄.md#四帳號權限試用-seed2026-10-22)保留沿革
 
+## 帳號與工作空間設定
+
+右上角頭像可開啟帳號選單，查看姓名、Email與目前空間，前往個人資料／工作空間設定或登出；左下角保留身分資訊。個人資料可改顯示名稱，Email目前唯讀。
+
+「工作空間設定 → 一般設定」可改空間名稱；「成員與權限」可邀請同伴及調整固定工作空間角色。Owner／Manager有空間管理權限，一般成員只能查看有權讀取的資料；角色操作仍由後端有效permission決定，這裡不提供ownership轉移或自訂角色。個別專案請進入專案側欄「成員與權限」設定負責人／專案管理者／開發者／讀者，與空間角色分開。
+
+設定表單有版本衝突、重試及未保存確認，改名不改歷史內容。詳見 [帳號與工作空間設定](docs/account-workspace-settings.md)。專用瀏覽器驗證：在 `frontend/` 執行 `E2E_API_URL=http://127.0.0.1:13004 npm run test:settings`，必須使用隔離API，與其他瀏覽器腳本分開使用5175埠。
+
 ## 首頁小待辦
 
 首頁提供不屬於 Project Issue 的輕量待辦：直接寫一整塊 Markdown 速記，Enter 換行，按「加入待辦」保存；選同空間成員即可直接交辦。首行自動產生清單摘要，展開可閱讀全文。所有有效 Workspace 成員都可互相交辦, 包含一般成員交給 Manager／Owner；收到後直接進「我的待辦」, 可完成、重新開啟或退回交辦者。「我交辦的」用來追蹤自己交出去的項目, 完成／取消／轉卡預設收合。寬螢幕與專案入口並列, 窄螢幕先顯示專案；未完成待辦預設預覽三筆, 可展開全部, 從通知定位時會自動顯示目標項目

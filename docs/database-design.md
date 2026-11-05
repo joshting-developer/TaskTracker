@@ -35,7 +35,7 @@ Epic／Task／Bug 共用 `issues`；`epic_id` 與 `parent_issue_id` 是不同關
 
 | 範圍 | 資料表 | 內容 |
 | --- | --- | --- |
-| 帳號／空間 | `users`、`workspaces`、`workspace_members` | 帳號資料及密碼、工作空間、加入時間／空間角色／停用時間 |
+| 帳號／空間 | `users`、`workspaces`、`workspace_members` | 帳號資料及密碼、工作空間、加入時間／空間角色／停用時間；profile_revision／settings_revision／role_revision各自保護設定寫入 |
 | 邀請 | `workspace_invitations` | 邀請識別碼、目標 Email、空間、到期與使用時間 |
 | 專案 | `projects` | 代碼、名稱、介紹、負責人、下個卡片編號、revision |
 | 狀態 | `project_statuses` | 專案內穩定 code、名稱、category、顏色、排序 |

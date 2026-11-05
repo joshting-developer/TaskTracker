@@ -1,3 +1,18 @@
+## 2026-11-05 帳號選單與設定交付完成
+
+- 右上頭像為44px按鈕，選單顯示姓名／Email／空間，支援方向鍵／Home／End／Escape／外點／關閉焦點；提供個人資料、工作空間設定及登出，移除左下登出。
+- 個人顯示名稱可改、Email唯讀；工作空間一般設定改名，成員與權限含固定角色／邀請與Project ACL路徑提示；Project側欄入口明示成員與權限。草稿與衝突保護、手機隱藏側欄關閉後焦點回頭像。
+- API階段09d72dc，後端46 tests／896 assertions；完整browser-check、U01–U08 UIUX、編譯版本設定流程與build通過。三尺寸及橫向短螢幕截圖已檢視，修角色字級／焦點／選單高度；未宣稱上游inspector全部通過或真人研究。
+- 本機備份/data/backups/before-account-settings-20261105.sqlite，副本預演與正式migrate均確認業務DTO／原帳號欄位／records不變、3筆待辦與密碼保留、FK／integrity正常。長駐服務已重建；不Reset Seed、不寄信。
+- 契約／README／產品討論／DB／permission目錄及plans同步。前端階段本機commit；GitHub SSH連線已排查並切正確帳號，未push。
+
+## 2026-11-05 GitHub認證排查
+
+- 使用者push被GitHub辨識為jack100398而403；查核TaskTracker原為HTTPS＋osxkeychain，GuildManager原為SSH。
+- SSH唯讀驗證成功對應joshting-developer；指定TaskTracker的ls-remote成功且無refs。僅將本機origin改為git@github.com:joshting-developer/TaskTracker.git，未push，尚無upstream。
+- 使用者明確要求不再保留jack100398憑證；只erase Keychain protocol=https／host=github.com／username=jack100398，get檢查不再取得password，不輸出秘密；其他服務／SSH key不變。
+- 待前端設定階段驗收commit後，可由使用者git push -u origin main首次推送；沒有推論自動push授權。
+
 ## 2026-11-05 設定API階段完成
 
 - 新增設定Controller／AccountSettings服務／SettingsRepository，ApiExecution同交易串接；路由只註冊固定五操作。

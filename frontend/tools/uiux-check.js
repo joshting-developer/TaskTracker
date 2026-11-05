@@ -152,7 +152,7 @@ try {
   }
   await page.setViewportSize({ width: 1440, height: 900 });
   const projectUrl = `http://127.0.0.1:5175/#/projects/${fixture.project.id}`;
-  for (const [name, route] of [['工時月曆', 'time'], ['狀態設定', 'settings'], ['專案成員', 'members'], ['通知預覽', 'notifications'], ['Epic 概覽', 'epics']]) {
+  for (const [name, route] of [['工時月曆', 'time'], ['狀態設定', 'settings'], ['專案成員與權限', 'members'], ['通知預覽', 'notifications'], ['Epic 概覽', 'epics']]) {
     const nav = page.getByRole('navigation', { name: '專案任務' }).getByRole('button', { name: new RegExp(`^${name}`) });
     await nav.click();
     assert.equal(page.url(), `${projectUrl}/${route}`);

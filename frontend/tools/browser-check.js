@@ -46,7 +46,7 @@ async function checkSeedAccounts(browser, failures) {
     for (const account of ['owner', 'manager', 'maintainer', 'developer']) await team.getByText(`${account}@example.test`, { exact: true }).waitFor();
     assert.equal(await team.getByText('成員', { exact: true }).count(), 2, 'Workspace user 與 Project 角色分開呈現');
     assert.equal(await team.getByRole('button', { name: '建立邀請連結', exact: true }).count(), manager ? 1 : 0);
-    await team.getByRole('button', { name: '關閉成員', exact: true }).click();
+    await team.getByRole('button', { name: '關閉工作空間設定', exact: true }).click();
     await page.getByRole('button', { name: '進入專案：first', exact: true }).click();
     await page.getByRole('button', { name: '完成登入功能', exact: true }).waitFor();
     assert.equal(await page.getByRole('button', { name: '狀態設定', exact: true }).count(), maintainer ? 1 : 0);
@@ -234,7 +234,7 @@ async function checkProjectAcl(page, browser, failures) {
     return { project, other, hidden, issue, task, member, board };
   });
   await page.goto(`http://127.0.0.1:5175/#/projects/${fixture.project.id}`);
-  await page.getByRole('button', { name: '專案成員', exact: true }).click();
+  await page.getByRole('button', { name: '專案成員與權限', exact: true }).click();
   const members = page.getByRole('region', { name: '專案成員與權限', exact: true });
   await members.getByLabel('加入專案的成員').selectOption(fixture.member.id);
   await members.getByLabel('專案角色').selectOption('reader');
@@ -270,7 +270,7 @@ async function checkProjectAcl(page, browser, failures) {
   await teammate.getByRole('button', { name: '登入', exact: true }).click();
   await teammate.getByRole('button', { name: '進入專案：ACL 閱讀專案', exact: true }).click();
   assert.equal(await teammate.getByRole('button', { name: '新增任務', exact: true }).count(), 0);
-  for (const name of ['專案成員', '狀態設定', '工時月曆']) assert.equal(await teammate.getByRole('button', { name, exact: true }).count(), 0);
+  for (const name of ['專案成員與權限', '狀態設定', '工時月曆']) assert.equal(await teammate.getByRole('button', { name, exact: true }).count(), 0);
   await teammate.getByRole('button', { name: '受保護的閱讀卡片', exact: true }).click();
   const detail = teammate.getByRole('region', { name: '任務完整頁', exact: true });
   await detail.getByRole('heading', { name: '受保護的閱讀卡片', exact: true }).waitFor();
@@ -748,7 +748,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.getByRole('button', { name: '建立邀請連結' }).click();
   await page.getByLabel('邀請連結', { exact: true }).waitFor();
   const inviteUrl = await page.getByLabel('邀請連結', { exact: true }).inputValue();
-  await page.getByRole('button', { name: '關閉成員' }).click();
+  await page.getByRole('button', { name: '關閉工作空間設定' }).click();
   await page.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).click();
   const teammate = await browser.newPage({ viewport: { width: 1440, height: 1050 } });
   teammate.setDefaultTimeout(15000);
@@ -760,7 +760,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await teammate.getByRole('button', { name: '加入工作空間', exact: true }).click();
   await teammate.getByRole('heading', { name: '尚未加入任何專案', exact: true }).waitFor();
   assert.equal(await teammate.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).count(), 0);
-  await page.getByRole('button', { name: '專案成員', exact: true }).click();
+  await page.getByRole('button', { name: '專案成員與權限', exact: true }).click();
   const membership = page.getByRole('region', { name: '專案成員與權限', exact: true });
   await membership.getByRole('button', { name: '重新載入成員', exact: true }).click();
   await membership.getByLabel('加入專案的成員').selectOption({ label: 'Mei · mei@example.test' });
