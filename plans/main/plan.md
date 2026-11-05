@@ -1,4 +1,304 @@
+## 2026-11-05 Skill限定專案內來源
+
+- 使用者明確要求未來只參考本專案下skill。根AGENTS新增Skill來源與適用範圍：只用.agents/skills入口及skills副本，除非當次明示不讀／套外部共用或全域skill；沿革連結不是載入授權。
+- 移除剛才新增的外部Git skill引用，原repo／分支／保護差異及不使用暫存clone／worktree的工作位置規則直接留在專案AGENTS。
+- plans隨階段提交，補交先前累積紀錄；先前排除plans及外部skill適用說明由本節與AGENTS更正，不重寫沿革。
+
+## 2026-11-05 更正規劃文件提交規則
+
+- 使用者指出本專案過往會提交plan.md／step.md。查核歷史含020cf12、dbbb871、0fe29a2，確實隨功能階段納入規劃紀錄。
+- 先前將共用Git skill中的planning排除規則套入TaskTracker是適用範圍判斷錯誤；上層僅指定「Git 工作位置（所有專案）」。根AGENTS明訂本專案plans隨階段提交，其他專案封存規則不自動搬入。
+- 本次補交先前累積規劃／續接紀錄，保留沿革中當時「不提交plans」記載以便追溯，由本節更正。待辦完成入口工作進行中，接下來與對應程式提交更新。
+- 只做本機commit、不push；不更動workspace共用skill。
+
+## 2026-11-05 待辦完成入口改為文字動作
+
+- 使用者將列首checkbox誤認為選取，要求放到更多下方；移除列首完成／重開checkbox，更多提供「標記為已完成」／「重新開啟」。
+- 只改TodoHome呈現，保留capabilities、busy、同筆草稿保護及現有API／通知／版本規則；原資料不變。
+- 先在真實隔離API記錄before，改相近既有瀏覽器測試，再驗證完成／重開、作者與承辦者可用動作、草稿、三尺寸／鍵盤及build；產品紀錄同步後本機commit，不push。
+- plans兩份累積紀錄依共用Git skill排除功能commit，已向使用者說明；保留全部原差異。
+
+## 2026-11-05 Markdown速記交付完成
+
+- 後端commit 1c75a6b：完整content、摘要、舊API、空白原稿及升降版保護。
+- 共用MarkdownEditor／MarkdownContent接上待辦、卡片描述及留言；Enter換行、格式／預覽、IME、草稿焦點、全文轉卡與安全HTML／URL均驗證。
+- 42 tests／839 assertions、完整browser-check、UIUX、usability-fixes-check及Markdown專用真實隔離API檢查通過；build／Docker映像通過。1440／768／390畫面已檢視，未聲稱上游inspector全面通過或真人研究。
+- 本機先停寫、備份並以副本預演後migrate；業務DTO／users／records雜湊不變，3筆待辦保留，FK／integrity正常。備份 /data/backups/before-markdown-final-20261105.sqlite。重新建立frontend／backend／queue／websocket，健康與來源編譯200、Redis PONG。
+- 新依賴marked／dompurify鎖版，Vite同線安全patch7.3.7，npm audit 0。README、產品／待辦／DB及Markdown文件同步；本機分段commit，不push；plans既有差異不提交。
+
+## 2026-11-05 Markdown編輯與整塊待辦速記
+
+- 使用者確認小待辦直接一整塊Markdown，不分標題／說明；卡片描述／留言也希望同樣編輯體驗。
+- 建共用多行MarkdownEditor及安全MarkdownContent（Marked＋DOMPurify鎖版），工具列、編輯／預覽、鍵盤／IME、字數與草稿保護；一般標題仍簡短純文字。
+- 待辦新增content欄保存完整原稿，title自動摘要供清單／通知；舊title／note介面相容、舊資料不清空。轉卡帶全文。Backend skill套用新增欄位／驗證／交易及遷移保護。
+- 前端已查官方Marked安全／DOMPurify／CKEditor Markdown文件；採輕量原生textarea與格式工具，保留Markdown原稿與既有Vue／Vuetify，不擴張附件或協同編輯。
+- 階段：後端content契約與測試；共用編輯與安全render；待辦／卡片整合與真實隔離API／手機／XSS驗證；備份升級本機及Docker前端依賴重建、文件／分段本機commit。不push，plans原差異不提交。
+
+## 2026-11-05 列表與詳細頁交付
+
+兩階段均完成：列表標題／編號精簡（468bdf8）；詳細頁屬性／關聯側欄tab、手機展開、長清單、鍵盤及草稿保護（另commit）。驗證build、隔離真實API瀏覽器、UIUX與多尺寸畫面，更新產品文件；不push，不提交plans歷史差異，不動本機資料。
+
+## 2026-11-05 詳細頁關聯移至側欄
+
+- 已確認使用者希望Epic／一般卡片關聯改放側欄，考慮tab分區；本輪實作「屬性／關聯」兩tab，不改關聯資料與編輯方式。
+- 主文只保留描述＋留言／歷史／工時；側欄關聯分所屬Epic、父任務、Epic所屬卡片／子任務及一般關聯。預設屬性，手機以「屬性與關聯」展開入口降低遮擋。
+- 沿用現有tab鍵盤helper、權限過濾與草稿保護，窄欄文字可換行，長清單可在側欄捲動。驗證不同Issue類型、空狀態、長清單、鍵盤、手機、閱覽權限及狀態／留言流程。
+- 先記錄隔離登入before，再改元件及相近browser-check，build與真實API回歸、三寬度人工檢視後本機commit；不push，不動業務DB。
+
+## 2026-11-05 任務列表摘要精簡
+
+- 使用者反映標題下Epic／關聯資訊太多。列表聚焦標題、編號、類型／狀態／優先級／負責人／期限；完整關聯、子任務與工時留詳細頁，專案內重複名稱與留言數亦收斂。
+- 限App任務列表，保留ProjectBoard共用IssueContext及編輯／篩選功能，不改資料模型／API。按兩個UI／UX skill單元件流程保留現有視覺方向。
+- 隔離API假帳號取before／after桌面／平板／手機證據，驗證閱讀／快速編輯、條件篩選仍可用，build與既有browser-check，更新產品紀錄及README後本機commit。
+- 不push、不重設本機資料；plans先前差異保留不提交。
+
+## 2026-11-04 任務詳細頁狀態操作辨識
+
+- 使用者反映上方橫列像tab，容易誤以為切換內容。沿用專案自訂狀態與既有更新API，調整成「目前狀態」及明確「變更狀態」選單。
+- 使用ui-ux-pro-max／design-taste-frontend app-screen單元件流程，保持既有配色／字型／Vue與資料範圍。讀取task內容為主要工作，狀態為可編輯屬性，留言／歷史／工時才是tab。
+- 先記錄登入後before證據，再調元件／既有瀏覽器案例（自訂狀態、busy、衝突、唯讀與手機），build及隔離真實API驗證、檢視1440／768／390畫面。
+- 同步產品討論／README，單階段本機commit；不push，保留plans原有差異。
+
+## 2026-11-04 關聯式儲存交付狀態
+
+本輪已完成：需求／基準、22張關聯表與Eloquent、FK／索引及DTO適配、Seed／匯入／回退保護、隔離測試／瀏覽器驗收、本機停寫備份／副本預演／升級及服務重建、設計文件導覽。程式階段fb6e468，文件驗收階段另commit；不push、不提交本plans既有差異。保留SQLite，未擴張REST、自訂角色或正式部署。
+
 # 建立專案規範與競品調研
+
+## 2026-11-04：關聯式業務儲存
+
+使用者明確要求正統關聯式儲存。建立Workspace／Membership／Project／Status／Issue／Comment／Relation／Board／TimeEntry／Todo／Notification／Invitation等明確資料表、外鍵與索引及Eloquent關聯；將既有DTO存取轉到關聯式repository，不將整份payload換表存JSON。保留records作歷史備份／舊匯入升級來源，業務不再寫入。新增可驗證的舊資料遷移、順序／欄位／歷史保留、租戶完整性及回退流程；更新Seed局部重設與舊匯入。先隔離34項baseline與schema／migration測試，再完整API與瀏覽器，備份並預演本機DB後才執行遷移；每階段commit，不push，planning既有差異保留。
+
+
+## 2026-11-04：後端可讀性與Laravel分層整理
+
+使用者已要求開始調整後端，解除先前暫緩。以人工可讀性與Laravel責任分層為本輪主軸：先以既有API／ACL測試取得baseline；拆分WorkspaceService中的專案／狀態、Issue／關聯／通知、工時、示範與工作空間查詢，顯式HTTP路由與Controller、共用JSON request／response、統一交易及重試邊界；展開Account／Todos／授權／Repository主要流程並補中文docblock。保留RPC URL與DTO、requestId的原始簽章、權限重驗與資料，資料存取用明確模型封裝既有records，不在可讀性整理中直接變更租戶／關聯表schema。按可獨立驗證階段commit，隔離PHP測試與真實API瀏覽器回歸、文件同步及本機長駐程序更新，不push、不清除seed。完整關聯式表與REST新契約不在本輪自行定案。
+
+
+## 2026-11-04：匯入後端開發規範
+
+使用者要求參考workspace/skills將後端開發規範搬進專案。盤點主skill及相容別名，僅收backend-development-standards與六份reference／metadata，建立TaskTracker適用邊界與來源校驗；加入專案.agents/skills入口與root/backend AGENTS、CLAUDE及README。CLM專屬例子不改寫產品契約，權限仍以permission ID＋scope，既有後端重構繼續暫緩。純規範工作，不動PHP／DB／依賴／共用skill來源；驗證skill格式、相對連結、copy來源與差異後本機commit，不push，planning保留既有差異。
+
+
+## 2026-11-04：前端待辦與PHP版本檢查
+
+本輪評估既有UIUX修正後剩餘優先事項與前端程式維護性；核對composer根需求、lock依賴PHP門檻、Docker及執行環境，查PHP／Laravel官方支援資訊。有明確設定錯誤時只做必要版本契約修正，不展開延後的後端重構、不自行更新整批依賴或主機PHP。驗證composer與隔離API測試，文件紀錄後本機commit；planning保留既有差異。
+
+
+## 2026-11-04：修正任務走查 F01–F04
+
+使用者確認問題合理並要求先調。依四項採可逆方案：F03 跨tab保留草稿但提供明確草稿狀態／返回／取消, 其他項目操作不消失, 取代草稿才確認；F01 查閱上下文按帳號／Workspace／Project 存目前分頁 sessionStorage, 含本人／全部／完成與工時月份／成員／日期, 無效或撤權回退, 不恢復儲存視圖；F02 首頁首屏直達小待辦與速記焦點, 保持專案入口；F04 列表／看板標題進完整閱讀, 顯式快速編輯保留及ACL唯讀控制。先草稿階段驗證commit, 再上下文與角色／重整／儲存失敗回退驗證commit, 再首頁閱讀／回歸適配、production截圖及文件commit。只用獨立Laravel SQLite假資料, 不改使用者DB／seed或上游skills, 本機commit不push, planning保留既有差異。
+
+
+## 2026-11-04：雙 skill 可用性任務走查
+
+使用者明確要求使用 cognitive-walkthrough 與 usability-testing 掃專案。本輪以現有固定 vendor skill 明確呼叫, 不需註冊才能讀取。先鎖定 T1–T8 的角色／任務／完成條件, 用隔離 Laravel seed＋production preview 實際操作正常、空資料、無權限、錯誤／中斷復原與手機；每個關鍵步驟記 Q1–Q4 可見線索、觀察與推論。兩份 skill 分工為任務走查與可用性測試程序；真人參與為零, 不捏造時間／滿意度／成功率, 交含資料缺口的 report 及可用真人腳本。只審查、不改 UI／業務程式／使用者 DB／seed, 不向他人聯絡, 不 push。完成來源追查、報告與文件入口／討論更新、連結／diff 驗證後階段 commit, planning 保留原差異。
+
+
+## 2026-11-04：尋找使用者流程與可用性 skills
+
+使用者希望再找 GitHub 上兩個 skill, 驗證流程是否卡住、資訊是否雜亂及功能是否難找, 並釐清與 UI／UX 的差異。本輪研究原始 SKILL.md／必要參考／授權／維護及星數快照, 按任務適配而非宣稱新星數前二。選兩個互補方向：AI 任務走查／啟發式評估與真人可用性測試設計。延續上輪方式保留固定版本評估副本及個別介紹, 不自動註冊新 skills、不重做 TaskTracker 審查或改 UI。整理本專案任務情境、可觀察指標與證據邊界；更新 skills 入口／產品討論, 驗證來源／連結／原檔校驗後本機 commit。使用者未要求 push, planning 保留原差異。
+
+
+## 2026-11-04：修正 UI／UX 審查結果
+
+使用者要求修正前輪 U01–U08。保留 Vue／Vuetify、紫色與資料工作區, 先可讀性及工時錯誤規則／欄位定位, 再首頁限量待辦與專案入口、語意 tab 鍵盤、手機閱讀順序／觸控目標、平板工具列及獨立 section 路由。首頁採專案先呈現、待辦預覽三筆可展開, 是本輪實作選擇而非新增產品類型。路由保留舊 board／issue 與返回草稿保護, ACL 撤權按 permission fallback 不以角色判斷。分階段隔離 Laravel SQLite＋真實瀏覽器驗證及本機 commit；不改使用者 DB／seed／上游 skill, 不 push。測試與 build／實際截圖視覺檢查, 報告追加修正對照保留原發現。planning 保留未提交。
+
+
+## 2026-11-03：啟用兩個 UI/UX skills 並審查
+
+使用者要求加入 .agents/skills, 明確套用 Pro Max 與 Taste 審查專案。以相對 symlink 指向固定版本 vendor, 不複製／改寫上游；更新註冊及使用說明後第一階段本機提交。第二階段以隔離 Laravel／假資料／production preview, 觀察登入、首頁待辦、任務清單／詳情／表單、看板、工時及權限畫面, 桌面／平板／手機, 使用兩份 skill 的檢索與瀏覽器規則；產出證據、問題優先級與最小改善建議。僅審查不直接改 UI, 不動使用者 SQLite／seed／正式服務, 不把 house style 或工具 FAIL 當合規結論。報告及討論紀錄／文件入口核對後第二次本機提交, planning 保留原差異不提交。
+
+## 2026-11-03：UI/UX skills 調研與專案副本
+
+使用者要求找 GitHub 星數最高兩個 UI/UX skill, 複製到專案並各寫介紹, 供後續選擇或融合審查。採專用 UI/UX skill repository 範圍, 實際 SKILL.md／可用依賴／授權, 官方 API 星數快照, 排除綜合工程 skill 庫與純設計資料庫並註明候選。讀 installer, 以 download 模式及 commit SHA 下載到原專案 skills/vendor, 無 Git clone／全域安裝／UI 修改。保留原文與授權, 加來源／版本／檔案校驗、繁中個別介紹及比較／後續審查提案；不提前融合、審 UI 或套用上游規則。相關文件檢查及必要資料工具 smoke check 後本機 commit, planning 保留。
+
+## 2026-11-02：首頁小待辦與互相交辦
+
+追加：使用者要求單向轉正式 Issue, 側欄補 Project／正式欄位, 同交易／重試去重, 不提供 Issue→TODO；轉換連結按 Project ACL 過濾, 不洩漏原交辦者未授權 Project。
+
+使用者希望首頁小待辦, 自記及角色間交辦, 已明確選直接加入、可退回。實作獨立 Workspace TODO＋專屬站內通知, 明確 permission 和作者／承辦者條件, 不改 Project ACL 或恢復視圖；同空間最小成員目錄可選交辦, 無跨空間。先後端服務與隔離權限／並發／重試測試及契約階段 commit, 再首頁清單／通知入口、真實 API E2E／build／文件階段 commit。保留目前資料, 不需要 schema migration 或 seed 重設, 測試用隔離容器。
+
+## 2026-10-30：最小 Project ACL 實作
+
+使用者確認先做 ACL。範圍：集中 permission＋Project scope 授權, owner／manager 明列 Any 權限操作全專案, Workspace user 僅 workspace.read、不自動讀專案。固定 Project lead／maintainer／developer／reader, 前兩者同權限（專案資訊、狀態、成員、Issue、看板、團隊工時）, developer Issue／本人工時與團隊工時閱讀, reader 專案／Issue 讀取但無工時。角色僅 registry 映射, API 不以名稱放行。getWorkspace 逐專案及衍生 Issue／看板／通知／工時過濾, 服務所有讀寫及重試前驗 scope, 作者限制保留。Project 成員管理加入／改角色／移除採 ACL revision／requestId／授權歷史, 只能授與自己有效權限子集合, 不改 Workspace role。前端以每個 project.permissions 和 memberIds 顯示操作, Reader 唯讀, 未加入空狀態與撤權清除私有資料。既有資料 migration 保留業務資料、不以 lead metadata 或所有 user 反推授權, admin→manager、member等→user；Seed 明確 first+second maintainer、僅first developer, 除此不授權既有一般成員。匯入共用升級, Seed不重設資料／帳密。先規劃與後端隔離API／遷移／防洩漏測試後commit, 再前端／真實E2E／文件commit, 本機先備份再明確migration；不擴張站內Inbox／新邀請流程／自訂角色。planning保留未提交
+
+
+## 2026-10-30：競品日常使用流程、回饋與功能缺口調研
+
+使用者要求建立 Markdown, 調研競品如何使用任務功能、公開使用者回饋與 TaskTracker 值得補上的功能。本輪範圍為 TaskTracker 專案管理, 不延伸前一則不同脈絡 log parser。調研 YouTrack／OpenProject／GitLab／Linear／Jira 官方文件, 補第一手公開論壇／issue 使用者回饋；功能事實、個案回饋、助理推論及已確認需求分開。以目前程式確認 ACL／通知／工時／看板等差距, 不照舊文件假設。產新日期報告並更新產品討論與文件入口, 標建議優先級／依賴／最小驗收, 尊重已暫緩甘特／依賴／儲存視圖／自訂角色。僅文件不新增功能、不登入或向外留言。來源與日期／連結檢查、diff 後本機 commit；保留 planning 差異
+
+
+## 2026-10-22：收斂 ACL 與角色試用的觀察基準
+
+使用者指出需求發散且沒有 ACL 會讓 admin/user 觀察失真。本輪為產品討論, 只整理既有已確認的 Workspace／Project scope 原則與下一階段建議, 不直接展開 ACL 功能或變更現有 Seed。重點：先有專案可見性與有效 permission, 再比較角色介面；帳號名稱非固定全域職位。提案以最小 Project ACL／關聯資料防洩漏／撤權及測試情境為下一里程碑, 固定預設角色即可, 不提早做自訂角色等擴充。新增討論紀錄, 區分回饋／已確認／建議, 檢查一致性與 diff 後文件階段本機 commit, planning 不提交
+
+
+## 2026-10-22：四帳號權限測試 Seed
+
+使用者要求 owner／manager／maintainer／developer 與共用指定密碼, 授權安排權限以便比較。保留 Email 登入, 四組 @example.test, 密碼讀本機 TASKTRACKER_SEED_PASSWORD 不進 Git。以集中 permission 映射 owner 全部／manager 除 smtp.verify／maintainer 維護專案狀態看板、不建專案邀請／developer 任務及本人工時；不以角色名稱放行。保留既有 user/member/admin 行為, 不將此次擴張成完整 Project ACL, 四者目前仍可讀同空間專案。Seed v2 非破壞升級加帳號保留 Jack／業務資料, 新建／reset 以四帳號分配示範工作與工時。碰撞拒覆蓋、重跑冪等及 reset namespace 隔離。適配前端入口、角色標示、文件與 API／瀏覽器驗證。先隔離測試後備份本機 SQLite、執行不重設 seed、驗證登入與權限, 本機階段 commit
+
+
+## 2026-10-21：任務完整詳細頁
+
+使用者提出應有任務詳細頁。實作選擇：保留側邊快速編輯, 增加可分享／重整的完整閱讀頁, 描述與討論為主內容, 右側列屬性, 顯示子任務／關聯／工時明細。完整頁編輯沿用現有 IssuePanel 與 API 規則, 不重寫另一套寫入流程；留言直接填寫並保護草稿。使用者追加希望狀態在上方用 tab, 釐清後確認為任務詳細頁直接切換狀態, 非列表篩選；沿用 moveIssue 版本／重試驗證與自訂 statuses, 非樂觀更新, 錯誤在完整頁提示、留言不丟失。路由在現有專案／看板 Issue URL 加 ?detail=1, 保留來源列表篩選／頁碼、看板偏好與捲動, 原快速面板網址相容。驗證深連結、返回、留言／編輯、版本衝突／草稿及手機, 僅使用隔離 API 資料庫。同步產品紀錄與 README, build／完整 E2E 後本機 commit；planning 保留未提交
+
+
+## 2026-10-20：看板列表與手動收錄
+
+使用者要求看板列表、Default 全部卡片與自訂看板手動收錄 Epic／一般卡片, Epic 底下卡片跟著收錄。已用非同步問題確認 Default 範圍是目前 Project 還是目前 Workspace, 回答前不實作依賴該範圍的路由／狀態／權限。獨立可先盤點：現有卡片同專案 epicId、Default 不複製卡片、自訂存明確選取 IDs, Epic 展開動態計算與去重, 解除 Epic 不移除另有明確收錄的單卡, 不連動卡片本體資料。待答覆後收斂驗證：新卡／移出 Epic／子項／多重收錄、revision／requestId／租戶隔離、既有列表／看板拖曳／手機。需更新產品文件, 各可驗證階段本機提交, 不恢復已取消視圖或實作首頁個人清單
+
+
+範圍已確認：使用者回覆「目前專案的所有卡片」。看板綁 Project, Default 虛擬固定 id=default, 自訂存 selectedIssueIds 動態展開 Epic；原型 board.manage 映射可編輯任務的成員權限, 不以角色名稱檢查。/boards 為列表, /board 保留 Default 舊網址, /board/<id> 為自訂。自訂看板內新增卡片需在同交易收錄避免新卡消失；移除看板採封存, Issue 保留。先驗證／提交後端, 再完成前端與整合
+
+## 2026-10-20：日期開啟工時側邊面板
+
+使用者希望點日期後由右側出現填報工時面板, 不常駐占用月曆。採原生 dialog 右側抽屜, 月曆完整寬, 點日格帶入日期／修改紀錄亦開啟, 手機滿寬。沿用工時 API／revision／requestId／作者限制／每日24h／Asia Taipei, 未儲存欄位變更在關閉／Escape／遮罩／離開前保護, 成功保存關閉並更新明細。維持成員篩選只影響閱覽, 填報只歸本人。只改前端／文件／既有瀏覽器測試, build 與隔離真實 API E2E 驗證開關／日期／dirty／衝突／資料與手機後本機 commit
+
+
+## 2026-10-20：類型收斂為 Epic／Task／Bug
+
+使用者確認先採 Epic／Task／Bug 三種, 自訂類型只記未來方向。前後端縮減可選 ID, 顯示直接用英文名稱；Feature 資料以 migration／舊匯入共用升級器轉 Task, 保留 ID／關聯／留言／工時／舊歷史, 加升級歷史與 revision, 重跑不重改。示範資料改用 Task, 不重設本機 Seed。隔離 PHP 驗證三類／拒收 feature／遷移／匯入及 sentinel 不變, build／隔離 E2E 驗證選項／列表／看板／手機。先驗證再備份本機 SQLite 執行明確 migration, 查核保存資料, 一個可驗證成果本機 commit
+
+
+## 2026-10-20：移除視圖與類型文字化
+
+延續使用者要求移除視圖功能, 一般搜尋／即時篩選保留。移除前端元件／RPC／套用路由及後端三個操作／權限／getWorkspace 回傳／Seed 寫入, 已有 savedViews 紀錄封存原地不讀寫、不作破壞遷移；舊 ?view= 明確提示取消功能並清除參數, 保留專案／看板／Issue。首頁個人卡片小清單只記方向, 所擁有語意／跨專案範圍待定, 不實作。追加表格符號理解問題：第一欄實為類型, 第二階段改成有欄名的文字標籤, 狀態欄不改。先移除視圖並驗證提交, 再獨立提交類型顯示；測試全用隔離 Docker tmp／memory SQLite, 不動目前資料
+
+
+## 2026-10-20：移除重複常駐視圖列
+
+使用者認為「全部任務／尚未結案 團隊」與篩選重複, 希望降低介面干擾。移除常駐視圖列及全部任務籤, 保存／套用移入展開篩選區, 以單一下拉選擇既有常用篩選, 有實際條件才出現保存。前輪命名建議併入本次試作, 改用常用篩選語彙；不刪示範或私人資料、不改 API 契約。保留深連結、條件摘要／失效警告、作者限制與清除操作。更新產品紀錄與 README, build／隔離 Laravel E2E 驗證桌面／手機與既有分享後本機 commit
+
+
+## 2026-10-20：說明常用視圖用途
+
+使用者不清楚「存為視圖」的用途。本輪核對現有保存與套用行為, 用常用篩選捷徑說明, 記錄名稱及常駐入口的易用性問題。改名「儲存常用篩選」、移到篩選區及有條件才顯示皆屬助理建議, 未確認前不修改 UI 或刪既有資料。僅更新產品文件, 檢查內容／連結／diff 後本機提交, 保留既有 planning 差異
+
+
+## 2026-10-20：任務工具列按需展開
+
+使用者覺得任務頁常駐資訊與篩選太多, 本輪依既有試作授權採按需展開。任務頁移除重複返回與介紹, 保留專案標題、新增、常用視圖；搜尋／排序／篩選入口常駐, 六組條件折疊, 已套用條件可見且可逐項移除或清除。既有視圖／失效條件／路由與資料契約不變。更新產品紀錄, build 與隔離真實 API E2E 驗證桌面／手機、篩選保存及清除, 階段本機 commit, 不寫使用者業務資料
+
+
+## 2026-10-20：專案入口顯示負責人與介紹
+
+使用者指出長期專案的累計完成率與任務數無助判斷, 希望分析另有專業畫面；進一步偏好負責人與專案介紹。首頁移除任務統計, 顯示名稱／代碼／介紹／負責人。專案新增 leadId metadata 與 updateProject, 新專案預設建立者, 舊資料未設定不猜測；建立／編輯可選目前空間成員, 以 project.update 控制修改, 不由 leadId 放行。介紹沿用 description, 代碼不改以保留既有 Issue 編號。示範空間只補兩個指定 Project 的缺漏 leadId, 不重設 Seed。獨立分析功能只記設計方向（期間／版本／Epic 範圍與趨勢）, 不新增報表。分後端、介面／文件階段提交；後端用無使用者 volume 的隔離容器驗證, E2E 用獨立 project 標籤與 tmp SQLite, 保留既有 planning 差異
+
+
+## 2026-10-20：示範 Seed 與測試隔離修正
+
+第一輪在 Compose 容器執行 Laravel 測試時, PHPUnit env 未覆寫真實程序環境, 造成目前本機 SQLite 被 migrate:fresh 清空。已停止寫入、保留原始副本與備份並檢查舊 volume, 沒有可恢復紀錄；使用者明確說明目前資料不重要, 改要求建立 seed, 不再繼續恢復。指定假帳號 jack100398@gmail.com、Workspace f-ws、Project first／second；密碼只放被忽略的本機環境, 不提交 Git。補強 TestCase 在 bootstrap 前覆寫 putenv／SERVER／ENV, 並在任何 RefreshDatabase 前強制 memory config／檢查。以帶有非空 sentinel 的隔離 SQLite 模擬 Compose 環境, 驗證標準測試命令不改該檔。Seed 預設冪等, --reset 只清這組 seed namespace, 測試保留其他空間及拒絕 production。完成原子任務介面、Seed 與測試隔離分階段本機提交
+
+## 2026-10-20：改為子任務與關聯任務
+
+使用者明確要求移除前置任務, 改做子任務／關聯任務。實作選擇：同專案一層 parentIssueId, 子任務各自狀態／負責人／估時／工時, 完成數提示不自動改父狀態；relatedIssueIds 雙向且不連動狀態。保留 Epic 歸屬, 子任務跟父項 Epic, 父項移 Epic 在交易內同步子項 revision／history；Epic 彙總每個實際 Issue 一次, 一般父任務只顯示自己的工時與子項完成數。移除依賴阻擋／DAG／篩選, 舊 blockedBy 遷為雙向關聯並保留歷史。既有 blocked／review 視圖保留條件並標示失效, 不靜默放寬。Laravel migration 與 legacy import 共用升級器, 以隔離資料驗證後備份使用者 SQLite 並執行 migration。分後端契約與介面／文件兩個階段 commit, 不 push
+
+
+## 2026-10-20：YouTrack 任務關係調研與設計討論
+
+使用者質疑常駐前置任務表單難用, 詢問 YouTrack 是否提供, 並提出關聯任務／子卡片。查閱官方 Link Issues、Dependencies、Subtasks, 區分關聯、拆解與依賴以及 workflow 自動化。核對目前 blockedBy／epicId 實作, 本輪整理文件及提案, 不將追問視為採納、不改既有資料或結案規則。純文件做來源／連結／一致性與 diff 檢查, 明確路徑本機 commit, 不 push
+
+
+## 2026-10-19：列表去除重複資訊與總計
+
+使用者質疑右側功能標題重複左側導覽, 並詢問總計是否適合移至另一個畫面。沿用已授權的介面試作, 移除列表總計／完成率與列表／看板的重複標題列, 保留目前篩選結果筆數, 僅多頁顯示分頁。保留實際專案說明、手機以頂端顯示目前功能。概覽作為助理建議記入產品文件, 不視為已確認, 本輪不新增報表頁、不改 API 或統計規則。建置與隔離瀏覽器檢查桌面／手機、搜尋及看板後本機 commit, 保留原 planning 差異
+
+
+## 2026-10-19：可讀性與 GitLab 式完整內容區
+
+使用者覺得文字太小淡, 希望右側以分隔線區分並盡量顯示資料, 補充參考 GitLab 截圖。保留左側專案導覽, 將右側列表／看板改平整全寬、縮小標頭及摘要、整合視圖與篩選工具列, 不擅自加入 GitLab 業務功能。主要文字 14–16px、輔助 12–13px, 使用深色中性文字, 狀態與優先級以色點／圖示表意, 不用自訂淺色當主要文字。保留表單／手機／獨立看板導覽與資料契約, 以隔離資料檢查桌面寬度、資料起始高度、字體對比與手機捲動, build／瀏覽器回歸後本機 commit
+
+## 2026-10-19：任務列表與視覺看板分離
+
+使用者偏好附圖 YouTrack Agile Board, 要求列表／看板是不同功能, 不只是同頁顯示切換。查證官方欄位與泳道設計, 不推定圖片版本。保留同一組 Issue／權限／revision, 以獨立側欄入口與 hash route 分離列表與看板, 看板採固定狀態欄頭、Epic 泳道／收合、卡片密度與欄內新增, 不實作 Sprint／WIP 限制或多看板設定。列表保留欄位、篩選與分頁。處理舊視圖／任務深連結與返回, 更新紀錄後以隔離 Laravel 驗證同步與手機操作, 各階段本機 commit, 不寫使用者資料
+
+## 2026-10-19：專案內導覽聚焦
+
+使用者認為已進專案仍能在側欄切換其他專案會干擾, 希望點左上角回首頁再選工作空間／專案。移除側欄跨專案清單與專案內的工作空間管理入口, 專案內顯示目前專案資訊及功能, 左上角品牌作明確返回首頁入口。首頁保留目前 Workspace 成員管理及專案卡片, 不假裝支援多 Workspace 切換。保留既有 canLeave／revision／hash 深連結與手機導覽, 更新產品紀錄、README 與瀏覽器回歸。以隔離 Laravel 資料庫測試, 不寫使用者目前服務資料, build／E2E 通過後建立本機 commit
+
+## 2026-10-19：切換本機新版服務
+
+使用者要求移除舊版並啟動新版。確認舊 TaskTracker frontend／api 與 tasktracker_tasktracker-data volume, 先建置新版映像, 再只移除舊容器, 保留舊資料及 GuildManager。啟動 frontend／backend／queue／websocket／redis 並驗證 HTTP、Redis 工作消費與 WebSocket 握手。不自動匯入舊資料、不刪 volume、不做新的產品功能或遠端推送
+
+## 2026-10-19：前後端分離與 Laravel 遷移
+
+使用者進一步要求分別 commit, 本輪依前端／Laravel 核心／容器即時通訊基礎／交付文件拆分, 各批明確指定路徑, 不提交憑證、資料、依賴或編譯產物
+
+使用者指定 frontend（Vue＋Vuetify）、backend（Laravel）與根 README, 並詢問 Inertia。依明確目錄與獨立 API 需求採前後端分離, 不引入 Inertia。先保留既有 Issue／Epic／狀態／工時／視圖及資料, 不擴張未定權限矩陣。主機 PHP 因 icu 動態庫無法執行, 採 Docker PHP／Composer 完成安裝與驗證, 不變動主機 PHP
+
+進行中追加：使用者要求後端 Docker 預留 WebSocket 接口及 Redis。採 Laravel Reverb 獨立 websocket service、共用 backend image 的 queue worker、內網 Redis 與獨立持久化 volume；驗證握手、拒絕不可信 origin、Queue 實際入列／消費。此輪先建基礎設施, 不把 Reverb 連線當成 Issue 即時同步已完成, 不新增公開任務頻道或真實寄信
+
+階段：
+1. 記錄選型與遷移契約, 保留歷史 GAS／Node 討論, 本機文件 commit
+2. 搬移前端並實際接入 Vuetify, 建立可執行 Laravel API, 遷移業務功能及驗證, 更新 Compose／README／開發指引；依可獨立驗證成果分 commit
+3. 執行前端 build、Laravel API／隔離資料與瀏覽器回歸, 查核根目錄、忽略規則與既有資料保留, 完成交付
+
+舊 data 與 Docker volume 不自動覆蓋或刪除, 提供明確移入方式與帳密相容性說明。README 既有 Docker 補充屬同一入口文件更新範圍, 改寫時保留其資料保留／本機限定等有效說明；planning 與空白 docs/架構.md 不併入功能提交。不推送、不寄真實郵件、不產 GAS
+
+## 2026-10-19：實作成熟度與面試技術選型
+
+使用者詢問目前架構是否可開始製作, 以及面試作品應採熟悉的 Laravel 或延續 Node。核對產品決策與實際 API／儲存, 查證官方框架能力, 區分可開始的產品骨架、實作前應收斂的權限／成員／資料契約與正式上線需求。將 Laravel 優先的情境建議、Node 延用成本、GAS 舊方向的取捨與可展示的驗收流程整理進產品討論紀錄, 技術選型標待確認, 不自行重寫或新增功能。檢查文件連結、差異與格式後僅提交本輪產品文件, 保留既有 README／planning／空白架構檔
+
+## 2026-10-19：重申權限是授權依據
+
+使用者要求記住所有角色只是擁有權限, 由權限決定能看與能做。強化 D-015、集中 policy 與範圍授予規則, 避免 policy 內仍用 owner／manager／user 名稱放行；加入改角色名不影響授權的驗收。不新增個人覆寫或自訂角色功能, 更新產品／協作文件與持續開發指引, 驗證後只提交相關文件, 保留其他差異
+
+## 2026-10-19：專案四角色與責任歸屬
+
+使用者偏好負責人／專案管理者／開發者／讀者, 說明負責人可能是老闆或交由他人承擔、PM 是日常管理、讀者可能供財務／人資取資料。將目前候選方案改為四角色並保留前輪三角色沿革, 區分責任歸屬、操作權限、Workspace owner 與 Issue assignee。讀者的專案內容、工時明細／分析與匯出分開權限, 不預設全空間查閱。具體矩陣與角色 ID 仍待確認, 文件檢查後僅提交產品紀錄, 不改程式
+
+## 2026-10-19：推薦專案角色
+
+使用者詢問專案內角色, 建議 manager／contributor／viewer, 明確角色映射權限與 scope, 整理基本操作矩陣及 Workspace 管理角色的全專案授權。空間外邀請、刪除、匯出、團隊工時與作者例外另列邊界, 不把推薦當成採納。檢查產品紀錄與連結後只提交討論文件, 保留既有差異, 不改應用程式
+
+## 2026-10-19：確定 Workspace 預設角色
+
+使用者明確指定 owner 為建立空間者、manager 管理空間, 兩者可操作全部專案；user 須明確加入 Project 並授權, 否則看不到也不能操作。更新產品決策、目前權限說明與授權契約, 移除空間內可見授權途徑, 保留舊提案在沿革, 不與現行規則並列。同步協作與架構文件；Project 角色、Workspace 所有權操作及資料作者限制的細項繼續待定, 不把原型 admin／member 改名當成完成遷移。文件驗證後提交三份設計文件, 保留既有差異, 本輪不改程式
+
+過程中使用者先要求比較空間內可見, 隨後明確選擇自己的版本, 並確認按權限而非身分名稱判斷。記錄比較理由與 D-013～D-015, 集中授權從提案更新為採納方向, 未將待定的專案角色或細項矩陣誤標已完成
+
+## 2026-10-19：授權判斷契約
+
+使用者要求釐清角色名稱或權限判斷, 避免先試做之後大改。先盤點目前直接判 admin 與資料作者的地方, 查證官方授權原則, 明確提出固定角色映射權限＋資源範圍／作者條件的集中授權契約。將權限 ID、角色 ID、資料模型、判斷順序、admin 可見例外、遷移與驗收寫入產品紀錄, 同步協作設計與架構文件入口。待確認的角色矩陣不擅自定案, 本輪不改程式或資料, 文件檢查後獨立提交, 保留既有差異
+
+## 2026-10-19：固定／自訂角色
+
+使用者詢問 Workspace／Project 是否需要自訂身分。建議第一版每層三組固定角色, 分清空間管理、專案操作、邀請與帳號身分；Owner／Admin／Member 與 Manager／Contributor／Viewer 全部標為提案, 保留 admin 只確認全專案可見性的邊界。記錄未來擴充條件與目前程式差距, 檢查文件後只提交產品討論紀錄, 不改程式或其他既有差異
+
+## 2026-10-19：Workspace／專案兩層權限
+
+使用者明確提出每專案可設定可見成員, 並希望 Workspace admin 可查看空間內全部專案。記錄 D-010／D-011, 收斂一般成員按專案設定、admin 空間級可見性的規則, 詳列可見模式、授權順序、私人資料延伸 API、預設與舊資料遷移等提案。修正前輪暫緩專案 ACL 的建議, 已是明確需求；仍不把 admin 全部修改權、自訂角色或預設私人視為已確認。僅同步討論與協作文件, 檢查連結與差異後提交, 不擅自修改現有共享資料或應用程式
+
+## 2026-10-19：SaaS／自建版交付方向
+
+使用者指出目前層級有利 SaaS 與自建版切分, 記為設計目標 D-009。整理共用核心、部署設定與保留空間隔離的建議, 不把兩版本規格、管理角色或收費政策視為已定案。同步原架構提案的最新方向, 核對連結與差異後只提交兩份產品文件, 保留其他工作區差異, 不實作或部署新版本
+
+## 2026-10-19：流程複雜度討論
+
+使用者詢問目前流程是否合理。回覆以現有產品模型的設計判斷說明, 建議第一版簡化為工作空間內管理者／一般成員, 進階角色及方案限制另按實際需求評估。同步產品討論紀錄並標待確認, 不改既定決策或程式。核對文件與差異後只提交討論文件, 其他既有差異保留
+
+## 2026-10-19：邀請權限
+
+使用者確認有權限的帳號／Workspace 可以邀請使用者加入。將「邀請須授權」記為 D-008, 建議以帳號在目標 Workspace 的成員權限表示, 保留具體角色、可授予權限與空間邀請開關的待討論狀態。同步協作文件, 檢查連結與差異, 僅提交兩份設計文件, 不修改程式或併入其他工作區差異
+
+## 2026-10-19：確認工作流程層級
+
+使用者確認 Workspace → 建立專案 → 專案開 Issue。更新產品討論紀錄 D-002、層級與沿革, 同步協作設計入口描述, 不把成員邀請誤寫成建立專案前置條件。帳號／多空間／個人方案繼續待確認。本輪只整理文件, 檢查連結與差異後提交兩份設計文件, 保留既有 README／planning／使用者架構檔
+
+## 2026-10-19：持續產品討論紀錄
+
+使用者要求邊討論邊整理成一份 Markdown, 持續完善以免遺漏。新增 docs/產品討論紀錄.md, 回收已確認 SaaS／專案入口等方向, 及最近企業邀請、個人使用與工作空間模型的提案, 明確區分使用者確認、助理建議、目前實作及待討論問題
+
+docs/架構.md 是開工前使用者的未追蹤空白檔, 保留原樣；README 及本計畫既有 Docker 紀錄差異保留。將後續同步紀錄的規則與文件入口補入 AGENTS.md, 本輪為文件整理階段, 只提交討論文件與相關指引, 不併入先前其他差異。不變更功能、不推送遠端, 驗證來源對照、文件相對連結與差異即可
+
+## 2026-10-19：Docker Compose 本機開發
+
+使用者要求確認並新增 docker-compose.yml。開工時 main 工作區乾淨, 沒有 Dockerfile／Compose 設定；維持原專案 Git 工作位置, 本輪不推送遠端
+
+新增本機開發用 Node Dockerfile、忽略清單與 frontend／api Compose 服務。主機只開放 127.0.0.1:5174, API 在容器網路監聽, SQLite 使用獨立 named volume, 不自動搬動原有 data。原生 npm 開發仍維持 loopback 預設。掛載程式碼支援熱更新, 依賴由容器建置, 不共用主機 node_modules；SMTP 僅 API 使用伺服器設定且不烘進 image
+
+驗證 Compose config、映像建置／服務 health／前端代理與登入讀寫、重建後資料保留、既有 API 測試與 build。容器驗證使用獨立 project name／volume 與替代本機 port, 不干擾使用者既有資料或服務。若 Docker daemon 不可用, 記錄實際可驗證範圍。完成一個階段 commit, 排除本輪 planning 紀錄, 依共享 Git skill 不自動推送
 
 ## 2026-10-06：自主補充日常工作流程
 

@@ -86,6 +86,8 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - 階段以可獨立說明與驗證的成果為單位, 例如完成規劃、建立原型或調整一個使用流程, 不以每次存檔作為階段
 - 開始前檢查分支、工作區與既有差異, 保留使用者的改動
 - 完成階段後先執行適合該變更的驗證, 明確指定該階段的檔案, 檢查 staged diff 與空白後立即提交
+- `plans/<分支>/plan.md`、`step.md` 隨相關階段提交，保留規劃與續接歷史，不預設排除；不套用其他專案的 planning 排除／封存流程（2026-11-05 使用者更正）。
+- Git 操作直接在本專案原有 repository 進行，操作前確認根目錄、分支與既有差異；不在 `/private`、`/tmp` 或其他暫存目錄另建 clone／worktree 規避限制。
 - commit 訊息採 Conventional Commits, 用繁體中文說明成果, 例如 `feat: 調整專案入口與任務導覽`
 - 不提交憑證、資料庫、依賴、截圖、暫存檔或編譯產物
 - 保留每階段的歷史, 不自行 amend、squash 或重寫已提交內容
@@ -110,6 +112,14 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - `docs/architecture.md`：GuildManager 參考結果與本專案架構提案
 - `docs/database-design.md`：現行關聯式資料表、Eloquent關聯、外鍵／索引與遷移／回退保護
 - `plans/<分支>/plan.md`、`step.md`：當次工作範圍與續接紀錄
+
+## Skill 來源與適用範圍
+
+2026-11-05 使用者確認：後續工作只參考本專案底下的 skill，以 `.agents/skills/` 的入口及 `skills/` 內的專案副本為準；兩者指向同一份內容時不重複套用。
+
+- 除非使用者在當次任務明確指定，不讀取或套用專案外的 skill，包括 `/Users/josh/Projects/workspace/skills`、使用者家目錄及全域安裝的 skill。
+- skill 內的來源／沿革連結不代表授權載入外部規範；所需規則應由本專案的 skill／references 明確提供。缺少必要內容時先說明，不自行回到共用目錄補規則。
+- 本專案 `AGENTS.md`、相關子目錄指引與使用者指示優先；不因專案外 skill 的提交、封存、權限確認或工作流程規則改變本專案做法。
 
 ## UI／UX skills
 
