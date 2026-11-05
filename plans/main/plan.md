@@ -1,3 +1,10 @@
+## 2026-11-05 移除側欄重複帳號資訊
+
+- 使用者要求移除左下頭像／姓名／角色資訊區，帳號資訊沿用既有選單。
+- 移除sidebar-bottom整塊及專用失效CSS，保留導覽、共用avatar及AccountMenu；不更動授權。
+- 已移除側欄底部DOM與專用CSS，保留共用avatar及頂端AccountMenu。production build通過；隔離tmpfs SQLite＋真實Laravel登入的編譯版1440／390畫面與手機導覽、帳號選單／個人資料／登出入口通過，瀏覽器無錯誤，截圖已檢視。
+- 前端src掛載即時套用，不需重啟服務；未改後端／使用者資料。產品討論同步、差異檢查後本機commit，不push；隔離容器完成後移除。
+
 ## 2026-11-05 看板WebSocket即時協作
 
 - 使用者要求看板加入WebSocket、調整Laravel／Docker，完成後整套Compose重啟，已明確授權本機重啟，不推送／部署。

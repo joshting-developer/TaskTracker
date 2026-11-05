@@ -479,7 +479,6 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
           <button class="nav-item active" @click="goHome()"><Icon name="folder" :size="18" />專案列表<span class="nav-count">{{ projects.length }}</span></button>
         </nav>
       </template>
-      <div class="sidebar-bottom"><div class="sidebar-note"><span class="spark">✦</span><strong>小步前進, 也算進步</strong><p>先記下下一步<br />再把一件事情完成</p></div><div class="profile"><div class="avatar">{{ workspace.meta.actor?.slice(0, 1) }}</div><div><strong>{{ workspace.meta.actor }}</strong><span>{{ workspace.meta.permissions?.includes('workspace.invite') ? '工作空間管理員' : '團隊成員' }}</span></div></div></div>
     </aside>
 
     <main class="main">
