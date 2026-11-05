@@ -15,7 +15,8 @@ async function openQuickIssue(page, name) {
   const title = page.getByRole('button', { name, exact: true });
   await title.waitFor();
   const card = page.locator('tr[data-issue], article.issue-card').filter({ has: title });
-  if (await card.count()) await card.getByRole('button', { name: /^快速編輯 / }).click();
+  if (await card.evaluateAll(elements => elements.some(element => element.matches('article.issue-card')))) await title.dblclick();
+  else if (await card.count()) await card.getByRole('button', { name: /^快速編輯 / }).click();
   else await title.click(); // Epic／工時明細等既有來源入口
 }
 
@@ -432,6 +433,7 @@ async function checkBoardWorkflow(page) {
   });
   await page.goto('about:blank');
   await page.goto(`http://127.0.0.1:5175/#/projects/${project.id}/board`);
+  await page.getByLabel('看板泳道').selectOption('epic');
   const firstLane = page.getByRole('region', { name: '泳道 第一個交付', exact: true });
   const secondLane = page.getByRole('region', { name: '泳道 第二個交付', exact: true });
   await firstLane.getByRole('button', { name: '在第一個交付新增待處理任務', exact: true }).click();
@@ -492,11 +494,11 @@ async function checkCustomBoards(page) {
   await dialog.getByLabel('看板名稱', { exact: true }).fill('交付看板');
   await dialog.getByLabel(`收錄 ${fixture.epic.identifier}`, { exact: true }).check();
   await dialog.getByLabel(`收錄 ${fixture.task.identifier}`, { exact: true }).check();
-  await dialog.getByRole('status').filter({ hasText: '目前包含 2 張卡片' }).waitFor();
+  await dialog.getByRole('status').filter({ hasText: '目前包含 3 張卡片' }).waitFor();
   await dialog.getByRole('button', { name: '儲存看板', exact: true }).click();
   await page.locator('.selected-board-heading h3').getByText('交付看板', { exact: true }).waitFor();
   const customUrl = page.url();
-  assert.equal(await page.locator('.issue-card').count(), 2, 'Epic 與明確單卡去重');
+  assert.equal(await page.locator('.issue-card').count(), 3, 'Epic 本身、所屬卡片與明確單卡去重');
   await page.reload(); await page.locator('.issue-card').nth(1).waitFor();
   await openQuickIssue(page, '父工作'); await page.reload();
   await page.getByRole('dialog', { name: '任務詳細內容', exact: true }).waitFor();
@@ -505,14 +507,14 @@ async function checkCustomBoards(page) {
   await page.evaluate(async ({ project, epic }) => (await import('/src/api/index.js')).api.createIssue({ projectId: project.id, title: '後來加入 Epic', epicId: epic.id, requestId: crypto.randomUUID() }), fixture);
   await page.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
   await page.getByRole('button', { name: '後來加入 Epic', exact: true }).waitFor();
-  assert.equal(await page.locator('.issue-card').count(), 3);
+  assert.equal(await page.locator('.issue-card').count(), 4);
   await page.evaluate(async ({ task, otherEpic }) => {
     const { api } = await import('/src/api/index.js');
     const current = (await api.getWorkspace()).issues.find(item => item.id === task.id);
     await api.updateIssue({ id: current.id, expectedRevision: current.revision, epicId: otherEpic.id, requestId: crypto.randomUUID() });
   }, fixture);
   await page.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
-  await page.waitForFunction(() => document.querySelectorAll('.issue-card').length === 2);
+  await page.waitForFunction(() => document.querySelectorAll('.issue-card').length === 3);
   assert.equal(await page.getByRole('button', { name: '父工作', exact: true }).count(), 1, '明確收錄不隨 Epic 移除');
   assert.equal(await page.getByRole('button', { name: '子工作', exact: true }).count(), 0);
   await page.getByRole('button', { name: '編輯收錄', exact: true }).click();
@@ -568,7 +570,7 @@ async function checkCustomBoards(page) {
   page.once('dialog', event => event.accept()); await page.getByRole('button', { name: '移除看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await page.getByRole('button', { name: '由自訂看板建立', exact: true }).waitFor();
-  assert.equal(await page.locator('.issue-card').count(), 5, '移除看板保留卡片');
+  assert.equal(await page.locator('.issue-card').count(), 7, '移除看板保留所有卡片與Epic');
   await page.goto(customUrl); await page.getByRole('button', { name: '開啟看板 Default', exact: true }).waitFor();
   assert.ok(page.url().endsWith('/boards'));
   console.log('PASS: project board index/default, Epic dynamic inclusion/dedup, explicit card override, atomic creation, filter intersection, deep links, conflict drafts, archive and mobile');
@@ -1016,6 +1018,7 @@ try {
   assert.equal(await page.locator('.issue-table').count(), 0);
   assert.equal(await page.getByLabel('任務概況', { exact: true }).count(), 0, '看板不重複列表的大型摘要');
   await page.getByLabel('看板卡片密度').selectOption('compact');
+  await page.getByLabel('看板泳道').selectOption('epic');
   await page.getByRole('button', { name: '收合或展開 未歸類到 Epic', exact: true }).click();
   assert.equal(await page.locator('.issue-card').count(), 0, '收合泳道保留表頭及計數');
   await page.reload();

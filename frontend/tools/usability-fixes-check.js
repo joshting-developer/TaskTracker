@@ -132,7 +132,7 @@ try {
   await page.getByRole('button', { name: fixture.issue.title, exact: true }).click();
   await detail.getByRole('heading', { name: fixture.issue.title, exact: true }).waitFor();
   await detail.getByRole('button', { name: '返回看板', exact: true }).click();
-  await page.getByRole('button', { name: `快速編輯 ${fixture.issue.identifier}`, exact: true }).click();
+  await page.locator(`[data-issue="${fixture.issue.identifier}"] .card-title`).dblclick();
   await page.getByRole('dialog').getByLabel(/任務標題/).waitFor();
   await page.getByRole('button', { name: '關閉任務', exact: true }).click();
   // F02：兩個專案的手機首頁首屏有入口，不丟速記內容。

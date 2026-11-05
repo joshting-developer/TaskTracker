@@ -7,6 +7,7 @@ const paths = {
   board: 'M3 4h18v16H3z M9 4v16M15 4v16M6 8v3M12 8v6M18 8v2',
   search: 'M21 21l-5-5 M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',
   plus: 'M12 5v14M5 12h14',
+  edit: 'M16 3l5 5M4 20l4-1L21 6a2 2 0 0 0-4-4L4 15z',
   close: 'M6 6l12 12M18 6L6 18',
   check: 'M5 12l4 4L19 6',
   chevron: 'M9 5l7 7-7 7',

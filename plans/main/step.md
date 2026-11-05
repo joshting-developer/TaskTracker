@@ -1,3 +1,22 @@
+## 2026-11-05 看板互動交付驗收
+
+- 已修單一頁面垂直捲動、局部橫向；取消board-scroll max-height與外層flex收縮，三尺寸最後卡片／新增入口完整可見。Epic未刪，原先前端filters排除；Board允許Epic，列表仍Task／Bug。
+- 無偏好預設none，原localStorage帳號／專案／看板key延用；分組／密度／收合可恢復，JSON無效與storage禁用不阻擋。精簡隱藏描述／優先級／期限／留言／context，保留識別／類型／標題／負責人／狀態。
+- 移除看板快速編輯文字，雙擊卡片／F2／鉛筆開抽屜；標題鼠標單擊延遲400ms判定避免先跳閱讀，鍵盤／touch不延遲，拖曳／卸載清timer；選單／關聯不觸發雙擊編輯。列表入口保留。
+- Epic卡片與計數／預覽對齊，分組時本身放自己泳道；不收錄Epic的單卡看板不額外加入。Epic拖曳僅state、無Epic套Epic；詳細工時／估時用既有epicSummary加總。
+- production長看板18Task／Bug＋2Epic，1440／768／390下無第二層Y scroll、底卡完整，密度高度差、localStorage失效、Epic篩選／加總、真實拖曳、自訂板去重、dblclick／F2／手機通過；完整browser-check、U01–U08 UIUX、F01–F04可用性與build通過。
+- 前後桌面／平板／手機、精簡／詳細卡、分組畫面已檢視，保留既有style；不宣稱完整inspector全綠或真人研究。日誌 /tmp/tasktracker-board-ux-*.log，忽略artifacts/board-ux-*不提交。
+- README／board-design／產品討論與plans同步、本機階段commit，不push；無後端變更／migration／Seed reset或使用者DB測試，前端掛載即時套用。
+
+## 2026-11-05 看板閱讀、捲動與編輯調整
+
+- 使用者要求修雙層垂直捲動導致底卡不可見；泳道預設不分組／localStorage記住；精簡與詳細需明顯不同；移除卡片快速編輯字，雙擊開抽屜；Default應看到Epic。
+- 根因：ProjectBoard的board-scroll與外頁雙層垂直捲動；filterIssues硬排除Epic。調整為頁面單一垂直捲動、看板只有橫向，保留列表原行為。
+- Board範圍含Epic套既有篩選；不分組獨立卡，Epic泳道包含該Epic本身，單任務明確收錄不額外引入未收錄Epic。Epic拖曳只變狀態，不產生Epic隸屬Epic。
+- 偏好沿用現有localStorage帳號／專案／看板key，無有效值預設none，失效／拒絕存取回退；精簡只識別碼／類型／標題／負責人／狀態，詳細加描述／優先級／期限／留言及關聯工時。
+- 雙擊卡片編輯，保留單擊標題閱讀、鍵盤F2／編輯圖示與手機入口；避免雙擊先跳詳細或重複開。列表快速編輯本輪不改。
+- 依專案內兩UI／UX skill保留既有視覺。先建隔離真實API與長看板before，驗證最後卡片、分組／storage／篩選／拖曳、密度／dblclick／唯讀與手機、production build及完整回歸；同步產品文件／plans單階段commit，不push、不碰業務DB。
+
 ## 2026-11-05 帳號選單與設定交付完成
 
 - 右上頭像為44px按鈕，選單顯示姓名／Email／空間，支援方向鍵／Home／End／Escape／外點／關閉焦點；提供個人資料、工作空間設定及登出，移除左下登出。

@@ -42,7 +42,7 @@ async function save() {
         <label v-for="issue in candidates" :key="issue.id" class="board-picker-item"><input v-model="form.selectedIssueIds" type="checkbox" :value="issue.id" :aria-label="`收錄 ${issue.identifier}`" :disabled="busy" /><span><strong>{{ issue.identifier }} · {{ issue.title }}</strong><small>{{ TYPES.find(type => type.id === issue.type)?.label }}{{ issue.type === 'epic' ? ' · 所屬卡片自動跟隨' : '' }}</small></span></label>
         <p v-if="!candidates.length" class="subtle">沒有符合條件的項目</p>
       </div>
-      <p class="board-preview" role="status">已選 {{ form.selectedIssueIds.length }} 個項目 · 目前包含 {{ preview.filter(issue => issue.type !== 'epic').length }} 張卡片</p>
+      <p class="board-preview" role="status">已選 {{ form.selectedIssueIds.length }} 個項目 · 目前包含 {{ preview.length }} 張卡片（含 Epic）</p>
       <small class="subtle">移除收錄不會刪除卡片；一般 Task／Bug 的子任務需要個別選取</small>
       <button class="button primary" :disabled="busy">{{ busy ? '儲存中…' : '儲存看板' }}</button>
     </form>

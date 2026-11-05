@@ -8,5 +8,5 @@ export function includedIssues(board, issues) {
   return candidates.filter(issue => selected.has(issue.id) || (issue.type !== 'epic' && epics.has(issue.epicId)));
 }
 export function boardCount(board, issues) {
-  return includedIssues(board, issues).filter(issue => issue.type !== 'epic').length;
+  return includedIssues(board, issues).length;
 }

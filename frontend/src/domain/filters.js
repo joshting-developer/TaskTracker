@@ -11,10 +11,10 @@ export function missingFilters(filters, project, members, issues) {
   if (filters.epicId && filters.epicId !== 'unlinked' && !issues.some((issue) => issue.id === filters.epicId && issue.type === 'epic' && issue.projectId === project.id)) messages.push('Epic 已不存在');
   return messages;
 }
-export function filterIssues(issues, filters, { project, userId, members, today }) {
+export function filterIssues(issues, filters, { project, userId, members, today, includeEpics = false }) {
   const term = filters.search.trim().toLowerCase();
   return issues.filter((issue) => {
-    if (issue.projectId !== project.id || issue.type === 'epic') return false;
+    if (issue.projectId !== project.id || (!includeEpics && issue.type === 'epic')) return false;
     const category = categoryFor(issue, project), closed = ['done', 'canceled'].includes(category);
     if (filters.scope === 'mine' && issue.assignee !== userId) return false;
     if (filters.scope === 'done' && category !== 'done') return false;
@@ -22,7 +22,8 @@ export function filterIssues(issues, filters, { project, userId, members, today 
     if (filters.priority && issue.priority !== filters.priority) return false;
     if (filters.assignee && issue.assignee !== filters.assignee) return false;
     if (filters.type && issue.type !== filters.type) return false;
-    if (filters.epicId && (filters.epicId === 'unlinked' ? Boolean(issue.epicId) : issue.epicId !== filters.epicId)) return false;
+    const epicId = issue.type === 'epic' ? issue.id : issue.epicId;
+    if (filters.epicId && (filters.epicId === 'unlinked' ? Boolean(epicId) : epicId !== filters.epicId)) return false;
     if (filters.condition === 'open' && closed) return false;
     if (!CONDITIONS.some(condition => condition.id === filters.condition)) return false;
     if (filters.condition === 'overdue' && (closed || !issue.dueDate || issue.dueDate >= today)) return false;

@@ -91,7 +91,7 @@
 .visual-board .card-state { border-top-color: #e2e5ed; }
 .visual-board .issue-context { font-size: 12px; }
 .visual-board .board-tools { padding-left: 24px; padding-right: 24px; }
-.data-workspace .board-scroll { max-height: calc(100vh - 300px); }
+.board-workspace .task-workspace { flex-shrink: 0; }
 
 /* 導覽和表單的輔助資訊也採可讀字級, 保留清楚的前後景對比 */
 .nav-item { font-size: 14px; color: #d4d7e0; }
@@ -165,7 +165,6 @@
   .table-footer { font-size: 12px; padding: 10px 14px; align-items: flex-start; }
   .table-footer > span { max-width: 55%; }
   .visual-board .board-tools { padding-left: 14px; padding-right: 14px; }
-  .data-workspace .board-scroll { max-height: 65vh; }
 }
 
 .context-parent, .context-related { display: inline-flex; align-items: center; gap: 5px; color: #5844a0; font-size: 12px; padding: 0; text-align: left; overflow-wrap: anywhere; }
