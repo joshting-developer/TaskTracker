@@ -1,3 +1,10 @@
+## 2026-11-05 待辦文字完成入口交付
+
+- 移除列首完成／重開checkbox及重複狀態，更多提供「標記為已完成」／「重新開啟」，保留狀態文字、刪除線、capabilities與busy／同筆草稿保護。手機動作不拆行。
+- 完整隔離真實API browser-check與usability-fixes-check通過；production build及編譯版本文字完成／重開保存、鍵盤、1440／768／390px無溢位驗證通過。前後三尺寸圖片已檢視，未宣稱上游inspector全綠或真人研究。
+- README／todo-design／產品討論同步，僅前端修改，不改API／DB／Seed；本機frontend掛載來源即時套用。日誌 /tmp/tasktracker-todo-action-{build,browser,usability,after}.log，截圖 /tmp/tasktracker-todo-action-{before,after}/，不提交產物。
+- 使用者更正已由9d95238提交：只參考專案內skill，規劃文件隨階段commit。本階段亦明確提交plans兩份新增紀錄，不push。
+
 ## 2026-11-05 Skill限定專案內來源
 
 - 使用者明確要求未來只參考本專案下skill。根AGENTS新增Skill來源與適用範圍：只用.agents/skills入口及skills副本，除非當次明示不讀／套外部共用或全域skill；沿革連結不是載入授權。

@@ -52,11 +52,15 @@ export async function checkTodoWorkflow(browser, failures) {
   await personal.getByLabel('編輯待辦內容', { exact: true }).fill('準備 613 快照');
   await personal.getByRole('button', { name: '儲存待辦修改', exact: true }).click();
   row = personal.locator('.todo-row').filter({ hasText: '準備 613 快照' });
-  await row.getByRole('checkbox', { name: '完成待辦 準備 613 快照', exact: true }).check();
+  assert.equal(await row.getByRole('checkbox').count(), 0, '列首不再用checkbox變更狀態');
+  await row.getByLabel('待辦操作').focus();
+  await member.keyboard.press('Enter');
+  await row.getByRole('button', { name: '標記為已完成', exact: true }).click();
   await row.waitFor({ state: 'hidden' });
   await personal.getByRole('button', { name: /顯示已完成/ }).click();
-  await row.getByRole('checkbox', { name: '重新開啟 準備 613 快照', exact: true }).uncheck();
-  await row.getByRole('checkbox', { name: '完成待辦 準備 613 快照', exact: true }).waitFor();
+  await row.getByLabel('待辦操作').click();
+  await row.getByRole('button', { name: '重新開啟', exact: true }).click();
+  await row.getByRole('button', { name: '標記為已完成', exact: true }).waitFor();
 
   // 普通成員交給 owner, 直接加入而非等待接受
   await personal.getByLabel('快速新增待辦', { exact: true }).fill('幫忙確認 614 範圍');
@@ -65,7 +69,8 @@ export async function checkTodoWorkflow(browser, failures) {
   await personal.getByRole('tab', { name: /我交辦的/ }).click();
   const outgoing = personal.locator('.todo-row').filter({ hasText: '幫忙確認 614 範圍' });
   await outgoing.waitFor();
-  assert.equal(await outgoing.getByRole('checkbox').count(), 0);
+  await outgoing.getByLabel('待辦操作').click();
+  assert.equal(await outgoing.getByRole('button', { name: '標記為已完成', exact: true }).count(), 0, '交辦者不能代承辦者完成');
   await owner.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
   await owner.getByRole('button', { name: /待辦通知（1 則未讀）/ }).waitFor();
   await owner.getByRole('button', { name: /待辦通知/ }).click();
@@ -73,8 +78,8 @@ export async function checkTodoWorkflow(browser, failures) {
   const ownerTodos = owner.getByRole('region', { name: '首頁小待辦', exact: true });
   const received = ownerTodos.locator('.todo-row').filter({ hasText: '幫忙確認 614 範圍' });
   await received.waitFor();
-  assert.equal(await received.getByRole('checkbox').count(), 1);
   await received.getByLabel('待辦操作').click();
+  await received.getByRole('button', { name: '標記為已完成', exact: true }).waitFor();
   owner.once('dialog', dialog => dialog.accept());
   await received.getByRole('button', { name: '退回給交辦者', exact: true }).click();
   await received.waitFor({ state: 'hidden' });

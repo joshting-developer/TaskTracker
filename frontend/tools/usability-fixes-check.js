@@ -80,7 +80,7 @@ try {
   const draft = todos.getByLabel('編輯待辦內容', { exact: true });
   assert.equal(await draft.inputValue(), '切換後保留的草稿');
   assert.equal(await draft.evaluate(el => el === document.activeElement), true);
-  assert.equal(await todos.locator(`[data-todo-id="${editedId}"]`).getByRole('checkbox').isDisabled(), true);
+  assert.equal(await todos.locator(`[data-todo-id="${editedId}"]`).locator('.todo-actions').count(), 0, '編輯中的同筆待辦不顯示狀態動作');
   // 開始編輯另一筆需要明確放棄；拒絕時原草稿不變。
   const next = todos.locator('.todo-row:has(.todo-actions)').first();
   await next.getByLabel('待辦操作').click();
