@@ -1,3 +1,13 @@
+## 2026-11-05 任務詳細頁直接填報工時
+
+- 使用者在詳細頁工時tab找不到填寫入口，預期這裡能填報；目前需到工時月曆點日期。補詳細頁入口與共用抽屜。
+- 抽取TimeEntryDrawer供月曆／詳細頁共用，沿用logTime／updateTime、分鐘驗證、Asia/Taipei日期、requestId及原始entry revision。Task／Bug自動帶入並鎖定，Epic只能選所屬執行卡。
+- 詳細頁依timeEntry.writeOwn提供填報與修改本人有效紀錄，不以issue.write或角色名稱放行；整合dirty／saving／關閉／導覽保護，失敗保留內容，背景更新不重設基準。
+- 沿用後端作者／24小時／權限檢查，不新增API或schema。新增test:issue-time使用真實隔離API通過：詳細頁新增／本人修改／月曆一致、Epic只選所屬執行卡、無整數分鐘拒絕、每日上限、背景刷新原revision／409保留草稿、伺服器已提交但遺失回應後同requestId重試不重複、Escape與hash離開保護、管理者不能改別人工時、developer降reader後清除抽屜與後端拒寫。
+- production build、完整browser-check、U01–U08 UIUX回歸通過。共用抽屜關閉採卸載，原月曆測試改檢查detached，原日期焦點恢復、月曆本人修改／作廢及草稿保護仍通過。
+- 編譯版1440／768／390抽屜已等動畫完成後量測與檢視，欄位、焦點、任務帶入、邊界與無橫向溢位正常，無瀏覽器錯誤。早期滑入途中截圖已重拍，不把測試時機當產品故障。
+- 專案UI／UX skills保留既有介面；README／workflow-design／產品討論同步，本機階段commit，不push。前端src掛載生效、不需主Compose重啟；測試僅隔離tmpfs假資料，完成後移除，不使用業務DB。
+
 ## 2026-11-05 移除看板卡片狀態選單
 
 - 使用者要求卡片不再直接選狀態，透過拖曳至其他欄位變更。

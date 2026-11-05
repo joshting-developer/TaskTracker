@@ -15,7 +15,8 @@
     "test:settings": "node tools/account-settings-check.js",
     "test:board": "node tools/board-ux-check.js",
     "test:realtime": "node tools/realtime-check.js",
-    "test:home": "node tools/home-check.js"
+    "test:home": "node tools/home-check.js",
+    "test:issue-time": "node tools/issue-time-check.js"
   },
   "dependencies": {
     "@mdi/font": "7.4.47",

@@ -296,7 +296,7 @@ function openIssue(issue, fullPage = detailPage.value, approved = false) {
   if (fullPage) nextTick(() => { window.scrollTo(0, 0); detailTool.value?.focus(); });
 }
 function jumpFromEditor(issue) {
-  if (detailTool.value?.dirty && !window.confirm('完整頁還有未送出的留言, 確定要切換任務嗎？')) return;
+  if (detailTool.value?.dirty && !window.confirm('完整頁還有未儲存的內容，確定要切換任務嗎？')) return;
   openIssue(issue, detailPage.value, true);
 }
 function issueReturnLabel() {
@@ -489,7 +489,7 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
       <div class="workspace-content" :class="{ 'board-workspace': section === 'tasks' && view === 'board', 'data-workspace': selectedProject && section === 'tasks', 'detail-workspace': showIssuePage }">
         <button v-if="selectedProject && section !== 'tasks'" class="back-to-projects" @click="goProjects()"><Icon name="chevron" :size="14" />返回專案列表</button>
         <div v-if="showIssuePage && error" class="error-box workspace-error" role="alert">{{ error }}<button class="text-button" @click="refresh">重新載入</button></div>
-        <IssueDetail v-if="showIssuePage" ref="detailTool" :key="selectedIssue.id" :issue="selectedIssue" :project="selectedProject" :issues="projectAllIssues" :members="projectMembers" :entries="workspace.timeEntries" :return-label="issueReturnLabel()" :busy="Boolean(moving)" :can-write="canWrite" :can-read-time="can('timeEntry.readOwn')" @state="state => moveIssue(selectedIssue, { state })" @close="closeIssue" @edit="canWrite && (editingDetail = true)" @open="issue => openIssue(issue, true)" @saved="savedIssue" @reload="refresh" />
+        <IssueDetail v-if="showIssuePage" ref="detailTool" :key="selectedIssue.id" :issue="selectedIssue" :project="selectedProject" :issues="projectAllIssues" :members="projectMembers" :entries="workspace.timeEntries" :return-label="issueReturnLabel()" :busy="Boolean(moving)" :can-write="canWrite" :can-read-time="can('timeEntry.readOwn')" :can-log-time="can('timeEntry.writeOwn')" :user-id="currentUserId" @time-updated="toolUpdated" @state="state => moveIssue(selectedIssue, { state })" @close="closeIssue" @edit="canWrite && (editingDetail = true)" @open="issue => openIssue(issue, true)" @saved="savedIssue" @reload="refresh" />
         <div v-if="!showIssuePage && (selectedProject || landing === 'projects')" class="page-heading"><div><div class="eyebrow">{{ selectedProject ? 'YOUR PROJECT, IN FOCUS' : 'A SPACE FOR EVERY PROJECT' }}</div><h1>{{ title }}<span class="heading-dot">.</span></h1><p v-if="!selectedProject || (section !== 'tasks' && selectedProject.description)">{{ selectedProject ? selectedProject.description : '先選一個專案, 再專心處理裡面的事' }}</p></div><div class="heading-actions"><button v-if="selectedProject && canCreateIssue && !(section === 'tasks' && view === 'boards')" class="button primary" :disabled="loading" @click="newIssue"><Icon name="plus" :size="18" />新增任務<span class="button-key">＋</span></button><button v-else-if="!selectedProject && workspace.meta.permissions?.includes('project.create')" class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div></div>
         <div v-if="!selectedProject" :class="landing === 'home' ? 'home-layout' : 'project-list-page'">
         <h1 v-if="landing === 'home'" class="sr-only">首頁</h1>
@@ -532,7 +532,7 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
         </section>
         <div v-if="error && section !== 'tasks'" class="error-box" role="alert">{{ error }}</div>
         <EpicOverview :can-write="canWrite" :can-read-time="can('timeEntry.readOwn')" v-if="section === 'epics'" :project="selectedProject" :issues="projectAllIssues" :entries="workspace.timeEntries" :members="projectMembers" @open="openIssue" @create="newIssue('', 'epic')" />
-        <TimeCalendar v-if="section === 'time' && can('timeEntry.readOwn')" ref="workspaceTool" :key="workContextKey" :context-key="workContextKey" :project="selectedProject" :issues="projectAllIssues" :entries="workspace.timeEntries" :members="projectMembers" :user-id="currentUserId" @updated="toolUpdated" @open="openIssue" />
+        <TimeCalendar :can-write="can('timeEntry.writeOwn')" v-if="section === 'time' && can('timeEntry.readOwn')" ref="workspaceTool" :key="workContextKey" :context-key="workContextKey" :project="selectedProject" :issues="projectAllIssues" :entries="workspace.timeEntries" :members="projectMembers" :user-id="currentUserId" @updated="toolUpdated" @open="openIssue" />
         <ProjectSettings v-if="section === 'settings' && can('project.statuses.update')" ref="workspaceTool" :project="selectedProject" :issues="projectAllIssues" :permissions="selectedProject.permissions || []" @updated="toolUpdated" />
         <ProjectMembers v-if="section === 'members' && can('project.members.manage')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" />
         <NotificationPreview v-if="section === 'notifications'" :project="selectedProject" :notifications="workspace.notifications" :issues="projectAllIssues" :permissions="workspace.meta.permissions || []" @open="openIssue" />

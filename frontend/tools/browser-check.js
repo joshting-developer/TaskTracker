@@ -861,7 +861,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await teammate.screenshot({ path: 'artifacts/time-drawer-desktop.png', fullPage: true });
   teammate.once('dialog', dialog => dialog.accept());
   await timeDrawer.getByRole('button', { name: '關閉工時面板', exact: true }).click();
-  assert.equal(await teammate.locator('.time-entry-drawer').getAttribute('open'), null);
+  await teammate.locator('.time-entry-drawer').waitFor({ state: 'detached' });
   assert.equal(await teammate.evaluate(() => document.activeElement?.getAttribute('aria-haspopup')), 'dialog', '關閉後焦點回到日期');
   await teammate.getByRole('button', { name: '今天', exact: true }).click();
   await teammate.getByRole('button', { name: new RegExp(`^${dateInTaipei()} 工時 `) }).click();

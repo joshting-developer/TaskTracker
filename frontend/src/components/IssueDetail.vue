@@ -4,22 +4,30 @@ import { onTabKeydown } from '../ui/tabs.js';
 import Icon from './Icon.vue';
 import MarkdownEditor from './MarkdownEditor.vue';
 import MarkdownContent from './MarkdownContent.vue';
+import TimeEntryDrawer from './TimeEntryDrawer.vue';
 import { api } from '../api/index.js';
 import { FIELD_LABELS, hours, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
-const props = defineProps({ issue: Object, project: Object, issues: Array, members: Array, entries: Array, returnLabel: String, busy: Boolean, canWrite: { type: Boolean, default: true }, canReadTime: { type: Boolean, default: true } });
-const emit = defineEmits(['close', 'open', 'edit', 'saved', 'reload', 'state']);
+const props = defineProps({ issue: Object, project: Object, issues: Array, members: Array, entries: Array, returnLabel: String, busy: Boolean, canWrite: { type: Boolean, default: true }, canReadTime: { type: Boolean, default: true }, canLogTime: { type: Boolean, default: false }, userId: String });
+const emit = defineEmits(['close', 'open', 'edit', 'saved', 'reload', 'state', 'time-updated']);
 const tab = ref('comments'), comment = ref(''), saving = ref(false), error = ref(''), conflict = ref(false);
+const timeOpen = ref(false), timeDrawer = ref(null), editingTime = ref(null), timeFormKey = ref(0);
 const heading = ref(null), propertiesExpanded = ref(false), sidebarTab = ref('properties');
 let pending;
 watch(() => props.canWrite, allowed => { if (!allowed) { comment.value = ''; pending = null; error.value = ''; conflict.value = false; } });
-watch(() => props.canReadTime, allowed => { if (!allowed && tab.value === 'time') tab.value = 'comments'; });
-const dirty = computed(() => Boolean(comment.value.trim()));
-defineExpose({ dirty, saving, focus: () => heading.value?.focus() });
+watch([() => props.canReadTime, () => props.canLogTime], ([read, write]) => {
+  if (!read && !write && tab.value === 'time') tab.value = 'comments';
+  if (!write) { timeOpen.value = false; editingTime.value = null; }
+});
+const commentDirty = computed(() => Boolean(comment.value.trim()));
+const dirty = computed(() => commentDirty.value || Boolean(timeDrawer.value?.dirty));
+const isSaving = computed(() => saving.value || Boolean(timeDrawer.value?.saving));
+defineExpose({ dirty, saving: isSaving, focus: () => heading.value?.focus() });
 const states = computed(() => statusesFor(props.project));
 const state = issue => states.value.find(item => item.id === issue.state);
 const memberName = id => props.members.find(member => member.id === id)?.name || id || '未指派';
 const children = computed(() => props.issues.filter(issue => props.issue.type === 'epic' ? issue.epicId === props.issue.id : issue.parentIssueId === props.issue.id));
+const timeIssues = computed(() => (props.issue.type === 'epic' ? children.value : [props.issue]).filter(issue => issue.type !== 'epic'));
 const related = computed(() => (props.issue.relatedIssueIds || []).map(id => props.issues.find(issue => issue.id === id)).filter(Boolean));
 const epic = computed(() => props.issues.find(issue => issue.id === props.issue.epicId));
 const parent = computed(() => props.issues.find(issue => issue.id === props.issue.parentIssueId));
@@ -48,7 +56,7 @@ function changeState(event) {
   emit('state', nextState);
 }
 async function sendComment() {
-  if (!props.canWrite || saving.value || props.busy || !dirty.value) return;
+  if (!props.canWrite || saving.value || props.busy || !commentDirty.value) return;
   saving.value = true; error.value = ''; conflict.value = false;
   const payload = { id: props.issue.id, content: comment.value, expectedRevision: props.issue.revision };
   const signature = JSON.stringify(payload);
@@ -58,6 +66,14 @@ async function sendComment() {
     comment.value = ''; pending = null; emit('saved', result, false);
   } catch (failure) { error.value = failure.message; conflict.value = failure.code === 'REVISION_CONFLICT'; }
   finally { saving.value = false; }
+}
+function openTime(entry = null) {
+  if (!props.canLogTime || isSaving.value || props.busy || (entry && entry.userId !== props.userId)) return;
+  editingTime.value = entry ? { ...entry } : null; timeFormKey.value++; timeOpen.value = true;
+}
+function timeSaved() {
+  timeOpen.value = false; editingTime.value = null;
+  emit('time-updated', '工時已儲存');
 }
 </script>
 
@@ -89,7 +105,7 @@ async function sendComment() {
           <div class="discussion-tabs" role="tablist" aria-label="任務紀錄" @keydown="onTabKeydown">
             <button id="detail-comments-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" :class="{ active: tab === 'comments' }" @click="tab = 'comments'">留言 <span>{{ issue.comments.length }}</span></button>
             <button id="detail-history-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" :class="{ active: tab === 'history' }" @click="tab = 'history'">異動紀錄 <span>{{ issue.history.length }}</span></button>
-            <button v-if="canReadTime" id="detail-time-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'time' ? 0 : -1" :aria-selected="tab === 'time'" :class="{ active: tab === 'time' }" @click="tab = 'time'">工時 <span>{{ work.length }}</span></button>
+            <button v-if="canReadTime || canLogTime" id="detail-time-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'time' ? 0 : -1" :aria-selected="tab === 'time'" :class="{ active: tab === 'time' }" @click="tab = 'time'">工時 <span v-if="canReadTime">{{ work.length }}</span></button>
           </div>
           <div id="detail-activity" role="tabpanel" tabindex="0" :aria-labelledby="`detail-${tab}-tab`">
             <template v-if="tab === 'comments'">
@@ -100,15 +116,18 @@ async function sendComment() {
               <article v-for="entry in [...issue.history].reverse()" :key="entry.id" class="history-entry"><span class="history-dot"></span><div><p><strong>{{ entry.actor }}</strong> {{ entry.kind === 'created' ? '建立了任務' : '更新了任務' }} <time>{{ timestamp(entry.at) }}</time></p><p v-for="change in entry.changes" :key="change.field" class="history-change">{{ FIELD_LABELS[change.field] || change.field }}：{{ display(change.field, change.before) }} → {{ display(change.field, change.after) }}</p></div></article>
             </template>
             <template v-else>
-              <p v-if="!work.length" class="quiet-message">尚無工時紀錄</p>
-              <article v-for="entry in work" :key="entry.id" class="issue-detail-work"><div><strong>{{ entry.workDate }} · {{ memberName(entry.userId) }}</strong><p>{{ entry.note || '未填說明' }}</p></div><span>{{ hours(entry.minutes) }}</span></article>
-              <p class="subtle">{{ issue.type === 'epic' ? '加總所屬卡片, 不重複計算子任務' : '依目前任務的有效紀錄計算' }} · 工作日採 Asia/Taipei</p>
+              <div v-if="canLogTime" class="issue-time-toolbar"><button class="button secondary" :disabled="busy || saving || !timeIssues.length" @click="openTime()"><Icon name="plus" :size="16" />{{ issue.type === 'epic' ? '填報子任務工時' : '填報工時' }}</button></div>
+              <p v-if="issue.type === 'epic'" class="subtle">Epic 工時由所屬任務加總，請在 Task 或 Bug 填報。</p>
+              <template v-if="canReadTime">
+                <p v-if="!work.length" class="quiet-message">尚無工時紀錄</p>
+                <article v-for="entry in work" :key="entry.id" class="issue-detail-work"><div><strong>{{ entry.workDate }} · {{ memberName(entry.userId) }}</strong><p>{{ entry.note || '未填說明' }}</p></div><div class="issue-work-actions"><span>{{ hours(entry.minutes) }}</span><button v-if="canLogTime && entry.userId === userId" class="text-button" :disabled="busy || saving" :aria-label="`修改工時 ${entry.id}`" @click="openTime(entry)">修改</button></div></article>
+              </template>
             </template>
           </div>
           <form v-if="canWrite" v-show="tab === 'comments'" class="comment-form" @submit.prevent="sendComment">
             <div v-if="error" class="error-box" role="alert">{{ error }}<button v-if="conflict" class="text-button" type="button" :disabled="saving || busy" @click="emit('reload')">更新任務資料（保留留言）</button></div>
             <MarkdownEditor v-model="comment" label="新增留言" :rows="3" :maxlength="2000" placeholder="留下想法或進度…" :disabled="saving || busy" />
-            <button class="button secondary" :disabled="saving || busy || !dirty">{{ saving ? '送出中…' : '送出留言' }}</button>
+            <button class="button secondary" :disabled="saving || busy || !commentDirty">{{ saving ? '送出中…' : '送出留言' }}</button>
           </form>
         </section>
       </div>
@@ -145,10 +164,14 @@ async function sendComment() {
         </div>
       </aside>
     </div>
+    <TimeEntryDrawer v-if="timeOpen && canLogTime" ref="timeDrawer" :key="timeFormKey" :issues="timeIssues" :default-issue-id="issue.type === 'epic' ? '' : issue.id" :lock-issue="issue.type !== 'epic'" :entry="editingTime" @close="timeOpen = false; editingTime = null" @saved="timeSaved" @conflict="emit('reload')" />
   </section>
 </template>
 
 <style scoped>
+.issue-time-toolbar { display: flex; justify-content: flex-end; margin: 16px 0; }
+.issue-work-actions { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+.issue-work-actions button { min-height: 44px; }
 .issue-detail-page { background: #fff; color: #242936; min-height: calc(100dvh - 60px); }
 .issue-detail-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding: 18px 24px; border-bottom: 1px solid #daddE5; }
 .issue-detail-toolbar .primary { margin-left: auto; }

@@ -1,0 +1,121 @@
+import assert from 'node:assert/strict';
+import { mkdirSync } from 'node:fs';
+import { preview } from 'vite';
+import { chromium } from 'playwright';
+import { dateInTaipei } from '../src/domain/model.js';
+if (!process.env.E2E_API_URL) throw new Error('請設定隔離E2E_API_URL，不可使用業務資料庫');
+let server, browser;
+async function request(page, operation, input = {}, group = 'rpc') {
+  return page.evaluate(async ({ operation, input, group }) => {
+    const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();
+    const response = await fetch(`/api/${group}/${operation}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken }, body: JSON.stringify({ requestId: crypto.randomUUID(), ...input }) });
+    return { status: response.status, ...await response.json() };
+  }, { operation, input, group });
+}
+async function call(page, operation, input = {}, group = 'rpc') {
+  const result = await request(page, operation, input, group); assert.equal(result.ok, true, JSON.stringify(result)); return result.data;
+}
+try {
+  server = await preview({ preview: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
+  browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } }), page = await context.newPage(), errors = [];
+  page.setDefaultTimeout(10000); page.on('pageerror', error => errors.push(error.message));
+  await page.goto('http://127.0.0.1:5175');
+  const token = crypto.randomUUID(), password = 'issue-time-test-only-password';
+  const identity = await call(page, 'register', { name: '工時負責人', email: `time-owner-${token}@example.test`, password, workspaceName: '工時驗證' }, 'auth');
+  const project = await call(page, 'createProject', { name: '詳細頁填報', code: 'TIME' });
+  const task = await call(page, 'createIssue', { projectId: project.id, title: '整理操作說明', type: 'task' });
+  const epic = await call(page, 'createIssue', { projectId: project.id, title: '發佈準備', type: 'epic' });
+  const child = await call(page, 'createIssue', { projectId: project.id, title: '上線前檢查', type: 'bug', epicId: epic.id });
+  const url = issue => `http://127.0.0.1:5175/#/projects/${project.id}/issues/${issue.id}?detail=1`;
+  const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
+  const drawer = page.locator('.time-entry-drawer');
+  async function openIssue(issue) { await page.goto(url(issue)); await page.reload(); await detail.getByRole('tab', { name: /^工時/ }).click(); }
+  await openIssue(task);
+  await detail.getByRole('button', { name: '填報工時', exact: true }).click();
+  assert.equal(await drawer.getByLabel('工時任務').inputValue(), task.id); assert.equal(await drawer.getByLabel('工時任務').isDisabled(), true);
+  assert.equal(await drawer.getByLabel('工作日期', { exact: true }).inputValue(), dateInTaipei());
+  let saves = 0; page.on('request', req => { if (req.url().endsWith('/api/rpc/logTime')) saves++; });
+  await drawer.getByLabel('投入小時', { exact: true }).fill('0.017'); await drawer.getByRole('button', { name: '登記工時', exact: true }).click();
+  await drawer.getByRole('alert').filter({ hasText: '整數分鐘' }).waitFor(); assert.equal(saves, 0);
+  await drawer.getByLabel('投入小時', { exact: true }).fill('0.5'); await drawer.getByLabel('工時說明').fill('從詳細頁填寫');
+  await drawer.getByRole('button', { name: '登記工時', exact: true }).click(); await drawer.waitFor({ state: 'detached' });
+  await detail.locator('.issue-detail-work').filter({ hasText: '從詳細頁填寫' }).waitFor(); assert.equal(page.url(), url(task));
+  let workspace = await call(page, 'getWorkspace'), entry = workspace.timeEntries.find(item => item.note === '從詳細頁填寫');
+  assert.equal(entry.minutes, 30); assert.equal(entry.userId, identity.user.id); assert.equal(entry.issueId, task.id);
+  await page.getByRole('button', { name: '工時月曆', exact: true }).click();
+  await page.locator('.time-entry').filter({ hasText: '從詳細頁填寫' }).waitFor();
+  console.log('PASS: 詳細頁自動帶任務／今日、整數分鐘驗證、本人保存、原頁更新及月曆一致');
+
+  await openIssue(task); await detail.getByRole('button', { name: `修改工時 ${entry.id}`, exact: true }).click();
+  await drawer.getByLabel('投入小時', { exact: true }).fill('0.75'); await drawer.getByLabel('工時說明').fill('保留的工時草稿');
+  const otherTab = await context.newPage(); await otherTab.goto('http://127.0.0.1:5175');
+  await call(otherTab, 'updateTime', { id: entry.id, expectedRevision: entry.revision, workDate: entry.workDate, minutes: 60, note: '另一視窗修改' });
+  await page.getByRole('button', { name: '重新整理工作空間', exact: true }).evaluate(button => button.click());
+  const conflict = page.waitForResponse(response => response.url().endsWith('/api/rpc/updateTime') && response.status() === 409);
+  await drawer.getByRole('button', { name: '儲存工時修改', exact: true }).click(); await conflict;
+  assert.equal(await drawer.getByLabel('工時說明').inputValue(), '保留的工時草稿');
+  page.once('dialog', dialog => dialog.accept()); await drawer.getByRole('button', { name: '關閉工時面板', exact: true }).click();
+  await detail.getByRole('button', { name: `修改工時 ${entry.id}`, exact: true }).click();
+  await drawer.getByLabel('投入小時', { exact: true }).fill('0.75'); await drawer.getByLabel('工時說明').fill('修改後的工時');
+  await drawer.getByRole('button', { name: '儲存工時修改', exact: true }).click(); await drawer.waitFor({ state: 'detached' });
+  await detail.locator('.issue-detail-work').filter({ hasText: '修改後的工時' }).waitFor();
+  entry = (await call(page, 'getWorkspace')).timeEntries.find(item => item.id === entry.id); assert.equal(entry.minutes, 45);
+  await detail.getByRole('button', { name: '填報工時', exact: true }).click(); await drawer.getByLabel('工時說明').fill('未儲存工時');
+  page.once('dialog', dialog => dialog.dismiss()); await page.keyboard.press('Escape'); assert.equal(await drawer.isVisible(), true);
+  page.once('dialog', dialog => dialog.dismiss()); await page.evaluate(() => { location.hash = '#/'; });
+  await page.waitForURL(url(task)); assert.equal(await drawer.getByLabel('工時說明').inputValue(), '未儲存工時');
+  page.once('dialog', dialog => dialog.accept()); await drawer.getByRole('button', { name: '關閉工時面板', exact: true }).click();
+  console.log('PASS: 本人工時修改、背景刷新不偷換revision、409保留草稿、Escape及導覽取消保護');
+
+  await detail.getByRole('button', { name: '填報工時', exact: true }).click(); await drawer.getByLabel('投入小時', { exact: true }).fill('24');
+  await drawer.getByRole('button', { name: '登記工時', exact: true }).click(); await drawer.getByRole('alert').waitFor();
+  assert.equal(await drawer.getByLabel('投入小時', { exact: true }).inputValue(), '24');
+  page.once('dialog', dialog => dialog.accept()); await drawer.getByRole('button', { name: '關閉工時面板', exact: true }).click();
+  await detail.getByRole('button', { name: '填報工時', exact: true }).click(); await drawer.getByLabel('投入小時', { exact: true }).fill('0.1'); await drawer.getByLabel('工時說明').fill('網路重試工時');
+  const retryIds = []; const trackRetry = req => { if (req.url().endsWith('/api/rpc/logTime')) retryIds.push(req.postDataJSON().requestId); }; page.on('request', trackRetry);
+  await page.route('**/api/rpc/logTime', async route => { await route.fetch(); await route.abort(); }, { times: 1 });
+  await drawer.getByRole('button', { name: '登記工時', exact: true }).click(); await drawer.getByRole('alert').filter({ hasText: '暫時無法連線' }).waitFor();
+  await drawer.getByRole('button', { name: '登記工時', exact: true }).click(); await drawer.waitFor({ state: 'detached' }); page.off('request', trackRetry);
+  assert.equal(retryIds.length, 2); assert.equal(retryIds[0], retryIds[1]);
+  assert.equal((await call(page, 'getWorkspace')).timeEntries.filter(item => item.note === '網路重試工時').length, 1);
+  await openIssue(epic); await detail.getByRole('button', { name: '填報子任務工時', exact: true }).click();
+  assert.equal(await drawer.getByLabel('工時任務').locator('option[value="' + epic.id + '"]').count(), 0);
+  assert.equal(await drawer.getByLabel('工時任務').locator('option[value="' + task.id + '"]').count(), 0);
+  await drawer.getByLabel('工時任務').selectOption(child.id); await drawer.getByLabel('投入小時', { exact: true }).fill('0.25');
+  await drawer.getByRole('button', { name: '登記工時', exact: true }).click(); await drawer.waitFor({ state: 'detached' });
+  await detail.locator('.issue-detail-work').waitFor(); assert.equal((await call(page, 'getWorkspace')).timeEntries.find(item => item.issueId === child.id).minutes, 15);
+  console.log('PASS: 每日上限、真實API已提交但遺失回應後重試不重複、Epic只選所屬執行卡');
+
+  const invite = await call(page, 'inviteMember', { email: `time-member-${token}@example.test` });
+  const member = await (await browser.newContext()).newPage(); member.on('pageerror', error => errors.push(error.message)); await member.goto('http://127.0.0.1:5175');
+  const memberIdentity = await call(member, 'register', { name: '工時成員', email: invite.email, password, inviteToken: invite.token }, 'auth');
+  let acl = await call(page, 'getProjectMembers', { projectId: project.id });
+  await call(page, 'setProjectMember', { projectId: project.id, userId: memberIdentity.user.id, roleId: 'developer', expectedRevision: acl.revision });
+  const otherEntry = await call(member, 'logTime', { issueId: task.id, workDate: dateInTaipei(), minutes: 30, note: '同事的工時' });
+  await openIssue(task); await detail.locator('.issue-detail-work').filter({ hasText: '同事的工時' }).waitFor();
+  assert.equal(await detail.getByRole('button', { name: `修改工時 ${otherEntry.id}`, exact: true }).count(), 0);
+  assert.equal((await request(page, 'updateTime', { id: otherEntry.id, expectedRevision: otherEntry.revision, workDate: otherEntry.workDate, minutes: 60 })).status, 403);
+  await member.goto(url(task)); await member.reload(); await member.getByRole('tab', { name: /^工時/ }).click(); await member.getByRole('button', { name: '填報工時', exact: true }).click();
+  await member.getByLabel('工時說明').fill('撤權後不可保留的填報');
+  acl = await call(page, 'getProjectMembers', { projectId: project.id });
+  await call(page, 'setProjectMember', { projectId: project.id, userId: memberIdentity.user.id, roleId: 'reader', expectedRevision: acl.revision });
+  await member.getByRole('button', { name: '重新整理工作空間', exact: true }).evaluate(button => button.click());
+  await member.locator('.time-entry-drawer').waitFor({ state: 'detached' });
+  assert.equal(await member.getByRole('tab', { name: /^工時/ }).count(), 0);
+  assert.equal((await request(member, 'logTime', { issueId: task.id, workDate: dateInTaipei(), minutes: 5 })).status, 403);
+  console.log('PASS: 管理者不可修改別人工時、developer可填報、降為reader後清除表單並拒絕寫入');
+  mkdirSync('artifacts/issue-time', { recursive: true });
+  for (const width of [1440, 768, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await detail.getByRole('button', { name: '填報工時', exact: true }).click();
+    await drawer.evaluate(async el => { await Promise.all(el.getAnimations().map(animation => animation.finished)); });
+    if (width === 390) await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
+    assert.equal(await drawer.getByLabel('工時任務').inputValue(), task.id);
+    const box = await drawer.boundingBox(); assert.ok(box.x >= 0 && box.x + box.width <= width + 1, JSON.stringify(box));
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    await page.screenshot({ path: `artifacts/issue-time/drawer-${width}.png` });
+    await drawer.getByRole('button', { name: '關閉工時面板', exact: true }).click();
+  }
+  assert.deepEqual(errors, []); console.log('PASS: 編譯版三尺寸抽屜／任務帶入、頁面無橫向溢位及瀏覽器無錯誤');
+} finally { await browser?.close(); await new Promise(resolve => server ? server.httpServer.close(resolve) : resolve()); }
