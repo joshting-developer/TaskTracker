@@ -62,6 +62,9 @@ class ApiExecution
     {
         return DB::transaction(function () use ($request, $operation, $input) {
             $workspaceSession = $this->accounts->context($request);
+            if (in_array($operation, AccountSettings::OPERATIONS, true)) {
+                return (new AccountSettings($workspaceSession))->execute($operation, $input);
+            }
             if (in_array($operation, Todos::OPERATIONS, true)) {
                 return (new Todos($workspaceSession))->execute($operation, $input);
             }

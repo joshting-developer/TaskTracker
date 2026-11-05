@@ -40,7 +40,7 @@ class AccountService
      */
     public function context(Request $request): array
     {
-        $user = $request->user();
+        $user = $request->user()?->fresh();
         $workspaceId = $request->session()->get('workspace_id');
         if (! $user || ! is_string($workspaceId)) {
             DomainError::fail('UNAUTHENTICATED', '請先登入');

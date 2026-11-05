@@ -1,3 +1,18 @@
+## 2026-11-05 設定API階段完成
+
+- 新增設定Controller／AccountSettings服務／SettingsRepository，ApiExecution同交易串接；路由只註冊固定五操作。
+- 姓名限本人，Workspace改名與角色異動依workspace.update／workspace.members.manage；ownership permission保護擁有者，角色ID僅查映射。三個SQL版本欄及requestId，讀重試前重查資格。
+- 完整46 tests／896 assertions通過；本人姓名立即刷新、一般成員拒絕、私有Project升降權、衝突、重試／撤權、SQL保存及migration往返。以Pint／parser整理新檔，未修改無關模組。
+- 本階段先commit API、契約、產品討論與plans；前端新選單與設定流程仍在隔離驗收，下一階段提交；本機升級需備份，不push。
+
+## 2026-11-05 帳號選單與工作空間設定
+
+- 使用者要求右上頭像可開選單，顯示／編輯資料與登出，左下移除登出；工作區名稱可改，權限管理入口需清楚。
+- 實作個人資料（顯示名稱可改、Email唯讀）與工作空間設定（一般／成員與權限）；保留原邀請入口與個別Project ACL。固定角色先提供manager／user指派，ownership另案、不提供自訂permission編輯。
+- 後端用permission ID、可信Session／scope、同交易revision／requestId；owner資格保護由ownership permission判斷，不能用名稱放行。新增三個SQL版本欄，設定Repository直接使用Eloquent，不把新設定藏入legacy JSON。
+- 先跑帳號／ACL baseline，依序完成API＋隔離測試commit、帳號選單與設定互動／草稿／鍵盤／手機／真實API／build，再備份本機migrate與重啟長駐服務；文件plans隨階段commit，不push。
+- 使用專案內backend-development-standards與兩個UI／UX skill；不參考外部skill、不用業務資料測試、不產GAS。
+
 ## 2026-11-05 Footer驗收
 
 - 共用.main直向flex並以100vh／100dvh撐滿，topbar不縮小；workspace-content flex:1，footer margin-top:auto並留內容間距。短頁置底，長頁自然排在資料後，不用fixed遮蓋內容。
