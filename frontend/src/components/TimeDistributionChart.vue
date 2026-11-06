@@ -18,7 +18,7 @@ const segments = row => props.allocations.filter(item => item.userId === row.id)
       <button class="row-name" @click="emit('select', row.id)">{{ row.name }}</button>
       <div class="bar-track">
         <template v-if="mode === 'members'">
-          <button v-for="segment in segments(row)" :key="segment.projectId" class="segment" :style="{ width: `${segment.minutes / maximum * 100}%`, background: colorFor(segment.projectId) }" :aria-label="`${row.name}，${segment.projectName}，${hours(segment.minutes)}，查看此專案`" @click="emit('select', row.id, segment.projectId)"><span class="segment-tip">{{ segment.projectName }} · {{ hours(segment.minutes) }}</span></button>
+          <button v-for="segment in segments(row)" :key="segment.projectId" class="segment" :style="{ width: `${segment.minutes / maximum * 100}%`, background: colorFor(segment.projectId) }" :aria-label="`${row.name}，${segment.projectName}，${hours(segment.minutes)}，查看工時明細`" @click="emit('select', row.id, segment.projectId)"><span class="segment-tip">{{ segment.projectName }} · {{ hours(segment.minutes) }}</span></button>
         </template>
         <button v-else class="segment" :style="{ width: `${row.minutes / maximum * 100}%`, background: colorFor(row.id) }" :aria-label="`${row.name}，${hours(row.minutes)}，查看成員分配`" @click="emit('select', row.id)"><span class="segment-tip">{{ row.name }} · {{ hours(row.minutes) }}</span></button>
       </div>

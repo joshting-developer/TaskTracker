@@ -66,10 +66,12 @@ try {
   await region.getByRole('button', { name: /^成員投入/ }).click();
   await region.locator('.distribution .chart-row').first().waitFor();
   await region.getByRole('button', { name: '分析負責人', exact: true }).first().click();
-  await region.getByRole('heading', { name: '專案投入', exact: true }).waitFor();
-  await region.locator('.analysis-totals').getByText('3 h', { exact: true }).waitFor();
-  assert.equal(await region.getByLabel('分析成員').inputValue(), identity.user.id);
-  await region.getByLabel('分析成員').selectOption(''); await region.getByRole('button', { name: '套用範圍', exact: true }).click();
+  await region.getByRole('heading', { name: '分析負責人 · 工時明細', exact: true }).waitFor();
+  await region.locator('.member-summary').filter({ hasText: '3 h' }).waitFor();
+  assert.equal(await region.locator('.member-row').count(), 3);
+  await region.getByRole('button', { name: '依卡片', exact: true }).click();
+  await region.locator('.member-details[aria-busy="false"]').waitFor();
+  await region.getByRole('button', { name: '返回成員分析', exact: true }).click();
   await region.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();
   await region.getByRole('button', { name: '返回工時分析', exact: true }).click();
   console.log('PASS: 三個分析入口／深連結／重新整理，Epic及子卡各計一次，成員／專案／日期加總一致，三尺寸');
@@ -95,6 +97,10 @@ try {
   await call(owner, 'setWorkspaceMemberRole', { userId: memberIdentity.user.id, roleId: 'manager', expectedRevision: 0 });
   await member.reload(); await member.getByRole('button', { name: '工時分析', exact: true }).click(); await member.getByRole('button', { name: /^專案投入/ }).click();
   const managerRegion = member.getByRole('region', { name: '工時分析', exact: true }); await managerRegion.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();
+  await managerRegion.getByRole('button', { name: '返回工時分析', exact: true }).click();
+  await managerRegion.getByRole('button', { name: /^成員投入/ }).click();
+  await managerRegion.getByRole('button', { name: '分析負責人', exact: true }).first().click();
+  await managerRegion.locator('.member-summary').filter({ hasText: '3 h' }).waitFor();
   await call(owner, 'setWorkspaceMemberRole', { userId: memberIdentity.user.id, roleId: 'user', expectedRevision: 1 });
   await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click(); await member.waitForURL('**/#/');
   assert.equal(await managerRegion.count(), 0); assert.equal((await request(member, 'getTimeReport', query)).status, 403);

@@ -21,19 +21,24 @@ class WorkspaceTimeReport
     public function __construct(private RecordStore $store, private array $workspaceSession) {}
 
     /**
-     * 依工作日期與可選成員／專案範圍回傳三種一致的統計。
+     * 依工作日期與可選成員／專案範圍回傳統計，按需查單人成員明細。
      *
      * @param  array  $input  起訖日與可選篩選ID
-     * @return array 分鐘整數、成員／專案分布及含零日期序列
+     * @return array 分鐘整數、成員／專案分布、含零日期序列及可選分頁明細
      */
     public function get(array $input): array
     {
         WorkspacePermissions::authorize($this->workspaceSession, 'workspace.timeReports.read');
         [$start, $end] = $this->dateRange($input);
+        $detailGroup = $input['detailGroup'] ?? null;
+        if ($detailGroup !== null) {
+            Fields::choice($detailGroup, ['dates', 'issues'], '明細分組');
+        }
         $access = new ProjectAccess($this->store, $this->workspaceSession);
         $projects = [];
         foreach ($this->store->all('projects') as $project) {
-            if ($access->can($project['id'], 'project.read') && $access->can($project['id'], 'timeEntry.readTeam')) {
+            $canReadDetails = $detailGroup === null || $access->can($project['id'], 'issue.read');
+            if ($access->can($project['id'], 'project.read') && $access->can($project['id'], 'timeEntry.readTeam') && $canReadDetails) {
                 $projects[$project['id']] = $project;
             }
         }
@@ -46,6 +51,10 @@ class WorkspaceTimeReport
         if ($userId !== '' && ! isset($members[$userId])) {
             DomainError::fail('NOT_FOUND', '找不到可分析的成員');
         }
+        if ($detailGroup !== null) {
+            Fields::text($userId, '成員', 100, true);
+        }
+        $detailEntries = [];
         $memberRows = [];
         $projectRows = [];
         $allocations = [];
@@ -69,6 +78,9 @@ class WorkspaceTimeReport
             }
             if ($projectId !== '' && $entry['projectId'] !== $projectId || $userId !== '' && $entry['userId'] !== $userId) {
                 continue;
+            }
+            if ($detailGroup !== null) {
+                $detailEntries[] = $entry;
             }
             $member = $entry['userId'];
             $project = $entry['projectId'];
@@ -123,7 +135,7 @@ class WorkspaceTimeReport
         usort($memberRows, fn ($a, $b) => $b['minutes'] <=> $a['minutes'] ?: strcmp($a['id'], $b['id']));
         usort($projectRows, fn ($a, $b) => $b['minutes'] <=> $a['minutes'] ?: strcmp($a['id'], $b['id']));
 
-        return [
+        $result = [
             'range' => [
                 'startDate' => $start,
                 'endDate' => $end,
@@ -151,6 +163,16 @@ class WorkspaceTimeReport
                 ], $members)),
             ],
         ];
+        if ($detailGroup !== null) {
+            $result['details'] = (new MemberTimeDetails)->get(
+                $input,
+                $detailEntries,
+                array_column($this->store->all('issues'), null, 'id'),
+                $projects,
+            );
+        }
+
+        return $result;
     }
 
     /**

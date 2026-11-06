@@ -115,6 +115,7 @@ class TimeReportTest extends TestCase
                 'issueId' => $issue['id'],
                 'workDate' => $start,
                 'minutes' => $minutes,
+                'note' => '工作說明 '.$minutes,
             ])->assertOk();
         }
         $voided = $this->rpc('logTime', [
@@ -212,6 +213,43 @@ class TimeReportTest extends TestCase
         $this->assertSame(155, $limited['summary']['totalMinutes'], '報表入口權限不跳過逐專案團隊工時資格');
         $this->assertSame([$first['id']], array_values(array_unique(array_column($limited['allocations'], 'projectId'))));
         $this->assertSame([$first['id']], array_column($limited['options']['projects'], 'id'));
+        $details = $this->rpc('getTimeReport', [
+            ...$range, 'userId' => $owner['user']['id'], 'detailGroup' => 'dates',
+        ])->assertOk()->json('data.details');
+        $this->assertCount(4, $details['rows']);
+        $this->assertSame(255, array_sum(array_column($details['rows'], 'minutes')));
+        $this->assertNull($details['expanded']);
+        $taskKey = $start.'|'.$task['id'];
+        $expanded = $this->rpc('getTimeReport', [
+            ...$range, 'userId' => $owner['user']['id'], 'detailGroup' => 'dates', 'entryGroupKey' => $taskKey,
+        ])->assertOk()->json('data.details.expanded');
+        $this->assertCount(1, $expanded['rows']);
+        $this->assertSame('工作說明 60', $expanded['rows'][0]['note']);
+        $this->assertArrayNotHasKey('history', $expanded['rows'][0]);
+        $this->assertArrayNotHasKey('userId', $expanded['rows'][0]);
+        $limitedDetails = (new WorkspaceTimeReport((new RecordStore)->forWorkspace($owner['workspace']['id']), $limitedSession))->get([
+            ...$range, 'userId' => $owner['user']['id'], 'detailGroup' => 'issues',
+        ]);
+        $this->assertSame([$first['id']], array_values(array_unique(array_column($limitedDetails['details']['rows'], 'projectId'))));
+        $aggregateOnlySession = [...$limitedSession, 'permissions' => [
+            ...$limitedSession['permissions'], 'project.readAny', 'timeEntry.readTeamAny',
+        ]];
+        $aggregateOnly = new WorkspaceTimeReport((new RecordStore)->forWorkspace($owner['workspace']['id']), $aggregateOnlySession);
+        $this->assertSame(275, $aggregateOnly->get($range)['summary']['totalMinutes']);
+        $visibleDetails = $aggregateOnly->get([...$range, 'userId' => $owner['user']['id'], 'detailGroup' => 'issues']);
+        $this->assertSame(135, $visibleDetails['summary']['totalMinutes'], '明細卡片名稱仍需issue.read，不能只靠團隊工時權限');
+        $this->assertSame([$first['id']], array_values(array_unique(array_column($visibleDetails['details']['rows'], 'projectId'))));
+        foreach ([$bug['id'], $foreignIssue['id']] as $hiddenKey) {
+            try {
+                (new WorkspaceTimeReport((new RecordStore)->forWorkspace($owner['workspace']['id']), $limitedSession))->get([
+                    ...$range, 'userId' => $owner['user']['id'], 'detailGroup' => 'issues', 'entryGroupKey' => $hiddenKey,
+                ]);
+                $this->fail('不可展開未授權的卡片工時');
+            } catch (\App\Domain\DomainError $error) {
+                $this->assertSame('NOT_FOUND', $error->errorCode);
+            }
+        }
+
         $this->rpc('getTimeReport', [
             'startDate' => '2024-01-01',
             'endDate' => '2024-12-31',
@@ -252,4 +290,50 @@ class TimeReportTest extends TestCase
         $this->signIn($member);
         $this->rpc('getTimeReport', $range)->assertStatus(403);
     }
+    /** 跨日期與同卡大量紀錄均分頁，總計不因頁碼改變。 */
+    public function test_member_details_pagination_and_input_validation(): void
+    {
+        $owner = $this->register('report-detail-owner@example.test');
+        $project = $this->rpc('createProject', ['name' => '工時明細', 'code' => 'DETAIL'])->assertOk()->json('data');
+        $task = $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => '多日投入'])->assertOk()->json('data');
+        $bug = $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => '同日多筆', 'type' => 'bug'])->assertOk()->json('data');
+        $today = CarbonImmutable::today('Asia/Taipei');
+        for ($day = 0; $day < 23; $day++) {
+            $this->rpc('logTime', ['issueId' => $task['id'], 'workDate' => $today->subDays($day)->format('Y-m-d'), 'minutes' => 1, 'note' => '第'.$day.'日'])->assertOk();
+        }
+        for ($index = 0; $index < 21; $index++) {
+            $this->rpc('logTime', ['issueId' => $bug['id'], 'workDate' => $today->format('Y-m-d'), 'minutes' => 1, 'note' => '<script>測試</script> '.$index])->assertOk();
+        }
+        $voided = $this->rpc('logTime', ['issueId' => $task['id'], 'workDate' => $today->format('Y-m-d'), 'minutes' => 100, 'note' => '不可回傳的作廢說明'])->assertOk()->json('data');
+        $this->rpc('voidTime', ['id' => $voided['id'], 'expectedRevision' => $voided['revision']])->assertOk();
+        $query = ['startDate' => $today->subDays(27)->format('Y-m-d'), 'endDate' => $today->format('Y-m-d'), 'userId' => $owner['user']['id'], 'detailGroup' => 'dates'];
+        $first = $this->rpc('getTimeReport', $query)->assertOk()->json('data');
+        $this->assertSame(44, $first['summary']['totalMinutes']);
+        $this->assertSame(24, $first['details']['total']);
+        $this->assertCount(20, $first['details']['rows']);
+        $this->assertSame(22, $first['details']['rows'][0]['dayMinutes']);
+        $second = $this->rpc('getTimeReport', [...$query, 'detailPage' => 2])->assertOk()->json('data');
+        $this->assertCount(4, $second['details']['rows']);
+        $this->assertSame($first['summary'], $second['summary']);
+        $this->assertSame([], array_intersect(array_column($first['details']['rows'], 'key'), array_column($second['details']['rows'], 'key')));
+        $this->rpc('getTimeReport', [...$query, 'detailPage' => 999])->assertOk()->assertJsonPath('data.details.page', 2);
+        $cards = $this->rpc('getTimeReport', [...$query, 'detailGroup' => 'issues'])->assertOk()->json('data.details');
+        $this->assertCount(2, $cards['rows']);
+        $this->assertSame([23, 21], array_column($cards['rows'], 'minutes'));
+        $this->assertSame($task['id'], $cards['rows'][0]['issueId']);
+        $entries = $this->rpc('getTimeReport', [...$query, 'detailGroup' => 'issues', 'entryGroupKey' => $bug['id']])->assertOk()->json('data.details.expanded');
+        $this->assertSame(21, $entries['total']);
+        $this->assertCount(20, $entries['rows']);
+        $lastEntries = $this->rpc('getTimeReport', [...$query, 'detailGroup' => 'issues', 'entryGroupKey' => $bug['id'], 'entryPage' => 2])->assertOk()->json('data.details.expanded');
+        $this->assertCount(1, $lastEntries['rows']);
+        $this->assertSame([], array_intersect(array_column($entries['rows'], 'id'), array_column($lastEntries['rows'], 'id')));
+        foreach ([['detailGroup' => 'invalid'], ['userId' => ''], ['detailPage' => 0], ['detailPage' => '2'], ['entryPage' => -1], ['entryGroupKey' => []]] as $invalid) {
+            $this->rpc('getTimeReport', [...$query, ...$invalid])->assertStatus(400);
+        }
+        $this->rpc('getTimeReport', [...$query, 'entryGroupKey' => 'missing'])->assertStatus(404);
+        $empty = $this->rpc('getTimeReport', [...$query, 'startDate' => '2024-01-01', 'endDate' => '2024-01-02'])->assertOk()->json('data.details');
+        $this->assertSame([], $empty['rows']);
+        $this->assertSame(1, $empty['lastPage']);
+    }
+
 }

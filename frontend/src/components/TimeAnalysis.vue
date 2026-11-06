@@ -5,6 +5,7 @@ import { dateInTaipei, hours } from '../domain/model.js';
 import Icon from './Icon.vue';
 import TimeDistributionChart from './TimeDistributionChart.vue';
 import TimeTrendChart from './TimeTrendChart.vue';
+import TimeMemberDetails from './TimeMemberDetails.vue';
 const props = defineProps({ mode: { type: String, default: 'index' }, workspaceVersion: Object });
 const emit = defineEmits(['navigate']);
 const analyses = [
@@ -16,6 +17,7 @@ const selected = computed(() => analyses.find(item => item.id === props.mode));
 const today = dateInTaipei();
 const startDate = shallowRef(`${today.slice(0, 7)}-01`), endDate = shallowRef(today), projectId = shallowRef(''), userId = shallowRef('');
 const report = shallowRef(null), options = shallowRef({ members: [], projects: [] }), loading = shallowRef(false), error = shallowRef('');
+const memberDetail = shallowRef(null);
 let generation = 0, applied = null;
 const rows = computed(() => report.value?.[props.mode] || []);
 const total = computed(() => report.value?.summary.totalMinutes || 0);
@@ -36,14 +38,24 @@ async function load(useDraft = true) {
 }
 async function drill(id, selectedProjectId = '') {
   if (!report.value || loading.value) return;
-  startDate.value = report.value.range.startDate; endDate.value = report.value.range.endDate;
   if (props.mode === 'members') {
-    userId.value = id; projectId.value = selectedProjectId || report.value.range.projectId;
+    const range = { ...report.value.range, projectId: selectedProjectId || report.value.range.projectId };
+    memberDetail.value = {
+      id, range,
+      name: options.value.members.find(member => member.id === id)?.name || '歷史成員',
+      projectName: options.value.projects.find(project => project.id === range.projectId)?.name || '',
+    };
+    return;
   } else {
+    startDate.value = report.value.range.startDate; endDate.value = report.value.range.endDate;
     projectId.value = id; userId.value = report.value.range.userId;
   }
   await load();
   if (report.value) emit('navigate', props.mode === 'members' ? 'projects' : 'members');
+}
+function backFromMember() {
+  memberDetail.value = null;
+  load(false);
 }
 function preset(recent = false) {
   const date = new Date(`${today}T12:00:00Z`);
@@ -52,8 +64,10 @@ function preset(recent = false) {
   endDate.value = today;
   load();
 }
+watch(() => props.mode, () => { memberDetail.value = null; });
 watch(() => [props.mode, props.workspaceVersion], () => {
-  if (selected.value) load(false);
+  if (selected.value && !memberDetail.value) load(false);
+  else if (memberDetail.value) return;
   else { generation++; report.value = null; loading.value = false; error.value = ''; }
 }, { immediate: true });
 onBeforeUnmount(() => { generation++; });
@@ -66,6 +80,7 @@ onBeforeUnmount(() => { generation++; });
         <button v-for="analysis in analyses" :key="analysis.id" class="analysis-choice" @click="emit('navigate', analysis.id)"><span><strong>{{ analysis.title }}</strong></span><Icon name="chevron" :size="20" /></button>
       </div>
     </template>
+    <TimeMemberDetails v-else-if="memberDetail" :member="memberDetail" :workspace-version="workspaceVersion" @back="backFromMember" />
     <template v-else>
       <button class="text-button analysis-back" @click="emit('navigate', 'index')"><Icon name="chevron" :size="16" />返回工時分析</button>
       <header class="analysis-heading"><h1>{{ selected.title }}</h1></header>
