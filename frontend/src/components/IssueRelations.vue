@@ -35,7 +35,7 @@ const state = item => statusesFor(props.project).find(status => status.id === it
     </div>
     <section v-if="issue && type !== 'epic' && !parentId" class="relation-group" aria-label="子任務">
       <header><h3>子任務 <small v-if="children.length">{{ done }} / {{ children.length }} 完成</small></h3><button class="text-button" :disabled="saving" @click="creatingChild = !creatingChild">{{ creatingChild ? '收起新增' : '新增子任務' }}</button></header>
-      <form v-if="creatingChild" class="child-create" @submit.prevent="emit('create-child', childTitle)"><label class="sr-only" for="child-title">子任務標題</label><input id="child-title" v-model="childTitle" placeholder="輸入子任務標題…" maxlength="180" required :disabled="saving" /><button class="button secondary" :disabled="saving || !childTitle.trim()">建立子任務</button><p>建立後可開啟設定負責人、狀態與工時</p></form>
+      <form v-if="creatingChild" class="child-create" @submit.prevent="emit('create-child', childTitle)"><label class="sr-only" for="child-title">子任務標題</label><input id="child-title" v-model="childTitle" placeholder="輸入子任務標題…" maxlength="180" required :disabled="saving" /><button class="button secondary" :disabled="saving || !childTitle.trim()">建立子任務</button></form>
       <div v-for="item in children" :key="item.id" class="relation-row"><button class="relation-link" :aria-label="`開啟子任務 ${item.identifier}`" :disabled="saving" @click="emit('open', item)"><span class="identifier">{{ item.identifier }}</span><span>{{ item.title }}</span></button><span class="relation-state">{{ state(item) }}</span></div>
     </section>
     <section class="relation-group" aria-label="關聯任務">

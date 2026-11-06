@@ -28,11 +28,11 @@ async function submit() {
 
 <template>
   <main class="auth-page">
-    <div class="auth-story"><span class="eyebrow">TASKTRACKER / TEAM WORKSPACE</span><h1>一個目標<br />一起完成<span>.</span></h1><p>從 Epic 到每個小任務,<br />讓進度、討論與投入的時間有地方可去</p><div class="auth-mini-board"><span>計畫</span><span>一起推進</span><span>交付</span><i></i><i></i><i></i></div><small>本機協作試用 · 資料保存在這台電腦</small></div>
+    <div class="auth-story"><h1>TaskTracker</h1></div>
     <v-card class="auth-card" elevation="0" rounded="0">
-      <div class="eyebrow">WELCOME TO YOUR WORKSPACE</div>
-      <h2>{{ mode === 'login' ? '登入工作空間' : inviteToken ? '加入團隊' : '建立你的工作空間' }}</h2>
-      <p>{{ inviteToken ? (invitedWorkspace ? `加入 ${invitedWorkspace}，請使用受邀Email登入或註冊` : '使用受邀Email登入或註冊，加入工作空間') : '帳號與工作空間不限定 Google 身分' }}</p>
+
+      <h2>{{ mode === 'login' ? '登入工作空間' : inviteToken ? '工作空間邀請' : '建立工作空間' }}</h2>
+      <p v-if="inviteToken && invitedWorkspace">{{ invitedWorkspace }}</p>
       <v-alert v-if="error" type="error" variant="tonal" class="mb-5" role="alert">{{ error }}</v-alert>
       <form @submit.prevent="submit">
         <v-text-field v-if="mode === 'register'" v-model="form.name" label="你的名字" autocomplete="name" maxlength="60" required :disabled="busy" />
@@ -42,7 +42,7 @@ async function submit() {
         <v-btn type="submit" color="primary" block size="large" :loading="busy" :disabled="busy">{{ mode === 'login' ? (inviteToken ? '登入並接受邀請' : '登入') : inviteToken ? '加入工作空間' : '建立工作空間' }}</v-btn>
       </form>
       <button class="text-button auth-toggle" :disabled="busy" @click="mode = mode === 'login' ? 'register' : 'login'; error = ''">{{ mode === 'login' ? (inviteToken ? '尚未有帳號？註冊加入' : '第一次使用？建立工作空間') : '已有帳號？登入' }}</button>
-      <p class="auth-hint">協作者請使用管理員提供的邀請連結加入<br />自行建立工作空間會有各自獨立的資料</p>
+
     </v-card>
   </main>
 </template>

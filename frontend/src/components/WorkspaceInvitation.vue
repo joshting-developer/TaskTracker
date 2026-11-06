@@ -27,7 +27,7 @@ onBeforeUnmount(() => dialog.value?.close());
   <dialog ref="dialog" class="workspace-invitation" aria-labelledby="workspace-invite-title" @cancel.prevent="close">
     <header><h2 id="workspace-invite-title">工作空間邀請</h2><button class="icon-button" aria-label="關閉工作空間邀請" :disabled="busy" @click="close"><Icon name="close" /></button></header>
     <p v-if="loading" role="status">正在確認邀請…</p><div v-if="error" class="error-box" role="alert">{{ error }}<button v-if="!invitation" class="text-button" @click="load">重試</button></div>
-    <template v-if="invitation"><h3>{{ invitation.workspaceName }}</h3><p>受邀帳號：{{ invitation.email }}</p><p v-if="email !== invitation.email">目前登入的是 {{ email }}，請切換成受邀帳號。</p><p v-else>接受後會進入這個工作空間。各專案的存取由團隊另行授權。</p><button v-if="email === invitation.email" class="button primary" :disabled="busy" @click="join">{{ busy ? '正在加入…' : '接受邀請並進入' }}</button><button v-else class="button secondary" :disabled="busy" @click="emit('logout')">改用受邀帳號登入</button></template>
+    <template v-if="invitation"><h3>{{ invitation.workspaceName }}</h3><p>受邀帳號：{{ invitation.email }}</p><p v-if="email !== invitation.email">目前登入的是 {{ email }}，請切換成受邀帳號。</p><button v-if="email === invitation.email" class="button primary" :disabled="busy" @click="join">{{ busy ? '正在加入…' : '接受邀請並進入' }}</button><button v-else class="button secondary" :disabled="busy" @click="emit('logout')">改用受邀帳號登入</button></template>
   </dialog>
 </template>
 <style scoped>

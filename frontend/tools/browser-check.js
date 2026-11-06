@@ -987,12 +987,12 @@ try {
   await page.getByLabel('工作空間名稱', { exact: true }).fill('產品團隊');
   await page.getByRole('button', { name: '建立工作空間', exact: true }).click();
   await openProjectList(page);
-  await page.getByRole('heading', { name: '你的下一個計畫, 從這裡開始' }).waitFor();
+  await page.getByRole('heading', { name: '尚無專案' }).waitFor();
   const ownerId = await page.evaluate(async () => (await (await import('/src/api/index.js')).api.getWorkspace()).meta.userId);
   assert.equal(await page.getByRole('button', { name: '任務看板', exact: true }).count(), 0);
   assert.equal(await page.getByRole('button', { name: /新增任務/ }).count(), 0);
   assert.equal(await page.getByRole('navigation', { name: '專案任務' }).count(), 0);
-  await page.getByRole('button', { name: '試試示範專案' }).click();
+  await page.getByRole('button', { name: '載入示範專案' }).click();
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：產品第一版 · 示範', exact: true }).waitFor();
   assert.equal(await page.getByRole('button', { name: '任務看板', exact: true }).count(), 0);
@@ -1103,7 +1103,7 @@ try {
   await page.getByRole('heading', { name: '專案列表.', exact: true }).waitFor();
   assert.equal(await projectSidebar.getByRole('navigation', { name: '專案任務', exact: true }).count(), 0);
   await page.getByRole('button', { name: '建立專案', exact: true }).click();
-  const projectDialog = page.getByRole('dialog', { name: '給下一個計畫一個家' });
+  const projectDialog = page.getByRole('dialog', { name: '建立專案' });
   await projectDialog.getByLabel(/專案名稱/).fill('我的測試專案');
   await projectDialog.getByLabel(/專案代碼/).fill('TEST');
   await projectDialog.getByRole('button', { name: '建立專案', exact: true }).click();

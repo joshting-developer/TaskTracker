@@ -101,7 +101,7 @@ try {
   assert.match(await page.locator('.nav-item.active').innerText(), /我的任務/);
   await page.getByRole('button', { name: /^已完成/ }).click();
   await page.reload();
-  await page.getByRole('heading', { name: '每件完成的事, 都會出現在這裡', exact: true }).waitFor();
+  await page.getByRole('heading', { name: '尚無已完成任務', exact: true }).waitFor();
   assert.match(await page.locator('.nav-item.active').innerText(), /已完成/);
   await page.getByRole('button', { name: '工時月曆', exact: true }).click();
   await page.getByLabel('工時月份', { exact: true }).fill('2026-10');
@@ -115,7 +115,7 @@ try {
   await page.getByRole('button', { name: '任務列表', exact: true }).waitFor();
   assert.match(await page.locator('.nav-item.active').innerText(), /任務列表/);
   await page.goto(`http://127.0.0.1:5175/#/projects/${fixture.project.id}`);
-  await page.getByRole('heading', { name: '每件完成的事, 都會出現在這裡', exact: true }).waitFor();
+  await page.getByRole('heading', { name: '尚無已完成任務', exact: true }).waitFor();
   await page.getByRole('button', { name: '任務列表', exact: true }).click();
   await page.reload(); await page.locator('tbody tr').first().waitFor();
   assert.equal(await page.locator('tbody tr').count(), 2);

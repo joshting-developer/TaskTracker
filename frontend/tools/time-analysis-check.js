@@ -69,7 +69,7 @@ try {
   await region.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();
   await region.getByRole('button', { name: '套用範圍', exact: true }).click(); await region.locator('.analysis-totals').getByText('2 h', { exact: true }).waitFor();
   await region.getByLabel('分析成員').selectOption(memberIdentity.user.id); await region.getByRole('button', { name: '套用範圍', exact: true }).click(); await region.locator('.analysis-totals').getByText('0.5 h', { exact: true }).waitFor();
-  await region.getByLabel('分析專案').selectOption(second.id); await region.getByRole('button', { name: '套用範圍', exact: true }).click(); await region.getByText(/這段期間沒有符合範圍的工時紀錄/).waitFor(); assert.equal(await region.locator('table').count(), 0);
+  await region.getByLabel('分析專案').selectOption(second.id); await region.getByRole('button', { name: '套用範圍', exact: true }).click(); await region.getByText(/尚無符合條件的工時紀錄/).waitFor(); assert.equal(await region.locator('table').count(), 0);
   await region.getByLabel('分析專案').selectOption(''); await region.getByLabel('分析成員').selectOption(''); await region.getByLabel('分析開始日期').fill('2020-01-01'); await region.getByRole('button', { name: '套用範圍', exact: true }).click(); await region.getByRole('alert').filter({ hasText: '最多366天' }).waitFor();
   await region.getByLabel('分析開始日期').fill(`${today.slice(0, 7)}-01`);
   await owner.route('**/api/rpc/getTimeReport', route => route.abort('failed'), { times: 1 });

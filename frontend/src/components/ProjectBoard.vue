@@ -64,7 +64,6 @@ function drop(event, state, lane) {
 <template>
   <div class="visual-board" :class="{ 'compact-cards': density === 'compact' }" aria-label="任務看板">
     <div class="board-tools">
-      <p>{{ canWrite ? (group === 'epic' ? '拖曳更新狀態或歸類 · 雙擊卡片編輯' : '拖曳更新狀態 · 雙擊卡片編輯') : '點擊標題查看完整內容' }}</p>
       <div><span class="board-sync" :class="{ live: syncState === 'live' }" role="status" aria-label="看板同步狀態"><i></i>{{ syncState === 'live' ? '即時同步' : syncState === 'connecting' ? '連線中…' : '定期更新' }}</span><label>泳道<select v-model="group" aria-label="看板泳道"><option value="epic">依 Epic 分組</option><option value="none">不分組</option></select></label><label>卡片<select v-model="density" aria-label="看板卡片密度"><option value="comfortable">詳細</option><option value="compact">精簡</option></select></label></div>
     </div>
     <div class="board-scroll" tabindex="0" aria-label="看板橫向捲動區">
@@ -95,13 +94,13 @@ function drop(event, state, lane) {
         </section>
       </div>
     </div>
-    <p v-if="!visibleIssues.length" class="board-empty-note">目前沒有符合條件的卡片, 可調整篩選或在欄位內新增任務</p>
+    <p v-if="!visibleIssues.length" class="board-empty-note">沒有符合條件的卡片</p>
   </div>
 </template>
 
 <style scoped>
 .visual-board { background: #f7f8fb; position: relative; overflow: hidden; min-width: 0; max-width: 100%; }
-.board-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 20px; background: white; border-bottom: 1px solid #e7e9ef; font-size: 13px; color: #5f6673; }
+.board-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 16px; padding: 14px 20px; background: white; border-bottom: 1px solid #e7e9ef; font-size: 13px; color: #5f6673; }
 .board-tools > div, .board-tools label { display: flex; align-items: center; gap: 10px; }
 .board-tools > div { gap: 18px; flex-wrap: wrap; }.board-tools label { white-space: nowrap; }
 .board-sync { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #5f6673; }
@@ -138,5 +137,5 @@ function drop(event, state, lane) {
 .lane-add { display: flex; align-items: center; gap: 6px; color: #596276; padding: 7px 4px; font-size: 12px; }
 .lane-add:hover { color: #8670b2; }
 .board-empty-note { padding: 12px 20px; font-size: 13px; color: #5f6673; }
-@media (max-width: 700px) { .board-tools { align-items: flex-start; flex-direction: column; padding: 12px; } }
+@media (max-width: 700px) { .board-tools { justify-content: flex-end; align-items: flex-start; flex-direction: column; padding: 12px; } }
 </style>

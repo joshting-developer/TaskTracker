@@ -84,7 +84,7 @@ function onKeydown(event) {
       <MarkdownContent v-if="mode === 'preview' && modelValue.trim()" :source="modelValue" />
       <p v-else class="editor-empty">尚無內容</p>
     </div>
-    <div :id="`${id}-help`" class="editor-footer"><span>{{ message || '支援 Markdown · Enter 換行' }}</span><span>{{ modelValue.length }} / {{ maxlength }}</span></div>
+    <div :id="`${id}-help`" class="editor-footer"><span>{{ message }}</span><span>{{ modelValue.length }} / {{ maxlength }}</span></div>
     <p v-if="message" class="sr-only" role="status">{{ message }}</p>
   </div>
 </template>

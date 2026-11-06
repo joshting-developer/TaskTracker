@@ -125,7 +125,7 @@ function timeSaved() {
           </div>
           <form v-if="canWrite" v-show="tab === 'comments'" class="comment-form" @submit.prevent="sendComment">
             <div v-if="error" class="error-box" role="alert">{{ error }}<button v-if="conflict" class="text-button" type="button" :disabled="saving || busy" @click="emit('reload')">更新任務資料（保留留言）</button></div>
-            <MarkdownEditor v-model="comment" label="新增留言" :rows="3" :maxlength="2000" placeholder="留下想法或進度…" :disabled="saving || busy" />
+            <MarkdownEditor v-model="comment" label="新增留言" :rows="3" :maxlength="2000" placeholder="輸入留言…" :disabled="saving || busy" />
             <button class="button secondary" :disabled="saving || busy || !commentDirty">{{ saving ? '送出中…' : '送出留言' }}</button>
           </form>
         </section>

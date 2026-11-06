@@ -36,8 +36,8 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload));
     <div v-if="error" class="error-box" role="alert">{{ error }}<button v-if="!saving" class="text-button" @click="load(true)">{{ conflict ? '重新載入個人資料' : '重試載入' }}</button></div>
     <form v-if="profile" @submit.prevent="save">
       <label class="field">顯示名稱<input v-model="name" maxlength="60" required :disabled="saving || loading" autocomplete="name" /></label>
-      <label class="field">Email<input :value="profile.email" type="email" readonly aria-describedby="profile-email-note" /></label>
-      <p id="profile-email-note" class="subtle">Email目前作為登入帳號，這裡先提供顯示名稱修改。</p>
+      <label class="field">Email<input :value="profile.email" type="email" readonly /></label>
+
       <button class="button primary" :disabled="saving || loading || !dirty || !name.trim()">{{ saving ? '儲存中…' : '儲存個人資料' }}</button>
     </form>
   </dialog>

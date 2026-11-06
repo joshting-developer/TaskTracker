@@ -162,11 +162,11 @@ function timestamp(value) {
       </header>
       <div class="panel-content">
         <h2 id="issue-heading">{{ todo ? '轉成正式卡片' : issue ? '任務詳細內容' : '新增一個任務' }}</h2>
-        <p class="form-intro">{{ todo ? '補上所屬專案與正式欄位, 建立後保留原待辦的轉卡紀錄' : issue ? '更新進度, 留下討論, 把下一步寫清楚' : '先寫下要做的事, 細節可以慢慢補上' }}</p>
+
         <div v-if="error" class="error-box" role="alert">{{ error }} <button v-if="conflict" type="button" class="text-button" :disabled="saving" @click="reload">重新載入最新版本</button></div>
         <form id="issue-form" @submit.prevent="save">
-          <label class="field">任務標題 <span class="required">*</span><input v-model="form.title" name="title" placeholder="要完成什麼？" maxlength="180" required :disabled="saving" /></label>
-          <MarkdownEditor v-model="form.description" label="描述" name="description" placeholder="寫下背景、下一步或完成條件…" :rows="5" :maxlength="6000" :disabled="saving" />
+          <label class="field">任務標題 <span class="required">*</span><input v-model="form.title" name="title" placeholder="輸入任務標題…" maxlength="180" required :disabled="saving" /></label>
+          <MarkdownEditor v-model="form.description" label="描述" name="description" placeholder="輸入描述…" :rows="5" :maxlength="6000" :disabled="saving" />
           <div class="form-grid">
             <label class="field">專案<select v-model="form.projectId" aria-label="專案" :disabled="!todo || saving" required><option v-if="todo" value="" disabled>選擇所屬專案</option><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option></select></label>
             <label class="field">狀態<select v-model="form.state" aria-label="狀態" :disabled="saving"><option v-for="state in states" :key="state.id" :value="state.id">{{ state.label }}</option></select></label>
@@ -187,12 +187,12 @@ function timestamp(value) {
           </div>
           <div :id="`${tabId}-activity`" role="tabpanel" :aria-labelledby="`${tabId}-${tab}-tab`" tabindex="0">
           <div v-if="tab === 'comments'" class="comments">
-            <p v-if="!issue.comments.length" class="quiet-message">還沒有留言, 留下你的下一步吧</p>
+            <p v-if="!issue.comments.length" class="quiet-message">尚無留言</p>
             <article v-for="entry in issue.comments" :key="entry.id" class="comment">
               <div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><MarkdownContent :source="entry.content" /></div>
             </article>
             <form @submit.prevent="sendComment" class="comment-form">
-              <MarkdownEditor v-model="comment" label="新增留言" placeholder="留下想法或進度…" :maxlength="2000" :rows="3" :disabled="saving" />
+              <MarkdownEditor v-model="comment" label="新增留言" placeholder="輸入留言…" :maxlength="2000" :rows="3" :disabled="saving" />
               <button class="button secondary" :disabled="saving || !comment.trim()">送出留言 <Icon name="arrow" :size="16" /></button>
             </form>
           </div>
@@ -204,7 +204,7 @@ function timestamp(value) {
           </div>
         </section>
       </div>
-      <footer class="panel-footer"><span class="subtle">{{ dirty ? '有尚未儲存的修改' : issue ? `版本 ${issue.revision} · 已儲存` : '新增後即可在清單與看板查看' }}</span><button type="submit" form="issue-form" class="button primary" :disabled="saving || (Boolean(issue) && !dirty) || (Boolean(todo) && !form.projectId)"><Icon :name="saving ? 'clock' : 'check'" :size="17" />{{ saving ? '儲存中…' : todo ? '建立卡片並完成轉換' : issue ? '儲存修改' : '建立任務' }}</button></footer>
+      <footer class="panel-footer"><span class="subtle">{{ dirty ? '有尚未儲存的修改' : issue ? `版本 ${issue.revision} · 已儲存` : '' }}</span><button type="submit" form="issue-form" class="button primary" :disabled="saving || (Boolean(issue) && !dirty) || (Boolean(todo) && !form.projectId)"><Icon :name="saving ? 'clock' : 'check'" :size="17" />{{ saving ? '儲存中…' : todo ? '建立卡片並完成轉換' : issue ? '儲存修改' : '建立任務' }}</button></footer>
     </div>
   </dialog>
 </template>

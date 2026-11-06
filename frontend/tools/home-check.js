@@ -35,7 +35,7 @@ try {
   await openProjectList(page); assert.equal(await todos.count(), 0);
   await page.reload(); await page.getByRole('region', { name: '專案列表', exact: true }).waitFor();
   await page.getByRole('button', { name: '建立專案', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: '給下一個計畫一個家', exact: true });
+  const dialog = page.getByRole('dialog', { name: '建立專案', exact: true });
   await dialog.getByLabel(/專案名稱/).fill('獨立專案入口'); await dialog.getByLabel(/專案代碼/).fill('HOME');
   await dialog.getByRole('button', { name: '建立專案', exact: true }).click();
   await page.getByRole('button', { name: '進入專案：獨立專案入口', exact: true }).waitFor();

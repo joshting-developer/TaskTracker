@@ -146,9 +146,9 @@ dialog{border:0;padding:0;color:inherit}dialog::backdrop{background:#19162255;ba
   .time-form-card .field { margin: 0; }
 }
 @media (max-width: 700px) {
-  .auth-page { grid-template-columns: 1fr; }
-  .auth-story { padding: 28px 25px; }
-  .auth-story h1 { font-size: 32px; margin: 15px 0; }
+  .auth-page { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .auth-story { padding: 18px 25px; }
+  .auth-story h1 { font-size: 28px; margin: 0; }
   .auth-story p, .auth-mini-board, .auth-story small { display: none; }
   .auth-card { padding: 35px 0; }
   .section-title { gap: 12px; flex-wrap: wrap; }

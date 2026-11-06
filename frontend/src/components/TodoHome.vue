@@ -80,9 +80,9 @@ async function action(item, operation) {
 </script>
 <template>
   <section class="todo-home" aria-label="首頁小待辦">
-    <header class="todo-heading"><div><h2>小待辦</h2><p>先記下來, 一件一件完成</p></div><span class="todo-private">只對交辦者與承辦者可見</span></header>
+    <header class="todo-heading"><div><h2>小待辦</h2></div></header>
     <form v-if="canWrite" class="todo-create" @submit.prevent="create">
-      <MarkdownEditor ref="quickInput" v-model="content" label="快速新增待辦" placeholder="直接記下溝通重點、待辦清單或下一步…" :maxlength="6000" :rows="3" :disabled="busy" required />
+      <MarkdownEditor ref="quickInput" v-model="content" label="快速新增待辦" placeholder="輸入待辦內容…" :maxlength="6000" :rows="3" :disabled="busy" required />
       <div class="todo-quick"><select v-if="canAssign" v-model="assigneeId" aria-label="待辦交給誰" :disabled="busy"><option :value="userId">自己</option><option v-for="member in data.members.filter(member => member.id !== userId)" :key="member.id" :value="member.id">{{ member.name }} · {{ member.email }}</option></select><button class="button primary" :disabled="busy || !content.trim()">{{ assigneeId === userId ? '加入待辦' : '交辦' }}</button></div>
     </form>
     <div class="todo-tabs" role="tablist" aria-label="待辦範圍" @keydown="onTabKeydown"><button :id="`${tabId}-mine-tab`" role="tab" :aria-controls="`${tabId}-panel`" :tabindex="tab === 'mine' ? 0 : -1" :aria-selected="tab === 'mine'" :class="{ active: tab === 'mine' }" :disabled="busy" @click="tab = 'mine'">我的待辦 <span>{{ mine.filter(item => item.state === 'open').length }}</span></button><button :id="`${tabId}-sent-tab`" role="tab" :aria-controls="`${tabId}-panel`" :tabindex="tab === 'sent' ? 0 : -1" :aria-selected="tab === 'sent'" :class="{ active: tab === 'sent' }" :disabled="busy" @click="tab = 'sent'">我交辦的 <span>{{ sent.filter(item => item.state === 'open').length }}</span></button></div>
@@ -90,7 +90,7 @@ async function action(item, operation) {
     <div :id="`${tabId}-panel`" role="tabpanel" :aria-labelledby="`${tabId}-${tab}-tab`" tabindex="0">
     <div v-if="error" class="error-box" role="alert">{{ error }}<button v-if="conflict && draft" class="text-button" :disabled="busy" @click="reloadDraft">載入最新待辦</button></div>
     <p v-if="successMessage" class="todo-success" role="status">{{ successMessage }}</p>
-    <p v-if="!openItems.length" class="todo-empty">{{ tab === 'mine' ? '目前沒有待處理的小事' : '目前沒有等待處理的交辦' }}</p>
+    <p v-if="!openItems.length" class="todo-empty">{{ tab === 'mine' ? '尚無待辦' : '尚無交辦' }}</p>
     <div class="todo-list">
       <article v-for="item in [...displayedOpen, ...(showClosed ? closedItems : [])]" :id="`todo-${item.id}`" :key="item.id" class="todo-row" :class="{ 'todo-closed': item.state !== 'open', 'todo-focused': focused === item.id }" :data-todo-id="item.id" tabindex="-1">
         <div class="todo-body">
@@ -116,7 +116,7 @@ async function action(item, operation) {
 <style scoped>
 .todo-home { min-width: 0; color: #242936; }
 .todo-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
-.todo-heading h2 { font-size: 22px; margin: 0; }.todo-heading p { font-size: 14px; color: #5f6673; margin-top: 6px; }.todo-private { font-size: 12px; color: #5f6673; }
+.todo-heading h2 { font-size: 22px; margin: 0; }
 .todo-quick { display: flex; gap: 8px; }.todo-quick select { max-width: 260px; }.todo-quick select { border: 1px solid #bfc6d2; padding: 10px 12px; border-radius: 7px; font-size: 14px; background: #fff; }
 .todo-success { color: #286b55; font-size: 13px; margin-top: 12px; }
 .todo-draft-notice { padding: 12px; margin-top: 12px; background: #f5f3fc; border: 1px solid #ddd6ef; border-radius: 6px; font-size: 14px; color: #424b5c; }
