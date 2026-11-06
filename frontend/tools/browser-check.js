@@ -550,7 +550,8 @@ async function checkCustomBoards(page) {
   await page.waitForFunction(() => document.querySelectorAll('.issue-card').length === 1);
   await moveBoardCard(page, fixture.task.identifier, 'inprogress');
   await page.locator(`[data-column="inprogress"] [data-issue="${fixture.task.identifier}"]`).waitFor();
-  await page.getByRole('button', { name: /新增任務/ }).first().click();
+  assert.equal(await page.locator('.page-heading').getByRole('button', { name: /新增任務/ }).count(), 0);
+  await page.getByRole('button', { name: '新增待規劃任務', exact: true }).click();
   const editor = page.getByRole('dialog', { name: '新增一個任務', exact: true });
   await editor.getByLabel(/任務標題/).fill('由自訂看板建立');
   await editor.getByRole('button', { name: '建立任務', exact: true }).click();
