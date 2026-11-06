@@ -27,6 +27,7 @@ try {
   const invite = await call(second, 'inviteMember', { email: a.user.email });
   const inviteUrl = `http://127.0.0.1:5175/#/invite?token=${invite.token}`;
   await first.reload(); await second.reload();
+  await first.getByRole('button', { name: '工作空間設定', exact: true }).waitFor();
   assert.equal(await first.getByRole('button', { name: '工作空間設定', exact: true }).count(), 1);
   await first.getByRole('button', { name: '帳號選單', exact: true }).click(); assert.equal(await first.getByRole('menuitem', { name: '工作空間設定', exact: true }).count(), 0); await first.keyboard.press('Escape');
   await second.goto(inviteUrl); const wrong = second.getByRole('dialog', { name: '工作空間邀請', exact: true }); await wrong.getByText(/目前登入的是/).waitFor(); assert.equal(await wrong.getByRole('button', { name: '接受邀請並進入', exact: true }).count(), 0); await wrong.getByRole('button', { name: '關閉工作空間邀請', exact: true }).click();

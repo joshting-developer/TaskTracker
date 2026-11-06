@@ -9,6 +9,7 @@ use DateTimeImmutable;
 /** 不可變工時查詢條件；不包含操作者、角色或可信工作區。 */
 final readonly class TimeReportData
 {
+    /** 僅由from建立已驗證的純值，呼叫者不能建立未檢查的查詢條件。 */
     private function __construct(
         public string $startDate,
         public string $endDate,

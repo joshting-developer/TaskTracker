@@ -40,7 +40,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - 2026-11-06全部demo建立邏輯集中backend/database/seeders/DemoSeeder.php（含示範專案、四帳號、ACL與28天工時）；run／seed／loadProject入口只允許local／testing，其他環境拒絕。DatabaseSeeder、相容CLI與載入示範API共用，不在Services保存demo資料。
 - 預設空資料, 可手動載入示範專案或 `tasktracker:seed-demo`；指定 Seed 建 Jack／f-ws／first／second, 密碼只讀本機 TASKTRACKER_SEED_PASSWORD, --reset 只重設此 seed namespace；專案列表先建／選Project，首頁只留小待辦，點入Project才有任務功能, 所有操作保留目前專案上下文
 - 2026-11-06多工作空間：上方區塊列本人有效工作區並可切換；Owner以workspace.ownership取得側欄設定入口。2026-11-06設定改為獨立頁面#/workspace/settings與/members，非dialog；保留路由分頁、草稿／送出中保護，無權限深連結回首頁。既有帳號可登入／直接接受受邀Email的其他工作區邀請，只新增一般成員資格，專案仍另授權。切換清除舊租戶UI；X-Workspace-ID比對Session、Session blocking與回應generation防跨分頁錯寫，見docs/workspace-membership.md。
-- `backend/app/Repositories/RecordStore.php` 由伺服器選定Workspace，經RelationalRecords／Children寫入明確業務表；AccountService從Laravel session推導操作者與空間，不信任前端身分。2026-11-04新增22張關聯表、Eloquent模型及FK／索引，舊records只供歷史遷移／回退／匯入；見docs/database-design.md
+- `backend/app/Repositories/RecordStore.php` 由伺服器選定Workspace，經RelationalRecords／Children寫入明確業務表；Http/WorkspaceSession從Laravel Session取得操作者與空間，AccountService重驗資格，不信任前端身分。2026-11-04新增22張關聯表、Eloquent模型及FK／索引，舊records只供歷史遷移／回退／匯入；見docs/database-design.md
 - 租戶間隔離，ProjectAccess逐案檢查有效permission／scope及作者條件；Project ACL／固定角色矩陣已落地。新關聯表以複合外鍵再限制同Workspace／Project，不以FK取代權限檢查
 - 舊 Node API／測試由 PHP 取代, 原 SQLite 與舊 Docker volume 保留；匯入指令只接受空目標、不覆蓋來源, 保留作者歷史, 舊帳號登入後升級雜湊
 - 2026-10-20 類型固定 Epic／Task／Bug, feature 透過 migration／匯入共用升級器轉 task 並保留歷史與 revision 保護；自訂類型僅記構想, 不提前實作
@@ -140,10 +140,12 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 
 2026-11-06：後端工作使用專案內 [ECC laravel-patterns](skills/vendor/laravel-patterns/SKILL.md) 與 [Laravel Architecture](skills/laravel-architecture/SKILL.md)，入口為`.agents/skills/laravel-patterns`及`.agents/skills/laravel-architecture`。後者補充分層／命名／回傳型別／Resource／交易／測試，與舊規範相悖時以ECC為準。既有產品契約、permission＋scope與資料安全限制不因範例改寫；適用配置見[開發skills配置](docs/development-skills.md)。
 
-舊backend-development-standards已由使用者授權移除，不再引用或套用；歷史來源校驗留於skills/history。使用者已暫緩重構，本輪只安裝skills及整理規範，不代表現有程式已合規，也不授權自動重構。
+舊backend-development-standards已由使用者授權移除，不再引用或套用；歷史來源校驗留於skills/history。安裝階段曾暫緩重構；2026-11-06後續使用者已恢復，依本輪計畫分階段重構。安裝skill本身不代表程式已合規，也不授權超出當輪範圍的改寫。
 
 ## Vue開發 skill
 
 Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-practices](skills/vendor/vue-best-practices/SKILL.md)，入口`.agents/skills/vue-best-practices`。既有Vue 3＋Vuetify與JavaScript繼續使用，保留Composition API／script setup；TypeScript為後續新功能或明確遷移時的優先選項，不因安裝skill改寫全庫、裝Router／Pinia或改路由。UI設計與可用性仍搭配上述兩份UI／UX skills，Vue skill負責程式結構。
 
 2026-11-06後續更新：使用者已明確恢復前後端架構重構，先前暫緩為歷史決策。依本專案Laravel／Vue skills分階段實作及驗證，保留API、資料、授權及產品操作契約，見`plans/main/plan.md`與`docs/產品討論紀錄.md`。
+
+2026-11-06重構成果：Http/ApiExecution／WorkspaceSession／RealtimeSession處理HTTP及交易，AccountService不接Request或操作Auth；工時分析有專用TimeReportRequest／readonly DTO及TimeReportRepository的Eloquent限定查詢；App任務篩選、列表與移動生命週期已分責。其他舊寫入仍有RecordStore array與通用Request相容邊界，詳見docs/refactoring-2026-11-06.md，不宣稱全庫已全面遷移。

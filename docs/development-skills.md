@@ -43,3 +43,7 @@ root／backend AGENTS、backend CLAUDE／README及skills索引已改指向新入
 本輪檢查固定來源Git blob與本地SHA-256、全部skill symlink、Vue四份核心references、local skill frontmatter／metadata及相對文件連結；確認沒有產品程式或依賴變更。純規範工作不跑業務測試，不重啟服務。
 
 未來更新先比對官方commit與授權、查看差異，再更新vendor及來源清單；不覆蓋本地Architecture，不自動追main。上游新規則若與產品契約衝突，先記錄並處理相容方案，不直接變更業務行為。
+
+## 後續重構授權（2026-11-06）
+
+使用者已恢復重構，前述「本輪只安裝／尚未授權」為安裝階段沿革。實作範圍、責任、相容邊界及驗證見[前後端架構重構紀錄](refactoring-2026-11-06.md)。上游vendor skills保持原樣，本地Architecture僅同步授權階段說明；不因此宣稱全庫已合規。

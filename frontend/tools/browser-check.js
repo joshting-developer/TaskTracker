@@ -482,7 +482,7 @@ async function checkBoardWorkflow(page) {
   await openQuickIssue(page, '從泳道新增的工作');
   await page.reload();
   await page.getByRole('dialog', { name: '任務詳細內容' }).waitFor();
-  await page.getByRole('button', { name: '關閉任務' }).click();
+  await page.getByRole('button', { name: '關閉任務', exact: true }).click();
   assert.ok(page.url().endsWith('/board'), '詳細頁重整及關閉保留看板');
   await page.getByRole('button', { name: '任務列表', exact: true }).click();
   await page.locator('tbody [data-issue="VISUAL-3"]').waitFor();
@@ -648,7 +648,7 @@ async function checkTaskFilters(page, projectUrl) {
   await page.goto(`${projectUrl}/issues/${issue.id}?view=retired-issue`);
   await page.getByRole('dialog', { name: '任務詳細內容' }).waitFor();
   assert.ok(page.url().endsWith(`/issues/${issue.id}`));
-  await page.getByRole('button', { name: '關閉任務' }).click();
+  await page.getByRole('button', { name: '關閉任務', exact: true }).click();
   assert.equal(page.url(), projectUrl);
   await page.setViewportSize({ width: 390, height: 844 });
   await openTaskFilters(page);
@@ -771,7 +771,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await editor.getByLabel('預估小時', { exact: true }).fill('3');
   await editor.getByRole('button', { name: '儲存修改' }).click();
   await editor.getByText(/版本 2 · 已儲存/).waitFor();
-  await editor.getByRole('button', { name: '關閉任務' }).click();
+  await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
   await page.getByRole('button', { name: '任務列表', exact: true }).click();
   await openQuickIssue(page, '會員系統上線');
   editor = page.getByRole('dialog');
@@ -779,7 +779,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await editor.getByRole('button', { name: '儲存修改' }).click();
   await editor.getByRole('alert').filter({ hasText: '還有未結案子任務' }).waitFor();
   page.once('dialog', dialog => dialog.accept());
-  await editor.getByRole('button', { name: '關閉任務' }).click();
+  await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
   await page.getByRole('button', { name: '狀態設定', exact: true }).click();
   assert.equal(await page.getByLabel('狀態 1 Type', { exact: true }).inputValue(), 'open');
   assert.equal(await page.getByLabel('移除狀態 1', { exact: true }).isDisabled(), true);
@@ -841,7 +841,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await editor.getByLabel('負責人', { exact: true }).selectOption({ label: 'Mei' });
   await editor.getByRole('button', { name: '儲存修改' }).click();
   await editor.getByText(/版本 4 · 已儲存/).waitFor();
-  await editor.getByRole('button', { name: '關閉任務' }).click();
+  await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
   await page.getByRole('button', { name: '通知預覽', exact: true }).click();
   await page.locator('.notification-card').waitFor();
   await page.getByText('收件人 mei@example.test', { exact: true }).waitFor();
@@ -863,7 +863,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await teammateEditor.getByLabel('描述', { exact: true }).fill('同伴已更新, 舊表單不能覆蓋');
   await teammateEditor.getByRole('button', { name: '儲存修改' }).click();
   await teammateEditor.getByText(/版本 5 · 已儲存/).waitFor();
-  await teammateEditor.getByRole('button', { name: '關閉任務' }).click();
+  await teammateEditor.getByRole('button', { name: '關閉任務', exact: true }).click();
   const poll = concurrent.waitForResponse(response => response.url().endsWith('/api/rpc/getWorkspace'));
   await concurrent.clock.fastForward(31000);
   await poll;
@@ -874,7 +874,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await staleEditor.getByRole('button', { name: '重新載入最新版本' }).click();
   await staleEditor.getByText(/版本 5 · 已儲存/).waitFor();
   assert.equal(await staleEditor.getByLabel('描述', { exact: true }).inputValue(), '同伴已更新, 舊表單不能覆蓋');
-  await staleEditor.getByRole('button', { name: '關閉任務' }).click();
+  await staleEditor.getByRole('button', { name: '關閉任務', exact: true }).click();
   await concurrent.close();
 
   await teammate.getByRole('button', { name: '工時月曆', exact: true }).click();
@@ -946,19 +946,19 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await editor.getByLabel('狀態', { exact: true }).selectOption('closed');
   await editor.getByRole('button', { name: '儲存修改' }).click();
   await editor.getByText(/版本 6 · 已儲存/).waitFor();
-  await editor.getByRole('button', { name: '關閉任務' }).click();
+  await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
   await openQuickIssue(page, '會員系統上線');
   editor = page.getByRole('dialog');
   await editor.getByLabel('狀態', { exact: true }).selectOption('closed');
   await editor.getByRole('button', { name: '儲存修改' }).click();
   await editor.getByText(/版本 2 · 已儲存/).waitFor();
-  await editor.getByRole('button', { name: '關閉任務' }).click();
+  await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
   await openQuickIssue(page, '我建立的任務 <script>alert(1)</script>');
   editor = page.getByRole('dialog');
   await editor.getByLabel('狀態', { exact: true }).selectOption('open');
   await editor.getByRole('button', { name: '儲存修改' }).click();
   await editor.getByText(/版本 7 · 已儲存/).waitFor();
-  await editor.getByRole('button', { name: '關閉任務' }).click();
+  await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
   await page.locator('tr[data-issue="TEST-2"]').getByText('已關閉', { exact: true }).waitFor();
 
   await page.setViewportSize({ width: 390, height: 844 });
@@ -1116,7 +1116,7 @@ try {
   await editor.getByRole('tab', { name: /異動紀錄/ }).click();
   await editor.getByText('標題：設計任務清單的搜尋與篩選 → 搜尋流程已完成', { exact: true }).waitFor();
   await page.screenshot({ path: 'artifacts/issue-detail.png', fullPage: true });
-  await editor.getByRole('button', { name: '關閉任務' }).click();
+  await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
   await page.reload();
   await page.getByRole('button', { name: '搜尋流程已完成', exact: true }).waitFor();
   await openQuickIssue(page, '搜尋流程已完成');
@@ -1126,10 +1126,10 @@ try {
   await editor.getByText('清單與看板現在可以一起使用', { exact: true }).waitFor();
   await editor.getByLabel(/任務標題/).fill('尚未儲存的內容');
   page.once('dialog', (dialog) => dialog.dismiss());
-  await editor.getByRole('button', { name: '關閉任務' }).click();
+  await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
   assert.equal(await editor.getByLabel(/任務標題/).inputValue(), '尚未儲存的內容');
   page.once('dialog', (dialog) => dialog.accept());
-  await editor.getByRole('button', { name: '關閉任務' }).click();
+  await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
 
   const projectSidebar = page.locator('.sidebar');
   assert.equal(await projectSidebar.getByRole('navigation', { name: '專案', exact: true }).count(), 0, '專案內不列出其他專案');
@@ -1197,11 +1197,11 @@ try {
   await page.reload();
   await page.getByRole('dialog', { name: '任務詳細內容' }).waitFor();
   assert.equal(await page.getByRole('dialog').getByLabel('專案', { exact: true }).locator('option').textContent(), '產品第一版 · 示範');
-  await page.getByRole('button', { name: '關閉任務' }).click();
+  await page.getByRole('button', { name: '關閉任務', exact: true }).click();
   const legacyId = issueUrl.split('/issues/')[1];
   await page.goto(`http://127.0.0.1:5175/#/issue/${legacyId}`);
   await page.getByRole('dialog', { name: '任務詳細內容' }).waitFor();
-  await page.getByRole('button', { name: '關閉任務' }).click();
+  await page.getByRole('button', { name: '關閉任務', exact: true }).click();
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: '開啟導覽' }).click();
@@ -1220,7 +1220,7 @@ try {
   await page.getByRole('button', { name: '新增任務', exact: false }).first().click();
   await page.getByRole('dialog', { name: '新增一個任務' }).waitFor();
   await page.screenshot({ path: 'artifacts/mobile-editor.png', fullPage: true });
-  await page.getByRole('button', { name: '關閉任務' }).click();
+  await page.getByRole('button', { name: '關閉任務', exact: true }).click();
   await page.getByRole('button', { name: '專案', exact: true }).click();
   await page.screenshot({ path: 'artifacts/mobile-projects.png', fullPage: true });
   assert.equal(await page.getByRole('button', { name: '任務看板', exact: true }).count(), 0);

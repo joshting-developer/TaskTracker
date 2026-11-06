@@ -19,6 +19,8 @@ Owner／Manager可從側欄「工時分析」選擇成員投入、專案投入�
 
 介面文案以標題、操作、資料與必要狀態為主，已移除標語、鼓勵語及長篇功能教學；操作手冊待後續指示。盤點見[介面文案精簡](docs/ui-copy-review-2026-11-06.md)。
 
+程式責任與本輪調整見[前後端架構重構紀錄](docs/refactoring-2026-11-06.md)。
+
 ## 資料儲存
 
 業務資料使用關聯式 SQLite：Workspace／Member、Project／Status／ACL、Issue／Comment／Relation、Board／收錄、工時、Todo／通知各有獨立資料表，含外鍵與索引。Laravel Eloquent 模型提供關聯；歷史事件與重試結果保留快照 JSON。

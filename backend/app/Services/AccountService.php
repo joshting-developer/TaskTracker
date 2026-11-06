@@ -123,6 +123,7 @@ class AccountService
                 }
             }
         }
+
         return new AuthenticatedAccountData($user, $workspace['id']);
     }
 
@@ -164,6 +165,7 @@ class AccountService
         if (! $workspaceId) {
             DomainError::fail('UNAUTHENTICATED', '找不到工作空間資格');
         }
+
         return new AuthenticatedAccountData($user, $workspaceId);
     }
 

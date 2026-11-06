@@ -1,6 +1,12 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from 'vue';
 import Icon from './components/Icon.vue';
+import IssueList from './components/IssueList.vue';
+import IssueFilters from './components/IssueFilters.vue';
+import { useIssueQuery } from './composables/useIssueQuery.js';
+import { useIssueTransitions } from './composables/useIssueTransitions.js';
+import { useToast } from './composables/useToast.js';
+import { useWorkspaceClock } from './composables/useWorkspaceClock.js';
 import IssuePanel from './components/IssuePanel.vue';
 import IssueDetail from './components/IssueDetail.vue';
 import ProjectDialog from './components/ProjectDialog.vue';
@@ -25,59 +31,46 @@ import NotificationPreview from './components/NotificationPreview.vue';
 import { api, setWorkspaceContext } from './api/index.js';
 import WorkspaceSwitcher from './components/WorkspaceSwitcher.vue';
 import WorkspaceInvitation from './components/WorkspaceInvitation.vue';
-import { isClosed, dateInTaipei, PRIORITIES, statusesFor, TYPES } from './domain/model.js';
-import { CONDITIONS, filterIssues, missingFilters } from './domain/filters.js';
+import { statusesFor } from './domain/model.js';
 
-const workspace = ref({ projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} });
-const authenticated = ref(false);
-const todoData = ref({ todos: [], notifications: [], members: [] });
-const todoTool = ref(null), conversionTool = ref(null), convertingTodo = ref(null), todoNotificationsOpen = ref(false);
+const workspace = shallowRef({ projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} });
+const authenticated = shallowRef(false);
+const todoData = shallowRef({ todos: [], notifications: [], members: [] });
+const todoTool = useTemplateRef('todoTool'), conversionTool = useTemplateRef('conversionTool'), convertingTodo = shallowRef(null), todoNotificationsOpen = shallowRef(false);
 const todoUnread = computed(() => todoData.value.notifications.filter(item => !item.readAt).length);
 const convertibleProjects = computed(() => workspace.value.projects.filter(project => project.permissions?.includes('issue.write')));
-const switchingWorkspace = ref(false), workspaceInviteToken = ref(''), invitationTool = ref(null);
-const teamTab = ref('general'), teamTool = ref(null);
+const switchingWorkspace = shallowRef(false), workspaceInviteToken = shallowRef(''), invitationTool = useTemplateRef('invitationTool');
+const teamTab = shallowRef('general'), teamTool = useTemplateRef('teamTool');
 const canManageWorkspace = computed(() => workspace.value.meta.permissions?.includes('workspace.ownership'));
-const profileOpen = ref(false), profileTool = ref(null), accountMenu = ref(null);
+const profileOpen = shallowRef(false), profileTool = useTemplateRef('profileTool'), accountMenu = useTemplateRef('accountMenu');
 let settingsOpener;
-const section = ref('tasks');
+const section = shallowRef('tasks');
 const sectionPermissions = { settings: 'project.statuses.update', members: 'project.members.manage', time: 'timeEntry.readOwn' };
-const workspaceTool = ref(null);
-const defaultType = ref('task');
-const defaultEpicId = ref('');
-const loading = ref(true);
-const error = ref('');
-const view = ref('list');
-const boardId = ref('default'), boardEditor = ref(null), boardEditorTool = ref(null);
-const scope = ref('all');
-const projectId = ref('');
-const landing = ref('home');
-const analysisMode = ref('index');
+const workspaceTool = useTemplateRef('workspaceTool');
+const defaultType = shallowRef('task');
+const defaultEpicId = shallowRef('');
+const loading = shallowRef(true);
+const error = shallowRef('');
+const view = shallowRef('list');
+const boardId = shallowRef('default'), boardEditor = shallowRef(null), boardEditorTool = useTemplateRef('boardEditorTool');
+const scope = shallowRef('all');
+const projectId = shallowRef('');
+const landing = shallowRef('home');
+const analysisMode = shallowRef('index');
 const canAnalyze = computed(() => workspace.value.meta.permissions?.includes('workspace.timeReports.read'));
-const search = ref('');
-const stateFilter = ref([]);
-const priorityFilter = ref('');
-const assigneeFilter = ref(''), epicFilter = ref(''), typeFilter = ref(''), conditionFilter = ref('');
-const sort = ref('updated');
-const filtersOpen = ref(false);
-const page = ref(1);
-const selectedId = ref('');
-const detailPage = ref(false), editingDetail = ref(false), detailTool = ref(null), issueTool = ref(null);
+const selectedId = shallowRef('');
+const detailPage = shallowRef(false), editingDetail = shallowRef(false), detailTool = useTemplateRef('detailTool'), issueTool = useTemplateRef('issueTool');
 let issueReturn = null;
-const creatingIssue = ref(false);
-const defaultState = ref('todo');
-const creatingProject = ref(false);
-const editingProject = ref(null);
-const sidebarOpen = ref(false);
-const toast = ref('');
-const demoLoading = ref(false);
-const moving = ref('');
-const today = ref(dateInTaipei());
-const pageSize = 20;
+const creatingIssue = shallowRef(false);
+const defaultState = shallowRef('todo');
+const creatingProject = shallowRef(false);
+const editingProject = shallowRef(null);
+const sidebarOpen = shallowRef(false);
+const { toast, notify } = useToast();
+const demoLoading = shallowRef(false);
+const today = useWorkspaceClock({ active: computed(() => authenticated.value && !switchingWorkspace.value), refresh });
 let refreshGeneration = 0;
-let toastTimer;
-let dateTimer;
 let opener;
-const moveRequests = new Map();
 const demoRequestId = crypto.randomUUID();
 
 const projects = computed(() => workspace.value.projects);
@@ -104,38 +97,27 @@ const projectBoards = computed(() => (workspace.value.boards || []).filter(board
 const selectedBoard = computed(() => projectBoards.value.find(board => board.id === boardId.value));
 const boardIssues = computed(() => includedIssues(selectedBoard.value, projectAllIssues.value));
 const boardEpicIds = computed(() => [...new Set([...boardIssues.value.filter(issue => issue.type === 'epic').map(issue => issue.id), ...boardIssues.value.map(issue => issue.epicId).filter(Boolean)])]);
-const projectStates = computed(() => statusesFor(selectedProject.value));
 const currentUserId = computed(() => workspace.value.meta.userId);
 const workContextKey = computed(() => contextKey(currentUserId.value, workspace.value.meta.workspace?.id, selectedProject.value?.id));
 function restoreTaskScope() {
   if (view.value === 'list' && section.value === 'tasks') scope.value = taskScope(workContextKey.value);
 }
 watch(workContextKey, restoreTaskScope, { flush: 'sync' });
-const currentFilters = computed(() => ({ search: search.value, scope: scope.value, state: stateFilter.value, priority: priorityFilter.value, assignee: assigneeFilter.value, epicId: epicFilter.value, type: typeFilter.value, condition: conditionFilter.value, sort: sort.value, view: view.value }));
-const filterWarnings = computed(() => selectedProject.value ? missingFilters(currentFilters.value, selectedProject.value, workspace.value.members, projectAllIssues.value) : []);
-function memberName(id) { return workspace.value.members.find((member) => member.id === id)?.name || id || ''; }
-const visibleIssues = computed(() => selectedProject.value ? filterIssues(view.value === 'board' ? boardIssues.value : projectAllIssues.value, currentFilters.value, { project: selectedProject.value, userId: currentUserId.value, members: workspace.value.members, today: today.value, includeEpics: true }) : []);
-const pageCount = computed(() => Math.max(1, Math.ceil(visibleIssues.value.length / pageSize)));
-const pagedIssues = computed(() => visibleIssues.value.slice((page.value - 1) * pageSize, page.value * pageSize));
+const {
+  filterInput, page, pageSize, pageCount, projectStates, visibleIssues, pagedIssues,
+  filterWarnings, filterActive, activeFilterChips, removeFilter, clearFilters,
+} = useIssueQuery({
+  project: selectedProject, issues: projectAllIssues, boardIssues,
+  members: computed(() => workspace.value.members), userId: currentUserId, today, view, scope, projectId,
+});
+const { moving, moveIssue } = useIssueTransitions({
+  canWrite, contextKey: workContextKey, saved: issue => savedIssue(issue, false), refresh,
+  onError: message => { error.value = message; },
+});
 const title = computed(() => selectedProject.value?.name || '專案列表');
 const currentFeature = computed(() => section.value === 'tasks'
   ? view.value === 'boards' ? '看板列表' : view.value === 'board' ? '任務看板' : scope.value === 'mine' ? '我的任務' : '任務列表'
   : { time: '工時月曆', settings: '狀態設定', members: '專案成員', notifications: '通知預覽' }[section.value]);
-const filterActive = computed(() => search.value || stateFilter.value.length || priorityFilter.value || assigneeFilter.value || epicFilter.value || typeFilter.value || conditionFilter.value);
-const filterFields = { state: stateFilter, priority: priorityFilter, assignee: assigneeFilter, epicId: epicFilter, type: typeFilter, condition: conditionFilter };
-const activeFilterChips = computed(() => [
-  { key: 'state', label: '狀態', value: stateFilter.value.length, name: stateFilter.value.map(id => projectStates.value.find(item => item.id === id)?.label || '已移除').join('、') },
-  { key: 'priority', label: '優先級', value: priorityFilter.value, name: PRIORITIES.find(item => item.id === priorityFilter.value)?.label },
-  { key: 'assignee', label: '負責人', value: assigneeFilter.value, name: workspace.value.members.find(item => item.id === assigneeFilter.value)?.name || '已移除' },
-  { key: 'epicId', label: 'Epic', value: epicFilter.value, name: epicFilter.value === 'unlinked' ? '尚未掛入 Epic' : projectAllIssues.value.find(item => item.id === epicFilter.value)?.title || '已移除' },
-  { key: 'type', label: '類型', value: typeFilter.value, name: TYPES.find(item => item.id === typeFilter.value)?.label },
-  { key: 'condition', label: '情況', value: conditionFilter.value, name: CONDITIONS.find(item => item.id === conditionFilter.value)?.label || '已停用' },
-].filter(item => item.value));
-
-watch([search, stateFilter, priorityFilter, assigneeFilter, epicFilter, typeFilter, conditionFilter, sort, scope, projectId], () => { page.value = 1; });
-watch(pageCount, (count) => { if (page.value > count) page.value = count; });
-watch([projectId, view], () => { filtersOpen.value = false; });
-
 async function refresh() {
   const generation = ++refreshGeneration;
   error.value = '';
@@ -176,11 +158,6 @@ async function refresh() {
 
   } catch (failure) { if (generation === refreshGeneration) { if (failure.code === 'UNAUTHENTICATED') { authenticated.value = false; todoData.value = { todos: [], notifications: [], members: [] }; convertingTodo.value = null; todoNotificationsOpen.value = false; profileOpen.value = false; creatingProject.value = false; editingProject.value = null; boardEditor.value = null; creatingIssue.value = false; selectedId.value = ''; detailPage.value = false; editingDetail.value = false; workspace.value = { projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} }; } else error.value = failure.message; } }
   finally { if (generation === refreshGeneration) loading.value = false; }
-}
-function notify(message) {
-  toast.value = message;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { toast.value = ''; }, 3500);
 }
 function projectHash(id, issueId = '', mode = view.value, selectedBoardId = boardId.value, fullPage = detailPage.value, targetSection = issueId ? 'tasks' : section.value) {
   const featurePath = targetSection !== 'tasks' ? `/${targetSection}` : mode === 'boards' ? '/boards' : mode === 'board' ? `/board${selectedBoardId === 'default' ? '' : `/${encodeURIComponent(selectedBoardId)}`}` : '';
@@ -477,26 +454,6 @@ async function loadDemo() {
   } catch (failure) { error.value = failure.message; }
   finally { demoLoading.value = false; }
 }
-async function moveIssue(issue, fields) {
-  if (!canWrite.value) return;
-  if (moving.value || Object.entries(fields).every(([key, value]) => issue[key] === value)) return;
-  moving.value = issue.id;
-  const signature = `${issue.id}:${issue.revision}:${JSON.stringify(fields)}`;
-  if (!moveRequests.has(signature)) moveRequests.set(signature, crypto.randomUUID());
-  try {
-    const result = await api.updateIssue({ id: issue.id, ...fields, expectedRevision: issue.revision, requestId: moveRequests.get(signature) });
-    await savedIssue(result, false);
-    moveRequests.delete(signature);
-  } catch (failure) {
-    error.value = failure.message;
-    if (failure.code === 'REVISION_CONFLICT') { await refresh(); error.value = `${failure.message}, 清單已更新`; }
-  } finally { moving.value = ''; }
-}
-function clearFilters() { search.value = ''; stateFilter.value = []; priorityFilter.value = ''; assigneeFilter.value = ''; epicFilter.value = ''; typeFilter.value = ''; conditionFilter.value = ''; }
-function overdue(issue) { return issue.dueDate && issue.dueDate < today.value && !isClosed(issue); }
-function shortDate(value) { return value ? `${Number(value.slice(5, 7))}/${Number(value.slice(8))}` : ''; }
-function option(items, id) { return items.find((item) => item.id === id); }
-function projectFor(issue) { return projects.value.find((item) => item.id === issue.projectId); }
 async function reloadEditor(callback, settled = () => {}) { try { await refresh(); if (!error.value) { await nextTick(); callback(); } } finally { settled(); } }
 function beforeUnload(event) { if (teamTool.value?.dirty || profileTool.value?.dirty || todoTool.value?.dirty || conversionTool.value?.dirty || workspaceTool.value?.dirty || detailTool.value?.dirty) { event.preventDefault(); event.returnValue = ''; } }
 function keydown(event) {
@@ -508,10 +465,9 @@ onMounted(async () => {
   window.addEventListener('keydown', keydown);
   window.addEventListener('beforeunload', beforeUnload);
   window.addEventListener('tasktracker:access-changed', refresh);
-  dateTimer = setInterval(() => { today.value = dateInTaipei(); if (authenticated.value && !switchingWorkspace.value) refresh(); }, 30000);
   await refresh();
 });
-onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); window.removeEventListener('keydown', keydown); window.removeEventListener('beforeunload', beforeUnload); window.removeEventListener('tasktracker:access-changed', refresh); clearTimeout(toastTimer); clearInterval(dateTimer); });
+onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); window.removeEventListener('keydown', keydown); window.removeEventListener('beforeunload', beforeUnload); window.removeEventListener('tasktracker:access-changed', refresh); });
 </script>
 
 <template>
@@ -572,30 +528,15 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
         <section v-show="!showIssuePage" v-if="section === 'tasks' && view !== 'boards'" class="task-workspace" aria-label="任務工作區">
           <h2 class="sr-only">{{ currentFeature }}</h2>
           <header v-if="view === 'board' && selectedBoard" class="selected-board-heading"><div><button class="text-button" @click="navigate('all', projectId, 'boards')">返回看板列表</button><h3>{{ selectedBoard.name }}</h3></div><div v-if="!selectedBoard.isDefault && can('board.manage')" class="selected-board-actions"><button class="button secondary" @click="boardEditor = { board: selectedBoard }">編輯收錄</button><button class="text-button danger-text" @click="archiveBoard">移除看板</button></div></header>
-          <div class="filter-toolbar">
-            <label class="search-field"><Icon name="search" :size="18" /><input v-model="search" placeholder="搜尋任務、編號或負責人…" aria-label="搜尋任務" maxlength="180" /><button v-if="search" class="icon-button" aria-label="清除搜尋" @click="search = ''"><Icon name="close" :size="15" /></button></label>
-            <div class="filters">
-              <button class="button secondary filter-toggle" :class="{ active: filtersOpen || activeFilterChips.length }" aria-label="任務篩選" :aria-expanded="filtersOpen" aria-controls="task-filters" @click="filtersOpen = !filtersOpen"><Icon name="filter" :size="17" />篩選<span v-if="activeFilterChips.length" class="filter-count">{{ activeFilterChips.length }}</span></button>
-              <select v-model="sort" aria-label="排序方式"><option value="updated">最近更新</option><option value="priority">優先級排序</option><option value="due">到期日排序</option></select>
-            </div>
-          </div>
-          <div id="task-filters" v-show="filtersOpen" class="advanced-filters" role="group" aria-label="任務篩選條件">
-            <div class="status-filter"><span>狀態</span><details @keydown.esc.prevent="$event.currentTarget.open = false" @focusout="!$event.currentTarget.contains($event.relatedTarget) && ($event.currentTarget.open = false)"><summary aria-label="篩選狀態">{{ stateFilter.length ? `已選 ${stateFilter.length} 個狀態` : '所有狀態' }}</summary><div class="status-filter-options"><label v-for="state in projectStates" :key="state.id"><input v-model="stateFilter" type="checkbox" :value="state.id" :aria-label="`篩選狀態 ${state.label}`" />{{ state.label }}</label><button v-if="stateFilter.length" type="button" class="text-button" @click="stateFilter = []">清除狀態</button></div></details></div>
-            <label>優先級<select v-model="priorityFilter" aria-label="篩選優先級"><option value="">所有優先級</option><option v-for="priority in PRIORITIES" :key="priority.id" :value="priority.id">{{ priority.label }}</option></select></label>
-            <label>負責人<select v-model="assigneeFilter" aria-label="篩選負責人"><option value="">所有成員</option><option v-if="assigneeFilter && !workspace.members.some(member => member.id === assigneeFilter)" :value="assigneeFilter" disabled>成員已移除（需修正）</option><option v-for="member in workspace.members" :key="member.id" :value="member.id">{{ member.name }}</option></select></label>
-            <label>Epic<select v-model="epicFilter" aria-label="篩選 Epic"><option value="">所有 Epic</option><option value="unlinked">尚未掛入 Epic</option><option v-if="epicFilter && epicFilter !== 'unlinked' && !projectAllIssues.some(issue => issue.id === epicFilter && issue.type === 'epic')" :value="epicFilter" disabled>Epic 已移除（需修正）</option><option v-for="epic in projectAllIssues.filter(issue => issue.type === 'epic')" :key="epic.id" :value="epic.id">{{ epic.title }}</option></select></label>
-            <label>類型<select v-model="typeFilter" aria-label="篩選類型"><option value="">所有類型</option><option v-for="type in TYPES" :key="type.id" :value="type.id">{{ type.label }}</option></select></label>
-            <label>情況<select v-model="conditionFilter" aria-label="篩選情況"><option v-if="conditionFilter && !CONDITIONS.some(condition => condition.id === conditionFilter)" :value="conditionFilter" disabled>舊前置篩選已停用（需修正）</option><option v-for="condition in CONDITIONS" :key="condition.id" :value="condition.id">{{ condition.label }}</option></select></label>
-          </div>
-          <div v-if="activeFilterChips.length" class="active-filter-chips" aria-label="已套用篩選">
-            <button v-for="chip in activeFilterChips" :key="chip.key" class="active-filter-chip" :aria-label="`移除篩選：${chip.label}：${chip.name}`" @click="filterFields[chip.key].value = chip.key === 'state' ? [] : ''"><span>{{ chip.label }}：{{ chip.name }}</span><Icon name="close" :size="13" /></button>
-            <button class="text-button" @click="clearFilters">清除全部篩選</button>
-          </div>
-          <div v-if="filterWarnings.length" class="filter-warning" role="alert">{{ filterWarnings.join('、') }}, 請重新選擇或清除條件。原條件保留, 沒有放寬搜尋</div>
+          <IssueFilters
+            :key="`${projectId}:${view}`" v-model="filterInput" :states="projectStates" :members="workspace.members"
+            :issues="projectAllIssues" :active-filter-chips="activeFilterChips" :filter-warnings="filterWarnings"
+            @remove="removeFilter" @clear="clearFilters"
+          />
           <div v-if="error" class="error-box workspace-error" role="alert">{{ error }}<button class="text-button" @click="refresh">重新載入</button></div>
           <div v-if="loading" class="empty-state"><span class="loader"></span><h2>正在整理你的工作空間</h2></div>
           <div v-else-if="!visibleIssues.length && view === 'list'" class="empty-state"><span class="empty-icon"><Icon :name="filterActive ? 'search' : 'check'" :size="32" /></span><h2>{{ filterActive ? '沒有符合條件的任務' : scope === 'mine' ? '目前沒有指派給你的任務' : '尚無任務' }}</h2><button v-if="filterActive" class="button secondary" @click="clearFilters">清除篩選</button><button v-else-if="showNewIssueAction" class="button secondary" @click="newIssue"><Icon name="plus" :size="17" />新增任務</button></div>
-          <div v-else-if="view === 'list'" class="table-scroll"><table class="issue-table"><thead><tr><th class="type-column" scope="col">類型</th><th>任務</th><th>狀態</th><th>優先級</th><th>負責人</th><th>到期日</th><th class="end-column"></th></tr></thead><tbody><tr v-for="issue in pagedIssues" :key="issue.id" :data-issue="issue.identifier"><td class="type-column"><span class="issue-type-label">{{ option(TYPES, issue.type)?.label || '未知類型' }}</span></td><td class="task-title-cell"><button class="task-title" @click="openIssue(issue, true)">{{ issue.title }}</button><div class="task-subline"><span class="identifier">{{ issue.identifier }}</span></div></td><td><span class="status-badge" :class="issue.state" :style="{ '--status-color': option(projectStates, issue.state)?.color }"><i></i>{{ option(projectStates, issue.state)?.label }}</span></td><td><span class="priority-label" :style="{ '--priority-color': option(PRIORITIES, issue.priority)?.color }"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span>{{ option(PRIORITIES, issue.priority)?.label }}</span></td><td><span v-if="issue.assignee" class="assignee"><span class="avatar small">{{ memberName(issue.assignee).slice(0, 1) }}</span>{{ memberName(issue.assignee) }}</span><span v-else class="unassigned">未指派</span></td><td><span :class="['due-date', { overdue: overdue(issue) }]">{{ shortDate(issue.dueDate) || '—' }}<span v-if="overdue(issue)" class="overdue-dot" title="已過期"></span></span></td><td class="issue-row-actions"><button v-if="canWrite" class="text-button quick-edit" :aria-label="`快速編輯 ${issue.identifier}`" @click="openIssue(issue, false)">快速編輯</button><button class="icon-button row-open" :aria-label="`開啟完整頁 ${issue.identifier}`" title="開啟完整頁" @click="openIssue(issue, true)"><Icon name="chevron" :size="17" /></button></td></tr></tbody></table></div>
+          <IssueList v-else-if="view === 'list'" :issues="pagedIssues" :states="projectStates" :members="workspace.members" :can-write="canWrite" :today="today" @open="openIssue" />
           <ProjectBoard v-else :sync-state="realtimeState" :key="`${currentUserId}:${projectId}:${boardId}`" :board-key="boardId" :included-epic-ids="boardEpicIds" :project="selectedProject" :issues="projectAllIssues" :visible-issues="visibleIssues" :entries="workspace.timeEntries" :members="projectMembers" :user-id="currentUserId" :can-write="canWrite" :can-create="canCreateIssue" :moving="moving" :today="today" @open="openIssue" @move="moveIssue" @create="input => newIssue(input.state, 'task', input.epicId)" />
           <footer v-if="projects.length && !loading && view === 'list'" class="table-footer"><span v-if="view === 'list'" role="status">{{ visibleIssues.length }} 筆結果</span><span v-else>{{ canWrite ? '' : '唯讀' }}</span><div v-if="view === 'list' && pageCount > 1" class="pagination"><span>{{ (page - 1) * pageSize + 1 }}–{{ Math.min(page * pageSize, visibleIssues.length) }} / {{ visibleIssues.length }}</span><button class="icon-button previous" aria-label="上一頁" :disabled="page === 1" @click="page--"><Icon name="chevron" :size="15" /></button><button class="icon-button" aria-label="下一頁" :disabled="page === pageCount" @click="page++"><Icon name="chevron" :size="15" /></button></div></footer>
         </section>

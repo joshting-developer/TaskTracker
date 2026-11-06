@@ -10,7 +10,7 @@
 - Controller只處理HTTP協調，輸入由FormRequest驗證；Service協調流程、Action是有實際用途的單一用例；Repository只做資料存取。簡單CRUD可由Service直接用Eloquent，不讓Controller查DB，不為每個Model建立空Repository／Action。
 - 命名、Repository回傳、Resource使用、交易owner及Unit／Feature必要條件依Architecture兩份references，不再沿用舊測試命名硬性格式或CLM專用例子。
 - 保留既有Session／CSRF、RPC／ok-data／DomainError、revision／requestId與permission＋scope；不抄ECC範例改API、資料庫或登入方式。
-- 2026-11-06使用者暫緩重構；skills安裝不代表既有程式已全面合規，也不授權批次格式化、搬層或改依賴。
+- 2026-11-06安裝階段曾暫緩；後續使用者已恢復重構，依本輪計畫分階段執行。skills安裝不代表全庫已合規，不授權無關的批次格式化或改依賴。
 
 ## 專案限制與驗證
 

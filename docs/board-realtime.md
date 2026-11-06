@@ -77,3 +77,5 @@ E2E_API_URL=http://127.0.0.1:13024 E2E_REALTIME_PROJECT=tasktracker-realtime-tes
 ## 參考
 
 查核日期2026-11-05。交易後派送與私有頻道採[Laravel 13 Broadcasting官方文件](https://laravel.com/framework/docs/13.x/broadcasting)；Reverb設定、長駐服務與代理參考[Laravel Reverb官方文件](https://laravel.com/framework/docs/13.x/reverb)。實際簽章／client events選項另外核對本專案lockfile安裝的Laravel／Reverb原始碼。
+
+2026-11-06架構重構：RealtimeController改為薄HTTP入口，Http/RealtimeSession協調同交易Session重驗與簽章，ProjectChannelAccess負責固定頻道及project.read／issue.read。事件與簽章協定未改；獨立Compose實測兩帳號同步、草稿409、停啟後補抓、撤權清除及CSRF／三尺寸通過，測試專用資料卷已清理。
