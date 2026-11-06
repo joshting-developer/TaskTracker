@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\JsonOperationRequest;
 use App\Http\Resources\ApiResponse;
-use App\Services\ApiExecution;
+use App\Http\ApiExecution;
 
 /**
  * 處理未知或已停用操作，保留舊API錯誤及登入契約。

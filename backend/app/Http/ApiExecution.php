@@ -1,9 +1,16 @@
 <?php
 
-namespace App\Services;
+namespace App\Http;
 
 use App\Authorization\WorkspacePermissions;
+use App\Data\AuthenticatedAccountData;
 use App\Domain\DomainError;
+use App\Services\AccountService;
+use App\Services\AccountSettings;
+use App\Services\SmtpService;
+use App\Services\Todos;
+use App\Services\WorkspaceMemberships;
+use App\Services\WorkspaceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,9 +25,10 @@ class ApiExecution
      *
      * @param  AccountService  $accounts  帳號與工作空間資格服務
      * @param  SmtpService  $smtp  SMTP驗證服務
+     * @param  WorkspaceSession  $session  HTTP身分邊界
      * @return void
      */
-    public function __construct(private AccountService $accounts, private SmtpService $smtp) {}
+    public function __construct(private AccountService $accounts, private SmtpService $smtp, private WorkspaceSession $session) {}
 
     /**
      * 在同一交易處理帳號與Session異動。
@@ -55,16 +63,30 @@ class ApiExecution
                 $workspaceId = $operation === 'acceptWorkspaceInvite' ? $memberships->accept($user, $input) : $memberships->target($user, $input);
                 $request->session()->put('workspace_id', $workspaceId);
 
-                return $this->accounts->context($request);
+                return $this->session->context($request);
             }
 
             return match ($operation) {
-                'current' => $this->accounts->context($request),
-                'register' => $this->accounts->register($request, $input),
-                'login' => $this->accounts->login($request, $input),
+                'current' => $this->session->context($request),
+                'register' => $this->establishSession($request, $this->accounts->register($input)),
+                'login' => $this->establishSession($request, $this->accounts->login($input)),
                 default => DomainError::fail('NOT_FOUND', '找不到這個操作'),
             };
         });
+    }
+
+    /** 將已驗證帳號寫入HTTP Session，領域服務不接觸Request或Auth facade。
+     * @param  Request  $request  目前HTTP與Session
+     * @param  AuthenticatedAccountData  $account  領域服務驗證的帳號與空間
+     * @return array 公開工作空間資格
+     */
+    private function establishSession(Request $request, AuthenticatedAccountData $account): array
+    {
+        Auth::login($account->user);
+        $request->session()->regenerate();
+        $request->session()->put('workspace_id', $account->workspaceId);
+
+        return $this->session->context($request);
     }
 
     /**
@@ -78,7 +100,7 @@ class ApiExecution
     public function execute(Request $request, string $operation, array $input): array
     {
         return DB::transaction(function () use ($request, $operation, $input) {
-            $workspaceSession = $this->accounts->context($request);
+            $workspaceSession = $this->session->context($request);
             $expectedWorkspace = $request->header('X-Workspace-ID');
             if ($operation !== 'getWorkspace' && $expectedWorkspace !== null && $expectedWorkspace !== $workspaceSession['workspace']['id']) {
                 DomainError::fail('WORKSPACE_CHANGED', '工作空間已在其他分頁切換，請重新載入後操作');

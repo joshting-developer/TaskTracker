@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\JsonOperationRequest;
 use App\Http\Resources\ApiResponse;
-use App\Services\ApiExecution;
+use App\Http\ApiExecution;
 
 /**
  * 提供工作空間快照、邀請與示範資料HTTP入口。

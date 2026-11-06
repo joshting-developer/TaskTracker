@@ -1,3 +1,12 @@
+## 2026-11-06 前後端架構重構
+
+- 使用者已恢復先前暫緩的重構，依本專案ECC／Laravel Architecture／Vue skills執行；不是新功能或UI改版。
+- 階段一：將HTTP／Session協調移回Http層，AccountService只處理帳號及資格，清除RealtimeController的資料存取／授權流程；保留原交易、Session blocking、CSRF及X-Workspace-ID。
+- 階段一完成：Http/ApiExecution、WorkspaceSession、RealtimeSession與ProjectChannelAccess分責，帳號服務不依賴Request／Auth；readonly AuthenticatedAccountData承接帳號結果。完整既有59項＋新帳號領域1項測試通過，登入、切換、邀請、舊憑證升級與回滾契約保留。
+- 階段二：工時分析輸入專用FormRequest／readonly DTO，透過租戶限定Eloquent Repository讀取有效範圍，不載入整個工作區歷史工時及卡片；服務持有權限與聚合，Resource沿用既有envelope。
+- 階段三：App.vue抽出任務查詢／分頁、列表呈現與獨立互動生命週期，保留既有hash路由、草稿、事件與跨空間清理，不新增Router／Pinia或重做畫面。
+- 驗證：先取得完整後端與build baseline，逐階段跑適當測試；跨層完成後以tmpfs隔離API跑完整瀏覽器、分析及切換／草稿／看板回歸，重啟受影響長駐程序。每階段各自commit，不改schema／業務資料或push。
+
 ## 2026-11-06 成員工時明細
 
 - 使用者已要求完成成員分析：查看哪一天、哪些卡片、時數與填報說明；日期／卡片切換及明細分頁。

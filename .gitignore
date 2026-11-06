@@ -19,3 +19,7 @@ vendor/
 !skills/vendor/
 !skills/vendor/ui-ux-pro-max/data/
 !skills/vendor/ui-ux-pro-max/data/**
+
+# Laravel DTO原始碼（大小寫不敏感的檔案系統會匹配data/）
+!backend/app/Data/
+!backend/app/Data/**

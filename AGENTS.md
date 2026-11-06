@@ -145,3 +145,5 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 ## Vue開發 skill
 
 Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-practices](skills/vendor/vue-best-practices/SKILL.md)，入口`.agents/skills/vue-best-practices`。既有Vue 3＋Vuetify與JavaScript繼續使用，保留Composition API／script setup；TypeScript為後續新功能或明確遷移時的優先選項，不因安裝skill改寫全庫、裝Router／Pinia或改路由。UI設計與可用性仍搭配上述兩份UI／UX skills，Vue skill負責程式結構。
+
+2026-11-06後續更新：使用者已明確恢復前後端架構重構，先前暫緩為歷史決策。依本專案Laravel／Vue skills分階段實作及驗證，保留API、資料、授權及產品操作契約，見`plans/main/plan.md`與`docs/產品討論紀錄.md`。

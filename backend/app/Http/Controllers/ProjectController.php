@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\JsonOperationRequest;
 use App\Http\Resources\ApiResponse;
-use App\Services\ApiExecution;
+use App\Http\ApiExecution;
 
 /**
  * 提供專案建立、資訊更新及狀態設定HTTP入口。

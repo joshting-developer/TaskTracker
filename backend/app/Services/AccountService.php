@@ -3,17 +3,16 @@
 namespace App\Services;
 
 use App\Authorization\WorkspacePermissions;
+use App\Data\AuthenticatedAccountData;
 use App\Domain\DomainError;
 use App\Domain\Fields;
 use App\Models\User;
 use App\Repositories\RecordStore;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * 處理帳號、Session工作空間資格與邀請，避免信任前端身分。
+ * 處理帳號、工作空間資格與邀請；不依賴HTTP、Session或登入狀態寫入。
  */
 class AccountService
 {
@@ -33,15 +32,14 @@ class AccountService
     }
 
     /**
-     * 從Session及目前成員資格建立可信任工作空間身分。
+     * 從伺服器提供的帳號及空間ID重新驗證成員資格。
      *
-     * @param  Request  $request  目前HTTP請求與Session
+     * @param  User|null  $user  HTTP邊界取得的新鮮帳號模型
+     * @param  mixed  $workspaceId  HTTP邊界取得的Session空間ID
      * @return array
      */
-    public function context(Request $request): array
+    public function context(?User $user, mixed $workspaceId): array
     {
-        $user = $request->user()?->fresh();
-        $workspaceId = $request->session()->get('workspace_id');
         if (! $user || ! is_string($workspaceId)) {
             DomainError::fail('UNAUTHENTICATED', '請先登入');
         }
@@ -64,13 +62,12 @@ class AccountService
     }
 
     /**
-     * 驗證註冊或邀請後建立帳號並更新Session。
+     * 驗證註冊或邀請後建立帳號，回傳待建立Session的資格。
      *
-     * @param  Request  $request  目前HTTP請求與Session
      * @param  array  $input  此次操作的原始輸入欄位
-     * @return array
+     * @return AuthenticatedAccountData 已確認的帳號及空間
      */
-    public function register(Request $request, array $input): array
+    public function register(array $input): AuthenticatedAccountData
     {
         $email = $this->email($input['email'] ?? null);
         $name = Fields::text($input['name'] ?? null, '姓名', 60, true);
@@ -126,21 +123,16 @@ class AccountService
                 }
             }
         }
-        Auth::login($user);
-        $request->session()->regenerate();
-        $request->session()->put('workspace_id', $workspace['id']);
-
-        return $this->context($request);
+        return new AuthenticatedAccountData($user, $workspace['id']);
     }
 
     /**
      * 驗證帳號並在必要時升級舊密碼雜湊。
      *
-     * @param  Request  $request  目前HTTP請求與Session
      * @param  array  $input  此次操作的原始輸入欄位
-     * @return array
+     * @return AuthenticatedAccountData 已確認的帳號及空間
      */
-    public function login(Request $request, array $input): array
+    public function login(array $input): AuthenticatedAccountData
     {
         $email = $this->email($input['email'] ?? null);
         $password = Fields::text($input['password'] ?? null, '密碼', 128, true);
@@ -172,11 +164,7 @@ class AccountService
         if (! $workspaceId) {
             DomainError::fail('UNAUTHENTICATED', '找不到工作空間資格');
         }
-        Auth::login($user);
-        $request->session()->regenerate();
-        $request->session()->put('workspace_id', $workspaceId);
-
-        return $this->context($request);
+        return new AuthenticatedAccountData($user, $workspaceId);
     }
 
     /**

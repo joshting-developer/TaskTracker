@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\JsonOperationRequest;
 use App\Http\Resources\ApiResponse;
-use App\Services\ApiExecution;
+use App\Http\ApiExecution;
 
 /** 提供已註冊設定操作的JSON邊界，授權及交易交由服務處理。 */
 class AccountSettingsController extends Controller

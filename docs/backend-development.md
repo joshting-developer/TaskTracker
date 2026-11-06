@@ -25,7 +25,7 @@ flowchart TD
 | `Http/Controllers/*Controller.php` | 各功能HTTP入口、讀取JSON與回傳Resource；沒有SQL或業務規則 |
 | `Http/Requests/JsonOperationRequest.php` | Content-Type、大小、JSON語法及物件形狀；保留原始輸入供簽章使用 |
 | `Http/Resources/ApiResponse.php` | 固定成功格式`{ok:true,data:...}`，帳號操作附CSRF；沒有第二層data |
-| `Services/ApiExecution.php` | HTTP應用協調：交易內重驗Session，再執行業務；帳號／Session操作也是交易內完成 |
+| `Http/ApiExecution.php` | HTTP應用協調：交易內重驗Session，再執行業務；帳號／Session操作也是交易內完成 |
 | `Services/WorkspaceService.php` | 舊操作相容入口，明確映射操作到領域服務；供API、Seed及待辦轉卡共用 |
 | `Services/WorkspaceQuery.php` | 可見專案、任務、工時、通知與成員資料的彙整 |
 | `Services/ProjectService.php` | 專案資訊、責任資訊、自訂狀態與修改歷史 |
@@ -68,3 +68,5 @@ flowchart TD
 同日使用者要求將集中 payload 改為關聯式表。新增22張表、Eloquent關聯、複合外鍵與索引，正常業務改寫入欄位／子表；Seed局部重設及舊Node匯入同步適配。既有歷史migration仍可處理舊records，回退先匯出最新關聯資料。
 
 完整38項／796斷言、隔離真實瀏覽器回歸通過；本機備份副本逐欄比對69筆舊資料通過。實際升級／資料完整性與剩餘邊界見[資料設計驗收](database-design.md#本輪驗證)。上方34項驗證屬前階段分層紀錄，並非最新儲存架構的全部驗收。
+
+2026-11-06架構重構階段一：HTTP交易／Session協調移入`Http/ApiExecution`及`Http/WorkspaceSession`，AccountService接受可信User及工作區ID，註冊／登入回`AuthenticatedAccountData`，不接Request／Auth facade；RealtimeController經`Http/RealtimeSession`協調，ProjectChannelAccess獨立驗證私有頻道及permission。原Session blocking、CSRF、交易及回應契約不變。完整59項及新增非HTTP帳號測試通過；後續範圍見plans/main。
