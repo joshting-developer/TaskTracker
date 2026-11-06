@@ -21,6 +21,8 @@ Owner／Manager可從側欄「工時分析」選擇成員投入、專案投入�
 
 程式責任與本輪調整見[前後端架構重構紀錄](docs/refactoring-2026-11-06.md)。
 
+查詢數量測、N+1／全量載入／SQLite交易風險及Redis使用建議見[效能與架構review](docs/performance-review-2026-11-06.md)；內含僅用記憶體SQLite的可重跑取樣工具。
+
 ## 資料儲存
 
 業務資料使用關聯式 SQLite：Workspace／Member、Project／Status／ACL、Issue／Comment／Relation、Board／收錄、工時、Todo／通知各有獨立資料表，含外鍵與索引。Laravel Eloquent 模型提供關聯；歷史事件與重試結果保留快照 JSON。

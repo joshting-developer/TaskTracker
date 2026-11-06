@@ -1,5 +1,17 @@
 ## 2026-11-06 工時分析視覺整理
 
+## 2026-11-06 效能／架構與Redis review
+
+- 需求：全面檢查重構機會、N+1與前後端效能，確認Redis服務及使用位置。
+- 範圍：先用隔離記憶體SQLite量測工作區讀取與工時分析；盤點SQL、回應大小、PHP聚合、Vue掃描與刷新，以及Compose Redis／Queue／鎖。
+- 保留既有資料、API與即時撤權；不以快取掩蓋重複查詢，不擅自轉移Session或清空Redis。
+- 步驟：閱讀程式與規範→取得可重現查詢證據→驗證Redis／Queue／WebSocket→整理優先級、可採方案與風險→文件及階段commit。
+- 本輪為review，未經實測不宣稱加速，不擴張為全庫重寫。
+- 已完成：隔離memory SQLite兩輪取樣，Workspace 3635→6435 SQL（增加200工時），任務14／114張皆14 SQL，期間報表固定71 SQL。
+- 已完成：執行中Redis cache／queue／session driver確認；既有探針Redis、Cache、worker消費與WebSocket握手通過。
+- 交付：docs/performance-review-2026-11-06.md及backend/tools/profile-reads.php，依證據區分P1／P2與建議，列Redis使用位置／失效／租戶／故障邊界。未改業務程式、schema、Session或使用者資料；沒有宣稱問題已修復。
+
+
 - 使用者認為工時分析缺乏設計感，本輪實作既有分析及成員明細的視覺層次；不新增分析指標或放寬權限。
 - 使用專案ui-ux-pro-max／design-taste-frontend app-screen／Vue skills，保留紫色品牌、Vue／Vuetify與繁體中文。以真實隔離seed登入截圖比較，不用假統計裝飾畫面。
 - 決定：分析入口做可辨識的三種圖形；報表統一標題／切換／日期篩選／精簡總量／圖表／明細層次。成員用專案堆疊條、專案用直條比較、趨勢改成可讀且可選日期的響應式折線。保留已套用範圍、返回／撤權／錯誤處理及每頁20筆成員明細。
