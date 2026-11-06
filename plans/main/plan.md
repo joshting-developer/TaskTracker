@@ -1,3 +1,12 @@
+## 2026-11-06 GitHub效能分析skill選型
+
+- 需求：找GitHub高星效能分析skills三個，核對星數與原始內容，評估Laravel／Vue／SQLite／Redis適配。
+- 範圍：只調研與文件，未要求安裝，不執行上游腳本或改動產品。
+- 方法：廣泛搜尋→GitHub原始repository即時星數與skill路徑→實際內容／相依／限制比較→依本專案已測瓶頸選型。
+- 排名說明：星數屬來源repository；公開搜尋不能證明GitHub全站絕對前三，明確列候選範圍與排除原因。
+- 已完成：API核對高星來源與完整tree，代表前三ECC benchmark／gstack benchmark／Addy performance-optimization，固定commit及SHA-256存來源JSON。
+- 已完成：原文與必要references比較；建議Addy主診斷、ECC補量測，gstack暫不優先。docs/performance-skills-survey-2026-11-06.md記證據及本專案適配；僅文件研究，無安裝／啟用或產品改動。
+
 ## 2026-11-06 工時分析視覺整理
 
 ## 2026-11-06 效能／架構與Redis review

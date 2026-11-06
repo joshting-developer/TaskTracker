@@ -4,6 +4,10 @@
 
 這裡最初保存兩個上游 UI／UX skill 的完整副本, 供 Josh 選擇或討論如何融合成 TaskTracker 的 UI／UX 審查流程。初次收錄僅下載與介紹；同日使用者追加要求啟用兩者並審查專案。現在已建立 [.agents/skills 入口](../.agents/skills/README.md), 原文仍維持固定版本, 不另建融合 skill。審查與 UI 改版分開處理。
 
+## 效能分析skill選型（2026-11-06，尚未安裝）
+
+已研究GitHub高星來源的ECC benchmark、gstack benchmark與Addy performance-optimization；建議Addy作主診斷、ECC補基準比較，尚未新增vendor副本或`.agents/skills`入口。詳見[選型報告](../docs/performance-skills-survey-2026-11-06.md)與[來源版本／星數](../docs/performance-skills-sources-2026-11-06.json)。
+
 ## Laravel／Vue開發 skills（2026-11-06）
 
 已啟用專案內ECC `laravel-patterns`、`vue-best-practices`與自訂`laravel-architecture`；上游完整子目錄及LICENSE固定版本收錄，透過`.agents/skills`相對symlink提供入口。來源commit與逐檔雜湊見[development-sources.json](development-sources.json)，用途、衝突優先序、現況與退役規範見[開發skills配置](../docs/development-skills.md)。

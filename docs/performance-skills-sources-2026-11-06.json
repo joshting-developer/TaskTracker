@@ -1,0 +1,58 @@
+{
+  "observedDate": "2026-11-06",
+  "timezone": "Asia/Taipei",
+  "scope": "Checked public repositories with a dedicated web/API/database performance analysis or benchmark SKILL.md; one representative per source repository. Not an exhaustive global GitHub ranking.",
+  "status": "research-only; no installation or activation",
+  "repositories": [
+    {
+      "repository": "affaan-m/ECC",
+      "starsSnapshot": 298239,
+      "api": "https://api.github.com/repos/affaan-m/ECC",
+      "treeCommit": "b38be6a7f6350964d59328b52f0624e1d1d552d1",
+      "treeTruncated": false,
+      "skillPath": "skills/benchmark/SKILL.md",
+      "skillUrl": "https://github.com/affaan-m/ECC/blob/b38be6a7f6350964d59328b52f0624e1d1d552d1/skills/benchmark/SKILL.md",
+      "skillSha256": "58e34c3ccf60ee5155e3db74357b73770015a7aad3594649b6758ba8375ab6ff",
+      "license": "MIT"
+    },
+    {
+      "repository": "garrytan/gstack",
+      "starsSnapshot": 140312,
+      "api": "https://api.github.com/repos/garrytan/gstack",
+      "treeCommit": "673a336bc447061c445a53ff44f50486556053a0",
+      "treeTruncated": false,
+      "skillPath": "benchmark/SKILL.md",
+      "skillUrl": "https://github.com/garrytan/gstack/blob/673a336bc447061c445a53ff44f50486556053a0/benchmark/SKILL.md",
+      "skillSha256": "8da9022b493820b03f7a304f4fd277cb4f70742cb7326a6d474bed472baba4af",
+      "license": "MIT"
+    },
+    {
+      "repository": "addyosmani/agent-skills",
+      "starsSnapshot": 113630,
+      "api": "https://api.github.com/repos/addyosmani/agent-skills",
+      "treeCommit": "301b02b12bff98e4688e6984af6556802322bbde",
+      "treeTruncated": false,
+      "skillPath": "skills/performance-optimization/SKILL.md",
+      "skillUrl": "https://github.com/addyosmani/agent-skills/blob/301b02b12bff98e4688e6984af6556802322bbde/skills/performance-optimization/SKILL.md",
+      "skillSha256": "82af71540457cf853893685211f64509cd1e781c0de09d0186f16960f2d6eeba",
+      "license": "MIT"
+    }
+  ],
+  "additionalInspectedReferences": [
+    {
+      "repository": "addyosmani/agent-skills",
+      "path": "skills/performance-optimization/references/optimization-patterns.md",
+      "sha256": "fbf724076ffb8ac1a28e1a2773c0b550f5361090024b2dd32e5a682c69b7945f"
+    },
+    {
+      "repository": "addyosmani/agent-skills",
+      "path": "references/performance-checklist.md",
+      "sha256": "ce946457d4a502846e781a2747cf6af50bcc79b1957a66dc024f50557e8982e1"
+    },
+    {
+      "repository": "garrytan/gstack",
+      "path": "benchmark/SKILL.md.tmpl",
+      "sha256": "6cbd006df46d39df6966933988cd418b5a5fa43017c964b0e10637f1f7a415fd"
+    }
+  ]
+}
