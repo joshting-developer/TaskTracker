@@ -14,7 +14,7 @@ export function writeContext(key, patch) {
 }
 export function taskScope(key) {
   const value = readContext(key).scope;
-  return ['all', 'mine', 'done'].includes(value) ? value : 'all';
+  return ['all', 'mine'].includes(value) ? value : 'all';
 }
 export function timeSelection(key, members, userId, today) {
   const saved = readContext(key).time || {};

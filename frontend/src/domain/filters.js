@@ -1,7 +1,7 @@
 import { categoryFor, PRIORITIES, statusesFor } from './model.js';
 
 export const CONDITIONS = [
-  { id: '', label: '所有情況' }, { id: 'open', label: '尚未結案' },
+  { id: '', label: '所有情況' }, { id: 'open', label: '尚未結案' }, { id: 'done', label: '已完成' },
   { id: 'overdue', label: '已逾期' }, { id: 'unassigned', label: '尚未指派' },
 ];
 export function missingFilters(filters, project, members, issues) {
@@ -17,7 +17,6 @@ export function filterIssues(issues, filters, { project, userId, members, today,
     if (issue.projectId !== project.id || (!includeEpics && issue.type === 'epic')) return false;
     const category = categoryFor(issue, project), closed = ['done', 'canceled'].includes(category);
     if (filters.scope === 'mine' && issue.assignee !== userId) return false;
-    if (filters.scope === 'done' && category !== 'done') return false;
     if (filters.state && issue.state !== filters.state) return false;
     if (filters.priority && issue.priority !== filters.priority) return false;
     if (filters.assignee && issue.assignee !== filters.assignee) return false;
@@ -25,6 +24,7 @@ export function filterIssues(issues, filters, { project, userId, members, today,
     const epicId = issue.type === 'epic' ? issue.id : issue.epicId;
     if (filters.epicId && (filters.epicId === 'unlinked' ? Boolean(epicId) : epicId !== filters.epicId)) return false;
     if (filters.condition === 'open' && closed) return false;
+    if (filters.condition === 'done' && category !== 'done') return false;
     if (!CONDITIONS.some(condition => condition.id === filters.condition)) return false;
     if (filters.condition === 'overdue' && (closed || !issue.dueDate || issue.dueDate >= today)) return false;
     if (filters.condition === 'unassigned' && issue.assignee) return false;

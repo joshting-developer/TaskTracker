@@ -9,6 +9,8 @@ globalThis.sessionStorage = { getItem: key => values.get(key), setItem: (key, va
 const key = contextKey('u', 'w', 'p');
 writeContext(key, { scope: 'mine', time: { month: '2026-02', date: '2026-02-30', member: 'removed' } });
 assert.equal(taskScope(key), 'mine');
+writeContext(key, { scope: 'done' }); assert.equal(taskScope(key), 'all');
+writeContext(key, { scope: 'mine' });
 assert.equal(taskScope(contextKey('other', 'w', 'p')), 'all');
 assert.equal(taskScope(contextKey('u', 'w', 'other')), 'all');
 assert.deepEqual(timeSelection(key, [{ id: 'u' }], 'u', '2026-11-04'), { month: '2026-02', member: 'u', date: '2026-02-01', resetMember: true });
@@ -99,10 +101,7 @@ try {
   await page.reload(); await page.locator('tbody tr').first().waitFor();
   assert.equal(await page.locator('tbody tr').count(), 1);
   assert.match(await page.locator('.nav-item.active').innerText(), /我的任務/);
-  await page.getByRole('button', { name: /^已完成/ }).click();
-  await page.reload();
-  await page.getByRole('heading', { name: '尚無已完成任務', exact: true }).waitFor();
-  assert.match(await page.locator('.nav-item.active').innerText(), /已完成/);
+  assert.equal(await page.getByRole('button', { name: /^已完成/ }).count(), 0);
   await page.getByRole('button', { name: '工時月曆', exact: true }).click();
   await page.getByLabel('工時月份', { exact: true }).fill('2026-10');
   await page.getByLabel('工時成員', { exact: true }).selectOption('');
@@ -115,7 +114,8 @@ try {
   await page.getByRole('button', { name: '任務列表', exact: true }).waitFor();
   assert.match(await page.locator('.nav-item.active').innerText(), /任務列表/);
   await page.goto(`http://127.0.0.1:5175/#/projects/${fixture.project.id}`);
-  await page.getByRole('heading', { name: '尚無已完成任務', exact: true }).waitFor();
+  await page.locator('tbody tr').first().waitFor();
+  assert.match(await page.locator('.nav-item.active').innerText(), /我的任務/);
   await page.getByRole('button', { name: '任務列表', exact: true }).click();
   await page.reload(); await page.locator('tbody tr').first().waitFor();
   assert.equal(await page.locator('tbody tr').count(), 2);

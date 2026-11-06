@@ -601,7 +601,22 @@ async function checkTaskFilters(page, projectUrl) {
   await page.goto(projectUrl);
   await page.getByRole('button', { name: '付款流程', exact: true }).waitFor();
   const total = await page.locator('tbody tr').count();
+  assert.equal(await page.locator('.sidebar').getByRole('button', { name: /^已完成/ }).count(), 0);
+  await page.evaluate(async () => {
+    const { api } = await import('/src/api/index.js');
+    const { contextKey, writeContext } = await import('/src/ui/workContext.js');
+    const workspace = await api.getWorkspace();
+    const projectId = location.hash.split('/')[2];
+    writeContext(contextKey(workspace.meta.userId, workspace.meta.workspace.id, projectId), { scope: 'done' });
+  });
+  await page.reload(); await page.locator('tbody tr').first().waitFor();
+  assert.equal(await page.locator('tbody tr').count(), total, '舊已完成位置回到全部任務');
   await openTaskFilters(page);
+  await page.getByLabel('篩選情況').selectOption('done');
+  assert.ok(await page.locator('tbody tr').count() > 0, '一般列表可篩出已完成卡片');
+  for (const row of await page.locator('tbody tr').all()) assert.equal(await row.locator('.status-badge').innerText(), '已完成');
+  await page.getByLabel('篩選情況').selectOption('');
+
   assert.equal(await page.getByLabel('套用常用篩選', { exact: true }).count(), 0);
   assert.equal(await page.getByRole('button', { name: /儲存常用篩選|存為視圖/ }).count(), 0);
   assert.deepEqual(await page.getByLabel('篩選類型').locator('option').allTextContents(), ['所有類型', 'Epic', 'Task', 'Bug']);
