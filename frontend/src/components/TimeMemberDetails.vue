@@ -67,7 +67,7 @@ onBeforeUnmount(() => { generation++; });
     <p v-if="loading" role="status">正在載入工時明細…</p>
     <div v-if="error" class="error-box" role="alert">{{ error }} <button class="text-button" @click="load()">重試</button></div>
     <template v-else-if="report">
-      <p class="member-summary">{{ hours(report.summary.totalMinutes) }} · {{ report.summary.entryCount }} 筆 · {{ report.summary.activeDays }} 天</p>
+      <p class="member-summary"><strong>{{ hours(report.summary.totalMinutes) }}</strong><span>{{ report.summary.entryCount }} 筆</span><span>{{ report.summary.activeDays }} 天</span></p>
       <p v-if="!report.details.total" role="status">尚無符合條件的工時紀錄</p>
       <div v-else class="member-groups">
         <article v-for="(row, index) in report.details.rows" :key="row.key" class="member-row">
@@ -97,20 +97,21 @@ onBeforeUnmount(() => { generation++; });
 .member-heading { font-size: 26px; line-height: 1.4; margin: 0; overflow-wrap: anywhere; }
 .member-period, .member-code, .member-day span { color: var(--text-secondary, #5f6673); font-size: 14px; }
 .member-period { line-height: 1.7; }
-.member-grouping { display: flex; gap: 8px; margin: 20px 0; }
-.member-grouping .button { min-height: 44px; }
-.member-grouping [aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
-.member-summary { padding: 16px 0; border-block: 1px solid #daddE5; font-variant-numeric: tabular-nums; }
-.member-row { border-bottom: 1px solid #daddE5; padding: 18px 0; }
+.member-grouping { display: inline-flex; gap: 3px; margin: 12px 0 20px; background: #f5f3f9; border: 1px solid #e5e2ed; border-radius: 8px; padding: 3px; }
+.member-grouping .button { min-height: 40px; background: transparent; border: 1px solid transparent; border-radius: 5px; }
+.member-grouping [aria-pressed="true"] { border-color: #e2ddec; background: #fff; color: var(--accent); font-weight: 600; }
+.member-summary { display: flex; align-items: baseline; flex-wrap: wrap; gap: 24px; padding: 18px 0; border-block: 1px solid #e5e2ed; font-variant-numeric: tabular-nums; }
+.member-summary strong { font-size: 26px; font-weight: 600; letter-spacing: -.4px; }.member-summary span { color: var(--text-secondary, #5f6673); font-size: 14px; }
+.member-row { border-bottom: 1px solid #e5e2ed; padding: 20px 0; }
 .member-day { display: flex; flex-wrap: wrap; gap: 16px; align-items: baseline; margin-bottom: 14px; }
 .member-card { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 20px; align-items: center; }
 .member-card-name { min-width: 0; overflow-wrap: anywhere; }
 .member-card-title { margin: 6px 0 0; font-size: 16px; line-height: 1.5; }
 .member-hours { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .member-expand { min-height: 44px; }
-.member-entries { margin-top: 16px; border-left: 2px solid #daddE5; padding-left: 20px; }
+.member-entries { margin-top: 16px; border-left: 2px solid #c4b9e5; padding: 4px 18px; background: #faf9fd; border-radius: 0 6px 6px 0; }
 .member-entry { padding: 14px 0; border-bottom: 1px solid #eceef2; }
 .member-entry-meta { display: flex; justify-content: space-between; gap: 16px; font-size: 14px; font-variant-numeric: tabular-nums; }
 .member-note { white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0 0; line-height: 1.7; }
-@media(max-width:600px) { .member-heading { font-size: 24px; }.member-card { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; }.member-expand { grid-column: 1 / -1; justify-self: start; }.member-entries { padding-left: 12px; } }
+@media(max-width:600px) { .member-grouping .button { min-height: 44px; } .member-heading { font-size: 24px; }.member-card { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; }.member-expand { grid-column: 1 / -1; justify-self: start; }.member-entries { padding-left: 12px; } }
 </style>

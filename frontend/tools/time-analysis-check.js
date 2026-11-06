@@ -38,11 +38,14 @@ try {
   await owner.reload(); await owner.getByRole('button', { name: '工時分析', exact: true }).click();
   const region = owner.getByRole('region', { name: '工時分析', exact: true });
   await region.getByRole('heading', { name: '工時分析', exact: true }).waitFor();
+  assert.equal(await owner.getByRole('button', { name: '工時分析', exact: true }).getAttribute('aria-current'), 'page');
   assert.equal(await region.locator('.analysis-choice').count(), 3);
   mkdirSync('artifacts/time-analysis', { recursive: true });
   async function screenshots(label) {
     for (const width of [1440, 768, 390]) {
       await owner.setViewportSize({ width, height: 1000 });
+      await owner.evaluate(() => window.scrollTo(0, 0));
+      await owner.mouse.move(1, 1);
       if (width === 390) await owner.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
       assert.equal(await owner.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${label} ${width}不能整頁橫向溢位`);
       await owner.screenshot({ path: `artifacts/time-analysis/${label}-${width}.png`, fullPage: true });
@@ -58,7 +61,11 @@ try {
     if (mode === 'members') assert.equal(await region.getByLabel('專案圖例', { exact: true }).locator('li').count(), 2);
     if (mode === 'members') { await region.locator('tbody tr').filter({ hasText: '分析負責人' }).getByText('3 h', { exact: true }).waitFor(); await region.locator('tbody tr').filter({ hasText: '協作成員' }).getByText('0.5 h', { exact: true }).waitFor(); }
     if (mode === 'projects') { await region.locator('tbody tr').filter({ hasText: '會員服務' }).getByText('2 h', { exact: true }).waitFor(); await region.locator('tbody tr').filter({ hasText: '營運維護' }).getByText('1.5 h', { exact: true }).waitFor(); }
-    if (mode === 'trend') { await region.getByRole('img', { name: /每日工時趨勢/ }).waitFor(); await region.locator('tbody tr').filter({ hasText: today }).getByText('3.5 h', { exact: true }).waitFor(); }
+    if (mode === 'trend') {
+      await region.getByRole('img', { name: /每日工時趨勢/ }).waitFor();
+      if (Number(today.slice(-2)) > 20) await region.getByRole('navigation', { name: '分析明細分頁', exact: true }).getByRole('button', { name: '下一頁', exact: true }).click();
+      await region.locator('tbody tr').filter({ hasText: today }).getByText('3.5 h', { exact: true }).waitFor();
+    }
     await screenshots(mode);
     await owner.reload(); await region.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();
     await region.getByRole('button', { name: '返回工時分析', exact: true }).click();

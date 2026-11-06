@@ -9,7 +9,7 @@
 | 入口 | 回答的問題 | 呈現 |
 | --- | --- | --- |
 | 成員投入 | 誰在這段期間填報多少？參與幾個專案？ | 跨專案堆疊長條、實際時數／占比；點成員進日期／卡片工時明細 |
-| 專案投入 | 團隊時間分布在哪些專案？ | 專案投入比較長條、時數／占比、可聚焦成員；保留明細 |
+| 專案投入 | 團隊時間分布在哪些專案？ | 專案投入直條圖、時數／占比、可聚焦成員；保留明細 |
 | 時間趨勢 | 每日填報量如何變化？ | 每日折線與刻度、可選日期值、最高投入日，含零日期的明細 |
 
 工作空間側欄與專案側欄都可進入工時分析，分析跨目前工作空間中有權讀取的專案。`#/time-analysis`提供三個入口；`/members`、`/projects`、`/trend`各自可深連結、重新整理及返回列表。不是專案內的工時填報月曆；原填報入口保留。
@@ -73,8 +73,10 @@
 
 2026-11-06實用性review、圖表互動及seed規則見[工時分析review](time-analysis-review-2026-11-06.md)。總覽交叉聚合只在原已授權／未作廢／範圍內迴圈加總，不含原始工時說明；成員明細由同一租戶查詢join取得範圍內卡片資訊，只投影可讀卡片與明確展開說明。
 
-成員明細增加`MemberTimeDetailsTest`純聚合Unit與`TimeReportTest`分頁／展開／非法輸入／逐專案卡片資格驗證；`frontend/tools/member-time-details-check.js`以隔離API驗日期與卡片切換、兩層20筆分頁、完整總計、範圍及草稿保留、背景更新、文字安全、錯誤重試與1440／768／390畫面。既有分析瀏覽器測試同步更新成員入口與明細中撤權流程。一般總覽表格仍未分頁，本輪分頁限新增的成員工時明細。
+成員明細增加`MemberTimeDetailsTest`純聚合Unit與`TimeReportTest`分頁／展開／非法輸入／逐專案卡片資格驗證；`frontend/tools/member-time-details-check.js`以隔離API驗日期與卡片切換、兩層20筆分頁、完整總計、範圍及草稿保留、背景更新、文字安全、錯誤重試與1440／768／390畫面。既有分析瀏覽器測試同步更新成員入口與明細中撤權流程。2026-11-06視覺整理後，一般分析明細也每頁20筆（前端分頁），圖表與總計保留完整期間；成員明細及展開紀錄仍各自20筆。
 
 專用瀏覽器入口：`cd frontend && E2E_API_URL=<隔離API網址> npm run test:member-time`，與既有`test:time-analysis`分開執行（同占5175）。使用已安裝Chrome時可指定`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`；不得指向業務資料庫，產物在忽略的`frontend/artifacts/member-time-details/`。
 
 重構路徑：TimeEntryController → TimeReportRequest::toDto → Http/ApiExecution::timeReport（共用交易及Session驗證）→ WorkspaceTimeReport → TimeReportRepository → TimeEntry模型；結果仍經ApiResponse。TimeReportData不可變且不含操作者／工作區；Repository回Collection<TimeReportEntryData>，不承擔permission或回應envelope。新增相同公開ID跨租戶碰撞及單查詢／無歷史投影測試。
+
+視覺整理的入口示意、分析方式切換、直條／堆疊／響應式折線及驗證邊界見[工時分析畫面整理](time-analysis-ui-2026-11-06.md)。
