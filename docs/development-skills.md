@@ -47,3 +47,7 @@ root／backend AGENTS、backend CLAUDE／README及skills索引已改指向新入
 ## 後續重構授權（2026-11-06）
 
 使用者已恢復重構，前述「本輪只安裝／尚未授權」為安裝階段沿革。實作範圍、責任、相容邊界及驗證見[前後端架構重構紀錄](refactoring-2026-11-06.md)。上游vendor skills保持原樣，本地Architecture僅同步授權階段說明；不因此宣稱全庫已合規。
+
+## 效能工作搭配（2026-11-06）
+
+使用者另已選定Addy performance-optimization為主診斷、ECC benchmark補量測；專案入口與Laravel／Vue／SQLite適用邊界見[效能skills配置](performance-skills.md)。不取代本文件的分層／契約及Vue規範，上游副本分別固定版本；效能skill安裝本身不啟動新一輪重構。

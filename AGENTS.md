@@ -136,6 +136,15 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 使用者已指定 UI／UX 工作使用 `.agents/skills/ui-ux-pro-max/SKILL.md` 及 `.agents/skills/design-taste-frontend/SKILL.md`。後者對 TaskTracker 採 app-screen 流程；保留使用者產品決策與 Vue／Vuetify, 不因 house style 自動換色。審查要有實際登入畫面／操作證據, 區分可用性問題與審美偏好；只要求審查時先交報告, 不直接修改產品 UI。來源與使用邊界見 `.agents/skills/README.md`。
 
 
+## 效能分析 skills
+
+2026-11-06使用者已選「Addy主診斷＋ECC補量測」。效能review／優化／基準比較工作先讀[本地配置](docs/performance-skills.md)，使用專案內[Addy performance-optimization](skills/vendor/addyosmani-agent-skills/skills/performance-optimization/SKILL.md)為主，按量測面向搭配[ECC benchmark](skills/vendor/ecc-benchmark/SKILL.md)。入口為`.agents/skills/performance-optimization`與`.agents/skills/benchmark`；原文與必要references／LICENSE固定版本，來源見skills/performance-sources.json。
+
+- Addy負責量測→定位→單一假設實驗→重測與正確性；ECC補頁面／API／build基準與回歸比較，不機械重複跑兩套完整流程。
+- Laravel／Vue實作仍遵守原有skills及permission＋scope／Session／revision／requestId；範例React、Prisma、PostgreSQL、cache及SLO不直接移植，SQLite／Vue適配依本地配置。
+- 純審查不自動修產品；量測使用隔離人造資料，回報樣本、環境、冷暖cache及限制，不把memory SQLite單次耗時當HTTP p95，也不把lab結果當真人RUM。
+- 本輪只安裝／配置，不代表已修復效能review問題或新增重構範圍；不安裝gstack或整套ECC其他tools／hooks。
+
 ## 後端開發 skills
 
 2026-11-06：後端工作使用專案內 [ECC laravel-patterns](skills/vendor/laravel-patterns/SKILL.md) 與 [Laravel Architecture](skills/laravel-architecture/SKILL.md)，入口為`.agents/skills/laravel-patterns`及`.agents/skills/laravel-architecture`。後者補充分層／命名／回傳型別／Resource／交易／測試，與舊規範相悖時以ECC為準。既有產品契約、permission＋scope與資料安全限制不因範例改寫；適用配置見[開發skills配置](docs/development-skills.md)。

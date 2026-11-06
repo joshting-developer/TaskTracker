@@ -1,3 +1,12 @@
+## 2026-11-06 啟用Addy主診斷＋ECC補量測
+
+- 使用者已確認選這兩個skill；本輪安裝／配置專案入口，不開始業務重構或效能壓測。
+- 固定上一輪查證commit，下載原文與完整必要references／LICENSE，保存逐檔來源與雜湊；不執行installer、hooks或全域安裝。
+- Addy負責瓶頸診斷與實驗；ECC benchmark負責基準／前後比較；依Laravel／Vue／SQLite及既有隔離／permission／revision契約配置適用邊界。
+- 步驟：盤點既有來源→下載並校驗→專案symlink與規範→文件及相對連結驗證→本機commit。
+- 已完成：6份固定原文／必要references／MIT LICENSE，來源manifest及兩個相對symlink；Addy外層reference依上游階層保留，vendor未改寫。
+- 已完成：AGENTS與索引／配置／產品紀錄更新；6檔hash／Git blob／大小／LICENSE、兩入口frontmatter、跨目錄reference與文件相對連結驗證通過。純skills／文件，不跑業務測試或重啟服務。
+
 ## 2026-11-06 GitHub效能分析skill選型
 
 - 需求：找GitHub高星效能分析skills三個，核對星數與原始內容，評估Laravel／Vue／SQLite／Redis適配。

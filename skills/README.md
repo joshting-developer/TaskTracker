@@ -4,9 +4,16 @@
 
 這裡最初保存兩個上游 UI／UX skill 的完整副本, 供 Josh 選擇或討論如何融合成 TaskTracker 的 UI／UX 審查流程。初次收錄僅下載與介紹；同日使用者追加要求啟用兩者並審查專案。現在已建立 [.agents/skills 入口](../.agents/skills/README.md), 原文仍維持固定版本, 不另建融合 skill。審查與 UI 改版分開處理。
 
-## 效能分析skill選型（2026-11-06，尚未安裝）
+## 效能分析skills（2026-11-06，已啟用專案入口）
 
-已研究GitHub高星來源的ECC benchmark、gstack benchmark與Addy performance-optimization；建議Addy作主診斷、ECC補基準比較，尚未新增vendor副本或`.agents/skills`入口。詳見[選型報告](../docs/performance-skills-survey-2026-11-06.md)與[來源版本／星數](../docs/performance-skills-sources-2026-11-06.json)。
+使用者已確認「Addy主診斷＋ECC補量測」。
+
+| Skill | 專案入口 | 固定原文 |
+| --- | --- | --- |
+| Addy performance-optimization | [.agents/skills/performance-optimization](../.agents/skills/performance-optimization/SKILL.md) | [SKILL.md](vendor/addyosmani-agent-skills/skills/performance-optimization/SKILL.md)，commit 301b02b1 |
+| ECC benchmark | [.agents/skills/benchmark](../.agents/skills/benchmark/SKILL.md) | [SKILL.md](vendor/ecc-benchmark/SKILL.md)，commit b38be6a7 |
+
+共6份原文／必要references／MIT LICENSE，Addy保留上游跨目錄引用階層；相對symlink不另複製內容。適用規則見[本地配置](../docs/performance-skills.md)，逐檔來源與雜湊見[performance-sources.json](performance-sources.json)。安裝未修改業務程式、測試或Docker，沒有啟用gstack／全域工具；選型沿革與當時星數仍見[研究報告](../docs/performance-skills-survey-2026-11-06.md)。
 
 ## Laravel／Vue開發 skills（2026-11-06）
 

@@ -1,6 +1,8 @@
 # GitHub 效能分析 skills 選型
 
-調研日期：2026-11-06（Asia/Taipei）。本輪只研究，未安裝、啟用或執行候選skill。
+調研日期：2026-11-06（Asia/Taipei）。原調研階段只研究，未安裝或執行候選skill。
+
+同日後續：使用者已確認Addy主診斷＋ECC補量測，兩者已加入專案入口；[安裝及適用配置](performance-skills.md)記現況，本報告保留當時比較與建議，gstack未安裝。
 
 ## 建議
 
