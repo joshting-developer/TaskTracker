@@ -4,13 +4,17 @@ namespace App\Http;
 
 use App\Authorization\WorkspacePermissions;
 use App\Data\AuthenticatedAccountData;
+use App\Data\TimeReportData;
 use App\Domain\DomainError;
+use App\Repositories\RecordStore;
+use App\Repositories\TimeReportRepository;
 use App\Services\AccountService;
 use App\Services\AccountSettings;
 use App\Services\SmtpService;
 use App\Services\Todos;
 use App\Services\WorkspaceMemberships;
 use App\Services\WorkspaceService;
+use App\Services\WorkspaceTimeReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -26,9 +30,10 @@ class ApiExecution
      * @param  AccountService  $accounts  帳號與工作空間資格服務
      * @param  SmtpService  $smtp  SMTP驗證服務
      * @param  WorkspaceSession  $session  HTTP身分邊界
+     * @param  TimeReportRepository  $timeReports  有租戶範圍的工時查詢
      * @return void
      */
-    public function __construct(private AccountService $accounts, private SmtpService $smtp, private WorkspaceSession $session) {}
+    public function __construct(private AccountService $accounts, private SmtpService $smtp, private WorkspaceSession $session, private TimeReportRepository $timeReports) {}
 
     /**
      * 在同一交易處理帳號與Session異動。
@@ -99,12 +104,7 @@ class ApiExecution
      */
     public function execute(Request $request, string $operation, array $input): array
     {
-        return DB::transaction(function () use ($request, $operation, $input) {
-            $workspaceSession = $this->session->context($request);
-            $expectedWorkspace = $request->header('X-Workspace-ID');
-            if ($operation !== 'getWorkspace' && $expectedWorkspace !== null && $expectedWorkspace !== $workspaceSession['workspace']['id']) {
-                DomainError::fail('WORKSPACE_CHANGED', '工作空間已在其他分頁切換，請重新載入後操作');
-            }
+        return $this->inWorkspace($request, $operation, function ($workspaceSession) use ($operation, $input) {
             if (in_array($operation, AccountSettings::OPERATIONS, true)) {
                 return (new AccountSettings($workspaceSession))->execute($operation, $input);
             }
@@ -121,6 +121,43 @@ class ApiExecution
             }
 
             return (new WorkspaceService($workspaceSession))->execute($operation, $input);
+        });
+    }
+
+    /**
+     * 專用唯讀用例接收一次建立的DTO，不經任意payload派送。
+     *
+     * @param  Request  $request  HTTP身分及租戶標頭
+     * @param  TimeReportData  $filters  已驗證條件
+     * @return array 已授權的工時報表
+     */
+    public function timeReport(Request $request, TimeReportData $filters): array
+    {
+        return $this->inWorkspace($request, 'getTimeReport', function ($context) use ($filters) {
+            $store = (new RecordStore)->forWorkspace($context['workspace']['id']);
+
+            return (new WorkspaceTimeReport($store, $context, $this->timeReports))->get($filters);
+        });
+    }
+
+    /**
+     * 共用交易及Session／X-Workspace-ID驗證，寫入與專用查詢均不可略過。
+     *
+     * @param  Request  $request  HTTP身分及租戶標頭
+     * @param  string  $operation  API操作名稱
+     * @param  \Closure  $callback  接收可信資格的領域用例
+     * @return array 用例結果
+     */
+    private function inWorkspace(Request $request, string $operation, \Closure $callback): array
+    {
+        return DB::transaction(function () use ($request, $operation, $callback) {
+            $context = $this->session->context($request);
+            $expectedWorkspace = $request->header('X-Workspace-ID');
+            if ($operation !== 'getWorkspace' && $expectedWorkspace !== null && $expectedWorkspace !== $context['workspace']['id']) {
+                DomainError::fail('WORKSPACE_CHANGED', '工作空間已在其他分頁切換，請重新載入後操作');
+            }
+
+            return $callback($context);
         });
     }
 }

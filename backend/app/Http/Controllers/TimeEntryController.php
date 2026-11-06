@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\JsonOperationRequest;
-use App\Http\Resources\ApiResponse;
 use App\Http\ApiExecution;
+use App\Http\Requests\JsonOperationRequest;
+use App\Http\Requests\TimeReportRequest;
+use App\Http\Resources\ApiResponse;
 
 /**
  * 提供本人工時建立、修改、作廢及工作空間分析HTTP入口。
@@ -18,10 +19,9 @@ class TimeEntryController extends Controller
      * @param  ApiExecution  $execution  交易與Session重驗入口
      * @return ApiResponse 工作空間報表
      */
-    public function report(JsonOperationRequest $request, ApiExecution $execution): ApiResponse
+    public function report(TimeReportRequest $request, ApiExecution $execution): ApiResponse
     {
-        $input = $request->payload();
-        $result = $execution->execute($request, 'getTimeReport', $input);
+        $result = $execution->timeReport($request, $request->toDto());
 
         return new ApiResponse($result);
     }

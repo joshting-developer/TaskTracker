@@ -70,3 +70,5 @@ flowchart TD
 完整38項／796斷言、隔離真實瀏覽器回歸通過；本機備份副本逐欄比對69筆舊資料通過。實際升級／資料完整性與剩餘邊界見[資料設計驗收](database-design.md#本輪驗證)。上方34項驗證屬前階段分層紀錄，並非最新儲存架構的全部驗收。
 
 2026-11-06架構重構階段一：HTTP交易／Session協調移入`Http/ApiExecution`及`Http/WorkspaceSession`，AccountService接受可信User及工作區ID，註冊／登入回`AuthenticatedAccountData`，不接Request／Auth facade；RealtimeController經`Http/RealtimeSession`協調，ProjectChannelAccess獨立驗證私有頻道及permission。原Session blocking、CSRF、交易及回應契約不變。完整59項及新增非HTTP帳號測試通過；後續範圍見plans/main。
+
+2026-11-06階段二：工時分析增加專用TimeReportRequest、readonly TimeReportData／TimeReportEntryData及Eloquent TimeReportRepository，HTTP用例只傳DTO，Repository先按工作區／已授權專案／日期／成員查詢，不讀全歷史或整個卡片集合。WorkspaceTimeReport仍負責permission、聚合與輸出投影，ApiResponse保持原契約；現有非HTTP入口array僅相容轉DTO，不作為新功能預設。SQL群組聚合／分頁不在此次範圍。

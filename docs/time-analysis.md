@@ -65,14 +65,16 @@
 
 ## 目前限制
 
-這是本機版本，查詢沿用目前RecordStore批次讀取後彙整，尚未改成資料庫分頁／SQL聚合、匯出、計費或排程寄送。366日上限限制輸出日期數，不代表已針對大量歷史工時完成壓測。導覽回分析列表保留同一元件篩選；重新整理回預設本月，不提供儲存視圖。
+這是本機版本。2026-11-06重構後，TimeReportRepository以Eloquent在SQL先限定Session工作區、可讀專案、日期及成員，只取有效紀錄及必要欄位；一般總覽不讀說明或卡片名稱，明細按需取卡片名稱與展開說明，不再載入所有歷史工時與卡片。聚合及群組分頁仍在記憶體，尚未改成SQL聚合／SQL群組分頁、匯出、計費或排程寄送。366日上限不代表大量期間內紀錄的壓測。導覽回分析列表保留同一元件篩選；重新整理回預設本月，不提供儲存視圖。
 
 ## 驗證方式
 
 `TimeReportTest`使用隔離記憶體SQLite，驗證三組加總、Epic不重複、作廢／範圍排除、零日、交集、外租戶ID、偽造角色、manager升降、逐專案資格與366日邊界。`frontend/tools/time-analysis-check.js`使用隔離Laravel API及編譯版，驗證三入口／篩選／錯誤／權限撤回與1440、768、390尺寸；測試不使用本機業務資料。
 
-2026-11-06實用性review、圖表互動及seed規則見[工時分析review](time-analysis-review-2026-11-06.md)。總覽交叉聚合只在原已授權／未作廢／範圍內迴圈加總，不含原始工時說明；本輪成員明細另外讀取同工作空間卡片索引，僅投影可讀範圍的卡片與明確展開的說明。
+2026-11-06實用性review、圖表互動及seed規則見[工時分析review](time-analysis-review-2026-11-06.md)。總覽交叉聚合只在原已授權／未作廢／範圍內迴圈加總，不含原始工時說明；成員明細由同一租戶查詢join取得範圍內卡片資訊，只投影可讀卡片與明確展開說明。
 
 成員明細增加`MemberTimeDetailsTest`純聚合Unit與`TimeReportTest`分頁／展開／非法輸入／逐專案卡片資格驗證；`frontend/tools/member-time-details-check.js`以隔離API驗日期與卡片切換、兩層20筆分頁、完整總計、範圍及草稿保留、背景更新、文字安全、錯誤重試與1440／768／390畫面。既有分析瀏覽器測試同步更新成員入口與明細中撤權流程。一般總覽表格仍未分頁，本輪分頁限新增的成員工時明細。
 
 專用瀏覽器入口：`cd frontend && E2E_API_URL=<隔離API網址> npm run test:member-time`，與既有`test:time-analysis`分開執行（同占5175）。使用已安裝Chrome時可指定`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`；不得指向業務資料庫，產物在忽略的`frontend/artifacts/member-time-details/`。
+
+重構路徑：TimeEntryController → TimeReportRequest::toDto → Http/ApiExecution::timeReport（共用交易及Session驗證）→ WorkspaceTimeReport → TimeReportRepository → TimeEntry模型；結果仍經ApiResponse。TimeReportData不可變且不含操作者／工作區；Repository回Collection<TimeReportEntryData>，不承擔permission或回應envelope。新增相同公開ID跨租戶碰撞及單查詢／無歷史投影測試。

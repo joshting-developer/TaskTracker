@@ -4,9 +4,10 @@ namespace App\Services;
 
 use App\Authorization\ProjectAccess;
 use App\Authorization\WorkspacePermissions;
+use App\Data\TimeReportData;
 use App\Domain\DomainError;
-use App\Domain\Fields;
 use App\Repositories\RecordStore;
+use App\Repositories\TimeReportRepository;
 use DateTimeImmutable;
 
 /** 彙整工作空間內有權讀取的有效工時，不重複累計Epic彙總。 */
@@ -17,23 +18,24 @@ class WorkspaceTimeReport
      *
      * @param  RecordStore  $store  目前工作空間的儲存入口
      * @param  array  $workspaceSession  後端重新驗證的資格
+     * @param  TimeReportRepository  $reports  有租戶／期間範圍的資料查詢
      */
-    public function __construct(private RecordStore $store, private array $workspaceSession) {}
+    public function __construct(private RecordStore $store, private array $workspaceSession, private TimeReportRepository $reports) {}
 
     /**
      * 依工作日期與可選成員／專案範圍回傳統計，按需查單人成員明細。
      *
-     * @param  array  $input  起訖日與可選篩選ID
+     * @param  array|TimeReportData  $input  HTTP DTO或既有非HTTP條件
      * @return array 分鐘整數、成員／專案分布、含零日期序列及可選分頁明細
      */
-    public function get(array $input): array
+    public function get(array|TimeReportData $input): array
     {
+        WorkspacePermissions::authorize($this->workspaceSession, 'workspace.read');
         WorkspacePermissions::authorize($this->workspaceSession, 'workspace.timeReports.read');
-        [$start, $end] = $this->dateRange($input);
-        $detailGroup = $input['detailGroup'] ?? null;
-        if ($detailGroup !== null) {
-            Fields::choice($detailGroup, ['dates', 'issues'], '明細分組');
-        }
+        $filters = $input instanceof TimeReportData ? $input : TimeReportData::from($input);
+        $start = $filters->startDate;
+        $end = $filters->endDate;
+        $detailGroup = $filters->detailGroup;
         $access = new ProjectAccess($this->store, $this->workspaceSession);
         $projects = [];
         foreach ($this->store->all('projects') as $project) {
@@ -43,16 +45,13 @@ class WorkspaceTimeReport
             }
         }
         $members = array_column($this->store->all('members'), null, 'id');
-        $projectId = Fields::text($input['projectId'] ?? '', '專案', 100);
-        $userId = Fields::text($input['userId'] ?? '', '成員', 100);
+        $projectId = $filters->projectId;
+        $userId = $filters->userId;
         if ($projectId !== '' && ! isset($projects[$projectId])) {
             DomainError::fail('NOT_FOUND', '找不到可分析的專案');
         }
         if ($userId !== '' && ! isset($members[$userId])) {
             DomainError::fail('NOT_FOUND', '找不到可分析的成員');
-        }
-        if ($detailGroup !== null) {
-            Fields::text($userId, '成員', 100, true);
         }
         $detailEntries = [];
         $memberRows = [];
@@ -69,16 +68,9 @@ class WorkspaceTimeReport
         }
         $totalMinutes = 0;
         $entryCount = 0;
-        foreach ($this->store->all('timeEntries') as $entry) {
-            if (! empty($entry['voidedAt']) || ! isset($projects[$entry['projectId']])) {
-                continue;
-            }
-            if ($entry['workDate'] < $start || $entry['workDate'] > $end) {
-                continue;
-            }
-            if ($projectId !== '' && $entry['projectId'] !== $projectId || $userId !== '' && $entry['userId'] !== $userId) {
-                continue;
-            }
+        $entries = $this->reports->entries($this->workspaceSession['workspace']['id'], array_keys($projects), $filters);
+        foreach ($entries as $row) {
+            $entry = $row->entry();
             if ($detailGroup !== null) {
                 $detailEntries[] = $entry;
             }
@@ -165,41 +157,16 @@ class WorkspaceTimeReport
         ];
         if ($detailGroup !== null) {
             $result['details'] = (new MemberTimeDetails)->get(
-                $input,
+                $filters->detailInput(),
                 $detailEntries,
-                array_column($this->store->all('issues'), null, 'id'),
+                $entries->mapWithKeys(fn ($row) => [$row->issueId => [
+                    'id' => $row->issueId, 'projectId' => $row->projectId,
+                    'identifier' => $row->identifier, 'title' => $row->title,
+                ]])->all(),
                 $projects,
             );
         }
 
         return $result;
-    }
-
-    /**
-     * 驗證真實日曆日期、先後及366日範圍，限制日期序列長度。
-     *
-     * @param  array  $input  使用者指定日期
-     * @return array 含首尾的起訖日期
-     */
-    private function dateRange(array $input): array
-    {
-        $dates = [];
-        foreach (['startDate', 'endDate'] as $field) {
-            $value = Fields::text($input[$field] ?? '', '分析日期', 10, true);
-            if (! preg_match('/^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$/D', $value)) {
-                DomainError::fail('INVALID_INPUT', '請填寫有效的分析日期');
-            }
-            $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
-            if (! $date || $date->format('Y-m-d') !== $value) {
-                DomainError::fail('INVALID_INPUT', '請填寫有效的分析日期');
-            }
-            $dates[] = $value;
-        }
-        [$start, $end] = $dates;
-        if ($start > $end || (new DateTimeImmutable($start))->diff(new DateTimeImmutable($end))->days > 365) {
-            DomainError::fail('INVALID_INPUT', '起訖日期需依序且範圍最多366天');
-        }
-
-        return $dates;
     }
 }

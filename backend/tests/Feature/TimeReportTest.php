@@ -2,12 +2,19 @@
 
 namespace Tests\Feature;
 
+use App\Data\TimeReportData;
+use App\Domain\DomainError;
+use App\Models\Issue;
+use App\Models\Project;
+use App\Models\TimeEntry;
 use App\Models\User;
 use App\Repositories\RecordStore;
+use App\Repositories\TimeReportRepository;
 use App\Services\WorkspaceTimeReport;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
@@ -209,7 +216,7 @@ class TimeReportTest extends TestCase
             'workspace' => $owner['workspace'],
             'permissions' => ['workspace.read', 'workspace.timeReports.read'],
         ];
-        $limited = (new WorkspaceTimeReport((new RecordStore)->forWorkspace($owner['workspace']['id']), $limitedSession))->get($range);
+        $limited = (new WorkspaceTimeReport((new RecordStore)->forWorkspace($owner['workspace']['id']), $limitedSession, app(TimeReportRepository::class)))->get($range);
         $this->assertSame(155, $limited['summary']['totalMinutes'], '報表入口權限不跳過逐專案團隊工時資格');
         $this->assertSame([$first['id']], array_values(array_unique(array_column($limited['allocations'], 'projectId'))));
         $this->assertSame([$first['id']], array_column($limited['options']['projects'], 'id'));
@@ -227,25 +234,25 @@ class TimeReportTest extends TestCase
         $this->assertSame('工作說明 60', $expanded['rows'][0]['note']);
         $this->assertArrayNotHasKey('history', $expanded['rows'][0]);
         $this->assertArrayNotHasKey('userId', $expanded['rows'][0]);
-        $limitedDetails = (new WorkspaceTimeReport((new RecordStore)->forWorkspace($owner['workspace']['id']), $limitedSession))->get([
+        $limitedDetails = (new WorkspaceTimeReport((new RecordStore)->forWorkspace($owner['workspace']['id']), $limitedSession, app(TimeReportRepository::class)))->get([
             ...$range, 'userId' => $owner['user']['id'], 'detailGroup' => 'issues',
         ]);
         $this->assertSame([$first['id']], array_values(array_unique(array_column($limitedDetails['details']['rows'], 'projectId'))));
         $aggregateOnlySession = [...$limitedSession, 'permissions' => [
             ...$limitedSession['permissions'], 'project.readAny', 'timeEntry.readTeamAny',
         ]];
-        $aggregateOnly = new WorkspaceTimeReport((new RecordStore)->forWorkspace($owner['workspace']['id']), $aggregateOnlySession);
+        $aggregateOnly = new WorkspaceTimeReport((new RecordStore)->forWorkspace($owner['workspace']['id']), $aggregateOnlySession, app(TimeReportRepository::class));
         $this->assertSame(275, $aggregateOnly->get($range)['summary']['totalMinutes']);
         $visibleDetails = $aggregateOnly->get([...$range, 'userId' => $owner['user']['id'], 'detailGroup' => 'issues']);
         $this->assertSame(135, $visibleDetails['summary']['totalMinutes'], '明細卡片名稱仍需issue.read，不能只靠團隊工時權限');
         $this->assertSame([$first['id']], array_values(array_unique(array_column($visibleDetails['details']['rows'], 'projectId'))));
         foreach ([$bug['id'], $foreignIssue['id']] as $hiddenKey) {
             try {
-                (new WorkspaceTimeReport((new RecordStore)->forWorkspace($owner['workspace']['id']), $limitedSession))->get([
+                (new WorkspaceTimeReport((new RecordStore)->forWorkspace($owner['workspace']['id']), $limitedSession, app(TimeReportRepository::class)))->get([
                     ...$range, 'userId' => $owner['user']['id'], 'detailGroup' => 'issues', 'entryGroupKey' => $hiddenKey,
                 ]);
                 $this->fail('不可展開未授權的卡片工時');
-            } catch (\App\Domain\DomainError $error) {
+            } catch (DomainError $error) {
                 $this->assertSame('NOT_FOUND', $error->errorCode);
             }
         }
@@ -290,6 +297,7 @@ class TimeReportTest extends TestCase
         $this->signIn($member);
         $this->rpc('getTimeReport', $range)->assertStatus(403);
     }
+
     /** 跨日期與同卡大量紀錄均分頁，總計不因頁碼改變。 */
     public function test_member_details_pagination_and_input_validation(): void
     {
@@ -336,4 +344,45 @@ class TimeReportTest extends TestCase
         $this->assertSame(1, $empty['lastPage']);
     }
 
+    /** 相同公開ID跨租戶時仍只投影本工作區，不載入歷史與不需要的說明。 */
+    public function test_repository_scopes_colliding_public_ids_and_returns_only_requested_projection(): void
+    {
+        $today = CarbonImmutable::today('Asia/Taipei')->format('Y-m-d');
+        $fixtures = [];
+        foreach (['first' => 45, 'foreign' => 900] as $name => $minutes) {
+            $identity = $this->register('repository-'.$name.'@example.test');
+            $project = $this->rpc('createProject', ['name' => $name, 'code' => strtoupper($name)])->assertOk()->json('data');
+            $issue = $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => $name])->assertOk()->json('data');
+            $entry = $this->rpc('logTime', ['issueId' => $issue['id'], 'workDate' => $today, 'minutes' => $minutes, 'note' => $name.'私有說明'])->assertOk()->json('data');
+            $fixtures[$name] = compact('identity', 'project', 'issue', 'entry');
+        }
+        $first = $fixtures['first'];
+        $foreign = $fixtures['foreign'];
+        Project::where('public_id', $foreign['project']['id'])->update(['public_id' => $first['project']['id']]);
+        Issue::where('public_id', $foreign['issue']['id'])->update(['public_id' => $first['issue']['id']]);
+        TimeEntry::where('public_id', $foreign['entry']['id'])->update(['public_id' => $first['entry']['id']]);
+        $repository = app(TimeReportRepository::class);
+        $filters = TimeReportData::from(['startDate' => $today, 'endDate' => $today]);
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        try {
+            $rows = $repository->entries($first['identity']['workspace']['id'], [$first['project']['id']], $filters);
+            $this->assertCount(1, $rows);
+            $this->assertSame(45, $rows[0]->minutes);
+            $this->assertSame($first['identity']['user']['id'], $rows[0]->userId);
+            $this->assertSame('', $rows[0]->note);
+            $this->assertNull($rows[0]->title);
+            $this->assertCount(1, DB::getQueryLog(), '不逐列查詢關聯或歷史');
+        } finally {
+            DB::disableQueryLog();
+        }
+        $details = TimeReportData::from([
+            'startDate' => $today, 'endDate' => $today, 'userId' => $first['identity']['user']['id'],
+            'detailGroup' => 'issues', 'entryGroupKey' => $first['issue']['id'],
+        ]);
+        $expanded = $repository->entries($first['identity']['workspace']['id'], [$first['project']['id']], $details);
+        $this->assertSame('first私有說明', $expanded[0]->note);
+        $this->assertSame('first', $expanded[0]->title);
+        $this->assertCount(0, $repository->entries($first['identity']['workspace']['id'], [], $details));
+    }
 }

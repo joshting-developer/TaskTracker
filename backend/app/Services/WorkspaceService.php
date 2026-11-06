@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Authorization\WorkspaceOperationAccess;
 use App\Domain\DomainError;
 use App\Repositories\RecordStore;
+use App\Repositories\TimeReportRepository;
 use Database\Seeders\DemoSeeder;
 
 /**
@@ -42,7 +43,7 @@ class WorkspaceService
         }
         $this->authorization->authorize($operation, $input);
         if ($operation === 'getTimeReport') {
-            return (new WorkspaceTimeReport($this->store, $this->workspaceSession))->get($input);
+            return (new WorkspaceTimeReport($this->store, $this->workspaceSession, app(TimeReportRepository::class)))->get($input);
         }
         if ($operation === 'getWorkspace') {
             return (new WorkspaceQuery($this->store, $this->workspaceSession))->getWorkspace();
