@@ -10,7 +10,7 @@ import BoardList from './components/BoardList.vue';
 import BoardDialog from './components/BoardDialog.vue';
 import { includedIssues } from './domain/boards.js';
 import AuthGate from './components/AuthGate.vue';
-import TeamDialog from './components/TeamDialog.vue';
+import WorkspaceSettings from './components/WorkspaceSettings.vue';
 import AccountMenu from './components/AccountMenu.vue';
 import ProfileDialog from './components/ProfileDialog.vue';
 import TimeCalendar from './components/TimeCalendar.vue';
@@ -35,7 +35,8 @@ const todoTool = ref(null), conversionTool = ref(null), convertingTodo = ref(nul
 const todoUnread = computed(() => todoData.value.notifications.filter(item => !item.readAt).length);
 const convertibleProjects = computed(() => workspace.value.projects.filter(project => project.permissions?.includes('issue.write')));
 const switchingWorkspace = ref(false), workspaceInviteToken = ref(''), invitationTool = ref(null);
-const teamOpen = ref(false), teamTab = ref('members'), teamTool = ref(null);
+const teamTab = ref('general'), teamTool = ref(null);
+const canManageWorkspace = computed(() => workspace.value.meta.permissions?.includes('workspace.ownership'));
 const profileOpen = ref(false), profileTool = ref(null), accountMenu = ref(null);
 let settingsOpener;
 const section = ref('tasks');
@@ -172,7 +173,7 @@ async function refresh() {
     todoData.value = personal;
     if (convertingTodo.value && !personal.todos.some(item => item.id === convertingTodo.value.id && item.capabilities.convert)) { convertingTodo.value = null; notify('待辦資格已改變, 已關閉轉卡表單'); }
 
-  } catch (failure) { if (generation === refreshGeneration) { if (failure.code === 'UNAUTHENTICATED') { authenticated.value = false; todoData.value = { todos: [], notifications: [], members: [] }; convertingTodo.value = null; todoNotificationsOpen.value = false; teamOpen.value = false; profileOpen.value = false; creatingProject.value = false; editingProject.value = null; boardEditor.value = null; creatingIssue.value = false; selectedId.value = ''; detailPage.value = false; editingDetail.value = false; workspace.value = { projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} }; } else error.value = failure.message; } }
+  } catch (failure) { if (generation === refreshGeneration) { if (failure.code === 'UNAUTHENTICATED') { authenticated.value = false; todoData.value = { todos: [], notifications: [], members: [] }; convertingTodo.value = null; todoNotificationsOpen.value = false; profileOpen.value = false; creatingProject.value = false; editingProject.value = null; boardEditor.value = null; creatingIssue.value = false; selectedId.value = ''; detailPage.value = false; editingDetail.value = false; workspace.value = { projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} }; } else error.value = failure.message; } }
   finally { if (generation === refreshGeneration) loading.value = false; }
 }
 function notify(message) {
@@ -182,9 +183,13 @@ function notify(message) {
 }
 function projectHash(id, issueId = '', mode = view.value, selectedBoardId = boardId.value, fullPage = detailPage.value, targetSection = issueId ? 'tasks' : section.value) {
   const featurePath = targetSection !== 'tasks' ? `/${targetSection}` : mode === 'boards' ? '/boards' : mode === 'board' ? `/board${selectedBoardId === 'default' ? '' : `/${encodeURIComponent(selectedBoardId)}`}` : '';
-  return id ? `#/projects/${encodeURIComponent(id)}${featurePath}${issueId ? `/issues/${encodeURIComponent(issueId)}${fullPage ? '?detail=1' : ''}` : ''}` : landing.value === 'analysis' ? `#/time-analysis${analysisMode.value === 'index' ? '' : `/${analysisMode.value}`}` : landing.value === 'projects' ? '#/projects' : '#/';
+  return id ? `#/projects/${encodeURIComponent(id)}${featurePath}${issueId ? `/issues/${encodeURIComponent(issueId)}${fullPage ? '?detail=1' : ''}` : ''}` : landing.value === 'analysis' ? `#/time-analysis${analysisMode.value === 'index' ? '' : `/${analysisMode.value}`}` : landing.value === 'settings' ? workspaceSettingsHash(teamTab.value) : landing.value === 'projects' ? '#/projects' : '#/';
 }
+function workspaceSettingsHash(tab = 'general') { return `#/workspace/settings${tab === 'members' ? '/members' : ''}`; }
 function ensureSectionAccess() {
+  if (landing.value === 'settings' && !canManageWorkspace.value) {
+    history.replaceState(null, '', '#/'); readHash(true); notify('你沒有工作空間設定的存取權限');
+  }
   if (landing.value === 'analysis' && !canAnalyze.value) {
     history.replaceState(null, '', '#/'); readHash(true);
     notify('你沒有工時分析的存取權限');
@@ -208,11 +213,16 @@ function changeSection(value) {
     readHash(true);
   }
 }
-function openWorkspaceSettings(tab = 'general') { if (!workspace.value.meta.permissions?.includes('workspace.ownership')) return; settingsOpener = document.activeElement; teamTab.value = tab; teamOpen.value = true; sidebarOpen.value = false; }
+function openWorkspaceSettings(tab = 'general') {
+  if (!canManageWorkspace.value) return;
+  if (landing.value === 'settings' && teamTab.value === tab) { sidebarOpen.value = false; return; }
+  if (!canLeave()) return;
+  history.pushState(null, '', workspaceSettingsHash(tab));
+  readHash(true); sidebarOpen.value = false;
+}
 function openProfile() { settingsOpener = document.activeElement; profileOpen.value = true; }
 async function closeSettings(kind) {
   if (kind === 'profile') profileOpen.value = false;
-  else teamOpen.value = false;
   await nextTick();
   const box = settingsOpener?.getBoundingClientRect();
   const hiddenSidebar = innerWidth <= 700 && settingsOpener?.closest('.sidebar') && !sidebarOpen.value;
@@ -223,7 +233,7 @@ async function savedProfile() { await refresh(); await closeSettings('profile');
 async function logout() { if (!canLeave()) return; try { await api.logout(); setWorkspaceContext(''); ++refreshGeneration; authenticated.value = false; todoData.value = { todos: [], notifications: [], members: [] }; convertingTodo.value = null; todoNotificationsOpen.value = false; workspace.value = { projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} }; history.replaceState(null, '', '#/'); readHash(true); } catch (failure) { notify(failure.message); } }
 function resetWorkspaceUI() {
   selectedId.value = ''; creatingIssue.value = false; detailPage.value = false; editingDetail.value = false;
-  teamOpen.value = false; profileOpen.value = false; creatingProject.value = false; editingProject.value = null;
+  profileOpen.value = false; creatingProject.value = false; editingProject.value = null;
   boardEditor.value = null; convertingTodo.value = null; todoNotificationsOpen.value = false; issueReturn = null;
   todoData.value = { todos: [], notifications: [], members: [] };
   projectId.value = ''; section.value = 'tasks'; view.value = 'list'; boardId.value = 'default';
@@ -375,9 +385,11 @@ function readHash(skipGuard = false) {
   } catch { history.replaceState(null, '', '#/'); }
   const analysisRoute = path.match(/^#\/time-analysis(?:\/(members|projects|trend))?$/);
   const nextAnalysis = analysisRoute?.[1] || 'index';
-  const nextLanding = analysisRoute ? 'analysis' : path === '#/projects' || path === '#/projects/' ? 'projects' : 'home';
+  const settingsRoute = path.match(/^#\/workspace\/settings(?:\/(general|members))?$/);
+  const nextTeamTab = settingsRoute?.[1] || 'general';
+  const nextLanding = settingsRoute ? 'settings' : analysisRoute ? 'analysis' : path === '#/projects' || path === '#/projects/' ? 'projects' : 'home';
   const nextInvite = path === '#/invite' ? new URLSearchParams(query).get('token') || '' : '';
-  const landingChanged = landing.value !== nextLanding || analysisMode.value !== nextAnalysis || workspaceInviteToken.value !== nextInvite;
+  const landingChanged = landing.value !== nextLanding || (nextLanding === 'settings' && teamTab.value !== nextTeamTab) || analysisMode.value !== nextAnalysis || workspaceInviteToken.value !== nextInvite;
   const nextMode = route?.[2] || 'list';
   const retiredEpics = featureRoute?.[2] === 'epics';
   const nextSection = retiredEpics ? 'tasks' : featureRoute?.[2] || 'tasks';
@@ -390,7 +402,7 @@ function readHash(skipGuard = false) {
   if (projectChanged || modeChanged || boardChanged || retiredView) {
     section.value = 'tasks'; scope.value = 'all'; boardEditor.value = null; clearFilters();
   }
-  landing.value = nextLanding; analysisMode.value = nextAnalysis; workspaceInviteToken.value = nextInvite;
+  landing.value = nextLanding; teamTab.value = nextTeamTab; analysisMode.value = nextAnalysis; workspaceInviteToken.value = nextInvite;
   projectId.value = nextProject;
   view.value = nextMode; boardId.value = nextBoard;
   selectedId.value = nextIssue;
@@ -534,25 +546,26 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
           <button class="nav-item" :class="{ active: landing === 'projects' }" :aria-current="landing === 'projects' ? 'page' : undefined" aria-label="專案列表" @click="goProjects()"><Icon name="folder" :size="18" />專案列表<span class="nav-count">{{ projects.length }}</span></button>
         </nav>
       </template>
-      <nav v-if="workspace.meta.permissions?.includes('workspace.ownership')" aria-label="工作空間管理"><button class="nav-item" @click="openWorkspaceSettings()"><Icon name="settings" :size="18" />工作空間設定</button></nav>
+      <nav v-if="workspace.meta.permissions?.includes('workspace.ownership')" aria-label="工作空間管理"><button class="nav-item" :class="{ active: landing === 'settings' && !selectedProject }" :aria-current="landing === 'settings' && !selectedProject ? 'page' : undefined" @click="openWorkspaceSettings()"><Icon name="settings" :size="18" />工作空間設定</button></nav>
       <nav v-if="canAnalyze" aria-label="工作空間分析"><button class="nav-item" :class="{ active: landing === 'analysis' && !selectedProject }" :aria-current="landing === 'analysis' && !selectedProject ? 'page' : undefined" @click="goAnalysis()"><Icon name="clock" :size="18" />工時分析</button></nav>
     </aside>
 
     <main class="main">
-      <header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" aria-label="開啟導覽" :aria-expanded="sidebarOpen" @click="sidebarOpen = !sidebarOpen"><Icon name="menu" /></button><Icon name="folder" :size="17" /><button class="breadcrumb-home" @click="selectedProject ? goProjects() : goHome()">{{ selectedProject ? '專案' : '工作空間' }}</button><Icon name="chevron" :size="13" /><strong :class="{ 'has-mobile-context': selectedProject }"><span class="project-breadcrumb">{{ selectedProject?.code || (landing === 'analysis' ? '工時分析' : landing === 'projects' ? '專案列表' : '首頁') }}</span><span v-if="selectedProject" class="mobile-feature-context">{{ currentFeature }}</span></strong></div><div class="topbar-end"><button v-if="workspace.meta.permissions?.includes('todo.read')" class="button secondary todo-notification-toggle" :aria-label="`待辦通知${todoUnread ? `（${todoUnread} 則未讀）` : ''}`" @click="todoNotificationsOpen = true"><Icon name="bell" :size="17" /><span>待辦通知</span><b v-if="todoUnread">{{ todoUnread }}</b></button><button class="icon-button" aria-label="重新整理工作空間" :disabled="loading || Boolean(moving)" @click="refresh"><Icon name="refresh" :size="18" /></button><AccountMenu ref="accountMenu" :name="workspace.meta.actor" :email="workspace.members.find(member => member.id === currentUserId)?.email" :workspace-name="workspace.meta.workspace?.name" @profile="openProfile" @logout="logout" /></div></header>
+      <header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" aria-label="開啟導覽" :aria-expanded="sidebarOpen" @click="sidebarOpen = !sidebarOpen"><Icon name="menu" /></button><Icon name="folder" :size="17" /><button class="breadcrumb-home" @click="selectedProject ? goProjects() : goHome()">{{ selectedProject ? '專案' : '工作空間' }}</button><Icon name="chevron" :size="13" /><strong :class="{ 'has-mobile-context': selectedProject }"><span class="project-breadcrumb">{{ selectedProject?.code || (landing === 'settings' ? '工作空間設定' : landing === 'analysis' ? '工時分析' : landing === 'projects' ? '專案列表' : '首頁') }}</span><span v-if="selectedProject" class="mobile-feature-context">{{ currentFeature }}</span></strong></div><div class="topbar-end"><button v-if="workspace.meta.permissions?.includes('todo.read')" class="button secondary todo-notification-toggle" :aria-label="`待辦通知${todoUnread ? `（${todoUnread} 則未讀）` : ''}`" @click="todoNotificationsOpen = true"><Icon name="bell" :size="17" /><span>待辦通知</span><b v-if="todoUnread">{{ todoUnread }}</b></button><button class="icon-button" aria-label="重新整理工作空間" :disabled="loading || Boolean(moving)" @click="refresh"><Icon name="refresh" :size="18" /></button><AccountMenu ref="accountMenu" :name="workspace.meta.actor" :email="workspace.members.find(member => member.id === currentUserId)?.email" :workspace-name="workspace.meta.workspace?.name" @profile="openProfile" @logout="logout" /></div></header>
       <div class="workspace-content" :class="{ 'board-workspace': section === 'tasks' && view === 'board', 'data-workspace': selectedProject && section === 'tasks', 'detail-workspace': showIssuePage }">
         <button v-if="selectedProject && section !== 'tasks'" class="back-to-projects" @click="goProjects()"><Icon name="chevron" :size="14" />返回專案列表</button>
         <div v-if="showIssuePage && error" class="error-box workspace-error" role="alert">{{ error }}<button class="text-button" @click="refresh">重新載入</button></div>
         <IssueDetail v-if="showIssuePage" ref="detailTool" :key="selectedIssue.id" :issue="selectedIssue" :project="selectedProject" :issues="projectAllIssues" :members="projectMembers" :entries="workspace.timeEntries" :return-label="issueReturnLabel()" :busy="Boolean(moving)" :can-write="canWrite" :can-read-time="can('timeEntry.readOwn')" :can-log-time="can('timeEntry.writeOwn')" :user-id="currentUserId" @time-updated="toolUpdated" @state="state => moveIssue(selectedIssue, { state })" @close="closeIssue" @edit="canWrite && (editingDetail = true)" @open="issue => openIssue(issue, true)" @saved="savedIssue" @reload="refresh" />
+        <WorkspaceSettings v-if="!selectedProject && landing === 'settings' && canManageWorkspace" :key="workspace.meta.workspace?.id" ref="teamTool" :active-tab="teamTab" :members="workspace.members" :meta="workspace.meta" @navigate="openWorkspaceSettings" @saved="refresh" />
         <TimeAnalysis :key="workspace.meta.workspace?.id" v-if="!selectedProject && landing === 'analysis' && canAnalyze" :mode="analysisMode" :workspace-version="workspace" @navigate="goAnalysis" />
         <div v-if="!showIssuePage && (selectedProject || landing === 'projects')" class="page-heading"><div><h1>{{ title }}<span class="heading-dot">.</span></h1><p v-if="selectedProject && section !== 'tasks' && selectedProject.description">{{ selectedProject.description }}</p></div><div class="heading-actions"><button v-if="selectedProject && canCreateIssue && !(section === 'tasks' && view === 'boards')" class="button primary" :disabled="loading" @click="newIssue"><Icon name="plus" :size="18" />新增任務<span class="button-key">＋</span></button><button v-else-if="!selectedProject && workspace.meta.permissions?.includes('project.create')" class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div></div>
-        <div v-if="!selectedProject" :key="workspace.meta.workspace?.id" :class="landing === 'home' ? 'home-layout' : 'project-list-page'">
+        <div v-if="!selectedProject && ['home', 'projects'].includes(landing)" :key="workspace.meta.workspace?.id" :class="landing === 'home' ? 'home-layout' : 'project-list-page'">
         <h1 v-if="landing === 'home'" class="sr-only">首頁</h1>
         <div v-if="landing === 'home' && error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="refresh">重新載入</button></div>
         <ProjectHome v-if="landing === 'projects'" :projects="projects" :members="workspace.members" :can-create="workspace.meta.permissions?.includes('project.create')" :loading="loading" :error="error" :demo-loading="demoLoading" @create="creatingProject = true" @edit="editingProject = $event" @open="id => navigate('all', id)" @demo="loadDemo" @retry="refresh" />
         <TodoHome v-if="landing === 'home' && workspace.meta.permissions?.includes('todo.read')" ref="todoTool" :data="todoData" :user-id="currentUserId" :can-write="workspace.meta.permissions?.includes('todo.writeOwn')" :can-assign="workspace.meta.permissions?.includes('todo.assign')" :can-convert="Boolean(convertibleProjects.length)" :refresh="refresh" @convert="convertTodo" @open-issue="openTodoIssue" />
         </div>
-        <template v-else>
+        <template v-else-if="selectedProject">
 
         <BoardList v-show="!showIssuePage" v-if="section === 'tasks' && view === 'boards'" :boards="projectBoards" :issues="projectAllIssues" :can-manage="can('board.manage')" :loading="loading" @open="openBoard" @create="boardEditor = { board: null }" @edit="boardEditor = { board: $event }" />
         <section v-show="!showIssuePage" v-if="section === 'tasks' && view !== 'boards'" class="task-workspace" aria-label="任務工作區">
@@ -599,7 +612,7 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
     <BoardDialog v-if="boardEditor" ref="boardEditorTool" :project="selectedProject" :issues="projectAllIssues" :board="boardEditor.board" @close="boardEditor = null" @saved="boardSaved" @reload="refresh" />
     <IssuePanel v-if="convertingTodo" ref="conversionTool" :key="`convert:${convertingTodo.id}`" :todo="convertingTodo" :projects="convertibleProjects" :members="workspace.members" :issues="workspace.issues" :entries="workspace.timeEntries" @close="convertingTodo = null" @converted="convertedTodo" @reload="reloadConversion" @open="jumpFromConversion" />
     <TodoNotifications v-if="todoNotificationsOpen" :notifications="todoData.notifications" @close="todoNotificationsOpen = false" @open="openTodoNotification" />
-    <TeamDialog v-if="teamOpen" ref="teamTool" :initial-tab="teamTab" :members="workspace.members" :meta="workspace.meta" @close="closeSettings('team')" @saved="refresh" />
+
     <ProfileDialog v-if="profileOpen" ref="profileTool" @close="closeSettings('profile')" @saved="savedProfile" />
     <ProjectDialog v-if="creatingProject || editingProject" :project="editingProject" :members="editingProject ? workspace.members.filter(member => editingProject.memberIds?.includes(member.id)) : workspace.members.filter(member => workspace.meta.projectLeadIds?.includes(member.id))" :user-id="currentUserId" @close="creatingProject = false; editingProject = null" @created="createdProject" />
     <Transition name="toast"><div v-if="toast" class="toast-message" role="status"><span><Icon name="check" :size="16" /></span>{{ toast }}</div></Transition>

@@ -27,6 +27,11 @@ async function openTaskFilters(page) {
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
 }
 
+async function setStatusPickerOpen(page, open) {
+  const picker = page.locator('.status-filter details');
+  if (await picker.evaluate(element => element.open) !== open) await page.getByLabel('篩選狀態', { exact: true }).click();
+}
+
 async function checkSeedAccounts(browser, failures) {
   if (!process.env.E2E_SEED_PASSWORD) return;
   for (const role of ['owner', 'manager', 'maintainer', 'developer']) {
@@ -49,10 +54,10 @@ async function checkSeedAccounts(browser, failures) {
     if (role === 'owner') {
       await page.getByRole('button', { name: '工作空間設定', exact: true }).click();
       await page.getByRole('tab', { name: '成員與權限', exact: true }).click();
-      const team = page.getByRole('dialog', { name: 'f-ws · 成員', exact: true });
+      const team = page.getByRole('region', { name: '工作空間設定', exact: true });
       for (const account of ['owner', 'manager', 'maintainer', 'developer']) await team.getByText(`${account}@example.test`, { exact: true }).waitFor();
       assert.ok(await team.getByRole('combobox', { name: /^工作空間身份 / }).count() > 0);
-      await team.getByRole('button', { name: '關閉工作空間設定', exact: true }).click();
+      await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
     } else assert.equal(await page.getByRole('button', { name: '工作空間設定', exact: true }).count(), 0);
   await openProjectList(page);
     await page.getByRole('button', { name: '進入專案：first', exact: true }).click();
@@ -612,23 +617,23 @@ async function checkTaskFilters(page, projectUrl) {
   await page.reload(); await page.locator('tbody tr').first().waitFor();
   assert.equal(await page.locator('tbody tr').count(), total, '舊已完成位置回到全部任務');
   await openTaskFilters(page);
-  await page.getByLabel('篩選狀態', { exact: true }).click();
+  await setStatusPickerOpen(page, true);
   await page.getByLabel('篩選狀態 已關閉', { exact: true }).check();
   assert.ok(await page.locator('tbody tr').count() > 0, '列表可直接篩出 closed');
   for (const row of await page.locator('tbody tr').all()) assert.equal(await row.locator('.status-badge').innerText(), '已關閉');
   await page.getByLabel('篩選狀態 待規劃', { exact: true }).check();
   assert.ok(await page.locator('tbody tr').count() > 1, '可同時選取 open 與 closed');
   await page.getByRole('button', { name: '清除狀態', exact: true }).click();
-  await page.getByLabel('篩選狀態', { exact: true }).click();
+  await setStatusPickerOpen(page, false);
 
   assert.equal(await page.getByLabel('套用常用篩選', { exact: true }).count(), 0);
   assert.equal(await page.getByRole('button', { name: /儲存常用篩選|存為視圖/ }).count(), 0);
   assert.deepEqual(await page.getByLabel('篩選類型').locator('option').allTextContents(), ['所有類型', 'Epic', 'Task', 'Bug']);
   await page.getByLabel('篩選類型').selectOption('bug');
   await page.getByLabel('篩選 Epic').selectOption({ label: '會員系統上線' });
-  await page.getByLabel('篩選狀態', { exact: true }).click();
+  await setStatusPickerOpen(page, true);
   await page.getByLabel('篩選狀態 待規劃', { exact: true }).check();
-  await page.getByLabel('篩選狀態', { exact: true }).click();
+  await setStatusPickerOpen(page, false);
   assert.equal(await page.locator('tbody tr').count(), 1, '篩選仍採條件交集');
   await page.getByRole('button', { name: '任務篩選', exact: true }).click();
   assert.equal(await page.getByLabel('已套用篩選').getByRole('button').count(), 4);
@@ -800,7 +805,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.getByRole('button', { name: '建立邀請連結' }).click();
   await page.getByLabel('邀請連結', { exact: true }).waitFor();
   const inviteUrl = await page.getByLabel('邀請連結', { exact: true }).inputValue();
-  await page.getByRole('button', { name: '關閉工作空間設定' }).click();
+  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).click();
   const teammate = await browser.newPage({ viewport: { width: 1440, height: 1050 } });
@@ -1059,14 +1064,14 @@ try {
   assert.equal(await page.locator('tbody tr').count(), 1);
   await page.getByRole('button', { name: '清除搜尋' }).click();
   await openTaskFilters(page);
-  await page.getByLabel('篩選狀態', { exact: true }).click();
+  await setStatusPickerOpen(page, true);
   await page.getByLabel('篩選狀態 進行中', { exact: true }).check();
-  await page.getByLabel('篩選狀態', { exact: true }).click();
+  await setStatusPickerOpen(page, false);
   assert.equal(await page.locator('tbody tr').count(), 2);
   await openTaskFilters(page);
-  await page.getByLabel('篩選狀態', { exact: true }).click();
+  await setStatusPickerOpen(page, true);
   await page.getByRole('button', { name: '清除狀態', exact: true }).click();
-  await page.getByLabel('篩選狀態', { exact: true }).click();
+  await setStatusPickerOpen(page, false);
   await page.getByRole('button', { name: '任務看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await moveBoardCard(page, 'DEMO-3', 'closed');

@@ -54,8 +54,6 @@ dialog{border:0;padding:0;color:inherit}dialog::backdrop{background:#19162255;ba
 .auth-toggle { display: block; margin: 20px auto; }
 .auth-card .auth-hint { text-align: center; font-size: 10px; border-top: 1px solid #e5dfed; padding-top: 18px; }
 .auth-card .error-box { margin-top: 18px; }
-.team-dialog { border: 1px solid #e5dfee; border-radius: 14px; width: min(620px, calc(100% - 30px)); max-height: 88vh; padding: 28px; color: #494253; }
-.team-dialog::backdrop { background: #24203175; }
 .member-list { list-style: none; padding: 0; margin: 20px 0 28px; }
 .member-list li { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid #eeebf3; }
 .member-list strong { font-size: 13px; }
@@ -154,7 +152,6 @@ dialog{border:0;padding:0;color:inherit}dialog::backdrop{background:#19162255;ba
   .section-title { gap: 12px; flex-wrap: wrap; }
   .section-title h2 { font-size: 18px; }
   .section-title p { font-size: 11px; }
-  .team-dialog { padding: 20px; }
   .invite-form { flex-direction: column; align-items: stretch; }
   .time-report-grid { grid-template-columns: 1fr; gap: 16px; }
   .time-form-card form { display: block; }

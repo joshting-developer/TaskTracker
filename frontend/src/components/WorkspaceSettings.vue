@@ -1,12 +1,11 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, useId } from 'vue';
+import { computed, onMounted, ref, useId, watch } from 'vue';
 import { api } from '../api/index.js';
 import { onTabKeydown } from '../ui/tabs.js';
-import Icon from './Icon.vue';
-const props = defineProps({ members: Array, meta: Object, initialTab: { type: String, default: 'members' } });
-const emit = defineEmits(['close', 'saved']);
+const props = defineProps({ members: Array, meta: Object, activeTab: { type: String, default: 'general' } });
+const emit = defineEmits(['navigate', 'saved']);
 const roleLabels = { owner: 'Owner', manager: 'Manager', admin: 'Manager', user: '成員', member: '成員', maintainer: '成員', developer: '成員' };
-const dialog = ref(null), tab = ref(props.initialTab), data = ref(null), name = ref(''), loading = ref(true), busy = ref(false), error = ref(''), conflict = ref(false), success = ref('');
+const tab = ref(props.activeTab), data = ref(null), name = ref(''), loading = ref(true), busy = ref(false), error = ref(''), conflict = ref(false), success = ref('');
 const email = ref(''), link = ref(''), copied = ref(false);
 const id = useId();
 const permissions = computed(() => props.meta.permissions || []);
@@ -17,14 +16,12 @@ const visibleMembers = computed(() => permissions.value.includes('workspace.memb
 const roles = computed(() => (data.value?.roles || []).filter(role => !role.permissions.includes('workspace.ownership') && role.permissions.every(permission => permissions.value.includes(permission))));
 defineExpose({ dirty, saving: busy });
 let pending;
-function close() { if (!busy.value && (!dirty.value || window.confirm('還有未儲存的工作空間設定，確定要關閉嗎？'))) emit('close'); }
-function beforeUnload(event) { if (dirty.value) { event.preventDefault(); event.returnValue = ''; } }
 function switchTab(next) {
   if (next === tab.value) return;
   if (dirty.value && !window.confirm('切換設定分區會捨棄尚未儲存的內容，要繼續嗎？')) return;
   if (data.value) name.value = data.value.workspace.name;
   email.value = ''; pending = null;
-  tab.value = next; success.value = '';
+  emit('navigate', next);
 }
 async function load(confirm = false) {
   if (confirm && dirty.value && !window.confirm('重新載入會捨棄目前修改，要繼續嗎？')) return;
@@ -57,12 +54,16 @@ async function invite() {
   finally { busy.value = false; }
 }
 async function copy() { try { await navigator.clipboard.writeText(link.value); copied.value = true; } catch { error.value = '請選取下方連結並複製'; } }
-onMounted(() => { dialog.value.showModal(); load(); window.addEventListener('beforeunload', beforeUnload); });
-onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload));
+watch(() => props.activeTab, next => {
+  tab.value = next;
+  if (data.value) name.value = data.value.workspace.name;
+  email.value = ''; pending = null; success.value = '';
+});
+onMounted(load);
 </script>
 <template>
-  <dialog ref="dialog" class="team-dialog" aria-labelledby="team-heading" @cancel.prevent="close">
-    <header class="section-title"><h2 id="team-heading">{{ tab === 'general' ? '工作空間設定' : `${meta.workspace?.name} · 成員` }}</h2><button class="icon-button" aria-label="關閉工作空間設定" :disabled="busy" @click="close"><Icon name="close" /></button></header>
+  <section class="workspace-settings-page" aria-labelledby="workspace-settings-heading">
+    <header class="section-title"><h1 id="workspace-settings-heading">工作空間設定</h1><span class="workspace-name">{{ meta.workspace?.name }}</span></header>
     <div class="settings-tabs" role="tablist" aria-label="工作空間設定分區" @keydown="onTabKeydown"><button :id="`${id}-general`" role="tab" :aria-selected="tab === 'general'" :tabindex="tab === 'general' ? 0 : -1" :aria-controls="`${id}-general-panel`" :disabled="busy" @click="switchTab('general')">一般設定</button><button :id="`${id}-members`" role="tab" :aria-selected="tab === 'members'" :tabindex="tab === 'members' ? 0 : -1" :aria-controls="`${id}-members-panel`" :disabled="busy" @click="switchTab('members')">成員與權限</button></div>
     <p v-if="loading" role="status">正在載入工作空間設定…</p>
     <div v-if="error" class="error-box" role="alert">{{ error }}<button v-if="!busy" class="text-button" @click="load(true)">{{ conflict ? '載入最新設定' : '重試載入' }}</button></div>
@@ -76,12 +77,14 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload));
 
       <template v-if="permissions.includes('workspace.invite')"><h3>邀請成員</h3><form @submit.prevent="invite" class="invite-form"><label class="field">受邀者 Email<input v-model="email" type="email" required :disabled="busy || loading" /></label><button class="button primary" :disabled="busy || loading">{{ busy ? '建立中…' : '建立邀請連結' }}</button></form><div v-if="link" class="invite-result"><label class="field">邀請連結<input :value="link" readonly @focus="$event.target.select()" /></label><button class="button secondary" @click="copy">{{ copied ? '已複製' : '複製連結' }}</button></div></template>
     </section>
-  </dialog>
+  </section>
 </template>
 <style scoped>
-.team-dialog { width: min(720px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); padding: 24px; overflow-y: auto; color: #242936; }
+.workspace-settings-page { width: 100%; padding: 24px; color: #242936; }
+.workspace-settings-page > [role=tabpanel] { max-width: 960px; }
+.workspace-name { color: #5f6673; overflow-wrap: anywhere; }
 .section-title { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-h2 { font-size: 22px; } h3 { font-size: 18px; margin: 22px 0 12px; }
+h1 { font-size: 24px; margin: 0; } h3 { font-size: 18px; margin: 22px 0 12px; }
 .settings-tabs { display: flex; gap: 18px; margin: 18px 0 22px; border-bottom: 1px solid #daddE5; }
 .settings-tabs button { min-height: 44px; padding: 10px 4px; border-bottom: 2px solid transparent; font-size: 14px; }
 .settings-tabs button[aria-selected="true"] { color: #5844a0; border-bottom-color: #6653bd; }
@@ -94,5 +97,5 @@ h2 { font-size: 22px; } h3 { font-size: 18px; margin: 22px 0 12px; }
 .member-role, .icon-button { min-width: 44px; min-height: 44px; }
 .member-role { width: 130px; max-width: 100%; padding: 8px 10px; border: 1px solid #bfc6d2; border-radius: 6px; background: #fff; color: #424b5c; font-size: 14px; }
 .settings-success { color: #286b55; font-size: 14px; margin-bottom: 16px; }
-@media(max-width:700px) { .team-dialog { padding: 18px; }.member-list li > div { min-width: 140px; }.member-role { margin-left: auto; } }
+@media(max-width:700px) { .workspace-settings-page { padding: 18px 15px; }.member-list li > div { min-width: 140px; }.member-role { margin-left: auto; } }
 </style>

@@ -48,6 +48,18 @@ try {
   await picker.getByRole('button', { name: '重新載入', exact: true }).click();
   await picker.getByRole('button', { name: '選擇工作空間 第一工作區', exact: true }).click(); await picker.waitFor({ state: 'hidden' }); await first.getByText('A工作區速記', { exact: true }).first().waitFor();
   assert.equal(await first.getByRole('button', { name: '工作空間設定', exact: true }).count(), 1);
+  await first.getByRole('button', { name: '工作空間設定', exact: true }).click();
+  const settings = first.getByRole('region', { name: '工作空間設定', exact: true });
+  await settings.getByLabel('工作空間名稱', { exact: true }).fill('工作區未送出設定');
+  await openPicker(); first.once('dialog', d => d.dismiss());
+  await picker.getByRole('button', { name: '選擇工作空間 第二工作區', exact: true }).click();
+  assert.equal(await settings.getByLabel('工作空間名稱', { exact: true }).inputValue(), '工作區未送出設定');
+  assert.equal(await first.evaluate(() => location.hash), '#/workspace/settings');
+  first.once('dialog', d => d.accept()); await picker.getByRole('button', { name: '選擇工作空間 第二工作區', exact: true }).click();
+  await picker.waitFor({ state: 'hidden' }); await first.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
+  assert.equal(await settings.count(), 0, '切空間清除舊設定頁及草稿');
+  await openPicker(); await picker.getByRole('button', { name: '選擇工作空間 第一工作區', exact: true }).click();
+  await picker.waitFor({ state: 'hidden' }); await first.getByText('A工作區速記', { exact: true }).first().waitFor();
   const stale = await context.newPage(); stale.setDefaultTimeout(10000); await stale.goto('http://127.0.0.1:5175'); await stale.getByText('A工作區速記', { exact: true }).first().waitFor();
   await first.getByLabel('快速新增待辦', { exact: true }).fill('A未送出草稿'); await openPicker();
   first.once('dialog', d => d.dismiss()); await picker.getByRole('button', { name: '選擇工作空間 第二工作區', exact: true }).click(); assert.equal(await picker.isVisible(), true); assert.equal(await first.getByLabel('快速新增待辦', { exact: true }).inputValue(), 'A未送出草稿');
