@@ -15,7 +15,7 @@ docs/               產品決策與設計紀錄
 
 首頁 `#/` 目前只顯示小待辦，保留空間供未來個人小工具；專案搜尋、建立與進入改在獨立的「專案列表」`#/projects`。品牌回首頁，專案麵包屑返回列表，小工具配置功能尚未實作。
 
-Owner／Manager可從側欄「工時分析」選擇成員投入、專案投入或時間趨勢；提供期間、專案、成員篩選，預設本月。權限由後端permission與專案scope判斷，Epic與子卡各筆工時不重複加總。詳見[工時分析](docs/time-analysis.md)。
+Owner／Manager可從側欄「工時分析」選擇成員投入、專案投入或時間趨勢；提供期間、專案、成員篩選，預設本月。權限由後端permission與專案scope判斷，Epic與子卡各筆工時不重複加總。成員可看跨專案堆疊長條，專案看投入比較，趨勢有時數刻度及每日數值；圖表可聚焦成員／專案。詳見[工時分析](docs/time-analysis.md)與[實用性review](docs/time-analysis-review-2026-11-06.md)。
 
 介面文案以標題、操作、資料與必要狀態為主，已移除標語、鼓勵語及長篇功能教學；操作手冊待後續指示。盤點見[介面文案精簡](docs/ui-copy-review-2026-11-06.md)。
 
@@ -118,7 +118,7 @@ docker compose exec backend php artisan tasktracker:seed-demo --reset
 
 新建／重設時每個專案有 1 個 Epic、6 張一般卡片, 包含父子任務、雙向關聯、不同狀態／優先級、留言及按不同帳號填報的工時。Epic 指派 manager、父 Task 指派 maintainer；first 執行卡指派 developer, second 執行卡指派 maintainer。舊 Seed 重跑會非破壞地加入四帳號, **保留 Jack 與既有卡片、指派和工時**；所以既有資料的「我的任務」可能仍是空的, 可自行指派試用。v2 再重跑保留修改及帳密；明確 --reset 才重建此 seed 空間與四帳號密碼, 不修改其他空間。Email／ID 被外部帳號占用時拒絕覆蓋
 
-Seed 只允許 local／testing。Laravel 的 `php artisan db:seed` 也呼叫相同非重設流程。目前權限矩陣及限制見[Project ACL 契約](docs/project-acl.md)；[四帳號舊紀錄](docs/產品討論紀錄.md#四帳號權限試用-seed2026-10-22)保留沿革
+Seed 只允許 local／testing。Laravel 的 `php artisan db:seed` 透過 DatabaseSeeder 呼叫 DemoSeeder，同樣採非重設流程；也可用`php artisan db:seed --class=DemoSeeder`。所有示範邏輯集中`backend/database/seeders/DemoSeeder.php`，入口只允許local／testing，其他環境即使`--force`仍拒絕。目前權限矩陣及限制見[Project ACL 契約](docs/project-acl.md)；[四帳號舊紀錄](docs/產品討論紀錄.md#四帳號權限試用-seed2026-10-22)保留沿革
 
 ## 帳號與工作空間設定
 
@@ -264,3 +264,5 @@ Markdown 專用檢查：在 `frontend/` 執行 `E2E_API_URL=http://127.0.0.1:130
 ## 開發 skills
 
 Laravel使用ECC `laravel-patterns`與本地`laravel-architecture`；Vue使用`vue-best-practices`，UI／UX仍搭配原有兩份skills。入口集中於`.agents/skills/`，僅專案內生效。舊後端規範skill已移除；2026-11-06依使用者指示先配置規範，暫緩重構。來源與具體約束見[開發skills配置](docs/development-skills.md)。
+
+工時分析示範：執行`docker compose exec backend php artisan tasktracker:seed-demo`會在既有f-ws FIRST／SECOND補最近28天的四帳號工時，不用`--reset`；月內重跑不重複，跨月工作日去重，原密碼／卡片／工時保留。登入Owner或Manager → 工時分析 → 選分析 →「近28天」可比較完整差異，本月範圍也有資料。沒有FIRST／SECOND時跳過，不重建被刪專案。

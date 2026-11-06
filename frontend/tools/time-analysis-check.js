@@ -54,6 +54,8 @@ try {
     await region.getByRole('button', { name: new RegExp(`^${title}`) }).click();
     await region.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();
     assert.ok(owner.url().endsWith(`/time-analysis/${mode}`));
+    if (mode !== 'trend') assert.equal(await region.locator('.distribution .chart-row').count(), 2);
+    if (mode === 'members') assert.equal(await region.getByLabel('專案圖例', { exact: true }).locator('li').count(), 2);
     if (mode === 'members') { await region.locator('tbody tr').filter({ hasText: '分析負責人' }).getByText('3 h', { exact: true }).waitFor(); await region.locator('tbody tr').filter({ hasText: '協作成員' }).getByText('0.5 h', { exact: true }).waitFor(); }
     if (mode === 'projects') { await region.locator('tbody tr').filter({ hasText: '會員服務' }).getByText('2 h', { exact: true }).waitFor(); await region.locator('tbody tr').filter({ hasText: '營運維護' }).getByText('1.5 h', { exact: true }).waitFor(); }
     if (mode === 'trend') { await region.getByRole('img', { name: /每日工時趨勢/ }).waitFor(); await region.locator('tbody tr').filter({ hasText: today }).getByText('3.5 h', { exact: true }).waitFor(); }
@@ -61,6 +63,15 @@ try {
     await owner.reload(); await region.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();
     await region.getByRole('button', { name: '返回工時分析', exact: true }).click();
   }
+  await region.getByRole('button', { name: /^成員投入/ }).click();
+  await region.locator('.distribution .chart-row').first().waitFor();
+  await region.getByRole('button', { name: '分析負責人', exact: true }).first().click();
+  await region.getByRole('heading', { name: '專案投入', exact: true }).waitFor();
+  await region.locator('.analysis-totals').getByText('3 h', { exact: true }).waitFor();
+  assert.equal(await region.getByLabel('分析成員').inputValue(), identity.user.id);
+  await region.getByLabel('分析成員').selectOption(''); await region.getByRole('button', { name: '套用範圍', exact: true }).click();
+  await region.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();
+  await region.getByRole('button', { name: '返回工時分析', exact: true }).click();
   console.log('PASS: 三個分析入口／深連結／重新整理，Epic及子卡各計一次，成員／專案／日期加總一致，三尺寸');
   await region.getByRole('button', { name: /^成員投入/ }).click(); await region.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();
   await region.getByLabel('分析專案').selectOption(first.id);

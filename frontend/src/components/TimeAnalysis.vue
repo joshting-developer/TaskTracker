@@ -1,8 +1,10 @@
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { dateInTaipei, hours } from '../domain/model.js';
 import Icon from './Icon.vue';
+import TimeDistributionChart from './TimeDistributionChart.vue';
+import TimeTrendChart from './TimeTrendChart.vue';
 const props = defineProps({ mode: { type: String, default: 'index' }, workspaceVersion: Object });
 const emit = defineEmits(['navigate']);
 const analyses = [
@@ -12,13 +14,11 @@ const analyses = [
 ];
 const selected = computed(() => analyses.find(item => item.id === props.mode));
 const today = dateInTaipei();
-const startDate = ref(`${today.slice(0, 7)}-01`), endDate = ref(today), projectId = ref(''), userId = ref('');
-const report = ref(null), options = ref({ members: [], projects: [] }), loading = ref(false), error = ref('');
+const startDate = shallowRef(`${today.slice(0, 7)}-01`), endDate = shallowRef(today), projectId = shallowRef(''), userId = shallowRef('');
+const report = shallowRef(null), options = shallowRef({ members: [], projects: [] }), loading = shallowRef(false), error = shallowRef('');
 let generation = 0, applied = null;
 const rows = computed(() => report.value?.[props.mode] || []);
 const total = computed(() => report.value?.summary.totalMinutes || 0);
-const maxDay = computed(() => Math.max(1, ...(report.value?.days || []).map(day => day.minutes)));
-const points = computed(() => (report.value?.days || []).map((day, index, days) => `${days.length === 1 ? 450 : 20 + index / (days.length - 1) * 860},${180 - day.minutes / maxDay.value * 150}`).join(' '));
 const pendingFilters = computed(() => report.value && [startDate.value, endDate.value, projectId.value, userId.value].join('|') !== [report.value.range.startDate, report.value.range.endDate, report.value.range.projectId, report.value.range.userId].join('|'));
 const share = minutes => total.value ? `${(minutes / total.value * 100).toFixed(1)}%` : '0%';
 async function load(useDraft = true) {
@@ -33,6 +33,24 @@ async function load(useDraft = true) {
     applied = { startDate: result.range.startDate, endDate: result.range.endDate, projectId: result.range.projectId, userId: result.range.userId };
   } catch (failure) { if (current === generation) { error.value = failure.message; if (['FORBIDDEN', 'UNAUTHENTICATED'].includes(failure.code)) options.value = { members: [], projects: [] }; } }
   finally { if (current === generation) loading.value = false; }
+}
+async function drill(id, selectedProjectId = '') {
+  if (!report.value || loading.value) return;
+  startDate.value = report.value.range.startDate; endDate.value = report.value.range.endDate;
+  if (props.mode === 'members') {
+    userId.value = id; projectId.value = selectedProjectId || report.value.range.projectId;
+  } else {
+    projectId.value = id; userId.value = report.value.range.userId;
+  }
+  await load();
+  if (report.value) emit('navigate', props.mode === 'members' ? 'projects' : 'members');
+}
+function preset(recent = false) {
+  const date = new Date(`${today}T12:00:00Z`);
+  if (recent) date.setUTCDate(date.getUTCDate() - 27);
+  startDate.value = recent ? date.toISOString().slice(0, 10) : `${today.slice(0, 7)}-01`;
+  endDate.value = today;
+  load();
 }
 watch(() => [props.mode, props.workspaceVersion], () => {
   if (selected.value) load(false);
@@ -51,6 +69,7 @@ onBeforeUnmount(() => { generation++; });
     <template v-else>
       <button class="text-button analysis-back" @click="emit('navigate', 'index')"><Icon name="chevron" :size="16" />返回工時分析</button>
       <header class="analysis-heading"><h1>{{ selected.title }}</h1></header>
+      <div class="analysis-presets"><button class="button secondary" :disabled="loading" @click="preset()">本月</button><button class="button secondary" :disabled="loading" @click="preset(true)">近 28 天</button></div>
       <form class="analysis-filters" @submit.prevent="load">
         <label class="field">開始日期<input v-model="startDate" aria-label="分析開始日期" type="date" min="1000-01-01" max="9999-12-31" required /></label>
         <label class="field">結束日期<input v-model="endDate" aria-label="分析結束日期" type="date" :min="startDate" max="9999-12-31" required /></label>
@@ -67,8 +86,9 @@ onBeforeUnmount(() => { generation++; });
         <dl class="analysis-totals"><div><dt>實際投入</dt><dd>{{ hours(total) }}</dd></div><div><dt>工時紀錄</dt><dd>{{ report.summary.entryCount }} 筆</dd></div><div><dt>有填報的日期</dt><dd>{{ report.summary.activeDays }} 天</dd></div></dl>
         <p v-if="!report.summary.entryCount" class="analysis-empty" role="status">尚無符合條件的工時紀錄</p>
         <template v-else>
-          <div v-if="mode === 'trend'" class="trend-chart"><h2>每日實際投入</h2><p class="trend-limit">{{ hours(maxDay) }}</p><svg viewBox="0 0 900 190" preserveAspectRatio="none" role="img" :aria-label="`${report.range.startDate}至${report.range.endDate}每日工時趨勢，最高${hours(maxDay)}，詳細數值見下表`"><line x1="20" y1="180" x2="880" y2="180" stroke="currentColor" opacity=".25" /><polyline v-if="report.days.length > 1" :points="points" fill="none" stroke="var(--accent)" stroke-width="3" vector-effect="non-scaling-stroke" /><circle v-else cx="450" :cy="180 - report.days[0].minutes / maxDay * 150" r="5" fill="var(--accent)" /></svg><div class="trend-labels"><span>{{ report.range.startDate }}</span><span>{{ report.range.endDate }}</span></div></div>
-          <div class="analysis-table-scroll" tabindex="0" role="region" aria-label="工時明細，可左右捲動"><table class="analysis-table"><caption>{{ mode === 'trend' ? '每日工時明細（含未填報日期）' : `${selected.title}明細` }}</caption><thead><tr><th scope="col">{{ mode === 'members' ? '成員' : mode === 'projects' ? '專案' : '工作日期' }}</th><th scope="col">實際投入</th><th scope="col">紀錄數</th><th v-if="mode !== 'trend'" scope="col">{{ mode === 'members' ? '參與專案' : '投入成員' }}</th><th v-if="mode !== 'trend'" scope="col">投入占比</th></tr></thead><tbody><tr v-for="row in mode === 'trend' ? report.days : rows" :key="row.id || row.date"><th scope="row">{{ row.name || row.date }}<span v-if="row.code" class="analysis-code">{{ row.code }}</span></th><td>{{ hours(row.minutes) }}</td><td>{{ row.entryCount }}</td><td v-if="mode !== 'trend'">{{ mode === 'members' ? row.projectCount : row.memberCount }}</td><td v-if="mode !== 'trend'" class="analysis-share"><span>{{ share(row.minutes) }}</span><span class="analysis-bar"><i :style="{ width: `${total ? row.minutes / total * 100 : 0}%` }"></i></span></td></tr></tbody><tfoot><tr><th scope="row">總計</th><td>{{ hours(total) }}</td><td>{{ report.summary.entryCount }}</td><td v-if="mode !== 'trend'"></td><td v-if="mode !== 'trend'">100%</td></tr></tfoot></table></div>
+          <TimeTrendChart v-if="mode === 'trend'" :days="report.days" />
+          <TimeDistributionChart v-else :mode="mode" :rows="rows" :allocations="report.allocations || []" :total="total" @select="drill" />
+          <div class="analysis-table-scroll" tabindex="0" role="region" aria-label="工時明細，可左右捲動"><table class="analysis-table"><caption>{{ mode === 'trend' ? '每日工時明細（含未填報日期）' : `${selected.title}明細` }}</caption><thead><tr><th scope="col">{{ mode === 'members' ? '成員' : mode === 'projects' ? '專案' : '工作日期' }}</th><th scope="col">實際投入</th><th scope="col">紀錄數</th><th v-if="mode !== 'trend'" scope="col">{{ mode === 'members' ? '參與專案' : '投入成員' }}</th><th v-if="mode !== 'trend'" scope="col">投入占比</th></tr></thead><tbody><tr v-for="row in mode === 'trend' ? report.days : rows" :key="row.id || row.date"><th scope="row"><button v-if="mode !== 'trend'" class="text-button" @click="drill(row.id)">{{ row.name }}</button><template v-else>{{ row.date }}</template><span v-if="row.code" class="analysis-code">{{ row.code }}</span></th><td>{{ hours(row.minutes) }}</td><td>{{ row.entryCount }}</td><td v-if="mode !== 'trend'">{{ mode === 'members' ? row.projectCount : row.memberCount }}</td><td v-if="mode !== 'trend'" class="analysis-share"><span>{{ share(row.minutes) }}</span><span class="analysis-bar"><i :style="{ width: `${total ? row.minutes / total * 100 : 0}%` }"></i></span></td></tr></tbody><tfoot><tr><th scope="row">總計</th><td>{{ hours(total) }}</td><td>{{ report.summary.entryCount }}</td><td v-if="mode !== 'trend'"></td><td v-if="mode !== 'trend'">100%</td></tr></tfoot></table></div>
         </template>
 
       </template>
@@ -86,6 +106,7 @@ onBeforeUnmount(() => { generation++; });
 .analysis-choice strong { display: block; font-size: 20px; margin-bottom: 0; }
 .analysis-choice svg { flex-shrink: 0; align-self: center; }
 .analysis-back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-bottom: 12px; }
+.analysis-presets { display: flex; gap: 8px; margin-bottom: 16px; }
 .analysis-back svg { transform: rotate(180deg); }
 .analysis-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; margin-bottom: 24px; }
 .analysis-filters .field { flex: 1 1 160px; margin: 0; font-size: 14px; }
@@ -109,10 +130,6 @@ onBeforeUnmount(() => { generation++; });
 .analysis-bar i { display: block; height: 100%; background: var(--accent); }
 .analysis-empty { padding: 32px 0; font-size: 16px; line-height: 1.7; }
 .analysis-pending { color: #805a13; font-size: 14px; }
-.trend-chart { margin-bottom: 24px; }
-.trend-chart h2 { font-size: 18px; }
-.trend-chart svg { width: 100%; height: 200px; display: block; color: var(--text-secondary, #5f6673); }
-.trend-limit, .trend-labels { font-size: 13px; color: var(--text-secondary, #5f6673); }.trend-limit { margin: 12px 0 0; }.trend-labels { display: flex; justify-content: space-between; gap: 12px; }
 @media(max-width:900px) { .analysis-index { grid-template-columns: 1fr; }.analysis-choice { min-height: 110px; padding: 22px; } }
 @media(max-width:600px) { .analysis-heading { margin-bottom: 24px; }
 .analysis-heading h1 { font-size: 24px; }.analysis-totals { gap: 24px; }.analysis-totals dd { font-size: 22px; }.analysis-filters .field { flex-basis: calc(50% - 14px); min-width: 0; }.analysis-filters button { width: 100%; }.analysis-table th, .analysis-table td { padding: 14px 8px; }.analysis-table { min-width: 480px; } }

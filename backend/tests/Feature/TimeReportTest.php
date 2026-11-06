@@ -177,6 +177,15 @@ class TimeReportTest extends TestCase
         $this->assertSame([255, 0, 20], array_column($report['days'], 'minutes'));
         $this->assertSame([255, 20], array_column($report['members'], 'minutes'));
         $this->assertSame([155, 120], array_column($report['projects'], 'minutes'));
+        $this->assertSame(275, array_sum(array_column($report['allocations'], 'minutes')));
+        $this->assertCount(3, $report['allocations']);
+        foreach ($report['allocations'] as $allocation) {
+            $this->assertNotSame($foreign['id'], $allocation['projectId']);
+            $this->assertArrayNotHasKey('note', $allocation);
+        }
+        foreach ($report['members'] as $row) {
+            $this->assertSame($row['minutes'], array_sum(array_column(array_filter($report['allocations'], fn ($item) => $item['userId'] === $row['id']), 'minutes')));
+        }
         $this->assertSame($report['summary']['totalMinutes'], array_sum(array_column($report['members'], 'minutes')));
         $this->assertNotContains($foreign['id'], array_column($report['options']['projects'], 'id'));
         $this->assertNotContains($other['user']['id'], array_column($report['options']['members'], 'id'));
@@ -201,6 +210,7 @@ class TimeReportTest extends TestCase
         ];
         $limited = (new WorkspaceTimeReport((new RecordStore)->forWorkspace($owner['workspace']['id']), $limitedSession))->get($range);
         $this->assertSame(155, $limited['summary']['totalMinutes'], '報表入口權限不跳過逐專案團隊工時資格');
+        $this->assertSame([$first['id']], array_values(array_unique(array_column($limited['allocations'], 'projectId'))));
         $this->assertSame([$first['id']], array_column($limited['options']['projects'], 'id'));
         $this->rpc('getTimeReport', [
             'startDate' => '2024-01-01',

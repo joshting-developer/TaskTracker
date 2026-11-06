@@ -8,9 +8,9 @@
 
 | 入口 | 回答的問題 | 呈現 |
 | --- | --- | --- |
-| 成員投入 | 誰在這段期間填報多少？參與幾個專案？ | 成員、實際時數、紀錄數、參與專案數、占比長條 |
-| 專案投入 | 團隊時間分布在哪些專案？ | 專案、實際時數、紀錄數、投入成員數、占比長條 |
-| 時間趨勢 | 每日填報量如何變化？ | 每日折線、含零日期的明細與總計 |
+| 成員投入 | 誰在這段期間填報多少？參與幾個專案？ | 跨專案堆疊長條、實際時數／占比、可聚焦查專案；保留明細 |
+| 專案投入 | 團隊時間分布在哪些專案？ | 專案投入比較長條、時數／占比、可聚焦成員；保留明細 |
+| 時間趨勢 | 每日填報量如何變化？ | 每日折線與刻度、可選日期值、最高投入日，含零日期的明細 |
 
 工作空間側欄與專案側欄都可進入工時分析，分析跨目前工作空間中有權讀取的專案。`#/time-analysis`提供三個入口；`/members`、`/projects`、`/trend`各自可深連結、重新整理及返回列表。不是專案內的工時填報月曆；原填報入口保留。
 
@@ -32,7 +32,7 @@
 {"startDate":"2026-11-01","endDate":"2026-11-06","projectId":"","userId":""}
 ```
 
-輸出固定包含`range`、`summary`（`totalMinutes`、`entryCount`、`activeDays`）、`members`、`projects`、`days`、`options`。空資料集合保持陣列，日期序列仍補零。只回分析所需名稱、ID及加總，不回留言、說明、信箱、憑證或原始工時內容。
+輸出固定包含`range`、`summary`（`totalMinutes`、`entryCount`、`activeDays`）、`members`、`projects`、`days`、`allocations`（userId／memberName／projectId／projectName／minutes交叉聚合）、`options`。空資料集合保持陣列，日期序列仍補零。只回分析所需名稱、ID及加總，不回留言、說明、信箱、憑證或原始工時內容。
 
 新增有效permission `workspace.timeReports.read`，目前固定映射Owner／Manager（含舊admin別名）。前後端均檢查permission，不比較身份名稱或roleId。這是工作空間權限，不因擔任專案管理者／開發者而取得。
 
@@ -47,3 +47,5 @@
 ## 驗證方式
 
 `TimeReportTest`使用隔離記憶體SQLite，驗證三組加總、Epic不重複、作廢／範圍排除、零日、交集、外租戶ID、偽造角色、manager升降、逐專案資格與366日邊界。`frontend/tools/time-analysis-check.js`使用隔離Laravel API及編譯版，驗證三入口／篩選／錯誤／權限撤回與1440、768、390尺寸；測試不使用本機業務資料。
+
+2026-11-06實用性review、圖表互動及seed規則見[工時分析review](time-analysis-review-2026-11-06.md)。新增聚合只在原已授權／未作廢／範圍內迴圈加總，不另讀更多資料，不含原始工時說明。

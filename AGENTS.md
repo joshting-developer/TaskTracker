@@ -37,6 +37,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - 根目錄 Compose 提供 frontend（5174）、backend（3002）、queue、websocket／Reverb（8080）與 Redis。主機接口只監聽 loopback, Redis 只在容器網路
 - `cd frontend && npm run dev`／`npm run build`；`docker compose exec backend php artisan test --do-not-cache-result` 驗證 Laravel API／隔離 SQLite
 - `frontend/tools/browser-check.js` 以 `E2E_API_URL` 接隔離 Laravel 服務, 使用 5175 埠, 不使用業務 mock 或使用者資料庫
+- 2026-11-06全部demo建立邏輯集中backend/database/seeders/DemoSeeder.php（含示範專案、四帳號、ACL與28天工時）；run／seed／loadProject入口只允許local／testing，其他環境拒絕。DatabaseSeeder、相容CLI與載入示範API共用，不在Services保存demo資料。
 - 預設空資料, 可手動載入示範專案或 `tasktracker:seed-demo`；指定 Seed 建 Jack／f-ws／first／second, 密碼只讀本機 TASKTRACKER_SEED_PASSWORD, --reset 只重設此 seed namespace；專案列表先建／選Project，首頁只留小待辦，點入Project才有任務功能, 所有操作保留目前專案上下文
 - 2026-11-06多工作空間：上方區塊列本人有效工作區並可切換；Owner以workspace.ownership取得側欄設定入口。2026-11-06設定改為獨立頁面#/workspace/settings與/members，非dialog；保留路由分頁、草稿／送出中保護，無權限深連結回首頁。既有帳號可登入／直接接受受邀Email的其他工作區邀請，只新增一般成員資格，專案仍另授權。切換清除舊租戶UI；X-Workspace-ID比對Session、Session blocking與回應generation防跨分頁錯寫，見docs/workspace-membership.md。
 - `backend/app/Repositories/RecordStore.php` 由伺服器選定Workspace，經RelationalRecords／Children寫入明確業務表；AccountService從Laravel session推導操作者與空間，不信任前端身分。2026-11-04新增22張關聯表、Eloquent模型及FK／索引，舊records只供歷史遷移／回退／匯入；見docs/database-design.md

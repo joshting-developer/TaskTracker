@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Authorization\WorkspaceOperationAccess;
 use App\Domain\DomainError;
 use App\Repositories\RecordStore;
+use Database\Seeders\DemoSeeder;
 
 /**
  * 維持既有操作契約，協調逐筆授權、重試與各領域寫入。
@@ -36,6 +37,9 @@ class WorkspaceService
      */
     public function execute(string $operation, array $input): array
     {
+        if ($operation === 'loadDemo') {
+            app(DemoSeeder::class)->assertEnvironment();
+        }
         $this->authorization->authorize($operation, $input);
         if ($operation === 'getTimeReport') {
             return (new WorkspaceTimeReport($this->store, $this->workspaceSession))->get($input);
@@ -80,7 +84,7 @@ class WorkspaceService
             'archiveBoard' => $boards->archive($input),
             'setProjectMember' => $members->change($input, false),
             'removeProjectMember' => $members->change($input, true),
-            'loadDemo' => (new DemoService($this->store, $this->workspaceSession, $projects, $issues))->loadDemo($input),
+            'loadDemo' => app(DemoSeeder::class)->loadProject($this->workspaceSession),
             default => DomainError::fail('NOT_FOUND', '找不到這個操作'),
         };
         $projectId = match ($operation) {

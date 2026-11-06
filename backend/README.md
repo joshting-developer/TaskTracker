@@ -23,3 +23,5 @@ PHP：Composer最低需求8.3，Docker指定8.5.12；目前以Docker為驗證環
 閱讀入口：見[後端程式導覽](../docs/backend-development.md)，包含請求流程、各class責任、相容邊界及驗證紀錄。
 
 資料入口：見[關聯式資料設計](../docs/database-design.md)，包含 ER 圖、資料表用途、外鍵／索引、JSON 邊界及升級／回退驗證。
+
+示範資料統一在`database/seeders/DemoSeeder.php`；DatabaseSeeder、`php artisan db:seed --class=DemoSeeder`與`tasktracker:seed-demo`共用，後者提供明確的`--reset`。只允許local／testing，其他環境拒絕；不在Services保存demo資料。新seed包含工時分析的跨成員／專案／日期示範，見[review](../docs/time-analysis-review-2026-11-06.md)。

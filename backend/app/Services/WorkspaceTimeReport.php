@@ -48,6 +48,7 @@ class WorkspaceTimeReport
         }
         $memberRows = [];
         $projectRows = [];
+        $allocations = [];
         $days = [];
         for ($date = new DateTimeImmutable($start); $date->format('Y-m-d') <= $end; $date = $date->modify('+1 day')) {
             $key = $date->format('Y-m-d');
@@ -87,6 +88,15 @@ class WorkspaceTimeReport
                 'memberIds' => [],
             ];
             $minutes = $entry['minutes'];
+            $allocationKey = $member.':'.$project;
+            $allocations[$allocationKey] ??= [
+                'userId' => $member,
+                'memberName' => $members[$member]['name'] ?? '歷史成員',
+                'projectId' => $project,
+                'projectName' => $projects[$project]['name'],
+                'minutes' => 0,
+            ];
+            $allocations[$allocationKey]['minutes'] += $minutes;
             $memberRows[$member]['minutes'] += $minutes;
             $memberRows[$member]['entryCount']++;
             $memberRows[$member]['projectIds'][$project] = true;
@@ -129,6 +139,7 @@ class WorkspaceTimeReport
             'members' => $memberRows,
             'projects' => $projectRows,
             'days' => array_values($days),
+            'allocations' => array_values($allocations),
             'options' => [
                 'projects' => array_values(array_map(fn ($project) => [
                     'id' => $project['id'],

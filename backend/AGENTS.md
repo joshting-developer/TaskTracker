@@ -25,6 +25,7 @@
 - 不自動安裝額外 agent 工具或修改全域環境；新增套件須與當次任務相關
 
 - 2026-10-20 補強：TestCase 在 bootstrap 前覆寫程序環境並強制 memory config, 避免 Compose 環境令 RefreshDatabase 清空本機資料；隔離證據須驗證外部 sentinel SQLite 完全未改
+- 所有demo資料建立在database/seeders/DemoSeeder.php，DatabaseSeeder／db:seed與相容tasktracker:seed-demo共用；入口只允許local／testing，不因--force放寬。工時分析seed按月與工作日標記冪等，不覆寫舊工時。
 - `tasktracker:seed-demo` 建指定 Jack／f-ws／first／second, 密碼僅由忽略的 TASKTRACKER_SEED_PASSWORD 設定；預設冪等, --reset 只重設此 seed namespace, 不改其他 Workspace
 
 - 2026-11-04儲存更新：22張關聯式表及Eloquent模型已落地，資料設計／ER／遷移保護見[database-design.md](../docs/database-design.md)。JSON只用於事件／重試快照及未映射歷史欄位；新業務欄位須新增明確欄位／migration。

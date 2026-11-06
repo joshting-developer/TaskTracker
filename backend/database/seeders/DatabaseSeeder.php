@@ -2,13 +2,16 @@
 
 namespace Database\Seeders;
 
-use App\Services\DemoData;
 use Illuminate\Database\Seeder;
 
+/** 標準seed入口，示範資料與環境限制統一由DemoSeeder負責。 */
 class DatabaseSeeder extends Seeder
 {
+    /** 透過Laravel Seeder呼叫示範資料建立流程。
+     * @return void
+     */
     public function run(): void
     {
-        app(DemoData::class)->seed();
+        $this->call(DemoSeeder::class);
     }
 }

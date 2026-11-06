@@ -1,3 +1,15 @@
+## 2026-11-06 工時分析意義review、圖表與示範資料
+
+- 使用者要求review三種分析實際意義、加入圖表，seed能呈現成員／專案／日期差異；不啟動先前暫緩的全庫重構。
+- 發現：三頁同樣總量缺少下一步、成員跨專案分配不明、趨勢刻度不清；工時不足以推論績效／效率／完成率。成員採專案堆疊長條，專案採投入比較並可聚焦成員，趨勢補軸刻度與日值；明細保留。
+- 範圍：既有report API只加已授權原始工時的member-project聚合，不回原始note；沿用permission／scope／作廢排除／Epic去重。前端request生命週期仍由TimeAnalysis持有，圖表子元件只接資料與發選取事件。
+- 使用者追加確認：所有demo建立邏輯集中database/seeders/DemoSeeder.php，允許local／testing，其他環境入口即拒絕；移除Services中的DemoData／DemoService／DemoTimeData及ACL示範配置。DatabaseSeeder／CLI／原載入示範API共用Seeder，不改原正常業務服務責任。
+- Seed在既有f-ws first／second補最近28天、四種帳號不同分配，透過本人服務及每日上限驗證；標記當月已補，重跑不覆寫工時／密碼／卡片，不改其他工作區。先隔離測試再備份／套本機seed，非reset。
+- 已完成成員堆疊／專案比較／帶刻度及日期選值趨勢；圖表可聚焦到對應成員／專案，API交叉聚合不回note。TimeAnalysis仍持有請求／篩選，圖表各自擁有呈現責任。
+- 完整後端57 tests／2289 assertions、production build、分析專用／seed Owner與Manager登入／完整browser-check通過，含環境拒絕、種子保留及跨月去重、撤權、篩選聚焦與1440／768／390圖表；已人工檢視實際截圖。
+- 本機先備份SQLite，非reset新增168筆，逐列確認既有帳號、資格、專案、卡片與工時未變，FK正常；重跑不再新增。Queue／Reverb重啟，隔離tmpfs容器結束清理。
+- docs/time-analysis-review-2026-11-06.md記實用性判斷、這輪呈現選擇、限制及未做功能，README／AGENTS／設計同步；無schema遷移、寄信、全庫重構或push，完成後本機commit。
+
 ## 2026-11-06 安裝ECC／Vue與專案Laravel Architecture skills
 
 - 原要求安裝ECC laravel-patterns與vuejs-ai/vue-best-practices，新增Laravel Architecture補充分層規則；使用者隨後明確要求暫緩重構，本輪僅skills及規範／文件。

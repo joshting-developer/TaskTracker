@@ -411,6 +411,12 @@ class WorkspaceApiTest extends TestCase
         $this->rpc('loadDemo')->assertOk();
         $this->rpc('getWorkspace')->assertJsonCount(9, 'data.issues');
         $this->rpc('loadDemo')->assertStatus(409);
+        app()->instance('env', 'production');
+        $this->withSession(['_token' => 'environment-test-token'])->withHeader('X-CSRF-TOKEN', 'environment-test-token');
+        $this->rpc('loadDemo')->assertStatus(403);
+        app()->instance('env', 'testing');
+        $this->flushHeaders();
+        $this->rpc('getWorkspace')->assertJsonCount(9, 'data.issues');
         $this->assertSame([], WorkspacePermissions::resolve('unknown'));
         $tenant = (new RecordStore)->forWorkspace($context['workspace']['id']);
         $member = $tenant->require('members', $context['user']['id']);
