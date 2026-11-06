@@ -29,6 +29,14 @@ class RelationalDataMigration
                 $target = $store->forWorkspace($workspace['id']);
                 foreach (['members', 'projects'] as $kind) {
                     foreach ($source->all($kind) as $value) {
+                        if ($kind === 'projects' && ! isset($value['statuses'])) {
+                            $value['statuses'] = [
+                                ['id' => 'backlog', 'label' => '待規劃', 'color' => '#9a9da9'],
+                                ['id' => 'todo', 'label' => '待處理', 'color' => '#7b82e8'],
+                                ['id' => 'in_progress', 'label' => '進行中', 'color' => '#e7a443'],
+                                ['id' => 'done', 'label' => '已完成', 'color' => '#4aab8a'],
+                            ];
+                        }
                         $target->put($kind, $value['id'], $value);
                     }
                 }

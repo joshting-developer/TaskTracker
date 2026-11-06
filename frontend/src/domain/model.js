@@ -1,8 +1,7 @@
 export const STATES = [
-  { id: 'backlog', label: '待規劃', color: '#9a9da9', category: 'backlog' },
-  { id: 'todo', label: '待處理', color: '#7b82e8', category: 'active' },
-  { id: 'in_progress', label: '進行中', color: '#e7a443', category: 'active' },
-  { id: 'done', label: '已完成', color: '#4aab8a', category: 'done' },
+  { id: 'open', label: '待規劃', color: '#9a9da9' },
+  { id: 'inprogress', label: '進行中', color: '#e7a443' },
+  { id: 'closed', label: '已關閉', color: '#4aab8a' },
 ];
 export const PRIORITIES = [
   { id: 'urgent', label: '緊急', color: '#e26669' },
@@ -42,7 +41,7 @@ export function validateIssue(input, statuses = STATES) {
   return {
     title: textField(input.title, '標題', 180, true),
     description: textField(input.description ?? '', '描述', 6000),
-    state: enumField(input.state ?? statuses.find((state) => !['done', 'canceled'].includes(state.category))?.id, statuses, '狀態'),
+    state: enumField(input.state ?? 'open', statuses, '狀態'),
     priority: enumField(input.priority ?? 'normal', PRIORITIES, '優先級'),
     type: enumField(input.type ?? 'task', TYPES, '類型'),
     assignee: textField(input.assignee ?? '', '負責人', 60),
@@ -69,16 +68,16 @@ export function validDate(value) {
   return date;
 }
 export function statusesFor(project) { return project?.statuses || STATES; }
-export function categoryFor(issue, project) { return statusesFor(project).find((state) => state.id === issue.state)?.category || 'active'; }
+export function isClosed(issue) { return issue.state === 'closed'; }
 export function epicSummary(epic, issues, entries, project) {
   const children = issues.filter((issue) => issue.epicId === epic.id);
-  const done = children.filter((issue) => categoryFor(issue, project) === 'done').length;
-  const canceled = children.filter((issue) => categoryFor(issue, project) === 'canceled').length;
+  const done = children.filter((issue) => isClosed(issue)).length;
+  const canceled = 0;
   const total = children.length - canceled;
   return { children, done, canceled, total, percent: total ? Math.round(done / total * 100) : null,
     estimateMinutes: children.reduce((sum, issue) => sum + (issue.estimateMinutes || 0), 0),
     spentMinutes: entries.filter((entry) => !entry.voidedAt && (entry.issueId === epic.id || children.some((issue) => issue.id === entry.issueId))).reduce((sum, entry) => sum + entry.minutes, 0),
-    needsReview: categoryFor(epic, project) === 'done' && done < total };
+    needsReview: isClosed(epic) && done < total };
 }
 export function hours(minutes) { return `${Number((minutes / 60).toFixed(2))} h`; }
 export function canonical(value) {

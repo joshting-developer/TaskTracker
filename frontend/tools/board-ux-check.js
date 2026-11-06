@@ -93,21 +93,21 @@ try {
     for (const density of ['comfortable', 'compact']) { await page.getByLabel('看板卡片密度').selectOption(density); await first.screenshot({ path: `${artifacts}/card-${density}.png` }); }
     await page.setViewportSize({ width: 390, height: 844 });
     await first.getByRole('button', { name: `編輯 ${tasks[0].identifier}`, exact: true }).click(); await editor.waitFor(); await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
-    await changeBoardCardStateInDetail(page, tasks[0].identifier, 'in_progress');
+    await changeBoardCardStateInDetail(page, tasks[0].identifier, 'inprogress');
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.getByLabel('看板泳道').selectOption('epic');
-    await moveBoardCard(page, epic.identifier, 'in_progress');
-    await board.locator(`[data-column="in_progress"] [data-issue="${epic.identifier}"]`).waitFor();
-    const saved = (await call(page, 'getWorkspace')).issues.find(issue => issue.id === epic.id); assert.equal(saved.epicId, ''); assert.equal(saved.state, 'in_progress');
+    await moveBoardCard(page, epic.identifier, 'inprogress');
+    await board.locator(`[data-column="inprogress"] [data-issue="${epic.identifier}"]`).waitFor();
+    const saved = (await call(page, 'getWorkspace')).issues.find(issue => issue.id === epic.id); assert.equal(saved.epicId, ''); assert.equal(saved.state, 'inprogress');
     const custom = await call(page, 'createBoard', { projectId: project.id, name: '單卡收錄', selectedIssueIds: [tasks[0].id], requestId: crypto.randomUUID() });
     await page.goto(`${boardUrl}/${custom.id}`); await page.locator('.issue-card').waitFor();
     assert.equal(await page.locator('.issue-card').count(), 1); assert.equal(await page.locator(`[data-issue="${epic.identifier}"]`).count(), 0, '單卡收錄不引入未收錄Epic');
     const dragBoard = await call(page, 'createBoard', { projectId: project.id, name: '短泳道拖曳', selectedIssueIds: [otherEpic.id, tasks[0].id], requestId: crypto.randomUUID() });
     await page.goto(`${boardUrl}/${dragBoard.id}`); await page.getByLabel('看板泳道').selectOption('epic');
-    const destination = page.getByRole('region', { name: '泳道 會員功能第一版', exact: true }).locator('[data-column="in_progress"]');
+    const destination = page.getByRole('region', { name: '泳道 會員功能第一版', exact: true }).locator('[data-column="inprogress"]');
     await page.locator(`[data-issue="${otherEpic.identifier}"]`).dragTo(destination, { sourcePosition: { x: 10, y: 10 }, targetPosition: { x: 5, y: 5 } });
-    await page.locator(`[data-column="in_progress"] [data-issue="${otherEpic.identifier}"]`).waitFor();
-    const moved = (await call(page, 'getWorkspace')).issues.find(issue => issue.id === otherEpic.id); assert.equal(moved.epicId, ''); assert.equal(moved.state, 'in_progress');
+    await page.locator(`[data-column="inprogress"] [data-issue="${otherEpic.identifier}"]`).waitFor();
+    const moved = (await call(page, 'getWorkspace')).issues.find(issue => issue.id === otherEpic.id); assert.equal(moved.epicId, ''); assert.equal(moved.state, 'inprogress');
     await page.goto(boardUrl); await page.getByLabel('看板泳道').waitFor(); assert.equal(await page.getByLabel('看板泳道').inputValue(), 'epic', '看板偏好獨立保存');
     await page.addInitScript(() => { Storage.prototype.getItem = () => { throw new Error('storage disabled'); }; Storage.prototype.setItem = () => { throw new Error('storage disabled'); }; });
     await page.reload(); assert.equal(await page.getByLabel('看板泳道').inputValue(), 'none'); await page.getByLabel('看板泳道').selectOption('epic');

@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { categoryFor, epicSummary, hours } from '../domain/model.js';
+import { isClosed, epicSummary, hours } from '../domain/model.js';
 import Icon from './Icon.vue';
 const props = defineProps({ issue: Object, issues: Array, entries: Array, project: Object, canReadTime: { type: Boolean, default: true } });
 defineEmits(['open']);
@@ -11,7 +11,7 @@ const spentMinutes = computed(() => summary.value ? summary.value.spentMinutes :
 const estimateMinutes = computed(() => summary.value ? summary.value.estimateMinutes : props.issue.estimateMinutes);
 const parent = computed(() => props.issues.find(item => item.id === props.issue.parentIssueId));
 const children = computed(() => props.issues.filter(item => item.parentIssueId === props.issue.id));
-const completed = computed(() => children.value.filter(item => categoryFor(item, props.project) === 'done').length);
+const completed = computed(() => children.value.filter(item => isClosed(item)).length);
 const related = computed(() => (props.issue.relatedIssueIds || []).map(id => props.issues.find(item => item.id === id)).filter(Boolean));
 </script>
 <template>

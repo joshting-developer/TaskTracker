@@ -8,30 +8,9 @@ namespace App\Domain;
 class Fields
 {
     public const STATES = [
-        [
-            'id' => 'backlog',
-            'label' => '待規劃',
-            'color' => '#9a9da9',
-            'category' => 'backlog',
-        ],
-        [
-            'id' => 'todo',
-            'label' => '待處理',
-            'color' => '#7b82e8',
-            'category' => 'active',
-        ],
-        [
-            'id' => 'in_progress',
-            'label' => '進行中',
-            'color' => '#e7a443',
-            'category' => 'active',
-        ],
-        [
-            'id' => 'done',
-            'label' => '已完成',
-            'color' => '#4aab8a',
-            'category' => 'done',
-        ],
+        ['id' => 'open', 'label' => '待規劃', 'color' => '#9a9da9'],
+        ['id' => 'inprogress', 'label' => '進行中', 'color' => '#e7a443'],
+        ['id' => 'closed', 'label' => '已關閉', 'color' => '#4aab8a'],
     ];
 
     public const ISSUE_FIELDS = ['title', 'description', 'state', 'priority', 'type', 'assignee', 'dueDate', 'epicId', 'estimateMinutes', 'parentIssueId', 'relatedIssueIds'];
@@ -132,21 +111,14 @@ class Fields
     }
 
     /**
-     * 依固定狀態ID查詢任務的狀態分類。
+     * 依保留的 closed type 判斷結案；舊分類不參與規則。
      *
      * @param  array  $issue  目前任務內容
-     * @param  array  $project  目前專案內容與設定
-     * @return string
+     * @return bool
      */
-    public static function category(array $issue, array $project): string
+    public static function isClosed(array $issue): bool
     {
-        foreach ($project['statuses'] ?? self::STATES as $state) {
-            if ($state['id'] === $issue['state']) {
-                return $state['category'];
-            }
-        }
-
-        return 'active';
+        return $issue['state'] === 'closed';
     }
 
     /**
@@ -175,7 +147,7 @@ class Fields
             DomainError::fail('INVALID_INPUT', '關聯任務不可重複');
         }
         sort($ids);
-        $defaultState = array_values(array_filter($statuses, fn ($s) => ! in_array($s['category'], ['done', 'canceled'], true)))[0]['id'];
+        $defaultState = 'open';
 
         return [
             'title' => self::text($input['title'] ?? null, '標題', 180, true),

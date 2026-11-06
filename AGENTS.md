@@ -16,7 +16,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 
 使用者已要求先做本機第一版, 以任務清單與看板試用；甘特圖暫不製作。GAS `.gs` 產檔、雲端儲存與部署等本機版本確認後再處理
 
-使用者已確認任務以專案作為入口；2026-11-05首頁調整為只顯示小待辦，其餘空間保留未來個人小工具（本輪不做自訂配置）。專案列表獨立於#/projects，建立／選擇專案後才呈現任務清單、看板與進度。任務操作與我的任務都限於目前專案, 不自動回到跨專案任務首頁。2026-11-06已移除已完成專用範圍，改用列表的完成分類篩選
+使用者已確認任務以專案作為入口；2026-11-05首頁調整為只顯示小待辦，其餘空間保留未來個人小工具（本輪不做自訂配置）。專案列表獨立於#/projects，建立／選擇專案後才呈現任務清單、看板與進度。任務操作與我的任務都限於目前專案, 不自動回到跨專案任務首頁。2026-11-06已移除已完成專用範圍，改用列表的實際狀態多選篩選
 
 尚未確認：正式功能範圍、使用人數、團隊登入方式、正式試算表與 Apps Script 專案
 
@@ -43,7 +43,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - 租戶間隔離，ProjectAccess逐案檢查有效permission／scope及作者條件；Project ACL／固定角色矩陣已落地。新關聯表以複合外鍵再限制同Workspace／Project，不以FK取代權限檢查
 - 舊 Node API／測試由 PHP 取代, 原 SQLite 與舊 Docker volume 保留；匯入指令只接受空目標、不覆蓋來源, 保留作者歷史, 舊帳號登入後升級雜湊
 - 2026-10-20 類型固定 Epic／Task／Bug, feature 透過 migration／匯入共用升級器轉 task 並保留歷史與 revision 保護；自訂類型僅記構想, 不提前實作
-- 狀態用固定 ID＋category 判斷完成, Epic估時仍加總子項目；2026-11-06使用者改為允許Epic直接填實際工時，總投入為自身與所屬卡片各筆有效紀錄去重加總。2026-10-20 改 parentIssueId 一層子任務與 relatedIssueIds 雙向關聯, 移除前置／DAG／結案阻擋；子項跟父項 Epic, 狀態獨立, 舊 blockedBy 透過 migration 轉關聯並保留歷史
+- 2026-11-06狀態改固定英文type（DTO id／DB code）與顯示名稱，open／closed必備，只有closed算結案，category退出API與介面；舊DB欄位僅相容保存。新專案預設open／inprogress／closed，既有卡片不自動轉closed，詳見docs/status-types.md。 Epic估時仍加總子項目；2026-11-06使用者改為允許Epic直接填實際工時，總投入為自身與所屬卡片各筆有效紀錄去重加總。2026-10-20 改 parentIssueId 一層子任務與 relatedIssueIds 雙向關聯, 移除前置／DAG／結案阻擋；子項跟父項 Epic, 狀態獨立, 舊 blockedBy 透過 migration 轉關聯並保留歷史
 - 2026-11-06工時分析：工作空間有效permission `workspace.timeReports.read`映射Owner／Manager，側欄先進三個分析入口，再查看成員投入／專案投入／時間趨勢；專用唯讀API逐Project確認團隊工時資格，依Asia/Taipei工作日、期間／成員／專案交集，只計有效原始entry且不重複Epic。見docs/time-analysis.md。
 - 工時只能修改自己有效紀錄, 作者限制不因管理者而略過；每人每日最多 24 小時, 工作日採 Asia/Taipei
 - 2026-10-20 使用者要求移除視圖／常用篩選保存：介面與三個 RPC 停用, getWorkspace 不回傳, 舊紀錄原地保留不使用；即時搜尋／篩選保留。首頁個人卡片篩選小清單只記構想, 未要求實作前不製作

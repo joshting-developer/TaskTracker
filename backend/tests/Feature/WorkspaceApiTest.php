@@ -159,18 +159,18 @@ class WorkspaceApiTest extends TestCase
         $project = $this->project();
         $epic = $this->issue($project, ['type' => 'epic']);
         $task = $this->issue($project, ['epicId' => $epic['id'], 'estimateMinutes' => 60]);
-        $this->rpc('updateIssue', ['id' => $epic['id'], 'expectedRevision' => 1, 'state' => 'done'])->assertStatus(400);
+        $this->rpc('updateIssue', ['id' => $epic['id'], 'expectedRevision' => 1, 'state' => 'closed'])->assertStatus(400);
         $this->rpc('logTime', ['issueId' => $epic['id'], 'workDate' => '2026-01-01', 'minutes' => 30])->assertOk();
         $entry = $this->rpc('logTime', ['issueId' => $task['id'], 'workDate' => '2026-01-01', 'minutes' => 60])->assertOk()->json('data');
         $this->rpc('logTime', ['issueId' => $task['id'], 'workDate' => '2026-01-01', 'minutes' => 1400])->assertStatus(400);
         $this->rpc('logTime', ['issueId' => $task['id'], 'workDate' => now()->addYear()->format('Y-m-d'), 'minutes' => 60])->assertStatus(400);
         $this->rpc('updateTime', ['id' => $entry['id'], 'expectedRevision' => 1, 'workDate' => '2026-01-02', 'minutes' => 90])->assertJsonPath('data.revision', 2);
         $this->rpc('voidTime', ['id' => $entry['id'], 'expectedRevision' => 2])->assertJsonPath('data.revision', 3);
-        $this->rpc('updateIssue', ['id' => $task['id'], 'expectedRevision' => 1, 'state' => 'done'])->assertOk();
-        $this->rpc('updateIssue', ['id' => $epic['id'], 'expectedRevision' => 1, 'state' => 'done'])->assertOk();
-        $this->rpc('updateIssue', ['id' => $task['id'], 'expectedRevision' => 2, 'state' => 'todo'])->assertOk();
-        $this->rpc('getWorkspace')->assertJsonPath('data.issues.0.state', 'todo');
-        $states = [...Fields::STATES, ['id' => 'accepted', 'label' => '驗收', 'color' => '#123456', 'category' => 'done']];
+        $this->rpc('updateIssue', ['id' => $task['id'], 'expectedRevision' => 1, 'state' => 'closed'])->assertOk();
+        $this->rpc('updateIssue', ['id' => $epic['id'], 'expectedRevision' => 1, 'state' => 'closed'])->assertOk();
+        $this->rpc('updateIssue', ['id' => $task['id'], 'expectedRevision' => 2, 'state' => 'open'])->assertOk();
+        $this->rpc('getWorkspace')->assertJsonPath('data.issues.0.state', 'open');
+        $states = [...Fields::STATES, ['id' => 'accepted', 'label' => '驗收', 'color' => '#123456']];
         $this->rpc('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => $states])->assertOk();
         $this->rpc('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => $states])->assertStatus(409);
     }
@@ -301,7 +301,7 @@ class WorkspaceApiTest extends TestCase
         foreach ([$child['id'], $parent['id'], $external['id'], $epic['id']] as $id) $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 1, 'parentIssueId' => $id])->assertStatus(400);
         $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => '孫任務', 'parentIssueId' => $child['id']])->assertStatus(400);
         $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 1, 'type' => 'epic', 'epicId' => ''])->assertStatus(400);
-        $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 1, 'state' => 'done'])->assertOk();
+        $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 1, 'state' => 'closed'])->assertOk();
         $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 2, 'epicId' => ''])->assertOk();
         $this->rpc('updateIssue', ['id' => $child['id'], 'expectedRevision' => 1, 'title' => '舊表單'])->assertStatus(409);
         $input = ['id' => $child['id'], 'expectedRevision' => 2, 'relatedIssueIds' => [$parent['id']], 'requestId' => 'link-retry'];
@@ -310,15 +310,15 @@ class WorkspaceApiTest extends TestCase
         $items = collect($this->rpc('getWorkspace')->assertOk()->json('data.issues'))->keyBy('id');
         $this->assertSame('', $items[$child['id']]['epicId']);
         $this->assertSame($child['state'], $items[$child['id']]['state']);
-        $this->assertSame('done', $items[$parent['id']]['state']);
+        $this->assertSame('closed', $items[$parent['id']]['state']);
         $this->assertSame([$child['id']], $items[$parent['id']]['relatedIssueIds']);
         $this->assertSame(4, $items[$parent['id']]['revision']);
         $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 3, 'title' => '舊表單'])->assertStatus(409);
         $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 4, 'relatedIssueIds' => [$external['id']]])->assertStatus(400);
         $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 4, 'relatedIssueIds' => [$parent['id']]])->assertStatus(400);
         $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 4, 'relatedIssueIds' => []])->assertOk();
-        $this->rpc('updateIssue', ['id' => $child['id'], 'expectedRevision' => 4, 'state' => 'done'])->assertOk();
-        $this->rpc('updateIssue', ['id' => $child['id'], 'expectedRevision' => 5, 'state' => 'todo'])->assertOk();
+        $this->rpc('updateIssue', ['id' => $child['id'], 'expectedRevision' => 4, 'state' => 'closed'])->assertOk();
+        $this->rpc('updateIssue', ['id' => $child['id'], 'expectedRevision' => 5, 'state' => 'open'])->assertOk();
         $this->rpc('updateIssue', ['id' => $child['id'], 'expectedRevision' => 6, 'blockedBy' => [$parent['id']]])->assertStatus(400);
         $this->rpc('logTime', ['issueId' => $parent['id'], 'workDate' => '2026-01-01', 'minutes' => 30])->assertOk();
         $this->rpc('logTime', ['issueId' => $child['id'], 'workDate' => '2026-01-01', 'minutes' => 60])->assertOk();
@@ -357,7 +357,7 @@ class WorkspaceApiTest extends TestCase
         $this->assertSame(30, $store->require('timeEntries', 'old-time')['minutes']);
         $migration->up();
         $this->assertSame($converted, $store->require('issues', $second['id']));
-        $this->rpc('updateIssue', ['id' => $second['id'], 'expectedRevision' => 2, 'state' => 'done'])->assertOk();
+        $this->rpc('updateIssue', ['id' => $second['id'], 'expectedRevision' => 2, 'state' => 'closed'])->assertOk();
     }
 
     public function test_invite_member_author_permissions_and_revocation(): void
@@ -417,4 +417,87 @@ class WorkspaceApiTest extends TestCase
         $tenant->put('members', $member['id'], [...$member, 'role' => 'unknown']);
         $this->rpc('getWorkspace')->assertStatus(403);
     }
+
+    /** 必備type不可移除，名稱可改，舊分類與重複type被拒絕。
+     * @return void
+     */
+    public function test_updateStatuses_Success_Required_types_and_validation(): void
+    {
+        $this->register();
+        $project = $this->project();
+        $this->assertSame(['open', 'inprogress', 'closed'], array_column($project['statuses'], 'id'));
+        $this->assertArrayNotHasKey('category', $project['statuses'][0]);
+        foreach (['open', 'closed'] as $required) {
+            $states = array_values(array_filter($project['statuses'], fn ($state) => $state['id'] !== $required));
+            $this->rpc('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => $states])->assertStatus(400);
+        }
+        $custom = ['id' => 'review', 'label' => '待驗收', 'color' => '#123456'];
+        foreach (['open', 'Review', 'not valid', '123'] as $invalid) {
+            $this->rpc('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => [...Fields::STATES, [...$custom, 'id' => $invalid]]])->assertStatus(400);
+        }
+        $this->rpc('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => [...Fields::STATES, [...$custom, 'category' => 'done']]])->assertStatus(400);
+        $states = [...Fields::STATES, $custom];
+        $states[0]['label'] = '新工作';
+        $states[2]['label'] = '封存結案';
+        $requestId = (string) Str::uuid();
+        $input = ['requestId' => $requestId, 'projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => $states];
+        $this->rpc('updateStatuses', $input)->assertOk()->assertJsonPath('data.statuses.0.label', '新工作');
+        $this->rpc('updateStatuses', $input)->assertOk()->assertJsonPath('data.revision', 2);
+        $this->rpc('updateStatuses', [...$input, 'requestId' => (string) Str::uuid()])->assertStatus(409);
+        $issue = $this->issue($project);
+        $this->assertSame('open', $issue['state']);
+        $this->rpc('updateIssue', ['id' => $issue['id'], 'expectedRevision' => 1, 'state' => 'review'])->assertOk();
+        $this->rpc('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 2, 'statuses' => array_slice($states, 0, 3)])->assertStatus(400);
+    }
+
+    /** done只是中間狀態，只有closed滿足Epic結案條件。
+     * @return void
+     */
+    public function test_updateIssue_Success_Done_is_not_closed(): void
+    {
+        $this->register();
+        $project = $this->project();
+        $states = [...Fields::STATES, ['id' => 'done', 'label' => '已完成', 'color' => '#abcdef']];
+        $this->rpc('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => $states])->assertOk();
+        $epic = $this->issue($project, ['title' => '大卡', 'type' => 'epic']);
+        $child = $this->issue($project, ['title' => '小卡', 'epicId' => $epic['id'], 'state' => 'done']);
+        $this->rpc('updateIssue', ['id' => $epic['id'], 'expectedRevision' => 1, 'state' => 'done'])->assertOk();
+        $this->rpc('updateIssue', ['id' => $epic['id'], 'expectedRevision' => 2, 'state' => 'closed'])->assertStatus(400);
+        $this->rpc('updateIssue', ['id' => $child['id'], 'expectedRevision' => 1, 'state' => 'closed'])->assertOk();
+        $this->rpc('updateIssue', ['id' => $epic['id'], 'expectedRevision' => 2, 'state' => 'closed'])->assertOk();
+        $this->rpc('updateIssue', ['id' => $child['id'], 'expectedRevision' => 2, 'state' => 'open'])->assertOk();
+        $items = $this->rpc('getWorkspace')->assertOk()->json('data.issues');
+        $this->assertSame('closed', array_values(array_filter($items, fn ($item) => $item['id'] === $epic['id']))[0]['state']);
+    }
+
+    /** 補必要狀態時保留卡片外鍵與歷史，重跑不增加版本。
+     * @return void
+     */
+    public function test_run_Success_Status_upgrade_preserves_existing_cards(): void
+    {
+        $this->register();
+        $project = $this->project();
+        $workspace = $this->rpc('getWorkspace')->assertOk()->json('data.meta.workspace.id');
+        $tenant = (new RecordStore)->forWorkspace($workspace);
+        $project['statuses'] = [
+            ['id' => 'todo', 'label' => '待規劃', 'color' => '#123456'],
+            ['id' => 'done', 'label' => '已完成', 'color' => '#123456'],
+        ];
+        $tenant->put('projects', $project['id'], $project);
+        $issue = $this->issue($project, ['state' => 'done']);
+        $old = $tenant->require('issues', $issue['id']);
+        $stateId = DB::table('issues')->where('public_id', $issue['id'])->value('state_id');
+        \App\Services\ProjectStatusTypesUpgrade::run();
+        $upgraded = $tenant->require('projects', $project['id']);
+        $this->assertSame(['todo', 'done', 'open', 'closed'], array_column($upgraded['statuses'], 'id'));
+        $this->assertSame('待規劃 (open)', $upgraded['statuses'][2]['label']);
+        $this->assertSame($old, $tenant->require('issues', $issue['id']));
+        $this->assertSame($stateId, DB::table('issues')->where('public_id', $issue['id'])->value('state_id'));
+        $this->assertSame(2, $upgraded['revision']);
+        $this->assertFalse(Fields::isClosed($old));
+        \App\Services\ProjectStatusTypesUpgrade::run();
+        $this->assertSame($upgraded, $tenant->require('projects', $project['id']));
+        $this->assertSame([], DB::select('PRAGMA foreign_key_check'));
+    }
+
 }

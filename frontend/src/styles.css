@@ -227,3 +227,12 @@ dialog{border:0;padding:0;color:inherit}dialog::backdrop{background:#19162255;ba
 .issue-detail-page .field { font-size: 14px; color: #5f6673; }
 .issue-detail-page .field textarea { font-size: 14px; color: #242936; border-color: #bfc6d2; }
 @media(max-width:700px) { .issue-expand { font-size: 12px; padding: 8px 10px; margin-right: 6px; } }
+
+.status-type input { font-family: ui-monospace, monospace; }
+.status-type input[readonly] { background: #f7f8fa; color: #454b5c; }
+.status-filter { display: flex; align-items: center; gap: 8px; }
+.status-filter details { position: relative; min-width: 160px; }
+.status-filter summary { cursor: pointer; border: 1px solid #bfc5d4; border-radius: 6px; padding: 9px 12px; background: white; color: #454b5c; }
+.status-filter-options { position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; min-width: 220px; max-height: 300px; overflow-y: auto; border: 1px solid #bfc5d4; border-radius: 6px; padding: 8px; background: white; box-shadow: 0 4px 12px #20243418; }
+.status-filter-options label { display: flex; align-items: center; min-height: 44px; gap: 10px; padding: 4px 8px; }
+.status-filter-options input[type=checkbox] { width: 18px; height: 18px; }

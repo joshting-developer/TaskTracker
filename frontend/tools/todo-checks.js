@@ -111,7 +111,7 @@ export async function checkTodoWorkflow(browser, failures) {
   const project = await owner.evaluate(async () => {
     const { api } = await import('/src/api/index.js');
     const project = await api.createProject({ name: '待辦正式專案', code: 'TODOPROJ', requestId: crypto.randomUUID() });
-    await api.updateStatuses({ projectId: project.id, expectedRevision: project.revision, statuses: [...project.statuses, { id: 'todo_review', label: '待討論', category: 'active', color: '#8757b3' }], requestId: crypto.randomUUID() });
+    await api.updateStatuses({ projectId: project.id, expectedRevision: project.revision, statuses: [...project.statuses, { id: 'todo_review', label: '待討論', color: '#8757b3' }], requestId: crypto.randomUUID() });
     const target = (await api.getTodos()).members.find(member => member.name === 'Todo Member');
     await api.setProjectMember({ projectId: project.id, userId: target.id, roleId: 'developer', expectedRevision: 0, requestId: crypto.randomUUID() });
     return project;

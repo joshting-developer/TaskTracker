@@ -1,12 +1,13 @@
-import { categoryFor, PRIORITIES, statusesFor } from './model.js';
+import { isClosed, PRIORITIES, statusesFor } from './model.js';
 
 export const CONDITIONS = [
-  { id: '', label: '所有情況' }, { id: 'open', label: '尚未結案' }, { id: 'done', label: '已完成' },
+  { id: '', label: '所有情況' },
   { id: 'overdue', label: '已逾期' }, { id: 'unassigned', label: '尚未指派' },
 ];
+export function selectedStates(value) { return Array.isArray(value) ? value : value ? [value] : []; }
 export function missingFilters(filters, project, members, issues) {
   const messages = [];
-  if (filters.state && !statusesFor(project).some((state) => state.id === filters.state)) messages.push('狀態已不存在');
+  if (selectedStates(filters.state).some(id => !statusesFor(project).some(state => state.id === id))) messages.push('狀態已不存在');
   if (filters.assignee && !members.some((member) => member.id === filters.assignee)) messages.push('成員已不存在');
   if (filters.epicId && filters.epicId !== 'unlinked' && !issues.some((issue) => issue.id === filters.epicId && issue.type === 'epic' && issue.projectId === project.id)) messages.push('Epic 已不存在');
   return messages;
@@ -15,16 +16,14 @@ export function filterIssues(issues, filters, { project, userId, members, today,
   const term = filters.search.trim().toLowerCase();
   return issues.filter((issue) => {
     if (issue.projectId !== project.id || (!includeEpics && issue.type === 'epic')) return false;
-    const category = categoryFor(issue, project), closed = ['done', 'canceled'].includes(category);
+    const closed = isClosed(issue);
     if (filters.scope === 'mine' && issue.assignee !== userId) return false;
-    if (filters.state && issue.state !== filters.state) return false;
+    if (selectedStates(filters.state).length && !selectedStates(filters.state).includes(issue.state)) return false;
     if (filters.priority && issue.priority !== filters.priority) return false;
     if (filters.assignee && issue.assignee !== filters.assignee) return false;
     if (filters.type && issue.type !== filters.type) return false;
     const epicId = issue.type === 'epic' ? issue.id : issue.epicId;
     if (filters.epicId && (filters.epicId === 'unlinked' ? Boolean(epicId) : epicId !== filters.epicId)) return false;
-    if (filters.condition === 'open' && closed) return false;
-    if (filters.condition === 'done' && category !== 'done') return false;
     if (!CONDITIONS.some(condition => condition.id === filters.condition)) return false;
     if (filters.condition === 'overdue' && (closed || !issue.dueDate || issue.dueDate >= today)) return false;
     if (filters.condition === 'unassigned' && issue.assignee) return false;

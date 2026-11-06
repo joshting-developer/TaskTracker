@@ -168,14 +168,17 @@ class ProjectService
         $project = $this->store->require('projects', $input['projectId'] ?? '');
         RecordRevision::assertCurrent($project, $input, '專案設定');
         $states = $input['statuses'] ?? null;
-        if (! is_array($states) || ! array_is_list($states) || count($states) < 2 || count($states) > 12) {
-            DomainError::fail('INVALID_INPUT', '請設定 2–12 個狀態');
+        if (! is_array($states) || ! array_is_list($states) || count($states) < 2 || count($states) > 20) {
+            DomainError::fail('INVALID_INPUT', '請設定 2–20 個狀態');
         }
         $states = array_map(function ($s) {
             if (! is_array($s)) {
                 DomainError::fail('INVALID_INPUT', '狀態格式不正確');
             }
-            $id = Fields::text($s['id'] ?? null, '狀態 ID', 100, true);
+            if (array_key_exists('category', $s)) {
+                DomainError::fail('INVALID_INPUT', '狀態分類已停用，請重新整理後使用 type 與顯示名稱');
+            }
+            $id = Fields::text($s['id'] ?? null, '狀態 type', 100, true);
             $color = Fields::text($s['color'] ?? null, '顏色', 7, true);
             if (! preg_match('/^[A-Za-z0-9_-]+$/D', $id) || ! preg_match('/^#[0-9a-f]{6}$/iD', $color)) {
                 DomainError::fail('INVALID_INPUT', '狀態 ID 或顏色不正確');
@@ -184,15 +187,20 @@ class ProjectService
             return [
                 'id' => $id,
                 'label' => Fields::text($s['label'] ?? null, '狀態名稱', 30, true),
-                'category' => Fields::choice($s['category'] ?? null, ['backlog', 'active', 'done', 'canceled'], '分類'),
                 'color' => $color,
             ];
         }, $states);
         if (count(array_unique(array_column($states, 'id'))) !== count($states) || count(array_unique(array_column($states, 'label'))) !== count($states)) {
             DomainError::fail('INVALID_INPUT', '狀態 ID 與名稱不可重複');
         }
-        if (! in_array('done', array_column($states, 'category'), true) || ! array_intersect(['active', 'backlog'], array_column($states, 'category'))) {
-            DomainError::fail('INVALID_INPUT', '至少需要一個完成與一個未結案狀態');
+        if (array_diff(['open', 'closed'], array_column($states, 'id'))) {
+            DomainError::fail('INVALID_INPUT', 'open 與 closed 狀態不可移除');
+        }
+        $existingIds = array_column($project['statuses'] ?? Fields::STATES, 'id');
+        foreach ($states as $state) {
+            if (! in_array($state['id'], $existingIds, true) && ! preg_match('/^[a-z][a-z0-9_]{0,39}$/D', $state['id'])) {
+                DomainError::fail('INVALID_INPUT', '新狀態 type 須以小寫英文字母開頭，最多 40 字，只能包含小寫英文、數字與底線');
+            }
         }
         foreach ($this->store->all('issues') as $issue) {
             if ($issue['projectId'] === $project['id'] && ! in_array($issue['state'], array_column($states, 'id'), true)) {

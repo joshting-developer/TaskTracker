@@ -50,7 +50,7 @@ const epics = computed(() => availableIssues.value.filter((issue) => issue.type 
 const parentIssue = computed(() => availableIssues.value.find(item => item.id === form.parentIssueId));
 watch(() => form.projectId, (value, before) => {
   if (!props.todo || value === before) return;
-  form.state = states.value.find(state => state.category === 'active')?.id || states.value[0]?.id || 'todo';
+  form.state = states.value.find(state => state.id === 'open')?.id || states.value[0]?.id || 'todo';
   form.epicId = ''; form.parentIssueId = ''; form.relatedIssueIds = [];
   form.assignee = availableMembers.value.some(member => member.id === props.todo.assigneeId) ? props.todo.assigneeId : '';
 });
@@ -106,7 +106,7 @@ async function createChild(title) {
   if (dirty.value) { error.value = '請先儲存目前任務的修改, 再建立子任務'; return; }
   saving.value = true;
   error.value = '';
-  const payload = { projectId: form.projectId, title, parentIssueId: props.issue.id, state: states.value.find(state => state.category === 'active')?.id || states.value[0].id };
+  const payload = { projectId: form.projectId, title, parentIssueId: props.issue.id, state: states.value.find(state => state.id === 'open')?.id || states.value[0].id };
   const signature = JSON.stringify(payload);
   if (childRequest?.signature !== signature) childRequest = { signature, requestId: crypto.randomUUID() };
   try {

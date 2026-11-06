@@ -152,10 +152,10 @@ class IssueService
                     }
                 }
             }
-            if ($fields['state'] !== $current['state'] && Fields::category($fields, $project) === 'done') {
+            if ($fields['state'] !== $current['state'] && Fields::isClosed($fields)) {
                 foreach ($epicChildren as $child) {
-                    if (! in_array(Fields::category($child, $project), ['done', 'canceled'], true)) {
-                        DomainError::fail('INVALID_INPUT', '還有未結案子任務, 請先完成或取消後再驗收 Epic');
+                    if (! Fields::isClosed($child)) {
+                        DomainError::fail('INVALID_INPUT', '還有未結案子任務, 請先關閉後再關閉 Epic');
                     }
                 }
             }
@@ -262,7 +262,7 @@ class IssueService
         }
         if ($issue['epicId']) {
             $parent = $this->store->require('issues', $issue['epicId']);
-            if (Fields::category($parent, $project) === 'done' && ! in_array(Fields::category($issue, $project), ['done', 'canceled'], true)) {
+            if (Fields::isClosed($parent) && ! Fields::isClosed($issue)) {
                 $this->notify($parent, 'Epic 需要重新確認', $this->workspaceSession['user']['name'].' 更新了未結案子任務 '.$issue['identifier'], $parent['assignee']);
             }
         }

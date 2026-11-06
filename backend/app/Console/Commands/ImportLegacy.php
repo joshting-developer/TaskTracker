@@ -52,6 +52,7 @@ class ImportLegacy extends Command
                 IssueTypesUpgrade::run(legacy: true);
                 ProjectAclUpgrade::run(legacy: true);
                 RelationalDataMigration::import();
+                \App\Services\ProjectStatusTypesUpgrade::run();
             });
         } catch (\Throwable $error) {
             $this->error($error->getMessage());

@@ -1,3 +1,14 @@
+## 2026-11-06 明確狀態 type 與獨立結案
+
+- 使用者確認：open／closed必備，狀態設定改為英文type與顯示名稱，不再編輯分類；列表直接篩選實際狀態。
+- 實作選擇：既有status.id就是唯一英文type，沿用資料庫code與Issue.state，避免另建重複識別欄位。既有type固定、可改顯示名稱／顏色／順序；新type可輸入，open／closed不可移除。
+- 新專案預設open（待規劃）、inprogress（進行中）、closed（已關閉）。舊專案補open／closed，保留所有原卡片狀態與歷史；done不自動轉closed，只有closed算結案。
+- 已移除介面與API可編輯category；舊DB欄位僅相容保存。列表與看板可多選實際狀態（OR），其他篩選維持AND，移除open／done分類條件。
+- 驗證通過：後端56 tests／1117 assertions（必備／重複／格式／使用中／版本與重試／done不等於closed／升級冪等與外鍵／匯入）；production build、完整browser-check通過。同步更新既有看板／即時同步測試fixture的新預設ID；未另啟即時同步測試環境。
+- 另以隔離API確認1440／768／390狀態設定不溢出、精確多選篩選及Escape；檢視桌面與手機截圖。沿用既有品牌與表單，不新增介紹文案。
+- 主服務已先備份SQLite，再執行migration並重啟Queue／Reverb；逐列比對備份，帳號、成員、卡片、留言、關聯、工時、看板與待辦未變，FK檢查通過，主服務健康。隔離tmpfs測試容器完成後清理。
+- docs/status-types.md記錄契約、歷史資料、回退邊界，README／AGENTS／資料與協作設計同步；本階段本機commit、不push。
+
 ## 2026-11-06 移除已完成專用頁面
 
 - 使用者要求移除側欄已完成與對應專用範圍，改由任務列表篩選。

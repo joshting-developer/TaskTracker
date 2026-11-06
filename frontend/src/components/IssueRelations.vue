@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { categoryFor, statusesFor } from '../domain/model.js';
+import { isClosed, statusesFor } from '../domain/model.js';
 import Icon from './Icon.vue';
 const props = defineProps({ issue: Object, issues: Array, project: Object, type: String, parentId: String, relatedIds: Array, saving: Boolean });
 const emit = defineEmits(['parent', 'related', 'open', 'create-child']);
@@ -10,7 +10,7 @@ const childTitle = ref('');
 const creatingChild = ref(false);
 const parent = computed(() => props.issues.find(item => item.id === props.parentId));
 const children = computed(() => props.issue ? props.issues.filter(item => item.parentIssueId === props.issue.id) : []);
-const done = computed(() => children.value.filter(item => categoryFor(item, props.project) === 'done').length);
+const done = computed(() => children.value.filter(item => isClosed(item)).length);
 const related = computed(() => (props.relatedIds || []).map(id => props.issues.find(item => item.id === id)).filter(Boolean));
 const candidates = computed(() => props.issues.filter(item => {
   if (item.projectId !== props.project.id || item.id === props.issue?.id) return false;

@@ -40,7 +40,7 @@ class LegacyImportTest extends TestCase
             $this->assertSame('feature', $converted['history'][2]['changes'][0]['before']);
             $this->postJson('/api/auth/login', ['email' => $account['email'], 'password' => 'test-local-password'])->assertOk()->assertJsonPath('data.workspace.id', 'legacy-workspace');
             $this->assertNull(User::first()->legacy_salt);
-            $this->postJson('/api/rpc/getWorkspace', ['requestId' => 'import-read'])->assertOk()->assertJsonPath('data.projects.0.revision', 3);
+            $this->postJson('/api/rpc/getWorkspace', ['requestId' => 'import-read'])->assertOk()->assertJsonPath('data.projects.0.revision', 4);
             $this->artisan('tasktracker:import-legacy', ['file' => $file])->assertFailed();
             $this->assertSame($before, hash_file('sha256', $file));
         } finally { unlink($file); }

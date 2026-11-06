@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import Icon from './Icon.vue';
 import IssueContext from './IssueContext.vue';
-import { categoryFor, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
+import { isClosed, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
 const props = defineProps({ syncState: { type: String, default: 'polling' }, project: Object, issues: Array, visibleIssues: Array, entries: Array, members: Array, userId: String, moving: String, today: String, boardKey: String, includedEpicIds: Array, canWrite: { type: Boolean, default: true }, canCreate: { type: Boolean, default: true } });
 const emit = defineEmits(['open', 'move', 'create']);
@@ -51,7 +51,7 @@ onBeforeUnmount(clearReading);
 function toggle(id) { collapsed.value = collapsed.value.includes(id) ? collapsed.value.filter(item => item !== id) : [...collapsed.value, id]; }
 function memberName(id) { return props.members.find(member => member.id === id)?.name || id || '未指派'; }
 function option(items, id) { return items.find(item => item.id === id); }
-function overdue(issue) { return issue.dueDate && issue.dueDate < props.today && !['done', 'canceled'].includes(categoryFor(issue, props.project)); }
+function overdue(issue) { return issue.dueDate && issue.dueDate < props.today && !isClosed(issue); }
 function startDrag(event, issue) { clearReading(); event.dataTransfer.setData('text/plain', issue.id); event.dataTransfer.effectAllowed = 'move'; }
 function drop(event, state, lane) {
   dragOver.value = '';

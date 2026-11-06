@@ -48,10 +48,10 @@ try {
   await owner.goto(boardUrl); await owner.reload(); await reader.goto(boardUrl); await reader.reload();
   const live = page => page.getByRole('status', { name: '看板同步狀態', exact: true });
   await live(owner).filter({ hasText: '即時同步' }).waitFor(); await live(reader).filter({ hasText: '即時同步' }).waitFor();
-  const changed = await call(owner, 'updateIssue', { id: issue.id, expectedRevision: issue.revision, title: '跨使用者即時更新', state: 'in_progress' });
+  const changed = await call(owner, 'updateIssue', { id: issue.id, expectedRevision: issue.revision, title: '跨使用者即時更新', state: 'inprogress' });
   const card = reader.locator(`[data-issue="${issue.identifier}"]`);
   await card.getByText('跨使用者即時更新', { exact: true }).waitFor({ timeout: 8000 });
-  assert.equal(await card.evaluate(el => el.closest('[data-column]').dataset.column), 'in_progress');
+  assert.equal(await card.evaluate(el => el.closest('[data-column]').dataset.column), 'inprogress');
   assert.equal(await card.locator('select').count(), 0);
   const signalDeadline = Date.now() + 8000;
   while (!signals.length && Date.now() < signalDeadline) await new Promise(resolve => setTimeout(resolve, 50));

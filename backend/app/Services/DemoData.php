@@ -61,17 +61,17 @@ class DemoData
             $run = fn ($op, $input) => $service->execute($op, [...$input, 'requestId' => (string) Str::uuid()]);
             foreach (['first', 'second'] as $index => $name) {
                 $project = $run('createProject', ['name' => $name, 'code' => strtoupper($name), 'description' => $name.' 的示範工作, 可自由修改；重設 seed 可還原']);
-                $run('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => [...$project['statuses'], ['id' => 'review', 'label' => '待驗收', 'category' => 'active', 'color' => '#8757b3']]]);
+                $run('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => [...$project['statuses'], ['id' => 'review', 'label' => '待驗收', 'color' => '#8757b3']]]);
                 ProjectAclUpgrade::seedAssignments($tenant);
                 // 非開發者成員不能在 second 被指派新工作
                 $create = fn ($title, $fields = []) => $run('createIssue', ['projectId' => $project['id'], 'title' => $title, 'assignee' => self::ACCOUNTS[$index ? 'maintainer' : 'developer']['id'], ...$fields]);
                 $epic = $create($index ? '正式上線準備' : '會員功能第一版', ['type' => 'epic', 'assignee' => self::ACCOUNTS['manager']['id']]);
-                $parent = $create($index ? '完成上線前檢查' : '完成登入功能', ['epicId' => $epic['id'], 'estimateMinutes' => 60, 'state' => 'in_progress', 'assignee' => self::ACCOUNTS['maintainer']['id']]);
+                $parent = $create($index ? '完成上線前檢查' : '完成登入功能', ['epicId' => $epic['id'], 'estimateMinutes' => 60, 'state' => 'inprogress', 'assignee' => self::ACCOUNTS['maintainer']['id']]);
                 $api = $create($index ? '檢查 API 健康狀態' : '實作登入 API', ['parentIssueId' => $parent['id'], 'estimateMinutes' => 120, 'state' => 'review']);
-                $ui = $create($index ? '確認手機畫面' : '完成登入畫面', ['parentIssueId' => $parent['id'], 'estimateMinutes' => 90, 'state' => 'todo']);
+                $ui = $create($index ? '確認手機畫面' : '完成登入畫面', ['parentIssueId' => $parent['id'], 'estimateMinutes' => 90, 'state' => 'open']);
                 $bug = $create($index ? '修正通知文案' : '修正表單錯誤提示', ['type' => 'bug', 'epicId' => $epic['id'], 'estimateMinutes' => 30, 'priority' => 'high', 'relatedIssueIds' => [$parent['id']], 'dueDate' => now('Asia/Taipei')->subDay()->toDateString()]);
-                $create($index ? '整理發布說明' : '整理操作說明', ['type' => 'task', 'state' => 'done', 'epicId' => $epic['id'], 'estimateMinutes' => 60]);
-                $create('討論下一次迭代範圍', ['state' => 'backlog', 'assignee' => '']);
+                $create($index ? '整理發布說明' : '整理操作說明', ['type' => 'task', 'state' => 'closed', 'epicId' => $epic['id'], 'estimateMinutes' => 60]);
+                $create('討論下一次迭代範圍', ['state' => 'open', 'assignee' => '']);
                 foreach ([[$parent, 30, 2, 'maintainer'], [$api, 90, 1, $index ? 'maintainer' : 'developer'], [$ui, 45, 0, $index ? 'maintainer' : 'developer']] as [$issue, $minutes, $daysAgo, $role]) {
                     $account = self::ACCOUNTS[$role];
                     $member = $tenant->require('members', $account['id']);

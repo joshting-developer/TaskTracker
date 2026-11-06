@@ -25,7 +25,7 @@ import NotificationPreview from './components/NotificationPreview.vue';
 import { api, setWorkspaceContext } from './api/index.js';
 import WorkspaceSwitcher from './components/WorkspaceSwitcher.vue';
 import WorkspaceInvitation from './components/WorkspaceInvitation.vue';
-import { categoryFor, dateInTaipei, PRIORITIES, statusesFor, TYPES } from './domain/model.js';
+import { isClosed, dateInTaipei, PRIORITIES, statusesFor, TYPES } from './domain/model.js';
 import { CONDITIONS, filterIssues, missingFilters } from './domain/filters.js';
 
 const workspace = ref({ projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} });
@@ -53,7 +53,7 @@ const landing = ref('home');
 const analysisMode = ref('index');
 const canAnalyze = computed(() => workspace.value.meta.permissions?.includes('workspace.timeReports.read'));
 const search = ref('');
-const stateFilter = ref('');
+const stateFilter = ref([]);
 const priorityFilter = ref('');
 const assigneeFilter = ref(''), epicFilter = ref(''), typeFilter = ref(''), conditionFilter = ref('');
 const sort = ref('updated');
@@ -119,10 +119,10 @@ const title = computed(() => selectedProject.value?.name || '專案列表');
 const currentFeature = computed(() => section.value === 'tasks'
   ? view.value === 'boards' ? '看板列表' : view.value === 'board' ? '任務看板' : scope.value === 'mine' ? '我的任務' : '任務列表'
   : { time: '工時月曆', settings: '狀態設定', members: '專案成員', notifications: '通知預覽' }[section.value]);
-const filterActive = computed(() => search.value || stateFilter.value || priorityFilter.value || assigneeFilter.value || epicFilter.value || typeFilter.value || conditionFilter.value);
+const filterActive = computed(() => search.value || stateFilter.value.length || priorityFilter.value || assigneeFilter.value || epicFilter.value || typeFilter.value || conditionFilter.value);
 const filterFields = { state: stateFilter, priority: priorityFilter, assignee: assigneeFilter, epicId: epicFilter, type: typeFilter, condition: conditionFilter };
 const activeFilterChips = computed(() => [
-  { key: 'state', label: '狀態', value: stateFilter.value, name: projectStates.value.find(item => item.id === stateFilter.value)?.label || '已移除' },
+  { key: 'state', label: '狀態', value: stateFilter.value.length, name: stateFilter.value.map(id => projectStates.value.find(item => item.id === id)?.label || '已移除').join('、') },
   { key: 'priority', label: '優先級', value: priorityFilter.value, name: PRIORITIES.find(item => item.id === priorityFilter.value)?.label },
   { key: 'assignee', label: '負責人', value: assigneeFilter.value, name: workspace.value.members.find(item => item.id === assigneeFilter.value)?.name || '已移除' },
   { key: 'epicId', label: 'Epic', value: epicFilter.value, name: epicFilter.value === 'unlinked' ? '尚未掛入 Epic' : projectAllIssues.value.find(item => item.id === epicFilter.value)?.title || '已移除' },
@@ -431,7 +431,7 @@ function newIssue(state = '', type = 'task', epicId = '') {
   if (!canCreateIssue.value) return;
   defaultType.value = type;
   defaultEpicId.value = epicId;
-  defaultState.value = typeof state === 'string' && state ? state : projectStates.value.find((item) => item.category === 'active')?.id || projectStates.value[0].id;
+  defaultState.value = typeof state === 'string' && state ? state : projectStates.value.find((item) => item.id === 'open')?.id || projectStates.value[0].id;
   opener = document.activeElement;
   if (!selectedProject.value) creatingProject.value = true;
   else creatingIssue.value = true;
@@ -479,8 +479,8 @@ async function moveIssue(issue, fields) {
     if (failure.code === 'REVISION_CONFLICT') { await refresh(); error.value = `${failure.message}, 清單已更新`; }
   } finally { moving.value = ''; }
 }
-function clearFilters() { search.value = ''; stateFilter.value = ''; priorityFilter.value = ''; assigneeFilter.value = ''; epicFilter.value = ''; typeFilter.value = ''; conditionFilter.value = ''; }
-function overdue(issue) { return issue.dueDate && issue.dueDate < today.value && !['done', 'canceled'].includes(categoryFor(issue, selectedProject.value)); }
+function clearFilters() { search.value = ''; stateFilter.value = []; priorityFilter.value = ''; assigneeFilter.value = ''; epicFilter.value = ''; typeFilter.value = ''; conditionFilter.value = ''; }
+function overdue(issue) { return issue.dueDate && issue.dueDate < today.value && !isClosed(issue); }
 function shortDate(value) { return value ? `${Number(value.slice(5, 7))}/${Number(value.slice(8))}` : ''; }
 function option(items, id) { return items.find((item) => item.id === id); }
 function projectFor(issue) { return projects.value.find((item) => item.id === issue.projectId); }
@@ -566,7 +566,7 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
             </div>
           </div>
           <div id="task-filters" v-show="filtersOpen" class="advanced-filters" role="group" aria-label="任務篩選條件">
-            <label>狀態<select v-model="stateFilter" aria-label="篩選狀態"><option value="">所有狀態</option><option v-if="stateFilter && !projectStates.some(state => state.id === stateFilter)" :value="stateFilter" disabled>狀態已移除（需修正）</option><option v-for="state in projectStates" :key="state.id" :value="state.id">{{ state.label }}</option></select></label>
+            <div class="status-filter"><span>狀態</span><details @keydown.esc.prevent="$event.currentTarget.open = false" @focusout="!$event.currentTarget.contains($event.relatedTarget) && ($event.currentTarget.open = false)"><summary aria-label="篩選狀態">{{ stateFilter.length ? `已選 ${stateFilter.length} 個狀態` : '所有狀態' }}</summary><div class="status-filter-options"><label v-for="state in projectStates" :key="state.id"><input v-model="stateFilter" type="checkbox" :value="state.id" :aria-label="`篩選狀態 ${state.label}`" />{{ state.label }}</label><button v-if="stateFilter.length" type="button" class="text-button" @click="stateFilter = []">清除狀態</button></div></details></div>
             <label>優先級<select v-model="priorityFilter" aria-label="篩選優先級"><option value="">所有優先級</option><option v-for="priority in PRIORITIES" :key="priority.id" :value="priority.id">{{ priority.label }}</option></select></label>
             <label>負責人<select v-model="assigneeFilter" aria-label="篩選負責人"><option value="">所有成員</option><option v-if="assigneeFilter && !workspace.members.some(member => member.id === assigneeFilter)" :value="assigneeFilter" disabled>成員已移除（需修正）</option><option v-for="member in workspace.members" :key="member.id" :value="member.id">{{ member.name }}</option></select></label>
             <label>Epic<select v-model="epicFilter" aria-label="篩選 Epic"><option value="">所有 Epic</option><option value="unlinked">尚未掛入 Epic</option><option v-if="epicFilter && epicFilter !== 'unlinked' && !projectAllIssues.some(issue => issue.id === epicFilter && issue.type === 'epic')" :value="epicFilter" disabled>Epic 已移除（需修正）</option><option v-for="epic in projectAllIssues.filter(issue => issue.type === 'epic')" :key="epic.id" :value="epic.id">{{ epic.title }}</option></select></label>
@@ -574,7 +574,7 @@ onBeforeUnmount(() => { window.removeEventListener('hashchange', readHash); wind
             <label>情況<select v-model="conditionFilter" aria-label="篩選情況"><option v-if="conditionFilter && !CONDITIONS.some(condition => condition.id === conditionFilter)" :value="conditionFilter" disabled>舊前置篩選已停用（需修正）</option><option v-for="condition in CONDITIONS" :key="condition.id" :value="condition.id">{{ condition.label }}</option></select></label>
           </div>
           <div v-if="activeFilterChips.length" class="active-filter-chips" aria-label="已套用篩選">
-            <button v-for="chip in activeFilterChips" :key="chip.key" class="active-filter-chip" :aria-label="`移除篩選：${chip.label}：${chip.name}`" @click="filterFields[chip.key].value = ''"><span>{{ chip.label }}：{{ chip.name }}</span><Icon name="close" :size="13" /></button>
+            <button v-for="chip in activeFilterChips" :key="chip.key" class="active-filter-chip" :aria-label="`移除篩選：${chip.label}：${chip.name}`" @click="filterFields[chip.key].value = chip.key === 'state' ? [] : ''"><span>{{ chip.label }}：{{ chip.name }}</span><Icon name="close" :size="13" /></button>
             <button class="text-button" @click="clearFilters">清除全部篩選</button>
           </div>
           <div v-if="filterWarnings.length" class="filter-warning" role="alert">{{ filterWarnings.join('、') }}, 請重新選擇或清除條件。原條件保留, 沒有放寬搜尋</div>

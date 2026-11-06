@@ -47,7 +47,6 @@ class RelationalChildren
                 'id' => $state->code,
                 'label' => $state->label,
                 'color' => $state->color,
-                'category' => $state->category,
             ], $this->items('project_statuses', $row->id));
             $result['settingsHistory'] = [];
         }
@@ -103,7 +102,7 @@ class RelationalChildren
                 ], [
                     'workspace_id' => $row->workspace_id,
                     'label' => $state['label'],
-                    'category' => $state['category'],
+                    'category' => $state['id'] === 'closed' ? 'done' : 'active',
                     'color' => $state['color'],
                     'position' => $position,
                 ]);

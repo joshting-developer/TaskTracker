@@ -56,7 +56,7 @@ class DemoSeedTest extends TestCase
         $jack = User::create(['id' => '00000000-0000-4000-8000-000000000101', 'name' => 'Jack', 'email' => 'jack100398@gmail.com', 'password' => Hash::make('legacy-test-password')]);
         $tenant->put('members', $jack->id, ['id' => $jack->id, 'name' => 'Jack', 'role' => 'owner']);
         $tenant->put('projects', 'original', ['id' => 'original', 'name' => '手改保留', 'code' => 'ORIGINAL', 'revision' => 7]);
-        $tenant->put('issues', 'original-issue', ['id' => 'original-issue', 'projectId' => 'original', 'identifier' => 'ORIGINAL-1', 'state' => 'todo', 'title' => '保留卡片', 'assignee' => $jack->id, 'history' => [['actor' => 'Jack']]]);
+        $tenant->put('issues', 'original-issue', ['id' => 'original-issue', 'projectId' => 'original', 'identifier' => 'ORIGINAL-1', 'state' => 'open', 'title' => '保留卡片', 'assignee' => $jack->id, 'history' => [['actor' => 'Jack']]]);
         $tenant->put('timeEntries', 'original-time', ['id' => 'original-time', 'projectId' => 'original', 'issueId' => 'original-issue', 'userId' => $jack->id, 'workDate' => '2026-10-01', 'minutes' => 60]);
         $snapshot = [$tenant->all('projects'), $tenant->all('issues'), $tenant->all('timeEntries')];
         // 最後一組帳號衝突時, 不可留下前三組或更新 marker
