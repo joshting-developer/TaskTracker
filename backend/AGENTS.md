@@ -4,12 +4,13 @@
 
 ## 後端共用規範
 
-後端程式開發、review及測試設計先讀 [backend-development-standards](../skills/backend-development-standards/SKILL.md)，再按工作選讀六份references；專案入口亦在`.agents/skills/backend-development-standards`。來源與適配校驗見 [來源清單](../skills/backend-standards-sources.json)。
+後端程式開發、review及測試設計先讀 [ECC laravel-patterns](../skills/vendor/laravel-patterns/SKILL.md)，再讀 [Laravel Architecture](../skills/laravel-architecture/SKILL.md) 與按需references。均由專案`.agents/skills`提供入口；來源及配置見[開發skills配置](../docs/development-skills.md)。舊backend-development-standards已移除。
 
-- 新增／修改的class、function使用中文docblock，說清責任、實際參數及回傳；展開流程，避免密集單行及需要心算的布林條件。
-- 只建立有實際用途的Controller／Service／Repository／Resource或Transformer，流程要能從入口理解；不以新增空wrapper代替責任拆分。
-- 規範自後續相關改動採用，未修改的既有原型不視為已合規；使用者於2026-11-04後續已要求調整，核心流程已分層；後續仍按明確範圍逐步整理，不為套規範改動無關工具或重命名舊測試。
-- TaskTracker既有產品契約與下列授權／隔離規則優先；CLM的時間macro、Kibana、Report／PDF與安裝包只是來源案例，不自動加入本專案。
+- 架構／慣例以ECC為準，本地Architecture補足其未規定處；使用者需求、產品契約與下方資料／授權安全限制優先。
+- Controller只處理HTTP協調，輸入由FormRequest驗證；Service協調流程、Action是有實際用途的單一用例；Repository只做資料存取。簡單CRUD可由Service直接用Eloquent，不讓Controller查DB，不為每個Model建立空Repository／Action。
+- 命名、Repository回傳、Resource使用、交易owner及Unit／Feature必要條件依Architecture兩份references，不再沿用舊測試命名硬性格式或CLM專用例子。
+- 保留既有Session／CSRF、RPC／ok-data／DomainError、revision／requestId與permission＋scope；不抄ECC範例改API、資料庫或登入方式。
+- 2026-11-06使用者暫緩重構；skills安裝不代表既有程式已全面合規，也不授權批次格式化、搬層或改依賴。
 
 ## 專案限制與驗證
 

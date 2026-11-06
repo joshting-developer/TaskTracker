@@ -1,4 +1,0 @@
-interface:
-  display_name: "Backend Development Standards"
-  short_description: "TaskTracker Laravel／PHP 可讀性、分層、API與測試規範"
-  default_prompt: "Use $backend-development-standards to implement or review this TaskTracker backend change and read only the relevant references."

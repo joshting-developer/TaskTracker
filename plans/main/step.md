@@ -1,3 +1,14 @@
+## 2026-11-06 安裝ECC／Vue與專案Laravel Architecture skills
+
+- 原要求安裝ECC laravel-patterns與vuejs-ai/vue-best-practices，新增Laravel Architecture補充分層規則；使用者隨後明確要求暫緩重構，本輪僅skills及規範／文件。
+- 官方GitHub固定commit、原文及LICENSE存skills/vendor，以.agents/skills相對symlink啟用；不全域安裝、不執行上游腳本、不引入其餘ECC skills。
+- 新Laravel Architecture定義Repository／Service／Action邊界、CRUD例外、回傳型別、Resource、命名、交易及Unit／Feature測試；衝突以ECC為準，TaskTracker產品契約及資料隔離保留。
+- 已安裝固定版本ECC（b38be6a7）／Vue（198f0cd8）與本地Laravel Architecture，三個.agents入口皆有效；原文含LICENSE共26檔Git blob／SHA-256校驗通過。
+- 已明訂Controller／Request／Service／Action／Repository／Model／Resource責任、簡單CRUD例外、Model／Collection／Paginator／DTO回傳、命名、transaction owner及按風險的Unit／Feature測試矩陣；ECC優先於舊慣例，保留產品契約與資料隔離。
+- 舊backend-development-standards及其symlink已依指示移除，原來源清單移skills/history供追溯。root／backend AGENTS、CLAUDE、README與skills索引同步，不修改共用目錄或全域環境。
+- 驗證通過：26檔雜湊、全部skill symlink、三個frontmatter、Vue四份核心reference、本地Markdown連結及diff空白；沒有產品程式／測試／依賴／DB／Docker變更，純文件不跑業務測試。配置與衝突表見docs/development-skills.md。
+- 不修改frontend/src、backend/app、測試、依賴、DB或Docker，不宣稱現有程式已符合新規範。
+
 ## 2026-11-06 限縮新增任務入口
 
 - 使用者要求頁首新增任務只在任務列表出現；看板由欄位／泳道的＋建立，其他專案畫面不顯示。

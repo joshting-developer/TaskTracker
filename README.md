@@ -260,3 +260,7 @@ Markdown 專用檢查：在 `frontend/` 執行 `E2E_API_URL=http://127.0.0.1:130
 版本與維護：見[前端後續改善與PHP版本檢查](docs/前端後續改善與PHP版本檢查-2026-11-04.md)。本機PHP若遇到Homebrew／ICU錯誤，先使用`docker compose exec backend php artisan ...`，本專案不要求修改主機共用PHP。PHP映像修補後需重建並重新建立backend／queue／websocket，單純restart不會換映像。
 
 後端程式閱讀：2026-11-04已拆分明確HTTP入口、Project／Issue／TimeEntry服務及授權／重試邊界，見[Laravel後端程式導覽](docs/backend-development.md)。既有API與資料契約保留，尚未遷移完整關聯式業務表。
+
+## 開發 skills
+
+Laravel使用ECC `laravel-patterns`與本地`laravel-architecture`；Vue使用`vue-best-practices`，UI／UX仍搭配原有兩份skills。入口集中於`.agents/skills/`，僅專案內生效。舊後端規範skill已移除；2026-11-06依使用者指示先配置規範，暫緩重構。來源與具體約束見[開發skills配置](docs/development-skills.md)。

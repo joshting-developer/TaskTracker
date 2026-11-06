@@ -18,7 +18,7 @@ Laravel 13 JSON API, 獨立於 `../frontend` 的 Vue SPA, 不使用 Blade／Iner
 
 PHP：Composer最低需求8.3，Docker指定8.5.12；目前以Docker為驗證環境，未宣稱8.3／8.4均已測試。版本更新紀錄及檢查結果見[版本報告](../docs/前端後續改善與PHP版本檢查-2026-11-04.md)。
 
-開發規範：先讀 [AGENTS.md](AGENTS.md) 與 [backend-development-standards](../skills/backend-development-standards/SKILL.md)，涵蓋中文註解、可讀性、分層、API契約、併發與測試。原共用規範已搬入專案並適配；2026-11-04已依新指示完成核心流程分層與可讀性整理；同日後續已完成關聯式 schema 與舊資料遷移。
+開發規範：先讀 [AGENTS.md](AGENTS.md)、[ECC laravel-patterns](../skills/vendor/laravel-patterns/SKILL.md) 與 [Laravel Architecture](../skills/laravel-architecture/SKILL.md)。後者補充分層／命名／回傳／交易／測試；舊後端skill已移除。2026-11-06本輪只配置skills，使用者已暫緩重構，既有程式不宣稱全面符合新規範。詳見[配置與衝突處理](../docs/development-skills.md)。
 
 閱讀入口：見[後端程式導覽](../docs/backend-development.md)，包含請求流程、各class責任、相容邊界及驗證紀錄。
 

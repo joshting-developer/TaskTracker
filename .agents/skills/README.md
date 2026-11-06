@@ -14,8 +14,12 @@ UI／UX 審查或設計工作才讀取相關 skill。Pro Max 優先查可用性�
 本輪已明確讀取並使用兩份 skill。此目錄提供後續 agent 的專案 skill 入口, 不代表既有對話的工具清單會立即重新載入；需要時可直接指定上述 SKILL.md。完整背景見 [skills/README.md](../../skills/README.md)。
 
 
-## 後端開發規範（2026-11-04）
+## 開發skills（2026-11-06）
 
-[backend-development-standards](backend-development-standards/SKILL.md) 以相對symlink連到 [專案副本](../../skills/backend-development-standards/SKILL.md)，來源為workspace共用skills，包含六份references。用於Laravel／PHP開發、review與後端測試設計，預設允許正常自動選用；也可明確呼叫`$backend-development-standards`。後續對話是否已載入可用清單，以該次實際清單為準。
+| Skill | 入口 | 責任 |
+| --- | --- | --- |
+| laravel-patterns | [SKILL.md](laravel-patterns/SKILL.md) | ECC Laravel基礎，架構慣例衝突時優先 |
+| laravel-architecture | [SKILL.md](laravel-architecture/SKILL.md) | 專案分層、命名、回傳、交易及測試明確約束 |
+| vue-best-practices | [SKILL.md](vue-best-practices/SKILL.md) | Vue 3 Composition API、SFC、reactivity、資料流與composables |
 
-TaskTracker副本適配permission＋scope、DomainError、SQLite測試隔離及現有產品契約；來源校驗與修改範圍見 [backend-standards-sources.json](../../skills/backend-standards-sources.json)。舊相容別名backend-coding-style／clm-backend-structure不另外安裝。只接入規範，不代表已重構或現有程式均符合規範；不改全域skills或共用來源。
+均為相對symlink，指向skills/vendor原文或skills/laravel-architecture本地規範，不重複套用。舊backend-development-standards已移除，不再啟用。配置與來源見[開發skills配置](../../docs/development-skills.md)及[校驗](../../skills/development-sources.json)。本輪重構暫緩，沒有變更產品程式；不能把已安裝說成現有程式已全面合規。

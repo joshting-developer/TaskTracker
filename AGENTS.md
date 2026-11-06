@@ -135,8 +135,12 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 使用者已指定 UI／UX 工作使用 `.agents/skills/ui-ux-pro-max/SKILL.md` 及 `.agents/skills/design-taste-frontend/SKILL.md`。後者對 TaskTracker 採 app-screen 流程；保留使用者產品決策與 Vue／Vuetify, 不因 house style 自動換色。審查要有實際登入畫面／操作證據, 區分可用性問題與審美偏好；只要求審查時先交報告, 不直接修改產品 UI。來源與使用邊界見 `.agents/skills/README.md`。
 
 
-## 後端開發 skill
+## 後端開發 skills
 
-後端Laravel／PHP開發、review與測試設計使用 [backend-development-standards](skills/backend-development-standards/SKILL.md)，由`.agents/skills/backend-development-standards`提供專案入口。這是2026-11-04由workspace共用skills搬入並適配的副本，來源與差異見 [校驗清單](skills/backend-standards-sources.json)；使用細節及現行授權狀態以 [backend/AGENTS.md](backend/AGENTS.md) 為準。
+2026-11-06：後端工作使用專案內 [ECC laravel-patterns](skills/vendor/laravel-patterns/SKILL.md) 與 [Laravel Architecture](skills/laravel-architecture/SKILL.md)，入口為`.agents/skills/laravel-patterns`及`.agents/skills/laravel-architecture`。後者補充分層／命名／回傳型別／Resource／交易／測試，與舊規範相悖時以ECC為準。既有產品契約、permission＋scope與資料安全限制不因範例改寫；適用配置見[開發skills配置](docs/development-skills.md)。
 
-上方2026-10-19的原型狀態保留沿革；2026-10-30已完成Project ACL及固定矩陣，不應再當成空間內共享。引入規範不代表現有程式已全面合規，使用者於2026-11-04後續已要求開始調整，核心流程已分層，現況見docs/backend-development.md。
+舊backend-development-standards已由使用者授權移除，不再引用或套用；歷史來源校驗留於skills/history。使用者已暫緩重構，本輪只安裝skills及整理規範，不代表現有程式已合規，也不授權自動重構。
+
+## Vue開發 skill
+
+Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-practices](skills/vendor/vue-best-practices/SKILL.md)，入口`.agents/skills/vue-best-practices`。既有Vue 3＋Vuetify與JavaScript繼續使用，保留Composition API／script setup；TypeScript為後續新功能或明確遷移時的優先選項，不因安裝skill改寫全庫、裝Router／Pinia或改路由。UI設計與可用性仍搭配上述兩份UI／UX skills，Vue skill負責程式結構。

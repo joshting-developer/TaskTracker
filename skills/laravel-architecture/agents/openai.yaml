@@ -1,0 +1,4 @@
+interface:
+  display_name: "TaskTracker Laravel Architecture"
+  short_description: "補充ECC的分層、命名、交易、API與測試規則"
+  default_prompt: "Use $laravel-architecture with $laravel-patterns to plan or review this TaskTracker backend change. Keep existing contracts and do not add empty layers."

@@ -1,0 +1,206 @@
+{
+  "checked_date": "2026-11-06",
+  "scope": "Project-local fixed upstream copies; no global install, hooks, runtime code or extra skills.",
+  "skills": [
+    {
+      "name": "laravel-patterns",
+      "repository": "https://github.com/affaan-m/everything-claude-code",
+      "commit": "b38be6a7f6350964d59328b52f0624e1d1d552d1",
+      "upstream_path": "skills/laravel-patterns",
+      "local_path": "skills/vendor/laravel-patterns",
+      "files": [
+        {
+          "path": "skills/vendor/laravel-patterns/LICENSE",
+          "upstream_path": "LICENSE",
+          "blob_sha1": "b832b6f642312312367c07688dc7426db40a82ed",
+          "sha256": "326146379f01bb137c0a5d3c54770c1aa31076705c8b88a7f6b26a460f6221b2",
+          "bytes": 1071
+        },
+        {
+          "path": "skills/vendor/laravel-patterns/SKILL.md",
+          "upstream_path": "skills/laravel-patterns/SKILL.md",
+          "blob_sha1": "a3ce33fdfa0550f2ec9e5186d0924a2382e644bc",
+          "sha256": "6fa9d96a7b944ef9775e2ecb93a56bc29d6219e34eb5af491792638fc5cb46b4",
+          "bytes": 10664
+        }
+      ]
+    },
+    {
+      "name": "vue-best-practices",
+      "repository": "https://github.com/vuejs-ai/skills",
+      "commit": "198f0cd8f7f9c0a3d9b566ccc16de6677519ee78",
+      "upstream_path": "skills/vue-best-practices",
+      "local_path": "skills/vendor/vue-best-practices",
+      "files": [
+        {
+          "path": "skills/vendor/vue-best-practices/LICENSE",
+          "upstream_path": "LICENSE",
+          "blob_sha1": "3f08a54d01249c8a7afd645b72f0786da7bc2d9b",
+          "sha256": "2ea4e714425cf682879c4dea3d0d0a1a379a1418f463063f9eea1aa709ad946d",
+          "bytes": 1098
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/SKILL.md",
+          "upstream_path": "skills/vue-best-practices/SKILL.md",
+          "blob_sha1": "5db46bfc641d23b0c3cde3d8886cd3453e07c61d",
+          "sha256": "3a601da4b2cc46b1712fcedb1ce434f0c263e29c2a8193ccf84dcbd0b7c03378",
+          "bytes": 10475
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/animation-class-based-technique.md",
+          "upstream_path": "skills/vue-best-practices/references/animation-class-based-technique.md",
+          "blob_sha1": "d79f7965b9e440b51e652d8914459ce9e02d258d",
+          "sha256": "3d59a496337d412870464c502a3b60c590c60b7047254abddb141b62ae7bd42e",
+          "bytes": 5026
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/animation-state-driven-technique.md",
+          "upstream_path": "skills/vue-best-practices/references/animation-state-driven-technique.md",
+          "blob_sha1": "baa7fd17acd34fc973c5fcc7e6c7334cce630bf8",
+          "sha256": "d780b876e5bb18b52b7646660b2e5fff1cd672a07a1c40b5809227d6893eb90e",
+          "bytes": 5829
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/component-async.md",
+          "upstream_path": "skills/vue-best-practices/references/component-async.md",
+          "blob_sha1": "b39310d2e93c23b6106fac8266e99f1d21371129",
+          "sha256": "e20036c6622a1647d9e1c23f1fe871b2465cf4bab434422e17eb05710c8878f3",
+          "bytes": 2532
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/component-data-flow.md",
+          "upstream_path": "skills/vue-best-practices/references/component-data-flow.md",
+          "blob_sha1": "bea52ce251592ca21da2956f9eecf3fcf7823a42",
+          "sha256": "ce31aafce44a5e455f0c0a4e32833ef2c3d74730c110aa108b179f27b597e537",
+          "bytes": 10520
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/component-fallthrough-attrs.md",
+          "upstream_path": "skills/vue-best-practices/references/component-fallthrough-attrs.md",
+          "blob_sha1": "5362fa4af9b0e3cc7324dd679537527bc134c0ee",
+          "sha256": "62d291508df9997d3b6c5adfde251d6c722926ecf5f7168dea0272564f119919",
+          "bytes": 4047
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/component-keep-alive.md",
+          "upstream_path": "skills/vue-best-practices/references/component-keep-alive.md",
+          "blob_sha1": "f887691fe331873edb285ca008cd6e42c4f018db",
+          "sha256": "8738608665ad42baa6d2d7548d46b3ecd318a85f4ec3a0afac5f728948ade3ca",
+          "bytes": 3487
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/component-slots.md",
+          "upstream_path": "skills/vue-best-practices/references/component-slots.md",
+          "blob_sha1": "f77a91c5c7e9864744be1d6f70d4e89a73a27c84",
+          "sha256": "726fdac036fcdb6071e669f1ed90af5b3bdc5fc150ad82ff41afa0af5e39f481",
+          "bytes": 4469
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/component-suspense.md",
+          "upstream_path": "skills/vue-best-practices/references/component-suspense.md",
+          "blob_sha1": "4d9ecab9d872e5e8e5e4ed29305b86d053e3899a",
+          "sha256": "6a5a98dcc6a2093f038f877eb6fefeedb199aba058a5dea71b139017c557bdd1",
+          "bytes": 5367
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/component-teleport.md",
+          "upstream_path": "skills/vue-best-practices/references/component-teleport.md",
+          "blob_sha1": "db48db2d7357620852ab16df9d0c96478ca0d488",
+          "sha256": "4e48748842262df50c293ab23857c22c107e3e8360c87da482d23f0eb88b2c3f",
+          "bytes": 2921
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/component-transition-group.md",
+          "upstream_path": "skills/vue-best-practices/references/component-transition-group.md",
+          "blob_sha1": "f23875afe4ac95c9c8f7164b901b53985c0d7d98",
+          "sha256": "4b05ae5474ea9e298016202d791c96e6b149d0395bb36427cd77ca9cdc52fd75",
+          "bytes": 3004
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/component-transition.md",
+          "upstream_path": "skills/vue-best-practices/references/component-transition.md",
+          "blob_sha1": "e6abed78322bb846bb3a3c220b660c123df09b62",
+          "sha256": "bc59a19f2e8eed7a228bdb6383d423a57c6dd75704ae11c9596018c9fb1cac42",
+          "bytes": 2722
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/composables.md",
+          "upstream_path": "skills/vue-best-practices/references/composables.md",
+          "blob_sha1": "6b11c4603030ce93cef86c4f60ed74144869037f",
+          "sha256": "4ae8492ca6ad62ba48281923da115e660c91ab3b4e2e1905cfafdb45928f9b7a",
+          "bytes": 8630
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/directives.md",
+          "upstream_path": "skills/vue-best-practices/references/directives.md",
+          "blob_sha1": "8412fbc8880ae2c6c4e108ff570a159705a18077",
+          "sha256": "70d4c68ea15a961eec6471c42b4c44d37adfeb094f694b6811fb718eab7b2cf7",
+          "bytes": 3803
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/perf-avoid-component-abstraction-in-lists.md",
+          "upstream_path": "skills/vue-best-practices/references/perf-avoid-component-abstraction-in-lists.md",
+          "blob_sha1": "f761815785fb608bc0bce85a026f55fbfa2a74b6",
+          "sha256": "8f14401852672527918a4d9e21fed49826e0fe78e0b5584907f689ca648cac71",
+          "bytes": 4683
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/perf-v-once-v-memo-directives.md",
+          "upstream_path": "skills/vue-best-practices/references/perf-v-once-v-memo-directives.md",
+          "blob_sha1": "dad822a8cb1cf21ffdf0b4bb69172bf4df07eaae",
+          "sha256": "88ac485f1cc3b59698266dccfd0f581a56ce5cd77a4bade3f135cb90c60d5d8c",
+          "bytes": 6191
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/perf-virtualize-large-lists.md",
+          "upstream_path": "skills/vue-best-practices/references/perf-virtualize-large-lists.md",
+          "blob_sha1": "2ab5d1ead0649cd00e21e43b689eacbb48ebdeb3",
+          "sha256": "51e6870226284398db9f6762179e730d2ac424d939869e3386a2d66732c5bda3",
+          "bytes": 5002
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/plugins.md",
+          "upstream_path": "skills/vue-best-practices/references/plugins.md",
+          "blob_sha1": "190cee822d23ed3ec06970118f1cb4be9837ab93",
+          "sha256": "b1583522aca059c4295708517ba987530dd6a13134f6046aed9fd7327fb9c936",
+          "bytes": 3882
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/reactivity.md",
+          "upstream_path": "skills/vue-best-practices/references/reactivity.md",
+          "blob_sha1": "876558b036690814f43850d5e109de9d101c5154",
+          "sha256": "9794443cd6018408fd16b03a7ba7a6918d8d054404a19b72478e3b84c6648573",
+          "bytes": 8452
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/render-functions.md",
+          "upstream_path": "skills/vue-best-practices/references/render-functions.md",
+          "blob_sha1": "b64942c5795f3cff454ff0788d6d6e2bd4158502",
+          "sha256": "01b35e671f7890939fa5acda52c5cf0a50b398e153d80cc9fc9f74c19e460357",
+          "bytes": 3866
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/sfc.md",
+          "upstream_path": "skills/vue-best-practices/references/sfc.md",
+          "blob_sha1": "d1c3981c7364b7f282b91447bcd8379b85faa243",
+          "sha256": "dfe09f28869a2bc44e618068c3b6269f55d925d096714df25e253d2bbb58c28f",
+          "bytes": 6216
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/state-management.md",
+          "upstream_path": "skills/vue-best-practices/references/state-management.md",
+          "blob_sha1": "02423ab245e232fcda3bedafb2ed9a51cffd9f37",
+          "sha256": "9e98a1c6d9009c0c8ef7228b6b3bcf10d30be6b713ffcef448ab7db3b419a851",
+          "bytes": 3380
+        },
+        {
+          "path": "skills/vendor/vue-best-practices/references/updated-hook-performance.md",
+          "upstream_path": "skills/vue-best-practices/references/updated-hook-performance.md",
+          "blob_sha1": "6375e862b234a43a89a399ee2d22ed7e6b0fa311",
+          "sha256": "ded08ce93f9b23082538846f84e8d159d84af757c27b2c6b43a9283df803a32b",
+          "bytes": 4618
+        }
+      ]
+    }
+  ]
+}
