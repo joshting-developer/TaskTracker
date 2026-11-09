@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import Icon from './Icon.vue';
 import IssueContext from './IssueContext.vue';
+import { buildIssueIndex } from '../domain/issueIndex.js';
 import { isClosed, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
 const props = defineProps({ syncState: { type: String, default: 'polling' }, project: Object, issues: Array, visibleIssues: Array, entries: Array, members: Array, userId: String, moving: String, today: String, boardKey: String, includedEpicIds: Array, canWrite: { type: Boolean, default: true }, canCreate: { type: Boolean, default: true } });
@@ -22,12 +23,32 @@ watch(preferenceKey, () => {
 watch([group, density, collapsed], () => {
   try { localStorage.setItem(preferenceKey.value, JSON.stringify({ group: group.value, density: density.value, collapsed: collapsed.value })); } catch {}
 });
+const contextIndex = computed(() => buildIssueIndex(props.issues, props.entries));
+const membersById = computed(() => new Map(props.members.map(member => [member.id, member.name])));
+const stateCounts = computed(() => {
+  const counts = new Map();
+  for (const issue of props.visibleIssues) counts.set(issue.state, (counts.get(issue.state) || 0) + 1);
+  return counts;
+});
 const lanes = computed(() => {
-  if (group.value === 'none') return [{ id: '', label: '全部任務', issues: props.visibleIssues }];
-  const epics = props.issues.filter(issue => issue.type === 'epic' && (!props.includedEpicIds || props.includedEpicIds.includes(issue.id)));
-  const rows = epics.map(epic => ({ id: epic.id, label: epic.title, epic, issues: props.visibleIssues.filter(issue => issue.id === epic.id || issue.epicId === epic.id) }));
-  rows.push({ id: '', label: '未歸類到 Epic', issues: props.visibleIssues.filter(issue => !epics.some(epic => epic.id === issue.id || epic.id === issue.epicId)) });
-  return rows;
+  let rows;
+  if (group.value === 'none') rows = [{ id: '', label: '全部任務', issues: props.visibleIssues }];
+  else {
+    const included = props.includedEpicIds ? new Set(props.includedEpicIds) : null;
+    const epics = props.issues.filter(issue => issue.type === 'epic' && (!included || included.has(issue.id)));
+    rows = epics.map(epic => ({ id: epic.id, label: epic.title, epic, issues: [] }));
+    rows.push({ id: '', label: '未歸類到 Epic', issues: [] });
+    const byId = new Map(rows.map(row => [row.id, row]));
+    for (const issue of props.visibleIssues) {
+      const key = byId.has(issue.id) ? issue.id : byId.has(issue.epicId) ? issue.epicId : '';
+      byId.get(key).issues.push(issue);
+    }
+  }
+  return rows.map(row => {
+    const columns = new Map(states.value.map(state => [state.id, []]));
+    for (const issue of row.issues) columns.get(issue.state)?.push(issue);
+    return { ...row, columns };
+  });
 });
 let readingTimer;
 function clearReading() { clearTimeout(readingTimer); }
@@ -49,7 +70,7 @@ function keyboardEdit(issue, event) {
 watch(() => props.moving, clearReading);
 onBeforeUnmount(clearReading);
 function toggle(id) { collapsed.value = collapsed.value.includes(id) ? collapsed.value.filter(item => item !== id) : [...collapsed.value, id]; }
-function memberName(id) { return props.members.find(member => member.id === id)?.name || id || '未指派'; }
+function memberName(id) { return membersById.value.get(id) || id || '未指派'; }
 function option(items, id) { return items.find(item => item.id === id); }
 function overdue(issue) { return issue.dueDate && issue.dueDate < props.today && !isClosed(issue); }
 function startDrag(event, issue) { clearReading(); event.dataTransfer.setData('text/plain', issue.id); event.dataTransfer.effectAllowed = 'move'; }
@@ -70,7 +91,7 @@ function drop(event, state, lane) {
       <div class="board-canvas" :style="{ '--board-columns': states.length }">
         <div class="board-headings">
           <div v-for="state in states" :key="state.id" :data-state="state.id">
-            <header class="column-header"><span><i :style="{ background: state.color }"></i>{{ state.label }}<b>{{ visibleIssues.filter(issue => issue.state === state.id).length }}</b></span><button v-if="canCreate" class="icon-button" :aria-label="`新增${state.label}任務`" :disabled="Boolean(moving) || !canWrite" @click="emit('create', { state: state.id, epicId: '' })"><Icon name="plus" :size="16" /></button></header>
+            <header class="column-header"><span><i :style="{ background: state.color }"></i>{{ state.label }}<b>{{ stateCounts.get(state.id) || 0 }}</b></span><button v-if="canCreate" class="icon-button" :aria-label="`新增${state.label}任務`" :disabled="Boolean(moving) || !canWrite" @click="emit('create', { state: state.id, epicId: '' })"><Icon name="plus" :size="16" /></button></header>
           </div>
         </div>
         <section v-for="lane in lanes" :key="lane.id" class="board-lane" :aria-label="`泳道 ${lane.label}`">
@@ -81,12 +102,12 @@ function drop(event, state, lane) {
           </header>
           <div v-if="group === 'none' || !collapsed.includes(lane.id)" class="lane-columns">
             <div v-for="state in states" :key="state.id" class="board-cell" :class="{ 'drag-over': dragOver === `${lane.id}:${state.id}` }" :data-column="state.id" @dragover.prevent="dragOver = `${lane.id}:${state.id}`" @dragleave.self="dragOver = ''" @drop.prevent="drop($event, state.id, lane)">
-              <article v-for="issue in lane.issues.filter(item => item.state === state.id)" :key="issue.id" class="issue-card" :class="{ moving: moving === issue.id }" :draggable="canWrite && !moving" :data-issue="issue.identifier" tabindex="0" :aria-label="`${issue.identifier} ${issue.title} · ${state.label}`" @dblclick="edit(issue, $event)" @keydown.f2="keyboardEdit(issue, $event)" @dragstart="startDrag($event, issue)" @dragend="dragOver = ''">
+              <article v-for="issue in lane.columns.get(state.id)" :key="issue.id" class="issue-card" :class="{ moving: moving === issue.id }" :draggable="canWrite && !moving" :data-issue="issue.identifier" tabindex="0" :aria-label="`${issue.identifier} ${issue.title} · ${state.label}`" @dblclick="edit(issue, $event)" @keydown.f2="keyboardEdit(issue, $event)" @dragstart="startDrag($event, issue)" @dragend="dragOver = ''">
                 <div class="card-top"><span class="identifier">{{ issue.identifier }}</span><span class="type-tag">{{ option(TYPES, issue.type)?.label }}</span><span v-if="density === 'comfortable'" class="priority-label" :style="{ '--priority-color': option(PRIORITIES, issue.priority)?.color }" :title="`優先級：${option(PRIORITIES, issue.priority)?.label}`"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span></span><button v-if="canWrite" type="button" class="icon-button card-edit" :aria-label="`編輯 ${issue.identifier}`" title="編輯任務（也可雙擊卡片或按 F2）" :disabled="Boolean(moving)" @click="clearReading(); emit('open', issue, false)"><Icon name="edit" :size="15" /></button></div>
                 <button class="card-title" @click="read(issue, $event)">{{ issue.title }}</button>
                 <p v-if="density === 'comfortable' && issue.description" class="board-card-description">{{ issue.description }}</p>
                 <div class="card-bottom"><span v-if="density === 'comfortable' && issue.dueDate" :class="['due-date', { overdue: overdue(issue) }]"><Icon name="clock" :size="12" />{{ issue.dueDate.slice(5).replace('-', '/') }}</span><span v-if="density === 'comfortable' && issue.comments.length" class="comment-count"><Icon name="message" :size="13" />{{ issue.comments.length }}</span><span class="board-assignee" :title="memberName(issue.assignee)"><span v-if="issue.assignee" class="avatar small">{{ memberName(issue.assignee).slice(0, 1) }}</span>{{ memberName(issue.assignee) }}</span></div>
-                <IssueContext v-if="density === 'comfortable'" :issue="issue" :issues="issues" :entries="entries" :project="project" :can-read-time="project.permissions?.includes('timeEntry.readOwn')" @open="emit('open', $event)" />
+                <IssueContext v-if="density === 'comfortable'" :issue="issue" :index="contextIndex" :can-read-time="project.permissions?.includes('timeEntry.readOwn')" @open="emit('open', $event)" />
               </article>
               <button v-if="canCreate" class="lane-add" :aria-label="`在${lane.label}新增${state.label}任務`" :disabled="Boolean(moving) || !canWrite" @click="emit('create', { state: state.id, epicId: group === 'epic' ? lane.id : '' })"><Icon name="plus" :size="15" /><span>新增卡片</span></button>
             </div>

@@ -58,3 +58,43 @@ transitionsScope.stop(); finishDisposed(); await disposed;
 assert.deepEqual(saved, ['i'], '離頁後不呼叫已卸載畫面');
 assert.equal(transitions.moving.value, '');
 console.log('PASS: 任務篩選／移除狀態／分頁收斂、重試識別、送出防重複、跨工作區與卸載過期回應');
+
+// 一般重讀可合併，寫入後／即時訊號要尾端再讀；跨scope不等舊請求。
+const { useRefreshQueue } = await import('../src/composables/useRefreshQueue.js');
+const refreshScope = effectScope();
+let refreshKey = 'u:w', loads = 0;
+const gates = [];
+const refresh = refreshScope.run(() => useRefreshQueue({ scope: () => refreshKey, load: () => { loads++; return new Promise(resolve => gates.push(resolve)); } }));
+const one = refresh({ join: true });
+assert.equal(refresh({ join: true }), one);
+assert.equal(loads, 1, '雙擊／輪詢共用一個請求');
+const afterWrite = refresh();
+assert.equal(afterWrite, one);
+gates.shift()(); await new Promise(resolve => setImmediate(resolve));
+assert.equal(loads, 2, '寫入後至少重讀一次，不能套用寫入前結果');
+gates.shift()(); await afterWrite;
+const old = refresh(); refresh();
+refreshKey = 'u:other';
+const other = refresh({ join: true });
+assert.equal(loads, 4, '新空間立即開始，不等舊空間');
+gates.shift()(); await old;
+assert.equal(loads, 4, '舊scope未完成的尾端刷新不再執行');
+gates.shift()(); await other;
+refreshScope.stop();
+
+const { buildIssueIndex } = await import('../src/domain/issueIndex.js');
+const { epicSummary } = await import('../src/domain/model.js');
+const fixtures = [
+  { id: 'epic', type: 'epic', state: 'closed' },
+  { id: 'parent', type: 'task', epicId: 'epic', state: 'closed', estimateMinutes: 40 },
+  { id: 'child', type: 'bug', epicId: 'epic', parentIssueId: 'parent', state: 'open', estimateMinutes: 20 },
+  { id: 'other', type: 'task', state: 'open' },
+];
+const entries = [{ issueId: 'epic', minutes: 10 }, { issueId: 'parent', minutes: 25 }, { issueId: 'child', minutes: 5 }, { issueId: 'child', minutes: 99, voidedAt: '2026-11-09' }, { issueId: 'other', minutes: 15 }];
+const index = buildIssueIndex(fixtures, entries);
+assert.deepEqual(index.summaries.get('epic'), epicSummary(fixtures[0], fixtures, entries));
+assert.equal(index.summaries.get('epic').spentMinutes, 40, 'Epic自身與各子卡紀錄只加一次');
+assert.equal(index.spent.get('child'), 5);
+assert.deepEqual(index.children.get('parent'), [fixtures[2]]);
+assert.equal(buildIssueIndex(fixtures, []).spent.size, 0, '刷新替換資料後不沿用舊索引');
+console.log('PASS: 刷新合併／寫後尾端重讀／跨scope、共享卡片關聯與有效工時索引');

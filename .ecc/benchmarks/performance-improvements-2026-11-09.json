@@ -1,7 +1,7 @@
 {
   "date": "2026-11-09",
   "baselineCommit": "30ff03d",
-  "stage": "read authorization batching",
+  "stage": "read authorization batching and board refresh/indexing",
   "runs": 5,
   "environment": "same profile-reads.php; isolated memory SQLite; query log enabled; not HTTP capacity",
   "domain": [
@@ -105,5 +105,286 @@
       "maxMs": 4.18,
       "jsonBytes": 58341
     }
-  ]
+  ],
+  "largeBoard": {
+    "scope": "isolated synthetic; sequential requests; no load capacity or field Web Vitals claim",
+    "fixture": {
+      "projects": 2,
+      "issues": 507,
+      "boardCards": 500,
+      "timeEntries": 374
+    },
+    "http": [
+      {
+        "role": "owner",
+        "operation": "getWorkspace",
+        "timingsMs": {
+          "samples": 30,
+          "min": 38.40712499999995,
+          "median": 40.20712500000002,
+          "p95": 46.4119169999999,
+          "max": 47.128333999999995
+        },
+        "responseBytes": 448956,
+        "projects": 2,
+        "issues": 507,
+        "entries": 374
+      },
+      {
+        "role": "owner",
+        "operation": "getTodos",
+        "timingsMs": {
+          "samples": 30,
+          "min": 7.569916999999805,
+          "median": 8.15079199999991,
+          "p95": 8.986750000000029,
+          "max": 11.845542000000023
+        },
+        "responseBytes": 444
+      },
+      {
+        "role": "owner",
+        "operation": "getTimeReport",
+        "timingsMs": {
+          "samples": 30,
+          "min": 11.01645899999994,
+          "median": 11.918999999999869,
+          "p95": 13.402999999999793,
+          "max": 14.163042000000132
+        },
+        "responseBytes": 19150,
+        "entries": 200
+      }
+    ],
+    "browser": [
+      {
+        "run": 1,
+        "homeReadyMs": 311.0177499999995,
+        "homeCalls": [
+          "/api/csrf-cookie",
+          "/api/rpc/getWorkspace",
+          "/api/rpc/getTodos"
+        ],
+        "boardReadyMs": 182.39066599999933,
+        "boardCalls": [
+          "/api/rpc/getWorkspace",
+          "/api/realtime/config",
+          "/api/rpc/getTodos"
+        ],
+        "boardDom": {
+          "cards": 500,
+          "contextBlocks": 500,
+          "totalElements": 12250
+        },
+        "densitySwitchMs": [
+          82.2646249999998,
+          117.61175000000003,
+          82.0728339999996,
+          117.32083299999977,
+          83.87512500000048
+        ],
+        "refreshReadyMs": 199.6224999999995,
+        "refreshCalls": [
+          "/api/rpc/getWorkspace",
+          "/api/rpc/getTodos"
+        ],
+        "burstCalls": [
+          "/api/rpc/getWorkspace",
+          "/api/rpc/getTodos"
+        ],
+        "analysisRefreshMs": 132.79883399999926,
+        "analysisCalls": [
+          "/api/rpc/getWorkspace",
+          "/api/rpc/getTodos",
+          "/api/rpc/getTimeReport"
+        ],
+        "longTasksMs": [
+          52
+        ],
+        "eventDurationsMs": [
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          48,
+          48,
+          48,
+          32,
+          32,
+          32,
+          48,
+          48,
+          48
+        ],
+        "staticResources": [
+          {
+            "type": "script",
+            "name": "index-CZ3evAVw.js",
+            "encodedBodySize": 183418,
+            "decodedBodySize": 552302
+          },
+          {
+            "type": "link",
+            "name": "index-K9Rapu2c.css",
+            "encodedBodySize": 110836,
+            "decodedBodySize": 694930
+          }
+        ],
+        "errors": []
+      },
+      {
+        "run": 2,
+        "homeReadyMs": 218.0836250000002,
+        "homeCalls": [
+          "/api/csrf-cookie",
+          "/api/rpc/getWorkspace",
+          "/api/rpc/getTodos"
+        ],
+        "boardReadyMs": 167.1284999999998,
+        "boardCalls": [
+          "/api/rpc/getWorkspace",
+          "/api/realtime/config",
+          "/api/rpc/getTodos"
+        ],
+        "boardDom": {
+          "cards": 500,
+          "contextBlocks": 500,
+          "totalElements": 12250
+        },
+        "densitySwitchMs": [
+          80.63220900000033,
+          118.61712499999976,
+          83.2928750000001,
+          116.74183300000004,
+          81.81425000000036
+        ],
+        "refreshReadyMs": 149.56933300000037,
+        "refreshCalls": [
+          "/api/rpc/getWorkspace",
+          "/api/rpc/getTodos"
+        ],
+        "burstCalls": null,
+        "analysisRefreshMs": 151.8484580000004,
+        "analysisCalls": [
+          "/api/rpc/getWorkspace",
+          "/api/rpc/getTodos",
+          "/api/rpc/getTimeReport"
+        ],
+        "longTasksMs": [],
+        "eventDurationsMs": [
+          16,
+          16,
+          16,
+          48,
+          48,
+          48,
+          32,
+          32,
+          32,
+          32,
+          32,
+          32
+        ],
+        "staticResources": [
+          {
+            "type": "script",
+            "name": "index-CZ3evAVw.js",
+            "encodedBodySize": 183418,
+            "decodedBodySize": 552302
+          },
+          {
+            "type": "link",
+            "name": "index-K9Rapu2c.css",
+            "encodedBodySize": 110836,
+            "decodedBodySize": 694930
+          }
+        ],
+        "errors": []
+      },
+      {
+        "run": 3,
+        "homeReadyMs": 216.32408299999952,
+        "homeCalls": [
+          "/api/csrf-cookie",
+          "/api/rpc/getWorkspace",
+          "/api/rpc/getTodos"
+        ],
+        "boardReadyMs": 165.60629100000006,
+        "boardCalls": [
+          "/api/rpc/getWorkspace",
+          "/api/realtime/config",
+          "/api/rpc/getTodos"
+        ],
+        "boardDom": {
+          "cards": 500,
+          "contextBlocks": 500,
+          "totalElements": 12250
+        },
+        "densitySwitchMs": [
+          84.04100000000017,
+          116.42858299999989,
+          83.22287500000039,
+          115.5610829999996,
+          84.42133399999966
+        ],
+        "refreshReadyMs": 165.70904100000007,
+        "refreshCalls": [
+          "/api/rpc/getWorkspace",
+          "/api/rpc/getTodos"
+        ],
+        "burstCalls": null,
+        "analysisRefreshMs": 151.78895799999918,
+        "analysisCalls": [
+          "/api/rpc/getWorkspace",
+          "/api/rpc/getTodos",
+          "/api/rpc/getTimeReport"
+        ],
+        "longTasksMs": [],
+        "eventDurationsMs": [
+          16,
+          16,
+          16,
+          48,
+          48,
+          48,
+          32,
+          32,
+          32,
+          32,
+          32,
+          32
+        ],
+        "staticResources": [
+          {
+            "type": "script",
+            "name": "index-CZ3evAVw.js",
+            "encodedBodySize": 183418,
+            "decodedBodySize": 552302
+          },
+          {
+            "type": "link",
+            "name": "index-K9Rapu2c.css",
+            "encodedBodySize": 110836,
+            "decodedBodySize": 694930
+          }
+        ],
+        "errors": []
+      }
+    ],
+    "bundle": [
+      {
+        "name": "index-CZ3evAVw.js",
+        "bytes": 552302,
+        "gzipBytes": 183418
+      },
+      {
+        "name": "index-K9Rapu2c.css",
+        "bytes": 694930,
+        "gzipBytes": 110836
+      }
+    ],
+    "browserVersion": "156.0.8078.80"
+  }
 }

@@ -1,18 +1,17 @@
 <script setup>
 import { computed } from 'vue';
-import { isClosed, epicSummary, hours } from '../domain/model.js';
+import { isClosed, hours } from '../domain/model.js';
 import Icon from './Icon.vue';
-const props = defineProps({ issue: Object, issues: Array, entries: Array, project: Object, canReadTime: { type: Boolean, default: true } });
+const props = defineProps({ issue: Object, index: { type: Object, required: true }, canReadTime: { type: Boolean, default: true } });
 defineEmits(['open']);
-const epic = computed(() => props.issues.find((item) => item.id === props.issue.epicId));
-const spent = computed(() => props.entries.filter((entry) => entry.issueId === props.issue.id && !entry.voidedAt).reduce((sum, entry) => sum + entry.minutes, 0));
-const summary = computed(() => props.issue.type === 'epic' ? epicSummary(props.issue, props.issues, props.entries, props.project) : null);
-const spentMinutes = computed(() => summary.value ? summary.value.spentMinutes : spent.value);
+const epic = computed(() => props.index.byId.get(props.issue.epicId));
+const summary = computed(() => props.index.summaries.get(props.issue.id));
+const spentMinutes = computed(() => summary.value ? summary.value.spentMinutes : props.index.spent.get(props.issue.id) || 0);
 const estimateMinutes = computed(() => summary.value ? summary.value.estimateMinutes : props.issue.estimateMinutes);
-const parent = computed(() => props.issues.find(item => item.id === props.issue.parentIssueId));
-const children = computed(() => props.issues.filter(item => item.parentIssueId === props.issue.id));
-const completed = computed(() => children.value.filter(item => isClosed(item)).length);
-const related = computed(() => (props.issue.relatedIssueIds || []).map(id => props.issues.find(item => item.id === id)).filter(Boolean));
+const parent = computed(() => props.index.byId.get(props.issue.parentIssueId));
+const children = computed(() => props.index.children.get(props.issue.id) || []);
+const completed = computed(() => children.value.filter(isClosed).length);
+const related = computed(() => (props.issue.relatedIssueIds || []).map(id => props.index.byId.get(id)).filter(Boolean));
 </script>
 <template>
   <div class="issue-context">

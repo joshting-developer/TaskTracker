@@ -111,6 +111,7 @@ try {
       assert.equal(pendingApi.size, 0, '雙擊刷新完成');
       await frames(page);
       burstCalls = [...calls]; calls.length = 0;
+      assert.equal(burstCalls.filter(path => path.endsWith('/getWorkspace')).length, 1, '雙擊刷新共用工作區讀取');
     }
     await page.getByRole('button', { name: '工時分析', exact: true }).click();
     await page.getByRole('button', { name: /^成員投入/ }).click();
