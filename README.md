@@ -21,7 +21,7 @@ Owner／Manager可從側欄「工時分析」選擇成員投入、專案投入�
 
 程式責任與本輪調整見[前後端架構重構紀錄](docs/refactoring-2026-11-06.md)。
 
-查詢數量測、N+1／全量載入／SQLite交易風險及Redis使用建議見[效能與架構review](docs/performance-review-2026-11-06.md)；內含僅用記憶體SQLite的可重跑取樣工具。效能工作已選用Addy主診斷＋ECC benchmark補量測，專案入口及適用方式見[配置文件](docs/performance-skills.md)。
+查詢數量測、N+1／全量載入／SQLite交易風險及Redis使用建議見[效能與架構review](docs/performance-review-2026-11-06.md)；內含僅用記憶體SQLite的可重跑取樣工具。效能工作已選用Addy主診斷＋ECC benchmark補量測，專案入口及適用方式見[配置文件](docs/performance-skills.md)。最新實際SQL／HTTP／500卡看板掃描見[效能複掃報告](docs/performance-scan-2026-11-09.md)。
 
 ## 資料儲存
 

@@ -1,3 +1,14 @@
+## 2026-11-06～11-09 Addy／ECC效能複掃
+
+- 需求：安裝skills後重新掃描效能；本輪為量測／review，不修改業務程式或自動落地快取。
+- 主診斷用Addy，ECC補領域／HTTP／瀏覽器基準；保留Laravel／Vue與隔離／授權契約。
+- 預算：領域隔離取樣5輪；獨立tmpfs SQLite API測固定seed與增加200工時，HTTP各主要讀取30次序列取樣；瀏覽器檢查登入後資料就緒與看板互動／DOM／請求，不對主服務壓測。
+- 步驟：核對來源／baseline→SQL成長與query plan→隔離HTTP→瀏覽器／bundle與刷新→整理基準JSON及優先級→清理隔離程序／本機commit。
+- 不把單次memory時間當p95、不把開發伺服器容量當正式部署，未執行的併發與RUM明確列缺口。
+- 追加有限實驗：原生SQLite雙連線WAL各模式5輪，核對IMMEDIATE寫鎖風險；固定374筆工時再把FIRST看板擴成500張卡，以3輪瀏覽器取樣確認DOM／切換成本，不混成僅工時增長的比較。
+- 2026-11-09完成：五輪領域、三角色共627次HTTP暖身／取樣、13輪真瀏覽器、query plan及PHP／SQLite雙連線鎖。Owner HTTP中位203→351ms、Developer SQL2729→6529、500卡12250元素；刷新重複請求已證實。
+- 交付：docs/performance-scan-2026-11-09.md、.ecc/benchmarks基準JSON、兩個診斷工具。build／語法／PHP格式／資料與文件檢查通過，未改業務程式／schema／主資料；隔離容器結束清理，未push。
+
 ## 2026-11-06 啟用Addy主診斷＋ECC補量測
 
 - 使用者已確認選這兩個skill；本輪安裝／配置專案入口，不開始業務重構或效能壓測。

@@ -1,0 +1,1174 @@
+{
+  "baselineCommit": "0434591",
+  "measurementDate": "2026-11-06",
+  "finalizedDate": "2026-11-09",
+  "timezone": "Asia/Taipei",
+  "purpose": "baseline only; no optimization implemented",
+  "environment": {
+    "api": "isolated tasktracker-backend image; PHP artisan serve; SQLite on Docker tmpfs; database sessions; file cache; sync queue; broadcast null",
+    "frontend": "production Vite build via preview; 1440x1000 Chromium, no throttling",
+    "httpSampling": "3 warm-up requests then 30 serial requests per endpoint and account; nearest-rank p95; not capacity or field latency",
+    "browserSampling": "new browser context per run; 5 seed/expanded runs and 3 cards runs; automation timings include locator and rAF waits, not INP",
+    "domainSampling": "5 fresh PHP/memory SQLite processes; query log enabled",
+    "fixtures": {
+      "seed": {
+        "projects": 2,
+        "members": 4,
+        "issues": 14,
+        "entries": 174
+      },
+      "expanded": {
+        "projects": 2,
+        "members": 4,
+        "issues": 14,
+        "entries": 374
+      },
+      "cards": {
+        "projects": 2,
+        "members": 4,
+        "issues": 507,
+        "firstProjectCards": 500,
+        "entries": 374
+      }
+    },
+    "reportDates": [
+      "2025-01-01",
+      "2025-12-31"
+    ]
+  },
+  "domain": [
+    {
+      "scenario": "seed.workspace",
+      "runs": 5,
+      "queryCounts": [
+        3635
+      ],
+      "elapsedMs": {
+        "min": 206.52,
+        "median": 208.49,
+        "max": 216.38
+      },
+      "jsonBytes": 125134
+    },
+    {
+      "scenario": "seed.report2025",
+      "runs": 5,
+      "queryCounts": [
+        71
+      ],
+      "elapsedMs": {
+        "min": 6.95,
+        "median": 7.67,
+        "max": 8.96
+      },
+      "jsonBytes": 18524
+    },
+    {
+      "scenario": "seed.issuesOnly",
+      "runs": 5,
+      "queryCounts": [
+        14
+      ],
+      "elapsedMs": {
+        "min": 1.11,
+        "median": 1.17,
+        "max": 1.27
+      },
+      "jsonBytes": 10159
+    },
+    {
+      "scenario": "plus50.workspace",
+      "runs": 5,
+      "queryCounts": [
+        4335
+      ],
+      "elapsedMs": {
+        "min": 239.16,
+        "median": 241.14,
+        "max": 256.21
+      },
+      "jsonBytes": 141674
+    },
+    {
+      "scenario": "plus50.report2025",
+      "runs": 5,
+      "queryCounts": [
+        71
+      ],
+      "elapsedMs": {
+        "min": 5.69,
+        "median": 5.88,
+        "max": 6.06
+      },
+      "jsonBytes": 18973
+    },
+    {
+      "scenario": "plus200.workspace",
+      "runs": 5,
+      "queryCounts": [
+        6435
+      ],
+      "elapsedMs": {
+        "min": 356.21,
+        "median": 359.29,
+        "max": 362.34
+      },
+      "jsonBytes": 191424
+    },
+    {
+      "scenario": "plus200.report2025",
+      "runs": 5,
+      "queryCounts": [
+        71
+      ],
+      "elapsedMs": {
+        "min": 6.74,
+        "median": 6.75,
+        "max": 7.82
+      },
+      "jsonBytes": 19131
+    },
+    {
+      "scenario": "plus200.24members.workspace",
+      "runs": 5,
+      "queryCounts": [
+        7235
+      ],
+      "elapsedMs": {
+        "min": 527.92,
+        "median": 532.71,
+        "max": 636.21
+      },
+      "jsonBytes": 194034
+    },
+    {
+      "scenario": "plus200.24members.report2025",
+      "runs": 5,
+      "queryCounts": [
+        71
+      ],
+      "elapsedMs": {
+        "min": 8.16,
+        "median": 8.22,
+        "max": 9.3
+      },
+      "jsonBytes": 19991
+    },
+    {
+      "scenario": "plus100.issuesOnly",
+      "runs": 5,
+      "queryCounts": [
+        14
+      ],
+      "elapsedMs": {
+        "min": 3.94,
+        "median": 4,
+        "max": 4.25
+      },
+      "jsonBytes": 58341
+    }
+  ],
+  "roleQueries": [
+    {
+      "scenario": "seed.owner",
+      "queries": 3635,
+      "elapsedMs": 210.21,
+      "jsonBytes": 125134
+    },
+    {
+      "scenario": "seed.manager",
+      "queries": 3635,
+      "elapsedMs": 202.28,
+      "jsonBytes": 125100
+    },
+    {
+      "scenario": "seed.developer",
+      "queries": 2729,
+      "elapsedMs": 148.07,
+      "jsonBytes": 69014
+    },
+    {
+      "scenario": "expanded.owner",
+      "queries": 6435,
+      "elapsedMs": 361.67,
+      "jsonBytes": 191424
+    },
+    {
+      "scenario": "expanded.manager",
+      "queries": 6435,
+      "elapsedMs": 363,
+      "jsonBytes": 191390
+    },
+    {
+      "scenario": "expanded.developer",
+      "queries": 6529,
+      "elapsedMs": 355.17,
+      "jsonBytes": 135304
+    }
+  ],
+  "httpAndBrowser": {
+    "seed": {
+      "phase": "seed",
+      "http": [
+        {
+          "role": "owner",
+          "operation": "getWorkspace",
+          "timingsMs": {
+            "samples": 30,
+            "min": 198.6334999999999,
+            "median": 203.38870900000074,
+            "p95": 238.5481249999998,
+            "max": 244.93958399999997
+          },
+          "responseBytes": 125153,
+          "projects": 2,
+          "issues": 14,
+          "entries": 174
+        },
+        {
+          "role": "owner",
+          "operation": "getTodos",
+          "timingsMs": {
+            "samples": 30,
+            "min": 7.710291999999754,
+            "median": 8.372624999999971,
+            "p95": 9.643625000000611,
+            "max": 23.790791999999783
+          },
+          "responseBytes": 444
+        },
+        {
+          "role": "owner",
+          "operation": "getTimeReport",
+          "timingsMs": {
+            "samples": 30,
+            "min": 11.598667000000205,
+            "median": 12.686958000000232,
+            "p95": 13.881874999999127,
+            "max": 15.375458000000435
+          },
+          "responseBytes": 18543,
+          "entries": 0
+        },
+        {
+          "role": "manager",
+          "operation": "getWorkspace",
+          "timingsMs": {
+            "samples": 30,
+            "min": 198.9358749999992,
+            "median": 200.71687500000007,
+            "p95": 217.07091700000092,
+            "max": 217.94187500000044
+          },
+          "responseBytes": 125121,
+          "projects": 2,
+          "issues": 14,
+          "entries": 174
+        },
+        {
+          "role": "manager",
+          "operation": "getTodos",
+          "timingsMs": {
+            "samples": 30,
+            "min": 7.7841669999997976,
+            "median": 8.086250000000291,
+            "p95": 9.092416000001322,
+            "max": 12.607707999999548
+          },
+          "responseBytes": 444
+        },
+        {
+          "role": "manager",
+          "operation": "getTimeReport",
+          "timingsMs": {
+            "samples": 30,
+            "min": 12.036458000000493,
+            "median": 12.516041000000769,
+            "p95": 13.060167000001456,
+            "max": 13.65295900000092
+          },
+          "responseBytes": 18543,
+          "entries": 0
+        },
+        {
+          "role": "developer",
+          "operation": "getWorkspace",
+          "timingsMs": {
+            "samples": 30,
+            "min": 146.68025000000125,
+            "median": 148.25199999999677,
+            "p95": 157.62325000000055,
+            "max": 159.45616599999994
+          },
+          "responseBytes": 69032,
+          "projects": 1,
+          "issues": 7,
+          "entries": 99
+        },
+        {
+          "role": "developer",
+          "operation": "getTodos",
+          "timingsMs": {
+            "samples": 30,
+            "min": 7.63654100000349,
+            "median": 8.325959000001603,
+            "p95": 9.81749999999738,
+            "max": 10.619500000000698
+          },
+          "responseBytes": 444
+        }
+      ],
+      "browser": [
+        {
+          "run": 1,
+          "homeReadyMs": 481.88029200000165,
+          "homeCalls": [
+            "/api/csrf-cookie",
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "boardReadyMs": 267.53050000000076,
+          "boardCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/realtime/config",
+            "/api/rpc/getTodos"
+          ],
+          "boardDom": {
+            "cards": 7,
+            "contextBlocks": 7,
+            "totalElements": 418
+          },
+          "densitySwitchMs": [
+            31.11687499999971,
+            32.65166699999827,
+            33.87574999999924,
+            33.49316700000054,
+            32.60462499999994
+          ],
+          "refreshReadyMs": 350.86091699999815,
+          "refreshCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "burstCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "analysisRefreshMs": 316.3998339999998,
+          "analysisCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos",
+            "/api/rpc/getTimeReport"
+          ],
+          "longTasksMs": [
+            51
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "homeReadyMs": 406.4101670000018,
+          "homeCalls": [
+            "/api/csrf-cookie",
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "boardReadyMs": 267.04170800000065,
+          "boardCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/realtime/config",
+            "/api/rpc/getTodos"
+          ],
+          "boardDom": {
+            "cards": 7,
+            "contextBlocks": 7,
+            "totalElements": 418
+          },
+          "densitySwitchMs": [
+            31.422749999997905,
+            31.661583999997674,
+            34.93174999999974,
+            33.3861250000009,
+            33.205582999999024
+          ],
+          "refreshReadyMs": 315.5792500000025,
+          "refreshCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "burstCalls": null,
+          "analysisRefreshMs": 316.8855829999993,
+          "analysisCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos",
+            "/api/rpc/getTimeReport"
+          ],
+          "longTasksMs": [],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "homeReadyMs": 398.2159580000007,
+          "homeCalls": [
+            "/api/csrf-cookie",
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "boardReadyMs": 267.1373330000024,
+          "boardCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/realtime/config",
+            "/api/rpc/getTodos"
+          ],
+          "boardDom": {
+            "cards": 7,
+            "contextBlocks": 7,
+            "totalElements": 418
+          },
+          "densitySwitchMs": [
+            32.957791000000725,
+            31.835165999997116,
+            34.683624999997846,
+            32.1047499999986,
+            34.63174999999683
+          ],
+          "refreshReadyMs": 398.2923750000009,
+          "refreshCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "burstCalls": null,
+          "analysisRefreshMs": 332.34500000000116,
+          "analysisCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos",
+            "/api/rpc/getTimeReport"
+          ],
+          "longTasksMs": [],
+          "errors": []
+        },
+        {
+          "run": 4,
+          "homeReadyMs": 435.53912499999933,
+          "homeCalls": [
+            "/api/csrf-cookie",
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "boardReadyMs": 266.55470799999966,
+          "boardCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/realtime/config",
+            "/api/rpc/getTodos"
+          ],
+          "boardDom": {
+            "cards": 7,
+            "contextBlocks": 7,
+            "totalElements": 418
+          },
+          "densitySwitchMs": [
+            32.56399999999849,
+            33.04491599999892,
+            33.671707999998034,
+            32.88970800000243,
+            33.334374999998545
+          ],
+          "refreshReadyMs": 317.20220899999913,
+          "refreshCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "burstCalls": null,
+          "analysisRefreshMs": 316.99129200000243,
+          "analysisCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos",
+            "/api/rpc/getTimeReport"
+          ],
+          "longTasksMs": [],
+          "errors": []
+        },
+        {
+          "run": 5,
+          "homeReadyMs": 385.4494159999995,
+          "homeCalls": [
+            "/api/csrf-cookie",
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "boardReadyMs": 248.48112500000207,
+          "boardCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/realtime/config",
+            "/api/rpc/getTodos"
+          ],
+          "boardDom": {
+            "cards": 7,
+            "contextBlocks": 7,
+            "totalElements": 418
+          },
+          "densitySwitchMs": [
+            34.133749999997235,
+            33.39766700000109,
+            31.8973330000008,
+            34.743249999999534,
+            33.32708400000047
+          ],
+          "refreshReadyMs": 316.79570800000147,
+          "refreshCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "burstCalls": null,
+          "analysisRefreshMs": 334.846749999997,
+          "analysisCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos",
+            "/api/rpc/getTimeReport"
+          ],
+          "longTasksMs": [],
+          "errors": []
+        }
+      ],
+      "bundle": [
+        {
+          "name": "index-6nwWuzDI.js",
+          "bytes": 550750,
+          "gzipBytes": 182738
+        },
+        {
+          "name": "index-TNfkpuPn.css",
+          "bytes": 694930,
+          "gzipBytes": 110835
+        }
+      ],
+      "browserVersion": "156.0.8078.80"
+    },
+    "expanded": {
+      "phase": "expanded",
+      "http": [
+        {
+          "role": "owner",
+          "operation": "getWorkspace",
+          "timingsMs": {
+            "samples": 30,
+            "min": 346.0599170000005,
+            "median": 351.0829580000002,
+            "p95": 365.0426670000006,
+            "max": 369.27020900000025
+          },
+          "responseBytes": 191443,
+          "projects": 2,
+          "issues": 14,
+          "entries": 374
+        },
+        {
+          "role": "owner",
+          "operation": "getTodos",
+          "timingsMs": {
+            "samples": 30,
+            "min": 7.806082999999489,
+            "median": 8.494375000000218,
+            "p95": 9.751540999999634,
+            "max": 10.029791999999361
+          },
+          "responseBytes": 444
+        },
+        {
+          "role": "owner",
+          "operation": "getTimeReport",
+          "timingsMs": {
+            "samples": 30,
+            "min": 14.801166999999623,
+            "median": 15.276541999999608,
+            "p95": 15.972583999999188,
+            "max": 17.711833999999726
+          },
+          "responseBytes": 19150,
+          "entries": 200
+        },
+        {
+          "role": "manager",
+          "operation": "getWorkspace",
+          "timingsMs": {
+            "samples": 30,
+            "min": 345.2887499999997,
+            "median": 348.94566600000326,
+            "p95": 362.91241600000285,
+            "max": 386.5305420000004
+          },
+          "responseBytes": 191411,
+          "projects": 2,
+          "issues": 14,
+          "entries": 374
+        },
+        {
+          "role": "manager",
+          "operation": "getTodos",
+          "timingsMs": {
+            "samples": 30,
+            "min": 7.936750000000757,
+            "median": 8.622583000000304,
+            "p95": 9.502458999999362,
+            "max": 24.563208999999915
+          },
+          "responseBytes": 444
+        },
+        {
+          "role": "manager",
+          "operation": "getTimeReport",
+          "timingsMs": {
+            "samples": 30,
+            "min": 14.283833999998024,
+            "median": 15.727917000000161,
+            "p95": 17.230082999998558,
+            "max": 17.254750000000058
+          },
+          "responseBytes": 19150,
+          "entries": 200
+        },
+        {
+          "role": "developer",
+          "operation": "getWorkspace",
+          "timingsMs": {
+            "samples": 30,
+            "min": 335.8771659999984,
+            "median": 342.08662500000355,
+            "p95": 402.74404100000174,
+            "max": 404.83920800000124
+          },
+          "responseBytes": 135322,
+          "projects": 1,
+          "issues": 7,
+          "entries": 299
+        },
+        {
+          "role": "developer",
+          "operation": "getTodos",
+          "timingsMs": {
+            "samples": 30,
+            "min": 7.757165999995777,
+            "median": 8.235291999997571,
+            "p95": 8.737166999999317,
+            "max": 9.48329200000444
+          },
+          "responseBytes": 444
+        }
+      ],
+      "browser": [
+        {
+          "run": 1,
+          "homeReadyMs": 643.4744580000042,
+          "homeCalls": [
+            "/api/csrf-cookie",
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "boardReadyMs": 416.91020800000115,
+          "boardCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/realtime/config",
+            "/api/rpc/getTodos"
+          ],
+          "boardDom": {
+            "cards": 7,
+            "contextBlocks": 7,
+            "totalElements": 418
+          },
+          "densitySwitchMs": [
+            31.170040999997582,
+            33.1337499999936,
+            33.32533400000102,
+            33.57974999999715,
+            33.02504200000112
+          ],
+          "refreshReadyMs": 567.1914580000011,
+          "refreshCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "burstCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "analysisRefreshMs": 467.15095799999835,
+          "analysisCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos",
+            "/api/rpc/getTimeReport"
+          ],
+          "longTasksMs": [
+            50
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "homeReadyMs": 551.630333000001,
+          "homeCalls": [
+            "/api/csrf-cookie",
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "boardReadyMs": 416.2257499999978,
+          "boardCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/realtime/config",
+            "/api/rpc/getTodos"
+          ],
+          "boardDom": {
+            "cards": 7,
+            "contextBlocks": 7,
+            "totalElements": 418
+          },
+          "densitySwitchMs": [
+            30.40450000000419,
+            35.12241599999834,
+            32.319415999998455,
+            34.59116700000595,
+            33.01645899999858
+          ],
+          "refreshReadyMs": 448.92070799999783,
+          "refreshCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "burstCalls": null,
+          "analysisRefreshMs": 450.66733399999794,
+          "analysisCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos",
+            "/api/rpc/getTimeReport"
+          ],
+          "longTasksMs": [],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "homeReadyMs": 543.7707910000026,
+          "homeCalls": [
+            "/api/csrf-cookie",
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "boardReadyMs": 400.0327909999978,
+          "boardCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/realtime/config",
+            "/api/rpc/getTodos"
+          ],
+          "boardDom": {
+            "cards": 7,
+            "contextBlocks": 7,
+            "totalElements": 418
+          },
+          "densitySwitchMs": [
+            32.396583000001556,
+            33.53783300000214,
+            33.40416699999332,
+            33.26941700000316,
+            33.04166700000496
+          ],
+          "refreshReadyMs": 433.3330829999977,
+          "refreshCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "burstCalls": null,
+          "analysisRefreshMs": 450.2474169999987,
+          "analysisCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos",
+            "/api/rpc/getTimeReport"
+          ],
+          "longTasksMs": [],
+          "errors": []
+        },
+        {
+          "run": 4,
+          "homeReadyMs": 551.4970410000024,
+          "homeCalls": [
+            "/api/csrf-cookie",
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "boardReadyMs": 398.6420830000061,
+          "boardCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/realtime/config",
+            "/api/rpc/getTodos"
+          ],
+          "boardDom": {
+            "cards": 7,
+            "contextBlocks": 7,
+            "totalElements": 418
+          },
+          "densitySwitchMs": [
+            33.0792089999959,
+            33.807416000003286,
+            33.23737500000425,
+            33.44620899999427,
+            33.239541000002646
+          ],
+          "refreshReadyMs": 466.7036669999943,
+          "refreshCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "burstCalls": null,
+          "analysisRefreshMs": 482.06562499999563,
+          "analysisCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos",
+            "/api/rpc/getTimeReport"
+          ],
+          "longTasksMs": [],
+          "errors": []
+        },
+        {
+          "run": 5,
+          "homeReadyMs": 549.7191250000033,
+          "homeCalls": [
+            "/api/csrf-cookie",
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "boardReadyMs": 434.61833299999853,
+          "boardCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/realtime/config",
+            "/api/rpc/getTodos"
+          ],
+          "boardDom": {
+            "cards": 7,
+            "contextBlocks": 7,
+            "totalElements": 418
+          },
+          "densitySwitchMs": [
+            31.582458000004408,
+            32.47504200000549,
+            33.292709000001196,
+            34.146499999995285,
+            33.38120899999922
+          ],
+          "refreshReadyMs": 482.3458329999994,
+          "refreshCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "burstCalls": null,
+          "analysisRefreshMs": 466.3301250000004,
+          "analysisCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos",
+            "/api/rpc/getTimeReport"
+          ],
+          "longTasksMs": [],
+          "errors": []
+        }
+      ],
+      "bundle": [
+        {
+          "name": "index-6nwWuzDI.js",
+          "bytes": 550750,
+          "gzipBytes": 182738
+        },
+        {
+          "name": "index-TNfkpuPn.css",
+          "bytes": 694930,
+          "gzipBytes": 110835
+        }
+      ],
+      "browserVersion": "156.0.8078.80"
+    },
+    "cards": {
+      "phase": "cards",
+      "http": [
+        {
+          "role": "owner",
+          "operation": "getWorkspace",
+          "timingsMs": {
+            "samples": 30,
+            "min": 362.067500000001,
+            "median": 370.3901249999999,
+            "p95": 420.02700000000004,
+            "max": 449.8845000000001
+          },
+          "responseBytes": 448956,
+          "projects": 2,
+          "issues": 507,
+          "entries": 374
+        },
+        {
+          "role": "owner",
+          "operation": "getTodos",
+          "timingsMs": {
+            "samples": 30,
+            "min": 8.3404589999991,
+            "median": 9.116625000000568,
+            "p95": 10.669625000000451,
+            "max": 13.307582999999795
+          },
+          "responseBytes": 444
+        },
+        {
+          "role": "owner",
+          "operation": "getTimeReport",
+          "timingsMs": {
+            "samples": 30,
+            "min": 14.743667000000642,
+            "median": 15.292166000001089,
+            "p95": 16.91095800000039,
+            "max": 17.165750000000116
+          },
+          "responseBytes": 19150,
+          "entries": 200
+        }
+      ],
+      "browser": [
+        {
+          "run": 1,
+          "homeReadyMs": 703.152583000001,
+          "homeCalls": [
+            "/api/csrf-cookie",
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "boardReadyMs": 633.203375000001,
+          "boardCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/realtime/config",
+            "/api/rpc/getTodos"
+          ],
+          "boardDom": {
+            "cards": 500,
+            "contextBlocks": 500,
+            "totalElements": 12250
+          },
+          "densitySwitchMs": [
+            80.94241599999805,
+            150.86095800000112,
+            98.78904200000034,
+            168.02083299999867,
+            83.06954200000109
+          ],
+          "refreshReadyMs": 550.8368340000015,
+          "refreshCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "burstCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "analysisRefreshMs": 501.3836249999986,
+          "analysisCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos",
+            "/api/rpc/getTimeReport"
+          ],
+          "longTasksMs": [
+            72,
+            97,
+            69,
+            69,
+            70
+          ],
+          "errors": []
+        },
+        {
+          "run": 2,
+          "homeReadyMs": 566.8096669999977,
+          "homeCalls": [
+            "/api/csrf-cookie",
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "boardReadyMs": 583.3453750000008,
+          "boardCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/realtime/config",
+            "/api/rpc/getTodos"
+          ],
+          "boardDom": {
+            "cards": 500,
+            "contextBlocks": 500,
+            "totalElements": 12250
+          },
+          "densitySwitchMs": [
+            82.3915829999969,
+            166.73008299999856,
+            83.27924999999959,
+            166.6850000000013,
+            83.20929199999955
+          ],
+          "refreshReadyMs": 533.5529999999999,
+          "refreshCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "burstCalls": null,
+          "analysisRefreshMs": 483.52100000000064,
+          "analysisCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos",
+            "/api/rpc/getTimeReport"
+          ],
+          "longTasksMs": [
+            92,
+            69,
+            70,
+            70
+          ],
+          "errors": []
+        },
+        {
+          "run": 3,
+          "homeReadyMs": 561.4797909999979,
+          "homeCalls": [
+            "/api/csrf-cookie",
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "boardReadyMs": 583.302208000001,
+          "boardCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/realtime/config",
+            "/api/rpc/getTodos"
+          ],
+          "boardDom": {
+            "cards": 500,
+            "contextBlocks": 500,
+            "totalElements": 12250
+          },
+          "densitySwitchMs": [
+            82.41220899999826,
+            149.60779100000218,
+            83.68083299999853,
+            149.5437920000004,
+            83.73912500000006
+          ],
+          "refreshReadyMs": 516.5965419999993,
+          "refreshCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos"
+          ],
+          "burstCalls": null,
+          "analysisRefreshMs": 483.78541699999914,
+          "analysisCalls": [
+            "/api/rpc/getWorkspace",
+            "/api/rpc/getTodos",
+            "/api/rpc/getTimeReport"
+          ],
+          "longTasksMs": [
+            91,
+            68,
+            69,
+            70
+          ],
+          "errors": []
+        }
+      ],
+      "bundle": [
+        {
+          "name": "index-6nwWuzDI.js",
+          "bytes": 550750,
+          "gzipBytes": 182738
+        },
+        {
+          "name": "index-TNfkpuPn.css",
+          "bytes": 694930,
+          "gzipBytes": 110835
+        }
+      ],
+      "browserVersion": "156.0.8078.80"
+    }
+  },
+  "reportQueryPlan": [
+    "SEARCH workspaces USING COVERING INDEX workspaces_public_id_unique (public_id=?)",
+    "SEARCH time_entries USING INDEX time_entries_scope_unique (workspace_id=?)",
+    "SEARCH projects USING INTEGER PRIMARY KEY (rowid=?)",
+    "SEARCH workspace_members USING INTEGER PRIMARY KEY (rowid=?)",
+    "SEARCH issues USING INTEGER PRIMARY KEY (rowid=?)"
+  ],
+  "notMeasured": [
+    "production capacity",
+    "HTTP concurrent users",
+    "RUM/Core Web Vitals field p75",
+    "mobile/network throttling",
+    "Redis cache hit rate or failure behavior",
+    "PHP CPU flamegraph",
+    "before/after optimization"
+  ],
+  "sqliteLockProbe": {
+    "php": "8.5.12",
+    "sqlite": "3.40.1",
+    "journal": "WAL",
+    "busyTimeoutMs": 200,
+    "samples": [
+      {
+        "mode": "IMMEDIATE",
+        "run": 1,
+        "writerStatus": "locked",
+        "writerMs": 211.243
+      },
+      {
+        "mode": "IMMEDIATE",
+        "run": 2,
+        "writerStatus": "locked",
+        "writerMs": 214.949
+      },
+      {
+        "mode": "IMMEDIATE",
+        "run": 3,
+        "writerStatus": "locked",
+        "writerMs": 211.171
+      },
+      {
+        "mode": "IMMEDIATE",
+        "run": 4,
+        "writerStatus": "locked",
+        "writerMs": 203.487
+      },
+      {
+        "mode": "IMMEDIATE",
+        "run": 5,
+        "writerStatus": "locked",
+        "writerMs": 210.72
+      },
+      {
+        "mode": "DEFERRED",
+        "run": 1,
+        "writerStatus": "committed",
+        "writerMs": 3.265
+      },
+      {
+        "mode": "DEFERRED",
+        "run": 2,
+        "writerStatus": "committed",
+        "writerMs": 2.398
+      },
+      {
+        "mode": "DEFERRED",
+        "run": 3,
+        "writerStatus": "committed",
+        "writerMs": 1.769
+      },
+      {
+        "mode": "DEFERRED",
+        "run": 4,
+        "writerStatus": "committed",
+        "writerMs": 1.799
+      },
+      {
+        "mode": "DEFERRED",
+        "run": 5,
+        "writerStatus": "committed",
+        "writerMs": 1.386
+      }
+    ]
+  }
+}
