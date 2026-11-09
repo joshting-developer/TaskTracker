@@ -49,4 +49,15 @@ docker compose -p tasktracker-mysql-check -f docker-compose.mysql-test.yml down 
 
 完整71 tests／2550 assertions通過（原SQLite66項＋MySQL5項）。MySQL證據包含UTF-8／微秒／DTO、工時上限與receipt、不同程序同時填時、同revision只能一個保存、相同requestId只建一次、等待鎖期間撤權後拒絕寫入；匯入測晚期失敗回滾、來源hash不變、完整核對、重匯入拒絕與內容變動偵測。JSON物件鍵順序差異使用嚴格型別且保留list順序的比較，不降低資料斷言。
 
-隔離MySQL真實瀏覽器：完整任務／看板／ACL／小待辦流程、多工作區／邀請／跨分頁409、三種工時分析／撤權／三尺寸均通過。PHP Pint與Compose config通過；主服務切換／持久化／基礎設施驗證於完成後補記。沒有兩引擎容量benchmark或正式部署成功宣稱。
+隔離MySQL真實瀏覽器：完整任務／看板／ACL／小待辦流程、多工作區／邀請／跨分頁409、三種工時分析／撤權／三尺寸均通過。PHP Pint與Compose config通過；主服務切換／持久化／基礎設施結果如下。沒有兩引擎容量benchmark或正式部署成功宣稱。
+
+
+## 本機切換結果
+
+- 2026-11-09離線停止舊frontend／API／Queue／Reverb後，先完成來源quick_check／foreign_key_check，建立`tasktracker_laravel-data`內`/data/backups/pre-mysql-20261109-091606-e05875.sqlite`一致備份（0600）。原`/data/tasktracker.sqlite`保留，轉移前後檔案SHA-256相同。
+- 空MySQL匯入全部來源表成功，保留6 users／2 workspaces／2 projects／16 issues／174 time_entries／4 todos；其他關聯、留言、通知、歷史及receipt逐表核對。沒有執行seed或替換使用者密碼。
+- 離線verify-only通過；MySQL重啟並健康後，再次verify-only全部一致，證實mysql-data持久化。之後才啟動主前端、API、Queue與Reverb。
+- 主API確認driver=mysql；frontend／backend／mysql／redis／websocket healthy，Queue running。基礎設施探針：Redis connected、Queue dispatched and consumed、WebSocket upgraded and connected。
+- 主設定已改MySQL後，再跑預設artisan test：原66項／2483 assertions通過，5項MySQL專用案例因沒有隔離測試flag而明確skip（它們已在獨立Compose通過）。測試前後User／Workspace／Project／Issue／TimeEntry／Todo的筆數及內容SHA-256全部相同，主庫未被測試污染。
+- 隔離MySQL測試project／tmpfs／測試秘密已清理；主mysql-data、兩個秘密volume、laravel-data／storage及Redis保留。沒有push；本機入口維持http://127.0.0.1:5174。
+- 切換後API健康檢查／使用者操作可能更新Session；再次對原SQLite做全庫verify-only預期可能因新Session或業務異動不同，不應用覆蓋／重匯入方式「修復」差異。上述全表核對均在API重新啟動前完成。
