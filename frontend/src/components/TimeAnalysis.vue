@@ -109,7 +109,7 @@ onBeforeUnmount(() => { generation++; });
     </template>
     <TimeMemberDetails v-else-if="memberDetail" :member="memberDetail" :workspace-version="workspaceVersion" @back="backFromMember" />
     <template v-else>
-      <button class="text-button analysis-back" @click="emit('navigate', 'index')"><Icon name="chevron" :size="15" />返回工時分析</button>
+      <button class="navigation-back analysis-back" @click="emit('navigate', 'index')"><Icon name="chevron" :size="15" />返回工時分析</button>
       <header class="analysis-heading">
         <h1>{{ selected.title }}</h1>
         <div class="analysis-presets"><button class="button secondary" :disabled="loading" @click="preset()">本月</button><button class="button secondary" :disabled="loading" @click="preset(true)">近 28 天</button></div>
@@ -167,8 +167,7 @@ onBeforeUnmount(() => { generation++; });
 .choice-top { color: #7e788f; }.choice-number { font-size: 12px; font-variant-numeric: tabular-nums; }
 .choice-title { font-size: 19px; font-weight: 600; }.choice-title svg { color: #898297; }
 .choice-preview { width: 100%; height: 90px; }.preview-primary { fill: #8c7cd2; }.preview-secondary { fill: #76b2a9; }.preview-muted { fill: #b6a9e3; }.preview-rule { stroke: #ebe8f2; stroke-width: 1; }.preview-line { fill: none; stroke: #8c7cd2; stroke-width: 3; }
-.analysis-back { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; margin-bottom: 4px; color: var(--analysis-muted); text-decoration: none; font-size: 13px; }
-.analysis-back svg { transform: rotate(180deg); }
+.analysis-back { margin-bottom: 4px; }
 .analysis-presets { display: flex; border: 1px solid var(--analysis-line); border-radius: 7px; padding: 3px; gap: 2px; background: #faf9fc; }
 .analysis-presets .button { border: 0; background: transparent; min-height: 36px; padding: 6px 12px; font-size: 13px; }
 .analysis-presets .button:hover { background: #efecf7; }

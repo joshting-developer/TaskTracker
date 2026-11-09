@@ -1,3 +1,9 @@
+## 2026-11-09 返回導覽視覺整理
+
+- 使用者認為看板返回文字缺乏設計感；本輪調整該入口，盤點並統一同類返回導覽，不改路由或擴張全站重設計。
+- 採兩份UI／UX app-screen流程及Vue規範，保留紫色品牌；返回改中性箭頭按鈕，看板名稱與返回同列，hover／focus／觸控尺寸清楚。
+- 已完成：build、既有看板UX回歸；三類返回入口各三尺寸44px／無底線／鍵盤focus及Enter目的地／無溢位。實際前後截圖檢視與skill inspector完成，既有規則例外／警告記錄於docs/navigation-polish-2026-11-09.md；隔離資料清理，本機commit。
+
 ## 2026-11-09 本機主庫改用MySQL
 
 - 使用者已授權本機與Docker改為MySQL，PostgreSQL可選但本輪採MySQL 8.4 LTS；保留SQLite來源與既有資料，不重設seed代替遷移。
