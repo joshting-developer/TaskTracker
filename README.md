@@ -7,7 +7,7 @@
 ```text
 frontend/            Vue 3＋Vuetify 4＋Vite, 獨立 SPA
 backend/             Laravel 13 JSON API, PHP 8.5 容器
-docker-compose.yml  本機前端／API／Queue／WebSocket／Redis
+docker-compose.yml  本機前端／API／Queue／WebSocket／Redis／MySQL
 docs/               產品決策與設計紀錄
 ```
 
@@ -25,11 +25,13 @@ Owner／Manager可從側欄「工時分析」選擇成員投入、專案投入�
 
 ## 資料儲存
 
-業務資料使用關聯式 SQLite：Workspace／Member、Project／Status／ACL、Issue／Comment／Relation、Board／收錄、工時、Todo／通知各有獨立資料表，含外鍵與索引。Laravel Eloquent 模型提供關聯；歷史事件與重試結果保留快照 JSON。
+業務資料使用 MySQL 8.4 LTS／InnoDB：Workspace／Member、Project／Status／ACL、Issue／Comment／Relation、Board／收錄、工時、Todo／通知各有獨立資料表，含外鍵與索引。Laravel Eloquent 模型提供關聯；歷史事件與重試結果保留快照 JSON。
 
-舊 `records.payload` 已改為歷史封存，正常業務不再寫入。升級會保留現有帳號、公開 ID、revision 與內容；啟動前先備份 SQLite，無需重設 Seed。資料表、ER 圖及升級／回退方式見[關聯式資料設計](docs/database-design.md)。
+舊 `records.payload` 已改為歷史封存，正常業務不再寫入。SQLite轉MySQL會保留現有帳號、公開 ID、revision、歷史及工時；原SQLite與volume保留。既有資料請先依[MySQL切換紀錄](docs/mysql-migration-2026-11-09.md)備份／匯入，不需重設Seed。資料表、ER 圖及升級／回退方式見[關聯式資料設計](docs/database-design.md)。
 
 ## Docker 開始試用
+
+新環境直接執行下列指令；有既有SQLite資料時，先依上面的切換文件離線匯入。MySQL密碼由一次性服務隨機產生並保存在獨立volume，不需設定公開預設密碼。
 
 ```sh
 docker compose up -d --build
@@ -74,6 +76,8 @@ docker compose up -d --build
 | queue | Laravel Redis queue worker, 3 次嘗試、60 秒 timeout | 不對主機開放 |
 | websocket | Laravel Reverb WebSocket | `ws://127.0.0.1:8080` |
 | redis | Queue／Cache, AOF 持久化 | 只開放容器內網 `redis:6379` |
+| mysql | MySQL 8.4 LTS／InnoDB | 只開放容器內網 `mysql:3306` |
+| mysql-secrets | 一次性隨機密碼初始化 | 不連網，成功後結束 |
 
 API 與 WebSocket 都只綁主機 loopback。這是本機開發設定, 正式交付仍需 HTTPS／WSS、反向代理、註冊政策及部署設計
 

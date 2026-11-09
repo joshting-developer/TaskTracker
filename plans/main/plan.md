@@ -1,3 +1,13 @@
+## 2026-11-09 本機主庫改用MySQL
+
+- 使用者已授權本機與Docker改為MySQL，PostgreSQL可選但本輪採MySQL 8.4 LTS；保留SQLite來源與既有資料，不重設seed代替遷移。
+- 使用專案Laravel skills；API／Session／permission＋scope／revision／requestId維持。
+- 階段一完成：MySQL schema／UTC微秒與DTO適配、User／Workspace交易鎖、保留來源的空目標Importer、Compose與秘密配置；完整71項2550 assertions、真實MySQL瀏覽器／多空間／工時分析通過。主服務尚未切換，下一階段離線備份匯入。
+- 階段一：審查MySQL schema及並行差異，加入明確交易鎖、遷移工具與隔離MySQL整合／競態驗證。
+- 階段二：Compose加入MySQL與持久化／健康檢查／本機秘密，PHP pdo_mysql、啟動與設定適配；空目標匯入舊SQLite並核對資料，再切換及重啟服務。
+- 階段三：真實MySQL API／瀏覽器流程、Queue／WebSocket及資料持久化驗證，更新README／設計與技能適配，各階段commit。
+- 限制：不push、不刪舊volume／SQLite、不外露MySQL埠；測試只使用獨立資料庫與帳號，不允許通用測試命令清空主庫。
+
 ## 2026-11-09 效能改善實作
 
 - 使用者已要求依複掃調整；採Addy診斷／ECC量測，Laravel與Vue原有契約保留。

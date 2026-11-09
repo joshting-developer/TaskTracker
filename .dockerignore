@@ -33,6 +33,8 @@
 !backend/public/.htaccess
 !backend/routes/
 !backend/routes/**
+!backend/tools/
+!backend/tools/**
 !backend/tests/
 !backend/tests/**
 !backend/phpunit.xml

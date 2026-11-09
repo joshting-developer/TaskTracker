@@ -1,0 +1,75 @@
+# 隔離測試專用；不繼承主服務volume、埠或Compose標籤。
+services:
+  secrets:
+    image: tasktracker-backend
+    user: '0:0'
+    entrypoint: ["php", "/app/docker/initialize-mysql.php"]
+    network_mode: none
+    volumes:
+      - root-secret:/run/tasktracker-root
+      - app-secret:/run/tasktracker-app
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: tasktracker_test
+      MYSQL_USER: tasktracker_test
+      MYSQL_PASSWORD_FILE: /run/tasktracker-app/password
+      MYSQL_ROOT_PASSWORD_FILE: /run/tasktracker-root/password
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_bin"]
+    tmpfs:
+      - /var/lib/mysql
+    volumes:
+      - ./backend/tools/mysql-test-init.sql:/docker-entrypoint-initdb.d/00-tests.sql:ro
+      - root-secret:/run/tasktracker-root:ro
+      - app-secret:/run/tasktracker-app:ro
+    depends_on:
+      secrets:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$(cat /run/tasktracker-app/password) mysql --protocol=TCP -h127.0.0.1 -utasktracker_test tasktracker_test -e 'SELECT 1' >/dev/null 2>&1"]
+      interval: 3s
+      timeout: 3s
+      retries: 45
+  backend:
+    image: tasktracker-backend
+    init: true
+    environment:
+      APP_ENV: testing
+      APP_DEBUG: 'false'
+      APP_URL: http://127.0.0.1:5175
+      TASKTRACKER_ENV_PATH: /data
+      TASKTRACKER_BOOTSTRAP: '1'
+      TASKTRACKER_MYSQL_TEST: '1'
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_DATABASE: tasktracker_test
+      DB_USERNAME: tasktracker_test
+      DB_PASSWORD_FILE: /run/tasktracker-app/password
+      SESSION_DRIVER: database
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      BROADCAST_CONNECTION: 'null'
+      ALLOWED_ORIGINS: http://127.0.0.1:5175
+    tmpfs:
+      - /data:uid=33,gid=33,mode=1777
+    volumes:
+      - ./backend/app:/app/app:ro
+      - ./backend/config:/app/config:ro
+      - ./backend/database:/app/database:ro
+      - ./backend/routes:/app/routes:ro
+      - ./backend/tests:/app/tests:ro
+      - ./backend/tools:/app/tools:ro
+      - app-secret:/run/tasktracker-app:ro
+    ports:
+      - "127.0.0.1:13029:3002"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:3002/api/health') === false ? 1 : 0);"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+volumes:
+  root-secret:
+  app-secret:

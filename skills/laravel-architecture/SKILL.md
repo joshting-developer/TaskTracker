@@ -10,7 +10,7 @@ description: Apply TaskTracker Laravel layer responsibilities, dependency direct
 ## 優先序與工作範圍
 
 - 使用者當次要求、產品契約及授權／資料安全限制優先；架構與慣例以ECC為基礎，本skill只補足未規定的細節。與舊backend-development-standards衝突時採ECC，舊skill已退役，不載入雙套規則。
-- 上游範例的Sanctum、REST、snake_case輸入、success envelope及DB方案不是本專案的遷移要求；保留Session／CSRF、RPC路由、camelCase API、ok/data、DomainError、revision／requestId及SQLite。變更契約要另有使用者授權與相容設計。
+- 上游範例的Sanctum、REST、snake_case輸入、success envelope及DB方案不是本專案的遷移要求；保留Session／CSRF、RPC路由、camelCase API、ok/data、DomainError、revision／requestId及目前MySQL主庫（2026-11-09使用者已授權遷移；SQLite保留隔離快測／歷史匯入）。變更契約要另有使用者授權與相容設計。
 - 2026-11-06使用者先暫緩、後續已明確恢復前後端重構；只處理當輪規劃及授權範圍。安裝本skill本身仍不代表授權任意改寫或現有程式已全面合規，重構紀錄見docs/refactoring-2026-11-06.md。
 
 ## 開工與交付

@@ -12,7 +12,7 @@
 
 - 協調整個寫入的Service或頂層Action擁有transaction。Repository不自行commit／rollback或包跨用例transaction；Model不偷偷開交易。多個Repository／Model更新、revision與receipt寫入要在同一邊界。
 - 現有ApiExecution／RequestReplay的交易與重試機制維持為相容邊界；未來重構前先確認owner，不在每一層再套transaction。巢狀交易不能當成跨服務一致性方案。
-- 檢查後寫入以鎖或expectedRevision條件更新防競爭；SQLite不能假定SELECT FOR UPDATE等同其他DB的行鎖，使用現行交易、版本與去重機制，不以換DB迴避問題。
+- 檢查後寫入以鎖或expectedRevision條件更新防競爭；MySQL先依固定順序鎖User／Workspace穩定資料列，再查授權與版本；沒有資料時不能只鎖不存在的工時列。SQLite不能假定SELECT FOR UPDATE等同MySQL行鎖；保留各引擎交易與去重機制。
 - 整批原子或逐筆部分成功必須事先定義。預設維持現有原子契約；部分成功需逐筆結果、授權與rollback邊界，不擅自把批次失敗改成跳過。
 - Queue／事件在commit後送出；外部IO不在長交易中同步執行。Job有timeout、重試／backoff與冪等性；SMTP仍只verify／preview，不因ECC郵件範例發真信。
 - Reverb仍用私有Project頻道，只發無內容訊號；API重新讀取時重新授權，禁止把資源內容放進公開事件。
@@ -35,6 +35,9 @@
 不是每個新增class都要機械配一個Unit與一個Feature檔；依上表覆蓋真實風險，可以擴充既有測試檔。測試expected value不得呼叫被測的新算法生成，mock必須符合真實collaborator契約，禁止無語意assert、用skip掩蓋可準備的fixture或只驗mock自己回傳的值。
 
 ## 測試環境與執行
+
+2026-11-09：主庫MySQL，預設TestCase仍強制memory SQLite做快速／歷史回歸；新增MySqlTestCase只允許TASKTRACKER_MYSQL_TEST=1且tasktracker_test帳號／tasktracker_test或tasktracker_test_import schema。用獨立docker-compose.mysql-test.yml跑真實API、雙程序競態與匯入；不能用SQLite通過替代MySQL證據，也不能鬆開預設測試隔離。
+
 
 - 維持PHPUnit與現有TestCase。bootstrap前強制程序env及config為testing／memory SQLite，不只依賴phpunit.xml，也不因範例RefreshDatabase／DatabaseTransactions改用業務DB。
 - fixture由每個case／明確共用setup建立，不依賴本機seed、其他測試先後或主鍵固定編號。新增class引用確認use／FQCN，至少執行經過該行的case，再跑完整修改測試檔。

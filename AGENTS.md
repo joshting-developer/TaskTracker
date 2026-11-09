@@ -3,6 +3,8 @@
 2026-11-06：已移除獨立Epic概覽與未掛Epic提醒，Epic保留可選卡片類型，列表／類型篩選及詳細頁共用入口，既有資料、關聯與工時保留。
 
 
+2026-11-09：使用者已選本機與部署主庫為MySQL 8.4 LTS／InnoDB，Compose新增mysql及一次性秘密初始化；SQLite保留唯讀來源／回退與memory快速測試，下方SQLite現況敘述視為歷史。寫入先鎖User／Workspace穩定資料列，再讀資格與revision；不能依賴SQLite全庫寫鎖。真實MySQL測試只用獨立Compose與tasktracker_test帳號／schema，預設artisan test仍強制memory，不改主庫。見docs/mysql-migration-2026-11-09.md。
+
 ## 專案定位與目前階段
 
 TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提供工作空間／帳號、專案入口、Epic、任務與自訂看板、工時月曆及通知預覽
@@ -33,7 +35,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 目前本機實作（2026-10-19 已改為前後端分離）：
 
 - `frontend/`：Vue 3＋Vuetify 4＋Vite, 登入／專案表單已使用 Vuetify, 既有清單／看板保留專用元件與 CSS
-- `backend/`：Laravel 13 JSON API, PHP 8.5 Docker, SQLite 與 Laravel session／CSRF；不使用 Inertia, Node 僅用前端工具鏈
+- `backend/`：Laravel 13 JSON API, PHP 8.5 Docker, MySQL 與 Laravel session／CSRF；不使用 Inertia, Node 僅用前端工具鏈
 - 根目錄 Compose 提供 frontend（5174）、backend（3002）、queue、websocket／Reverb（8080）與 Redis。主機接口只監聽 loopback, Redis 只在容器網路
 - `cd frontend && npm run dev`／`npm run build`；`docker compose exec backend php artisan test --do-not-cache-result` 驗證 Laravel API／隔離 SQLite
 - `frontend/tools/browser-check.js` 以 `E2E_API_URL` 接隔離 Laravel 服務, 使用 5175 埠, 不使用業務 mock 或使用者資料庫
@@ -67,7 +69,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - 前端只透過 `frontend/src/api/` 呼叫 JSON API, 不直接操作資料庫或匯入 PHP 業務服務
 - Laravel controller 負責 HTTP 邊界, service 負責規則, repository 負責隔離存取；權限與業務寫入在同一交易驗證
 - 同 origin 反向代理不影響程式與部署分離；如跨 origin 部署須明確設計 Cookie／CSRF／可信來源
-- Reverb、Queue 使用同一 backend image, 各自獨立服務；Redis 用 Queue／Cache, 業務資料以 SQLite 為準
+- Reverb、Queue 使用同一 backend image, 各自獨立服務；Redis 用 Queue／Cache, 業務資料以 MySQL 為準
 - 保留 API DTO、revision、requestId、日期與狀態語意, 不用更換框架作為清空資料或放寬權限的理由
 - 不修改或複製 GuildManager 的資料、帳號、憑證與部署設定
 

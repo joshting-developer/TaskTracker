@@ -10,8 +10,12 @@ x-backend: &backend
     APP_DEBUG: 'false'
     APP_URL: http://127.0.0.1:${TASKTRACKER_PORT:-5174}
     TASKTRACKER_ENV_PATH: /data
-    DB_CONNECTION: sqlite
-    DB_DATABASE: /data/tasktracker.sqlite
+    DB_CONNECTION: mysql
+    DB_HOST: mysql
+    DB_PORT: 3306
+    DB_DATABASE: tasktracker
+    DB_USERNAME: tasktracker
+    DB_PASSWORD_FILE: /run/tasktracker-app/password
     SESSION_DRIVER: database
     SESSION_COOKIE: tasktracker_session
     SESSION_LIFETIME: 480
@@ -44,6 +48,7 @@ x-backend: &backend
     - ./data:/legacy:ro
     - laravel-data:/data
     - laravel-storage:/app/storage
+    - mysql-app-secret:/run/tasktracker-app:ro
 
 services:
   backend:
@@ -55,6 +60,8 @@ services:
       - "127.0.0.1:${TASKTRACKER_API_PORT:-3002}:3002"
     depends_on:
       redis:
+        condition: service_healthy
+      mysql:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:3002/api/health') === false ? 1 : 0);"]
@@ -87,6 +94,40 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  mysql-secrets:
+    image: ${COMPOSE_PROJECT_NAME:-tasktracker}-backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    user: '0:0'
+    entrypoint: ["php", "/app/docker/initialize-mysql.php"]
+    network_mode: none
+    volumes:
+      - mysql-root-secret:/run/tasktracker-root
+      - mysql-app-secret:/run/tasktracker-app
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: tasktracker
+      MYSQL_USER: tasktracker
+      MYSQL_PASSWORD_FILE: /run/tasktracker-app/password
+      MYSQL_ROOT_PASSWORD_FILE: /run/tasktracker-root/password
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_bin"]
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - mysql-root-secret:/run/tasktracker-root:ro
+      - mysql-app-secret:/run/tasktracker-app:ro
+    depends_on:
+      mysql-secrets:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$(cat /run/tasktracker-app/password) mysql --protocol=TCP -h127.0.0.1 -utasktracker tasktracker -e 'SELECT 1' >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
 
   redis:
     image: redis:8-alpine
@@ -127,3 +168,6 @@ volumes:
   laravel-data:
   laravel-storage:
   redis-data:
+  mysql-data:
+  mysql-root-secret:
+  mysql-app-secret:

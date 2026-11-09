@@ -1,6 +1,6 @@
 FROM php:8.5.12-cli-bookworm
 RUN apt-get update && apt-get install -y --no-install-recommends libicu-dev libsqlite3-dev libzip-dev unzip \
-    && docker-php-ext-install -j"$(nproc)" intl pdo_sqlite pcntl bcmath zip \
+    && docker-php-ext-install -j"$(nproc)" intl pdo_sqlite pdo_mysql pcntl bcmath zip \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 WORKDIR /app

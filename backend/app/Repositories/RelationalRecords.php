@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Database\DatabaseTimes;
 use App\Domain\DomainError;
 use App\Models\User;
 use App\Models\Workspace;
@@ -194,6 +195,8 @@ class RelationalRecords
                 $value[$field] = $this->identities['states'][$raw];
             } elseif ($type === 'time' && $raw === null && ! in_array($field, ['completedAt', 'returnedAt', 'removedAt', 'readAt', 'consumedAt'], true)) {
                 continue;
+            } elseif ($type === 'time') {
+                $value[$field] = DatabaseTimes::public($raw);
             } elseif ($type === 'date' && $raw === null) {
                 $value[$field] = '';
             } else {
@@ -254,6 +257,8 @@ class RelationalRecords
                     $attributes[$column] = $raw === '' || $raw === null ? null : $this->internalId($reference, $raw);
                 } elseif ($type === 'state') {
                     $attributes[$column] = DB::table('project_statuses')->where('project_id', $attributes['project_id'])->where('code', $raw)->value('id') ?? throw new \RuntimeException('任務狀態不存在');
+                } elseif ($type === 'time') {
+                    $attributes[$column] = DatabaseTimes::store($raw === '' ? null : $raw);
                 } elseif ($type === 'workspace_ref') {
                     // 全球邀請的Workspace外鍵已由受信任ID設定。
                     continue;

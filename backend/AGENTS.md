@@ -2,6 +2,8 @@
 
 沿用根 [AGENTS.md](../AGENTS.md) 與[README](../README.md)。後端專案是 Laravel JSON API, 產品頁面只在 `../frontend`, 不加入 Inertia、Blade 產品頁面或後端 npm 工具鏈
 
+2026-11-09：主庫改MySQL 8.4 LTS／InnoDB，PHP同時提供pdo_mysql與pdo_sqlite。SQLite僅保留歷史與快速隔離回歸。MySQL並行與資料遷移需在獨立測試Compose實測；不可把預設TestCase改成使用主資料庫。見[MySQL切換](../docs/mysql-migration-2026-11-09.md)。
+
 ## 後端共用規範
 
 後端程式開發、review及測試設計先讀 [ECC laravel-patterns](../skills/vendor/laravel-patterns/SKILL.md)，再讀 [Laravel Architecture](../skills/laravel-architecture/SKILL.md) 與按需references。均由專案`.agents/skills`提供入口；來源及配置見[開發skills配置](../docs/development-skills.md)。舊backend-development-standards已移除。

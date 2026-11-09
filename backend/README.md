@@ -12,9 +12,9 @@ Laravel 13 JSON API, 獨立於 `../frontend` 的 Vue SPA, 不使用 Blade／Iner
 - `app/Authorization`：角色映射權限與Project範圍授權，包含撤權及重試前檢查
 - `app/Repositories`：Workspace 限定的關聯資料存取及既有 DTO 映射；LegacyRecordStore 僅供遷移／回退／匯入
 - `app/Console/Commands`：舊版 SQLite 匯入、Redis／Queue／WebSocket 檢查
-- `tests/Feature`：以隔離 SQLite 驗證 API 與資料遷移
+- `tests/Feature`：預設隔離memory SQLite回歸；獨立MySQL測試Compose驗證真實InnoDB、匯入與競態
 
-目前使用獨立關聯式業務表、外鍵及索引，保留既有 JSON API DTO；舊 records 保留封存，正常業務不雙寫。Project ACL 已落地。Reverb 尚未接上任務推播, Queue 不寄送真實郵件
+目前主庫為MySQL 8.4 LTS／InnoDB，使用獨立關聯式業務表、外鍵及索引，保留既有 JSON API DTO；舊 records 保留封存，正常業務不雙寫。Project ACL 已落地。Reverb已接上看板私有Project頻道, Queue 不寄送真實郵件
 
 PHP：Composer最低需求8.3，Docker指定8.5.12；目前以Docker為驗證環境，未宣稱8.3／8.4均已測試。版本更新紀錄及檢查結果見[版本報告](../docs/前端後續改善與PHP版本檢查-2026-11-04.md)。
 
@@ -25,3 +25,5 @@ PHP：Composer最低需求8.3，Docker指定8.5.12；目前以Docker為驗證環
 資料入口：見[關聯式資料設計](../docs/database-design.md)，包含 ER 圖、資料表用途、外鍵／索引、JSON 邊界及升級／回退驗證。
 
 示範資料統一在`database/seeders/DemoSeeder.php`；DatabaseSeeder、`php artisan db:seed --class=DemoSeeder`與`tasktracker:seed-demo`共用，後者提供明確的`--reset`。只允許local／testing，其他環境拒絕；不在Services保存demo資料。新seed包含工時分析的跨成員／專案／日期示範，見[review](../docs/time-analysis-review-2026-11-06.md)。
+
+2026-11-09：本機與部署方向改MySQL；SQLite保留歷史匯入及快速隔離測試。交易鎖、UTC時間格式、秘密與驗證命令見[MySQL切換](../docs/mysql-migration-2026-11-09.md)。

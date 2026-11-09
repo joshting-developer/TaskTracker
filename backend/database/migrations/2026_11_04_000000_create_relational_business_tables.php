@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('public_id', 200);
             $table->unique('public_id');
             $table->string('name');
-            $table->timestamp('created_at')->nullable();
+            $table->dateTime('created_at', 6)->nullable();
             $table->json('legacy_attributes')->nullable();
         });
         Schema::create('workspace_members', function (Blueprint $table) {
@@ -29,8 +29,8 @@ return new class extends Migration
             $table->unique(['workspace_id', 'user_id'], 'workspace_members_public_unique');
             $table->unique(['workspace_id', 'id'], 'workspace_members_scope_unique');
             $table->string('role')->default('user');
-            $table->timestamp('joined_at')->nullable();
-            $table->timestamp('disabled_at')->nullable();
+            $table->dateTime('joined_at', 6)->nullable();
+            $table->dateTime('disabled_at', 6)->nullable();
             $table->json('legacy_attributes')->nullable();
         });
         Schema::create('projects', function (Blueprint $table) {
@@ -42,12 +42,12 @@ return new class extends Migration
             $table->string('name');
             $table->string('code');
             $table->unsignedBigInteger('lead_id')->nullable();
-            $table->text('description')->default('');
+            $table->text('description')->default(DB::getDriverName() === 'mysql' ? DB::raw("('')") : '');
             $table->string('color')->default('#8d83ed');
             $table->unsignedInteger('next_number')->default(1);
             $table->unsignedInteger('revision')->default(1);
-            $table->timestamp('created_at')->nullable();
-            $table->timestamp('updated_at')->nullable();
+            $table->dateTime('created_at', 6)->nullable();
+            $table->dateTime('updated_at', 6)->nullable();
             $table->json('legacy_attributes')->nullable();
             $table->unique(['workspace_id', 'code']);
             $table->foreign(['workspace_id', 'lead_id'], 'projects_lead_id_fk')->references(['workspace_id', 'id'])->on('workspace_members')->restrictOnDelete();
@@ -76,7 +76,7 @@ return new class extends Migration
             $table->unsignedBigInteger('storage_position')->default(0);
             $table->index(['workspace_id', 'storage_position']);
             $table->string('title');
-            $table->text('description')->default('');
+            $table->text('description')->default(DB::getDriverName() === 'mysql' ? DB::raw("('')") : '');
             $table->unsignedBigInteger('state_id');
             $table->string('priority')->default('normal');
             $table->string('type')->default('task');
@@ -86,8 +86,8 @@ return new class extends Migration
             $table->unsignedInteger('estimate_minutes')->default(0);
             $table->unsignedBigInteger('parent_issue_id')->nullable();
             $table->unsignedInteger('revision')->default(1);
-            $table->timestamp('created_at')->nullable();
-            $table->timestamp('updated_at')->nullable();
+            $table->dateTime('created_at', 6)->nullable();
+            $table->dateTime('updated_at', 6)->nullable();
             $table->json('legacy_attributes')->nullable();
             $table->unique(['workspace_id', 'project_id', 'id'], 'issues_project_unique');
             $table->unique(['workspace_id', 'project_id', 'identifier']);
@@ -108,9 +108,9 @@ return new class extends Migration
             $table->string('name');
             $table->unsignedInteger('revision')->default(1);
             $table->unsignedBigInteger('created_by_id')->nullable();
-            $table->timestamp('created_at')->nullable();
-            $table->timestamp('updated_at')->nullable();
-            $table->timestamp('archived_at')->nullable();
+            $table->dateTime('created_at', 6)->nullable();
+            $table->dateTime('updated_at', 6)->nullable();
+            $table->dateTime('archived_at', 6)->nullable();
             $table->json('legacy_attributes')->nullable();
             $table->unique(['workspace_id', 'project_id', 'id'], 'boards_project_unique');
             $table->foreign(['workspace_id', 'project_id'], 'boards_project_id_fk')->references(['workspace_id', 'id'])->on('projects')->restrictOnDelete();
@@ -126,8 +126,8 @@ return new class extends Migration
             $table->unsignedBigInteger('member_id');
             $table->string('role_id');
             $table->unsignedInteger('revision')->default(1);
-            $table->timestamp('removed_at')->nullable();
-            $table->timestamp('updated_at')->nullable();
+            $table->dateTime('removed_at', 6)->nullable();
+            $table->dateTime('updated_at', 6)->nullable();
             $table->json('legacy_attributes')->nullable();
             $table->unique(['workspace_id', 'project_id', 'id'], 'project_members_project_unique');
             $table->unique(['project_id', 'member_id']);
@@ -156,13 +156,13 @@ return new class extends Migration
             $table->unsignedBigInteger('issue_id');
             $table->unsignedBigInteger('project_id');
             $table->unsignedBigInteger('member_id');
-            $table->timestamp('created_at')->nullable();
+            $table->dateTime('created_at', 6)->nullable();
             $table->date('work_date');
             $table->unsignedInteger('minutes');
-            $table->text('note')->default('');
+            $table->text('note')->default(DB::getDriverName() === 'mysql' ? DB::raw("('')") : '');
             $table->unsignedInteger('revision')->default(1);
-            $table->timestamp('updated_at')->nullable();
-            $table->timestamp('voided_at')->nullable();
+            $table->dateTime('updated_at', 6)->nullable();
+            $table->dateTime('voided_at', 6)->nullable();
             $table->json('legacy_attributes')->nullable();
             $table->unique(['workspace_id', 'project_id', 'id'], 'time_entries_project_unique');
             $table->index(['workspace_id', 'member_id', 'work_date']);
@@ -181,9 +181,9 @@ return new class extends Migration
             $table->unsignedBigInteger('recipient_id');
             $table->string('email');
             $table->string('subject');
-            $table->text('body')->default('');
+            $table->text('body')->default(DB::getDriverName() === 'mysql' ? DB::raw("('')") : '');
             $table->string('status')->default('preview');
-            $table->timestamp('created_at')->nullable();
+            $table->dateTime('created_at', 6)->nullable();
             $table->json('legacy_attributes')->nullable();
             $table->unique(['workspace_id', 'project_id', 'id'], 'issue_notifications_project_unique');
             $table->foreign(['workspace_id', 'project_id', 'issue_id'], 'issue_notifications_issue_id_fk')->references(['workspace_id', 'project_id', 'id'])->on('issues')->restrictOnDelete();
@@ -197,7 +197,7 @@ return new class extends Migration
             $table->unique(['workspace_id', 'public_id'], 'todos_public_unique');
             $table->unique(['workspace_id', 'id'], 'todos_scope_unique');
             $table->string('title');
-            $table->text('note')->default('');
+            $table->text('note')->default(DB::getDriverName() === 'mysql' ? DB::raw("('')") : '');
             $table->unsignedBigInteger('created_by_id');
             $table->string('creator_name');
             $table->unsignedBigInteger('assignee_id');
@@ -205,10 +205,10 @@ return new class extends Migration
             $table->string('assignee_name');
             $table->string('state')->default('open');
             $table->unsignedInteger('revision')->default(1);
-            $table->timestamp('created_at')->nullable();
-            $table->timestamp('updated_at')->nullable();
-            $table->timestamp('completed_at')->nullable();
-            $table->timestamp('returned_at')->nullable();
+            $table->dateTime('created_at', 6)->nullable();
+            $table->dateTime('updated_at', 6)->nullable();
+            $table->dateTime('completed_at', 6)->nullable();
+            $table->dateTime('returned_at', 6)->nullable();
             $table->unsignedBigInteger('converted_issue_id')->nullable();
             $table->unsignedBigInteger('converted_project_id')->nullable();
             $table->json('legacy_attributes')->nullable();
@@ -229,8 +229,8 @@ return new class extends Migration
             $table->unsignedBigInteger('recipient_id');
             $table->string('event');
             $table->string('actor');
-            $table->timestamp('created_at')->nullable();
-            $table->timestamp('read_at')->nullable();
+            $table->dateTime('created_at', 6)->nullable();
+            $table->dateTime('read_at', 6)->nullable();
             $table->json('legacy_attributes')->nullable();
             $table->foreign(['workspace_id', 'todo_id'], 'todo_notifications_todo_id_fk')->references(['workspace_id', 'id'])->on('todos')->restrictOnDelete();
             $table->foreign(['workspace_id', 'recipient_id'], 'todo_notifications_recipient_id_fk')->references(['workspace_id', 'id'])->on('workspace_members')->restrictOnDelete();
@@ -242,9 +242,9 @@ return new class extends Migration
             $table->unique(['workspace_id', 'public_id'], 'workspace_invitations_public_unique');
             $table->unique(['workspace_id', 'id'], 'workspace_invitations_scope_unique');
             $table->string('email');
-            $table->timestamp('expires_at')->nullable();
-            $table->timestamp('consumed_at')->nullable();
-            $table->timestamp('created_at')->nullable();
+            $table->dateTime('expires_at', 6)->nullable();
+            $table->dateTime('consumed_at', 6)->nullable();
+            $table->dateTime('created_at', 6)->nullable();
             $table->json('legacy_attributes')->nullable();
         });
         Schema::create('demo_seed_states', function (Blueprint $table) {
@@ -254,8 +254,8 @@ return new class extends Migration
             $table->unique(['workspace_id', 'public_id'], 'demo_seed_states_public_unique');
             $table->unique(['workspace_id', 'id'], 'demo_seed_states_scope_unique');
             $table->unsignedInteger('version')->default(1);
-            $table->timestamp('seeded_at')->nullable();
-            $table->timestamp('upgraded_at')->nullable();
+            $table->dateTime('seeded_at', 6)->nullable();
+            $table->dateTime('upgraded_at', 6)->nullable();
             $table->json('legacy_attributes')->nullable();
         });
         Schema::create('workspace_upgrades', function (Blueprint $table) {
@@ -264,9 +264,9 @@ return new class extends Migration
             $table->foreignId('workspace_id')->constrained('workspaces')->restrictOnDelete();
             $table->unique(['workspace_id', 'public_id'], 'workspace_upgrades_public_unique');
             $table->unique(['workspace_id', 'id'], 'workspace_upgrades_scope_unique');
-            $table->timestamp('applied_at')->nullable();
+            $table->dateTime('applied_at', 6)->nullable();
             $table->string('actor');
-            $table->text('note')->default('');
+            $table->text('note')->default(DB::getDriverName() === 'mysql' ? DB::raw("('')") : '');
             $table->json('role_changes')->nullable();
             $table->json('legacy_attributes')->nullable();
         });
@@ -304,7 +304,7 @@ return new class extends Migration
             $table->string('public_id', 200);
             $table->text('content');
             $table->string('author');
-            $table->timestamp('created_at')->nullable();
+            $table->dateTime('created_at', 6)->nullable();
             $table->unsignedInteger('position');
             $table->unique(['issue_id', 'public_id']);
         });

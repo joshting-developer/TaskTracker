@@ -6,6 +6,7 @@ use App\Authorization\WorkspacePermissions;
 use App\Data\AuthenticatedAccountData;
 use App\Data\TimeReportData;
 use App\Database\WorkspaceSqliteConnection;
+use App\Database\WriteLocks;
 use App\Domain\DomainError;
 use App\Repositories\RecordStore;
 use App\Repositories\TimeReportRepository;
@@ -46,7 +47,10 @@ class ApiExecution
      */
     public function authenticate(Request $request, string $operation, array $input = []): ?array
     {
-        return DB::transaction(function () use ($request, $operation, $input) {
+        $userId = $request->user()?->getAuthIdentifier();
+
+        return DB::transaction(function () use ($request, $operation, $input, $userId) {
+            (new WriteLocks)->authentication($operation, $input, $userId);
             if ($operation === 'logout') {
                 Auth::logout();
                 $request->session()->invalidate();
@@ -151,7 +155,14 @@ class ApiExecution
      */
     private function inWorkspace(Request $request, string $operation, \Closure $callback): array
     {
-        $execute = function () use ($request, $operation, $callback) {
+        $userId = $request->user()?->getAuthIdentifier();
+        $workspaceId = $request->session()->get('workspace_id');
+        $execute = function () use ($request, $operation, $callback, $userId, $workspaceId) {
+            if (! in_array($operation, ['getWorkspace', 'getTimeReport', 'getTodos', 'getProfile', 'getWorkspaceSettings', 'getProjectMembers', 'smtpStatus', 'verifySmtp'], true)) {
+                $locks = new WriteLocks;
+                $locks->account($userId);
+                $locks->workspace($workspaceId);
+            }
             $context = $this->session->context($request);
             $expectedWorkspace = $request->header('X-Workspace-ID');
             if ($operation !== 'getWorkspace' && $expectedWorkspace !== null && $expectedWorkspace !== $context['workspace']['id']) {

@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Database\DatabaseTimes;
 use App\Domain\Fields;
 use Illuminate\Support\Facades\DB;
 
@@ -56,7 +57,7 @@ class RelationalChildren
                 'id' => $comment->public_id,
                 'content' => $comment->content,
                 'author' => $comment->author,
-                'createdAt' => $comment->created_at,
+                'createdAt' => DatabaseTimes::public($comment->created_at),
             ], $this->items('issue_comments', $row->id));
             $result['history'] = [];
         }
@@ -117,7 +118,7 @@ class RelationalChildren
                     'public_id' => $comment['id'],
                     'content' => $comment['content'],
                     'author' => $comment['author'],
-                    'created_at' => $comment['createdAt'] ?? null,
+                    'created_at' => DatabaseTimes::store($comment['createdAt'] ?? null),
                     'position' => $position,
                 ]);
             }
