@@ -1,7 +1,7 @@
 {
   "date": "2026-11-09",
   "baselineCommit": "30ff03d",
-  "stage": "read authorization batching and board refresh/indexing",
+  "stage": "read batching, board refresh/indexing, explicit read transactions",
   "runs": 5,
   "environment": "same profile-reads.php; isolated memory SQLite; query log enabled; not HTTP capacity",
   "domain": [
@@ -385,6 +385,26 @@
         "gzipBytes": 110836
       }
     ],
-    "browserVersion": "156.0.8078.80"
+    "browserVersion": "156.0.8078.80",
+    "measurementStage": "after stage 2, before read transaction change"
+  },
+  "sqliteReadTransactions": {
+    "scope": "isolated native file WAL, two PDO connections and real HTTP feature tests; not HTTP capacity",
+    "operations": [
+      "getWorkspace",
+      "getTimeReport"
+    ],
+    "readMode": "DEFERRED + query_only",
+    "otherMode": "IMMEDIATE unchanged",
+    "verified": [
+      "concurrent other writer commits while read snapshot remains consistent",
+      "ordinary transaction blocks other writer",
+      "query_only rejects writes and restores after exceptions and nested reads",
+      "HTTP read whitelist and subsequent project persistence"
+    ],
+    "backendSuite": {
+      "tests": 66,
+      "assertions": 2483
+    }
   }
 }

@@ -5,6 +5,7 @@ namespace App\Http;
 use App\Authorization\WorkspacePermissions;
 use App\Data\AuthenticatedAccountData;
 use App\Data\TimeReportData;
+use App\Database\WorkspaceSqliteConnection;
 use App\Domain\DomainError;
 use App\Repositories\RecordStore;
 use App\Repositories\TimeReportRepository;
@@ -150,7 +151,7 @@ class ApiExecution
      */
     private function inWorkspace(Request $request, string $operation, \Closure $callback): array
     {
-        return DB::transaction(function () use ($request, $operation, $callback) {
+        $execute = function () use ($request, $operation, $callback) {
             $context = $this->session->context($request);
             $expectedWorkspace = $request->header('X-Workspace-ID');
             if ($operation !== 'getWorkspace' && $expectedWorkspace !== null && $expectedWorkspace !== $context['workspace']['id']) {
@@ -158,6 +159,12 @@ class ApiExecution
             }
 
             return $callback($context);
-        });
+        };
+        $connection = DB::connection();
+        if ($connection instanceof WorkspaceSqliteConnection && in_array($operation, ['getWorkspace', 'getTimeReport'], true)) {
+            return $connection->readTransaction($execute);
+        }
+
+        return $connection->transaction($execute);
     }
 }

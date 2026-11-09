@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Database\WorkspaceSqliteConnection;
+use Illuminate\Database\Connection;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +13,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        Connection::resolverFor('sqlite', fn ($pdo, $database, $prefix, $config) => new WorkspaceSqliteConnection($pdo, $database, $prefix, $config));
     }
 
     /**

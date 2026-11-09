@@ -5,7 +5,9 @@
 - 階段一：唯讀用例批次載入授權映射，移除每工時／成員重查；既有寫入仍即時查DB。補SQL成長、角色等價／撤權測試，跑完整後端與隔離量測並commit。
 - 階段二完成：刷新合併與看板索引；build／composables、完整瀏覽器、看板及跨工作區回歸通過。500卡HTTP中位370→40ms（含階段一）、雙刷新2→1；DOM仍12250，密度切換未明顯改善，記錄限制。
 - 階段二：合併同scope工作區刷新，建立看板共享索引／分欄資料，減少逐卡掃描；實測500卡／既有瀏覽器回歸後commit。
+- 階段三完成：getWorkspace／getTimeReport限定DEFERRED＋query_only，其他維持IMMEDIATE；SQLite雙連線／快照／誤寫／巢狀還原及HTTP白名單通過，完整66 tests／2483 assertions，工時分析／成員明細瀏覽器通過。
 - 階段三：審核唯讀DEFERRED交易，保留寫入IMMEDIATE與Session blocking／CSRF／scope；兩連線與API隔離測試證實後採用並commit。
+- 收尾完成：Queue／Reverb重啟且健康，API／前端／Redis維持運作；本輪隔離tmpfs容器已移除，沒有重設主資料、清Redis或push。
 - 其他：保留API資料契約；全量bootstrap API拆分、SQL報表聚合／分頁與正式虛擬化若超出本輪可驗證範圍，明確列剩餘，不以快取或刪欄位規避。
 
 ## 2026-11-06～11-09 Addy／ECC效能複掃

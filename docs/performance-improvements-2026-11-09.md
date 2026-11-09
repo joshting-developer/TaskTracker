@@ -31,7 +31,7 @@ ProjectAccess提供只在單次唯讀用例內使用的快照，WorkspaceQuery�
 | 指標 | 複掃基準 | 本輪 |
 | --- | ---: | ---: |
 | Owner getWorkspace中位 | 370.39ms | 40.21ms |
-| Owner getWorkspace p95 | 見原基準 | 46.41ms |
+| Owner getWorkspace p95 | 420.03ms | 46.41ms |
 | 看板就緒中位 | 583ms | 167ms |
 | 快速兩次刷新Workspace請求 | 2 | 1 |
 | DOM元素／卡片 | 12250／500 | 12250／500 |
@@ -40,4 +40,20 @@ HTTP及頁面就緒主要受階段一SQL減量影響，不能歸因為前端索�
 
 驗證：build、composable刷新競態／scope隔離／索引與舊彙總等價測試、500卡量測（含雙刷新請求斷言）、既有看板三尺寸操作、工作區切換／邀請／另一分頁409，以及完整瀏覽器業務回歸均通過。無主資料寫入、瀏覽器錯誤或API契約變更。
 
-後續交易及剩餘項目於完成時更新。
+## 階段三：明確唯讀SQLite交易
+
+AppServiceProvider註冊Laravel SQLiteConnection子類，保留框架transaction／savepoint／rollback／afterCommit生命週期。ApiExecution只對`getWorkspace`與`getTimeReport`啟用DEFERRED及`PRAGMA query_only=ON`，身分、permission與資料在同一讀取快照驗證；離開後於finally還原query_only。寫入與其他操作仍使用原本IMMEDIATE，沒有全庫改DEFERRED、放寬Session blocking、CSRF或跨分頁Workspace檢查。
+
+新增三項Feature測試：實際API讀取啟用query_only、後續建立Project可保存；唯讀誤寫拒絕／例外傳遞／巢狀還原；獨立磁碟WAL雙PDO讀取快照期間另一writer成功、既有快照不漂移，而一般交易仍令另一writer得到SQLITE_BUSY，結束後可正常寫入。tempnam資料庫及WAL／SHM皆清理，不使用業務DB。
+
+完整後端66 tests／2483 assertions通過；最終例外斷言補強後三項交易測試再次通過。真實隔離API的三種分析／撤權與成員兩層分頁／Epic工時／XSS／三尺寸回歸通過。上表HTTP與500卡數據於階段二完成後取得；階段三驗證鎖定機制，未另宣稱提高HTTP吞吐量。測試服務採序列PHP serve，不能用來推論正式多人容量。
+
+## 仍有的限制
+
+- 全量getWorkspace仍帶所有可讀Project／Issue／工時，首頁和分析仍會取整包；拆身分／導覽／目前Project API需另做契約與撤權清除設計。
+- 500卡仍全量DOM；密度切換成本尚在，後續虛擬化需保留拖曳、泳道及鍵盤焦點。
+- 工時報表仍在PHP聚合，群組分頁及日期SQL／索引候選尚未遷移；不能把查詢次數減量當作已完成資料量上限治理。
+- 初始JS／Vuetify與MDI CSS尚未拆分。未新增Redis業務或ACL快取，既有Queue／Cache用途保留。
+- 僅local合成人造資料證據；沒有真人RUM、正式多worker負載或新SLO承諾。
+
+交付不修改schema、不清空使用者資料、不push。長駐Queue／Reverb在完成後重啟載入程式，隔離量測容器移除。
