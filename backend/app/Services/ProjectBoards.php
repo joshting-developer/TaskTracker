@@ -25,9 +25,10 @@ class ProjectBoards
     /**
      * 回傳Default看板與尚未移除的自訂看板。
      *
+     * @param  ?array  $projects  同一唯讀用例已取得的同租戶專案，省去重複查詢
      * @return array
      */
-    public function listing(): array
+    public function listing(?array $projects = null): array
     {
         $defaults = array_map(fn ($project) => [
             'id' => 'default',
@@ -36,7 +37,7 @@ class ProjectBoards
             'selectedIssueIds' => [],
             'isDefault' => true,
             'revision' => 0,
-        ], $this->store->all('projects'));
+        ], $projects ?? $this->store->all('projects'));
 
         return [...$defaults, ...array_values(array_filter($this->store->all('boards'), fn ($board) => empty($board['archivedAt'])))];
     }

@@ -13,6 +13,8 @@ class WorkspaceQuery
 {
     private ProjectAccess $access;
 
+    private array $members = [];
+
     /**
      * 設定此服務使用的資料入口與可信任相依。
      *
@@ -32,9 +34,12 @@ class WorkspaceQuery
      */
     public function getWorkspace(): array
     {
+        $allProjects = $this->store->all('projects');
+        $this->members = $this->store->all('members');
+        $this->access = ProjectAccess::forRead($this->store, $this->workspaceSession, $allProjects, $this->members);
         $projects = [];
         $memberIds = [$this->workspaceSession['user']['id']];
-        foreach ($this->store->all('projects') as $project) {
+        foreach ($allProjects as $project) {
             if (! $this->access->can($project['id'], 'project.read')) {
                 continue;
             }
@@ -52,13 +57,13 @@ class WorkspaceQuery
         $issues = $this->visibleIssues($issueProjects);
         $issueIds = array_column($issues, 'id');
         $canReadAllMembers = in_array('workspace.members.read', $this->workspaceSession['permissions'], true);
-        $boards = (new ProjectBoards($this->store, $this->workspaceSession))->listing();
+        $boards = (new ProjectBoards($this->store, $this->workspaceSession))->listing($allProjects);
 
         return [
             'projects' => $projects,
             'issues' => $issues,
             'boards' => array_values(array_filter($boards, fn ($board) => in_array($board['projectId'], $issueProjects, true))),
-            'members' => array_values(array_filter($this->store->all('members'), fn ($member) => $canReadAllMembers || in_array($member['id'], $memberIds, true))),
+            'members' => array_values(array_filter($this->members, fn ($member) => $canReadAllMembers || in_array($member['id'], $memberIds, true))),
             'timeEntries' => $this->visibleTimeEntries($issueIds),
             'notifications' => $this->visibleNotifications($issueIds),
             'meta' => $this->metadata(),
@@ -73,7 +78,8 @@ class WorkspaceQuery
      */
     private function visibleIssues(array $projectIds): array
     {
-        $issues = array_values(array_filter($this->store->all('issues'), fn ($issue) => in_array($issue['projectId'], $projectIds, true)));
+        $allowed = array_fill_keys($projectIds, true);
+        $issues = array_values(array_filter($this->store->all('issues'), fn ($issue) => isset($allowed[$issue['projectId']])));
         usort($issues, fn ($first, $second) => strcmp($second['updatedAt'], $first['updatedAt']) ?: strcmp($first['identifier'], $second['identifier']));
 
         return $issues;
@@ -87,8 +93,10 @@ class WorkspaceQuery
      */
     private function visibleTimeEntries(array $issueIds): array
     {
-        return array_values(array_filter($this->store->all('timeEntries'), function ($entry) use ($issueIds) {
-            if (! in_array($entry['issueId'], $issueIds, true)) {
+        $visible = array_fill_keys($issueIds, true);
+
+        return array_values(array_filter($this->store->all('timeEntries'), function ($entry) use ($visible) {
+            if (! isset($visible[$entry['issueId']])) {
                 return false;
             }
             $canReadTeam = $this->access->can($entry['projectId'], 'timeEntry.readTeam');
@@ -107,8 +115,10 @@ class WorkspaceQuery
      */
     private function visibleNotifications(array $issueIds): array
     {
-        return array_values(array_filter($this->store->all('notifications'), function ($notification) use ($issueIds) {
-            if (! in_array($notification['issueId'], $issueIds, true)) {
+        $visible = array_fill_keys($issueIds, true);
+
+        return array_values(array_filter($this->store->all('notifications'), function ($notification) use ($visible) {
+            if (! isset($visible[$notification['issueId']])) {
                 return false;
             }
             $canReadTeam = $this->access->can($notification['projectId'], 'notification.readTeam');
@@ -148,7 +158,7 @@ class WorkspaceQuery
             return [];
         }
 
-        return array_column(array_filter($this->store->all('members'), function ($member) {
+        return array_column(array_filter($this->members, function ($member) {
             if (! empty($member['disabledAt'])) {
                 return false;
             }

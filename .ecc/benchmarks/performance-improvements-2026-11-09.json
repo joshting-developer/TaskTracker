@@ -1,0 +1,109 @@
+{
+  "date": "2026-11-09",
+  "baselineCommit": "30ff03d",
+  "stage": "read authorization batching",
+  "runs": 5,
+  "environment": "same profile-reads.php; isolated memory SQLite; query log enabled; not HTTP capacity",
+  "domain": [
+    {
+      "scenario": "seed.workspace",
+      "queries": [
+        55
+      ],
+      "medianMs": 10.97,
+      "minMs": 10.15,
+      "maxMs": 12.44,
+      "jsonBytes": 125134
+    },
+    {
+      "scenario": "seed.report2025",
+      "queries": [
+        22
+      ],
+      "medianMs": 4.16,
+      "minMs": 3.61,
+      "maxMs": 4.78,
+      "jsonBytes": 18524
+    },
+    {
+      "scenario": "seed.issuesOnly",
+      "queries": [
+        14
+      ],
+      "medianMs": 1.17,
+      "minMs": 1.14,
+      "maxMs": 1.33,
+      "jsonBytes": 10159
+    },
+    {
+      "scenario": "plus50.workspace",
+      "queries": [
+        55
+      ],
+      "medianMs": 9.54,
+      "minMs": 9.06,
+      "maxMs": 10.97,
+      "jsonBytes": 141674
+    },
+    {
+      "scenario": "plus50.report2025",
+      "queries": [
+        22
+      ],
+      "medianMs": 3.1,
+      "minMs": 2.88,
+      "maxMs": 4.28,
+      "jsonBytes": 18973
+    },
+    {
+      "scenario": "plus200.workspace",
+      "queries": [
+        55
+      ],
+      "medianMs": 12.96,
+      "minMs": 12.66,
+      "maxMs": 17.88,
+      "jsonBytes": 191424
+    },
+    {
+      "scenario": "plus200.report2025",
+      "queries": [
+        22
+      ],
+      "medianMs": 4.31,
+      "minMs": 4.03,
+      "maxMs": 6.9,
+      "jsonBytes": 19131
+    },
+    {
+      "scenario": "plus200.24members.workspace",
+      "queries": [
+        55
+      ],
+      "medianMs": 13.63,
+      "minMs": 13.38,
+      "maxMs": 14.55,
+      "jsonBytes": 194034
+    },
+    {
+      "scenario": "plus200.24members.report2025",
+      "queries": [
+        22
+      ],
+      "medianMs": 4.84,
+      "minMs": 4.7,
+      "maxMs": 4.91,
+      "jsonBytes": 19991
+    },
+    {
+      "scenario": "plus100.issuesOnly",
+      "queries": [
+        14
+      ],
+      "medianMs": 4.16,
+      "minMs": 4.04,
+      "maxMs": 4.18,
+      "jsonBytes": 58341
+    }
+  ]
+}

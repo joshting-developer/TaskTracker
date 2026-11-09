@@ -36,15 +36,17 @@ class WorkspaceTimeReport
         $start = $filters->startDate;
         $end = $filters->endDate;
         $detailGroup = $filters->detailGroup;
-        $access = new ProjectAccess($this->store, $this->workspaceSession);
+        $allProjects = $this->store->all('projects');
+        $allMembers = $this->store->all('members');
+        $access = ProjectAccess::forRead($this->store, $this->workspaceSession, $allProjects, $allMembers);
         $projects = [];
-        foreach ($this->store->all('projects') as $project) {
+        foreach ($allProjects as $project) {
             $canReadDetails = $detailGroup === null || $access->can($project['id'], 'issue.read');
             if ($access->can($project['id'], 'project.read') && $access->can($project['id'], 'timeEntry.readTeam') && $canReadDetails) {
                 $projects[$project['id']] = $project;
             }
         }
-        $members = array_column($this->store->all('members'), null, 'id');
+        $members = array_column($allMembers, null, 'id');
         $projectId = $filters->projectId;
         $userId = $filters->userId;
         if ($projectId !== '' && ! isset($projects[$projectId])) {

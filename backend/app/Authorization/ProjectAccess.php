@@ -30,6 +30,30 @@ class ProjectAccess
         'notification.readTeam' => 'notification.readTeamAny',
     ];
 
+    /** 僅存在單次唯讀用例，寫入入口不使用此快照。 */
+    private ?array $readSnapshot = null;
+
+    /**
+     * 批次載入同租戶資格，沿用permissions規則；呼叫者須在每次唯讀用例重建。
+     *
+     * @param  RecordStore  $store  伺服器限定租戶的入口
+     * @param  array  $context  已重新驗證的操作者
+     * @param  array  $projects  本次已讀取的專案
+     * @param  array  $members  本次已讀取的成員
+     * @return self 不可跨請求或用於寫入授權的讀取快照
+     */
+    public static function forRead(RecordStore $store, array $context, array $projects, array $members): self
+    {
+        $access = new self($store, $context);
+        $access->readSnapshot = [
+            'projects' => array_column($projects, null, 'id'),
+            'members' => array_column($members, null, 'id'),
+            'assignments' => array_column($store->all('projectMembers'), null, 'id'),
+        ];
+
+        return $access;
+    }
+
     /**
      * 設定此服務使用的資料入口與可信任相依。
      *
@@ -107,13 +131,18 @@ class ProjectAccess
      */
     public function permissions(string $projectId): array
     {
-        $member = $this->store->get('members', $this->workspaceSession['user']['id']);
+        $member = $this->readSnapshot !== null
+            ? ($this->readSnapshot['members'][$this->workspaceSession['user']['id']] ?? null)
+            : $this->store->get('members', $this->workspaceSession['user']['id']);
         $canEnterWorkspace = in_array('workspace.read', $this->workspaceSession['permissions'], true);
         $isActiveMember = $member && empty($member['disabledAt']);
-        if (! $canEnterWorkspace || ! $isActiveMember || ! $this->store->get('projects', $projectId)) {
+        if (! $canEnterWorkspace || ! $isActiveMember || ! ($this->readSnapshot !== null ? isset($this->readSnapshot['projects'][$projectId]) : $this->store->get('projects', $projectId))) {
             return [];
         }
-        $assignment = $this->store->get('projectMembers', self::memberId($projectId, $member['id']));
+        $assignmentId = self::memberId($projectId, $member['id']);
+        $assignment = $this->readSnapshot !== null
+            ? ($this->readSnapshot['assignments'][$assignmentId] ?? null)
+            : $this->store->get('projectMembers', $assignmentId);
         $hasActiveAssignment = $assignment && empty($assignment['removedAt']) && $assignment['projectId'] === $projectId && $assignment['userId'] === $member['id'];
         $permissions = $hasActiveAssignment ? self::rolePermissions($assignment['roleId']) : [];
         foreach (self::ANY as $permission => $any) {
@@ -170,12 +199,15 @@ class ProjectAccess
      */
     public function forUser(string $userId): self
     {
-        $member = $this->store->get('members', $userId);
+        $member = $this->readSnapshot !== null ? ($this->readSnapshot['members'][$userId] ?? null) : $this->store->get('members', $userId);
 
-        return new self($this->store, [
+        $access = new self($this->store, [
             'user' => ['id' => $userId],
             'permissions' => WorkspacePermissions::resolve($member['role'] ?? ''),
         ]);
+        $access->readSnapshot = $this->readSnapshot;
+
+        return $access;
     }
 
     /**
@@ -186,7 +218,9 @@ class ProjectAccess
      */
     public function eligibleMembers(string $projectId): array
     {
-        return array_values(array_filter($this->store->all('members'), fn ($member) => empty($member['disabledAt']) && $this->forUser($member['id'])->can($projectId, 'project.read')));
+        $members = $this->readSnapshot !== null ? array_values($this->readSnapshot['members']) : $this->store->all('members');
+
+        return array_values(array_filter($members, fn ($member) => empty($member['disabledAt']) && $this->forUser($member['id'])->can($projectId, 'project.read')));
     }
 
     /**
