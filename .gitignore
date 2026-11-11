@@ -14,6 +14,7 @@ artifacts/
 vendor/
 .env
 .local/
+__pycache__/
 .phpunit.cache/
 
 # UI/UX skill 的上游原始碼副本需納入版本控制, 不屬於 Composer vendor 或使用者 data

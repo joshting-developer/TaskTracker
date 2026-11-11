@@ -1,8 +1,11 @@
 # TaskTracker 低成本部署與同步重構計畫
 
-> 狀態：規劃／待 Codex 盤點與實作  
-> 版本：v1.0  
-> 日期：2026-11-11  
+> 狀態：規劃／待 Codex 盤點與實作
+
+> 版本：v1.0
+
+> 日期：2026-11-11
+
 > 專案：https://github.com/joshting-developer/TaskTracker
 
 ## 0. 核心決策（先看這裡）

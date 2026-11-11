@@ -1,7 +1,9 @@
 ## 2026-11-11 TaskTracker自我追蹤專案與AI帳號
 
+- 已完成202卡匯入：136 closed／49 open／17 deferred，全部指派taskTrackerAI；本次TT-202驗收／留言後結案。完整欄位及Epic、AI僅本Project Developer、拒絕管理與他專案查詢、原81卡ID／revision不變及實際桌機／手機UI均通過。私有登入檔不進Git；交接與對照記於docs/tasktracker-self-tracking.md，未執行未來部署重構。
+
 - 已讀兩份指定資料、README／產品沿革、API及Git歷史；指定commit為Multi-Agent交接文件。主服務健康，操作只走既有應用API，不直寫主庫／不seed。
-- 待完成：可恢復的卡片清單與來源副本、建立帳號／專案、狀態及全部指派、逐筆核對與UI／隔離查驗、私有登入檔與AGENTS導引、交付commit。
+- 階段一已提交來源副本、202卡初始清單與應用API工具；階段二完成真實帳號／專案／卡片建立、狀態核對與交接。
 
 ## 2026-11-11 Hallmark／Unslop安裝與介面去AI化
 

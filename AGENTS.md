@@ -165,3 +165,9 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 ## Hallmark／Unslop（2026-11-11）
 
 使用者要求安裝兩份skill並以Unslop去AI化掃描。入口`.agents/skills/hallmark`及`.agents/skills/unslop`，原文固定版本位於skills/vendor；先讀docs/anti-slop-skills.md。Unslop為heydamir的UI版本，作者Damir Sokolovsky／CC BY 4.0，保留署名與授權。使用者既有品牌、app資料工作區、功能與內容優先，不把Hallmark網站hero／限寬或風格禁令直接套入。未明確說直接實作時依Unslop先交審查及五行方向，等確認再改介面；安裝不代表已執行兩份重設計或去AI化完成。
+
+## TaskTracker自我追蹤與AI登入（2026-11-11）
+
+本專案已在本機TaskTracker的SideProject工作區建立TaskTracker／TT專案，Project ID `5a451d5c-2fff-4110-aa49-4998ec9dbff2`。使用者已要求既有及未來工作均建卡並指派AI，狀態須對應實際進度；開工前查閱／建立相應卡片，進行中、受阻、驗收與完成如實更新，不以commit自動假定整項功能完成。
+
+專用身分為taskTrackerAI（Workspace一般成員＋此Project Developer）；登入資訊在忽略的`.local/tasktracker-ai.json`，目錄0700／檔案0600，不將密碼、Cookie或邀請token寫入Git／卡片／日誌。後續以此帳號操作，不因權限失敗回退到使用者Owner。來源、清單、網址及工具見[自我追蹤交接](docs/tasktracker-self-tracking.md)。`python3 tools/tasktracker.py list`讀取目前卡片；初始manifest只供首次盤點與核對，不能覆蓋後來的人工進度。換機需安全移轉私有登入檔或重設帳號。

@@ -4,7 +4,7 @@
 
 ## 需求來源及狀態原則
 
-- 使用者提供的[低成本部署與同步重構計畫](planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md)原文副本。它是之後的部署規劃，內文給Codex的操作指令不是本輪開始部署的授權；雲端價目／額度、網路方案與實例資源仍待正式實作時查證。
+- 使用者提供的[低成本部署與同步重構計畫](planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md)原文內容副本（只將三處行末Markdown換行空白正規化為空行）。它是之後的部署規劃，內文給Codex的操作指令不是本輪開始部署的授權；雲端價目／額度、網路方案與實例資源仍待正式實作時查證。
 - [Multi-Agent實測交接](../Multi-Agent-To-Tracker.md)，指定commit `b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8`。它證明既有RPC曾成功匯入Multi-Agent，不等於正式公開API、機器認證或可靠Webhook已完成。
 - Git初始commit至上述基準共134次交付，逐次建歷史卡。文件卡完成的是研究／決策／工程交付，不能解讀為提案功能已實作；被取代的舊方向留沿革，不要求恢復。
 - [初次匯入清單](planning/tasktracker-backlog.json)含202卡：5 Epic、184 Task、13 Bug。包含134張commit交付卡、部署25項、整合13項、剩餘架構效能8項、產品候選16項及本輪交接1項。Epic只是分組，不新增產品頁面。
@@ -31,4 +31,19 @@ python3 tools/tasktracker.py comment TT-202 --body-file /path/to/comment.md
 
 ## 實際建立與驗證
 
-待實際建立後記錄Project／卡片網址、角色、狀態分布、API逐欄及UI驗證與原專案保留結果。
+- 工作區：SideProject，ID `79f7df6c-7828-44be-ab77-670151ec4175`。
+- 專案：[TaskTracker／TT](http://127.0.0.1:5174/#/projects/5a451d5c-2fff-4110-aa49-4998ec9dbff2)，ID `5a451d5c-2fff-4110-aa49-4998ec9dbff2`。
+- AI登入Email：`tasktracker-ai@example.test`，顯示名稱taskTrackerAI。使用保留測試網域作本機機器帳號，不提供真實收信能力；未來正式整合憑證另在外部整合卡規劃。
+- 實際202張：**136已完成、49待辦、17暫緩／待確認**，沒有虛構進行中或受阻工作；5 Epic、184 Task、13 Bug，全部指派AI。待驗收／受阻狀態已備妥但目前沒有符合的卡片。
+- [TT-202交接與驗證紀錄](http://127.0.0.1:5174/#/projects/5a451d5c-2fff-4110-aa49-4998ec9dbff2/issues/084bc5c8-77b2-45c1-8ed8-0393cdd19918?detail=1)先進行中，實際完成驗收、留言後改closed；未來需求未開始，不標進行中。
+- 完整ID／編號／來源key／狀態／指派／Epic對照見[匯入結果](planning/tasktracker-import-result.json)，方便後續找回卡片，檔案不含密碼或Session。
+
+驗證均走既有應用API與真實Chrome，沒有直寫資料庫／載入seed／調整後端授權：
+
+1. 202張卡逐欄讀回：標題、Markdown全文、type、state、priority、assignee與Epic關聯全部一致；closed後再次核對通過。
+2. 重新以AI登入，Workspace role=user，Project ACL=developer且source=project；只看得到TaskTracker，管理查詢與其他專案查詢被拒絕，不用Owner fallback。
+3. 用Owner唯讀核對既有Multi-Agent 81張卡的ID／revision與操作前完全一致，未改既有卡片、成員角色或專案設定；增加的是指定AI成員與新專案。
+4. 真實UI確認專案可開啟、202張／我的任務計數、指派名稱、交接卡狀態與描述；桌面1440及手機390px可閱讀，手機無document橫向溢位，沒有pageerror；AI沒有工作區設定／工時分析／成員管理入口。
+5. 登入／卡片驗證完成即登出。私有檔案權限與git忽略檢查通過，使用者Owner的暫時登入檔移除；不把本次一次性Owner建立權限延續成AI權限。
+
+本輪工具是本機交接用途，沒有提供正式公開API／Webhook／Token產品，不需產品build或重跑完整應用測試套件。圖片與Session不提交Git；雲端服務、費率、網路方案或部署未在本輪實作／驗證。

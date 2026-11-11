@@ -1,0 +1,2041 @@
+{
+  "date": "2026-11-11",
+  "workspaceId": "79f7df6c-7828-44be-ab77-670151ec4175",
+  "projectId": "5a451d5c-2fff-4110-aa49-4998ec9dbff2",
+  "accountName": "taskTrackerAI",
+  "workspaceRole": "user",
+  "projectRole": "developer",
+  "states": {
+    "closed": 136,
+    "deferred": 17,
+    "open": 49
+  },
+  "types": {
+    "task": 184,
+    "bug": 13,
+    "epic": 5
+  },
+  "originalProjectIssuesPreserved": 81,
+  "cards": [
+    {
+      "key": "history",
+      "identifier": "TT-1",
+      "id": "88b35b47-d777-4015-b9e4-965484619262",
+      "title": "歷史交付與產品決策紀錄",
+      "state": "closed",
+      "type": "epic",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": ""
+    },
+    {
+      "key": "deploy",
+      "identifier": "TT-2",
+      "id": "bb4f4088-5e90-4328-b79f-a0e2e43503d5",
+      "title": "低成本部署與智慧輪詢",
+      "state": "open",
+      "type": "epic",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": ""
+    },
+    {
+      "key": "external",
+      "identifier": "TT-3",
+      "id": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7",
+      "title": "受限外部整合與Agent工作流程",
+      "state": "open",
+      "type": "epic",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": ""
+    },
+    {
+      "key": "quality",
+      "identifier": "TT-4",
+      "id": "5bde250d-b9a9-496d-890a-6712ffaadc43",
+      "title": "剩餘架構、效能與操作品質",
+      "state": "open",
+      "type": "epic",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": ""
+    },
+    {
+      "key": "candidates",
+      "identifier": "TT-5",
+      "id": "b9c6697b-b994-47c0-bcd4-4f1af05cab21",
+      "title": "後續產品候選與暫緩事項",
+      "state": "deferred",
+      "type": "epic",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": ""
+    },
+    {
+      "key": "git:357e68dc1e9ddf384c859ff9a591bdfa2b536d3a",
+      "identifier": "TT-6",
+      "id": "52b26158-c683-4426-aa7a-035a8f4751c3",
+      "title": "文件／工程交付：建立專案規範與競品調研規劃",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:e6d046c40c8f951800c065ecc494168379d2b704",
+      "identifier": "TT-7",
+      "id": "a0c8fdaa-2b63-49f2-ab43-6d52bc825e66",
+      "title": "歷史實作：建立以專案為入口的本機任務管理原型",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:0acdd02b98d7bd7462555c14c59416d07f7e523a",
+      "identifier": "TT-8",
+      "id": "447233ee-df67-4cb9-92a0-fc9b31a466e1",
+      "title": "文件／工程交付：設定每完成一個階段就提交的工作規範",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:ac609e90604311ad63a2078a482cef5f24577b16",
+      "identifier": "TT-9",
+      "id": "26b232df-31d4-4696-9701-8daa364e65b6",
+      "title": "文件／工程交付：規劃 SaaS 協作、Epic 聯動與工時分析",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:35eb4723bd18185156843942d36a2e0e82ead1b6",
+      "identifier": "TT-10",
+      "id": "cfc243d8-3ea4-468a-b726-b3f538b34692",
+      "title": "歷史實作：建立隔離團隊帳號、Epic 與工時協作 API",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:0fe29a2a1ce35e8a06ca1eb558e70f6d0f65c4c4",
+      "identifier": "TT-11",
+      "id": "da1bb4aa-c65d-47a9-877b-f1b40c6e23bf",
+      "title": "歷史實作：加入 Epic 概覽、團隊工時月曆與協作介面",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:dbbb871ffeb28c05fd6d21d22e786ae0f1450acb",
+      "identifier": "TT-12",
+      "id": "12dd4248-b208-4f06-962d-3d28c9f882b5",
+      "title": "歷史實作：加入任務依賴與 Epic 工時上下文",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:020cf1256b9d29410222c027537be88628eca65f",
+      "identifier": "TT-13",
+      "id": "f205778f-3cb5-417b-8635-488803e75920",
+      "title": "歷史實作：加入個人與團隊常用視圖及進階篩選",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:b0c247f2c6825664d461372cb6daec531295ff40",
+      "identifier": "TT-14",
+      "id": "8726d933-9d45-4d1c-937d-5a2461d2f30b",
+      "title": "文件／工程交付：新增本機 Compose 開發環境與資料持久化",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:d9c5adaebe97ce664bfbff1fcc6dd24ae8a65668",
+      "identifier": "TT-15",
+      "id": "d4ece86d-beda-4c39-ae1c-d10235106287",
+      "title": "文件／工程交付：建立持續維護的產品討論與決策紀錄",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:dd860866f956ff6d1f40e03be60cb35bbcd781c7",
+      "identifier": "TT-16",
+      "id": "29f5bd59-bd68-4696-90a8-d101896b529a",
+      "title": "文件／工程交付：確認工作空間到專案與 Issue 的操作層級",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:d8572df0cdc9069bc2e3a4a47cfc281b9444ad5a",
+      "identifier": "TT-17",
+      "id": "0bfed5fe-9387-476d-a67b-78bfb3556962",
+      "title": "文件／工程交付：記錄工作空間成員邀請的授權原則",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:a16b0e6203a2e01747b069e9c0e1cec386a97181",
+      "identifier": "TT-18",
+      "id": "c019bb6e-45db-4294-afb7-16a675e73ba5",
+      "title": "文件／工程交付：整理邀請流程複雜度與第一版簡化建議",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:465b6e3a7a8d45f9f086ac2daa6ca5833ac32e30",
+      "identifier": "TT-19",
+      "id": "fd6f6f06-5df1-4b7d-9584-4d12de90d984",
+      "title": "文件／工程交付：整理 SaaS 與自建版共用核心的交付方向",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:8fdefb3a4de972e4e9f3a137172d58f4dbefa5ee",
+      "identifier": "TT-20",
+      "id": "732a528e-421f-416a-868c-5e7420720a59",
+      "title": "文件／工程交付：規劃 Workspace 與專案兩層可見性權限",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:0ce4fbee13b7100b5287443d3d3605ececd5e77c",
+      "identifier": "TT-21",
+      "id": "b8654ea5-bf6c-411a-909a-71c6d119d3d3",
+      "title": "文件／工程交付：整理工作空間與專案的固定角色提案",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:d9e6451becb26e4f50d2a655ad53ebfbb48cbf51",
+      "identifier": "TT-22",
+      "id": "5351c90f-e77b-468f-9fa3-ea2c1d1313f6",
+      "title": "文件／工程交付：明確定義權限與資源範圍的集中授權契約",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:56b723f22ff08abf02366788c5d58b75240f6f98",
+      "identifier": "TT-23",
+      "id": "53d92e64-0d8f-4b21-a32a-2d5d010dfcb2",
+      "title": "文件／工程交付：確定空間角色與專案明確授權規則",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:b3f6c7ab8049ead6644dc960d3197f92136aff33",
+      "identifier": "TT-24",
+      "id": "0f7bcd07-3e68-4f09-a4a9-450b72668d73",
+      "title": "文件／工程交付：補充專案固定角色與基本操作權限矩陣",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:b92a49f132b45af893f1193f9366faa85334ca27",
+      "identifier": "TT-25",
+      "id": "d4ec99a2-79d2-4735-9299-8b30a578e61b",
+      "title": "文件／工程交付：整理專案四角色與責任及資料閱覽邊界",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:4a1b787197cd134239bab12780473ed6d47736eb",
+      "identifier": "TT-26",
+      "id": "acd94357-d18a-4667-8fe7-38609c7cc2c6",
+      "title": "文件／工程交付：明定以有效權限控制可見性與操作",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:178d91da8ac0ceed87dd41181c20d3d2451b4c6e",
+      "identifier": "TT-27",
+      "id": "e49882ab-047f-41ce-ade7-57c4439e6201",
+      "title": "文件／工程交付：評估實作缺口與面試作品技術選型",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:73d2606c8ca5612d9f5d17b983ed88b4bead6a49",
+      "identifier": "TT-28",
+      "id": "41dea30c-ad1e-4142-8049-93847338e892",
+      "title": "文件／工程交付：確認 Vue 與 Laravel 前後端分離架構",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:84fe1da898cd18829a0339b6bf597b87064b1d3d",
+      "identifier": "TT-29",
+      "id": "86f3e303-ae9f-484f-a0bc-c56b8c75d13f",
+      "title": "歷史實作：拆分 Vue 前端並整合 Vuetify 表單",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:adff6431afe18443704e2d52d412fd9519be383b",
+      "identifier": "TT-30",
+      "id": "b7ca298d-adb1-49eb-b4a9-ad0250f83b3a",
+      "title": "歷史實作：將協作 API 與資料相容遷移至 Laravel",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:0ef890bddaf27cb01c0850402807b25e5db59fd8",
+      "identifier": "TT-31",
+      "id": "bd15a0ac-5463-407c-802d-732294d80729",
+      "title": "文件／工程交付：拆分容器並加入 Redis Queue 與 Reverb",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:e7743e9f92efe97d22c298892e9428a1de0ed59b",
+      "identifier": "TT-32",
+      "id": "3df14c53-bd20-4b5e-a622-ed83b7ee902e",
+      "title": "文件／工程交付：更新分離式架構與容器操作說明",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:9cbb41632e8d901311918422ff9ea18465d3d503",
+      "identifier": "TT-33",
+      "id": "33e05361-37ed-4428-b9b5-734943b3207b",
+      "title": "歷史實作：聚焦專案側欄並由首頁切換專案",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:3616079ce254f292631e88534313c7a7d9a78fa5",
+      "identifier": "TT-34",
+      "id": "14052ab7-cdc9-4df1-bc0a-1ec351e7fbb6",
+      "title": "歷史實作：分離任務列表與 Epic 泳道看板",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:a091dfb9fec6c034b146884c5cc09f4102ed9d2c",
+      "identifier": "TT-35",
+      "id": "89699bbe-23bb-4b0b-ad59-6d522c715ea6",
+      "title": "歷史實作：提高資料可讀性並改為全寬工作區",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:9475ec8a3e702b6db2f94412c88fcadce6cb148c",
+      "identifier": "TT-36",
+      "id": "6261a741-b9c4-41e7-ba5a-67f1daa6ca9c",
+      "title": "歷史實作：精簡任務工作區並整理專案總計提案",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:c071440e0a33141097aba1d5cd7fd3e864928c87",
+      "identifier": "TT-37",
+      "id": "6166db4c-5260-4f46-aa7b-5228cabb3fc6",
+      "title": "文件／工程交付：釐清任務關聯子任務與依賴的設計方向",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:bf3459d16bace72f3613353f3d726fc851c3452c",
+      "identifier": "TT-38",
+      "id": "f276b813-d498-4de7-b2ac-da3b0428eeb9",
+      "title": "歷史實作：以子任務與雙向關聯取代前置依賴",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:145e1732371ebfdb5737cac46acbdf715f73203a",
+      "identifier": "TT-39",
+      "id": "389f9f2c-762b-40d8-a3c9-e153c32e0290",
+      "title": "歷史實作：新增子任務與按需關聯操作介面",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:8ff6dd22a204574d0b7dd618aadf2bab33f941f1",
+      "identifier": "TT-40",
+      "id": "b3e182fb-a585-40a8-85f5-5fa034bcf193",
+      "title": "歷史實作：建立指定示範資料並強制隔離測試資料庫",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:ada4cdc6f00fab8e6a18412afadc184946c497eb",
+      "identifier": "TT-41",
+      "id": "76ab7128-e68b-46c2-af2e-b343f7cdd849",
+      "title": "文件／工程交付：更新子任務決策與示範資料操作指引",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:eb9d561ce953702de96cfeeb47345361cf40f27e",
+      "identifier": "TT-42",
+      "id": "2f62c2c4-02c0-4df6-860c-7fa5e51fb959",
+      "title": "歷史實作：新增專案負責人與基本資料編輯契約",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:8629c862dc3f6f9fdedfc05d80311d3c8059ec1e",
+      "identifier": "TT-43",
+      "id": "6855835d-96a7-4e28-a213-4945203cd21a",
+      "title": "歷史實作：首頁聚焦專案負責人與介紹並移除累計統計",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:524e577922f8361c4f856dcbd94feccd7d6e39e2",
+      "identifier": "TT-44",
+      "id": "3a0b4717-08ea-463f-8531-1637d86798d3",
+      "title": "歷史實作：精簡任務頁首並按需展開篩選",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:84c8ddcf3a6093073aca5498ea9e9d89e84ebbbe",
+      "identifier": "TT-45",
+      "id": "17a01e43-7f99-4dd5-ab28-ee089d2df159",
+      "title": "文件／工程交付：說明常用視圖用途與命名提案",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:5f796c1af84c98ece2cf6532385948679b38be33",
+      "identifier": "TT-46",
+      "id": "19243bab-4c13-417d-84d8-6b0464eb2ea8",
+      "title": "歷史實作：將常用篩選收進篩選區並移除常駐頁籤",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:0d8649c69b8fefd3b73b78412bec7908c314ff65",
+      "identifier": "TT-47",
+      "id": "0099a1cc-40d7-4860-bb79-0df479b41259",
+      "title": "歷史實作：移除視圖功能並記錄首頁個人清單構想",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:506798b385ed979fbbfed85a1ecf90fbf9e86ad2",
+      "identifier": "TT-48",
+      "id": "63180d8e-ea70-4e93-9157-c0ac59b10f05",
+      "title": "歷史實作：以文字顯示任務類型避免符號混淆",
+      "state": "closed",
+      "type": "bug",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:2a080cdcc18f03136a151c524e44456c5ff6e0b7",
+      "identifier": "TT-49",
+      "id": "5fafe45b-9ea5-4a72-bb27-bb658dcfb848",
+      "title": "歷史實作：收斂 Issue 類型為 Epic Task Bug",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:2da3cf90e111b4324d9b7984dc8115e137b8365d",
+      "identifier": "TT-50",
+      "id": "76a61d2d-ea59-433d-8223-943e54a491b9",
+      "title": "歷史實作：點選日期開啟工時填報側邊面板",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:5875be4ebbee49dcdb6cb1266aeb5c1f8ac5964c",
+      "identifier": "TT-51",
+      "id": "0ebf0627-bea5-4970-ba75-7cec6afa576f",
+      "title": "文件／工程交付：規劃看板列表與 Epic 動態收錄規則",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:ef01b37c796d2481c3ce0f5d63db852eaf804d4f",
+      "identifier": "TT-52",
+      "id": "f905e9bc-3fbf-4325-971a-c0a9ffc83114",
+      "title": "歷史實作：建立專案看板與卡片收錄 API",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:761dca7c75639b65d357cfcd0d7d2fa545483c5a",
+      "identifier": "TT-53",
+      "id": "89e91cf9-8e9c-4f5f-9540-f266cc22fd4b",
+      "title": "歷史實作：加入看板列表與 Epic 動態收錄介面",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:9ba0f6e507e1e306237dd9d68c84daca786b76b9",
+      "identifier": "TT-54",
+      "id": "facf95be-84f0-4be6-bc0e-d444db226d2c",
+      "title": "歷史實作：新增任務完整頁與上方狀態切換",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:91c816183970ddfb752767be8dcc03c0c9aeb7fe",
+      "identifier": "TT-55",
+      "id": "f90490a7-b0f0-4ad9-8162-db2779ad5e8d",
+      "title": "歷史實作：建立四種權限測試帳號與非破壞 Seed 升級",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:2f2f766e0f26209db1ae9415db5e96b1ce4388d2",
+      "identifier": "TT-56",
+      "id": "d1d4bb45-018d-4702-9db4-edda1bdaa843",
+      "title": "文件／工程交付：收斂專案 ACL 與角色試用的驗收基準",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:9c577150f0fcd1ec307b1423ec3fded3b56914d9",
+      "identifier": "TT-57",
+      "id": "e922aced-ac2d-4fb1-8a7f-ee9432e13a45",
+      "title": "文件／工程交付：研究競品任務流程與使用回饋並排序功能缺口",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:b157fa739cefb1e89c8199e20beb976663404dfc",
+      "identifier": "TT-58",
+      "id": "e939f5ad-8041-426d-a70f-e03ec16bd790",
+      "title": "歷史實作：加入專案範圍授權與成員 ACL 管理",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:1dc7510203a0263dda74f8b534ad6dcbaaf637f5",
+      "identifier": "TT-59",
+      "id": "3c05aff3-a183-4614-8976-b63c5b48433b",
+      "title": "歷史實作：加入專案成員介面與依權限顯示操作",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:83d2cf35683d6af992597358518157cdd9d57760",
+      "identifier": "TT-60",
+      "id": "62c13951-7953-409f-bbae-897bb0eb93da",
+      "title": "歷史實作：加入私人待辦交辦通知與單向轉卡 API",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:6359899c05da020853c573103243e1f9cb01857b",
+      "identifier": "TT-61",
+      "id": "9ff6dbdc-0db5-47c1-9b09-f2b15790a79f",
+      "title": "歷史實作：加入首頁小待辦通知與轉卡側邊表單",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:89f984c61fffd95eb7d5544e52e99ea7aa748577",
+      "identifier": "TT-62",
+      "id": "5c4a0c0d-823d-46a4-b347-d7bfdb610929",
+      "title": "文件／工程交付：收錄兩個高星 UIUX skill 與評估介紹",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:be1fda7d8bc51cad38f468cf4618013b45742c49",
+      "identifier": "TT-63",
+      "id": "d770a8d8-d26c-437c-a26b-0678691ae83f",
+      "title": "文件／工程交付：啟用專案 UIUX skills",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:1b9f6a29374cdc4306ea294a10a4f9859c2eb9da",
+      "identifier": "TT-64",
+      "id": "8c3162b0-3d04-4ec8-8118-f7de434da0bc",
+      "title": "文件／工程交付：完成雙 skill UIUX 審查與改善排序",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:8b09bed299665f9b8967ebe8611839c77fa9b533",
+      "identifier": "TT-65",
+      "id": "4e9375ed-5b5b-476d-83c3-0b3e845456a7",
+      "title": "歷史實作：改善文字可讀性與工時欄位錯誤提示",
+      "state": "closed",
+      "type": "bug",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:7e204b8e6ae27998e810226fc1b1e8432511bd9f",
+      "identifier": "TT-66",
+      "id": "13fcf40d-dcb2-4dc8-84a2-9f073a565d8b",
+      "title": "歷史實作：收斂首頁資訊並補齊鍵盤與跨尺寸操作",
+      "state": "closed",
+      "type": "bug",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:a160cb47475120eaebf0ea3d2fe71a5b68baa846",
+      "identifier": "TT-67",
+      "id": "ea71aad6-2c3b-4e42-9f34-2588ed2a4b2c",
+      "title": "歷史實作：保留功能路由並完成 UIUX 修正回驗",
+      "state": "closed",
+      "type": "bug",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:6d1805783c391d1ed149225f9578e81235545236",
+      "identifier": "TT-68",
+      "id": "d8885754-be74-4a1b-a21a-c724cdfbb7b3",
+      "title": "文件／工程交付：收錄使用者流程與可用性評估 skills",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:527fbf8a3a1fce2dd99432b3bbee7f9fa059b0d9",
+      "identifier": "TT-69",
+      "id": "cd4dabdb-7e44-460a-82dd-5f2b457fee1d",
+      "title": "文件／工程交付：完成雙 skill 使用者任務流程走查",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:f0d275572ae54055a40a2fd901841735d79d47ce",
+      "identifier": "TT-70",
+      "id": "02aae861-7158-463d-8886-541045d3c249",
+      "title": "歷史實作：保留待辦草稿並恢復跨清單操作",
+      "state": "closed",
+      "type": "bug",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:380e122f90514e5f4de523d5c41b4f11f70ca905",
+      "identifier": "TT-71",
+      "id": "683b805c-5482-4063-903f-81a81becaeae",
+      "title": "歷史實作：重整後保留專案任務與工時查閱範圍",
+      "state": "closed",
+      "type": "bug",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:34e49ba145e28ad9b34490d0d25bee1ea5413a4b",
+      "identifier": "TT-72",
+      "id": "ea00112c-19a7-409e-b7f1-b50ae0a0818b",
+      "title": "歷史實作：補手機速記入口並分開任務閱讀與快速編輯",
+      "state": "closed",
+      "type": "bug",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:575d9d1b009071cb96425403f93e1c7758ab242e",
+      "identifier": "TT-73",
+      "id": "3e8a4af3-80d9-4618-97ba-337ce87d7262",
+      "title": "文件／工程交付：記錄後端可讀性問題與暫緩重構決定",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:dcea6156e3b07a3ba80376f33497ba5a6936d42b",
+      "identifier": "TT-74",
+      "id": "2c80ad22-3dee-468c-bed9-0d02461f6feb",
+      "title": "文件／工程交付：更新 PHP 安全修補版並整理前端改善優先序",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:d134978f3a861b3b353cde60d544483ba95e8430",
+      "identifier": "TT-75",
+      "id": "1ff2eca7-343f-4230-9153-d9e32e6eef4b",
+      "title": "文件／工程交付：搬入並適配後端開發規範與專案 skill 入口",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:705d2b5a6d7aa5da9159aad6b18eac839b22f7ae",
+      "identifier": "TT-76",
+      "id": "abce3f63-6b7a-4b1c-92ab-a9c83f764305",
+      "title": "歷史實作：拆分後端業務服務並整理授權與重試流程",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:9f51ba72287cd16a350cd681eafc06523d8c0af3",
+      "identifier": "TT-77",
+      "id": "5e281af2-5c8b-42da-9a14-2cf01ad5a6b9",
+      "title": "歷史實作：明確分離 API 入口與 JSON 契約並建立資料模型入口",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:f3cde29a4e7995758056222c8889fbee8bd8461c",
+      "identifier": "TT-78",
+      "id": "b53e5879-24bb-4ffa-8ec8-fb46cfe1ef6b",
+      "title": "歷史實作：展開工時與待辦篩選的具名條件",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:419cfc966249dcc3e42b0ad668c3e99cebd7c356",
+      "identifier": "TT-79",
+      "id": "a72d0622-a21a-4f1d-b805-e50e8b3339a1",
+      "title": "文件／工程交付：補齊後端程式導覽與重構驗收紀錄",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:fb6e46852f3d8a3effff0201f84e56637e9fbfa9",
+      "identifier": "TT-80",
+      "id": "8dfde270-c3ca-4a6e-a8a4-6d7c0a989fd5",
+      "title": "歷史實作：將業務資料遷移至關聯式資料表",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:533b4451764e6244a667e0c3deb5895314871d36",
+      "identifier": "TT-81",
+      "id": "6d49d083-c0ce-44e0-9dde-1584d960ca1b",
+      "title": "文件／工程交付：更新關聯資料架構與本機升級驗收",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:d0430141e8e2f607171ac37d50dd3e91d95f720b",
+      "identifier": "TT-82",
+      "id": "a77e7c43-0e39-4e4c-b4fc-f5cf5aa1f3d5",
+      "title": "歷史實作：明確區分任務狀態變更與內容頁籤",
+      "state": "closed",
+      "type": "bug",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:468bdf8b4a16c1a90de52233d9bde7f9f5333459",
+      "identifier": "TT-83",
+      "id": "113608df-a266-4117-bd1f-9a04fd94f2b9",
+      "title": "歷史實作：精簡任務列表的重複資訊與摘要",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:2996281433d01ac403620b17f6f27b64d5c69b49",
+      "identifier": "TT-84",
+      "id": "a2a58926-987b-47e1-addf-92a52799779a",
+      "title": "歷史實作：將任務關聯集中於詳細頁側欄頁籤",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:1c75a6bed28a5640b6cb57e9a042f39e1aadf697",
+      "identifier": "TT-85",
+      "id": "a4122933-eac2-4ae6-b142-8dc71fcee924",
+      "title": "歷史實作：保存待辦Markdown全文並保留原稿格式",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:7e75559e9041bf449bbe64a9de8084e76d4894c1",
+      "identifier": "TT-86",
+      "id": "f2963efb-e17c-42b7-a9a3-a3636e4f6356",
+      "title": "歷史實作：共用Markdown編輯器並支援整塊待辦速記",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:9d95238457a3ffe70697d715c0b854af3ad7440c",
+      "identifier": "TT-87",
+      "id": "3f3a3de5-4c60-485b-8b78-42eac2a90fba",
+      "title": "文件／工程交付：限定專案內技能並補齊階段規劃紀錄",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:13c138c4e0cd6fb5f13a01bf6053503657742471",
+      "identifier": "TT-88",
+      "id": "420f6500-d917-4daa-b119-2e3de66bfd9f",
+      "title": "歷史實作：將待辦完成與重開改為明確文字操作",
+      "state": "closed",
+      "type": "bug",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:bb2d2725e1b329d39e90edee71a22899d9d87358",
+      "identifier": "TT-89",
+      "id": "40e86e2a-ac96-4aca-b6a3-2f0130514a7b",
+      "title": "歷史實作：讓短頁頁尾維持在畫面底部",
+      "state": "closed",
+      "type": "bug",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:09d72dc547934ca0d634e3690224cccadaf055a8",
+      "identifier": "TT-90",
+      "id": "df4e21d5-2fd6-46b6-94f7-2860517ab51e",
+      "title": "歷史實作：加入個人與工作空間設定及固定角色管理API",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:be6068004b451717f64cbdaff93d30e1f773a9b1",
+      "identifier": "TT-91",
+      "id": "67e0d137-53ad-42ba-bc76-e868fde7d653",
+      "title": "歷史實作：加入帳號選單與工作空間設定介面",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:5338ff6d6c869afe0da82ba8b197391f80422e94",
+      "identifier": "TT-92",
+      "id": "cd96988b-d6e4-45ec-a009-4616e00d786a",
+      "title": "歷史實作：整理看板捲動與卡片操作並顯示Epic",
+      "state": "closed",
+      "type": "bug",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:936c3108119d01883f5669b19b18d3fd4ff9c4f9",
+      "identifier": "TT-93",
+      "id": "d4e21295-8ad7-483b-970e-8e0a6389ab6b",
+      "title": "歷史實作：建立看板私有頻道授權與交易後廣播",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:5734b695ffbab941b9ac00c9e1a00f052e2b2b3c",
+      "identifier": "TT-94",
+      "id": "d0200f39-26b6-4362-9fbe-a19713915e18",
+      "title": "歷史實作：接上看板即時同步並更新容器啟動配置",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:0febc0fe445505f7922dc8fdcc7d93de4212ad6d",
+      "identifier": "TT-95",
+      "id": "5cdb17a1-dcc4-46af-8dc0-5993e788ad64",
+      "title": "歷史實作：移除側邊欄重複帳號資訊",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:0e9ec4d3c1d79637f9ec72d61b0a43104f192787",
+      "identifier": "TT-96",
+      "id": "2e6b6e5c-93a4-4d75-9a8d-64df41d2dc5c",
+      "title": "歷史實作：小待辦操作改為浮動選單並精簡來源提示",
+      "state": "closed",
+      "type": "bug",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:e11d99e2563211e5a67cbae5cd04b8134542e0a1",
+      "identifier": "TT-97",
+      "id": "27b2b779-687f-48d6-8568-81488237cb8e",
+      "title": "歷史實作：首頁聚焦小待辦並分離專案列表",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:161a72245cc79ccdf0dfd617606c400fd0854853",
+      "identifier": "TT-98",
+      "id": "a9d04ab8-5529-4b93-8fc3-c0c094a8786e",
+      "title": "歷史實作：精簡通知與設定頁技術文案",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:5ef0b77d0f17d6b7f7ba6671ec38c5c133db315b",
+      "identifier": "TT-99",
+      "id": "65b3751b-4616-4921-b48c-3002d41ea026",
+      "title": "歷史實作：移除看板卡片狀態選單並保留拖曳操作",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:c6a1b32f12c123d9e31e9b2e2042b1c627b1e440",
+      "identifier": "TT-100",
+      "id": "eb0d78c9-c013-4945-8978-dcc46849e2d6",
+      "title": "歷史實作：任務詳細頁支援填報與修改本人工時",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:9bba394afa3e1af9d80dc0147b998ac4de3ba1f6",
+      "identifier": "TT-101",
+      "id": "95e6a861-39f9-455f-add1-3ca18a62124d",
+      "title": "歷史實作：開放Epic直接填報工時並調整加總",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:47957611998db0a31a0b2be088732b05b34ce745",
+      "identifier": "TT-102",
+      "id": "d0086d03-190c-44e7-bfe3-346c17caf126",
+      "title": "文件／工程交付：研究Epic競品定位與介面取捨",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:a69995e4c473b8a633f09faa3ca7cf41ef9e03cf",
+      "identifier": "TT-103",
+      "id": "5e117cf9-71d3-41cf-bd4a-166289de2faf",
+      "title": "歷史實作：移除獨立Epic概覽並整合任務列表",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:1d0c956b93e8854f9618fb832c60159ff04439f5",
+      "identifier": "TT-104",
+      "id": "f0e8a504-71db-4152-86aa-ff323fdc5cd0",
+      "title": "歷史實作：工作空間成員改用身份下拉選單",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:004bc7e4377864ea7dd161b374302085d8f70f33",
+      "identifier": "TT-105",
+      "id": "8ece7b73-eb5d-4f61-a0e5-ad4a0777aebe",
+      "title": "歷史實作：新增工作空間三種工時分析與權限入口",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:16473ea0f914df97082ec7bc3ad270ea2c16d311",
+      "identifier": "TT-106",
+      "id": "b4c75ae8-7e5e-424d-a71f-ebb180c1c9b4",
+      "title": "歷史實作：支援既有帳號加入與切換多個工作空間",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:78c7da97102df73abfbaeee46e933746c02c9eb7",
+      "identifier": "TT-107",
+      "id": "5e3d175c-be9d-417b-8410-a98b5009a484",
+      "title": "歷史實作：整合工作區切換與新舊帳號邀請介面",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:4264c395b011fbe1e3515c41268352e052e36a3e",
+      "identifier": "TT-108",
+      "id": "95e58469-19b2-49d2-b4fa-6ec5fcc27e4a",
+      "title": "歷史實作：移除全站鼓勵語與常駐功能說明",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:72d82bef81f63ae4ed3aa9682e7d234abe2d1bf1",
+      "identifier": "TT-109",
+      "id": "206e1936-80f5-4b0c-aeb0-c1fa917dc02b",
+      "title": "歷史實作：移除已完成專頁並整合列表篩選",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:d8a0c155b1d5ae331441c4d19910b09b791797d8",
+      "identifier": "TT-110",
+      "id": "b5944fb0-c707-4c45-a575-432670065b19",
+      "title": "歷史實作：建立必備open與closed狀態並移除分類設定",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:027496e068b5472db162e1fb42864cdacba1086f",
+      "identifier": "TT-111",
+      "id": "408b98b7-6000-419d-8b89-bf94639267fc",
+      "title": "歷史實作：將工作空間設定改為獨立頁面",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:f6718c3ac64066e55aeaec189967b90916cd4835",
+      "identifier": "TT-112",
+      "id": "468f0e5f-fc0b-4dfd-8447-63ade5874ca5",
+      "title": "歷史實作：限縮新增任務入口至列表與看板欄位",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:28b69dc8f0ef83396d30a919ed2b84a30c91f43a",
+      "identifier": "TT-113",
+      "id": "0d33fc6f-9100-4f61-a45f-a2242036b41e",
+      "title": "文件／工程交付：安裝Laravel與Vue skills並替換後端架構規範",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:9a98d3e441604ac1ee1838f329cc8a22de40e337",
+      "identifier": "TT-114",
+      "id": "1acae1b2-94ee-48fd-93fd-1174bb8c03b7",
+      "title": "歷史實作：改善工時分析圖表並集中DemoSeeder資料建立",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:fc4f187f44dd5ceddfdece09d24011a2be39aa55",
+      "identifier": "TT-115",
+      "id": "a27f33af-2234-463f-8468-d207a7162285",
+      "title": "文件／工程交付：記錄工時分析長表格與分頁建議",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:f71969ea3bccb1cd37a12df92de3c0ee406368b7",
+      "identifier": "TT-116",
+      "id": "e06219ba-7667-4fdd-8174-ab8b252167bb",
+      "title": "歷史實作：補齊成員工時日期與卡片明細分析",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:b3f6874b1fdd1e42ee45425e2f2e3634450e2a5b",
+      "identifier": "TT-117",
+      "id": "3fb66119-3096-4328-a2d7-de714df81c92",
+      "title": "歷史實作：分離HTTP工作空間與帳號服務邊界",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:91c63ab1ecf9f9afab4539e3043ffb62e46620d9",
+      "identifier": "TT-118",
+      "id": "928d9a57-15e5-4f00-b57a-8f8ea04872b5",
+      "title": "歷史實作：建立工時查詢DTO與租戶限定資料存取",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:78f14702226e5b302c45e6349006879b6f9a0ae1",
+      "identifier": "TT-119",
+      "id": "49c6ea32-353f-4a3f-8f1b-3eabe32c5f65",
+      "title": "歷史實作：拆分Vue任務查詢與互動生命週期",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:a432500d64be8b190e26be2f61ffb097fe5aaf94",
+      "identifier": "TT-120",
+      "id": "7725aed0-9f88-4618-8efa-52f8d43e2818",
+      "title": "文件／工程交付：評估前後端重構收益與剩餘架構差距",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:1be16cc841b5b5ccaf2150be4bec9f8a0ebbd7c1",
+      "identifier": "TT-121",
+      "id": "1614970a-4837-4a2c-8dd5-dd2ca88ca491",
+      "title": "歷史實作：整理工時分析視覺圖表與明細分頁",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:a7f200f7f2ea2f620abdab6fa76814c044158102",
+      "identifier": "TT-122",
+      "id": "f9a3b3db-eb16-4542-a217-c4f582ccda63",
+      "title": "文件／工程交付：盤點查詢效能瓶頸與 Redis 使用規劃",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:9baa61943fc8c4c21d7ba46fa0492b3342ad005a",
+      "identifier": "TT-123",
+      "id": "8f9769eb-1aeb-4d06-990c-7132fd3de145",
+      "title": "文件／工程交付：比較 GitHub 高星效能分析 skills 與專案適配",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:04345913584486673d5fe7ac9d9493e05ef491ff",
+      "identifier": "TT-124",
+      "id": "9cb6c201-b6ee-4bd2-80f7-7f2807c26083",
+      "title": "文件／工程交付：安裝 Addy 效能診斷與 ECC 基準量測 skills",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:30ff03d62cb82fa2d0fc42aca5ccb26bef99352a",
+      "identifier": "TT-125",
+      "id": "d7c124aa-b4de-4538-9c4e-4f43f1184a7d",
+      "title": "文件／工程交付：完成 Addy 與 ECC 效能掃描及實測基準",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:2d13adf3d800143458313156d2113c5fc685064f",
+      "identifier": "TT-126",
+      "id": "2d2ee0e0-5fec-482d-8659-8d7085d5a7c3",
+      "title": "歷史實作：批次載入唯讀資格並移除逐工時授權查詢",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:be64027b561c7d54cf1573085a1f523689665c5d",
+      "identifier": "TT-127",
+      "id": "7c8ae7a4-54c4-40b0-a1a3-fcfaad9bb76c",
+      "title": "歷史實作：合併工作區刷新並共用看板卡片索引",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:64e61e1af81e7ab60e8058c8e25559ec8b7bf763",
+      "identifier": "TT-128",
+      "id": "6e8b89ec-28c7-4beb-bc5f-c881b80f31c6",
+      "title": "歷史實作：區分工作區唯讀交易並保留寫入鎖定",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:6612260f5c927fc434cc771dd7ca733d1740645e",
+      "identifier": "TT-129",
+      "id": "4804caef-7eda-4211-8efd-8766d4ff5cec",
+      "title": "文件／工程交付：記錄 SQLite 與 MySQL 適用性及遷移風險",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:234a95c14bda28c06fc61d4e145cd149c92b4a03",
+      "identifier": "TT-130",
+      "id": "df099148-0708-4268-ac53-fdef2db5a3a7",
+      "title": "歷史實作：新增 MySQL 主庫與安全匯入及並行保護",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:34607515802b66cef543e7b3db0c76261ff32f89",
+      "identifier": "TT-131",
+      "id": "464f6be7-7104-49ed-b62f-00c40710cd02",
+      "title": "文件／工程交付：記錄本機 MySQL 資料切換與持久化驗證",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:c2854320442653e5042a56abf2817465b4bb796d",
+      "identifier": "TT-132",
+      "id": "e0332f67-008d-45cf-b6de-3f34c39853fe",
+      "title": "歷史實作：統一返回導覽並精簡看板標題列",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:8621276192c026bce67f685b0024fb745a27c358",
+      "identifier": "TT-133",
+      "id": "6a776378-37b8-4a77-8952-4bb29820935c",
+      "title": "文件／工程交付：記錄 OCI 主機記憶體與部署容量評估",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:f4b2535e2ac346437112f106a248bbab26e64b91",
+      "identifier": "TT-134",
+      "id": "f52ecedb-f6dd-411f-bf81-ccd9e9bde57e",
+      "title": "文件／工程交付：記錄低記憶體 SQLite 展示部署方案",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:465381059915d80302da75318e27b1ed631ca03f",
+      "identifier": "TT-135",
+      "id": "bac4ef3b-8ebf-4300-88ba-4bd2c614ae9b",
+      "title": "文件／工程交付：記錄遠端原生部署與記憶體精簡方向",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:90c49c0de5c682214b6860e505e1f414bb7bb760",
+      "identifier": "TT-136",
+      "id": "a9c1088b-ca9c-407a-a558-ea33501a3db9",
+      "title": "文件／工程交付：安裝 Hallmark 與 Unslop 專案技能",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:0e69413859f5878ab60f4d5b528468ffef92b92e",
+      "identifier": "TT-137",
+      "id": "b68ee3fb-f100-43d4-accb-638561a81cab",
+      "title": "文件／工程交付：記錄 Unslop 審查與確認的修整範圍",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:b06d0c288dd376663bed1c09e2f238122a112974",
+      "identifier": "TT-138",
+      "id": "5dc7f17f-a2ea-40fe-8b04-05a46635f412",
+      "title": "歷史實作：依 Unslop 清理介面裝飾並修正登入按鈕",
+      "state": "closed",
+      "type": "bug",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "git:b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8",
+      "identifier": "TT-139",
+      "id": "f91e7509-36f6-44eb-a51f-70f9bdb1183c",
+      "title": "文件／工程交付：紀錄 Multi-Agent 實測與外部整合需求",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "88b35b47-d777-4015-b9e4-965484619262"
+    },
+    {
+      "key": "deploy:inventory-db",
+      "identifier": "TT-140",
+      "id": "3e80fbf9-f5b3-4c54-b29e-d5b21589b28b",
+      "title": "盤點現有MySQL切換與仍存SQLite特例",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:inventory-sync",
+      "identifier": "TT-141",
+      "id": "5ab32e9b-fffd-4520-b2b1-eeca5ebaa702",
+      "title": "盤點Reverb、輪詢、revision與衝突依賴",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:inventory-jobs",
+      "identifier": "TT-142",
+      "id": "69ca6bae-b98c-4c99-b334-6236d673a762",
+      "title": "盤點Queue／Scheduler／Redis與必要背景工作",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:redis-decision",
+      "identifier": "TT-143",
+      "id": "966685aa-409f-42b2-ae8b-0e641ea4c392",
+      "title": "決定低流量部署是否仍需要Redis",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:disable-websocket",
+      "identifier": "TT-144",
+      "id": "d971bc3b-1c0c-4aa3-b508-2df8f7f1bd17",
+      "title": "解除正式部署對Reverb與前端Pusher的必要依賴",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:orphan-jobs",
+      "identifier": "TT-145",
+      "id": "9a3c613e-8014-4e48-b05c-ff766ad988ea",
+      "title": "避免停用廣播後產生無人消費的Job",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:poll-manager",
+      "identifier": "TT-146",
+      "id": "82c97d3f-25d5-491b-87d5-7dcc4f7f697f",
+      "title": "抽取可重用的智慧輪詢生命週期",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:poll-backoff",
+      "identifier": "TT-147",
+      "id": "61cb3f50-a774-4432-b6f1-66f4095edcdc",
+      "title": "輪詢加入可配置間隔、jitter與退避",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:lightweight-sync",
+      "identifier": "TT-148",
+      "id": "6889d15a-7b36-4802-93c2-4d09151bcb9e",
+      "title": "設計有權限保護的輕量變更檢查",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:poll-drafts",
+      "identifier": "TT-149",
+      "id": "4d8bf44b-6e4e-4519-87e1-c0743439eda5",
+      "title": "輪詢保護拖曳、未儲存草稿與寫入衝突",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:no-ws-e2e",
+      "identifier": "TT-150",
+      "id": "b0de738b-12c5-41eb-91ee-62b32ae2d0e3",
+      "title": "建立無WebSocket的雙帳號同步回歸",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:production-image",
+      "identifier": "TT-151",
+      "id": "94a1ff43-c9ab-406d-9875-b14d1ada053c",
+      "title": "建立正式Laravel HTTP runtime與可重現映像",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:stateless",
+      "identifier": "TT-152",
+      "id": "0ddee3b7-6b8b-4c59-a4f1-41e487455e80",
+      "title": "外部化Session、Cache與業務檔案狀態",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:migrations",
+      "identifier": "TT-153",
+      "id": "070493cb-f4e5-47d1-8c19-1230b6fe9e49",
+      "title": "建立受控migration、備份與失敗回退流程",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:fly-autostop",
+      "identifier": "TT-154",
+      "id": "880412fa-3178-482e-b1b1-d9f2d1db60d7",
+      "title": "配置Fly東京HTTP自動啟停並驗證冷啟動",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:pages",
+      "identifier": "TT-155",
+      "id": "df1d7de7-dc93-4215-b1a8-130f7a009736",
+      "title": "配置Cloudflare Pages靜態前端與快取策略",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:cross-origin",
+      "identifier": "TT-156",
+      "id": "63fe9894-748f-4e19-885b-9583027cf06f",
+      "title": "定義Pages與Fly跨來源登入／Cookie／CSRF策略",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:oci-capacity",
+      "identifier": "TT-157",
+      "id": "ff68cd2e-c5df-441f-96a5-06cc3ab73bc9",
+      "title": "核對OCI實際規格、配額、磁碟與閒置回收風險",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:mysql-oci",
+      "identifier": "TT-158",
+      "id": "9576348a-0e31-41de-92fb-414c2280c7d1",
+      "title": "在OCI持久化MySQL並實測小記憶體配置",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:encrypted-network",
+      "identifier": "TT-159",
+      "id": "59625329-c731-4226-86cd-508f2604c0fe",
+      "title": "驗證Fly與OCI的加密且可恢復連線",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:redis-conditional",
+      "identifier": "TT-160",
+      "id": "3da89243-8e08-4ee4-95cd-1b68ddc7c2ea",
+      "title": "若保留Redis，配置用途隔離與記憶體政策",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:backup-restore",
+      "identifier": "TT-161",
+      "id": "bcf36449-7d7a-46b7-bc85-68f6eb6ca8ed",
+      "title": "建立異地加密備份並完成整庫還原演練",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:jobs-runtime",
+      "identifier": "TT-162",
+      "id": "18e813d4-a567-41df-bcc7-6470a99a3cc4",
+      "title": "為必要Queue／Scheduler選可靠的執行機制",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:observability",
+      "identifier": "TT-163",
+      "id": "db36bb36-018d-4c2e-8cac-7a4e81af15ad",
+      "title": "觀察1–2週成本、冷啟動、API p95與資料庫負載",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "deploy:fallback",
+      "identifier": "TT-164",
+      "id": "d87e8eae-e130-41ba-8213-0da662c162d6",
+      "title": "評估輪詢不休眠與跨雲故障時的回退門檻",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "bb4f4088-5e90-4328-b79f-a0e2e43503d5"
+    },
+    {
+      "key": "external:credentials",
+      "identifier": "TT-165",
+      "id": "7e4755dc-538a-401a-93f1-04868eae2f53",
+      "title": "設計可撤銷／輪替／過期的受限整合憑證",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7"
+    },
+    {
+      "key": "external:integration-actor",
+      "identifier": "TT-166",
+      "id": "98b7b65d-eb2b-4842-be95-b1a129fc6667",
+      "title": "區分human與integration actor並保留撤權規則",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7"
+    },
+    {
+      "key": "external:api-contract",
+      "identifier": "TT-167",
+      "id": "d1d10447-1c7a-443d-ba42-fa7b2e478707",
+      "title": "定義版本化公開API、錯誤碼與OpenAPI",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7"
+    },
+    {
+      "key": "external:api-queries",
+      "identifier": "TT-168",
+      "id": "8e30f845-91fa-41e2-85a6-18bde6ec77e6",
+      "title": "提供受限身分／專案／成員／狀態與單卡查詢",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7"
+    },
+    {
+      "key": "external:api-mutations",
+      "identifier": "TT-169",
+      "id": "67638d7c-d8af-4314-9941-5f24bbf794a2",
+      "title": "提供Issue、留言與Epic／父子／關聯寫入API",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7"
+    },
+    {
+      "key": "external:cursor",
+      "identifier": "TT-170",
+      "id": "076a8193-23b1-4afc-88b1-fb14642c42c6",
+      "title": "Issue列表支援穩定cursor與增量篩選",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7"
+    },
+    {
+      "key": "external:external-id",
+      "identifier": "TT-171",
+      "id": "cbc83d29-56d9-474d-9643-0553c23267e5",
+      "title": "建立project-scoped外部識別與upsert契約",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7"
+    },
+    {
+      "key": "external:batch",
+      "identifier": "TT-172",
+      "id": "0f6b84f9-f423-4fea-a3c0-068280a94ab9",
+      "title": "設計可恢復的批次匯入與逐項結果",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7"
+    },
+    {
+      "key": "external:incremental",
+      "identifier": "TT-173",
+      "id": "87ae0ea9-464d-46cc-9d6f-97e83e7ac375",
+      "title": "定義全量／增量同步與刪除或歸檔語意",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7"
+    },
+    {
+      "key": "external:webhook-outbox",
+      "identifier": "TT-174",
+      "id": "7a95a27a-45ca-4816-84af-2bfa03b8e17d",
+      "title": "建立交易一致的Webhook事件與outbox",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7"
+    },
+    {
+      "key": "external:webhook-delivery",
+      "identifier": "TT-175",
+      "id": "74690f63-097b-4dcd-b3aa-47c22408b5ee",
+      "title": "實作Webhook簽章、退避、死信與手動重送",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7"
+    },
+    {
+      "key": "external:agent-audit",
+      "identifier": "TT-176",
+      "id": "9e3f24eb-3a6a-4f6e-b15c-38a66893e24b",
+      "title": "記錄Agent run、交付物與同步失敗狀態",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7"
+    },
+    {
+      "key": "external:multi-agent-acceptance",
+      "identifier": "TT-177",
+      "id": "a1285fe7-d0c3-44d4-884d-b00bfeae94aa",
+      "title": "用Multi-Agent驗收正式整合並解除MA-79阻礙",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7"
+    },
+    {
+      "key": "quality:typed-writes",
+      "identifier": "TT-178",
+      "id": "07ce586a-da44-47c2-b5d5-b883ab565465",
+      "title": "逐用例遷移任務／工時寫入的專用Request與DTO",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "5bde250d-b9a9-496d-890a-6712ffaadc43"
+    },
+    {
+      "key": "quality:app-coordination",
+      "identifier": "TT-179",
+      "id": "c3e33591-3001-4964-8054-37b74fa4f1d0",
+      "title": "評估App導覽、工作區及草稿協調的責任拆分",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "5bde250d-b9a9-496d-890a-6712ffaadc43"
+    },
+    {
+      "key": "quality:workspace-payload",
+      "identifier": "TT-180",
+      "id": "24faf757-c80f-4190-8586-e998f6863183",
+      "title": "拆分身分／導航與目前Project查詢以減少全量Workspace",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "5bde250d-b9a9-496d-890a-6712ffaadc43"
+    },
+    {
+      "key": "quality:virtualization",
+      "identifier": "TT-181",
+      "id": "9cae6463-899a-40d2-a8be-044ce897bc1a",
+      "title": "評估500卡看板DOM與虛擬化策略",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "5bde250d-b9a9-496d-890a-6712ffaadc43"
+    },
+    {
+      "key": "quality:sql-reports",
+      "identifier": "TT-182",
+      "id": "0cf19a97-a30c-46b1-984e-bb512403a11f",
+      "title": "工時SQL聚合／群組分頁與日期索引實測",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "5bde250d-b9a9-496d-890a-6712ffaadc43"
+    },
+    {
+      "key": "quality:bundle",
+      "identifier": "TT-183",
+      "id": "6f09759a-1ceb-467f-84f0-bf74c5220918",
+      "title": "分割初始JS與Vuetify／MDI資源",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "5bde250d-b9a9-496d-890a-6712ffaadc43"
+    },
+    {
+      "key": "quality:load",
+      "identifier": "TT-184",
+      "id": "995aa01f-85a1-4a0a-98f8-15da60f01f4e",
+      "title": "建立正式多worker／弱網負載與容量基準",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "5bde250d-b9a9-496d-890a-6712ffaadc43"
+    },
+    {
+      "key": "quality:auth-policy",
+      "identifier": "TT-185",
+      "id": "209d7fb6-42f6-4a8d-a46e-03f87e28bedd",
+      "title": "部署前確認正式註冊、帳號恢復與秘密管理政策",
+      "state": "open",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "5bde250d-b9a9-496d-890a-6712ffaadc43"
+    },
+    {
+      "key": "candidate:home-widgets",
+      "identifier": "TT-186",
+      "id": "bcfa7257-d3f8-44ea-8161-7b82b5c4127a",
+      "title": "候選：首頁個人小工具與卡片篩選小清單",
+      "state": "deferred",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "b9c6697b-b994-47c0-bcd4-4f1af05cab21"
+    },
+    {
+      "key": "candidate:custom-roles",
+      "identifier": "TT-187",
+      "id": "885eb200-90de-4959-a29e-a413ac589d92",
+      "title": "候選：可自訂角色與permission編輯",
+      "state": "deferred",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "b9c6697b-b994-47c0-bcd4-4f1af05cab21"
+    },
+    {
+      "key": "candidate:custom-types",
+      "identifier": "TT-188",
+      "id": "11433349-cdda-476d-826f-32015f8de346",
+      "title": "候選：專案可自訂Issue類型",
+      "state": "deferred",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "b9c6697b-b994-47c0-bcd4-4f1af05cab21"
+    },
+    {
+      "key": "candidate:smtp-delivery",
+      "identifier": "TT-189",
+      "id": "d7a41415-1e77-4c96-83cf-029314af1008",
+      "title": "候選：實際Email寄送、偏好與可靠出站流程",
+      "state": "deferred",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "b9c6697b-b994-47c0-bcd4-4f1af05cab21"
+    },
+    {
+      "key": "candidate:issue-inbox",
+      "identifier": "TT-190",
+      "id": "202434c1-6b4f-419c-b167-15eee1b51ec7",
+      "title": "候選：Issue通知收件匣、追蹤者與mention",
+      "state": "deferred",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "b9c6697b-b994-47c0-bcd4-4f1af05cab21"
+    },
+    {
+      "key": "candidate:attachments",
+      "identifier": "TT-191",
+      "id": "714e9659-eb7e-4113-9a00-d200b710181b",
+      "title": "候選：R2附件／圖片與授權下載",
+      "state": "deferred",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "b9c6697b-b994-47c0-bcd4-4f1af05cab21"
+    },
+    {
+      "key": "candidate:templates",
+      "identifier": "TT-192",
+      "id": "5bfee185-8a98-43ca-8496-2966b4292612",
+      "title": "候選：Bug／任務範本",
+      "state": "deferred",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "b9c6697b-b994-47c0-bcd4-4f1af05cab21"
+    },
+    {
+      "key": "candidate:batch-labels",
+      "identifier": "TT-193",
+      "id": "95edca08-e032-42c1-897f-378c7a62cbf7",
+      "title": "候選：批次修改與標籤管理",
+      "state": "deferred",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "b9c6697b-b994-47c0-bcd4-4f1af05cab21"
+    },
+    {
+      "key": "candidate:board-grouping",
+      "identifier": "TT-194",
+      "id": "4333a70b-08f0-40a2-9fc9-6a5f78f0584d",
+      "title": "候選：看板負責人分組與持久排序／WIP提醒",
+      "state": "deferred",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "b9c6697b-b994-47c0-bcd4-4f1af05cab21"
+    },
+    {
+      "key": "candidate:milestones",
+      "identifier": "TT-195",
+      "id": "0e868ae2-ca45-45d1-b570-a7f9ecec3fdf",
+      "title": "候選：里程碑／版本與長期專案封存",
+      "state": "deferred",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "b9c6697b-b994-47c0-bcd4-4f1af05cab21"
+    },
+    {
+      "key": "candidate:flow-analysis",
+      "identifier": "TT-196",
+      "id": "49bf6f13-7f1e-436c-b99a-34e2e6efe1f7",
+      "title": "候選：期間交付／cycle time與重開分析",
+      "state": "deferred",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "b9c6697b-b994-47c0-bcd4-4f1af05cab21"
+    },
+    {
+      "key": "candidate:csv",
+      "identifier": "TT-197",
+      "id": "6b79ed13-37d6-4d5e-8bb2-98c233f13338",
+      "title": "候選：工時CSV匯出與對帳",
+      "state": "deferred",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "b9c6697b-b994-47c0-bcd4-4f1af05cab21"
+    },
+    {
+      "key": "candidate:vcs",
+      "identifier": "TT-198",
+      "id": "94fba35f-fe19-44c8-b994-169132308718",
+      "title": "候選：Git commit／PR／MR連結與受限事件整合",
+      "state": "deferred",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "b9c6697b-b994-47c0-bcd4-4f1af05cab21"
+    },
+    {
+      "key": "candidate:manual",
+      "identifier": "TT-199",
+      "id": "8deae428-410a-4e33-964a-1cd779fb23b2",
+      "title": "候選：依現有功能編寫操作手冊",
+      "state": "deferred",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "b9c6697b-b994-47c0-bcd4-4f1af05cab21"
+    },
+    {
+      "key": "candidate:ui-next",
+      "identifier": "TT-200",
+      "id": "dab0cb20-5232-4076-a2fa-07b5adc9d937",
+      "title": "候選：評估登入版型／分析入口／版本資訊的P3修整",
+      "state": "deferred",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "b9c6697b-b994-47c0-bcd4-4f1af05cab21"
+    },
+    {
+      "key": "candidate:distribution",
+      "identifier": "TT-201",
+      "id": "fc24b18c-2c78-4bcc-b2f5-5c0f632a8c73",
+      "title": "候選：定義SaaS與自建版共用核心交付",
+      "state": "deferred",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "b9c6697b-b994-47c0-bcd4-4f1af05cab21"
+    },
+    {
+      "key": "self-tracking",
+      "identifier": "TT-202",
+      "id": "084bc5c8-77b2-45c1-8ed8-0393cdd19918",
+      "title": "建立TaskTracker自我追蹤、AI Developer與完整卡片交接",
+      "state": "closed",
+      "type": "task",
+      "assigneeId": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "5bde250d-b9a9-496d-890a-6712ffaadc43"
+    }
+  ]
+}
