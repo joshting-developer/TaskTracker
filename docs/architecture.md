@@ -1,5 +1,7 @@
 # TaskTracker 架構提案
 
+2026-11-11產品架構確認：採API-first可整合平台，Web與外部REST API共用Application Service／集中授權。PAT與Scope為核心，MCP／工具專屬整合／Agent編排不在目前範圍；這是後續方向，尚未實作Token或更換SPA契約。詳見[API-first平台架構與邊界](api-first-platform.md)。
+
 2026-11-06更新：工作區選擇器與既有帳號跨區邀請已實作；設定改為Owner側欄入口，帳號選單只留個人資料／登出。下方初版描述保留沿革，現行流程見[多工作空間與帳號邀請](workspace-membership.md)。
 
 2026-11-04 儲存更新：業務改為22張明確關聯表及Eloquent模型／外鍵／索引，保留DTO及原資料；records僅作歷史封存。此更新取代下方records主儲存描述，詳見[關聯式資料設計](database-design.md)。

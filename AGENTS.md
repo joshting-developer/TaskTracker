@@ -171,3 +171,8 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 本專案已在本機TaskTracker的SideProject工作區建立TaskTracker／TT專案，Project ID `5a451d5c-2fff-4110-aa49-4998ec9dbff2`。使用者已要求既有及未來工作均建卡並指派AI，狀態須對應實際進度；開工前查閱／建立相應卡片，進行中、受阻、驗收與完成如實更新，不以commit自動假定整項功能完成。
 
 專用身分為taskTrackerAI（Workspace一般成員＋此Project Developer）；登入資訊在忽略的`.local/tasktracker-ai.json`，目錄0700／檔案0600，不將密碼、Cookie或邀請token寫入Git／卡片／日誌。後續以此帳號操作，不因權限失敗回退到使用者Owner。來源、清單、網址及工具見[自我追蹤交接](docs/tasktracker-self-tracking.md)。`python3 tools/tasktracker.py list`讀取目前卡片；初始manifest只供首次盤點與核對，不能覆蓋後來的人工進度。換機需安全移轉私有登入檔或重設帳號。
+
+
+## API-first平台邊界（2026-11-11）
+
+使用者已確認第三方走標準REST API＋個人PAT／Scope／撤銷與期限管理，沿用有效permission＋Workspace／Project及資源條件。Web與外部API共用Application Service、集中授權、交易與資料層；先盤點既有API，不複製第二套業務或無故另開服務，不直接改壞Session／CSRF／RPC相容契約。OpenAPI建議提供。TaskTracker暫不自建MCP、不製作Codex／Claude或其他工具專屬整合、不實作Agent編排工作流；這些由外部依API自行完成。通用來源稽核保留，Webhook為後續低優先候選。具體契約／技術實作另依當輪授權，見[API-first架構決策](docs/api-first-platform.md)。

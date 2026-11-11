@@ -19,6 +19,8 @@ Owner／Manager可從側欄「工時分析」選擇成員投入、專案投入�
 
 介面文案以標題、操作、資料與必要狀態為主，已移除標語、鼓勵語及長篇功能教學；操作手冊待後續指示。盤點見[介面文案精簡](docs/ui-copy-review-2026-11-06.md)。
 
+已確認後續採API-first平台方向：REST API／PAT／Scope與現行權限共用業務邏輯，由使用者自行整合第三方工具；目前尚未實作PAT或公開REST契約。範圍與非目標見[API-first平台架構](docs/api-first-platform.md)。
+
 程式責任與本輪調整見[前後端架構重構紀錄](docs/refactoring-2026-11-06.md)。
 
 查詢數量測、N+1／全量載入／SQLite交易風險及Redis使用建議見[效能與架構review](docs/performance-review-2026-11-06.md)；內含僅用記憶體SQLite的可重跑取樣工具。效能工作已選用Addy主診斷＋ECC benchmark補量測，專案入口及適用方式見[配置文件](docs/performance-skills.md)。最新實際SQL／HTTP／500卡看板掃描見[效能複掃報告](docs/performance-scan-2026-11-09.md)。
