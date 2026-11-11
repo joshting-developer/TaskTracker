@@ -1,5 +1,7 @@
 ## 2026-11-11 Hallmark／Unslop安裝與介面去AI化
 
+- 階段二：已完成隔離登入、48張三尺寸截圖及computed style補測；整體light slop。使用者已確認報告第一批修整方向，登入按鈕／標題句點／假鍵帽／空狀態與專案卡片為本輪範圍，其餘提案保留。
+
 - 使用者要求安裝兩份skill，並用Unslop掃描專案去AI化；選UI導向heydamir/unslop，非同名文章編輯skill，Hallmark用Nutlope官方來源。
 - 階段一完成：204個固定原文／素材／LICENSE檔案逐一核對Git blob與SHA-256，兩個專案symlink、manifest及適用配置建立；保留Unslop作者署名與先確認方向的流程。
 - 階段一：固定來源commit、原文／references／scripts／LICENSE與校驗manifest，建立專案入口及適用配置，確認與既有產品／品牌／Vue規則的優先序，再commit。
