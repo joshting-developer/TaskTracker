@@ -7,6 +7,8 @@ use App\Http\Controllers\BoardController;
 use App\Http\Controllers\IssueController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
+use App\Http\Controllers\Queries\IssuesController;
+use App\Http\Controllers\Queries\ProjectsController;
 use App\Http\Controllers\RealtimeController;
 use App\Http\Controllers\SmtpController;
 use App\Http\Controllers\SystemController;
@@ -76,6 +78,16 @@ Route::post('/api/rpc/readTodoNotification', [TodoController::class, 'readNotifi
 Route::post('/api/rpc/smtpStatus', [SmtpController::class, 'status']);
 Route::post('/api/rpc/verifySmtp', [SmtpController::class, 'verify']);
 
+// v1先共用Session／CSRF可信邊界，Application Service可供後續PAT適配器沿用。
+Route::prefix('/api/v1')->group(function () {
+    Route::get('/projects', [ProjectsController::class, 'index']);
+    Route::get('/projects/{project}', [ProjectsController::class, 'show']);
+    Route::get('/projects/{project}/issues', [IssuesController::class, 'index']);
+    Route::get('/projects/{project}/issues/{issue}', [IssuesController::class, 'show']);
+    Route::get('/projects/{project}/issues/{issue}/comments', [IssuesController::class, 'comments']);
+    Route::get('/projects/{project}/issues/{issue}/history', [IssuesController::class, 'history']);
+});
+
 // 相容舊客戶端的未知／已停用操作，維持身分驗證及JSON錯誤契約。
 Route::post('/api/rpc/{operation}', [ApiController::class, 'unknown'])->where('operation', '[A-Za-z]+');
 
@@ -85,7 +97,7 @@ foreach (['workspaces', 'switchWorkspace', 'acceptWorkspaceInvite', 'invitation'
 
 // 同一Session的切換與業務請求依序處理，避免舊Session覆寫新工作區。
 foreach (Route::getRoutes() as $route) {
-    if ($route->uri() === 'api/csrf-cookie' || str_starts_with($route->uri(), 'api/rpc/') || str_starts_with($route->uri(), 'api/auth/') || str_starts_with($route->uri(), 'api/realtime/')) {
+    if ($route->uri() === 'api/csrf-cookie' || str_starts_with($route->uri(), 'api/v1/') || str_starts_with($route->uri(), 'api/rpc/') || str_starts_with($route->uri(), 'api/auth/') || str_starts_with($route->uri(), 'api/realtime/')) {
         $route->block(10, 10);
     }
 }

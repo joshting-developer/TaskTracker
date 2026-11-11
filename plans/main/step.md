@@ -1,5 +1,7 @@
 ## 2026-11-11 效能改善實作與API分責
 
+- 階段B：新增分責GET v1 Project／Issue／活動接口，SQL分頁及最小欄位、有效permission快照與舊RPC共存。ScopedReadApiTest＋ProjectAclTest 8項／393 assertions通過；前端還未切換，相關卡仍進行中。
+
 - 階段A完成：健康探針零SQL／無cookie，限定Workspace ID重用、看板批次參照、留言／關聯／歷史／收錄差量寫入，日工時SQL SUM。memory68／2511、獨立MySQL73／2578及native補測2／23通過；TT-228／229／222／220按實際驗收結案，其他工作續作。
 
 - 使用者已授權解決效能改善並拆好API，供後續AI整合延伸。先前review-only／implementationAuthorized=false為歷史範圍，這次恢復實作；不新增PAT或工具專屬整合。

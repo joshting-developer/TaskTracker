@@ -37,7 +37,7 @@ class Client:
         headers = {'Accept': 'application/json', 'Origin': self.base}
         if payload is not None:
             headers.update({'Content-Type': 'application/json', 'X-CSRF-TOKEN': self.csrf})
-        if self.workspace_id and path.startswith('/api/rpc/'):
+        if self.workspace_id and path.startswith(('/api/rpc/', '/api/v1/')):
             headers['X-Workspace-ID'] = self.workspace_id
         req = urllib.request.Request(self.base + path, data=None if payload is None else json.dumps(payload).encode(), headers=headers)
         # 同一次mutation重試沿用payload內requestId；不在401／403或驗證失敗時重試。
@@ -90,6 +90,26 @@ class Client:
             raise RuntimeError('指定專案不可見，停止操作')
         return [i for i in data['issues'] if i['projectId'] == self.config['projectId']]
 
+    def issue_page(self, page=1, search='', identifier=''):
+        query = urllib.parse.urlencode({'page': page, 'perPage': 100, 'search': search, 'identifier': identifier})
+        return self.call('/api/v1/projects/' + self.config['projectId'] + '/issues?' + query)
+
+    def find_issue(self, identifier, detail=False):
+        rows = self.issue_page(identifier=identifier)['items']
+        item = next((i for i in rows if i['identifier'] == identifier), None)
+        if item is None:
+            raise RuntimeError('找不到可讀任務：' + str(identifier))
+        return self.call('/api/v1/projects/' + self.config['projectId'] + '/issues/' + item['id']) if detail else item
+
+    def list_issues(self):
+        page = 1
+        while True:
+            result = self.issue_page(page=page)
+            yield from result['items']
+            if page >= result['lastPage']:
+                break
+            page += 1
+
     def logout(self):
         self.call('/api/auth/logout', {})
 
@@ -126,7 +146,12 @@ def main():
         manifest = json.loads(MANIFEST.read_text())
         if args.command == 'import':
             import_cards(client, manifest)
-        issues = client.project_issues(client.workspace())
+        if args.command in ('import', 'verify'):
+            issues = client.project_issues(client.workspace())
+        elif args.command == 'list':
+            issues = client.list_issues()
+        else:
+            issues = [client.find_issue(args.identifier)]
         if args.command == 'verify':
             by_key = {key_for(i): i for i in issues}
             assert len(by_key) == len(issues), '重複追蹤鍵或無追蹤鍵卡片'

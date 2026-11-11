@@ -145,6 +145,12 @@ class ApiExecution
         });
     }
 
+    /** 有界查詢共用可信身分與交易，查詢服務不依賴HTTP或Session。 */
+    public function query(Request $request, \Closure $read): array
+    {
+        return $this->inWorkspace($request, 'query', $read);
+    }
+
     /**
      * 共用交易及Session／X-Workspace-ID驗證，寫入與專用查詢均不可略過。
      *
@@ -158,7 +164,7 @@ class ApiExecution
         $userId = $request->user()?->getAuthIdentifier();
         $workspaceId = $request->session()->get('workspace_id');
         $execute = function () use ($request, $operation, $callback, $userId, $workspaceId) {
-            if (! in_array($operation, ['getWorkspace', 'getTimeReport', 'getTodos', 'getProfile', 'getWorkspaceSettings', 'getProjectMembers', 'smtpStatus', 'verifySmtp'], true)) {
+            if (! in_array($operation, ['query', 'getWorkspace', 'getTimeReport', 'getTodos', 'getProfile', 'getWorkspaceSettings', 'getProjectMembers', 'smtpStatus', 'verifySmtp'], true)) {
                 $locks = new WriteLocks;
                 $locks->account($userId);
                 $locks->workspace($workspaceId);
@@ -172,7 +178,7 @@ class ApiExecution
             return $callback($context);
         };
         $connection = DB::connection();
-        if ($connection instanceof WorkspaceSqliteConnection && in_array($operation, ['getWorkspace', 'getTimeReport'], true)) {
+        if ($connection instanceof WorkspaceSqliteConnection && in_array($operation, ['query', 'getWorkspace', 'getTimeReport'], true)) {
             return $connection->readTransaction($execute);
         }
 

@@ -42,13 +42,13 @@ class ProjectAccess
      * @param  array  $members  本次已讀取的成員
      * @return self 不可跨請求或用於寫入授權的讀取快照
      */
-    public static function forRead(RecordStore $store, array $context, array $projects, array $members): self
+    public static function forRead(RecordStore $store, array $context, array $projects, array $members, ?array $assignments = null): self
     {
         $access = new self($store, $context);
         $access->readSnapshot = [
             'projects' => array_column($projects, null, 'id'),
             'members' => array_column($members, null, 'id'),
-            'assignments' => array_column($store->all('projectMembers'), null, 'id'),
+            'assignments' => array_column($assignments ?? $store->all('projectMembers'), null, 'id'),
         ];
 
         return $access;

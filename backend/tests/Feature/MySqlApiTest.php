@@ -51,4 +51,19 @@ class MySqlApiTest extends MySqlTestCase
         $this->assertCount(0, array_filter(DB::getQueryLog(), fn ($q) => str_contains($q['query'], 'audit_events') && ! str_starts_with($q['query'], 'select')));
         $this->assertSame($commentId, DB::table('issue_comments')->where('public_id', $first['comments'][0]['id'])->value('id'));
     }
+
+    /** 原生MySQL確認literal LIKE與最小欄位投影，不以SQLite結果推論。 */
+    public function test_scoped_read_filters_and_projection_on_mysql(): void
+    {
+        $this->postJson('/api/auth/register', ['name' => 'Read', 'email' => 'read-'.Str::uuid().'@example.test', 'password' => 'mysql-test-password', 'workspaceName' => 'Read'])->assertOk();
+        $project = $this->rpc('createProject', ['name' => 'Read', 'code' => 'READ'])->assertOk()->json('data');
+        $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => '資料_100%', 'description' => 'Private detail'])->assertOk();
+        $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => '資料A100B'])->assertOk();
+        $path = '/api/v1/projects/'.$project['id'].'/issues';
+        $row = $this->getJson($path.'?search=%25&sort=priority')->assertOk()->assertJsonPath('data.total', 1)->json('data.items.0');
+        $this->assertArrayNotHasKey('description', $row);
+        $this->assertArrayNotHasKey('history', $row);
+        $this->assertStringContainsString('T', $row['createdAt']);
+        $this->getJson($path.'?search=%5F&sort=due')->assertOk()->assertJsonPath('data.total', 1);
+    }
 }

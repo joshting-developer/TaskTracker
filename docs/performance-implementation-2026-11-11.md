@@ -17,3 +17,7 @@
 ## 後續階段
 
 分責查詢API與分頁、前端按頁面載入與有界同步、Todo／報表／月曆、正式runtime／量測與bundle，依看板逐項續作。未在本段完成的卡仍未結案；整體尚不能稱為已解決全量Workspace。
+
+## B：新增分責查詢邊界
+
+新增v1 Project分頁／屬性、Issue SQL分頁／詳細、留言與異動分頁，既有RPC保留。Service重用有效ProjectAccess；列表不讀Issue描述或子活動，活動只用父列參照；Project列表同快照取得能力／負責人摘要，Resource不查DB。專用Request／readonly條件與分頁資料隔離HTTP，契約見query-api-v1.md。Reader、私有Project、跨Project ID、撤權、X-Workspace-ID與literal搜尋／20筆SQL分頁／活動按需測試通過。一般列表／單卡查詢只取操作者本人的Project指派與最小Project參照，不為單人讀取載全員配置；專案頁需要成員能力才建立完整資格快照。前端尚待接線，TT-180／214／215仍進行中，不提前結案。
