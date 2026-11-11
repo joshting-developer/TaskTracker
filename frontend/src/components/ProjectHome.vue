@@ -17,7 +17,6 @@ function leadName(project) {
     <div v-if="error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="$emit('retry')">重新載入</button></div>
     <div v-if="loading" class="empty-state"><span class="loader"></span><h2>正在載入專案…</h2></div>
     <div v-else-if="!projects.length" class="empty-state welcome-state project-welcome">
-      <div class="empty-illustration"><span class="illustration-card"><Icon name="folder" :size="26" /><i></i><i></i></span><span class="illustration-spark">✦</span></div>
 
       <h2>{{ canCreate ? '尚無專案' : '尚未加入任何專案' }}</h2>
 
@@ -28,7 +27,7 @@ function leadName(project) {
       <div class="project-home-toolbar"><label class="search-field"><Icon name="search" :size="18" /><input v-model="search" placeholder="搜尋專案名稱或代碼…" aria-label="搜尋專案" /><button v-if="search" class="icon-button" aria-label="清除專案搜尋" @click="search = ''"><Icon name="close" :size="15" /></button></label><span class="project-list-count">{{ cards.length }} 個專案</span></div>
       <div class="project-grid">
         <article v-for="project in cards" :key="project.id" class="project-card-shell"><button class="project-card" :aria-label="`進入專案：${project.name}`" @click="$emit('open', project.id)">
-          <div class="project-card-top"><span class="project-card-icon" :style="{ color: project.color, background: `${project.color}16` }"><Icon name="folder" :size="23" /></span><span class="project-code">{{ project.code }}</span><Icon name="arrow" :size="19" class="project-enter-icon" /></div>
+          <div class="project-card-top"><span class="project-card-icon" :style="{ color: project.color }"><Icon name="folder" :size="20" /></span><span class="project-code">{{ project.code }}</span></div>
           <h2>{{ project.name }}</h2><p>{{ project.description || '尚未填寫專案介紹' }}</p>
           <div class="project-lead"><Icon name="user" :size="16" /><span>負責人</span><strong>{{ leadName(project) }}</strong></div>
           <div class="project-card-bottom"><span>進入專案 <Icon name="chevron" :size="13" /></span></div>

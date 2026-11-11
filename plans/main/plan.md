@@ -1,5 +1,7 @@
 ## 2026-11-11 Hallmark／Unslop安裝與介面去AI化
 
+- 第一批已完成：低權重reset排除Vuetify、內容標題句點／假鍵帽／空狀態裝飾移除、專案卡片文字／圖示／hover整理；品牌及業務契約保留。production build、隔離登入／專案建立與編輯／鍵盤／抽屜、三尺寸截圖、既有board與settings回歸通過；Taste餘下登入版型三項已記為P3，不宣稱零警告。
+
 - 階段二：已完成隔離登入、48張三尺寸截圖及computed style補測；整體light slop。使用者已確認報告第一批修整方向，登入按鈕／標題句點／假鍵帽／空狀態與專案卡片為本輪範圍，其餘提案保留。
 
 - 使用者要求安裝兩份skill，並用Unslop掃描專案去AI化；選UI導向heydamir/unslop，非同名文章編輯skill，Hallmark用Nutlope官方來源。

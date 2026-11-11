@@ -44,7 +44,7 @@ async function checkSeedAccounts(browser, failures) {
     await page.getByLabel('密碼', { exact: true }).fill(process.env.E2E_SEED_PASSWORD);
     await page.getByRole('button', { name: '登入', exact: true }).click();
   await openProjectList(page);
-    await page.getByRole('heading', { name: '專案列表.', exact: true }).waitFor();
+    await page.getByRole('heading', { name: '專案列表', exact: true }).waitFor();
     const manager = ['owner', 'manager'].includes(role), maintainer = role !== 'developer';
     assert.equal(await page.getByRole('button', { name: '建立專案', exact: true }).count(), manager ? 1 : 0);
     assert.equal(await page.getByRole('button', { name: '建立新專案', exact: false }).count(), manager ? 1 : 0);
@@ -311,7 +311,7 @@ async function checkProjectAcl(page, browser, failures) {
   assert.equal(snapshot.issues.some(issue => issue.title === '不可洩露的卡片'), false);
   await teammate.goto(`http://127.0.0.1:5175/#/projects/${fixture.hidden.id}`);
   await openProjectList(teammate);
-  await teammate.getByRole('heading', { name: '專案列表.', exact: true }).waitFor();
+  await teammate.getByRole('heading', { name: '專案列表', exact: true }).waitFor();
   await openProjectList(teammate);
   assert.equal(await teammate.getByRole('button', { name: '進入專案：ACL 未授權專案', exact: true }).count(), 0);
 
@@ -337,7 +337,7 @@ async function checkProjectAcl(page, browser, failures) {
   await teammate.getByRole('heading', { name: '首頁', exact: true }).waitFor();
   assert.equal(await teammate.evaluate(() => location.hash), '#/');
   await openProjectList(teammate);
-  await teammate.getByRole('heading', { name: '專案列表.', exact: true }).waitFor();
+  await teammate.getByRole('heading', { name: '專案列表', exact: true }).waitFor();
   assert.equal(await teammate.getByRole('dialog').count(), 0);
   assert.equal(await teammate.getByText('受保護的開發卡片', { exact: true }).count(), 0);
   await openProjectList(teammate);
@@ -999,7 +999,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   page.once('dialog', dialog => dialog.accept());
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await openProjectList(page);
-  await page.getByRole('heading', { name: '專案列表.', exact: true }).waitFor();
+  await page.getByRole('heading', { name: '專案列表', exact: true }).waitFor();
   await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
   await teammate.close();
   console.log('PASS: two accounts, invitation, role checks, Epic links/acceptance/reopen, custom board state, personal time edits/team rollup/calendar, notifications without sending, background-refresh revision conflict, mobile calendar/settings and unsaved guard');
@@ -1138,7 +1138,7 @@ try {
   assert.equal(await projectSidebar.getByRole('button', { name: /建立.*專案|新增專案/ }).count(), 0);
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await openProjectList(page);
-  await page.getByRole('heading', { name: '專案列表.', exact: true }).waitFor();
+  await page.getByRole('heading', { name: '專案列表', exact: true }).waitFor();
   assert.equal(await projectSidebar.getByRole('navigation', { name: '專案任務', exact: true }).count(), 0);
   await page.getByRole('button', { name: '建立專案', exact: true }).click();
   const projectDialog = page.getByRole('dialog', { name: '建立專案' });
@@ -1146,7 +1146,7 @@ try {
   await projectDialog.getByLabel(/專案代碼/).fill('TEST');
   await projectDialog.getByRole('button', { name: '建立專案', exact: true }).click();
   await openProjectList(page);
-  await page.getByRole('heading', { name: '專案列表.', exact: true }).waitFor();
+  await page.getByRole('heading', { name: '專案列表', exact: true }).waitFor();
   assert.equal(await page.getByRole('button', { name: '任務看板', exact: true }).count(), 0);
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).click();
@@ -1170,7 +1170,7 @@ try {
   const testProjectUrl = page.url();
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await openProjectList(page);
-  await page.getByRole('heading', { name: '專案列表.', exact: true }).waitFor();
+  await page.getByRole('heading', { name: '專案列表', exact: true }).waitFor();
   assert.equal(await page.getByRole('button', { name: '任務看板', exact: true }).count(), 0);
   assert.equal(await page.locator('.issue-card, tbody tr').count(), 0);
   await page.screenshot({ path: 'artifacts/desktop-projects.png', fullPage: true });
