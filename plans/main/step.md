@@ -1,3 +1,8 @@
+## 2026-11-11 TaskTracker自我追蹤專案與AI帳號
+
+- 已讀兩份指定資料、README／產品沿革、API及Git歷史；指定commit為Multi-Agent交接文件。主服務健康，操作只走既有應用API，不直寫主庫／不seed。
+- 待完成：可恢復的卡片清單與來源副本、建立帳號／專案、狀態及全部指派、逐筆核對與UI／隔離查驗、私有登入檔與AGENTS導引、交付commit。
+
 ## 2026-11-11 Hallmark／Unslop安裝與介面去AI化
 
 - 第一批已完成：低權重reset排除Vuetify、內容標題句點／假鍵帽／空狀態裝飾移除、專案卡片文字／圖示／hover整理；品牌及業務契約保留。production build、隔離登入／專案建立與編輯／鍵盤／抽屜、三尺寸截圖、既有board與settings回歸通過；Taste餘下登入版型三項已記為P3，不宣稱零警告。

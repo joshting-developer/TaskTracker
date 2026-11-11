@@ -1,0 +1,1825 @@
+{
+  "date": "2026-11-11",
+  "baseline": "b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8",
+  "purpose": "初次自我追蹤盤點；歷史以commit交付為單位，未來以可驗收工項為單位。不是持續覆蓋Tracker進度的來源。",
+  "cards": [
+    {
+      "key": "history",
+      "title": "歷史交付與產品決策紀錄",
+      "epic": null,
+      "type": "epic",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n歷史交付與產品決策紀錄\n\n## 來源\nGit main，截至b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8\n\n## 驗收\n下屬每個歷史交付可對照完整commit。文件交付不等同功能完成；被取代的舊能力只保留沿革。\n\n追蹤鍵：tasktracker:history"
+    },
+    {
+      "key": "deploy",
+      "title": "低成本部署與智慧輪詢",
+      "epic": null,
+      "type": "epic",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n低成本部署與智慧輪詢\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md\n\n## 驗收\nPhase 0–5逐階段有實測、回退與成本紀錄；MySQL資料與授權不丟失。\n\n追蹤鍵：tasktracker:deploy"
+    },
+    {
+      "key": "external",
+      "title": "受限外部整合與Agent工作流程",
+      "epic": null,
+      "type": "epic",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n受限外部整合與Agent工作流程\n\n## 來源\nMulti-Agent-To-Tracker.md @ b0c763d，TT-EXT-01～05\n\n## 驗收\nMulti-Agent可用正式受限憑證／API／同步與事件能力驗收；保留actor稽核與租戶邊界。\n\n追蹤鍵：tasktracker:external"
+    },
+    {
+      "key": "quality",
+      "title": "剩餘架構、效能與操作品質",
+      "epic": null,
+      "type": "epic",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n剩餘架構、效能與操作品質\n\n## 來源\ndocs/refactoring-2026-11-06.md；docs/performance-improvements-2026-11-09.md；docs/Unslop審查報告-2026-11-11.md\n\n## 驗收\n按單一可驗收用例改善，量測與正確性並存，不把部分重構當成全庫完成。\n\n追蹤鍵：tasktracker:quality"
+    },
+    {
+      "key": "candidates",
+      "title": "後續產品候選與暫緩事項",
+      "epic": null,
+      "type": "epic",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n後續產品候選與暫緩事項\n\n## 來源\ndocs/產品討論紀錄.md；docs/競品使用流程與功能缺口研究-2026-10-30.md\n\n## 驗收\n先確認需要與範圍，再排程；不恢復已取消的前置任務、儲存視圖或獨立Epic概覽。\n\n追蹤鍵：tasktracker:candidates"
+    },
+    {
+      "key": "git:357e68dc1e9ddf384c859ff9a591bdfa2b536d3a",
+      "title": "文件／工程交付：建立專案規範與競品調研規劃",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 建立專案規範與競品調研規劃\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 357e68dc1e9ddf384c859ff9a591bdfa2b536d3a（2026-10-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/357e68dc1e9ddf384c859ff9a591bdfa2b536d3a\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:357e68dc1e9ddf384c859ff9a591bdfa2b536d3a"
+    },
+    {
+      "key": "git:e6d046c40c8f951800c065ecc494168379d2b704",
+      "title": "歷史實作：建立以專案為入口的本機任務管理原型",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 建立以專案為入口的本機任務管理原型\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit e6d046c40c8f951800c065ecc494168379d2b704（2026-10-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/e6d046c40c8f951800c065ecc494168379d2b704\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:e6d046c40c8f951800c065ecc494168379d2b704"
+    },
+    {
+      "key": "git:0acdd02b98d7bd7462555c14c59416d07f7e523a",
+      "title": "文件／工程交付：設定每完成一個階段就提交的工作規範",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 設定每完成一個階段就提交的工作規範\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 0acdd02b98d7bd7462555c14c59416d07f7e523a（2026-10-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/0acdd02b98d7bd7462555c14c59416d07f7e523a\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:0acdd02b98d7bd7462555c14c59416d07f7e523a"
+    },
+    {
+      "key": "git:ac609e90604311ad63a2078a482cef5f24577b16",
+      "title": "文件／工程交付：規劃 SaaS 協作、Epic 聯動與工時分析",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 規劃 SaaS 協作、Epic 聯動與工時分析\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit ac609e90604311ad63a2078a482cef5f24577b16（2026-10-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/ac609e90604311ad63a2078a482cef5f24577b16\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:ac609e90604311ad63a2078a482cef5f24577b16"
+    },
+    {
+      "key": "git:35eb4723bd18185156843942d36a2e0e82ead1b6",
+      "title": "歷史實作：建立隔離團隊帳號、Epic 與工時協作 API",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 建立隔離團隊帳號、Epic 與工時協作 API\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 35eb4723bd18185156843942d36a2e0e82ead1b6（2026-10-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/35eb4723bd18185156843942d36a2e0e82ead1b6\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:35eb4723bd18185156843942d36a2e0e82ead1b6"
+    },
+    {
+      "key": "git:0fe29a2a1ce35e8a06ca1eb558e70f6d0f65c4c4",
+      "title": "歷史實作：加入 Epic 概覽、團隊工時月曆與協作介面",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 加入 Epic 概覽、團隊工時月曆與協作介面\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 0fe29a2a1ce35e8a06ca1eb558e70f6d0f65c4c4（2026-10-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/0fe29a2a1ce35e8a06ca1eb558e70f6d0f65c4c4\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:0fe29a2a1ce35e8a06ca1eb558e70f6d0f65c4c4"
+    },
+    {
+      "key": "git:dbbb871ffeb28c05fd6d21d22e786ae0f1450acb",
+      "title": "歷史實作：加入任務依賴與 Epic 工時上下文",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 加入任務依賴與 Epic 工時上下文\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit dbbb871ffeb28c05fd6d21d22e786ae0f1450acb（2026-10-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/dbbb871ffeb28c05fd6d21d22e786ae0f1450acb\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:dbbb871ffeb28c05fd6d21d22e786ae0f1450acb"
+    },
+    {
+      "key": "git:020cf1256b9d29410222c027537be88628eca65f",
+      "title": "歷史實作：加入個人與團隊常用視圖及進階篩選",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 加入個人與團隊常用視圖及進階篩選\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 020cf1256b9d29410222c027537be88628eca65f（2026-10-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/020cf1256b9d29410222c027537be88628eca65f\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:020cf1256b9d29410222c027537be88628eca65f"
+    },
+    {
+      "key": "git:b0c247f2c6825664d461372cb6daec531295ff40",
+      "title": "文件／工程交付：新增本機 Compose 開發環境與資料持久化",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：build(docker): 新增本機 Compose 開發環境與資料持久化\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit b0c247f2c6825664d461372cb6daec531295ff40（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/b0c247f2c6825664d461372cb6daec531295ff40\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:b0c247f2c6825664d461372cb6daec531295ff40"
+    },
+    {
+      "key": "git:d9c5adaebe97ce664bfbff1fcc6dd24ae8a65668",
+      "title": "文件／工程交付：建立持續維護的產品討論與決策紀錄",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 建立持續維護的產品討論與決策紀錄\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit d9c5adaebe97ce664bfbff1fcc6dd24ae8a65668（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/d9c5adaebe97ce664bfbff1fcc6dd24ae8a65668\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:d9c5adaebe97ce664bfbff1fcc6dd24ae8a65668"
+    },
+    {
+      "key": "git:dd860866f956ff6d1f40e03be60cb35bbcd781c7",
+      "title": "文件／工程交付：確認工作空間到專案與 Issue 的操作層級",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 確認工作空間到專案與 Issue 的操作層級\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit dd860866f956ff6d1f40e03be60cb35bbcd781c7（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/dd860866f956ff6d1f40e03be60cb35bbcd781c7\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:dd860866f956ff6d1f40e03be60cb35bbcd781c7"
+    },
+    {
+      "key": "git:d8572df0cdc9069bc2e3a4a47cfc281b9444ad5a",
+      "title": "文件／工程交付：記錄工作空間成員邀請的授權原則",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 記錄工作空間成員邀請的授權原則\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit d8572df0cdc9069bc2e3a4a47cfc281b9444ad5a（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/d8572df0cdc9069bc2e3a4a47cfc281b9444ad5a\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:d8572df0cdc9069bc2e3a4a47cfc281b9444ad5a"
+    },
+    {
+      "key": "git:a16b0e6203a2e01747b069e9c0e1cec386a97181",
+      "title": "文件／工程交付：整理邀請流程複雜度與第一版簡化建議",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 整理邀請流程複雜度與第一版簡化建議\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit a16b0e6203a2e01747b069e9c0e1cec386a97181（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/a16b0e6203a2e01747b069e9c0e1cec386a97181\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:a16b0e6203a2e01747b069e9c0e1cec386a97181"
+    },
+    {
+      "key": "git:465b6e3a7a8d45f9f086ac2daa6ca5833ac32e30",
+      "title": "文件／工程交付：整理 SaaS 與自建版共用核心的交付方向",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 整理 SaaS 與自建版共用核心的交付方向\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 465b6e3a7a8d45f9f086ac2daa6ca5833ac32e30（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/465b6e3a7a8d45f9f086ac2daa6ca5833ac32e30\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:465b6e3a7a8d45f9f086ac2daa6ca5833ac32e30"
+    },
+    {
+      "key": "git:8fdefb3a4de972e4e9f3a137172d58f4dbefa5ee",
+      "title": "文件／工程交付：規劃 Workspace 與專案兩層可見性權限",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 規劃 Workspace 與專案兩層可見性權限\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 8fdefb3a4de972e4e9f3a137172d58f4dbefa5ee（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/8fdefb3a4de972e4e9f3a137172d58f4dbefa5ee\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:8fdefb3a4de972e4e9f3a137172d58f4dbefa5ee"
+    },
+    {
+      "key": "git:0ce4fbee13b7100b5287443d3d3605ececd5e77c",
+      "title": "文件／工程交付：整理工作空間與專案的固定角色提案",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 整理工作空間與專案的固定角色提案\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 0ce4fbee13b7100b5287443d3d3605ececd5e77c（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/0ce4fbee13b7100b5287443d3d3605ececd5e77c\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:0ce4fbee13b7100b5287443d3d3605ececd5e77c"
+    },
+    {
+      "key": "git:d9e6451becb26e4f50d2a655ad53ebfbb48cbf51",
+      "title": "文件／工程交付：明確定義權限與資源範圍的集中授權契約",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 明確定義權限與資源範圍的集中授權契約\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit d9e6451becb26e4f50d2a655ad53ebfbb48cbf51（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/d9e6451becb26e4f50d2a655ad53ebfbb48cbf51\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:d9e6451becb26e4f50d2a655ad53ebfbb48cbf51"
+    },
+    {
+      "key": "git:56b723f22ff08abf02366788c5d58b75240f6f98",
+      "title": "文件／工程交付：確定空間角色與專案明確授權規則",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 確定空間角色與專案明確授權規則\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 56b723f22ff08abf02366788c5d58b75240f6f98（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/56b723f22ff08abf02366788c5d58b75240f6f98\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:56b723f22ff08abf02366788c5d58b75240f6f98"
+    },
+    {
+      "key": "git:b3f6c7ab8049ead6644dc960d3197f92136aff33",
+      "title": "文件／工程交付：補充專案固定角色與基本操作權限矩陣",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 補充專案固定角色與基本操作權限矩陣\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit b3f6c7ab8049ead6644dc960d3197f92136aff33（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/b3f6c7ab8049ead6644dc960d3197f92136aff33\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:b3f6c7ab8049ead6644dc960d3197f92136aff33"
+    },
+    {
+      "key": "git:b92a49f132b45af893f1193f9366faa85334ca27",
+      "title": "文件／工程交付：整理專案四角色與責任及資料閱覽邊界",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 整理專案四角色與責任及資料閱覽邊界\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit b92a49f132b45af893f1193f9366faa85334ca27（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/b92a49f132b45af893f1193f9366faa85334ca27\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:b92a49f132b45af893f1193f9366faa85334ca27"
+    },
+    {
+      "key": "git:4a1b787197cd134239bab12780473ed6d47736eb",
+      "title": "文件／工程交付：明定以有效權限控制可見性與操作",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 明定以有效權限控制可見性與操作\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 4a1b787197cd134239bab12780473ed6d47736eb（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/4a1b787197cd134239bab12780473ed6d47736eb\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:4a1b787197cd134239bab12780473ed6d47736eb"
+    },
+    {
+      "key": "git:178d91da8ac0ceed87dd41181c20d3d2451b4c6e",
+      "title": "文件／工程交付：評估實作缺口與面試作品技術選型",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 評估實作缺口與面試作品技術選型\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 178d91da8ac0ceed87dd41181c20d3d2451b4c6e（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/178d91da8ac0ceed87dd41181c20d3d2451b4c6e\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:178d91da8ac0ceed87dd41181c20d3d2451b4c6e"
+    },
+    {
+      "key": "git:73d2606c8ca5612d9f5d17b983ed88b4bead6a49",
+      "title": "文件／工程交付：確認 Vue 與 Laravel 前後端分離架構",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 確認 Vue 與 Laravel 前後端分離架構\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 73d2606c8ca5612d9f5d17b983ed88b4bead6a49（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/73d2606c8ca5612d9f5d17b983ed88b4bead6a49\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:73d2606c8ca5612d9f5d17b983ed88b4bead6a49"
+    },
+    {
+      "key": "git:84fe1da898cd18829a0339b6bf597b87064b1d3d",
+      "title": "歷史實作：拆分 Vue 前端並整合 Vuetify 表單",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 拆分 Vue 前端並整合 Vuetify 表單\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 84fe1da898cd18829a0339b6bf597b87064b1d3d（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/84fe1da898cd18829a0339b6bf597b87064b1d3d\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:84fe1da898cd18829a0339b6bf597b87064b1d3d"
+    },
+    {
+      "key": "git:adff6431afe18443704e2d52d412fd9519be383b",
+      "title": "歷史實作：將協作 API 與資料相容遷移至 Laravel",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 將協作 API 與資料相容遷移至 Laravel\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit adff6431afe18443704e2d52d412fd9519be383b（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/adff6431afe18443704e2d52d412fd9519be383b\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:adff6431afe18443704e2d52d412fd9519be383b"
+    },
+    {
+      "key": "git:0ef890bddaf27cb01c0850402807b25e5db59fd8",
+      "title": "文件／工程交付：拆分容器並加入 Redis Queue 與 Reverb",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：build: 拆分容器並加入 Redis Queue 與 Reverb\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 0ef890bddaf27cb01c0850402807b25e5db59fd8（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/0ef890bddaf27cb01c0850402807b25e5db59fd8\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:0ef890bddaf27cb01c0850402807b25e5db59fd8"
+    },
+    {
+      "key": "git:e7743e9f92efe97d22c298892e9428a1de0ed59b",
+      "title": "文件／工程交付：更新分離式架構與容器操作說明",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 更新分離式架構與容器操作說明\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit e7743e9f92efe97d22c298892e9428a1de0ed59b（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/e7743e9f92efe97d22c298892e9428a1de0ed59b\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:e7743e9f92efe97d22c298892e9428a1de0ed59b"
+    },
+    {
+      "key": "git:9cbb41632e8d901311918422ff9ea18465d3d503",
+      "title": "歷史實作：聚焦專案側欄並由首頁切換專案",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 聚焦專案側欄並由首頁切換專案\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 9cbb41632e8d901311918422ff9ea18465d3d503（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/9cbb41632e8d901311918422ff9ea18465d3d503\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:9cbb41632e8d901311918422ff9ea18465d3d503"
+    },
+    {
+      "key": "git:3616079ce254f292631e88534313c7a7d9a78fa5",
+      "title": "歷史實作：分離任務列表與 Epic 泳道看板",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 分離任務列表與 Epic 泳道看板\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 3616079ce254f292631e88534313c7a7d9a78fa5（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/3616079ce254f292631e88534313c7a7d9a78fa5\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:3616079ce254f292631e88534313c7a7d9a78fa5"
+    },
+    {
+      "key": "git:a091dfb9fec6c034b146884c5cc09f4102ed9d2c",
+      "title": "歷史實作：提高資料可讀性並改為全寬工作區",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：style: 提高資料可讀性並改為全寬工作區\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit a091dfb9fec6c034b146884c5cc09f4102ed9d2c（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/a091dfb9fec6c034b146884c5cc09f4102ed9d2c\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:a091dfb9fec6c034b146884c5cc09f4102ed9d2c"
+    },
+    {
+      "key": "git:9475ec8a3e702b6db2f94412c88fcadce6cb148c",
+      "title": "歷史實作：精簡任務工作區並整理專案總計提案",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 精簡任務工作區並整理專案總計提案\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 9475ec8a3e702b6db2f94412c88fcadce6cb148c（2026-10-19）\nhttps://github.com/joshting-developer/TaskTracker/commit/9475ec8a3e702b6db2f94412c88fcadce6cb148c\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:9475ec8a3e702b6db2f94412c88fcadce6cb148c"
+    },
+    {
+      "key": "git:c071440e0a33141097aba1d5cd7fd3e864928c87",
+      "title": "文件／工程交付：釐清任務關聯子任務與依賴的設計方向",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 釐清任務關聯子任務與依賴的設計方向\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit c071440e0a33141097aba1d5cd7fd3e864928c87（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/c071440e0a33141097aba1d5cd7fd3e864928c87\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:c071440e0a33141097aba1d5cd7fd3e864928c87"
+    },
+    {
+      "key": "git:bf3459d16bace72f3613353f3d726fc851c3452c",
+      "title": "歷史實作：以子任務與雙向關聯取代前置依賴",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 以子任務與雙向關聯取代前置依賴\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit bf3459d16bace72f3613353f3d726fc851c3452c（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/bf3459d16bace72f3613353f3d726fc851c3452c\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:bf3459d16bace72f3613353f3d726fc851c3452c"
+    },
+    {
+      "key": "git:145e1732371ebfdb5737cac46acbdf715f73203a",
+      "title": "歷史實作：新增子任務與按需關聯操作介面",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 新增子任務與按需關聯操作介面\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 145e1732371ebfdb5737cac46acbdf715f73203a（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/145e1732371ebfdb5737cac46acbdf715f73203a\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:145e1732371ebfdb5737cac46acbdf715f73203a"
+    },
+    {
+      "key": "git:8ff6dd22a204574d0b7dd618aadf2bab33f941f1",
+      "title": "歷史實作：建立指定示範資料並強制隔離測試資料庫",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 建立指定示範資料並強制隔離測試資料庫\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 8ff6dd22a204574d0b7dd618aadf2bab33f941f1（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/8ff6dd22a204574d0b7dd618aadf2bab33f941f1\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:8ff6dd22a204574d0b7dd618aadf2bab33f941f1"
+    },
+    {
+      "key": "git:ada4cdc6f00fab8e6a18412afadc184946c497eb",
+      "title": "文件／工程交付：更新子任務決策與示範資料操作指引",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 更新子任務決策與示範資料操作指引\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit ada4cdc6f00fab8e6a18412afadc184946c497eb（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/ada4cdc6f00fab8e6a18412afadc184946c497eb\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:ada4cdc6f00fab8e6a18412afadc184946c497eb"
+    },
+    {
+      "key": "git:eb9d561ce953702de96cfeeb47345361cf40f27e",
+      "title": "歷史實作：新增專案負責人與基本資料編輯契約",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 新增專案負責人與基本資料編輯契約\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit eb9d561ce953702de96cfeeb47345361cf40f27e（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/eb9d561ce953702de96cfeeb47345361cf40f27e\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:eb9d561ce953702de96cfeeb47345361cf40f27e"
+    },
+    {
+      "key": "git:8629c862dc3f6f9fdedfc05d80311d3c8059ec1e",
+      "title": "歷史實作：首頁聚焦專案負責人與介紹並移除累計統計",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 首頁聚焦專案負責人與介紹並移除累計統計\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 8629c862dc3f6f9fdedfc05d80311d3c8059ec1e（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/8629c862dc3f6f9fdedfc05d80311d3c8059ec1e\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:8629c862dc3f6f9fdedfc05d80311d3c8059ec1e"
+    },
+    {
+      "key": "git:524e577922f8361c4f856dcbd94feccd7d6e39e2",
+      "title": "歷史實作：精簡任務頁首並按需展開篩選",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 精簡任務頁首並按需展開篩選\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 524e577922f8361c4f856dcbd94feccd7d6e39e2（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/524e577922f8361c4f856dcbd94feccd7d6e39e2\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:524e577922f8361c4f856dcbd94feccd7d6e39e2"
+    },
+    {
+      "key": "git:84c8ddcf3a6093073aca5498ea9e9d89e84ebbbe",
+      "title": "文件／工程交付：說明常用視圖用途與命名提案",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 說明常用視圖用途與命名提案\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 84c8ddcf3a6093073aca5498ea9e9d89e84ebbbe（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/84c8ddcf3a6093073aca5498ea9e9d89e84ebbbe\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:84c8ddcf3a6093073aca5498ea9e9d89e84ebbbe"
+    },
+    {
+      "key": "git:5f796c1af84c98ece2cf6532385948679b38be33",
+      "title": "歷史實作：將常用篩選收進篩選區並移除常駐頁籤",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 將常用篩選收進篩選區並移除常駐頁籤\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 5f796c1af84c98ece2cf6532385948679b38be33（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/5f796c1af84c98ece2cf6532385948679b38be33\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:5f796c1af84c98ece2cf6532385948679b38be33"
+    },
+    {
+      "key": "git:0d8649c69b8fefd3b73b78412bec7908c314ff65",
+      "title": "歷史實作：移除視圖功能並記錄首頁個人清單構想",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 移除視圖功能並記錄首頁個人清單構想\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 0d8649c69b8fefd3b73b78412bec7908c314ff65（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/0d8649c69b8fefd3b73b78412bec7908c314ff65\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:0d8649c69b8fefd3b73b78412bec7908c314ff65"
+    },
+    {
+      "key": "git:506798b385ed979fbbfed85a1ecf90fbf9e86ad2",
+      "title": "歷史實作：以文字顯示任務類型避免符號混淆",
+      "epic": "history",
+      "type": "bug",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：fix: 以文字顯示任務類型避免符號混淆\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 506798b385ed979fbbfed85a1ecf90fbf9e86ad2（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/506798b385ed979fbbfed85a1ecf90fbf9e86ad2\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:506798b385ed979fbbfed85a1ecf90fbf9e86ad2"
+    },
+    {
+      "key": "git:2a080cdcc18f03136a151c524e44456c5ff6e0b7",
+      "title": "歷史實作：收斂 Issue 類型為 Epic Task Bug",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 收斂 Issue 類型為 Epic Task Bug\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 2a080cdcc18f03136a151c524e44456c5ff6e0b7（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/2a080cdcc18f03136a151c524e44456c5ff6e0b7\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:2a080cdcc18f03136a151c524e44456c5ff6e0b7"
+    },
+    {
+      "key": "git:2da3cf90e111b4324d9b7984dc8115e137b8365d",
+      "title": "歷史實作：點選日期開啟工時填報側邊面板",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 點選日期開啟工時填報側邊面板\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 2da3cf90e111b4324d9b7984dc8115e137b8365d（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/2da3cf90e111b4324d9b7984dc8115e137b8365d\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:2da3cf90e111b4324d9b7984dc8115e137b8365d"
+    },
+    {
+      "key": "git:5875be4ebbee49dcdb6cb1266aeb5c1f8ac5964c",
+      "title": "文件／工程交付：規劃看板列表與 Epic 動態收錄規則",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 規劃看板列表與 Epic 動態收錄規則\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 5875be4ebbee49dcdb6cb1266aeb5c1f8ac5964c（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/5875be4ebbee49dcdb6cb1266aeb5c1f8ac5964c\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:5875be4ebbee49dcdb6cb1266aeb5c1f8ac5964c"
+    },
+    {
+      "key": "git:ef01b37c796d2481c3ce0f5d63db852eaf804d4f",
+      "title": "歷史實作：建立專案看板與卡片收錄 API",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 建立專案看板與卡片收錄 API\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit ef01b37c796d2481c3ce0f5d63db852eaf804d4f（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/ef01b37c796d2481c3ce0f5d63db852eaf804d4f\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:ef01b37c796d2481c3ce0f5d63db852eaf804d4f"
+    },
+    {
+      "key": "git:761dca7c75639b65d357cfcd0d7d2fa545483c5a",
+      "title": "歷史實作：加入看板列表與 Epic 動態收錄介面",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 加入看板列表與 Epic 動態收錄介面\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 761dca7c75639b65d357cfcd0d7d2fa545483c5a（2026-10-20）\nhttps://github.com/joshting-developer/TaskTracker/commit/761dca7c75639b65d357cfcd0d7d2fa545483c5a\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:761dca7c75639b65d357cfcd0d7d2fa545483c5a"
+    },
+    {
+      "key": "git:9ba0f6e507e1e306237dd9d68c84daca786b76b9",
+      "title": "歷史實作：新增任務完整頁與上方狀態切換",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 新增任務完整頁與上方狀態切換\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 9ba0f6e507e1e306237dd9d68c84daca786b76b9（2026-10-21）\nhttps://github.com/joshting-developer/TaskTracker/commit/9ba0f6e507e1e306237dd9d68c84daca786b76b9\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:9ba0f6e507e1e306237dd9d68c84daca786b76b9"
+    },
+    {
+      "key": "git:91c816183970ddfb752767be8dcc03c0c9aeb7fe",
+      "title": "歷史實作：建立四種權限測試帳號與非破壞 Seed 升級",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 建立四種權限測試帳號與非破壞 Seed 升級\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 91c816183970ddfb752767be8dcc03c0c9aeb7fe（2026-10-22）\nhttps://github.com/joshting-developer/TaskTracker/commit/91c816183970ddfb752767be8dcc03c0c9aeb7fe\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:91c816183970ddfb752767be8dcc03c0c9aeb7fe"
+    },
+    {
+      "key": "git:2f2f766e0f26209db1ae9415db5e96b1ce4388d2",
+      "title": "文件／工程交付：收斂專案 ACL 與角色試用的驗收基準",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 收斂專案 ACL 與角色試用的驗收基準\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 2f2f766e0f26209db1ae9415db5e96b1ce4388d2（2026-10-22）\nhttps://github.com/joshting-developer/TaskTracker/commit/2f2f766e0f26209db1ae9415db5e96b1ce4388d2\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:2f2f766e0f26209db1ae9415db5e96b1ce4388d2"
+    },
+    {
+      "key": "git:9c577150f0fcd1ec307b1423ec3fded3b56914d9",
+      "title": "文件／工程交付：研究競品任務流程與使用回饋並排序功能缺口",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 研究競品任務流程與使用回饋並排序功能缺口\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 9c577150f0fcd1ec307b1423ec3fded3b56914d9（2026-10-30）\nhttps://github.com/joshting-developer/TaskTracker/commit/9c577150f0fcd1ec307b1423ec3fded3b56914d9\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:9c577150f0fcd1ec307b1423ec3fded3b56914d9"
+    },
+    {
+      "key": "git:b157fa739cefb1e89c8199e20beb976663404dfc",
+      "title": "歷史實作：加入專案範圍授權與成員 ACL 管理",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 加入專案範圍授權與成員 ACL 管理\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit b157fa739cefb1e89c8199e20beb976663404dfc（2026-10-30）\nhttps://github.com/joshting-developer/TaskTracker/commit/b157fa739cefb1e89c8199e20beb976663404dfc\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:b157fa739cefb1e89c8199e20beb976663404dfc"
+    },
+    {
+      "key": "git:1dc7510203a0263dda74f8b534ad6dcbaaf637f5",
+      "title": "歷史實作：加入專案成員介面與依權限顯示操作",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 加入專案成員介面與依權限顯示操作\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 1dc7510203a0263dda74f8b534ad6dcbaaf637f5（2026-10-30）\nhttps://github.com/joshting-developer/TaskTracker/commit/1dc7510203a0263dda74f8b534ad6dcbaaf637f5\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:1dc7510203a0263dda74f8b534ad6dcbaaf637f5"
+    },
+    {
+      "key": "git:83d2cf35683d6af992597358518157cdd9d57760",
+      "title": "歷史實作：加入私人待辦交辦通知與單向轉卡 API",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 加入私人待辦交辦通知與單向轉卡 API\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 83d2cf35683d6af992597358518157cdd9d57760（2026-11-02）\nhttps://github.com/joshting-developer/TaskTracker/commit/83d2cf35683d6af992597358518157cdd9d57760\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:83d2cf35683d6af992597358518157cdd9d57760"
+    },
+    {
+      "key": "git:6359899c05da020853c573103243e1f9cb01857b",
+      "title": "歷史實作：加入首頁小待辦通知與轉卡側邊表單",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 加入首頁小待辦通知與轉卡側邊表單\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 6359899c05da020853c573103243e1f9cb01857b（2026-11-02）\nhttps://github.com/joshting-developer/TaskTracker/commit/6359899c05da020853c573103243e1f9cb01857b\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:6359899c05da020853c573103243e1f9cb01857b"
+    },
+    {
+      "key": "git:89f984c61fffd95eb7d5544e52e99ea7aa748577",
+      "title": "文件／工程交付：收錄兩個高星 UIUX skill 與評估介紹",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 收錄兩個高星 UIUX skill 與評估介紹\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 89f984c61fffd95eb7d5544e52e99ea7aa748577（2026-11-03）\nhttps://github.com/joshting-developer/TaskTracker/commit/89f984c61fffd95eb7d5544e52e99ea7aa748577\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:89f984c61fffd95eb7d5544e52e99ea7aa748577"
+    },
+    {
+      "key": "git:be1fda7d8bc51cad38f468cf4618013b45742c49",
+      "title": "文件／工程交付：啟用專案 UIUX skills",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：chore: 啟用專案 UIUX skills\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit be1fda7d8bc51cad38f468cf4618013b45742c49（2026-11-03）\nhttps://github.com/joshting-developer/TaskTracker/commit/be1fda7d8bc51cad38f468cf4618013b45742c49\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:be1fda7d8bc51cad38f468cf4618013b45742c49"
+    },
+    {
+      "key": "git:1b9f6a29374cdc4306ea294a10a4f9859c2eb9da",
+      "title": "文件／工程交付：完成雙 skill UIUX 審查與改善排序",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 完成雙 skill UIUX 審查與改善排序\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 1b9f6a29374cdc4306ea294a10a4f9859c2eb9da（2026-11-03）\nhttps://github.com/joshting-developer/TaskTracker/commit/1b9f6a29374cdc4306ea294a10a4f9859c2eb9da\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:1b9f6a29374cdc4306ea294a10a4f9859c2eb9da"
+    },
+    {
+      "key": "git:8b09bed299665f9b8967ebe8611839c77fa9b533",
+      "title": "歷史實作：改善文字可讀性與工時欄位錯誤提示",
+      "epic": "history",
+      "type": "bug",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：fix: 改善文字可讀性與工時欄位錯誤提示\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 8b09bed299665f9b8967ebe8611839c77fa9b533（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/8b09bed299665f9b8967ebe8611839c77fa9b533\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:8b09bed299665f9b8967ebe8611839c77fa9b533"
+    },
+    {
+      "key": "git:7e204b8e6ae27998e810226fc1b1e8432511bd9f",
+      "title": "歷史實作：收斂首頁資訊並補齊鍵盤與跨尺寸操作",
+      "epic": "history",
+      "type": "bug",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：fix: 收斂首頁資訊並補齊鍵盤與跨尺寸操作\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 7e204b8e6ae27998e810226fc1b1e8432511bd9f（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/7e204b8e6ae27998e810226fc1b1e8432511bd9f\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:7e204b8e6ae27998e810226fc1b1e8432511bd9f"
+    },
+    {
+      "key": "git:a160cb47475120eaebf0ea3d2fe71a5b68baa846",
+      "title": "歷史實作：保留功能路由並完成 UIUX 修正回驗",
+      "epic": "history",
+      "type": "bug",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：fix: 保留功能路由並完成 UIUX 修正回驗\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit a160cb47475120eaebf0ea3d2fe71a5b68baa846（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/a160cb47475120eaebf0ea3d2fe71a5b68baa846\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:a160cb47475120eaebf0ea3d2fe71a5b68baa846"
+    },
+    {
+      "key": "git:6d1805783c391d1ed149225f9578e81235545236",
+      "title": "文件／工程交付：收錄使用者流程與可用性評估 skills",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 收錄使用者流程與可用性評估 skills\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 6d1805783c391d1ed149225f9578e81235545236（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/6d1805783c391d1ed149225f9578e81235545236\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:6d1805783c391d1ed149225f9578e81235545236"
+    },
+    {
+      "key": "git:527fbf8a3a1fce2dd99432b3bbee7f9fa059b0d9",
+      "title": "文件／工程交付：完成雙 skill 使用者任務流程走查",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 完成雙 skill 使用者任務流程走查\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 527fbf8a3a1fce2dd99432b3bbee7f9fa059b0d9（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/527fbf8a3a1fce2dd99432b3bbee7f9fa059b0d9\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:527fbf8a3a1fce2dd99432b3bbee7f9fa059b0d9"
+    },
+    {
+      "key": "git:f0d275572ae54055a40a2fd901841735d79d47ce",
+      "title": "歷史實作：保留待辦草稿並恢復跨清單操作",
+      "epic": "history",
+      "type": "bug",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：fix: 保留待辦草稿並恢復跨清單操作\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit f0d275572ae54055a40a2fd901841735d79d47ce（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/f0d275572ae54055a40a2fd901841735d79d47ce\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:f0d275572ae54055a40a2fd901841735d79d47ce"
+    },
+    {
+      "key": "git:380e122f90514e5f4de523d5c41b4f11f70ca905",
+      "title": "歷史實作：重整後保留專案任務與工時查閱範圍",
+      "epic": "history",
+      "type": "bug",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：fix: 重整後保留專案任務與工時查閱範圍\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 380e122f90514e5f4de523d5c41b4f11f70ca905（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/380e122f90514e5f4de523d5c41b4f11f70ca905\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:380e122f90514e5f4de523d5c41b4f11f70ca905"
+    },
+    {
+      "key": "git:34e49ba145e28ad9b34490d0d25bee1ea5413a4b",
+      "title": "歷史實作：補手機速記入口並分開任務閱讀與快速編輯",
+      "epic": "history",
+      "type": "bug",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：fix: 補手機速記入口並分開任務閱讀與快速編輯\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 34e49ba145e28ad9b34490d0d25bee1ea5413a4b（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/34e49ba145e28ad9b34490d0d25bee1ea5413a4b\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:34e49ba145e28ad9b34490d0d25bee1ea5413a4b"
+    },
+    {
+      "key": "git:575d9d1b009071cb96425403f93e1c7758ab242e",
+      "title": "文件／工程交付：記錄後端可讀性問題與暫緩重構決定",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 記錄後端可讀性問題與暫緩重構決定\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 575d9d1b009071cb96425403f93e1c7758ab242e（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/575d9d1b009071cb96425403f93e1c7758ab242e\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:575d9d1b009071cb96425403f93e1c7758ab242e"
+    },
+    {
+      "key": "git:dcea6156e3b07a3ba80376f33497ba5a6936d42b",
+      "title": "文件／工程交付：更新 PHP 安全修補版並整理前端改善優先序",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：chore: 更新 PHP 安全修補版並整理前端改善優先序\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit dcea6156e3b07a3ba80376f33497ba5a6936d42b（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/dcea6156e3b07a3ba80376f33497ba5a6936d42b\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:dcea6156e3b07a3ba80376f33497ba5a6936d42b"
+    },
+    {
+      "key": "git:d134978f3a861b3b353cde60d544483ba95e8430",
+      "title": "文件／工程交付：搬入並適配後端開發規範與專案 skill 入口",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 搬入並適配後端開發規範與專案 skill 入口\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit d134978f3a861b3b353cde60d544483ba95e8430（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/d134978f3a861b3b353cde60d544483ba95e8430\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:d134978f3a861b3b353cde60d544483ba95e8430"
+    },
+    {
+      "key": "git:705d2b5a6d7aa5da9159aad6b18eac839b22f7ae",
+      "title": "歷史實作：拆分後端業務服務並整理授權與重試流程",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 拆分後端業務服務並整理授權與重試流程\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 705d2b5a6d7aa5da9159aad6b18eac839b22f7ae（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/705d2b5a6d7aa5da9159aad6b18eac839b22f7ae\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:705d2b5a6d7aa5da9159aad6b18eac839b22f7ae"
+    },
+    {
+      "key": "git:9f51ba72287cd16a350cd681eafc06523d8c0af3",
+      "title": "歷史實作：明確分離 API 入口與 JSON 契約並建立資料模型入口",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 明確分離 API 入口與 JSON 契約並建立資料模型入口\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 9f51ba72287cd16a350cd681eafc06523d8c0af3（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/9f51ba72287cd16a350cd681eafc06523d8c0af3\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:9f51ba72287cd16a350cd681eafc06523d8c0af3"
+    },
+    {
+      "key": "git:f3cde29a4e7995758056222c8889fbee8bd8461c",
+      "title": "歷史實作：展開工時與待辦篩選的具名條件",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 展開工時與待辦篩選的具名條件\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit f3cde29a4e7995758056222c8889fbee8bd8461c（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/f3cde29a4e7995758056222c8889fbee8bd8461c\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:f3cde29a4e7995758056222c8889fbee8bd8461c"
+    },
+    {
+      "key": "git:419cfc966249dcc3e42b0ad668c3e99cebd7c356",
+      "title": "文件／工程交付：補齊後端程式導覽與重構驗收紀錄",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 補齊後端程式導覽與重構驗收紀錄\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 419cfc966249dcc3e42b0ad668c3e99cebd7c356（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/419cfc966249dcc3e42b0ad668c3e99cebd7c356\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:419cfc966249dcc3e42b0ad668c3e99cebd7c356"
+    },
+    {
+      "key": "git:fb6e46852f3d8a3effff0201f84e56637e9fbfa9",
+      "title": "歷史實作：將業務資料遷移至關聯式資料表",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 將業務資料遷移至關聯式資料表\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit fb6e46852f3d8a3effff0201f84e56637e9fbfa9（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/fb6e46852f3d8a3effff0201f84e56637e9fbfa9\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:fb6e46852f3d8a3effff0201f84e56637e9fbfa9"
+    },
+    {
+      "key": "git:533b4451764e6244a667e0c3deb5895314871d36",
+      "title": "文件／工程交付：更新關聯資料架構與本機升級驗收",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 更新關聯資料架構與本機升級驗收\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 533b4451764e6244a667e0c3deb5895314871d36（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/533b4451764e6244a667e0c3deb5895314871d36\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:533b4451764e6244a667e0c3deb5895314871d36"
+    },
+    {
+      "key": "git:d0430141e8e2f607171ac37d50dd3e91d95f720b",
+      "title": "歷史實作：明確區分任務狀態變更與內容頁籤",
+      "epic": "history",
+      "type": "bug",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：fix: 明確區分任務狀態變更與內容頁籤\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit d0430141e8e2f607171ac37d50dd3e91d95f720b（2026-11-04）\nhttps://github.com/joshting-developer/TaskTracker/commit/d0430141e8e2f607171ac37d50dd3e91d95f720b\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:d0430141e8e2f607171ac37d50dd3e91d95f720b"
+    },
+    {
+      "key": "git:468bdf8b4a16c1a90de52233d9bde7f9f5333459",
+      "title": "歷史實作：精簡任務列表的重複資訊與摘要",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 精簡任務列表的重複資訊與摘要\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 468bdf8b4a16c1a90de52233d9bde7f9f5333459（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/468bdf8b4a16c1a90de52233d9bde7f9f5333459\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:468bdf8b4a16c1a90de52233d9bde7f9f5333459"
+    },
+    {
+      "key": "git:2996281433d01ac403620b17f6f27b64d5c69b49",
+      "title": "歷史實作：將任務關聯集中於詳細頁側欄頁籤",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 將任務關聯集中於詳細頁側欄頁籤\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 2996281433d01ac403620b17f6f27b64d5c69b49（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/2996281433d01ac403620b17f6f27b64d5c69b49\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:2996281433d01ac403620b17f6f27b64d5c69b49"
+    },
+    {
+      "key": "git:1c75a6bed28a5640b6cb57e9a042f39e1aadf697",
+      "title": "歷史實作：保存待辦Markdown全文並保留原稿格式",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 保存待辦Markdown全文並保留原稿格式\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 1c75a6bed28a5640b6cb57e9a042f39e1aadf697（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/1c75a6bed28a5640b6cb57e9a042f39e1aadf697\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:1c75a6bed28a5640b6cb57e9a042f39e1aadf697"
+    },
+    {
+      "key": "git:7e75559e9041bf449bbe64a9de8084e76d4894c1",
+      "title": "歷史實作：共用Markdown編輯器並支援整塊待辦速記",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 共用Markdown編輯器並支援整塊待辦速記\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 7e75559e9041bf449bbe64a9de8084e76d4894c1（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/7e75559e9041bf449bbe64a9de8084e76d4894c1\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:7e75559e9041bf449bbe64a9de8084e76d4894c1"
+    },
+    {
+      "key": "git:9d95238457a3ffe70697d715c0b854af3ad7440c",
+      "title": "文件／工程交付：限定專案內技能並補齊階段規劃紀錄",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 限定專案內技能並補齊階段規劃紀錄\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 9d95238457a3ffe70697d715c0b854af3ad7440c（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/9d95238457a3ffe70697d715c0b854af3ad7440c\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:9d95238457a3ffe70697d715c0b854af3ad7440c"
+    },
+    {
+      "key": "git:13c138c4e0cd6fb5f13a01bf6053503657742471",
+      "title": "歷史實作：將待辦完成與重開改為明確文字操作",
+      "epic": "history",
+      "type": "bug",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：fix: 將待辦完成與重開改為明確文字操作\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 13c138c4e0cd6fb5f13a01bf6053503657742471（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/13c138c4e0cd6fb5f13a01bf6053503657742471\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:13c138c4e0cd6fb5f13a01bf6053503657742471"
+    },
+    {
+      "key": "git:bb2d2725e1b329d39e90edee71a22899d9d87358",
+      "title": "歷史實作：讓短頁頁尾維持在畫面底部",
+      "epic": "history",
+      "type": "bug",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：fix: 讓短頁頁尾維持在畫面底部\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit bb2d2725e1b329d39e90edee71a22899d9d87358（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/bb2d2725e1b329d39e90edee71a22899d9d87358\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:bb2d2725e1b329d39e90edee71a22899d9d87358"
+    },
+    {
+      "key": "git:09d72dc547934ca0d634e3690224cccadaf055a8",
+      "title": "歷史實作：加入個人與工作空間設定及固定角色管理API",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 加入個人與工作空間設定及固定角色管理API\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 09d72dc547934ca0d634e3690224cccadaf055a8（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/09d72dc547934ca0d634e3690224cccadaf055a8\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:09d72dc547934ca0d634e3690224cccadaf055a8"
+    },
+    {
+      "key": "git:be6068004b451717f64cbdaff93d30e1f773a9b1",
+      "title": "歷史實作：加入帳號選單與工作空間設定介面",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 加入帳號選單與工作空間設定介面\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit be6068004b451717f64cbdaff93d30e1f773a9b1（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/be6068004b451717f64cbdaff93d30e1f773a9b1\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:be6068004b451717f64cbdaff93d30e1f773a9b1"
+    },
+    {
+      "key": "git:5338ff6d6c869afe0da82ba8b197391f80422e94",
+      "title": "歷史實作：整理看板捲動與卡片操作並顯示Epic",
+      "epic": "history",
+      "type": "bug",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：fix: 整理看板捲動與卡片操作並顯示Epic\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 5338ff6d6c869afe0da82ba8b197391f80422e94（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/5338ff6d6c869afe0da82ba8b197391f80422e94\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:5338ff6d6c869afe0da82ba8b197391f80422e94"
+    },
+    {
+      "key": "git:936c3108119d01883f5669b19b18d3fd4ff9c4f9",
+      "title": "歷史實作：建立看板私有頻道授權與交易後廣播",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 建立看板私有頻道授權與交易後廣播\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 936c3108119d01883f5669b19b18d3fd4ff9c4f9（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/936c3108119d01883f5669b19b18d3fd4ff9c4f9\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:936c3108119d01883f5669b19b18d3fd4ff9c4f9"
+    },
+    {
+      "key": "git:5734b695ffbab941b9ac00c9e1a00f052e2b2b3c",
+      "title": "歷史實作：接上看板即時同步並更新容器啟動配置",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 接上看板即時同步並更新容器啟動配置\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 5734b695ffbab941b9ac00c9e1a00f052e2b2b3c（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/5734b695ffbab941b9ac00c9e1a00f052e2b2b3c\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:5734b695ffbab941b9ac00c9e1a00f052e2b2b3c"
+    },
+    {
+      "key": "git:0febc0fe445505f7922dc8fdcc7d93de4212ad6d",
+      "title": "歷史實作：移除側邊欄重複帳號資訊",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 移除側邊欄重複帳號資訊\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 0febc0fe445505f7922dc8fdcc7d93de4212ad6d（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/0febc0fe445505f7922dc8fdcc7d93de4212ad6d\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:0febc0fe445505f7922dc8fdcc7d93de4212ad6d"
+    },
+    {
+      "key": "git:0e9ec4d3c1d79637f9ec72d61b0a43104f192787",
+      "title": "歷史實作：小待辦操作改為浮動選單並精簡來源提示",
+      "epic": "history",
+      "type": "bug",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：fix: 小待辦操作改為浮動選單並精簡來源提示\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 0e9ec4d3c1d79637f9ec72d61b0a43104f192787（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/0e9ec4d3c1d79637f9ec72d61b0a43104f192787\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:0e9ec4d3c1d79637f9ec72d61b0a43104f192787"
+    },
+    {
+      "key": "git:e11d99e2563211e5a67cbae5cd04b8134542e0a1",
+      "title": "歷史實作：首頁聚焦小待辦並分離專案列表",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 首頁聚焦小待辦並分離專案列表\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit e11d99e2563211e5a67cbae5cd04b8134542e0a1（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/e11d99e2563211e5a67cbae5cd04b8134542e0a1\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:e11d99e2563211e5a67cbae5cd04b8134542e0a1"
+    },
+    {
+      "key": "git:161a72245cc79ccdf0dfd617606c400fd0854853",
+      "title": "歷史實作：精簡通知與設定頁技術文案",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 精簡通知與設定頁技術文案\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 161a72245cc79ccdf0dfd617606c400fd0854853（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/161a72245cc79ccdf0dfd617606c400fd0854853\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:161a72245cc79ccdf0dfd617606c400fd0854853"
+    },
+    {
+      "key": "git:5ef0b77d0f17d6b7f7ba6671ec38c5c133db315b",
+      "title": "歷史實作：移除看板卡片狀態選單並保留拖曳操作",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 移除看板卡片狀態選單並保留拖曳操作\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 5ef0b77d0f17d6b7f7ba6671ec38c5c133db315b（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/5ef0b77d0f17d6b7f7ba6671ec38c5c133db315b\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:5ef0b77d0f17d6b7f7ba6671ec38c5c133db315b"
+    },
+    {
+      "key": "git:c6a1b32f12c123d9e31e9b2e2042b1c627b1e440",
+      "title": "歷史實作：任務詳細頁支援填報與修改本人工時",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 任務詳細頁支援填報與修改本人工時\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit c6a1b32f12c123d9e31e9b2e2042b1c627b1e440（2026-11-05）\nhttps://github.com/joshting-developer/TaskTracker/commit/c6a1b32f12c123d9e31e9b2e2042b1c627b1e440\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:c6a1b32f12c123d9e31e9b2e2042b1c627b1e440"
+    },
+    {
+      "key": "git:9bba394afa3e1af9d80dc0147b998ac4de3ba1f6",
+      "title": "歷史實作：開放Epic直接填報工時並調整加總",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 開放Epic直接填報工時並調整加總\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 9bba394afa3e1af9d80dc0147b998ac4de3ba1f6（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/9bba394afa3e1af9d80dc0147b998ac4de3ba1f6\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:9bba394afa3e1af9d80dc0147b998ac4de3ba1f6"
+    },
+    {
+      "key": "git:47957611998db0a31a0b2be088732b05b34ce745",
+      "title": "文件／工程交付：研究Epic競品定位與介面取捨",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 研究Epic競品定位與介面取捨\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 47957611998db0a31a0b2be088732b05b34ce745（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/47957611998db0a31a0b2be088732b05b34ce745\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:47957611998db0a31a0b2be088732b05b34ce745"
+    },
+    {
+      "key": "git:a69995e4c473b8a633f09faa3ca7cf41ef9e03cf",
+      "title": "歷史實作：移除獨立Epic概覽並整合任務列表",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 移除獨立Epic概覽並整合任務列表\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit a69995e4c473b8a633f09faa3ca7cf41ef9e03cf（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/a69995e4c473b8a633f09faa3ca7cf41ef9e03cf\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:a69995e4c473b8a633f09faa3ca7cf41ef9e03cf"
+    },
+    {
+      "key": "git:1d0c956b93e8854f9618fb832c60159ff04439f5",
+      "title": "歷史實作：工作空間成員改用身份下拉選單",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 工作空間成員改用身份下拉選單\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 1d0c956b93e8854f9618fb832c60159ff04439f5（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/1d0c956b93e8854f9618fb832c60159ff04439f5\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:1d0c956b93e8854f9618fb832c60159ff04439f5"
+    },
+    {
+      "key": "git:004bc7e4377864ea7dd161b374302085d8f70f33",
+      "title": "歷史實作：新增工作空間三種工時分析與權限入口",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 新增工作空間三種工時分析與權限入口\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 004bc7e4377864ea7dd161b374302085d8f70f33（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/004bc7e4377864ea7dd161b374302085d8f70f33\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:004bc7e4377864ea7dd161b374302085d8f70f33"
+    },
+    {
+      "key": "git:16473ea0f914df97082ec7bc3ad270ea2c16d311",
+      "title": "歷史實作：支援既有帳號加入與切換多個工作空間",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 支援既有帳號加入與切換多個工作空間\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 16473ea0f914df97082ec7bc3ad270ea2c16d311（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/16473ea0f914df97082ec7bc3ad270ea2c16d311\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:16473ea0f914df97082ec7bc3ad270ea2c16d311"
+    },
+    {
+      "key": "git:78c7da97102df73abfbaeee46e933746c02c9eb7",
+      "title": "歷史實作：整合工作區切換與新舊帳號邀請介面",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 整合工作區切換與新舊帳號邀請介面\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 78c7da97102df73abfbaeee46e933746c02c9eb7（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/78c7da97102df73abfbaeee46e933746c02c9eb7\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:78c7da97102df73abfbaeee46e933746c02c9eb7"
+    },
+    {
+      "key": "git:4264c395b011fbe1e3515c41268352e052e36a3e",
+      "title": "歷史實作：移除全站鼓勵語與常駐功能說明",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 移除全站鼓勵語與常駐功能說明\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 4264c395b011fbe1e3515c41268352e052e36a3e（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/4264c395b011fbe1e3515c41268352e052e36a3e\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:4264c395b011fbe1e3515c41268352e052e36a3e"
+    },
+    {
+      "key": "git:72d82bef81f63ae4ed3aa9682e7d234abe2d1bf1",
+      "title": "歷史實作：移除已完成專頁並整合列表篩選",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 移除已完成專頁並整合列表篩選\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 72d82bef81f63ae4ed3aa9682e7d234abe2d1bf1（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/72d82bef81f63ae4ed3aa9682e7d234abe2d1bf1\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:72d82bef81f63ae4ed3aa9682e7d234abe2d1bf1"
+    },
+    {
+      "key": "git:d8a0c155b1d5ae331441c4d19910b09b791797d8",
+      "title": "歷史實作：建立必備open與closed狀態並移除分類設定",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 建立必備open與closed狀態並移除分類設定\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit d8a0c155b1d5ae331441c4d19910b09b791797d8（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/d8a0c155b1d5ae331441c4d19910b09b791797d8\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:d8a0c155b1d5ae331441c4d19910b09b791797d8"
+    },
+    {
+      "key": "git:027496e068b5472db162e1fb42864cdacba1086f",
+      "title": "歷史實作：將工作空間設定改為獨立頁面",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 將工作空間設定改為獨立頁面\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 027496e068b5472db162e1fb42864cdacba1086f（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/027496e068b5472db162e1fb42864cdacba1086f\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:027496e068b5472db162e1fb42864cdacba1086f"
+    },
+    {
+      "key": "git:f6718c3ac64066e55aeaec189967b90916cd4835",
+      "title": "歷史實作：限縮新增任務入口至列表與看板欄位",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 限縮新增任務入口至列表與看板欄位\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit f6718c3ac64066e55aeaec189967b90916cd4835（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/f6718c3ac64066e55aeaec189967b90916cd4835\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:f6718c3ac64066e55aeaec189967b90916cd4835"
+    },
+    {
+      "key": "git:28b69dc8f0ef83396d30a919ed2b84a30c91f43a",
+      "title": "文件／工程交付：安裝Laravel與Vue skills並替換後端架構規範",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：chore: 安裝Laravel與Vue skills並替換後端架構規範\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 28b69dc8f0ef83396d30a919ed2b84a30c91f43a（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/28b69dc8f0ef83396d30a919ed2b84a30c91f43a\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:28b69dc8f0ef83396d30a919ed2b84a30c91f43a"
+    },
+    {
+      "key": "git:9a98d3e441604ac1ee1838f329cc8a22de40e337",
+      "title": "歷史實作：改善工時分析圖表並集中DemoSeeder資料建立",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 改善工時分析圖表並集中DemoSeeder資料建立\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 9a98d3e441604ac1ee1838f329cc8a22de40e337（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/9a98d3e441604ac1ee1838f329cc8a22de40e337\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:9a98d3e441604ac1ee1838f329cc8a22de40e337"
+    },
+    {
+      "key": "git:fc4f187f44dd5ceddfdece09d24011a2be39aa55",
+      "title": "文件／工程交付：記錄工時分析長表格與分頁建議",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 記錄工時分析長表格與分頁建議\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit fc4f187f44dd5ceddfdece09d24011a2be39aa55（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/fc4f187f44dd5ceddfdece09d24011a2be39aa55\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:fc4f187f44dd5ceddfdece09d24011a2be39aa55"
+    },
+    {
+      "key": "git:f71969ea3bccb1cd37a12df92de3c0ee406368b7",
+      "title": "歷史實作：補齊成員工時日期與卡片明細分析",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 補齊成員工時日期與卡片明細分析\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit f71969ea3bccb1cd37a12df92de3c0ee406368b7（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/f71969ea3bccb1cd37a12df92de3c0ee406368b7\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:f71969ea3bccb1cd37a12df92de3c0ee406368b7"
+    },
+    {
+      "key": "git:b3f6874b1fdd1e42ee45425e2f2e3634450e2a5b",
+      "title": "歷史實作：分離HTTP工作空間與帳號服務邊界",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 分離HTTP工作空間與帳號服務邊界\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit b3f6874b1fdd1e42ee45425e2f2e3634450e2a5b（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/b3f6874b1fdd1e42ee45425e2f2e3634450e2a5b\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:b3f6874b1fdd1e42ee45425e2f2e3634450e2a5b"
+    },
+    {
+      "key": "git:91c63ab1ecf9f9afab4539e3043ffb62e46620d9",
+      "title": "歷史實作：建立工時查詢DTO與租戶限定資料存取",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 建立工時查詢DTO與租戶限定資料存取\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 91c63ab1ecf9f9afab4539e3043ffb62e46620d9（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/91c63ab1ecf9f9afab4539e3043ffb62e46620d9\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:91c63ab1ecf9f9afab4539e3043ffb62e46620d9"
+    },
+    {
+      "key": "git:78f14702226e5b302c45e6349006879b6f9a0ae1",
+      "title": "歷史實作：拆分Vue任務查詢與互動生命週期",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：refactor: 拆分Vue任務查詢與互動生命週期\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 78f14702226e5b302c45e6349006879b6f9a0ae1（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/78f14702226e5b302c45e6349006879b6f9a0ae1\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:78f14702226e5b302c45e6349006879b6f9a0ae1"
+    },
+    {
+      "key": "git:a432500d64be8b190e26be2f61ffb097fe5aaf94",
+      "title": "文件／工程交付：評估前後端重構收益與剩餘架構差距",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 評估前後端重構收益與剩餘架構差距\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit a432500d64be8b190e26be2f61ffb097fe5aaf94（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/a432500d64be8b190e26be2f61ffb097fe5aaf94\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:a432500d64be8b190e26be2f61ffb097fe5aaf94"
+    },
+    {
+      "key": "git:1be16cc841b5b5ccaf2150be4bec9f8a0ebbd7c1",
+      "title": "歷史實作：整理工時分析視覺圖表與明細分頁",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 整理工時分析視覺圖表與明細分頁\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 1be16cc841b5b5ccaf2150be4bec9f8a0ebbd7c1（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/1be16cc841b5b5ccaf2150be4bec9f8a0ebbd7c1\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:1be16cc841b5b5ccaf2150be4bec9f8a0ebbd7c1"
+    },
+    {
+      "key": "git:a7f200f7f2ea2f620abdab6fa76814c044158102",
+      "title": "文件／工程交付：盤點查詢效能瓶頸與 Redis 使用規劃",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 盤點查詢效能瓶頸與 Redis 使用規劃\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit a7f200f7f2ea2f620abdab6fa76814c044158102（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/a7f200f7f2ea2f620abdab6fa76814c044158102\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:a7f200f7f2ea2f620abdab6fa76814c044158102"
+    },
+    {
+      "key": "git:9baa61943fc8c4c21d7ba46fa0492b3342ad005a",
+      "title": "文件／工程交付：比較 GitHub 高星效能分析 skills 與專案適配",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 比較 GitHub 高星效能分析 skills 與專案適配\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 9baa61943fc8c4c21d7ba46fa0492b3342ad005a（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/9baa61943fc8c4c21d7ba46fa0492b3342ad005a\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:9baa61943fc8c4c21d7ba46fa0492b3342ad005a"
+    },
+    {
+      "key": "git:04345913584486673d5fe7ac9d9493e05ef491ff",
+      "title": "文件／工程交付：安裝 Addy 效能診斷與 ECC 基準量測 skills",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：chore: 安裝 Addy 效能診斷與 ECC 基準量測 skills\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 04345913584486673d5fe7ac9d9493e05ef491ff（2026-11-06）\nhttps://github.com/joshting-developer/TaskTracker/commit/04345913584486673d5fe7ac9d9493e05ef491ff\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:04345913584486673d5fe7ac9d9493e05ef491ff"
+    },
+    {
+      "key": "git:30ff03d62cb82fa2d0fc42aca5ccb26bef99352a",
+      "title": "文件／工程交付：完成 Addy 與 ECC 效能掃描及實測基準",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 完成 Addy 與 ECC 效能掃描及實測基準\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 30ff03d62cb82fa2d0fc42aca5ccb26bef99352a（2026-11-09）\nhttps://github.com/joshting-developer/TaskTracker/commit/30ff03d62cb82fa2d0fc42aca5ccb26bef99352a\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:30ff03d62cb82fa2d0fc42aca5ccb26bef99352a"
+    },
+    {
+      "key": "git:2d13adf3d800143458313156d2113c5fc685064f",
+      "title": "歷史實作：批次載入唯讀資格並移除逐工時授權查詢",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：perf: 批次載入唯讀資格並移除逐工時授權查詢\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 2d13adf3d800143458313156d2113c5fc685064f（2026-11-09）\nhttps://github.com/joshting-developer/TaskTracker/commit/2d13adf3d800143458313156d2113c5fc685064f\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:2d13adf3d800143458313156d2113c5fc685064f"
+    },
+    {
+      "key": "git:be64027b561c7d54cf1573085a1f523689665c5d",
+      "title": "歷史實作：合併工作區刷新並共用看板卡片索引",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：perf: 合併工作區刷新並共用看板卡片索引\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit be64027b561c7d54cf1573085a1f523689665c5d（2026-11-09）\nhttps://github.com/joshting-developer/TaskTracker/commit/be64027b561c7d54cf1573085a1f523689665c5d\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:be64027b561c7d54cf1573085a1f523689665c5d"
+    },
+    {
+      "key": "git:64e61e1af81e7ab60e8058c8e25559ec8b7bf763",
+      "title": "歷史實作：區分工作區唯讀交易並保留寫入鎖定",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：perf: 區分工作區唯讀交易並保留寫入鎖定\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 64e61e1af81e7ab60e8058c8e25559ec8b7bf763（2026-11-09）\nhttps://github.com/joshting-developer/TaskTracker/commit/64e61e1af81e7ab60e8058c8e25559ec8b7bf763\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:64e61e1af81e7ab60e8058c8e25559ec8b7bf763"
+    },
+    {
+      "key": "git:6612260f5c927fc434cc771dd7ca733d1740645e",
+      "title": "文件／工程交付：記錄 SQLite 與 MySQL 適用性及遷移風險",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 記錄 SQLite 與 MySQL 適用性及遷移風險\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 6612260f5c927fc434cc771dd7ca733d1740645e（2026-11-09）\nhttps://github.com/joshting-developer/TaskTracker/commit/6612260f5c927fc434cc771dd7ca733d1740645e\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:6612260f5c927fc434cc771dd7ca733d1740645e"
+    },
+    {
+      "key": "git:234a95c14bda28c06fc61d4e145cd149c92b4a03",
+      "title": "歷史實作：新增 MySQL 主庫與安全匯入及並行保護",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：feat: 新增 MySQL 主庫與安全匯入及並行保護\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 234a95c14bda28c06fc61d4e145cd149c92b4a03（2026-11-09）\nhttps://github.com/joshting-developer/TaskTracker/commit/234a95c14bda28c06fc61d4e145cd149c92b4a03\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:234a95c14bda28c06fc61d4e145cd149c92b4a03"
+    },
+    {
+      "key": "git:34607515802b66cef543e7b3db0c76261ff32f89",
+      "title": "文件／工程交付：記錄本機 MySQL 資料切換與持久化驗證",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 記錄本機 MySQL 資料切換與持久化驗證\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 34607515802b66cef543e7b3db0c76261ff32f89（2026-11-09）\nhttps://github.com/joshting-developer/TaskTracker/commit/34607515802b66cef543e7b3db0c76261ff32f89\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:34607515802b66cef543e7b3db0c76261ff32f89"
+    },
+    {
+      "key": "git:c2854320442653e5042a56abf2817465b4bb796d",
+      "title": "歷史實作：統一返回導覽並精簡看板標題列",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：style: 統一返回導覽並精簡看板標題列\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit c2854320442653e5042a56abf2817465b4bb796d（2026-11-09）\nhttps://github.com/joshting-developer/TaskTracker/commit/c2854320442653e5042a56abf2817465b4bb796d\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:c2854320442653e5042a56abf2817465b4bb796d"
+    },
+    {
+      "key": "git:8621276192c026bce67f685b0024fb745a27c358",
+      "title": "文件／工程交付：記錄 OCI 主機記憶體與部署容量評估",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 記錄 OCI 主機記憶體與部署容量評估\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 8621276192c026bce67f685b0024fb745a27c358（2026-11-10）\nhttps://github.com/joshting-developer/TaskTracker/commit/8621276192c026bce67f685b0024fb745a27c358\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:8621276192c026bce67f685b0024fb745a27c358"
+    },
+    {
+      "key": "git:f4b2535e2ac346437112f106a248bbab26e64b91",
+      "title": "文件／工程交付：記錄低記憶體 SQLite 展示部署方案",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 記錄低記憶體 SQLite 展示部署方案\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit f4b2535e2ac346437112f106a248bbab26e64b91（2026-11-10）\nhttps://github.com/joshting-developer/TaskTracker/commit/f4b2535e2ac346437112f106a248bbab26e64b91\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:f4b2535e2ac346437112f106a248bbab26e64b91"
+    },
+    {
+      "key": "git:465381059915d80302da75318e27b1ed631ca03f",
+      "title": "文件／工程交付：記錄遠端原生部署與記憶體精簡方向",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 記錄遠端原生部署與記憶體精簡方向\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 465381059915d80302da75318e27b1ed631ca03f（2026-11-10）\nhttps://github.com/joshting-developer/TaskTracker/commit/465381059915d80302da75318e27b1ed631ca03f\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:465381059915d80302da75318e27b1ed631ca03f"
+    },
+    {
+      "key": "git:90c49c0de5c682214b6860e505e1f414bb7bb760",
+      "title": "文件／工程交付：安裝 Hallmark 與 Unslop 專案技能",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：chore: 安裝 Hallmark 與 Unslop 專案技能\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 90c49c0de5c682214b6860e505e1f414bb7bb760（2026-11-11）\nhttps://github.com/joshting-developer/TaskTracker/commit/90c49c0de5c682214b6860e505e1f414bb7bb760\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:90c49c0de5c682214b6860e505e1f414bb7bb760"
+    },
+    {
+      "key": "git:0e69413859f5878ab60f4d5b528468ffef92b92e",
+      "title": "文件／工程交付：記錄 Unslop 審查與確認的修整範圍",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 記錄 Unslop 審查與確認的修整範圍\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit 0e69413859f5878ab60f4d5b528468ffef92b92e（2026-11-11）\nhttps://github.com/joshting-developer/TaskTracker/commit/0e69413859f5878ab60f4d5b528468ffef92b92e\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:0e69413859f5878ab60f4d5b528468ffef92b92e"
+    },
+    {
+      "key": "git:b06d0c288dd376663bed1c09e2f238122a112974",
+      "title": "歷史實作：依 Unslop 清理介面裝飾並修正登入按鈕",
+      "epic": "history",
+      "type": "bug",
+      "state": "closed",
+      "priority": "normal",
+      "description": "## 範圍\n原始交付：fix: 依 Unslop 清理介面裝飾並修正登入按鈕\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit b06d0c288dd376663bed1c09e2f238122a112974（2026-11-11）\nhttps://github.com/joshting-developer/TaskTracker/commit/b06d0c288dd376663bed1c09e2f238122a112974\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:b06d0c288dd376663bed1c09e2f238122a112974"
+    },
+    {
+      "key": "git:b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8",
+      "title": "文件／工程交付：紀錄 Multi-Agent 實測與外部整合需求",
+      "epic": "history",
+      "type": "task",
+      "state": "closed",
+      "priority": "low",
+      "description": "## 範圍\n原始交付：docs: 紀錄 Multi-Agent 實測與外部整合需求\n\n此卡為歷史盤點。若屬研究／提案，完成的是文件而非提案實作；舊Node／GAS方向、前置依賴、儲存視圖與獨立Epic概覽如被後續取代，不要求恢復。以目前產品決策為準。\n\n## 來源\nGit b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8（2026-11-11）\nhttps://github.com/joshting-developer/TaskTracker/commit/b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8\n\n## 驗收\n可查閱此commit與其變更檔案、當次測試／文件證據。只代表該次交付，不代表正式部署或全部後續工作完成。\n\n追蹤鍵：tasktracker:git:b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8"
+    },
+    {
+      "key": "deploy:inventory-db",
+      "title": "盤點現有MySQL切換與仍存SQLite特例",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n盤點現有MySQL切換與仍存SQLite特例\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §1／7 Phase 0\n\n## 驗收\n確認目前MySQL 8.4／InnoDB及交易鎖；SQLite只限來源／回退／隔離快速測試，不重做遷移或seed。\n\n追蹤鍵：tasktracker:deploy:inventory-db"
+    },
+    {
+      "key": "deploy:inventory-sync",
+      "title": "盤點Reverb、輪詢、revision與衝突依賴",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n盤點Reverb、輪詢、revision與衝突依賴\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §3／7 Phase 0\n\n## 驗收\n列出前後端連線、ShouldBroadcast、環境變數與測試；先交盤點和風險文件，未盤點前不刪服務。\n\n追蹤鍵：tasktracker:deploy:inventory-sync"
+    },
+    {
+      "key": "deploy:inventory-jobs",
+      "title": "盤點Queue／Scheduler／Redis與必要背景工作",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n盤點Queue／Scheduler／Redis與必要背景工作\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §2.3／4.3\n\n## 驗收\n搜尋dispatch、ShouldQueue、mail、Notifications、排程、Cache Lock與Session driver；逐項列同步／非同步／定時處置。\n\n追蹤鍵：tasktracker:deploy:inventory-jobs"
+    },
+    {
+      "key": "deploy:redis-decision",
+      "title": "決定低流量部署是否仍需要Redis",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n決定低流量部署是否仍需要Redis\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §2.3／5.1\n\n## 驗收\n用實際Session／鎖／Cache／Queue用途比較MySQL-only與Redis方案；Database Queue仍需可執行worker。\n\n追蹤鍵：tasktracker:deploy:redis-decision"
+    },
+    {
+      "key": "deploy:disable-websocket",
+      "title": "解除正式部署對Reverb與前端Pusher的必要依賴",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n解除正式部署對Reverb與前端Pusher的必要依賴\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §3.4／7 Phase 1\n\n## 驗收\n無WebSocket也能使用看板；清理專用服務／變數，保留Domain Event、ACL、歷史與可替換同步adapter。\n\n追蹤鍵：tasktracker:deploy:disable-websocket"
+    },
+    {
+      "key": "deploy:orphan-jobs",
+      "title": "避免停用廣播後產生無人消費的Job",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n避免停用廣播後產生無人消費的Job\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §3.4／4.3\n\n## 驗收\n盤點ShouldBroadcast及commit後派送；停用後無新孤兒工作，必要工作有可靠執行機制且不阻塞HTTP。\n\n追蹤鍵：tasktracker:deploy:orphan-jobs"
+    },
+    {
+      "key": "deploy:poll-manager",
+      "title": "抽取可重用的智慧輪詢生命週期",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n抽取可重用的智慧輪詢生命週期\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §3.1–3.2\n\n## 驗收\n登入且可見／在線才啟動；隱藏、離線、登出或卸載停止；前景恢復有最短間隔、去重與取消。\n\n追蹤鍵：tasktracker:deploy:poll-manager"
+    },
+    {
+      "key": "deploy:poll-backoff",
+      "title": "輪詢加入可配置間隔、jitter與退避",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n輪詢加入可配置間隔、jitter與退避\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §3.1–3.2\n\n## 驗收\n看板約30秒、通知約60秒可配置；無重疊、5xx／429退避，401停止、403撤權清理；閒置可延長。\n\n追蹤鍵：tasktracker:deploy:poll-backoff"
+    },
+    {
+      "key": "deploy:lightweight-sync",
+      "title": "設計有權限保護的輕量變更檢查",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n設計有權限保護的輕量變更檢查\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §3.3\n\n## 驗收\n優先沿用現有API；版本不變不全量下載，revision語意可靠，不洩漏未授權資源，私有資料不進CDN快取。\n\n追蹤鍵：tasktracker:deploy:lightweight-sync"
+    },
+    {
+      "key": "deploy:poll-drafts",
+      "title": "輪詢保護拖曳、未儲存草稿與寫入衝突",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n輪詢保護拖曳、未儲存草稿與寫入衝突\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §3.2–3.3\n\n## 驗收\n保留requestId／expectedRevision，兩人編輯不靜默覆寫；拖曳立即回饋，失敗回滾／提示，切租戶不串資料。\n\n追蹤鍵：tasktracker:deploy:poll-drafts"
+    },
+    {
+      "key": "deploy:no-ws-e2e",
+      "title": "建立無WebSocket的雙帳號同步回歸",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n建立無WebSocket的雙帳號同步回歸\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §7 Phase 1–2\n\n## 驗收\n實際測兩人移動、重連／前景／離線、撤權與跨工作區；證明沒有新廣播Job積壓。\n\n追蹤鍵：tasktracker:deploy:no-ws-e2e"
+    },
+    {
+      "key": "deploy:production-image",
+      "title": "建立正式Laravel HTTP runtime與可重現映像",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n建立正式Laravel HTTP runtime與可重現映像\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §4.1–4.2／7 Phase 3\n\n## 驗收\n採正式Web Server／PHP runtime，建置時安裝依賴，非artisan serve；端口、health check、關機與啟動明確。\n\n追蹤鍵：tasktracker:deploy:production-image"
+    },
+    {
+      "key": "deploy:stateless",
+      "title": "外部化Session、Cache與業務檔案狀態",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n外部化Session、Cache與業務檔案狀態\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §4.2\n\n## 驗收\nFly Machine可拋棄；重啟後Session／DB／Cache仍有效，APP_KEY／密碼以Secret管理，不在啟動自動seed。\n\n追蹤鍵：tasktracker:deploy:stateless"
+    },
+    {
+      "key": "deploy:migrations",
+      "title": "建立受控migration、備份與失敗回退流程",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n建立受控migration、備份與失敗回退流程\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §4.2\n\n## 驗收\n部署前備份；migration獨立控管、失敗有回復步驟，不每次冷啟動執行破壞性流程。\n\n追蹤鍵：tasktracker:deploy:migrations"
+    },
+    {
+      "key": "deploy:fly-autostop",
+      "title": "配置Fly東京HTTP自動啟停並驗證冷啟動",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n配置Fly東京HTTP自動啟停並驗證冷啟動\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §4.1／7 Phase 3\n\n## 驗收\nnrt／min_machines_running=0；無流量實際停止、請求喚醒、DB重連與超時可處理，量測冷啟動。\n\n追蹤鍵：tasktracker:deploy:fly-autostop"
+    },
+    {
+      "key": "deploy:pages",
+      "title": "配置Cloudflare Pages靜態前端與快取策略",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n配置Cloudflare Pages靜態前端與快取策略\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §6 Pages\n\n## 驗收\n部署Vite build產物；HTML／hash資源快取正確，私有API與通知不被CDN公開快取。\n\n追蹤鍵：tasktracker:deploy:pages"
+    },
+    {
+      "key": "deploy:cross-origin",
+      "title": "定義Pages與Fly跨來源登入／Cookie／CSRF策略",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n定義Pages與Fly跨來源登入／Cookie／CSRF策略\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §6 Pages／4.2\n\n## 驗收\n明確正式網域、CORS、Cookie屬性、CSRF與可信來源；驗證登入、切工作區、登出與未授權請求。\n\n追蹤鍵：tasktracker:deploy:cross-origin"
+    },
+    {
+      "key": "deploy:oci-capacity",
+      "title": "核對OCI實際規格、配額、磁碟與閒置回收風險",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n核對OCI實際規格、配額、磁碟與閒置回收風險\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §2.2／5.1\n\n## 驗收\n以目前實例查證：既有實測498MiB，不直接套用文件1GB假設；兩台RAM不可合併，額度和成本重新核對。\n\n追蹤鍵：tasktracker:deploy:oci-capacity"
+    },
+    {
+      "key": "deploy:mysql-oci",
+      "title": "在OCI持久化MySQL並實測小記憶體配置",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n在OCI持久化MySQL並實測小記憶體配置\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §5.1／7 Phase 4\n\n## 驗收\n以MySQL 8.4支援參數調校buffer pool／connections／暫存，監測OOM／Swap／I/O，使用專用最小權限帳號。\n\n追蹤鍵：tasktracker:deploy:mysql-oci"
+    },
+    {
+      "key": "deploy:encrypted-network",
+      "title": "驗證Fly與OCI的加密且可恢復連線",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n驗證Fly與OCI的加密且可恢復連線\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §5.2\n\n## 驗收\n選WireGuard／Tailscale或嚴格TLS方案；啟停後自動恢復、金鑰輪替、來源限制、故障快速超時；不公開3306／6379。\n\n追蹤鍵：tasktracker:deploy:encrypted-network"
+    },
+    {
+      "key": "deploy:redis-conditional",
+      "title": "若保留Redis，配置用途隔離與記憶體政策",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n若保留Redis，配置用途隔離與記憶體政策\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §2.3／5.1\n\n## 驗收\n先完成用途決策；cache淘汰不得丟queue/session，認證／介面／AOF／maxmemory明確，若不用則記錄移除驗證。\n\n追蹤鍵：tasktracker:deploy:redis-conditional"
+    },
+    {
+      "key": "deploy:backup-restore",
+      "title": "建立異地加密備份並完成整庫還原演練",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n建立異地加密備份並完成整庫還原演練\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §5.3\n\n## 驗收\n備份一致、私有儲存與保留政策明確；真實還原帳號、Workspace、Issue、ACL、工時、通知與歷史。\n\n追蹤鍵：tasktracker:deploy:backup-restore"
+    },
+    {
+      "key": "deploy:jobs-runtime",
+      "title": "為必要Queue／Scheduler選可靠的執行機制",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n為必要Queue／Scheduler選可靠的執行機制\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §4.3／7 Phase 4\n\n## 驗收\n每個必要工作均有觸發、重試、監測、失敗查詢與成本；不假設Web流量會消費Database Queue。\n\n追蹤鍵：tasktracker:deploy:jobs-runtime"
+    },
+    {
+      "key": "deploy:observability",
+      "title": "觀察1–2週成本、冷啟動、API p95與資料庫負載",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n觀察1–2週成本、冷啟動、API p95與資料庫負載\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §7 Phase 5\n\n## 驗收\n記錄樣本、環境、運行時數／輪詢次數、DB RTT、CPU／RAM／Swap與月底費用；預算約NT$500為目標不是承諾。\n\n追蹤鍵：tasktracker:deploy:observability"
+    },
+    {
+      "key": "deploy:fallback",
+      "title": "評估輪詢不休眠與跨雲故障時的回退門檻",
+      "epic": "deploy",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n評估輪詢不休眠與跨雲故障時的回退門檻\n\n## 來源\ndocs/planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md §7 Phase 5\n\n## 驗收\n量測後比較延長輪詢、單台VPS與未來Reverb；記錄可靠性／維運成本，不直接承諾零成本。\n\n追蹤鍵：tasktracker:deploy:fallback"
+    },
+    {
+      "key": "external:credentials",
+      "title": "設計可撤銷／輪替／過期的受限整合憑證",
+      "epic": "external",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n設計可撤銷／輪替／過期的受限整合憑證\n\n## 來源\nMulti-Agent-To-Tracker.md @ b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8 TT-EXT-01\n\n## 驗收\n憑證限制Workspace／Project與permission，秘密只建立時顯示，不指定必須採哪個套件。\n\n追蹤鍵：tasktracker:external:credentials"
+    },
+    {
+      "key": "external:integration-actor",
+      "title": "區分human與integration actor並保留撤權規則",
+      "epic": "external",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n區分human與integration actor並保留撤權規則\n\n## 來源\nMulti-Agent-To-Tracker.md @ b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8 TT-EXT-01／05\n\n## 驗收\n歷史可識別Agent／整合；停用、租戶隔離及最小權限生效，不依角色名稱放行。\n\n追蹤鍵：tasktracker:external:integration-actor"
+    },
+    {
+      "key": "external:api-contract",
+      "title": "定義版本化公開API、錯誤碼與OpenAPI",
+      "epic": "external",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n定義版本化公開API、錯誤碼與OpenAPI\n\n## 來源\nMulti-Agent-To-Tracker.md @ b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8 TT-EXT-02\n\n## 驗收\n公開版本、rate limit／Retry-After、revision／requestId及棄用策略明確，不暴露SPA內部結構。\n\n追蹤鍵：tasktracker:external:api-contract"
+    },
+    {
+      "key": "external:api-queries",
+      "title": "提供受限身分／專案／成員／狀態與單卡查詢",
+      "epic": "external",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n提供受限身分／專案／成員／狀態與單卡查詢\n\n## 來源\nMulti-Agent-To-Tracker.md @ b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8 TT-EXT-02\n\n## 驗收\n只回傳受權範圍；外部工具不依賴Vite模組或整包Workspace。\n\n追蹤鍵：tasktracker:external:api-queries"
+    },
+    {
+      "key": "external:api-mutations",
+      "title": "提供Issue、留言與Epic／父子／關聯寫入API",
+      "epic": "external",
+      "type": "task",
+      "state": "open",
+      "priority": "high",
+      "description": "## 範圍\n提供Issue、留言與Epic／父子／關聯寫入API\n\n## 來源\nMulti-Agent-To-Tracker.md @ b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8 TT-EXT-02\n\n## 驗收\n新增／更新與關聯沿用同交易授權、revision衝突和重送契約，不用Owner fallback。\n\n追蹤鍵：tasktracker:external:api-mutations"
+    },
+    {
+      "key": "external:cursor",
+      "title": "Issue列表支援穩定cursor與增量篩選",
+      "epic": "external",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\nIssue列表支援穩定cursor與增量篩選\n\n## 來源\nMulti-Agent-To-Tracker.md @ b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8 TT-EXT-02／03\n\n## 驗收\n依Project／type／status／priority／assignee／updatedSince篩選；排序與cursor邊界可恢復，避免同秒遺漏。\n\n追蹤鍵：tasktracker:external:cursor"
+    },
+    {
+      "key": "external:external-id",
+      "title": "建立project-scoped外部識別與upsert契約",
+      "epic": "external",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n建立project-scoped外部識別與upsert契約\n\n## 來源\nMulti-Agent-To-Tracker.md @ b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8 TT-EXT-03\n\n## 驗收\nexternalSource／externalId唯一、可查詢；requestId不當作長期資源識別，跨租戶不能碰撞。\n\n追蹤鍵：tasktracker:external:external-id"
+    },
+    {
+      "key": "external:batch",
+      "title": "設計可恢復的批次匯入與逐項結果",
+      "epic": "external",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n設計可恢復的批次匯入與逐項結果\n\n## 來源\nMulti-Agent-To-Tracker.md @ b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8 TT-EXT-03\n\n## 驗收\n逐項成功／失敗與外部key；逾時可判定結果，Epic／children可分階段重跑，無重複卡。\n\n追蹤鍵：tasktracker:external:batch"
+    },
+    {
+      "key": "external:incremental",
+      "title": "定義全量／增量同步與刪除或歸檔語意",
+      "epic": "external",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n定義全量／增量同步與刪除或歸檔語意\n\n## 來源\nMulti-Agent-To-Tracker.md @ b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8 TT-EXT-03\n\n## 驗收\ncursor、tombstone／刪除事件與來源識別明確，不依賴描述解析。\n\n追蹤鍵：tasktracker:external:incremental"
+    },
+    {
+      "key": "external:webhook-outbox",
+      "title": "建立交易一致的Webhook事件與outbox",
+      "epic": "external",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n建立交易一致的Webhook事件與outbox\n\n## 來源\nMulti-Agent-To-Tracker.md @ b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8 TT-EXT-04\n\n## 驗收\nrollback無幽靈事件，commit後失敗可補送；eventId／actor／scope／resource／revision完整且payload最小。\n\n追蹤鍵：tasktracker:external:webhook-outbox"
+    },
+    {
+      "key": "external:webhook-delivery",
+      "title": "實作Webhook簽章、退避、死信與手動重送",
+      "epic": "external",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n實作Webhook簽章、退避、死信與手動重送\n\n## 來源\nMulti-Agent-To-Tracker.md @ b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8 TT-EXT-04\n\n## 驗收\nHMAC／時間戳／重播限制，至少一次投遞及亂序可去重；撤權／停用停止傳送，接收URL防SSRF。\n\n追蹤鍵：tasktracker:external:webhook-delivery"
+    },
+    {
+      "key": "external:agent-audit",
+      "title": "記錄Agent run、交付物與同步失敗狀態",
+      "epic": "external",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n記錄Agent run、交付物與同步失敗狀態\n\n## 來源\nMulti-Agent-To-Tracker.md @ b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8 TT-EXT-05\n\n## 驗收\n留言／更新可追溯來源任務與run，秘密不進卡片；回音事件防循環，補送維持相同idempotency身分。\n\n追蹤鍵：tasktracker:external:agent-audit"
+    },
+    {
+      "key": "external:multi-agent-acceptance",
+      "title": "用Multi-Agent驗收正式整合並解除MA-79阻礙",
+      "epic": "external",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n用Multi-Agent驗收正式整合並解除MA-79阻礙\n\n## 來源\nMulti-Agent-To-Tracker.md @ b0c763dc26e6e190989ccfa1e7ce90d52adbbbe8 建議推進順序／TT-EXT-01～05\n\n## 驗收\n使用受限憑證完成開工、更新、受阻、交付與重啟補送；將實測失敗回填TaskTracker，不先將MA-79標完成。\n\n追蹤鍵：tasktracker:external:multi-agent-acceptance"
+    },
+    {
+      "key": "quality:typed-writes",
+      "title": "逐用例遷移任務／工時寫入的專用Request與DTO",
+      "epic": "quality",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n逐用例遷移任務／工時寫入的專用Request與DTO\n\n## 來源\ndocs/refactoring-2026-11-06.md\n\n## 驗收\nService／Repository職責明確；保留原receipt簽章、欄位順序、revision／requestId，不用一次allowlist改變契約。\n\n追蹤鍵：tasktracker:quality:typed-writes"
+    },
+    {
+      "key": "quality:app-coordination",
+      "title": "評估App導覽、工作區及草稿協調的責任拆分",
+      "epic": "quality",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n評估App導覽、工作區及草稿協調的責任拆分\n\n## 來源\ndocs/refactoring-2026-11-06.md\n\n## 驗收\n依實際生命週期拆分，切換／撤權／草稿保護回歸；不為行數引入Router／Pinia或全面TS。\n\n追蹤鍵：tasktracker:quality:app-coordination"
+    },
+    {
+      "key": "quality:workspace-payload",
+      "title": "拆分身分／導航與目前Project查詢以減少全量Workspace",
+      "epic": "quality",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n拆分身分／導航與目前Project查詢以減少全量Workspace\n\n## 來源\ndocs/performance-improvements-2026-11-09.md\n\n## 驗收\n首頁、報表與看板只取所需資料；有分頁、撤權清理與租戶scope，不用快取繞過ACL。\n\n追蹤鍵：tasktracker:quality:workspace-payload"
+    },
+    {
+      "key": "quality:virtualization",
+      "title": "評估500卡看板DOM與虛擬化策略",
+      "epic": "quality",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n評估500卡看板DOM與虛擬化策略\n\n## 來源\ndocs/performance-improvements-2026-11-09.md\n\n## 驗收\n量測前後layout／長任務與互動；保留DnD、泳道、鍵盤焦點及捲到底卡，不盲目隱藏資料。\n\n追蹤鍵：tasktracker:quality:virtualization"
+    },
+    {
+      "key": "quality:sql-reports",
+      "title": "工時SQL聚合／群組分頁與日期索引實測",
+      "epic": "quality",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n工時SQL聚合／群組分頁與日期索引實測\n\n## 來源\ndocs/performance-improvements-2026-11-09.md\n\n## 驗收\n以真實MySQL人造大資料集EXPLAIN及量測驗證，與有效工時／Epic去重／權限及分頁總數一致。\n\n追蹤鍵：tasktracker:quality:sql-reports"
+    },
+    {
+      "key": "quality:bundle",
+      "title": "分割初始JS與Vuetify／MDI資源",
+      "epic": "quality",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n分割初始JS與Vuetify／MDI資源\n\n## 來源\ndocs/performance-improvements-2026-11-09.md\n\n## 驗收\n比較gzip／初始載入／route互動；按需載入不破壞icon、表單、Markdown與離線錯誤狀態。\n\n追蹤鍵：tasktracker:quality:bundle"
+    },
+    {
+      "key": "quality:load",
+      "title": "建立正式多worker／弱網負載與容量基準",
+      "epic": "quality",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n建立正式多worker／弱網負載與容量基準\n\n## 來源\ndocs/performance-scan-2026-11-09.md\n\n## 驗收\n樣本／冷暖cache／並行度／p95與正確性明示，不把序列serve或memory SQLite當正式容量。\n\n追蹤鍵：tasktracker:quality:load"
+    },
+    {
+      "key": "quality:auth-policy",
+      "title": "部署前確認正式註冊、帳號恢復與秘密管理政策",
+      "epic": "quality",
+      "type": "task",
+      "state": "open",
+      "priority": "normal",
+      "description": "## 範圍\n部署前確認正式註冊、帳號恢復與秘密管理政策\n\n## 來源\ndocs/collaboration-design.md；docs/產品討論紀錄.md\n\n## 驗收\n核對公開註冊／邀請、Email驗證與密碼恢復範圍；威脅與操作流程先定案，不把本機登入視為正式SaaS完成。\n\n追蹤鍵：tasktracker:quality:auth-policy"
+    },
+    {
+      "key": "candidate:home-widgets",
+      "title": "候選：首頁個人小工具與卡片篩選小清單",
+      "epic": "candidates",
+      "type": "task",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n尚未排程／需確認範圍。建立卡片只保存構想，不代表本輪授權實作。\n首頁個人小工具與卡片篩選小清單\n\n## 來源\ndocs/產品討論紀錄.md\n\n## 驗收\n先確認小工具與清單需求；保留首頁小待辦，不恢復專案內已移除的儲存視圖。\n\n追蹤鍵：tasktracker:candidate:home-widgets"
+    },
+    {
+      "key": "candidate:custom-roles",
+      "title": "候選：可自訂角色與permission編輯",
+      "epic": "candidates",
+      "type": "task",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n尚未排程／需確認範圍。建立卡片只保存構想，不代表本輪授權實作。\n可自訂角色與permission編輯\n\n## 來源\ndocs/project-acl.md；docs/產品討論紀錄.md\n\n## 驗收\n有權限集合／scope／不可授予超權限保護與稽核；固定角色現況保留，使用者確認後才做。\n\n追蹤鍵：tasktracker:candidate:custom-roles"
+    },
+    {
+      "key": "candidate:custom-types",
+      "title": "候選：專案可自訂Issue類型",
+      "epic": "candidates",
+      "type": "task",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n尚未排程／需確認範圍。建立卡片只保存構想，不代表本輪授權實作。\n專案可自訂Issue類型\n\n## 來源\ndocs/產品討論紀錄.md\n\n## 驗收\nEpic／Task／Bug現況保留；定義刪除／遷移與類型語意，不把Epic特殊加總任意套所有類型。\n\n追蹤鍵：tasktracker:candidate:custom-types"
+    },
+    {
+      "key": "candidate:smtp-delivery",
+      "title": "候選：實際Email寄送、偏好與可靠出站流程",
+      "epic": "candidates",
+      "type": "task",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n尚未排程／需確認範圍。建立卡片只保存構想，不代表本輪授權實作。\n實際Email寄送、偏好與可靠出站流程\n\n## 來源\ndocs/競品使用流程與功能缺口研究-2026-10-30.md §7\n\n## 驗收\nSMTP目前只有verify；先定事件、撤權重驗、重試、失敗狀態及退訂／偏好，不在業務API同步寄信。\n\n追蹤鍵：tasktracker:candidate:smtp-delivery"
+    },
+    {
+      "key": "candidate:issue-inbox",
+      "title": "候選：Issue通知收件匣、追蹤者與mention",
+      "epic": "candidates",
+      "type": "task",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n尚未排程／需確認範圍。建立卡片只保存構想，不代表本輪授權實作。\nIssue通知收件匣、追蹤者與mention\n\n## 來源\ndocs/競品使用流程與功能缺口研究-2026-10-30.md\n\n## 驗收\n區分既有Todo通知與Issue通知；定義reporter／watcher／mention、已讀及權限，不重做已存在的Todo通知。\n\n追蹤鍵：tasktracker:candidate:issue-inbox"
+    },
+    {
+      "key": "candidate:attachments",
+      "title": "候選：R2附件／圖片與授權下載",
+      "epic": "candidates",
+      "type": "task",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n尚未排程／需確認範圍。建立卡片只保存構想，不代表本輪授權實作。\nR2附件／圖片與授權下載\n\n## 來源\n部署計畫 §6 R2；docs/競品使用流程與功能缺口研究-2026-10-30.md\n\n## 驗收\n第二階段選配；MySQL metadata、私有物件、短效下載／ACL、大小與MIME限制，不公開Bucket。\n\n追蹤鍵：tasktracker:candidate:attachments"
+    },
+    {
+      "key": "candidate:templates",
+      "title": "候選：Bug／任務範本",
+      "epic": "candidates",
+      "type": "task",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n尚未排程／需確認範圍。建立卡片只保存構想，不代表本輪授權實作。\nBug／任務範本\n\n## 來源\ndocs/競品使用流程與功能缺口研究-2026-10-30.md\n\n## 驗收\n定義預填描述與欄位、範圍與版本；沿用安全Markdown，不重建已有編輯器。\n\n追蹤鍵：tasktracker:candidate:templates"
+    },
+    {
+      "key": "candidate:batch-labels",
+      "title": "候選：批次修改與標籤管理",
+      "epic": "candidates",
+      "type": "task",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n尚未排程／需確認範圍。建立卡片只保存構想，不代表本輪授權實作。\n批次修改與標籤管理\n\n## 來源\ndocs/競品使用流程與功能缺口研究-2026-10-30.md\n\n## 驗收\n使用者確認最小範圍；逐卡授權、衝突、部分結果與選取狀態清楚。\n\n追蹤鍵：tasktracker:candidate:batch-labels"
+    },
+    {
+      "key": "candidate:board-grouping",
+      "title": "候選：看板負責人分組與持久排序／WIP提醒",
+      "epic": "candidates",
+      "type": "task",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n尚未排程／需確認範圍。建立卡片只保存構想，不代表本輪授權實作。\n看板負責人分組與持久排序／WIP提醒\n\n## 來源\ndocs/競品使用流程與功能缺口研究-2026-10-30.md C2／C4\n\n## 驗收\n分組不改assignee，排序持久化另定契約；WIP先提醒，不強擋移動。\n\n追蹤鍵：tasktracker:candidate:board-grouping"
+    },
+    {
+      "key": "candidate:milestones",
+      "title": "候選：里程碑／版本與長期專案封存",
+      "epic": "candidates",
+      "type": "task",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n尚未排程／需確認範圍。建立卡片只保存構想，不代表本輪授權實作。\n里程碑／版本與長期專案封存\n\n## 來源\ndocs/競品使用流程與功能缺口研究-2026-10-30.md C3／C4\n\n## 驗收\n先確認release／milestone語意；封存可查歷史，資料及連結保留，不刪除代替整理。\n\n追蹤鍵：tasktracker:candidate:milestones"
+    },
+    {
+      "key": "candidate:flow-analysis",
+      "title": "候選：期間交付／cycle time與重開分析",
+      "epic": "candidates",
+      "type": "task",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n尚未排程／需確認範圍。建立卡片只保存構想，不代表本輪授權實作。\n期間交付／cycle time與重開分析\n\n## 來源\ndocs/競品使用流程與功能缺口研究-2026-10-30.md C5\n\n## 驗收\n先定開始／關閉／重開的事件語意，能從明細重算；不把投入工時當交付率或加回首頁累計完成率。\n\n追蹤鍵：tasktracker:candidate:flow-analysis"
+    },
+    {
+      "key": "candidate:csv",
+      "title": "候選：工時CSV匯出與對帳",
+      "epic": "candidates",
+      "type": "task",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n尚未排程／需確認範圍。建立卡片只保存構想，不代表本輪授權實作。\n工時CSV匯出與對帳\n\n## 來源\ndocs/競品使用流程與功能缺口研究-2026-10-30.md C1\n\n## 驗收\n只匯出有權資料、有效紀錄去重，防試算表公式注入；與分析畫面加總一致。\n\n追蹤鍵：tasktracker:candidate:csv"
+    },
+    {
+      "key": "candidate:vcs",
+      "title": "候選：Git commit／PR／MR連結與受限事件整合",
+      "epic": "candidates",
+      "type": "task",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n尚未排程／需確認範圍。建立卡片只保存構想，不代表本輪授權實作。\nGit commit／PR／MR連結與受限事件整合\n\n## 來源\ndocs/競品使用流程與功能缺口研究-2026-10-30.md C6\n\n## 驗收\n使用正式整合契約；撤權與事件重送可查，合併不自動視為任務驗收完成。\n\n追蹤鍵：tasktracker:candidate:vcs"
+    },
+    {
+      "key": "candidate:manual",
+      "title": "候選：依現有功能編寫操作手冊",
+      "epic": "candidates",
+      "type": "task",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n尚未排程／需確認範圍。建立卡片只保存構想，不代表本輪授權實作。\n依現有功能編寫操作手冊\n\n## 來源\ndocs/產品討論紀錄.md 介面文案決策\n\n## 驗收\n使用者後續要求時才編寫；不把教學段落塞回介面。\n\n追蹤鍵：tasktracker:candidate:manual"
+    },
+    {
+      "key": "candidate:ui-next",
+      "title": "候選：評估登入版型／分析入口／版本資訊的P3修整",
+      "epic": "candidates",
+      "type": "task",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n尚未排程／需確認範圍。建立卡片只保存構想，不代表本輪授權實作。\n評估登入版型／分析入口／版本資訊的P3修整\n\n## 來源\ndocs/Unslop審查報告-2026-11-11.md\n\n## 驗收\n第一批已完成；這些候選另行確認方向，保留三種分析入口與revision／草稿語意。\n\n追蹤鍵：tasktracker:candidate:ui-next"
+    },
+    {
+      "key": "candidate:distribution",
+      "title": "候選：定義SaaS與自建版共用核心交付",
+      "epic": "candidates",
+      "type": "task",
+      "state": "deferred",
+      "priority": "normal",
+      "description": "## 範圍\n尚未排程／需確認範圍。建立卡片只保存構想，不代表本輪授權實作。\n定義SaaS與自建版共用核心交付\n\n## 來源\ndocs/產品討論紀錄.md D-009\n\n## 驗收\n先定註冊／秘密／部署／升級／備份差異，共用Workspace／Project授權，不分叉業務核心。\n\n追蹤鍵：tasktracker:candidate:distribution"
+    },
+    {
+      "key": "self-tracking",
+      "title": "建立TaskTracker自我追蹤、AI Developer與完整卡片交接",
+      "epic": "quality",
+      "type": "task",
+      "state": "inprogress",
+      "priority": "high",
+      "description": "## 範圍\n建立TaskTracker自我追蹤、AI Developer與完整卡片交接\n\n## 來源\n本輪使用者要求；Multi-Agent-To-Tracker.md；低成本部署計畫\n\n## 驗收\nSideProject／TaskTracker可開啟；AI為Workspace user＋Project developer，全部卡片指派AI；歷史／待辦狀態與欄位逐筆核對、原Multi-Agent未改動，私有登入檔不進Git。\n\n追蹤鍵：tasktracker:self-tracking"
+    }
+  ]
+}
