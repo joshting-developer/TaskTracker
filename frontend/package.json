@@ -20,7 +20,8 @@
     "test:issue-time": "node tools/issue-time-check.js",
     "test:time-analysis": "node tools/time-analysis-check.js",
     "test:member-time": "node tools/member-time-details-check.js",
-    "test:workspaces": "node tools/workspace-switch-check.js"
+    "test:workspaces": "node tools/workspace-switch-check.js",
+    "test:api": "node tools/api-client-check.js"
   },
   "dependencies": {
     "@mdi/font": "7.4.47",
