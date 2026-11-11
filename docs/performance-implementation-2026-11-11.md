@@ -20,4 +20,8 @@
 
 ## B：新增分責查詢邊界
 
-新增v1 Project分頁／屬性、Issue SQL分頁／詳細、留言與異動分頁，既有RPC保留。Service重用有效ProjectAccess；列表不讀Issue描述或子活動，活動只用父列參照；Project列表同快照取得能力／負責人摘要，Resource不查DB。專用Request／readonly條件與分頁資料隔離HTTP，契約見query-api-v1.md。Reader、私有Project、跨Project ID、撤權、X-Workspace-ID與literal搜尋／20筆SQL分頁／活動按需測試通過。一般列表／單卡查詢只取操作者本人的Project指派與最小Project參照，不為單人讀取載全員配置；專案頁需要成員能力才建立完整資格快照。前端尚待接線，TT-180／214／215仍進行中，不提前結案。
+新增v1 Project分頁／屬性、Issue SQL分頁／詳細、留言與異動分頁，既有RPC保留。Service重用有效ProjectAccess；列表不讀Issue描述或子活動，活動只用父列參照；Project列表同快照取得能力／負責人摘要，Resource不查DB。專用Request／readonly條件與分頁資料隔離HTTP，契約見query-api-v1.md。Reader、私有Project、跨Project ID、撤權、X-Workspace-ID與literal搜尋／20筆SQL分頁／活動按需測試通過。一般列表／單卡查詢只取操作者本人的Project指派與最小Project參照，不為單人讀取載全員配置；2026-11-12複審再縮限為指定Project或當頁ID，不附全員memberIds；成員選項待獨立有界端點。前端尚待接線，TT-180／214／215仍進行中，不提前結案。
+
+## 2026-11-12 資料存取規範複審
+
+使用者要求的八項審查已加入AGENTS，並明確授權修改過量API契約。複審修正Project授權全量參照與登入context附帶歷史，新增1→36 Project範圍成長／5筆分頁／回應不變測試。隔離MySQL完整78／2803與最終受影響9／414通過。遠端正常讀取摘要仍約2.3～2.6秒，未取得SQL分段與p95；前端全量載入及其他P1尚未完成，整體驗收未通過。見[八項複審](data-access-review-2026-11-12.md)。

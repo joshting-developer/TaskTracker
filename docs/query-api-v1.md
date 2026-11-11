@@ -22,3 +22,17 @@
 寫入暫沿用相容RPC及原有Form／revision／requestId契約；本輪不複製第二套業務實作。列表摘要不得直接當編輯基準，開編輯器前須讀單卡詳細及最新revision；留言／歷史另行分頁載入。
 
 本機tools/tasktracker.py的list改逐頁摘要，status／comment用identifier精準定位取得ID與revision，不為寫入載入任務描述／活動；只有初次import／歷史verify保留明確使用相容Workspace快照，不能以初始manifest蓋掉後來進度。
+
+2026-11-12契約修正：使用者已授權調整原API資料契約。舊RPC僅是前端／工具移轉中的暫時接口，不承諾永久保留整包Workspace；移轉後須退役過量入口並修改依賴它的測試，不可只新增v1而放任舊預設載入。安全與版本／冪等語意維持。資料存取審查見[審查紀錄](data-access-review-2026-11-12.md)。
+
+Project授權僅讀指定ID或當頁ID（最多100筆），可見範圍在SQL分頁前依有效permission映射篩選。單Project回應不附全員memberIds；成員選項將由獨立有界端點提供，目前尚未實作，不能宣稱本API已完整取代舊getWorkspace。
+
+## 舊讀取契約移轉狀態（2026-11-12）
+
+| 舊預設 | 新責任邊界 | 當前狀態／退役條件 |
+| --- | --- | --- |
+| getWorkspace取得全部Projects／Issues與活動 | 身分current、Project列表／屬性、Project Issue列表／單卡／活動分頁 | v1已建立，CLI一般讀取已切換；App尚未切換，仍屬P1。須完成側欄、選項、看板及草稿依賴後移除一般頁面快照入口。 |
+| getTodos同時取待辦、全通知與成員選項 | 個人待辦分頁、單待辦內容、通知摘要／分頁、承辦者搜尋 | 尚未實作；不承諾保留舊組合回應。 |
+| 全Workspace輪詢／事件後全量重讀 | 依目前頁面與Project的局部同步／授權重驗 | 尚未實作；需含斷線備援、隱藏分頁、撤權與草稿測試。 |
+
+寫入的既有Application Service與集中授權可重用，但回傳不得為了沿用讀取端而附帶整個Workspace。遷移不是直接刪除所有RPC；尚有呼叫端時先分階段接線，最後刪除舊依賴與相應過量契約測試。歷史import／verify若仍需全量資料，須設計明確管理用途與有界批次，不成為SPA預設讀取例外。

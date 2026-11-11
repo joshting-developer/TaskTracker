@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Project;
 use App\Repositories\RecordStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,42 @@ class ScopedReadApiTest extends TestCase
     private function rpc(string $operation, array $input = [])
     {
         return $this->postJson('/api/rpc/'.$operation, ['requestId' => (string) Str::uuid(), ...$input]);
+    }
+
+    public function test_project_authorization_reads_only_the_requested_or_paginated_project_references(): void
+    {
+        $actor = $this->postJson('/api/auth/register', ['name' => 'Scope', 'email' => 'scope@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Scope'])->assertOk()->json('data');
+        $target = $this->rpc('createProject', ['name' => 'Target', 'code' => 'TARGET'])->assertOk()->json('data');
+        $baseline = $this->getJson('/api/v1/projects/'.$target['id'])->assertOk()->getContent();
+        $source = Project::where('public_id', $target['id'])->firstOrFail();
+        for ($i = 0; $i < 35; $i++) {
+            $copy = $source->replicate();
+            $copy->public_id = (string) Str::uuid();
+            $copy->code = 'OTHER'.$i;
+            $copy->name = 'Other '.$i;
+            $copy->save();
+        }
+
+        DB::enableQueryLog();
+        DB::flushQueryLog();
+        $response = $this->getJson('/api/v1/projects/'.$target['id'])->assertOk()->assertJsonPath('data.id', $target['id']);
+        $this->assertSame($baseline, $response->getContent());
+        $references = array_values(array_filter(DB::getQueryLog(), fn ($q) => str_starts_with($q['query'], 'select "id", "workspace_id", "public_id" from "projects"')));
+        $this->assertCount(1, $references);
+        $this->assertSame([$actor['workspace']['id'], $target['id']], $references[0]['bindings']);
+        $this->assertStringContainsString('limit 1', $references[0]['query']);
+        $this->assertCount(0, array_filter(DB::getQueryLog(), fn ($q) => str_contains($q['query'], 'audit_events') || str_contains($q['query'], 'issue_comments')));
+
+        DB::flushQueryLog();
+        $page = $this->getJson('/api/v1/projects?perPage=5')->assertOk()->assertJsonPath('data.total', 36)->json('data');
+        $this->assertCount(5, $page['items']);
+        $ids = array_column($page['items'], 'id');
+        $references = array_values(array_filter(DB::getQueryLog(), fn ($q) => str_starts_with($q['query'], 'select "id", "workspace_id", "public_id" from "projects"')));
+        $this->assertCount(1, $references);
+        $this->assertSame([$actor['workspace']['id'], ...$ids], $references[0]['bindings']);
+        $this->assertStringContainsString('limit 5', $references[0]['query']);
+        $again = $this->getJson('/api/v1/projects?perPage=5')->assertOk()->json('data.items');
+        $this->assertSame($ids, array_column($again, 'id'));
     }
 
     public function test_project_issue_reads_are_scoped_bounded_and_activity_is_opt_in(): void

@@ -23,7 +23,7 @@
 | 層次 | 薄Controller、Service協調／Action單一用例、必要Repository、Model、Resource | 不強迫所有CRUD都加Action與Repository，也不准Controller查DB |
 | 命名 | Laravel layout；新資源Controllers採複數，Requests採Store／Update，Action以handle為公開入口；DB複數snake_case、anonymous timestamp migration | 舊class與RPC不批次改名；不用CLM特例 |
 | Repository | 只資料存取；Model／typed Collection／Paginator，聚合用typed Data DTO | 不以Repository執行商業決策、權限放行或組Response |
-| API | FormRequest驗輸入、typed Data DTO承載結構化用例；成功回應經Resource或既有ApiResponse | 保留RPC／ok-data／camelCase與DomainError；不抄ECC示例換envelope或Sanctum |
+| API | FormRequest驗輸入、typed Data DTO承載結構化用例；成功回應經Resource或既有ApiResponse | 保留ok-data／camelCase與DomainError；2026-11-12使用者授權依資料存取審查改版／退役RPC，須同步呼叫端／測試；不抄ECC示例換envelope或Sanctum |
 | 交易 | 頂層Service或Action唯一owner，afterCommit副作用 | 現有ApiExecution／RequestReplay是相容邊界，不巢狀重包或移除重試授權 |
 | 測試 | PHPUnit、Unit驗純規則、Feature驗HTTP／實際DB／隔離／交易；依變更風險補齊 | 移除舊action_Result_Test_case硬性命名，沿用test_snake_case，不機械每class配兩檔 |
 | 保留補充 | 中文有效docblock、清楚條件、SQLite測試隔離、tenant／author條件、程序生命週期 | 僅移轉仍適用約束；不帶CLM macro、Kibana、PDF或安裝包要求 |

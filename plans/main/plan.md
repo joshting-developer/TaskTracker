@@ -1,3 +1,10 @@
+## 2026-11-12 API資料存取規範與續作
+
+- 使用者新增八項資料存取審查要求，已加入根AGENTS；明確授權調整過量API契約，不以歷史相容承諾阻擋合理分責。同步本地Architecture規範與接口文件。
+- 重審A／B階段：有界回應已具SQL分頁與投影，但單Project授權仍讀全空間Project參照，屬未完成；前端仍依賴getWorkspace／getTodos與固定輪詢也是P1未完成，不能宣稱整體驗收。先縮限內部授權讀取與新增範圍成長測試，之後續接前端與其他資源。
+
+- 本階段修正Project授權讀取為單資源／當頁、SQL先篩可見Project；context改只投影當次資格，不附歷史。範圍成長測試1→36 Project／5筆分頁通過；MySQL完整78／2803，最後受影響9／414。新增docs/data-access-review-2026-11-12.md八項矩陣與未完成P1。遠端正常讀取單Project1115 bytes／2567ms、20卡10277 bytes／2314ms，僅單次觀察，非p95。TT-226保持進行中，前端／Todo／輪詢／報表尚未完成，不宣稱整體驗收。
+
 ## 2026-11-11 效能改善實作與API分責
 
 - 階段B：新增分責GET v1 Project／Issue／活動接口，SQL分頁及最小欄位、有效permission快照與舊RPC共存。ScopedReadApiTest＋ProjectAclTest 8項／393 assertions通過；前端還未切換，相關卡仍進行中。

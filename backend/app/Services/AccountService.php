@@ -7,6 +7,8 @@ use App\Data\AuthenticatedAccountData;
 use App\Domain\DomainError;
 use App\Domain\Fields;
 use App\Models\User;
+use App\Models\Workspace;
+use App\Models\WorkspaceMember;
 use App\Repositories\RecordStore;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -43,10 +45,11 @@ class AccountService
         if (! $user || ! is_string($workspaceId)) {
             DomainError::fail('UNAUTHENTICATED', '請先登入');
         }
-        $store = new RecordStore;
-        $workspace = $store->get('workspaces', $workspaceId);
-        $member = $store->forWorkspace($workspaceId)->get('members', $user->id);
-        if (! $workspace || ! $member || ! empty($member['disabledAt'])) {
+        // 此處只驗當次資格，不透過相容RecordStore附帶讀取歷史／全部欄位。
+        $workspace = Workspace::where('public_id', $workspaceId)->first(['id', 'name']);
+        $member = $workspace ? WorkspaceMember::where('workspace_id', $workspace->id)
+            ->where('user_id', $user->id)->whereNull('disabled_at')->first(['role']) : null;
+        if (! $workspace || ! $member) {
             DomainError::fail('UNAUTHENTICATED', '工作空間資格已失效');
         }
 
@@ -54,10 +57,10 @@ class AccountService
             'user' => $this->publicUser($user),
             'workspace' => [
                 'id' => $workspaceId,
-                'name' => $workspace['name'],
+                'name' => $workspace->name,
             ],
-            'role' => $member['role'],
-            'permissions' => WorkspacePermissions::resolve($member['role']),
+            'role' => $member->role,
+            'permissions' => WorkspacePermissions::resolve($member->role),
         ];
     }
 

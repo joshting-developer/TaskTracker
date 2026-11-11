@@ -39,7 +39,7 @@ flowchart TD
 - 認證確定使用者及Token來源；由伺服器建立可信的操作者與Workspace／Project上下文，再驗證範圍。外部請求不能自行指定可放行的角色或跨租戶工作區。
 - 外部Token不應依賴人類瀏覽器Session的「目前工作區」。請求的目標資源、Token範圍與使用者有效成員資格必須一致；具體路徑／header形式於契約設計時定案。
 - 共用邏輯不等於必須同一條HTTP路由。先盤點現有API，適合的能力直接重用，格式或認證不適合公開的入口才補薄REST adapter；不強迫另開一個後端服務，也不讓所有SPA RPC自動對Token開放。
-- 舊SPA的Session／CSRF、RPC／camelCase／ok-data與既有錯誤契約維持相容。REST路徑、版本與輸出契約須明確定義，不因「API-first」就全面換欄位或重寫前端。
+- 2026-11-12契約修正：Session／CSRF、camelCase／ok-data、錯誤及revision／requestId語意維持；使用者已授權依資料存取審查調整路徑／DTO與前端依賴、退役整包RPC。一般頁面不得預設取整個Workspace，列表SQL篩選／分頁、詳細活動按需；版本與移轉步驟見[分責契約](query-api-v1.md)，不能為相容永久保留過量載入。
 - Repo只負責資料存取；既有Service不因外部入口繞過權限、作者限制或MySQL寫入鎖。遵循本專案[Laravel Architecture](../skills/laravel-architecture/SKILL.md)，不機械增加空層。
 
 ## Token的授權語意

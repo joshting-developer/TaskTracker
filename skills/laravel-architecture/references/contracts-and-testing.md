@@ -4,7 +4,7 @@
 
 - 操作者與active workspace由伺服器Session重新取得；有效permission ID＋Workspace／Project scope＋資源條件決定可見與可操作。roleId僅查權限映射，role名稱永遠不是放行條件。
 - 保留Session／CSRF、跨分頁X-Workspace-ID比對與Session blocking；GET後的permission、作者、版本與狀態可能變動，寫入交易內必須重查。讀requestId重試結果前也要重查授權及scope。
-- 保留HTTP／DomainError語意、ok/data、API欄位、revision與requestId。格式驗證放FormRequest，依賴當前資料的商業／跨記錄驗證仍在Service／Action。不得只用FormRequest.authorize取代寫入前重查。
+- 保留授權、租戶隔離、資料保存、DomainError及revision／requestId語意。2026-11-12使用者已授權依資料存取審查調整API欄位／路由與過量回應契約，須同步呼叫端、文件與測試，不為相容永久保留整包Workspace。格式驗證放FormRequest，依賴當前資料的商業／跨記錄驗證仍在Service／Action。不得只用FormRequest.authorize取代寫入前重查。
 - 日期採YYYY-MM-DD，工作日Asia/Taipei；時間戳ISO 8601。只修改本人有效工時與每日24小時限制仍有效。open／closed必要、只有closed結案，不把skill示例的狀態enum覆蓋自訂狀態。
 - 不回傳SQL、exception原文、秘密或內部路徑；診斷只進受控log。輸入用allowlist，不做不受控mass assignment。
 

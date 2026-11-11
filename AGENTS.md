@@ -175,7 +175,7 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 
 ## API-first平台邊界（2026-11-11）
 
-使用者已確認第三方走標準REST API＋個人PAT／Scope／撤銷與期限管理，沿用有效permission＋Workspace／Project及資源條件。Web與外部API共用Application Service、集中授權、交易與資料層；先盤點既有API，不複製第二套業務或無故另開服務，不直接改壞Session／CSRF／RPC相容契約。OpenAPI建議提供。TaskTracker暫不自建MCP、不製作Codex／Claude或其他工具專屬整合、不實作Agent編排工作流；這些由外部依API自行完成。通用來源稽核保留，Webhook為後續低優先候選。具體契約／技術實作另依當輪授權，見[API-first架構決策](docs/api-first-platform.md)。
+使用者已確認第三方走標準REST API＋個人PAT／Scope／撤銷與期限管理，沿用有效permission＋Workspace／Project及資源條件。Web與外部API共用Application Service、集中授權、交易與資料層；先盤點既有API，不複製第二套業務或無故另開服務，維持Session／CSRF與授權語意；RPC可依資料存取審查改版或退役，須同步呼叫端與測試。OpenAPI建議提供。TaskTracker暫不自建MCP、不製作Codex／Claude或其他工具專屬整合、不實作Agent編排工作流；這些由外部依API自行完成。通用來源稽核保留，Webhook為後續低優先候選。具體契約／技術實作另依當輪授權，見[API-first架構決策](docs/api-first-platform.md)。
 
 
 ## TaskTracker主題看板（2026-11-11）
@@ -193,3 +193,21 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 使用者已要求API責任單純，建立「效能改進」橫切看板（ID `17e9af2b-4c24-42cb-af67-0a6337181e12`）；可和原主題看板交叉收錄，不複製Issue、不整包收跨主題Epic。新增效能工作先查重現有卡，按docs/performance-review-2026-11-11.md與建卡清單的分工執行。本輪僅審查建卡，所有改善工作仍未實作；TT-180等舊限制不因N+1／single-flight已修或已有Redis而視為解決。後續驗收須含頁面所需DTO、SQL rows／寫量、回應bytes、背景請求與撤權／草稿／revision安全，不能只報查詢數下降。
 
 2026-11-11後續更新：使用者已授權實作效能改善與API分責，上一輪只建卡是歷史範圍。按docs/performance-implementation-2026-11-11.md與plans/main分階段測試／commit／更新卡片；不能因部分底層改善就結案全部API／輪詢／觀測工作。不自動擴張成PAT或工具專屬整合。
+
+
+## API 資料存取架構檢查
+
+新增或修改 HTTP API、Repository、資料查詢、前端資料載入或輪詢時，必須執行資料存取審查。
+
+1. 明確列出呼叫端需要的資料欄位與範圍。
+2. 列表查詢必須有明確的資料上限與穩定排序。
+3. 篩選與分頁優先在 SQL 層執行。
+4. 不得以載入整個 Workspace 作為一般頁面或單一 Project 的預設資料取得方式。
+5. 詳細資料、歷史、留言及工時應按需讀取。
+6. 評估呼叫頻率、SQL RTT、查詢次數及 Response Size 隨資料量成長的情況。
+7. 相關測試必須驗證資料讀取範圍，不能只驗證 SQL 次數與既有回應相同。
+8. 發現尚未處理的 P1 問題，必須明確列為未完成或受阻，不得宣稱整體效能驗收通過。
+
+效能量測使用專案內的 performance-optimization 與 benchmark Skills；不能以本機 SQLite 的結果取代遠端 MySQL 或實際部署拓樸的驗證。
+
+2026-11-12使用者確認：既有API契約可以為合理資料範圍而調整，不必保留原本的整包Workspace回傳。變更須同步呼叫端、文件與測試，明確移轉／退役舊接口；權限、租戶隔離、資料保存、revision與requestId等安全／業務語意仍需維持。歷史文件的「保留相容契約」不能作為永久保留過量載入的理由。

@@ -20,12 +20,13 @@ class ProjectReadService
     /** 當次查詢的最小授權集合；不持久快取，也不載Project歷史。
      * @return array{ProjectAccess, Collection}
      */
-    private function visibility(array $actor, bool $includeOtherMembers = false): array
+    private function visibility(array $actor, array $projectIds): array
     {
         $store = (new RecordStore)->forWorkspace($actor['workspace']['id']);
-        $projects = $this->projects->references($actor['workspace']['id']);
-        $members = $includeOtherMembers ? $store->all('members') : [$store->require('members', $actor['user']['id'])];
-        $assignments = $includeOtherMembers ? null : $this->projects->assignments($actor['workspace']['id'], $actor['user']['id'])->map(fn ($assignment) => [
+        $projects = $this->projects->references($actor['workspace']['id'], $projectIds);
+        // actor已由同一交易內的AccountService重驗；不從前端或原始Session信任此資格。
+        $members = [['id' => $actor['user']['id'], 'role' => $actor['role']]];
+        $assignments = $this->projects->assignments($actor['workspace']['id'], $actor['user']['id'], $projectIds)->map(fn ($assignment) => [
             'id' => $assignment->public_id, 'projectId' => $assignment->getRelation('project')->public_id,
             'userId' => $assignment->getRelation('member')->user_id, 'roleId' => $assignment->role_id,
             'removedAt' => $assignment->removed_at,
@@ -35,20 +36,13 @@ class ProjectReadService
         return [$access, $projects];
     }
 
-    /** 只列當次操作者持有指定有效permission的Project公開ID。 */
-    public function ids(array $actor, string $permission = 'project.read'): array
-    {
-        [$access, $projects] = $this->visibility($actor);
-
-        return $projects->filter(fn ($p) => $access->can($p->public_id, $permission))->pluck('public_id')->all();
-    }
-
     /** 讓分頁與能力取自同一資格快照，禁止在Resource逐項查授權。 */
     public function index(array $actor, PageQueryData $filters): ProjectPageData
     {
-        [$access, $references] = $this->visibility($actor);
-        $ids = $references->filter(fn ($p) => $access->can($p->public_id, 'project.read'))->pluck('public_id')->all();
-        $page = $this->projects->page($actor['workspace']['id'], $ids, $filters);
+        // roleId只用來查permission映射，再把符合project.read的指派條件送入SQL。
+        $readRoleIds = array_column(array_filter(ProjectAccess::roles(), fn ($role) => in_array('project.read', $role['permissions'], true)), 'id');
+        $page = $this->projects->page($actor['workspace']['id'], $actor['user']['id'], in_array('project.readAny', $actor['permissions'], true), $readRoleIds, $filters);
+        [$access] = $this->visibility($actor, array_map(fn ($p) => $p->public_id, $page->items()));
         $permissions = [];
         foreach ($page->items() as $project) {
             $permissions[$project->public_id] = $access->permissions($project->public_id);
@@ -60,7 +54,7 @@ class ProjectReadService
     /** 限定資源前先驗當次有效資格，對外隱藏不可見Project存在性。 */
     public function require(array $actor, string $id, string $permission = 'project.read'): Project
     {
-        [$access, $projects] = $this->visibility($actor);
+        [$access, $projects] = $this->visibility($actor, [$id]);
         $this->authorize($access, $id, $permission);
 
         return $projects->firstWhere('public_id', $id) ?? DomainError::fail('NOT_FOUND', '找不到專案');
@@ -69,12 +63,12 @@ class ProjectReadService
     /** 專案單頁需要的屬性與能力資訊，不輸出設定／ACL歷史。 */
     public function show(array $actor, string $id): array
     {
-        [$access] = $this->visibility($actor, true);
+        [$access] = $this->visibility($actor, [$id]);
         $this->authorize($access, $id, 'project.read');
 
         return ['project' => $this->projects->find($actor['workspace']['id'], $id), 'capabilities' => [
             'permissions' => $access->permissions($id), 'accessSource' => $access->source($id),
-            'memberIds' => array_column($access->eligibleMembers($id), 'id'),
+            // 成員選項改由獨立有界查詢提供，不在專案屬性附帶全員名單。
         ]];
     }
 
