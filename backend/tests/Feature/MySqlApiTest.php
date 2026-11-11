@@ -36,4 +36,19 @@ class MySqlApiTest extends MySqlTestCase
         $this->rpc('getTimeReport', ['startDate' => $input['workDate'], 'endDate' => $input['workDate']])->assertOk()->assertJsonPath('data.summary.totalMinutes', 1400);
         $this->assertSame(1, DB::table('time_entries')->where('public_id', $entry['id'])->count());
     }
+
+    /** 原生JSON鍵排序不能導致歷史重寫，新增留言應保留舊列主鍵。 */
+    public function test_native_json_history_and_comment_rows_are_not_rewritten(): void
+    {
+        $this->postJson('/api/auth/register', ['name' => 'Native', 'email' => 'native-'.Str::uuid().'@example.test', 'password' => 'mysql-test-password', 'workspaceName' => 'Native'])->assertOk();
+        $project = $this->rpc('createProject', ['name' => 'Native', 'code' => 'NATIVE'])->assertOk()->json('data');
+        $issue = $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => 'Native JSON'])->assertOk()->json('data');
+        $first = $this->rpc('addComment', ['id' => $issue['id'], 'content' => 'First', 'expectedRevision' => $issue['revision']])->assertOk()->json('data');
+        $commentId = DB::table('issue_comments')->where('public_id', $first['comments'][0]['id'])->value('id');
+        DB::enableQueryLog();
+        DB::flushQueryLog();
+        $this->rpc('addComment', ['id' => $issue['id'], 'content' => 'Second', 'expectedRevision' => $first['revision']])->assertOk();
+        $this->assertCount(0, array_filter(DB::getQueryLog(), fn ($q) => str_contains($q['query'], 'audit_events') && ! str_starts_with($q['query'], 'select')));
+        $this->assertSame($commentId, DB::table('issue_comments')->where('public_id', $first['comments'][0]['id'])->value('id'));
+    }
 }

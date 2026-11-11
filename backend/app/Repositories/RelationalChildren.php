@@ -111,55 +111,99 @@ class RelationalChildren
             DB::table('project_statuses')->where('project_id', $row->id)->whereNotIn('code', array_column($statuses, 'id'))->delete();
         }
         if ($kind === 'issues') {
-            DB::table('issue_comments')->where('issue_id', $row->id)->delete();
+            $comments = [];
             foreach ($value['comments'] ?? [] as $position => $comment) {
-                DB::table('issue_comments')->insert([
-                    'issue_id' => $row->id,
-                    'public_id' => $comment['id'],
-                    'content' => $comment['content'],
-                    'author' => $comment['author'],
-                    'created_at' => DatabaseTimes::store($comment['createdAt'] ?? null),
+                $comments[] = [
+                    'public_id' => $comment['id'], 'content' => $comment['content'],
+                    'author' => $comment['author'], 'created_at' => DatabaseTimes::store($comment['createdAt'] ?? null),
                     'position' => $position,
-                ]);
+                ];
             }
-            DB::table('issue_relations')->where('issue_id', $row->id)->delete();
+            $this->syncRows('issue_comments', ['issue_id' => $row->id], 'public_id', $comments);
+            $relations = [];
             foreach ($value['relatedIssueIds'] ?? [] as $position => $id) {
-                DB::table('issue_relations')->insert([
-                    'workspace_id' => $row->workspace_id,
-                    'project_id' => $row->project_id,
-                    'issue_id' => $row->id,
-                    'related_issue_id' => $records->internalId('issues', $id),
-                    'position' => $position,
-                ]);
+                $relations[] = [
+                    'workspace_id' => $row->workspace_id, 'project_id' => $row->project_id,
+                    'related_issue_id' => $records->internalId('issues', $id), 'position' => $position,
+                ];
             }
+            $this->syncRows('issue_relations', ['issue_id' => $row->id], 'related_issue_id', $relations);
         }
         if ($kind === 'boards') {
-            DB::table('board_issues')->where('board_id', $row->id)->delete();
+            $items = [];
             foreach ($value['selectedIssueIds'] ?? [] as $position => $id) {
-                DB::table('board_issues')->insert([
-                    'workspace_id' => $row->workspace_id,
-                    'project_id' => $row->project_id,
-                    'board_id' => $row->id,
-                    'issue_id' => $records->internalId('issues', $id),
-                    'position' => $position,
-                ]);
+                $items[] = [
+                    'workspace_id' => $row->workspace_id, 'project_id' => $row->project_id,
+                    'issue_id' => $records->internalId('issues', $id), 'position' => $position,
+                ];
             }
+            $this->syncRows('board_issues', ['board_id' => $row->id], 'issue_id', $items);
         }
         foreach (['history', 'settingsHistory', 'detailsHistory'] as $stream) {
             if (! array_key_exists($stream, $value)) {
                 continue;
             }
-            DB::table('audit_events')->where('entity_type', $kind)->where('entity_id', $row->id)->where('stream', $stream)->delete();
+            $events = [];
             foreach ($value[$stream] as $position => $event) {
-                DB::table('audit_events')->insert([
-                    'workspace_id' => $row->workspace_id,
-                    'entity_type' => $kind,
-                    'entity_id' => $row->id,
-                    'stream' => $stream,
-                    'position' => $position,
+                $events[] = [
+                    'workspace_id' => $row->workspace_id, 'position' => $position,
                     'event_data' => json_encode($event, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
-                ]);
+                ];
+            }
+            $this->syncRows('audit_events', ['entity_type' => $kind, 'entity_id' => $row->id, 'stream' => $stream], 'position', $events);
+        }
+    }
+
+    /** 保留未異動子列的主鍵，只寫新增／刪除／改變的項目；交易由呼叫者擁有。
+     * @param  array<string, mixed>  $scope  可信的父列條件
+     * @param  array<int, array<string, mixed>>  $rows  有序子列投影
+     */
+    private function syncRows(string $table, array $scope, string $key, array $rows): void
+    {
+        $query = DB::table($table)->where($scope);
+        $existing = (clone $query)->get()->keyBy($key);
+        $keys = array_column($rows, $key);
+        $removed = $existing->keys()->diff($keys)->all();
+        if ($removed !== []) {
+            (clone $query)->whereIn($key, $removed)->delete();
+        }
+        $insert = [];
+        foreach ($rows as $row) {
+            $old = $existing->get($row[$key]);
+            if ($old === null) {
+                $insert[] = [...$scope, ...$row];
+
+                continue;
+            }
+            $changes = [];
+            foreach ($row as $column => $value) {
+                $before = $old->{$column};
+                $equal = $column === 'event_data'
+                    ? $this->canonical(json_decode($before, true, flags: JSON_THROW_ON_ERROR)) === $this->canonical(json_decode($value, true, flags: JSON_THROW_ON_ERROR))
+                    : ($before === null || $value === null ? $before === $value : (string) $before === (string) $value);
+                if (! $equal) {
+                    $changes[$column] = $value;
+                }
+            }
+            if ($changes !== []) {
+                (clone $query)->where($key, $row[$key])->update($changes);
             }
         }
+        foreach (array_chunk($insert, 100) as $batch) {
+            DB::table($table)->insert($batch);
+        }
+    }
+
+    /** JSON物件鍵順序不影響歷史內容，陣列順序與型別仍需保留。 */
+    private function canonical(mixed $value): mixed
+    {
+        if (! is_array($value)) {
+            return $value;
+        }
+        if (! array_is_list($value)) {
+            ksort($value);
+        }
+
+        return array_map(fn ($item) => $this->canonical($item), $value);
     }
 }

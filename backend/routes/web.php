@@ -14,9 +14,17 @@ use App\Http\Controllers\TimeEntryController;
 use App\Http\Controllers\TodoController;
 use App\Http\Controllers\WorkspaceController;
 use App\Services\AccountSettings;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-Route::get('/api/health', [SystemController::class, 'health']);
+// 存活探針不建立Session、不發CSRF cookie，也不觸碰業務資料庫。
+Route::get('/api/health', [SystemController::class, 'health'])->withoutMiddleware([
+    StartSession::class,
+    ShareErrorsFromSession::class,
+    PreventRequestForgery::class,
+]);
 Route::get('/api/csrf-cookie', [SystemController::class, 'csrf']);
 Route::post('/api/realtime/config', [RealtimeController::class, 'config']);
 Route::post('/api/realtime/authorize', [RealtimeController::class, 'authorizeChannel'])->middleware('throttle:120,1');

@@ -69,6 +69,29 @@ class RecordStore
         return $this->usesRelational($kind) ? $this->records->all($kind) : $this->archive->all($kind);
     }
 
+    /** 相容入口的批次參照投影；不擴大租戶或代替領域授權。
+     * @return array<string, string>
+     */
+    public function issueProjects(array $ids): array
+    {
+        if ($this->usesRelational('issues')) {
+            return $this->records->issueProjects($ids);
+        }
+
+        return array_column(array_filter($this->all('issues'), fn ($issue) => in_array($issue['id'], $ids, true)), 'projectId', 'id');
+    }
+
+    /** 交易鎖與資格已由上層確認；這裡只負責當人當日SQL聚合。 */
+    public function dailyMinutes(string $userId, string $date, string $excludeId = ''): int
+    {
+        if ($this->usesRelational('timeEntries')) {
+            return $this->records->dailyMinutes($userId, $date, $excludeId);
+        }
+
+        return array_sum(array_column(array_filter($this->all('timeEntries'), fn ($entry) => $entry['userId'] === $userId
+            && $entry['workDate'] === $date && empty($entry['voidedAt']) && $entry['id'] !== $excludeId), 'minutes'));
+    }
+
     /** 保存到真正的欄位及子表；正常模式不回寫JSON。
      * @param  string  $kind  實體種類
      * @param  string  $id  公開ID

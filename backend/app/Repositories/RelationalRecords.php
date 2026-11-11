@@ -15,6 +15,10 @@ class RelationalRecords
 {
     private array $identities = [];
 
+    private ?int $workspaceInternalId = null;
+
+    private bool $workspaceResolved = false;
+
     private array $users = [];
 
     private ?bool $hasTodoContent = null;
@@ -50,7 +54,12 @@ class RelationalRecords
      */
     private function workspaceId(): ?int
     {
-        return Workspace::where('public_id', $this->workspacePublicId)->value('id');
+        if (! $this->workspaceResolved) {
+            $this->workspaceInternalId = Workspace::where('public_id', $this->workspacePublicId)->value('id');
+            $this->workspaceResolved = true;
+        }
+
+        return $this->workspaceInternalId;
     }
 
     /** 取得種類的公開識別欄位。
@@ -96,6 +105,37 @@ class RelationalRecords
         $this->children->prepare($kind, $rows->pluck('id')->all());
 
         return $rows->map(fn ($row) => $this->serialize($kind, $row))->all();
+    }
+
+    /** 批次取得同工作區任務所屬Project，不載入內容／留言／歷史；資格由Service判斷。
+     * @return array<string, string>
+     */
+    public function issueProjects(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return DB::table('issues')->join('projects', 'projects.id', '=', 'issues.project_id')
+            ->where('issues.workspace_id', $this->workspaceId())
+            ->whereColumn('projects.workspace_id', 'issues.workspace_id')
+            ->whereIn('issues.public_id', $ids)
+            ->get(['projects.public_id as project_public_id', 'issues.public_id as issue_public_id'])
+            ->pluck('project_public_id', 'issue_public_id')->all();
+    }
+
+    /** 讀取本人當日有效分鐘，不取得其他作者／日期的原始紀錄。
+     * @param  string  $excludeId  修改時排除原公開ID
+     */
+    public function dailyMinutes(string $userId, string $date, string $excludeId = ''): int
+    {
+        return (int) DB::table('time_entries')->join('workspace_members', 'workspace_members.id', '=', 'time_entries.member_id')
+            ->where('time_entries.workspace_id', $this->workspaceId())
+            ->whereColumn('workspace_members.workspace_id', 'time_entries.workspace_id')
+            ->where('workspace_members.user_id', $userId)->where('time_entries.work_date', $date)
+            ->whereNull('time_entries.voided_at')
+            ->when($excludeId !== '', fn ($query) => $query->where('time_entries.public_id', '!=', $excludeId))
+            ->sum('time_entries.minutes');
     }
 
     /** 批次建立不可變識別碼對照，避免每張卡查詢所有關聯。

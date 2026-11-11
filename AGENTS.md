@@ -191,3 +191,5 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 ## 效能改進追蹤（2026-11-11）
 
 使用者已要求API責任單純，建立「效能改進」橫切看板（ID `17e9af2b-4c24-42cb-af67-0a6337181e12`）；可和原主題看板交叉收錄，不複製Issue、不整包收跨主題Epic。新增效能工作先查重現有卡，按docs/performance-review-2026-11-11.md與建卡清單的分工執行。本輪僅審查建卡，所有改善工作仍未實作；TT-180等舊限制不因N+1／single-flight已修或已有Redis而視為解決。後續驗收須含頁面所需DTO、SQL rows／寫量、回應bytes、背景請求與撤權／草稿／revision安全，不能只報查詢數下降。
+
+2026-11-11後續更新：使用者已授權實作效能改善與API分責，上一輪只建卡是歷史範圍。按docs/performance-implementation-2026-11-11.md與plans/main分階段測試／commit／更新卡片；不能因部分底層改善就結案全部API／輪詢／觀測工作。不自動擴張成PAT或工具專屬整合。

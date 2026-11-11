@@ -1,3 +1,11 @@
+## 2026-11-11 效能改善實作與API分責
+
+- 階段A完成：健康探針零SQL／無cookie，限定Workspace ID重用、看板批次參照、留言／關聯／歷史／收錄差量寫入，日工時SQL SUM。memory68／2511、獨立MySQL73／2578及native補測2／23通過；TT-228／229／222／220按實際驗收結案，其他工作續作。
+
+- 使用者已授權解決效能改善並拆好API，供後續AI整合延伸。先前review-only／implementationAuthorized=false為歷史範圍，這次恢復實作；不新增PAT或工具專屬整合。
+- 分階段：A健康探針／資料入口與寫入成本；B有界且權限一致的身分／Project／Issue／Todo／工時API；C前端按頁面讀取、取消／版本／事件局部刷新；D報表SQL／看板DOM與bundle；E獨立MySQL／HTTP／瀏覽器回歸與正式runtime／觀測入口。每段保留相容RPC、Session／CSRF／scope／revision／requestId，完成後測試與commit，按真實驗收更新卡片。
+- 不對主庫執行seed／RefreshDatabase／壓測，不清共享Redis；主資料備份與舊volume保留。觀測週期、正式外部部署與未取得的真實負載不偽稱完成。
+
 ## 2026-11-11 效能改進看板與API職責複審
 
 - 已完成：建立效能改進看板，16張新改善卡TT-214～229＋11張沿用待辦，共27張open且指派AI；TT-213審查交付卡closed，總收錄28。API讀回確認無重複、既有核心資料／五個看板保留，201張未處理原卡完整DTO不變；沿用11卡僅各補一則審查留言。Chrome實際登入與28卡渲染／無pageerror通過。

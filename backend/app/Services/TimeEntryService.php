@@ -67,14 +67,7 @@ class TimeEntryService
             DomainError::fail('INVALID_INPUT', '不能填報未來日期的工時');
         }
         $minutes = Fields::integer($input['minutes'] ?? null, '工時分鐘', 1, 1440);
-        $otherDailyEntries = array_filter($this->store->all('timeEntries'), function ($entry) use ($userId, $date, $current) {
-            $isEffective = empty($entry['voidedAt']);
-            $isSameUserAndDate = $entry['userId'] === $userId && $entry['workDate'] === $date;
-            $isOtherEntry = $entry['id'] !== ($current['id'] ?? '');
-
-            return $isEffective && $isSameUserAndDate && $isOtherEntry;
-        });
-        $daily = array_sum(array_column($otherDailyEntries, 'minutes'));
+        $daily = $this->store->dailyMinutes($userId, $date, $current['id'] ?? '');
         if ($daily + $minutes > 1440) {
             DomainError::fail('INVALID_INPUT', '同一人同一天的工時不能超過 24 小時');
         }

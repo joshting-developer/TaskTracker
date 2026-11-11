@@ -60,9 +60,9 @@ class ProjectBoards
         if (count(array_unique($ids)) !== count($ids)) {
             DomainError::fail('INVALID_INPUT', '收錄項目不可重複');
         }
+        $projects = $this->store->issueProjects($ids);
         foreach ($ids as $id) {
-            $issue = $this->store->require('issues', $id);
-            if ($issue['projectId'] !== $projectId) {
+            if (! isset($projects[$id]) || $projects[$id] !== $projectId) {
                 DomainError::fail('INVALID_INPUT', '只能收錄目前專案的 Epic、Task 或 Bug');
             }
         }
