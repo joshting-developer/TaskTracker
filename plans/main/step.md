@@ -1,3 +1,12 @@
+## 2026-11-11 公開登入入口／介紹頁／SEO只建卡
+
+- 已完成：A–D=TT-205～208 open，E沿用TT-155 open，F=TT-209 deferred／low；同步TT-151／156／2的規劃，全部AI指派。讀回欄位／狀態及5個來源key唯一性通過，204→209卡，其餘200張完整內容／revision不變。對照文件及產品紀錄已更新；未改程式／schema／部署。
+
+- 使用者指定24a34f91bbe7822c186742b1384ed992aa856056的docs/public-login-landing-seo-plan-2026-11-11.md；只查重及建待辦，不實作功能或部署。
+- 以AI讀取目前204張TaskTracker卡片並比對全文；A–D沒有同等驗收項目，登入P3外觀候選不等於入口／公開頁／SEO。E與既有靜態前端部署TT-155及runtime TT-151重疊，優先沿用原卡調整。
+- 預計新增A–D為open、F為deferred；E沿用TT-155，並使TT-151／156及部署Epic的規劃符合單Fly App、取消獨立Pages的最新方向。保留舊描述／追蹤鍵與歷史，全部沿用AI指派，不改已完成卡片。
+- 逐欄讀回、以來源key再次查重、核對無重複新增及無其他Project異動；交付來源／項目對照文件並commit。原202卡清單只作歷史快照，不覆蓋live進度。
+
 ## 2026-11-11 指派、留言、mention與通知盤點
 
 - 已完成：docs/notification-audit-2026-11-11.md與產品紀錄，確認Issue preview／Todo Inbox分開且無mention；11 tests／202 assertions隔離回歸通過。審查TT-204留言後closed；TT-190／189補發現並維持deferred，讀回核對通過；未改產品程式或發真信。
