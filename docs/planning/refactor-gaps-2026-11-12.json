@@ -1,0 +1,406 @@
+{
+  "date": "2026-11-12",
+  "scope": "review-and-cards-only",
+  "cards": [
+    {
+      "key": "di-context",
+      "title": "盤點全後端依賴並建立可信Context與Factory組裝邊界",
+      "priorityClass": "P1",
+      "evidence": "docs/backend-di-phpdoc-refactor-plan.md；ApiExecution、WorkspaceService及RecordStore仍混用穩定協作者與執行期workspaceSession。",
+      "work": "盤點app、seeders、Console、tools、tests支援類別及其他自有PHP；畫出依賴圖，定義型別化可信Context、Store／Access Factory與容器生命週期。",
+      "acceptance": "交付逐檔new／app／resolve清單、可保留例外與依賴循環；Context優先作方法參數，禁止帶租戶狀態singleton，容器解析與跨Actor／Workspace測試；不產生萬用Service Locator。",
+      "depends": [],
+      "board": "api"
+    },
+    {
+      "key": "di-core",
+      "title": "以Container與按需組裝重構後端核心依賴鏈",
+      "priorityClass": "P1",
+      "evidence": "WorkspaceService::write每次直接new五個領域服務；ApiExecution、IssueService、RecordStore仍手動組裝服務。",
+      "work": "按可信Context／Factory設計調整ApiExecution、WorkspaceService／Query、Issue／Project／TimeEntry、ProjectAccess及RecordStore／RelationalRecords／Children，保留既有交易擁有者。",
+      "acceptance": "單操作只初始化必要服務；collaborator可替換且容器可解析，無循環；User→Workspace鎖、重放前授權、revision／requestId、rollback／afterCommit不變；DI不混入API行為改版。",
+      "depends": [
+        "di-context"
+      ],
+      "board": "api"
+    },
+    {
+      "key": "di-periphery",
+      "title": "完成其餘後端協作者與長駐工作之DI遷移",
+      "priorityClass": "P1",
+      "evidence": "Todos、AccountSettings、WorkspaceMemberships、ProjectChannelAccess／Signals及Seeder／CLI仍有手動組裝；只改核心鏈會漏掉其他入口。",
+      "work": "逐檔處理其餘Controller、Authorization、Service、Repository、Job／Listener／Events、seeders及CLI／tools協作者；核對Provider僅綁必要項目。",
+      "acceptance": "每個直接new／locator已替換或記具體合理例外；不為每class建interface；Queue／Reverb連續不同租戶任務不殘留actor／scope，Seeder環境守門與歷史模式保留。",
+      "depends": [
+        "di-context",
+        "di-core"
+      ],
+      "board": "api"
+    },
+    {
+      "key": "phpdoc-all",
+      "title": "統一全自有後端PHPDoc並產生型別覆蓋與例外清單",
+      "priorityClass": "P1",
+      "evidence": "最新PHP仍有單行docblock、泛化array、缺param／return，原全面PHPDoc計畫尚無實作卡；TT-230只完成skill整理。",
+      "work": "依新skill逐檔檢視class／trait／interface及方法；繁中描述實際用途，param／return／throws、泛型／array shape與原生型別一致，保留工具註解。",
+      "acceptance": "涵蓋app、seeders、Console、tools、tests支援與需調整的自有PHP；migration／config檢視但不造無意義註解。交付分母、完成數、合理例外與簽章核對；Pint／語法及現有型別工具通過，不以字串批換當驗收。",
+      "depends": [
+        "di-context"
+      ],
+      "board": "api"
+    },
+    {
+      "key": "di-acceptance",
+      "title": "完成全面DI與PHPDoc的隔離整合與交付驗收",
+      "priorityClass": "P1",
+      "evidence": "原規格要求全庫清單、容器可測試性、真實MySQL與核心瀏覽器；規範或核心鏈完成不能等於全庫完成。",
+      "work": "彙總前面DI與PHPDoc工項，執行獨立掃描／第二輪差異檢查、完整測試與核心前端流程；同步後端導覽與重構紀錄。",
+      "acceptance": "報實際檔案數、替換new／locator數、保留例外、PHPDoc覆蓋與分母；隔離MySQL／多租戶／長駐程序、Session／CSRF／ACL／草稿／revision正確；無未處理P1才可整體驗收，效能卡仍分別驗收。",
+      "depends": [
+        "di-core",
+        "di-periphery",
+        "phpdoc-all"
+      ],
+      "board": "api"
+    },
+    {
+      "key": "query-client",
+      "title": "前端API客戶端支援分責GET、取消與正確錯誤分類",
+      "priorityClass": "P1",
+      "evidence": "frontend/src/api/index.js僅有POST callApi，未呼叫/api/v1；無AbortSignal，catch把多種失敗統一成NETWORK_ERROR。",
+      "work": "建立集中GET query adapter、query／多選參數及分頁meta，維持Session／X-Workspace-ID／generation；接取消／timeout與明確HTTP／DomainError分類。",
+      "acceptance": "舊Workspace／路由回應不能覆蓋新scope；Abort不冒充連線失敗、保留401／403／404／409／419與mutation CSRF／requestId；可讀／查詢重試政策分開，測真實隔離API並供各頁接線重用。",
+      "depends": [
+        "TT-180"
+      ],
+      "board": "performance"
+    },
+    {
+      "key": "board-list",
+      "title": "看板列表改為Project摘要API並接上前端",
+      "priorityClass": "P1",
+      "evidence": "BoardList.vue用props.issues與boardCount算數量，App.vue仍先getWorkspace；沒有GET boards查詢路由。TT-229僅完成收錄驗證／差量寫入。",
+      "work": "新增限定當前Project的看板摘要搜尋／穩定分頁，只回名稱、ID、revision、Default標記、動態去重卡數及操作能力；改BoardList與App載入。",
+      "acceptance": "看板列表不讀卡片全文／留言／歷史／工時／Todo；卡數涵蓋Epic動態收錄與去重。新增／改名／封存後局部刷新，直接網址及撤權正常；Network無getWorkspace/getTodos，SQL rows／bytes成長驗證。",
+      "depends": [
+        "query-client",
+        "TT-180"
+      ],
+      "board": "performance"
+    },
+    {
+      "key": "board-cards",
+      "title": "目前看板卡片改為有界查詢並維持泳道與拖曳",
+      "priorityClass": "P1",
+      "evidence": "ProjectBoard使用projectAllIssues、visibleIssues、workspace.timeEntries；新Issue API尚無board收錄條件，TT-181只處理DOM。",
+      "work": "建立Default／自訂看板卡片查詢與必要屬性，SQL套收錄ID＋Epic動態展開／去重／權限／篩選；前端依目前board載入，有界分批或欄位分頁策略須明確。",
+      "acceptance": "不能只取第一頁造成漏卡；保留Epic可見、不分組預設／選擇保存、泳道、拖曳、雙擊編輯與詳細／精簡；摘要不帶活動全文，不載其他Project。私有事件局部刷新與撤權符合TT-219，DOM策略與TT-181協作。",
+      "depends": [
+        "board-list",
+        "TT-214",
+        "TT-219"
+      ],
+      "board": "performance"
+    },
+    {
+      "key": "lookup-options",
+      "title": "建立有界選項查詢並移除表單對全量Issue與成員的依賴",
+      "priorityClass": "P1",
+      "evidence": "IssuePanel／IssueRelations／BoardDialog以所有issues前端搜尋；ProjectDialog／TimeEntryDrawer依賴全members／issues。v1 Project已不附memberIds。",
+      "work": "按用途提供可指派成員、Project負責人、可轉卡Project、Epic／父卡／關聯／收錄候選搜尋與已選ID摘要解析；接表單與篩選器按需讀取。",
+      "acceptance": "各用途只取所需欄位，有SQL範圍／上限／穩定排序及input debounce／取消；未在候選當頁的已選值不遺失，失去資格可辨識，不能拿空陣列覆蓋既有關聯。伺服器寫入再驗授權，與TT-221的驗證分工。",
+      "depends": [
+        "query-client",
+        "TT-214",
+        "TT-215"
+      ],
+      "board": "performance"
+    },
+    {
+      "key": "workspace-admin",
+      "title": "工作區設定與成員目錄拆分有界讀取並接線",
+      "priorityClass": "P1",
+      "evidence": "WorkspaceSettings仍由App傳workspace.members／meta；AccountSettings::listing一次帶全工作區成員。",
+      "work": "將一般設定、可見成員搜尋／分頁與角色選項按責任取得，前端分頁／切tab按需讀取，不把成員名單塞回bootstrap。",
+      "acceptance": "Owner／Manager／一般成員依有效permission與既有入口規則；穩定排序／上限，未開成員頁不下載名單，角色調整／邀請後局部刷新；維持revision／canChange／繼承語意與跨Workspace清理，不新增自訂角色。",
+      "depends": [
+        "query-client",
+        "TT-180"
+      ],
+      "board": "performance"
+    },
+    {
+      "key": "project-acl",
+      "title": "專案成員ACL讀取改批次分頁並拆出候選與歷史",
+      "priorityClass": "P1",
+      "evidence": "ProjectMembers::listing逐eligible member get(projectMembers)並forUser重判，附全部members候選與ACL歷史；ProjectMembers.vue尚用此組合。",
+      "work": "提供Project範圍的有效成員分頁與source摘要，批次指派／能力；邀請候選按需搜尋，ACL歷史按需分頁；同步管理頁。",
+      "acceptance": "SQL先限workspace/project，有固定上限與排序，無逐列讀完整歷史；保留Workspace繼承、可授予權限交集、ACL revision與撤權；區分本卡管理資料和選項卡的最小指派候選，不讓一般查詢拿全員email。",
+      "depends": [
+        "query-client",
+        "lookup-options"
+      ],
+      "board": "performance"
+    },
+    {
+      "key": "status-usage",
+      "title": "狀態設定以Project狀態使用摘要取代完整卡片掃描",
+      "priorityClass": "P2",
+      "evidence": "ProjectSettings.used依props.issues.some判斷，ProjectService::updateStatuses遍歷all(issues)，移除全Workspace後會失去使用中判斷。",
+      "work": "提供單Project狀態屬性與使用數／是否使用摘要，SQL分組／exists；前端狀態設定只讀此資料，寫入同交易重驗使用中限制。",
+      "acceptance": "open／closed必備與自訂type／顯示名稱／排序不變；禁止刪除使用中狀態、跨Project資料不影響判斷，競態下不移失卡片，無任務全文下載。與TT-221關聯驗證不同。",
+      "depends": [
+        "query-client",
+        "TT-178"
+      ],
+      "board": "performance"
+    },
+    {
+      "key": "issue-time",
+      "title": "任務詳細頁工時改用單卡摘要與分頁明細API",
+      "priorityClass": "P1",
+      "evidence": "IssueDetail.work從全部entries／children在前端篩選，單卡工時tab仍依workspace.timeEntries；TT-223只涵蓋月曆。",
+      "work": "建立指定Issue工時摘要與按日期穩定分頁的有效紀錄；Epic直接填報與所屬卡片去重加總分清，接詳細頁與填報／修改後局部更新。",
+      "acceptance": "timeEntry.readOwn／團隊permission及作者限制保持；摘要不為計算先載全期間原始列，明細SQL分頁；Epic不重複、void與日期時區正確，草稿／revision／每日24小時驗證不變。與TT-215活動頁、TT-222單日上限及TT-223月曆協作。",
+      "depends": [
+        "query-client",
+        "TT-215",
+        "TT-223"
+      ],
+      "board": "performance"
+    },
+    {
+      "key": "notification-preview",
+      "title": "現有通知預覽改為Project分頁與單筆按需讀取",
+      "priorityClass": "P2",
+      "evidence": "NotificationPreview從workspace.notifications過濾並依全issues找連結；WorkspaceQuery.visibleNotifications先all(notifications)。TT-217是Todo鈴鐺，TT-190則是未實作的新Issue通知產品。",
+      "work": "把現有Project通知preview的摘要列表／單筆內容按需查詢並接線，連結只帶issue識別與必要摘要；SMTP verify維持獨立權限。",
+      "acceptance": "只回有權且符合原recipient規則的Project通知，上限與穩定排序、內容按需；無getWorkspace／全量issues，撤權與深連結正常；不寄實際郵件、不做mention／追蹤者／新收件匣。",
+      "depends": [
+        "query-client",
+        "TT-219"
+      ],
+      "board": "performance"
+    },
+    {
+      "key": "typed-other-writes",
+      "title": "其餘領域寫入改用專用Request與DTO並同步前端契約",
+      "priorityClass": "P2",
+      "evidence": "Board／Project／Todo／Workspace等仍共用通用操作payload，TT-178只明列任務／工時寫入，不能涵蓋全部自有領域。",
+      "work": "逐用例處理Project／Board／Todo／Workspace／會員等非TT-178寫入，專用FormRequest→typed Data→共用Application Service→輸出邊界；前端api與表單同步。",
+      "acceptance": "列逐端點移轉矩陣；維持ok/data、DomainError、欄位語意、revision／requestId及重放前授權，不能靠刪allowlist破壞receipt；DI組裝與契約變更分開驗收，不重複TT-178的Issue／Time部分。",
+      "depends": [
+        "TT-178",
+        "query-client"
+      ],
+      "board": "api"
+    }
+  ],
+  "reuse": [
+    "TT-180",
+    "TT-178",
+    "TT-179",
+    "TT-214",
+    "TT-215",
+    "TT-219",
+    "TT-226",
+    "TT-168"
+  ],
+  "result": {
+    "new": {
+      "di-context": {
+        "identifier": "TT-232",
+        "id": "aac17bef-ed4e-43be-b27f-d76c51a281a6",
+        "boardId": "80f5c059-aba8-4caa-8ac5-8014c5c58a14",
+        "depends": []
+      },
+      "di-core": {
+        "identifier": "TT-233",
+        "id": "420eac4f-5cc0-4fee-beb6-30cb5a122960",
+        "boardId": "80f5c059-aba8-4caa-8ac5-8014c5c58a14",
+        "depends": [
+          "TT-232"
+        ]
+      },
+      "di-periphery": {
+        "identifier": "TT-234",
+        "id": "27d65780-d081-48d0-9280-d0838ef1a7d0",
+        "boardId": "80f5c059-aba8-4caa-8ac5-8014c5c58a14",
+        "depends": [
+          "TT-232",
+          "TT-233"
+        ]
+      },
+      "phpdoc-all": {
+        "identifier": "TT-235",
+        "id": "5d90c544-090e-45b6-ba87-649d3b3705b9",
+        "boardId": "80f5c059-aba8-4caa-8ac5-8014c5c58a14",
+        "depends": [
+          "TT-232"
+        ]
+      },
+      "di-acceptance": {
+        "identifier": "TT-236",
+        "id": "57c258fc-aff0-46fb-beea-af235b5414fc",
+        "boardId": "80f5c059-aba8-4caa-8ac5-8014c5c58a14",
+        "depends": [
+          "TT-233",
+          "TT-234",
+          "TT-235"
+        ]
+      },
+      "query-client": {
+        "identifier": "TT-237",
+        "id": "5fbb2d64-95ca-4ab0-a1b9-b195b6155a7c",
+        "boardId": "17e9af2b-4c24-42cb-af67-0a6337181e12",
+        "depends": [
+          "TT-180"
+        ]
+      },
+      "board-list": {
+        "identifier": "TT-238",
+        "id": "9a2b1fd5-2737-487b-a2f9-ff7cf96c6a68",
+        "boardId": "17e9af2b-4c24-42cb-af67-0a6337181e12",
+        "depends": [
+          "TT-237",
+          "TT-180"
+        ]
+      },
+      "board-cards": {
+        "identifier": "TT-239",
+        "id": "a48653db-282d-4829-80b2-4bb91c8baa80",
+        "boardId": "17e9af2b-4c24-42cb-af67-0a6337181e12",
+        "depends": [
+          "TT-238",
+          "TT-214",
+          "TT-219"
+        ]
+      },
+      "lookup-options": {
+        "identifier": "TT-240",
+        "id": "220188a2-abbf-4639-a112-9293c6c9ff14",
+        "boardId": "17e9af2b-4c24-42cb-af67-0a6337181e12",
+        "depends": [
+          "TT-237",
+          "TT-214",
+          "TT-215"
+        ]
+      },
+      "workspace-admin": {
+        "identifier": "TT-241",
+        "id": "de9270d0-5691-48ca-9e26-2e80ea2156a2",
+        "boardId": "17e9af2b-4c24-42cb-af67-0a6337181e12",
+        "depends": [
+          "TT-237",
+          "TT-180"
+        ]
+      },
+      "project-acl": {
+        "identifier": "TT-242",
+        "id": "8130656b-de6a-4653-90b2-31c2e2fc92fb",
+        "boardId": "17e9af2b-4c24-42cb-af67-0a6337181e12",
+        "depends": [
+          "TT-237",
+          "TT-240"
+        ]
+      },
+      "status-usage": {
+        "identifier": "TT-243",
+        "id": "bf8e5a89-0a38-4393-84e1-33204bfeb890",
+        "boardId": "17e9af2b-4c24-42cb-af67-0a6337181e12",
+        "depends": [
+          "TT-237",
+          "TT-178"
+        ]
+      },
+      "issue-time": {
+        "identifier": "TT-244",
+        "id": "ccb196b0-b4b7-4e98-9b55-b124677d4801",
+        "boardId": "17e9af2b-4c24-42cb-af67-0a6337181e12",
+        "depends": [
+          "TT-237",
+          "TT-215",
+          "TT-223"
+        ]
+      },
+      "notification-preview": {
+        "identifier": "TT-245",
+        "id": "a5debbe4-d40e-4d3c-89d9-1539c09d8c61",
+        "boardId": "17e9af2b-4c24-42cb-af67-0a6337181e12",
+        "depends": [
+          "TT-237",
+          "TT-219"
+        ]
+      },
+      "typed-other-writes": {
+        "identifier": "TT-246",
+        "id": "ee1e7b51-8914-492d-8e0a-0aa129047c55",
+        "boardId": "80f5c059-aba8-4caa-8ac5-8014c5c58a14",
+        "depends": [
+          "TT-178",
+          "TT-237"
+        ]
+      }
+    },
+    "supplemented": {
+      "TT-180": {
+        "state": "inprogress",
+        "assignee": "6eb559dc-774e-4f07-bde8-156172735eea"
+      },
+      "TT-178": {
+        "state": "open",
+        "assignee": "6eb559dc-774e-4f07-bde8-156172735eea"
+      },
+      "TT-179": {
+        "state": "open",
+        "assignee": "6eb559dc-774e-4f07-bde8-156172735eea"
+      },
+      "TT-214": {
+        "state": "inprogress",
+        "assignee": "6eb559dc-774e-4f07-bde8-156172735eea"
+      },
+      "TT-215": {
+        "state": "inprogress",
+        "assignee": "6eb559dc-774e-4f07-bde8-156172735eea"
+      },
+      "TT-219": {
+        "state": "open",
+        "assignee": "6eb559dc-774e-4f07-bde8-156172735eea"
+      },
+      "TT-226": {
+        "state": "inprogress",
+        "assignee": "6eb559dc-774e-4f07-bde8-156172735eea"
+      },
+      "TT-168": {
+        "state": "open",
+        "assignee": "6eb559dc-774e-4f07-bde8-156172735eea"
+      }
+    },
+    "delivery": {
+      "identifier": "TT-231",
+      "id": "4903b8d1-5cbb-4258-b285-ee4ca75b1caa"
+    },
+    "verification": {
+      "before": 230,
+      "after": 246,
+      "newOpen": 15,
+      "supplemented": 8,
+      "statesAndAssigneesVerified": true,
+      "boardMembership": {
+        "expected": 16,
+        "matched": 16,
+        "readOnly": true
+      }
+    }
+  },
+  "supplements": {
+    "TT-180": "端到端驗收包含App殼／ProjectHome／側欄能力與數量來源：使用auth/current與Project分頁／屬性，不再要求全部issues／members。建立舊getWorkspace／getTodos呼叫端（含tools的import／verify、tests與文件）移轉／退役矩陣，最後以Network證明一般頁面不走整包入口。新專用看板／選項／管理頁卡負責各頁實作，本卡負責導覽與移除全量預設，不必等所有效能卡才交付一條完整流程。",
+    "TT-178": "本卡包含Issue／Time寫入的專用Request／typed DTO與前端表單／api adapter同步；維持revision／requestId及重放前授權。非Issue／Time領域另由新卡承接，DI只處理依賴，不以DI完成代替契約遷移。",
+    "TT-179": "依實際路由拆出頁面資料生命週期與editor／overlay owner，不只是把整個App搬進composable；統一loading／empty／error／404／撤權狀態。頁面摘要與編輯完整資料狀態分開，不為接新API裝Router／Pinia或全庫TS。與TT-180資料導覽、TT-149草稿安全分工。",
+    "TT-214": "v1後端已有SQL分頁，但frontend/src/api/index.js與App尚未接線。本卡必須完成前端filter／search／sort／scope／page的伺服器參數、total／lastPage、過期回應及空頁處理；不能再用當頁摘要切片冒充整個Project。Network不得有getWorkspace/getTodos；只完成後端不能結案。",
+    "TT-215": "v1詳細目前只有摘要＋description，缺前端所需關聯／子項按需讀取；IssuePanel仍存取comments.length／history並依全量issues找關聯。須補單卡關聯／子項摘要分頁與tab活動載入；深連結先hydrate完整可編輯資料與最新revision，不以空陣列默認值覆蓋既有關聯／留言。單卡工時另由新工時卡處理；所有摘要／詳細契約與真實隔離瀏覽器同步驗收。",
+    "TT-219": "補明確scope失效／合併矩陣：Project／Board／Issue／Todo／工時／ACL mutation與事件，各自只刷新目前頁需要的資料。看板與設定等由本輪新專用卡提供查詢，本卡接刷新路由，跨Project／Workspace與權限變更時清資料及取消舊請求。",
+    "TT-226": "API新舊遷移必須驗證實際frontend／tools使用端：允許endpoint清單、初始與背景request／rows／bytes門檻、未開tab不查活動、500卡／100成員／長期間成長，連遠端服務的SQL RTT分段和正式拓樸另作可重跑量測；本輪新卡不因建卡或DTO新增就完成。保留實際data-access-review-2026-11-12.md的2.3～2.6秒單次觀察，不能當p95。",
+    "TT-168": "本卡仍是未來外部受限API／metadata能力。當前內部頁面分責查詢與新選項／看板／ACL卡共用Application Service與授權，不在本輪加PAT或另造第二套業務；內部前端接線須先完成，不能讓它被外部認證待辦阻塞。"
+  }
+}
