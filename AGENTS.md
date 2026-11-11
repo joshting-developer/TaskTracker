@@ -181,3 +181,8 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 ## TaskTracker主題看板（2026-11-11）
 
 已依使用者要求建立SEO、部署、實際功能、AI整合/API四板，Default保留所有卡片；分類與網址見[看板交接](docs/topic-boards-2026-11-11.md)。未來建卡依工作主題帶boardId或更新收錄，保持實際狀態與指派；API Epic TT-3會動態展開，跨主題總覽Epic不可整包收錄導致混板。日期版分類JSON只作本次快照，不能覆蓋後來人工調整。使用者已明確將AI的TaskTracker專案資格改為maintainer，Workspace仍user；權限來自後端有效permission，Owner僅本輪授權改資格後登出，不保留其密碼或延續Owner操作。
+
+
+## 外部MySQL／Redis（2026-11-11）
+
+本機已依使用者授權將全部資料遷至外部MySQL task_tracker_testing，並配置另一台外部Redis；根目錄忽略的.env以COMPOSE_FILE選docker-compose.remote-db.yml，秘密檔在.local/remote-mysql，不讀出或提交。原MySQL／Redis volume保留供回復，舊庫不再同步；不能直接切回舊庫覆蓋新進度。Redis以env的TASKTRACKER_REDIS_NAMESPACE區分服務與環境；Cache tags只作組內失效，不代替prefix或ACL，禁止對共享Redis執行FLUSHDB／FLUSHALL／Cache::flush／cache:clear。Reverb scaling頻道另帶namespace。MySQL測試環境TLS不驗證憑證為使用者明確授權的暫時例外，預設仍須驗證，不能沿用到正式部署。見docs/remote-services-migration-2026-11-11.md。

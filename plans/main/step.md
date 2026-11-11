@@ -1,3 +1,14 @@
+## 2026-11-11 遷移至使用者指定外部MySQL及Redis
+
+- 已完成：MySQL全33表／13,367筆（停寫最終快照）內容雜湊一致；9帳號／3工作區／4專案／310卡／7看板／174工時。切到指定外部MySQL TLS與外部Redis，舊兩服務停止、volume／SQL備份保留。根.env與秘密不進Git；外部Compose／環境範例及交接文件完成。
+- Redis初次timeout，使用者完成網路設定後ACL／prefix／Cache tags驗證成功；本機queue／reserved／delayed皆0再切換。實際Queue消費、WebSocket、PDO host／TLS與Redis namespace讀回通過；Chrome登入及五看板通過。
+- 隔離memory回歸66 tests／2483 assertions通過，5項獨立MySQL案例skip；兩設定Pint與Compose檢查通過。TT-211／212完成交接與結案後讀回，不對主庫跑seed或測試。MySQL暫不驗證憑證已有本輪明確授權，正式預設仍驗證，後續補CA。
+
+
+- 已授權將目前全部資料遷移至129.203.169.36的task_tracker_testing，帳號josh，密碼只保存於忽略的本機秘密檔。
+- 先檢查來源／目標版本、資料與權限；只對空目標匯入，既有資料不覆蓋。停止寫入後一致備份、全表遷移及內容比對，再切換API／Queue／Reverb設定並驗證登入與資料。保留原MySQL volume與備份供回復。
+- 連線不可用時保持原服務，記錄實際阻擋；不對主庫跑測試或seed。
+
 ## 2026-11-11 依SEO／部署／實際功能／AI整合API整理看板
 
 - 已完成：四個看板5／49／110／42張，Default210；AI為Project Maintainer／Workspace user。API、前端Epic展開函式及真實Chrome逐板／手機檢查通過；原209張完整資料與revision不變，TT-210交接留言後closed。未修改產品程式、資料表或部署。

@@ -33,3 +33,5 @@
 - 2026-11-04儲存更新：22張關聯式表及Eloquent模型已落地，資料設計／ER／遷移保護見[database-design.md](../docs/database-design.md)。JSON只用於事件／重試快照及未映射歷史欄位；新業務欄位須新增明確欄位／migration。
 
 2026-11-06後續更新：使用者已明確恢復前後端架構重構，先前暫緩為歷史決策。依本專案Laravel／Vue skills分階段實作及驗證，保留API、資料、授權及產品操作契約，見`plans/main/plan.md`與`docs/產品討論紀錄.md`。
+
+2026-11-11：目前本機依使用者要求連外部MySQL 8.0.46／Redis，根.env選docker-compose.remote-db.yml；原本機8.4及Redis volume保留但已停止。所有測試隔離原則不變，禁止對遠端主庫seed／RefreshDatabase或共享Redis全庫flush。連線、TLS測試例外及prefix見[外部服務切換](../docs/remote-services-migration-2026-11-11.md)。

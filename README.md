@@ -31,6 +31,8 @@ Owner／Manager可從側欄「工時分析」選擇成員投入、專案投入�
 
 舊 `records.payload` 已改為歷史封存，正常業務不再寫入。SQLite轉MySQL會保留現有帳號、公開 ID、revision、歷史及工時；原SQLite與volume保留。既有資料請先依[MySQL切換紀錄](docs/mysql-migration-2026-11-09.md)備份／匯入，不需重設Seed。資料表、ER 圖及升級／回退方式見[關聯式資料設計](docs/database-design.md)。
 
+目前這台開發機已依使用者指定切至外部MySQL／Redis，根目錄忽略的`.env`選擇`docker-compose.remote-db.yml`；新環境仍預設本機Compose。連線、秘密檔、Redis環境前綴及備份／回復限制見[外部服務切換](docs/remote-services-migration-2026-11-11.md)。
+
 ## Docker 開始試用
 
 新環境直接執行下列指令；有既有SQLite資料時，先依上面的切換文件離線匯入。MySQL密碼由一次性服務隨機產生並保存在獨立volume，不需設定公開預設密碼。

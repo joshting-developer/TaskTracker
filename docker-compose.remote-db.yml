@@ -1,0 +1,145 @@
+# External MySQL mode; select with COMPOSE_FILE in ignored root .env.
+x-backend: &backend
+  image: ${COMPOSE_PROJECT_NAME:-tasktracker}-backend
+  build:
+    context: .
+    dockerfile: backend/Dockerfile
+  init: true
+  environment: &backend-env
+    APP_NAME: TaskTracker
+    APP_ENV: local
+    APP_DEBUG: 'false'
+    APP_URL: http://127.0.0.1:${TASKTRACKER_PORT:-5174}
+    TASKTRACKER_ENV_PATH: /data
+    DB_CONNECTION: mysql
+    DB_HOST: ${TASKTRACKER_DB_HOST:?Set TASKTRACKER_DB_HOST}
+    DB_PORT: ${TASKTRACKER_DB_PORT:-3306}
+    DB_DATABASE: ${TASKTRACKER_DB_DATABASE:?Set TASKTRACKER_DB_DATABASE}
+    DB_USERNAME: ${TASKTRACKER_DB_USERNAME:?Set TASKTRACKER_DB_USERNAME}
+    DB_PASSWORD_FILE: /run/tasktracker-app/password
+    MYSQL_SSL_ENABLED: 'true'
+    MYSQL_ATTR_SSL_CA: ${TASKTRACKER_DB_CA_FILE:-/etc/ssl/certs/ca-certificates.crt}
+    MYSQL_SSL_VERIFY_SERVER_CERT: ${TASKTRACKER_DB_SSL_VERIFY:-true}
+    SESSION_DRIVER: database
+    SESSION_COOKIE: tasktracker_session
+    SESSION_LIFETIME: 480
+    CACHE_STORE: redis
+    QUEUE_CONNECTION: redis
+    BROADCAST_CONNECTION: reverb
+    REDIS_CLIENT: predis
+    REDIS_HOST: ${TASKTRACKER_REDIS_HOST:-redis}
+    REDIS_PORT: ${TASKTRACKER_REDIS_PORT:-6379}
+    REDIS_USERNAME: ${TASKTRACKER_REDIS_USERNAME:-}
+    REDIS_PASSWORD_FILE: ${TASKTRACKER_REDIS_PASSWORD_FILE:-}
+    REDIS_DB: ${TASKTRACKER_REDIS_DB:-0}
+    REDIS_CACHE_DB: ${TASKTRACKER_REDIS_CACHE_DB:-0}
+    REDIS_PREFIX: "${TASKTRACKER_REDIS_NAMESPACE:?Set TASKTRACKER_REDIS_NAMESPACE}:"
+    CACHE_PREFIX: "cache:"
+    REDIS_QUEUE: default
+    REVERB_SCALING_CHANNEL: "${TASKTRACKER_REDIS_NAMESPACE}:reverb"
+    REVERB_SERVER_HOST: 0.0.0.0
+    REVERB_SERVER_PORT: 8080
+    REVERB_HOST: websocket
+    REVERB_PORT: 8080
+    REVERB_SCHEME: http
+    REVERB_ALLOWED_ORIGINS: 127.0.0.1,localhost
+    ALLOWED_ORIGINS: http://127.0.0.1:${TASKTRACKER_PORT:-5174},http://localhost:${TASKTRACKER_PORT:-5174},http://127.0.0.1:5175
+    SMTP_HOST: ${SMTP_HOST:-}
+    SMTP_PORT: ${SMTP_PORT:-587}
+    SMTP_SECURE: ${SMTP_SECURE:-false}
+    SMTP_USER: ${SMTP_USER:-}
+    SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+    SMTP_FROM: ${SMTP_FROM:-}
+  volumes:
+    - ./backend/app:/app/app:ro
+    - ./backend/routes:/app/routes:ro
+    - ./backend/config:/app/config:ro
+    - ./backend/database/migrations:/app/database/migrations:ro
+    - ./backend/database/seeders:/app/database/seeders:ro
+    - ./backend/tests:/app/tests:ro
+    - ./backend/phpunit.xml:/app/phpunit.xml:ro
+    - ./data:/legacy:ro
+    - laravel-data:/data
+    - laravel-storage:/app/storage
+    - ${TASKTRACKER_DB_SECRET_DIR:?Set TASKTRACKER_DB_SECRET_DIR}:/run/tasktracker-app:ro
+
+services:
+  backend:
+    <<: *backend
+    environment:
+      <<: *backend-env
+      TASKTRACKER_BOOTSTRAP: '1'
+    ports:
+      - "127.0.0.1:${TASKTRACKER_API_PORT:-3002}:3002"
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:3002/api/health') === false ? 1 : 0);"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+      start_period: 20s
+
+  queue:
+    <<: *backend
+    command: ["php", "artisan", "queue:work", "redis", "--sleep=1", "--tries=3", "--timeout=60"]
+    restart: unless-stopped
+    stop_grace_period: 70s
+    depends_on:
+      backend:
+        condition: service_healthy
+      websocket:
+        condition: service_healthy
+
+  websocket:
+    <<: *backend
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+    ports:
+      - "127.0.0.1:${TASKTRACKER_WS_PORT:-8080}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "-r", "$$socket = @fsockopen('127.0.0.1', 8080); exit($$socket ? 0 : 1);"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    profiles: [local-redis]
+    image: redis:8-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    init: true
+    environment:
+      API_PROXY_TARGET: http://backend:3002
+      REVERB_PROXY_TARGET: http://websocket:8080
+      VITE_USE_POLLING: 'true'
+    ports:
+      - "127.0.0.1:${TASKTRACKER_PORT:-5174}:5174"
+    volumes:
+      - ./frontend/src:/app/src:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+      websocket:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "--input-type=module", "-e", "const r = await fetch('http://127.0.0.1:5174/api/health'); if (!r.ok) process.exit(1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  laravel-data:
+  laravel-storage:
+  redis-data:

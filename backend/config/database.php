@@ -62,8 +62,11 @@ return [
             'timezone' => '+00:00',
             'isolation_level' => 'REPEATABLE READ',
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
+                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA', env('MYSQL_SSL_ENABLED', false)
+                    ? '/etc/ssl/certs/ca-certificates.crt' : null),
+                Mysql::ATTR_SSL_VERIFY_SERVER_CERT => env('MYSQL_SSL_ENABLED', false)
+                    ? env('MYSQL_SSL_VERIFY_SERVER_CERT', true) : null,
+            ], static fn ($value) => $value !== null) : [],
         ],
 
         'mariadb' => [
@@ -159,7 +162,8 @@ return [
             'url' => env('REDIS_URL'),
             'host' => env('REDIS_HOST', '127.0.0.1'),
             'username' => env('REDIS_USERNAME'),
-            'password' => env('REDIS_PASSWORD'),
+            'password' => env('REDIS_PASSWORD_FILE')
+                ? trim(file_get_contents(env('REDIS_PASSWORD_FILE'))) : env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_DB', '0'),
             'max_retries' => env('REDIS_MAX_RETRIES', 3),
@@ -172,7 +176,8 @@ return [
             'url' => env('REDIS_URL'),
             'host' => env('REDIS_HOST', '127.0.0.1'),
             'username' => env('REDIS_USERNAME'),
-            'password' => env('REDIS_PASSWORD'),
+            'password' => env('REDIS_PASSWORD_FILE')
+                ? trim(file_get_contents(env('REDIS_PASSWORD_FILE'))) : env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_CACHE_DB', '1'),
             'max_retries' => env('REDIS_MAX_RETRIES', 3),
