@@ -1,3 +1,11 @@
+## 2026-11-11 指派、留言、mention與通知盤點
+
+- 已完成：docs/notification-audit-2026-11-11.md與產品紀錄，確認Issue preview／Todo Inbox分開且無mention；11 tests／202 assertions隔離回歸通過。審查TT-204留言後closed；TT-190／189補發現並維持deferred，讀回核對通過；未改產品程式或發真信。
+
+- 使用者要求盤點正式卡片指派／被留言／@mention會不會通知；先查後端事件、儲存／閱覽權限、前端鈴鐺與刷新、SMTP／Reverb及既有測試，不直接製作功能。
+- 建立本輪審查子卡，整理觸發矩陣、可見入口及缺口，區分正式卡片preview與Todo站內未讀通知；@mention若無功能則列後續候選。
+- 跑既有隔離memory測試驗證相關權限／通知流程，不在主庫建立測試業務資料；審查與建議同步產品紀錄及原通知待辦，功能卡不因報告完成結案。
+
 ## 2026-11-11 確認API-first平台範圍與共用業務邏輯
 
 - 已完成：docs/api-first-platform.md及四個文件／指引入口同步；10卡更新讀回通過，核心open、TT-174／175／177 deferred／low。TT-203僅規劃交付結案；連結／diff檢查通過，未改產品程式或他專案。
