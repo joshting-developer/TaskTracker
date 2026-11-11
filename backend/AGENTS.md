@@ -6,6 +6,8 @@
 
 ## 後端共用規範
 
+先套用專案自有 [TaskTracker Development Standards](../skills/tasktracker-development-standards/SKILL.md)，後端特別遵循其DI生命週期、PHPDoc、八項資料存取與驗證references；搭配下列Laravel專責skills。這些是後續修改的標準，不表示全庫DI／PHPDoc重構已完成。
+
 後端程式開發、review及測試設計先讀 [ECC laravel-patterns](../skills/vendor/laravel-patterns/SKILL.md)，再讀 [Laravel Architecture](../skills/laravel-architecture/SKILL.md) 與按需references。均由專案`.agents/skills`提供入口；來源及配置見[開發skills配置](../docs/development-skills.md)。舊backend-development-standards已移除。
 
 - 架構／慣例以ECC為準，本地Architecture補足其未規定處；使用者需求、產品契約與下方資料／授權安全限制優先。

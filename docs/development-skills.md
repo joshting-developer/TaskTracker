@@ -51,3 +51,7 @@ root／backend AGENTS、backend CLAUDE／README及skills索引已改指向新入
 ## 效能工作搭配（2026-11-06）
 
 使用者另已選定Addy performance-optimization為主診斷、ECC benchmark補量測；專案入口與Laravel／Vue／SQLite適用邊界見[效能skills配置](performance-skills.md)。不取代本文件的分層／契約及Vue規範，上游副本分別固定版本；效能skill安裝本身不啟動新一輪重構。
+
+## 專案自有開發規範（2026-11-12）
+
+[TaskTracker Development Standards](../skills/tasktracker-development-standards/SKILL.md)，入口`.agents/skills/tasktracker-development-standards`。集中AGENTS與DI／PHPDoc計畫的共通工程、安全、DI生命週期、繁中PHPDoc、資料存取八項與驗證；與ECC、Laravel Architecture、Vue及效能skills互補，分層與命名仍由Architecture維護。規則來源與移轉對照見新skill references/sources.md。原計畫保留待實作狀態；本輪只整理skill，不代表全庫合規。

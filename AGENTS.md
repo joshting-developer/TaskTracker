@@ -75,22 +75,13 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 
 ## 開發規則
 
-- JavaScript 預設 2 格縮排、單引號、分號, 優先使用 `const`
-- 函式與變數使用 `camelCase`, 常數使用 `UPPER_SNAKE_CASE`, 資料欄位命名由契約文件統一
-- 元件負責顯示與操作狀態, 後端負責權限、驗證與資料存取；元件不直接操作 Sheets 或資料庫
-- GAS `.gs` 共用全域環境, 避免名稱衝突與載入時執行資料寫入
-- `google.script.run` 是非同步 RPC, 必須處理成功、失敗、重複提交與過期回應
-- 介面只傳可序列化資料, 時刻使用 ISO 8601 字串, 日曆日期使用 `YYYY-MM-DD`, 不傳 `Date`、`Range` 或 `Sheet`
-- 正式寫入使用固定 ID、版本檢查及重試識別；跨工作表寫入須有明確的部分失敗處理
-- 權限由後端檢查, 不以隱藏按鈕、前端傳入的角色或網址參數判定權限
-- 不假設 GAS 以部署者執行時可以取得訪客 email, 登入方案需獨立設計與部署驗證
-- 使用者文字預設以文字呈現, Markdown／HTML 顯示須處理不可信內容
-- 憑證、session、私有 Script Properties、資料庫與備份不得寫入前端 bundle 或 Git
-- 維護 lockfile, 實作時再查證套件版本與執行環境, 不照抄參考專案的版本
+2026-11-12：專案自訂工程規範集中維護於 [TaskTracker Development Standards](skills/tasktracker-development-standards/SKILL.md)，入口為 `.agents/skills/tasktracker-development-standards`。**開發、review、重構及測試必須套用**；先讀skill，再按任務載入共通工程、DI、PHPDoc、資料存取與驗證references。
+
+本skill與既有ECC Laravel、Laravel Architecture、Vue、UI／UX及Addy／ECC效能skills搭配，各自分工見skill入口。根AGENTS保留產品決策、環境現況、作業授權與追蹤規則；長期工程規則以本地skill為單一維護來源，不複製到vendor或全域。原DI／PHPDoc計畫仍是待實作任務，這次整理skill不代表已完成程式重構。
 
 ## 介面文案
 
-2026-11-06使用者確認：介面不要情緒性價值、標語或長篇功能介紹。預設只保留標題、欄位／操作、實際資料與必要狀態、錯誤／結果／確認；空狀態用簡短事實。不要在頁面補常駐操作教學、統計口徑或規則段落，這類內容留待未來操作手冊；手冊必須等使用者後續指示，不提前製作。使用者輸入的介紹與描述是業務資料，不屬於要移除的系統文案。此次盤點見docs/ui-copy-review-2026-11-06.md。
+依[共通工程規範：介面文案](skills/tasktracker-development-standards/references/engineering.md)執行：只留必要操作與事實，不加情緒性標語／常駐教學；使用者業務描述保留。既有盤點見 `docs/ui-copy-review-2026-11-06.md`，操作手冊等使用者另行指示。
 
 ## Git 與階段提交
 
@@ -108,13 +99,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 
 ## 驗證與交付
 
-- 純文件工作檢查內容一致性、來源、相對連結與差異, 不額外建立測試套件
-- 功能實作驗證實際使用流程, 依風險補權限、版本衝突、防重複提交與資料保存測試
-- 前後端必須符合相同 API 契約, PHP／SQLite 的 API 測試與瀏覽器整合互補, mock 不取代真實整合驗證
-- 資料遷移以隔離 SQLite 驗證, 不用使用者現有資料做會破壞性的測試；TestCase 在 bootstrap 前強制 putenv／SERVER／ENV 及 memory config, 不只依賴 phpunit.xml。隔離 Docker helper 必須覆寫 com.docker.compose.project／service 標籤, 避免繼承映像的正式服務標籤
-- 編譯、上傳、初始化資料與更新 Web App 部署是不同動作, 各自記錄驗證結果
-- 本專案依上述規範每階段建立 commit, 不沿用其他專案的推送／部署授權
-- 不刪除 `AGENTS.md`、skill、規劃文件或使用者資料來清理工作區
+依[專案驗證與交付門檻](skills/tasktracker-development-standards/references/verification.md)執行；涵蓋純文件檢查、按風險的權限／版本／防重複測試、前後端實際流程、SQLite bootstrap隔離、獨立MySQL與Docker標籤，以及DI／PHPDoc驗收。未實測或有P1未完成須如實標示，編譯、初始化與部署分別回報。每階段本機提交及遠端授權仍依上節Git規則。
 
 ## 文件位置
 
@@ -197,17 +182,6 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 
 ## API 資料存取架構檢查
 
-新增或修改 HTTP API、Repository、資料查詢、前端資料載入或輪詢時，必須執行資料存取審查。
+新增或修改HTTP API、Repository、資料查詢、前端資料載入或輪詢時，**必須執行** [API資料存取八項審查](skills/tasktracker-development-standards/references/data-access.md)。2026-11-12使用者提供的八項完整規則已移至此reference作為正式規範，後續調整同樣適用。
 
-1. 明確列出呼叫端需要的資料欄位與範圍。
-2. 列表查詢必須有明確的資料上限與穩定排序。
-3. 篩選與分頁優先在 SQL 層執行。
-4. 不得以載入整個 Workspace 作為一般頁面或單一 Project 的預設資料取得方式。
-5. 詳細資料、歷史、留言及工時應按需讀取。
-6. 評估呼叫頻率、SQL RTT、查詢次數及 Response Size 隨資料量成長的情況。
-7. 相關測試必須驗證資料讀取範圍，不能只驗證 SQL 次數與既有回應相同。
-8. 發現尚未處理的 P1 問題，必須明確列為未完成或受阻，不得宣稱整體效能驗收通過。
-
-效能量測使用專案內的 performance-optimization 與 benchmark Skills；不能以本機 SQLite 的結果取代遠端 MySQL 或實際部署拓樸的驗證。
-
-2026-11-12使用者確認：既有API契約可以為合理資料範圍而調整，不必保留原本的整包Workspace回傳。變更須同步呼叫端、文件與測試，明確移轉／退役舊接口；權限、租戶隔離、資料保存、revision與requestId等安全／業務語意仍需維持。歷史文件的「保留相容契約」不能作為永久保留過量載入的理由。
+既有API契約可以為合理資料範圍改版／退役，須同步呼叫端、文件與測試；安全、租戶隔離、資料保存、revision及requestId語意維持。不得以歷史相容保留整包Workspace，也不得用本機SQLite代替遠端MySQL／實際拓樸驗證或將未完成P1宣稱整體通過。

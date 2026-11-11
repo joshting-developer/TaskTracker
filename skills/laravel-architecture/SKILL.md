@@ -13,6 +13,10 @@ description: Apply TaskTracker Laravel layer responsibilities, dependency direct
 - 上游範例的Sanctum、REST、snake_case輸入、success envelope及DB方案不是本專案的遷移要求；保留Session／CSRF、camelCase API、ok/data、DomainError、revision／requestId及目前MySQL主庫（2026-11-09使用者已授權遷移；SQLite保留隔離快測／歷史匯入）。2026-11-12使用者已授權因資料存取分責調整API契約／退役整包RPC，須同步呼叫端、測試與接口文件；安全與版本語意不變，不以相容舊欄位為全量載入理由。
 - 2026-11-06使用者先暫緩、後續已明確恢復前後端重構；只處理當輪規劃及授權範圍。安裝本skill本身仍不代表授權任意改寫或現有程式已全面合規，重構紀錄見docs/refactoring-2026-11-06.md。
 
+## 與共通開發規範搭配
+
+同時套用本地[TaskTracker Development Standards](../tasktracker-development-standards/SKILL.md)。本skill維持層次／命名／Repository／Resource等專責；DI組裝及租戶生命週期、全自有後端PHPDoc、資料存取八項與交付門檻由該skill的references集中維護。純skill整理不啟動全庫程式重構。
+
 ## 開工與交付
 
 1. 閱讀受影響入口、相近用例與測試，列出可信身分、permission／scope、輸入／回傳、交易與失敗時不得發生的副作用。

@@ -46,3 +46,7 @@ UI／UX 審查或設計工作才讀取相關 skill。Pro Max 優先查可用性�
 | Unslop | [SKILL.md](unslop/SKILL.md) | 本輪主要去AI化掃描，依signs／真實畫面與五行方向提出修改 |
 
 僅本專案入口，原文及LICENSE／署名保留於skills/vendor；來源見[manifest](../../skills/anti-slop-sources.json)。先讀[配置](../../docs/anti-slop-skills.md)，使用者產品／品牌／Vue決策優先；未授權直接實作時，Unslop要求先交審查方向再確認。安裝不代表已改UI或全面通過審查。
+
+## 專案自有開發規範（2026-11-12）
+
+[TaskTracker Development Standards](tasktracker-development-standards/SKILL.md)，本地來源`skills/tasktracker-development-standards`。集中AGENTS與DI／PHPDoc計畫的長期規則：共通安全、DI生命週期、PHPDoc、資料存取八項與驗證交付。分層／命名仍由Laravel Architecture負責，搭配ECC、Vue、UI及效能skills，不重複改寫vendor；來源對照在新skill的references/sources.md。僅本專案相對symlink，不裝全域，不表示原重構已完成。

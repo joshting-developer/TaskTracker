@@ -119,3 +119,7 @@ UI UX Pro Max 固定 `713eef51b04efc98d6fa565323b495f7c9c89fd4`, 上游路徑 `.
 ## Hallmark／Unslop（2026-11-11）
 
 使用者已要求安裝：Hallmark為Nutlope/hallmark（MIT），Unslop為heydamir/unslop（CC BY 4.0，作者Damir Sokolovsky）。專案入口為`.agents/skills/hallmark`及`.agents/skills/unslop`，原文集中vendor兩個同名目錄；來源及逐檔校驗見[manifest](anti-slop-sources.json)，適用邊界及Unslop先確認方向的流程見[配置](../docs/anti-slop-skills.md)。本輪用Unslop審查既有產品，Hallmark安裝不代表執行重設計。
+
+## 專案自有開發規範（2026-11-12）
+
+[TaskTracker Development Standards](tasktracker-development-standards/SKILL.md)，入口`.agents/skills/tasktracker-development-standards`，本地來源`skills/tasktracker-development-standards`。集中根AGENTS與DI／PHPDoc計畫的長期規範：共通安全、DI與租戶生命週期、繁中PHPDoc、API資料存取八項及驗證交付。與ECC Laravel／Laravel Architecture／Vue／UI／效能skills互補，分層與命名仍由Architecture負責；上游vendor不修改。根AGENTS只保留必要入口與產品／作業規則。僅本專案相對symlink，不安裝全域；不代表全庫程式已合規或已完成原重構任務。

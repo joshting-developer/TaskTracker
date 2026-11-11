@@ -15,6 +15,8 @@
 
 依賴往資料與領域內部走，不反向依賴HTTP。Service／Action互用須形成單向無環圖；不要先規定所有流程必經Service與Action。相依預設constructor injection；只有實際存在多實作、外部系統邊界或明確替換需求才建立interface並在Provider綁定，不為可mock單一class而建interface。
 
+DI細節遵循[依賴注入與生命週期](../../tasktracker-development-standards/references/dependency-injection.md)，包含Context方法參數、Factory邊界、singleton／scoped限制及合理new例外；不在此重複維護。
+
 ## 簡單CRUD與Repository邊界
 
 只有同時滿足「單一Model、固定workspace scope、簡單條件、沒有重複的複雜查詢／聚合、沒有既有適用Repository」時，Service／Action可直接使用Eloquent。權限、版本、防重複提交與交易仍須經既有共同入口，不因CRUD略過。條件不成立就使用或新增有實際用途的Repository／Query，不允許在Controller直接操作Model作例外。
@@ -48,5 +50,5 @@ Resource只能呈現已載入且已授權的資料，使用whenLoaded等機制�
 - 既有API欄位camelCase、DB snake_case，映射集中於資料／輸出邊界；不把ECC範例snake_case輸入當成改API指令。
 - 明確type hints／return types，依ECC使用Laravel慣例與constructor injection；保留4格縮排與Pint可接受風格。不為安裝skill加formatter／套件或整庫格式化。
 - 複雜條件用語意變數或private方法，展開流程；避免密集單行、無意義縮寫及需要心算的布林技巧。
-- 新增或實質修改的class／function保留中文docblock，說明責任、參數與回傳；內容須有意義，不寫只重複名稱的空說明。英文業務識別碼不翻成中文變數。
+- 自有後端class／function註解遵循[PHPDoc規範](../../tasktracker-development-standards/references/phpdoc.md)：繁中具體用途、param／return與實際簽章及精確型別一致。全面整理依明確任務範圍執行，不因讀取skill擴大改動。
 - PHPUnit沿用專案`test_snake_case_describes_behavior`及`*Test.php`；Unit置`tests/Unit`，HTTP／DB整合置`tests/Feature`。不沿用舊規範`action_Result_Test_case`硬性格式，不為風格重命名既有測試。

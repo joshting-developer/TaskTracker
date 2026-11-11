@@ -1,3 +1,13 @@
+## 2026-11-12 專案自有開發規範skill整理
+
+- 使用者要求讀取docs/backend-di-phpdoc-refactor-plan.md，將AGENTS與文件的長期開發規範整理為專案內自有skill，與現有Laravel／Vue／效能skills互補。本輪只整理規範與引用，不執行文件的全面DI／PHPDoc或效能程式重構。
+- 新建tasktracker-development-standards，集中共通程式／資料安全、八項資料存取、DI生命週期、PHPDoc與驗證規則；AGENTS保留專案決策／作業授權，改引用正式規則；laravel-architecture保留分層／命名／Repository等專責並引用新規範。
+- 驗證：入口symlink、frontmatter、全部新增相對連結、規則來源對照及新舊一致性；純文件不跑業務測試／重啟服務。檢查本機stage後commit，不push。
+
+- 已完成入口與6份reference、根／後端AGENTS及Architecture／skills索引引用，八項資料存取完整保留。驗證7份Markdown、全部skill相對連結、frontmatter、本地symlink及三處必要入口引用通過；diff空白通過。原DI計畫與產品程式、vendor／依賴、資料庫均未修改，不執行業務測試或重啟。
+
+- 自我追蹤：查重PHPDoc／skill既有卡後建立TT-230，指派AI並收錄AI整合/API板；僅本輪規範整理驗收後結案，原DI／效能工作不連帶結案。八項規則另與HEAD正文逐項去空白比對一致。
+
 ## 2026-11-12 API資料存取規範與續作
 
 - 使用者新增八項資料存取審查要求，已加入根AGENTS；明確授權調整過量API契約，不以歷史相容承諾阻擋合理分責。同步本地Architecture規範與接口文件。
