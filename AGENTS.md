@@ -186,3 +186,8 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 ## 外部MySQL／Redis（2026-11-11）
 
 本機已依使用者授權將全部資料遷至外部MySQL task_tracker_testing，並配置另一台外部Redis；根目錄忽略的.env以COMPOSE_FILE選docker-compose.remote-db.yml，秘密檔在.local/remote-mysql，不讀出或提交。原MySQL／Redis volume保留供回復，舊庫不再同步；不能直接切回舊庫覆蓋新進度。Redis以env的TASKTRACKER_REDIS_NAMESPACE區分服務與環境；Cache tags只作組內失效，不代替prefix或ACL，禁止對共享Redis執行FLUSHDB／FLUSHALL／Cache::flush／cache:clear。Reverb scaling頻道另帶namespace。MySQL測試環境TLS不驗證憑證為使用者明確授權的暫時例外，預設仍須驗證，不能沿用到正式部署。見docs/remote-services-migration-2026-11-11.md。
+
+
+## 效能改進追蹤（2026-11-11）
+
+使用者已要求API責任單純，建立「效能改進」橫切看板（ID `17e9af2b-4c24-42cb-af67-0a6337181e12`）；可和原主題看板交叉收錄，不複製Issue、不整包收跨主題Epic。新增效能工作先查重現有卡，按docs/performance-review-2026-11-11.md與建卡清單的分工執行。本輪僅審查建卡，所有改善工作仍未實作；TT-180等舊限制不因N+1／single-flight已修或已有Redis而視為解決。後續驗收須含頁面所需DTO、SQL rows／寫量、回應bytes、背景請求與撤權／草稿／revision安全，不能只報查詢數下降。

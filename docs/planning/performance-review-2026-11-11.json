@@ -1,0 +1,233 @@
+{
+  "date": "2026-11-11",
+  "boardName": "效能改進",
+  "implementationAuthorized": false,
+  "newCards": [
+    {
+      "key": "performance:issue-list",
+      "priorityClass": "P1",
+      "title": "以專案為範圍提供精簡任務列表與伺服器分頁",
+      "evidence": "WorkspaceQuery::visibleIssues先all(issues)再PHP篩選；RelationalRecords::all先get全部及子表。App.vue傳pagedIssues、useIssueQuery每20筆前端切片，但API仍下載全部資料。",
+      "acceptance": "列表只含編號、標題、類型、狀態、優先級、負責人、日期、revision與必要摘要；project／permission／filter／sort及穩定分頁在SQL執行，限制pageSize，不包含描述／留言／歷史全文。跨頁排序、最後一頁、我的任務、撤權與tenant隔離測試；無權專案不得先查進列表集合。",
+      "boundary": "TT-180先定首頁／導覽邊界，本卡負責目前Project的列表查詢與前端接線；不順便重做公開PAT。",
+      "identifier": "TT-214",
+      "id": "8096d11f-7f7e-4b6f-874d-5340f31fefa3"
+    },
+    {
+      "key": "performance:issue-detail",
+      "priorityClass": "P1",
+      "title": "任務詳情按需讀取並分頁載入留言與異動紀錄",
+      "evidence": "RelationalChildren::prepare/read批次讀issue_comments與audit_events；WorkspaceQuery把完整Issue DTO帶進首頁／列表／刷新。",
+      "acceptance": "開啟指定issue才讀描述與詳細屬性；留言／歷史分頁且有穩定排序與上限；列表不含兩者全文。舊路由深連結、編輯初始revision、留言與衝突草稿保持；未開詳情的任務不查歷史。",
+      "boundary": "與列表投影卡分工；必要摘要數量可預先aggregate，不把全文塞回列表。",
+      "identifier": "TT-215",
+      "id": "869d56fd-584f-45ca-9c58-fb8ad0767411"
+    },
+    {
+      "key": "performance:todo-list",
+      "priorityClass": "P1",
+      "title": "待辦依本人資格在SQL限縮並提供狀態分頁",
+      "evidence": "Todos::listing先all(todos)含歷史，再participant篩選；TodoHome的previewLimit只限制畫面，已完成集合仍全部載入。",
+      "acceptance": "本人承辦／交辦及狀態條件直接入SQL，已完成／退回／取消／轉卡歷史按需分頁，回傳最小DTO；參與者限制與逐筆capabilities不變。其他人的待辦與無需的歷史不先載入；隨其他人資料成長，讀取量不線性增加。",
+      "boundary": "限現有待辦功能；不改直接加入／退回／單向轉正式卡片的產品決策。",
+      "identifier": "TT-216",
+      "id": "37baca16-070c-4a96-9ee2-a4d82655dacf"
+    },
+    {
+      "key": "performance:todo-inbox",
+      "priorityClass": "P1",
+      "title": "將待辦通知摘要與收件匣從getTodos分離",
+      "evidence": "App.vue refreshWorkspace串接getTodos；Todos::listing同時回todos、全部本人通知與可指派成員，鈴鐺需求綁整份待辦。",
+      "acceptance": "鈴鐺只讀目前使用者未讀摘要／必要版本；開收件匣才分頁讀既有Todo通知；成員選項按建立／交辦操作需求取得。通知更新不重抓全部Todo／Workspace；讀取／標記已讀保留作者及參與者權限。",
+      "boundary": "只拆現有Todo站內通知；不實作TT-190暫緩的Issue inbox／mention新功能。",
+      "identifier": "TT-217",
+      "id": "4ae94e95-254a-4a01-b96b-9ba0e6e3890d"
+    },
+    {
+      "key": "performance:todo-links",
+      "priorityClass": "P2",
+      "title": "批次查詢已轉卡待辦連結與有效專案資格",
+      "evidence": "Todos::listing在array_map內對convertedIssueId呼叫ProjectAccess::can與store->get(issues)，每筆get還會prepare留言／歷史。",
+      "acceptance": "以已授權Project集合與待辦中的issue IDs批次讀最小連結欄位；增加已轉卡數時SQL數不逐筆成長，不載描述／留言／audit；撤權後連結消失，維持待辦本身參與資格。",
+      "boundary": "先用隔離0／20／200已轉卡待辦量測SQL成長，不將此分支風險當作本輪已量到的主耗時。",
+      "identifier": "TT-218",
+      "id": "cb51d1e4-114e-40f6-8132-f9cc5f477034"
+    },
+    {
+      "key": "performance:refresh-scope",
+      "priorityClass": "P1",
+      "title": "依頁面與異動資源刷新以解除全Workspace重抓",
+      "evidence": "App.vue::toolUpdated／保存回呼與useBoardRealtime的project.changed都走refreshWorkspace；TimeAnalysis監看workspaceVersion再load報表。",
+      "acceptance": "寫入成功合併回傳DTO或只失效相關Project／Issue／Todo；看板事件只刷新目前看板資料，報表刷新不先讀所有Issue。拆分各scope single-flight與generation；維持跨空間、撤權清除、草稿revision基準與同事件去重測試。",
+      "boundary": "TT-146負責排程／可見性，TT-148負責輕量版本檢查，本卡負責消費端失效與頁面資料依賴；禁止只停刷新造成畫面過期。",
+      "identifier": "TT-219",
+      "id": "8706b796-9ecb-4e65-931f-0b138bbff628"
+    },
+    {
+      "key": "performance:append-writes",
+      "priorityClass": "P1",
+      "title": "任務異動改為差量子表寫入而非重建留言與歷史",
+      "evidence": "RelationalChildren::write對issue_comments／issue_relations及audit_events刪除後逐筆insert；addComment以store->put保存整個Issue。",
+      "acceptance": "新增留言只append一筆；狀態等欄位修改不刪／重插既有留言，歷史append；關聯以差量維持雙向完整性。單次異動SQL寫量不隨舊留言／歷史數線性成長；保留交易、revision、requestId與事件afterCommit。",
+      "boundary": "在隔離資料量0／100／1000歷史下量寫入SQL與lock持有時間，不拿刪歷史換效能。",
+      "identifier": "TT-220",
+      "id": "40f8353b-8b22-4cea-b683-436ae3dfd5f2"
+    },
+    {
+      "key": "performance:issue-validation",
+      "priorityClass": "P1",
+      "title": "任務關聯與Epic驗證改為限定資源查詢",
+      "evidence": "IssueService::validateLinks每次all(issues)，再查parent／related／epic；部分類型變更all(timeEntries)，updateIssue也掃子項。",
+      "acceptance": "以目前Project、明確IDs、parent／epic及exists／count查詢驗證，批次處理關聯上限；無需的欄位不hydrate。保留同Project限制、一層子任務、Epic規則、雙向關聯與當次有效授權；別的專案卡片成長不增加本次處理量。",
+      "boundary": "不修改本次查出的既有Epic結案產品規則，功能取捨另討論；先保持現有語意。",
+      "identifier": "TT-221",
+      "id": "67457bce-2827-4892-a138-7208f614de27"
+    },
+    {
+      "key": "performance:daily-time-sum",
+      "priorityClass": "P1",
+      "title": "填報工時以當人當日SQL加總取代全工作區掃描",
+      "evidence": "TimeEntryService::saveTime先all(timeEntries)再依userId／workDate／voidedAt及current排除，單筆填時讀整個工作區工時。",
+      "acceptance": "交易內鎖穩定User／Workspace後，只對本人該工作日有效紀錄SUM(minutes)，修改排除原紀錄；保持每日1440分鐘、本人限制、void、revision／requestId。獨立MySQL並行測試不得超24h，其他人／其他日期紀錄增加不增加hydrate量。",
+      "boundary": "不使用TTL快取或移除鎖作每日上限判斷。",
+      "identifier": "TT-222",
+      "id": "1c5d274b-0415-4331-8f56-0fe5cf3e3eaa"
+    },
+    {
+      "key": "performance:calendar-query",
+      "priorityClass": "P1",
+      "title": "工時月曆依Project與月份取得必要紀錄",
+      "evidence": "TimeCalendar.vue用props.entries全部資料在前端filter月份；目前來源為getWorkspace的跨專案、跨期間timeEntries。",
+      "acceptance": "月曆查詢限定Project、Taipei工作日範圍及可讀成員；每日／成員／卡片摘要用需要的資料，點日期再取當日分頁明細。換月取消或捨棄舊scope，填報後局部更新；不回傳所有月份工時，團隊／本人資格及Epic去重語意不變。",
+      "boundary": "工時分析SQL卡TT-182負責跨Project報表，本卡只負責專案月曆及當日明細。",
+      "identifier": "TT-223",
+      "id": "4a5b7062-c3a3-4979-a07d-794afbcd47bc"
+    },
+    {
+      "key": "performance:session-lock",
+      "priorityClass": "P1",
+      "title": "驗證慢API超過Session鎖租期與跨分頁並行風險",
+      "evidence": "routes/web.php對auth／rpc／realtime統一block(10,10)；本輪getWorkspace單次14.953s，已超過設定租期。",
+      "acceptance": "隔離多worker環境注入超10s讀取並同時切Workspace／撤權／保存，檢查鎖等待、逾期及Session覆寫；依證據調整請求生命週期／鎖策略與明確失敗行為。保持X-Workspace-ID／Session／CSRF驗證；不可直接刪Session blocking。",
+      "boundary": "這是靜態設定與單次慢請求推得的風險，本輪未重現競態，不稱已發生資料錯寫；與TT-184聯動。",
+      "identifier": "TT-224",
+      "id": "ec8d12ac-d0f1-402b-9369-dd52d65b4999"
+    },
+    {
+      "key": "performance:query-context",
+      "priorityClass": "P2",
+      "title": "量測並合併請求內重複租戶與ID對照查詢",
+      "evidence": "RelationalRecords::query每次workspaceId都查Workspace；get／all清空identities與users快照，RecordStore建構也查Schema；跨網路往返成本放大。",
+      "acceptance": "隔離query log分類重複SQL及耗時，僅在同一請求可信context內重用穩定tenant內部ID／批次對照；量測有收益才保留。不得跨請求快取有效授權、復用過期revision或繞過帳號資格；報告不將所有查詢誤稱N+1。",
+      "boundary": "先定位再改，不以把整包Workspace放Redis作替代。",
+      "identifier": "TT-225",
+      "id": "4ce0fd8c-2e93-48b1-b3b2-3bab55c58b98"
+    },
+    {
+      "key": "performance:regression-gates",
+      "priorityClass": "P1",
+      "title": "建立API責任與背景請求效能驗收門檻",
+      "evidence": "舊審查已列全量bootstrap未修，但既有回歸驗收主要涵蓋SQL數及功能；首頁仍可每30s讀完整Issue／history。",
+      "acceptance": "為首頁／列表／詳情／看板／報表定義允許的endpoint、欄位與最大回傳量，加入network斷言：首頁0次全量getWorkspace，未開詳情不傳歷史；隱藏／閒置／版本不變及事件風暴測請求數。另對隔離資料成長驗query數、rows／bytes／p95與正確性，budgets先量測議定，不捏造SLO。",
+      "boundary": "TT-184負責正式runtime負載，TT-163負責長期觀察；本卡負責可重跑的契約／資料量與背景請求回歸門檻。",
+      "identifier": "TT-226",
+      "id": "341df85b-3de4-4e6d-9585-7dc449814a11"
+    },
+    {
+      "key": "performance:receipt-growth",
+      "priorityClass": "P2",
+      "title": "盤點防重複提交快照的儲存成長與保留契約",
+      "evidence": "RequestReplay把完整result寫operation_receipts；Issue result包含描述／留言／歷史，重複保存歷次整包快照。",
+      "acceptance": "以隔離長歷史Issue量測receipt bytes隨操作成長；界定必要重播結果／稽核與保留策略，保留signature、原requestId相同結果及重試前授權。任何精簡／清理需定義過期requestId行為，不能無條件刪receipt導致重複建立。",
+      "boundary": "先作容量與契約分析；不以自動TTL清除主庫或削弱idempotency作快速優化。",
+      "identifier": "TT-227",
+      "id": "8abb9aaf-3070-4dd8-b447-666d46726089"
+    },
+    {
+      "key": "performance:health-check",
+      "priorityClass": "P1",
+      "title": "健康檢查移除Session與業務資料庫寫入副作用",
+      "evidence": "/api/health位於routes/web.php，沿用web Session middleware；Compose的backend與frontend每5s呼叫，SESSION_DRIVER=database。StartSession會保存Session，健康檢查可能持續製造資料庫Session寫入與往返。 前輪遷移停寫快照有11,176筆sessions；這只是全庫數量，不能據此將來源全部歸因於health。",
+      "acceptance": "用隔離實際HTTP確認health不建立Cookie／Session、不寫業務DB且常態無DB查詢；區分輕量liveness與需要時才檢查依賴的readiness，失敗能反映實際服務狀態。檢查頻率／timeout有根據，避免健康探針佔滿序列runtime；不在主庫開大量探針測試。",
+      "boundary": "沿用TT-151正式runtime工作但本卡只處理健康端點／Compose探針契約。Session副作用依框架流程判讀，本輪沒有額外追蹤主庫寫入SQL，需隔離驗證；不是把普通業務API的Session middleware刪掉。",
+      "identifier": "TT-228",
+      "id": "05f789ed-f17c-446b-af1c-b88a6097073b"
+    },
+    {
+      "key": "performance:board-selection",
+      "priorityClass": "P1",
+      "title": "看板收錄以批次驗證與差量保存避免逐卡完整查詢",
+      "evidence": "ProjectBoards::fields對每個selectedIssueId呼叫store->require(issues)，每次還prepare留言／歷史；RelationalChildren::write對board_issues整批delete再逐筆insert。收錄上限1000，但驗證成本隨選取數成長。",
+      "acceptance": "以目前Workspace／Project＋selected IDs一次或有界分批驗證所有ID存在且符合資格，只投影ID／Project／type等必要欄位；不用每張卡完整DTO。board_issues按新增／移除差量更新；維持收錄去重、Epic動態展開、既有revision／requestId與新增卡同交易收錄。隔離1／100／1000項目測SQL讀寫數及交易持鎖時間，錯誤ID整筆回滾。",
+      "boundary": "只處理看板收錄驗證／保存，不把Workspace、列表與看板查詢重新塞進一隻API；與任務關聯驗證卡、任務留言／歷史差量卡各自分工。此靜態循環已確認，未以主庫1000項目壓測。",
+      "identifier": "TT-229",
+      "id": "51acef7f-1cc9-42ea-abd6-b7a8a76bf506"
+    }
+  ],
+  "reuse": [
+    {
+      "identifier": "TT-180",
+      "priorityClass": "P1",
+      "scope": "首頁bootstrap／身分導覽拆分，移除整包工作區依賴"
+    },
+    {
+      "identifier": "TT-146",
+      "priorityClass": "P1",
+      "scope": "智慧輪詢生命週期：可見性、離頁取消、scope及閒置策略"
+    },
+    {
+      "identifier": "TT-147",
+      "priorityClass": "P1",
+      "scope": "輪詢間隔、jitter、退避及失敗行為"
+    },
+    {
+      "identifier": "TT-148",
+      "priorityClass": "P1",
+      "scope": "輕量版本／變更檢查，未變不下載全量資料"
+    },
+    {
+      "identifier": "TT-149",
+      "priorityClass": "P1",
+      "scope": "局部刷新／輪詢下的草稿與revision保護"
+    },
+    {
+      "identifier": "TT-182",
+      "priorityClass": "P1",
+      "scope": "工時SQL彙總與資料庫分頁，避免全期間原始列載入PHP"
+    },
+    {
+      "identifier": "TT-151",
+      "priorityClass": "P1",
+      "scope": "正式HTTP runtime，避免以artisan serve推論多人容量"
+    },
+    {
+      "identifier": "TT-184",
+      "priorityClass": "P1",
+      "scope": "正式多worker、遠端服務與弱網容量基準"
+    },
+    {
+      "identifier": "TT-163",
+      "priorityClass": "P2",
+      "scope": "請求／SQL／bytes／p95與遠端服務負載觀測"
+    },
+    {
+      "identifier": "TT-181",
+      "priorityClass": "P2",
+      "scope": "500卡DOM／看板視窗化評估，保留DnD與可存取性"
+    },
+    {
+      "identifier": "TT-183",
+      "priorityClass": "P2",
+      "scope": "前端路由／功能lazy loading與MDI資源拆分"
+    }
+  ],
+  "delivery": {
+    "boardId": "17e9af2b-4c24-42cb-af67-0a6337181e12",
+    "url": "http://127.0.0.1:5174/#/projects/5a451d5c-2fff-4110-aa49-4998ec9dbff2/board/17e9af2b-4c24-42cb-af67-0a6337181e12",
+    "boardCardCount": 28,
+    "openWorkCardCount": 27,
+    "auditIdentifier": "TT-213",
+    "auditState": "closed",
+    "verification": "API readback passed; original board definitions and existing issue core fields preserved"
+  }
+}

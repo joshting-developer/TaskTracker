@@ -25,6 +25,8 @@ Owner／Manager可從側欄「工時分析」選擇成員投入、專案投入�
 
 查詢數量測、N+1／全量載入／SQLite交易風險及Redis使用建議見[效能與架構review](docs/performance-review-2026-11-06.md)；內含僅用記憶體SQLite的可重跑取樣工具。效能工作已選用Addy主診斷＋ECC benchmark補量測，專案入口及適用方式見[配置文件](docs/performance-skills.md)。最新實際SQL／HTTP／500卡看板掃描見[效能複掃報告](docs/performance-scan-2026-11-09.md)。
 
+2026-11-11外部MySQL／Redis環境的API責任、全量刷新與寫入成長複審及效能改進看板見[最新審查](docs/performance-review-2026-11-11.md)，本輪只審查建卡，未實作改善。
+
 ## 資料儲存
 
 業務資料使用 MySQL 8.4 LTS／InnoDB：Workspace／Member、Project／Status／ACL、Issue／Comment／Relation、Board／收錄、工時、Todo／通知各有獨立資料表，含外鍵與索引。Laravel Eloquent 模型提供關聯；歷史事件與重試結果保留快照 JSON。
