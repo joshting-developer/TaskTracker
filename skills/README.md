@@ -114,3 +114,8 @@ UI UX Pro Max 固定 `713eef51b04efc98d6fa565323b495f7c9c89fd4`, 上游路徑 `.
 ## 首次搭配審查（2026-11-03）
 
 已用兩者完成 [TaskTracker 審查報告](../docs/UIUX審查報告-2026-11-03.md)。Pro Max 提供鍵盤／錯誤等 UX 檢索, Taste 用 app-screen 規則、source lint 及已登入頁面的上游量測／判斷模組；實際檢查隔離 Laravel 與 production preview 的 44 組畫面, 並核對轉卡／工時／看板狀態保存。尚未改產品 UI 或建立融合 skill。完整 inspector 的無 session 限制、啟發式誤報與未覆蓋情境均在報告註明。
+
+
+## Hallmark／Unslop（2026-11-11）
+
+使用者已要求安裝：Hallmark為Nutlope/hallmark（MIT），Unslop為heydamir/unslop（CC BY 4.0，作者Damir Sokolovsky）。專案入口為`.agents/skills/hallmark`及`.agents/skills/unslop`，原文集中vendor兩個同名目錄；來源及逐檔校驗見[manifest](anti-slop-sources.json)，適用邊界及Unslop先確認方向的流程見[配置](../docs/anti-slop-skills.md)。本輪用Unslop審查既有產品，Hallmark安裝不代表執行重設計。

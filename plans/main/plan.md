@@ -1,3 +1,11 @@
+## 2026-11-11 Hallmark／Unslop安裝與介面去AI化
+
+- 使用者要求安裝兩份skill，並用Unslop掃描專案去AI化；選UI導向heydamir/unslop，非同名文章編輯skill，Hallmark用Nutlope官方來源。
+- 階段一完成：204個固定原文／素材／LICENSE檔案逐一核對Git blob與SHA-256，兩個專案symlink、manifest及適用配置建立；保留Unslop作者署名與先確認方向的流程。
+- 階段一：固定來源commit、原文／references／scripts／LICENSE與校驗manifest，建立專案入口及適用配置，確認與既有產品／品牌／Vue規則的優先序，再commit。
+- 階段二：隔離MySQL登入與三尺寸畫面＋原始碼盤點，按Unslop選有證據的文案／版面／視覺修正，保留功能與使用者資料，驗證並commit。
+- 不因去AI化改框架、角色／ACL、資料庫或業務契約；不以風格禁令強制換紫色品牌，不上傳私有畫面給外部生成服務。
+
 ## 2026-11-09 返回導覽視覺整理
 
 - 使用者認為看板返回文字缺乏設計感；本輪調整該入口，盤點並統一同類返回導覽，不改路由或擴張全站重設計。

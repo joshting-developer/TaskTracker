@@ -160,3 +160,8 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 2026-11-06後續更新：使用者已明確恢復前後端架構重構，先前暫緩為歷史決策。依本專案Laravel／Vue skills分階段實作及驗證，保留API、資料、授權及產品操作契約，見`plans/main/plan.md`與`docs/產品討論紀錄.md`。
 
 2026-11-06重構成果：Http/ApiExecution／WorkspaceSession／RealtimeSession處理HTTP及交易，AccountService不接Request或操作Auth；工時分析有專用TimeReportRequest／readonly DTO及TimeReportRepository的Eloquent限定查詢；App任務篩選、列表與移動生命週期已分責。其他舊寫入仍有RecordStore array與通用Request相容邊界，詳見docs/refactoring-2026-11-06.md，不宣稱全庫已全面遷移。
+
+
+## Hallmark／Unslop（2026-11-11）
+
+使用者要求安裝兩份skill並以Unslop去AI化掃描。入口`.agents/skills/hallmark`及`.agents/skills/unslop`，原文固定版本位於skills/vendor；先讀docs/anti-slop-skills.md。Unslop為heydamir的UI版本，作者Damir Sokolovsky／CC BY 4.0，保留署名與授權。使用者既有品牌、app資料工作區、功能與內容優先，不把Hallmark網站hero／限寬或風格禁令直接套入。未明確說直接實作時依Unslop先交審查及五行方向，等確認再改介面；安裝不代表已執行兩份重設計或去AI化完成。
