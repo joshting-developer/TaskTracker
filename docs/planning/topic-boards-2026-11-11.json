@@ -1,0 +1,1478 @@
+{
+  "date": "2026-11-11",
+  "projectId": "5a451d5c-2fff-4110-aa49-4998ec9dbff2",
+  "taskIdentifier": "TT-210",
+  "totalIssues": 210,
+  "defaultOnly": [
+    "TT-1",
+    "TT-2",
+    "TT-4",
+    "TT-5"
+  ],
+  "boards": [
+    {
+      "name": "SEO",
+      "selectedIssueIds": [
+        "518d51ee-ccf3-41b8-a7b5-2ecda831cc87",
+        "62d62e26-8701-4982-80e6-c2a7acd8682b",
+        "7c2a6bf8-5d83-41e7-ac8b-9981537417e7",
+        "d0157418-f9c3-43bd-a8ed-97ebad90961d",
+        "d35c2df8-bdbe-41cf-82da-90269142ffbc"
+      ],
+      "expectedIssueIds": [
+        "518d51ee-ccf3-41b8-a7b5-2ecda831cc87",
+        "62d62e26-8701-4982-80e6-c2a7acd8682b",
+        "7c2a6bf8-5d83-41e7-ac8b-9981537417e7",
+        "d0157418-f9c3-43bd-a8ed-97ebad90961d",
+        "d35c2df8-bdbe-41cf-82da-90269142ffbc"
+      ],
+      "issues": [
+        {
+          "identifier": "TT-205",
+          "title": "設計根目錄登入入口與Hash深層連結相容",
+          "id": "62d62e26-8701-4982-80e6-c2a7acd8682b"
+        },
+        {
+          "identifier": "TT-206",
+          "title": "訪客TopBar共用與登入狀態切換",
+          "id": "d0157418-f9c3-43bd-a8ed-97ebad90961d"
+        },
+        {
+          "identifier": "TT-207",
+          "title": "建立可直接讀取HTML的公開產品介紹頁",
+          "id": "7c2a6bf8-5d83-41e7-ac8b-9981537417e7"
+        },
+        {
+          "identifier": "TT-208",
+          "title": "公開介紹頁SEO與社群分享Metadata",
+          "id": "518d51ee-ccf3-41b8-a7b5-2ecda831cc87"
+        },
+        {
+          "identifier": "TT-209",
+          "title": "選配：公開頁搜尋收錄與量測",
+          "id": "d35c2df8-bdbe-41cf-82da-90269142ffbc"
+        }
+      ]
+    },
+    {
+      "name": "部署",
+      "selectedIssueIds": [
+        "070493cb-f4e5-47d1-8c19-1230b6fe9e49",
+        "0cf19a97-a30c-46b1-984e-bb512403a11f",
+        "0ddee3b7-6b8b-4c59-a4f1-41e487455e80",
+        "18e813d4-a567-41df-bcc7-6470a99a3cc4",
+        "209d7fb6-42f6-4a8d-a46e-03f87e28bedd",
+        "2c80ad22-3dee-468c-bed9-0d02461f6feb",
+        "3da89243-8e08-4ee4-95cd-1b68ddc7c2ea",
+        "3df14c53-bd20-4b5e-a622-ed83b7ee902e",
+        "3e80fbf9-f5b3-4c54-b29e-d5b21589b28b",
+        "41dea30c-ad1e-4142-8049-93847338e892",
+        "464f6be7-7104-49ed-b62f-00c40710cd02",
+        "4804caef-7eda-4211-8efd-8766d4ff5cec",
+        "4d8bf44b-6e4e-4519-87e1-c0743439eda5",
+        "59625329-c731-4226-86cd-508f2604c0fe",
+        "5ab32e9b-fffd-4520-b2b1-eeca5ebaa702",
+        "61cb3f50-a774-4432-b6f1-66f4095edcdc",
+        "63fe9894-748f-4e19-885b-9583027cf06f",
+        "6889d15a-7b36-4802-93c2-4d09151bcb9e",
+        "69ca6bae-b98c-4c99-b334-6236d673a762",
+        "6a776378-37b8-4a77-8952-4bb29820935c",
+        "6d49d083-c0ce-44e0-9dde-1584d960ca1b",
+        "6e8b89ec-28c7-4beb-bc5f-c881b80f31c6",
+        "82c97d3f-25d5-491b-87d5-7dcc4f7f697f",
+        "8726d933-9d45-4d1c-937d-5a2461d2f30b",
+        "880412fa-3178-482e-b1b1-d9f2d1db60d7",
+        "8dfde270-c3ca-4a6e-a8a4-6d7c0a989fd5",
+        "94a1ff43-c9ab-406d-9875-b14d1ada053c",
+        "9576348a-0e31-41de-92fb-414c2280c7d1",
+        "966685aa-409f-42b2-ae8b-0e641ea4c392",
+        "995aa01f-85a1-4a0a-98f8-15da60f01f4e",
+        "9a3c613e-8014-4e48-b05c-ff766ad988ea",
+        "b0de738b-12c5-41eb-91ee-62b32ae2d0e3",
+        "b3e182fb-a585-40a8-85f5-5fa034bcf193",
+        "bac4ef3b-8ebf-4300-88ba-4bd2c614ae9b",
+        "bcf36449-7d7a-46b7-bc85-68f6eb6ca8ed",
+        "bd15a0ac-5463-407c-802d-732294d80729",
+        "d0200f39-26b6-4362-9fbe-a19713915e18",
+        "d4e21295-8ad7-483b-970e-8e0a6389ab6b",
+        "d87e8eae-e130-41ba-8213-0da662c162d6",
+        "d971bc3b-1c0c-4aa3-b508-2df8f7f1bd17",
+        "db36bb36-018d-4c2e-8cac-7a4e81af15ad",
+        "df099148-0708-4268-ac53-fdef2db5a3a7",
+        "df1d7de7-dc93-4215-b1a8-130f7a009736",
+        "f52ecedb-f6dd-411f-bf81-ccd9e9bde57e",
+        "f90490a7-b0f0-4ad9-8162-db2779ad5e8d",
+        "f9a3b3db-eb16-4542-a217-c4f582ccda63",
+        "fc24b18c-2c78-4bcc-b2f5-5c0f632a8c73",
+        "fd6f6f06-5df1-4b7d-9584-4d12de90d984",
+        "ff68cd2e-c5df-441f-96a5-06cc3ab73bc9"
+      ],
+      "expectedIssueIds": [
+        "070493cb-f4e5-47d1-8c19-1230b6fe9e49",
+        "0cf19a97-a30c-46b1-984e-bb512403a11f",
+        "0ddee3b7-6b8b-4c59-a4f1-41e487455e80",
+        "18e813d4-a567-41df-bcc7-6470a99a3cc4",
+        "209d7fb6-42f6-4a8d-a46e-03f87e28bedd",
+        "2c80ad22-3dee-468c-bed9-0d02461f6feb",
+        "3da89243-8e08-4ee4-95cd-1b68ddc7c2ea",
+        "3df14c53-bd20-4b5e-a622-ed83b7ee902e",
+        "3e80fbf9-f5b3-4c54-b29e-d5b21589b28b",
+        "41dea30c-ad1e-4142-8049-93847338e892",
+        "464f6be7-7104-49ed-b62f-00c40710cd02",
+        "4804caef-7eda-4211-8efd-8766d4ff5cec",
+        "4d8bf44b-6e4e-4519-87e1-c0743439eda5",
+        "59625329-c731-4226-86cd-508f2604c0fe",
+        "5ab32e9b-fffd-4520-b2b1-eeca5ebaa702",
+        "61cb3f50-a774-4432-b6f1-66f4095edcdc",
+        "63fe9894-748f-4e19-885b-9583027cf06f",
+        "6889d15a-7b36-4802-93c2-4d09151bcb9e",
+        "69ca6bae-b98c-4c99-b334-6236d673a762",
+        "6a776378-37b8-4a77-8952-4bb29820935c",
+        "6d49d083-c0ce-44e0-9dde-1584d960ca1b",
+        "6e8b89ec-28c7-4beb-bc5f-c881b80f31c6",
+        "82c97d3f-25d5-491b-87d5-7dcc4f7f697f",
+        "8726d933-9d45-4d1c-937d-5a2461d2f30b",
+        "880412fa-3178-482e-b1b1-d9f2d1db60d7",
+        "8dfde270-c3ca-4a6e-a8a4-6d7c0a989fd5",
+        "94a1ff43-c9ab-406d-9875-b14d1ada053c",
+        "9576348a-0e31-41de-92fb-414c2280c7d1",
+        "966685aa-409f-42b2-ae8b-0e641ea4c392",
+        "995aa01f-85a1-4a0a-98f8-15da60f01f4e",
+        "9a3c613e-8014-4e48-b05c-ff766ad988ea",
+        "b0de738b-12c5-41eb-91ee-62b32ae2d0e3",
+        "b3e182fb-a585-40a8-85f5-5fa034bcf193",
+        "bac4ef3b-8ebf-4300-88ba-4bd2c614ae9b",
+        "bcf36449-7d7a-46b7-bc85-68f6eb6ca8ed",
+        "bd15a0ac-5463-407c-802d-732294d80729",
+        "d0200f39-26b6-4362-9fbe-a19713915e18",
+        "d4e21295-8ad7-483b-970e-8e0a6389ab6b",
+        "d87e8eae-e130-41ba-8213-0da662c162d6",
+        "d971bc3b-1c0c-4aa3-b508-2df8f7f1bd17",
+        "db36bb36-018d-4c2e-8cac-7a4e81af15ad",
+        "df099148-0708-4268-ac53-fdef2db5a3a7",
+        "df1d7de7-dc93-4215-b1a8-130f7a009736",
+        "f52ecedb-f6dd-411f-bf81-ccd9e9bde57e",
+        "f90490a7-b0f0-4ad9-8162-db2779ad5e8d",
+        "f9a3b3db-eb16-4542-a217-c4f582ccda63",
+        "fc24b18c-2c78-4bcc-b2f5-5c0f632a8c73",
+        "fd6f6f06-5df1-4b7d-9584-4d12de90d984",
+        "ff68cd2e-c5df-441f-96a5-06cc3ab73bc9"
+      ],
+      "issues": [
+        {
+          "identifier": "TT-14",
+          "title": "文件／工程交付：新增本機 Compose 開發環境與資料持久化",
+          "id": "8726d933-9d45-4d1c-937d-5a2461d2f30b"
+        },
+        {
+          "identifier": "TT-19",
+          "title": "文件／工程交付：整理 SaaS 與自建版共用核心的交付方向",
+          "id": "fd6f6f06-5df1-4b7d-9584-4d12de90d984"
+        },
+        {
+          "identifier": "TT-28",
+          "title": "文件／工程交付：確認 Vue 與 Laravel 前後端分離架構",
+          "id": "41dea30c-ad1e-4142-8049-93847338e892"
+        },
+        {
+          "identifier": "TT-31",
+          "title": "文件／工程交付：拆分容器並加入 Redis Queue 與 Reverb",
+          "id": "bd15a0ac-5463-407c-802d-732294d80729"
+        },
+        {
+          "identifier": "TT-32",
+          "title": "文件／工程交付：更新分離式架構與容器操作說明",
+          "id": "3df14c53-bd20-4b5e-a622-ed83b7ee902e"
+        },
+        {
+          "identifier": "TT-40",
+          "title": "歷史實作：建立指定示範資料並強制隔離測試資料庫",
+          "id": "b3e182fb-a585-40a8-85f5-5fa034bcf193"
+        },
+        {
+          "identifier": "TT-55",
+          "title": "歷史實作：建立四種權限測試帳號與非破壞 Seed 升級",
+          "id": "f90490a7-b0f0-4ad9-8162-db2779ad5e8d"
+        },
+        {
+          "identifier": "TT-74",
+          "title": "文件／工程交付：更新 PHP 安全修補版並整理前端改善優先序",
+          "id": "2c80ad22-3dee-468c-bed9-0d02461f6feb"
+        },
+        {
+          "identifier": "TT-80",
+          "title": "歷史實作：將業務資料遷移至關聯式資料表",
+          "id": "8dfde270-c3ca-4a6e-a8a4-6d7c0a989fd5"
+        },
+        {
+          "identifier": "TT-81",
+          "title": "文件／工程交付：更新關聯資料架構與本機升級驗收",
+          "id": "6d49d083-c0ce-44e0-9dde-1584d960ca1b"
+        },
+        {
+          "identifier": "TT-93",
+          "title": "歷史實作：建立看板私有頻道授權與交易後廣播",
+          "id": "d4e21295-8ad7-483b-970e-8e0a6389ab6b"
+        },
+        {
+          "identifier": "TT-94",
+          "title": "歷史實作：接上看板即時同步並更新容器啟動配置",
+          "id": "d0200f39-26b6-4362-9fbe-a19713915e18"
+        },
+        {
+          "identifier": "TT-122",
+          "title": "文件／工程交付：盤點查詢效能瓶頸與 Redis 使用規劃",
+          "id": "f9a3b3db-eb16-4542-a217-c4f582ccda63"
+        },
+        {
+          "identifier": "TT-128",
+          "title": "歷史實作：區分工作區唯讀交易並保留寫入鎖定",
+          "id": "6e8b89ec-28c7-4beb-bc5f-c881b80f31c6"
+        },
+        {
+          "identifier": "TT-129",
+          "title": "文件／工程交付：記錄 SQLite 與 MySQL 適用性及遷移風險",
+          "id": "4804caef-7eda-4211-8efd-8766d4ff5cec"
+        },
+        {
+          "identifier": "TT-130",
+          "title": "歷史實作：新增 MySQL 主庫與安全匯入及並行保護",
+          "id": "df099148-0708-4268-ac53-fdef2db5a3a7"
+        },
+        {
+          "identifier": "TT-131",
+          "title": "文件／工程交付：記錄本機 MySQL 資料切換與持久化驗證",
+          "id": "464f6be7-7104-49ed-b62f-00c40710cd02"
+        },
+        {
+          "identifier": "TT-133",
+          "title": "文件／工程交付：記錄 OCI 主機記憶體與部署容量評估",
+          "id": "6a776378-37b8-4a77-8952-4bb29820935c"
+        },
+        {
+          "identifier": "TT-134",
+          "title": "文件／工程交付：記錄低記憶體 SQLite 展示部署方案",
+          "id": "f52ecedb-f6dd-411f-bf81-ccd9e9bde57e"
+        },
+        {
+          "identifier": "TT-135",
+          "title": "文件／工程交付：記錄遠端原生部署與記憶體精簡方向",
+          "id": "bac4ef3b-8ebf-4300-88ba-4bd2c614ae9b"
+        },
+        {
+          "identifier": "TT-140",
+          "title": "盤點現有MySQL切換與仍存SQLite特例",
+          "id": "3e80fbf9-f5b3-4c54-b29e-d5b21589b28b"
+        },
+        {
+          "identifier": "TT-141",
+          "title": "盤點Reverb、輪詢、revision與衝突依賴",
+          "id": "5ab32e9b-fffd-4520-b2b1-eeca5ebaa702"
+        },
+        {
+          "identifier": "TT-142",
+          "title": "盤點Queue／Scheduler／Redis與必要背景工作",
+          "id": "69ca6bae-b98c-4c99-b334-6236d673a762"
+        },
+        {
+          "identifier": "TT-143",
+          "title": "決定低流量部署是否仍需要Redis",
+          "id": "966685aa-409f-42b2-ae8b-0e641ea4c392"
+        },
+        {
+          "identifier": "TT-144",
+          "title": "解除正式部署對Reverb與前端Pusher的必要依賴",
+          "id": "d971bc3b-1c0c-4aa3-b508-2df8f7f1bd17"
+        },
+        {
+          "identifier": "TT-145",
+          "title": "避免停用廣播後產生無人消費的Job",
+          "id": "9a3c613e-8014-4e48-b05c-ff766ad988ea"
+        },
+        {
+          "identifier": "TT-146",
+          "title": "抽取可重用的智慧輪詢生命週期",
+          "id": "82c97d3f-25d5-491b-87d5-7dcc4f7f697f"
+        },
+        {
+          "identifier": "TT-147",
+          "title": "輪詢加入可配置間隔、jitter與退避",
+          "id": "61cb3f50-a774-4432-b6f1-66f4095edcdc"
+        },
+        {
+          "identifier": "TT-148",
+          "title": "設計有權限保護的輕量變更檢查",
+          "id": "6889d15a-7b36-4802-93c2-4d09151bcb9e"
+        },
+        {
+          "identifier": "TT-149",
+          "title": "輪詢保護拖曳、未儲存草稿與寫入衝突",
+          "id": "4d8bf44b-6e4e-4519-87e1-c0743439eda5"
+        },
+        {
+          "identifier": "TT-150",
+          "title": "建立無WebSocket的雙帳號同步回歸",
+          "id": "b0de738b-12c5-41eb-91ee-62b32ae2d0e3"
+        },
+        {
+          "identifier": "TT-151",
+          "title": "建立正式Laravel HTTP runtime與可重現映像",
+          "id": "94a1ff43-c9ab-406d-9875-b14d1ada053c"
+        },
+        {
+          "identifier": "TT-152",
+          "title": "外部化Session、Cache與業務檔案狀態",
+          "id": "0ddee3b7-6b8b-4c59-a4f1-41e487455e80"
+        },
+        {
+          "identifier": "TT-153",
+          "title": "建立受控migration、備份與失敗回退流程",
+          "id": "070493cb-f4e5-47d1-8c19-1230b6fe9e49"
+        },
+        {
+          "identifier": "TT-154",
+          "title": "配置Fly東京HTTP自動啟停並驗證冷啟動",
+          "id": "880412fa-3178-482e-b1b1-d9f2d1db60d7"
+        },
+        {
+          "identifier": "TT-155",
+          "title": "單一Fly App的登入／介紹頁／SPA／API整合驗收",
+          "id": "df1d7de7-dc93-4215-b1a8-130f7a009736"
+        },
+        {
+          "identifier": "TT-156",
+          "title": "同網域登入／Cookie／CSRF與回跳驗收",
+          "id": "63fe9894-748f-4e19-885b-9583027cf06f"
+        },
+        {
+          "identifier": "TT-157",
+          "title": "核對OCI實際規格、配額、磁碟與閒置回收風險",
+          "id": "ff68cd2e-c5df-441f-96a5-06cc3ab73bc9"
+        },
+        {
+          "identifier": "TT-158",
+          "title": "在OCI持久化MySQL並實測小記憶體配置",
+          "id": "9576348a-0e31-41de-92fb-414c2280c7d1"
+        },
+        {
+          "identifier": "TT-159",
+          "title": "驗證Fly與OCI的加密且可恢復連線",
+          "id": "59625329-c731-4226-86cd-508f2604c0fe"
+        },
+        {
+          "identifier": "TT-160",
+          "title": "若保留Redis，配置用途隔離與記憶體政策",
+          "id": "3da89243-8e08-4ee4-95cd-1b68ddc7c2ea"
+        },
+        {
+          "identifier": "TT-161",
+          "title": "建立異地加密備份並完成整庫還原演練",
+          "id": "bcf36449-7d7a-46b7-bc85-68f6eb6ca8ed"
+        },
+        {
+          "identifier": "TT-162",
+          "title": "為必要Queue／Scheduler選可靠的執行機制",
+          "id": "18e813d4-a567-41df-bcc7-6470a99a3cc4"
+        },
+        {
+          "identifier": "TT-163",
+          "title": "觀察1–2週成本、冷啟動、API p95與資料庫負載",
+          "id": "db36bb36-018d-4c2e-8cac-7a4e81af15ad"
+        },
+        {
+          "identifier": "TT-164",
+          "title": "評估輪詢不休眠與跨雲故障時的回退門檻",
+          "id": "d87e8eae-e130-41ba-8213-0da662c162d6"
+        },
+        {
+          "identifier": "TT-182",
+          "title": "工時SQL聚合／群組分頁與日期索引實測",
+          "id": "0cf19a97-a30c-46b1-984e-bb512403a11f"
+        },
+        {
+          "identifier": "TT-184",
+          "title": "建立正式多worker／弱網負載與容量基準",
+          "id": "995aa01f-85a1-4a0a-98f8-15da60f01f4e"
+        },
+        {
+          "identifier": "TT-185",
+          "title": "部署前確認正式註冊、帳號恢復與秘密管理政策",
+          "id": "209d7fb6-42f6-4a8d-a46e-03f87e28bedd"
+        },
+        {
+          "identifier": "TT-201",
+          "title": "候選：定義SaaS與自建版共用核心交付",
+          "id": "fc24b18c-2c78-4bcc-b2f5-5c0f632a8c73"
+        }
+      ]
+    },
+    {
+      "name": "實際功能",
+      "selectedIssueIds": [
+        "0099a1cc-40d7-4860-bb79-0df479b41259",
+        "02aae861-7158-463d-8886-541045d3c249",
+        "036c36c0-58b1-4baa-aefa-61c3ddcbc621",
+        "0bfed5fe-9387-476d-a67b-78bfb3556962",
+        "0e868ae2-ca45-45d1-b570-a7f9ecec3fdf",
+        "0ebf0627-bea5-4970-ba75-7cec6afa576f",
+        "0f7bcd07-3e68-4f09-a4a9-450b72668d73",
+        "113608df-a266-4117-bd1f-9a04fd94f2b9",
+        "11433349-cdda-476d-826f-32015f8de346",
+        "12dd4248-b208-4f06-962d-3d28c9f882b5",
+        "13fcf40d-dcb2-4dc8-84a2-9f073a565d8b",
+        "14052ab7-cdc9-4df1-bc0a-1ec351e7fbb6",
+        "1614970a-4837-4a2c-8dd5-dd2ca88ca491",
+        "17a01e43-7f99-4dd5-ab28-ee089d2df159",
+        "19243bab-4c13-417d-84d8-6b0464eb2ea8",
+        "1acae1b2-94ee-48fd-93fd-1174bb8c03b7",
+        "202434c1-6b4f-419c-b167-15eee1b51ec7",
+        "206e1936-80f5-4b0c-aeb0-c1fa917dc02b",
+        "26b232df-31d4-4696-9701-8daa364e65b6",
+        "27b2b779-687f-48d6-8568-81488237cb8e",
+        "29f5bd59-bd68-4696-90a8-d101896b529a",
+        "2d2ee0e0-5fec-482d-8659-8d7085d5a7c3",
+        "2d80852f-6d22-405b-93bf-8a74839332d2",
+        "2e6b6e5c-93a4-4d75-9a8d-64df41d2dc5c",
+        "2f62c2c4-02c0-4df6-860c-7fa5e51fb959",
+        "33e05361-37ed-4428-b9b5-734943b3207b",
+        "389f9f2c-762b-40d8-a3c9-e153c32e0290",
+        "3a0b4717-08ea-463f-8531-1637d86798d3",
+        "3c05aff3-a183-4614-8976-b63c5b48433b",
+        "408b98b7-6000-419d-8b89-bf94639267fc",
+        "40e86e2a-ac96-4aca-b6a3-2f0130514a7b",
+        "420f6500-d917-4daa-b119-2e3de66bfd9f",
+        "4333a70b-08f0-40a2-9fc9-6a5f78f0584d",
+        "468f0e5f-fc0b-4dfd-8447-63ade5874ca5",
+        "49bf6f13-7f1e-436c-b99a-34e2e6efe1f7",
+        "49c6ea32-353f-4a3f-8f1b-3eabe32c5f65",
+        "4e9375ed-5b5b-476d-83c3-0b3e845456a7",
+        "52b26158-c683-4426-aa7a-035a8f4751c3",
+        "5351c90f-e77b-468f-9fa3-ea2c1d1313f6",
+        "53d92e64-0d8f-4b21-a32a-2d5d010dfcb2",
+        "5bfee185-8a98-43ca-8496-2966b4292612",
+        "5cdb17a1-dcc4-46af-8dc0-5993e788ad64",
+        "5dc7f17f-a2ea-40fe-8b04-05a46635f412",
+        "5e117cf9-71d3-41cf-bd4a-166289de2faf",
+        "5e3d175c-be9d-417b-8410-a98b5009a484",
+        "5fafe45b-9ea5-4a72-bb27-bb658dcfb848",
+        "6166db4c-5260-4f46-aa7b-5228cabb3fc6",
+        "6261a741-b9c4-41e7-ba5a-67f1daa6ca9c",
+        "63180d8e-ea70-4e93-9157-c0ac59b10f05",
+        "65b3751b-4616-4921-b48c-3002d41ea026",
+        "67e0d137-53ad-42ba-bc76-e868fde7d653",
+        "683b805c-5482-4063-903f-81a81becaeae",
+        "6855835d-96a7-4e28-a213-4945203cd21a",
+        "6b79ed13-37d6-4d5e-8bb2-98c233f13338",
+        "6f09759a-1ceb-467f-84f0-bf74c5220918",
+        "714e9659-eb7e-4113-9a00-d200b710181b",
+        "732a528e-421f-416a-868c-5e7420720a59",
+        "76a61d2d-ea59-433d-8223-943e54a491b9",
+        "76ab7128-e68b-46c2-af2e-b343f7cdd849",
+        "7c8ae7a4-54c4-40b0-a1a3-fcfaad9bb76c",
+        "86f3e303-ae9f-484f-a0bc-c56b8c75d13f",
+        "885eb200-90de-4959-a29e-a413ac589d92",
+        "89699bbe-23bb-4b0b-ad59-6d522c715ea6",
+        "89e91cf9-8e9c-4f5f-9540-f266cc22fd4b",
+        "8c3162b0-3d04-4ec8-8118-f7de434da0bc",
+        "8deae428-410a-4e33-964a-1cd779fb23b2",
+        "8ece7b73-eb5d-4f61-a0e5-ad4a0777aebe",
+        "95e58469-19b2-49d2-b4fa-6ec5fcc27e4a",
+        "95e6a861-39f9-455f-add1-3ca18a62124d",
+        "95edca08-e032-42c1-897f-378c7a62cbf7",
+        "9cae6463-899a-40d2-a8be-044ce897bc1a",
+        "9ff6dbdc-0db5-47c1-9b09-f2b15790a79f",
+        "a0c8fdaa-2b63-49f2-ab43-6d52bc825e66",
+        "a27f33af-2234-463f-8468-d207a7162285",
+        "a2a58926-987b-47e1-addf-92a52799779a",
+        "a4122933-eac2-4ae6-b142-8dc71fcee924",
+        "a77e7c43-0e39-4e4c-b4fc-f5cf5aa1f3d5",
+        "a9d04ab8-5529-4b93-8fc3-c0c094a8786e",
+        "acd94357-d18a-4667-8fe7-38609c7cc2c6",
+        "b4c75ae8-7e5e-424d-a71f-ebb180c1c9b4",
+        "b53e5879-24bb-4ffa-8ec8-fb46cfe1ef6b",
+        "b5944fb0-c707-4c45-a575-432670065b19",
+        "b8654ea5-bf6c-411a-909a-71c6d119d3d3",
+        "bcfa7257-d3f8-44ea-8161-7b82b5c4127a",
+        "c019bb6e-45db-4294-afb7-16a675e73ba5",
+        "c3e33591-3001-4964-8054-37b74fa4f1d0",
+        "cd4dabdb-7e44-460a-82dd-5f2b457fee1d",
+        "cd96988b-d6e4-45ec-a009-4616e00d786a",
+        "cfc243d8-3ea4-468a-b726-b3f538b34692",
+        "d0086d03-190c-44e7-bfe3-346c17caf126",
+        "d1d4bb45-018d-4702-9db4-edda1bdaa843",
+        "d4ec99a2-79d2-4735-9299-8b30a578e61b",
+        "d4ece86d-beda-4c39-ae1c-d10235106287",
+        "d7a41415-1e77-4c96-83cf-029314af1008",
+        "d7c124aa-b4de-4538-9c4e-4f43f1184a7d",
+        "da1bb4aa-c65d-47a9-877b-f1b40c6e23bf",
+        "dab0cb20-5232-4076-a2fa-07b5adc9d937",
+        "e0332f67-008d-45cf-b6de-3f34c39853fe",
+        "e06219ba-7667-4fdd-8174-ab8b252167bb",
+        "e49882ab-047f-41ce-ade7-57c4439e6201",
+        "e922aced-ac2d-4fb1-8a7f-ee9432e13a45",
+        "e939f5ad-8041-426d-a70f-e03ec16bd790",
+        "ea00112c-19a7-409e-b7f1-b50ae0a0818b",
+        "ea71aad6-2c3b-4e42-9f34-2588ed2a4b2c",
+        "eb0d78c9-c013-4945-8978-dcc46849e2d6",
+        "f0e8a504-71db-4152-86aa-ff323fdc5cd0",
+        "f205778f-3cb5-417b-8635-488803e75920",
+        "f276b813-d498-4de7-b2ac-da3b0428eeb9",
+        "f2963efb-e17c-42b7-a9a3-a3636e4f6356",
+        "facf95be-84f0-4be6-bc0e-d444db226d2c"
+      ],
+      "expectedIssueIds": [
+        "0099a1cc-40d7-4860-bb79-0df479b41259",
+        "02aae861-7158-463d-8886-541045d3c249",
+        "036c36c0-58b1-4baa-aefa-61c3ddcbc621",
+        "0bfed5fe-9387-476d-a67b-78bfb3556962",
+        "0e868ae2-ca45-45d1-b570-a7f9ecec3fdf",
+        "0ebf0627-bea5-4970-ba75-7cec6afa576f",
+        "0f7bcd07-3e68-4f09-a4a9-450b72668d73",
+        "113608df-a266-4117-bd1f-9a04fd94f2b9",
+        "11433349-cdda-476d-826f-32015f8de346",
+        "12dd4248-b208-4f06-962d-3d28c9f882b5",
+        "13fcf40d-dcb2-4dc8-84a2-9f073a565d8b",
+        "14052ab7-cdc9-4df1-bc0a-1ec351e7fbb6",
+        "1614970a-4837-4a2c-8dd5-dd2ca88ca491",
+        "17a01e43-7f99-4dd5-ab28-ee089d2df159",
+        "19243bab-4c13-417d-84d8-6b0464eb2ea8",
+        "1acae1b2-94ee-48fd-93fd-1174bb8c03b7",
+        "202434c1-6b4f-419c-b167-15eee1b51ec7",
+        "206e1936-80f5-4b0c-aeb0-c1fa917dc02b",
+        "26b232df-31d4-4696-9701-8daa364e65b6",
+        "27b2b779-687f-48d6-8568-81488237cb8e",
+        "29f5bd59-bd68-4696-90a8-d101896b529a",
+        "2d2ee0e0-5fec-482d-8659-8d7085d5a7c3",
+        "2d80852f-6d22-405b-93bf-8a74839332d2",
+        "2e6b6e5c-93a4-4d75-9a8d-64df41d2dc5c",
+        "2f62c2c4-02c0-4df6-860c-7fa5e51fb959",
+        "33e05361-37ed-4428-b9b5-734943b3207b",
+        "389f9f2c-762b-40d8-a3c9-e153c32e0290",
+        "3a0b4717-08ea-463f-8531-1637d86798d3",
+        "3c05aff3-a183-4614-8976-b63c5b48433b",
+        "408b98b7-6000-419d-8b89-bf94639267fc",
+        "40e86e2a-ac96-4aca-b6a3-2f0130514a7b",
+        "420f6500-d917-4daa-b119-2e3de66bfd9f",
+        "4333a70b-08f0-40a2-9fc9-6a5f78f0584d",
+        "468f0e5f-fc0b-4dfd-8447-63ade5874ca5",
+        "49bf6f13-7f1e-436c-b99a-34e2e6efe1f7",
+        "49c6ea32-353f-4a3f-8f1b-3eabe32c5f65",
+        "4e9375ed-5b5b-476d-83c3-0b3e845456a7",
+        "52b26158-c683-4426-aa7a-035a8f4751c3",
+        "5351c90f-e77b-468f-9fa3-ea2c1d1313f6",
+        "53d92e64-0d8f-4b21-a32a-2d5d010dfcb2",
+        "5bfee185-8a98-43ca-8496-2966b4292612",
+        "5cdb17a1-dcc4-46af-8dc0-5993e788ad64",
+        "5dc7f17f-a2ea-40fe-8b04-05a46635f412",
+        "5e117cf9-71d3-41cf-bd4a-166289de2faf",
+        "5e3d175c-be9d-417b-8410-a98b5009a484",
+        "5fafe45b-9ea5-4a72-bb27-bb658dcfb848",
+        "6166db4c-5260-4f46-aa7b-5228cabb3fc6",
+        "6261a741-b9c4-41e7-ba5a-67f1daa6ca9c",
+        "63180d8e-ea70-4e93-9157-c0ac59b10f05",
+        "65b3751b-4616-4921-b48c-3002d41ea026",
+        "67e0d137-53ad-42ba-bc76-e868fde7d653",
+        "683b805c-5482-4063-903f-81a81becaeae",
+        "6855835d-96a7-4e28-a213-4945203cd21a",
+        "6b79ed13-37d6-4d5e-8bb2-98c233f13338",
+        "6f09759a-1ceb-467f-84f0-bf74c5220918",
+        "714e9659-eb7e-4113-9a00-d200b710181b",
+        "732a528e-421f-416a-868c-5e7420720a59",
+        "76a61d2d-ea59-433d-8223-943e54a491b9",
+        "76ab7128-e68b-46c2-af2e-b343f7cdd849",
+        "7c8ae7a4-54c4-40b0-a1a3-fcfaad9bb76c",
+        "86f3e303-ae9f-484f-a0bc-c56b8c75d13f",
+        "885eb200-90de-4959-a29e-a413ac589d92",
+        "89699bbe-23bb-4b0b-ad59-6d522c715ea6",
+        "89e91cf9-8e9c-4f5f-9540-f266cc22fd4b",
+        "8c3162b0-3d04-4ec8-8118-f7de434da0bc",
+        "8deae428-410a-4e33-964a-1cd779fb23b2",
+        "8ece7b73-eb5d-4f61-a0e5-ad4a0777aebe",
+        "95e58469-19b2-49d2-b4fa-6ec5fcc27e4a",
+        "95e6a861-39f9-455f-add1-3ca18a62124d",
+        "95edca08-e032-42c1-897f-378c7a62cbf7",
+        "9cae6463-899a-40d2-a8be-044ce897bc1a",
+        "9ff6dbdc-0db5-47c1-9b09-f2b15790a79f",
+        "a0c8fdaa-2b63-49f2-ab43-6d52bc825e66",
+        "a27f33af-2234-463f-8468-d207a7162285",
+        "a2a58926-987b-47e1-addf-92a52799779a",
+        "a4122933-eac2-4ae6-b142-8dc71fcee924",
+        "a77e7c43-0e39-4e4c-b4fc-f5cf5aa1f3d5",
+        "a9d04ab8-5529-4b93-8fc3-c0c094a8786e",
+        "acd94357-d18a-4667-8fe7-38609c7cc2c6",
+        "b4c75ae8-7e5e-424d-a71f-ebb180c1c9b4",
+        "b53e5879-24bb-4ffa-8ec8-fb46cfe1ef6b",
+        "b5944fb0-c707-4c45-a575-432670065b19",
+        "b8654ea5-bf6c-411a-909a-71c6d119d3d3",
+        "bcfa7257-d3f8-44ea-8161-7b82b5c4127a",
+        "c019bb6e-45db-4294-afb7-16a675e73ba5",
+        "c3e33591-3001-4964-8054-37b74fa4f1d0",
+        "cd4dabdb-7e44-460a-82dd-5f2b457fee1d",
+        "cd96988b-d6e4-45ec-a009-4616e00d786a",
+        "cfc243d8-3ea4-468a-b726-b3f538b34692",
+        "d0086d03-190c-44e7-bfe3-346c17caf126",
+        "d1d4bb45-018d-4702-9db4-edda1bdaa843",
+        "d4ec99a2-79d2-4735-9299-8b30a578e61b",
+        "d4ece86d-beda-4c39-ae1c-d10235106287",
+        "d7a41415-1e77-4c96-83cf-029314af1008",
+        "d7c124aa-b4de-4538-9c4e-4f43f1184a7d",
+        "da1bb4aa-c65d-47a9-877b-f1b40c6e23bf",
+        "dab0cb20-5232-4076-a2fa-07b5adc9d937",
+        "e0332f67-008d-45cf-b6de-3f34c39853fe",
+        "e06219ba-7667-4fdd-8174-ab8b252167bb",
+        "e49882ab-047f-41ce-ade7-57c4439e6201",
+        "e922aced-ac2d-4fb1-8a7f-ee9432e13a45",
+        "e939f5ad-8041-426d-a70f-e03ec16bd790",
+        "ea00112c-19a7-409e-b7f1-b50ae0a0818b",
+        "ea71aad6-2c3b-4e42-9f34-2588ed2a4b2c",
+        "eb0d78c9-c013-4945-8978-dcc46849e2d6",
+        "f0e8a504-71db-4152-86aa-ff323fdc5cd0",
+        "f205778f-3cb5-417b-8635-488803e75920",
+        "f276b813-d498-4de7-b2ac-da3b0428eeb9",
+        "f2963efb-e17c-42b7-a9a3-a3636e4f6356",
+        "facf95be-84f0-4be6-bc0e-d444db226d2c"
+      ],
+      "issues": [
+        {
+          "identifier": "TT-6",
+          "title": "文件／工程交付：建立專案規範與競品調研規劃",
+          "id": "52b26158-c683-4426-aa7a-035a8f4751c3"
+        },
+        {
+          "identifier": "TT-7",
+          "title": "歷史實作：建立以專案為入口的本機任務管理原型",
+          "id": "a0c8fdaa-2b63-49f2-ab43-6d52bc825e66"
+        },
+        {
+          "identifier": "TT-9",
+          "title": "文件／工程交付：規劃 SaaS 協作、Epic 聯動與工時分析",
+          "id": "26b232df-31d4-4696-9701-8daa364e65b6"
+        },
+        {
+          "identifier": "TT-10",
+          "title": "歷史實作：建立隔離團隊帳號、Epic 與工時協作 API",
+          "id": "cfc243d8-3ea4-468a-b726-b3f538b34692"
+        },
+        {
+          "identifier": "TT-11",
+          "title": "歷史實作：加入 Epic 概覽、團隊工時月曆與協作介面",
+          "id": "da1bb4aa-c65d-47a9-877b-f1b40c6e23bf"
+        },
+        {
+          "identifier": "TT-12",
+          "title": "歷史實作：加入任務依賴與 Epic 工時上下文",
+          "id": "12dd4248-b208-4f06-962d-3d28c9f882b5"
+        },
+        {
+          "identifier": "TT-13",
+          "title": "歷史實作：加入個人與團隊常用視圖及進階篩選",
+          "id": "f205778f-3cb5-417b-8635-488803e75920"
+        },
+        {
+          "identifier": "TT-15",
+          "title": "文件／工程交付：建立持續維護的產品討論與決策紀錄",
+          "id": "d4ece86d-beda-4c39-ae1c-d10235106287"
+        },
+        {
+          "identifier": "TT-16",
+          "title": "文件／工程交付：確認工作空間到專案與 Issue 的操作層級",
+          "id": "29f5bd59-bd68-4696-90a8-d101896b529a"
+        },
+        {
+          "identifier": "TT-17",
+          "title": "文件／工程交付：記錄工作空間成員邀請的授權原則",
+          "id": "0bfed5fe-9387-476d-a67b-78bfb3556962"
+        },
+        {
+          "identifier": "TT-18",
+          "title": "文件／工程交付：整理邀請流程複雜度與第一版簡化建議",
+          "id": "c019bb6e-45db-4294-afb7-16a675e73ba5"
+        },
+        {
+          "identifier": "TT-20",
+          "title": "文件／工程交付：規劃 Workspace 與專案兩層可見性權限",
+          "id": "732a528e-421f-416a-868c-5e7420720a59"
+        },
+        {
+          "identifier": "TT-21",
+          "title": "文件／工程交付：整理工作空間與專案的固定角色提案",
+          "id": "b8654ea5-bf6c-411a-909a-71c6d119d3d3"
+        },
+        {
+          "identifier": "TT-22",
+          "title": "文件／工程交付：明確定義權限與資源範圍的集中授權契約",
+          "id": "5351c90f-e77b-468f-9fa3-ea2c1d1313f6"
+        },
+        {
+          "identifier": "TT-23",
+          "title": "文件／工程交付：確定空間角色與專案明確授權規則",
+          "id": "53d92e64-0d8f-4b21-a32a-2d5d010dfcb2"
+        },
+        {
+          "identifier": "TT-24",
+          "title": "文件／工程交付：補充專案固定角色與基本操作權限矩陣",
+          "id": "0f7bcd07-3e68-4f09-a4a9-450b72668d73"
+        },
+        {
+          "identifier": "TT-25",
+          "title": "文件／工程交付：整理專案四角色與責任及資料閱覽邊界",
+          "id": "d4ec99a2-79d2-4735-9299-8b30a578e61b"
+        },
+        {
+          "identifier": "TT-26",
+          "title": "文件／工程交付：明定以有效權限控制可見性與操作",
+          "id": "acd94357-d18a-4667-8fe7-38609c7cc2c6"
+        },
+        {
+          "identifier": "TT-27",
+          "title": "文件／工程交付：評估實作缺口與面試作品技術選型",
+          "id": "e49882ab-047f-41ce-ade7-57c4439e6201"
+        },
+        {
+          "identifier": "TT-29",
+          "title": "歷史實作：拆分 Vue 前端並整合 Vuetify 表單",
+          "id": "86f3e303-ae9f-484f-a0bc-c56b8c75d13f"
+        },
+        {
+          "identifier": "TT-33",
+          "title": "歷史實作：聚焦專案側欄並由首頁切換專案",
+          "id": "33e05361-37ed-4428-b9b5-734943b3207b"
+        },
+        {
+          "identifier": "TT-34",
+          "title": "歷史實作：分離任務列表與 Epic 泳道看板",
+          "id": "14052ab7-cdc9-4df1-bc0a-1ec351e7fbb6"
+        },
+        {
+          "identifier": "TT-35",
+          "title": "歷史實作：提高資料可讀性並改為全寬工作區",
+          "id": "89699bbe-23bb-4b0b-ad59-6d522c715ea6"
+        },
+        {
+          "identifier": "TT-36",
+          "title": "歷史實作：精簡任務工作區並整理專案總計提案",
+          "id": "6261a741-b9c4-41e7-ba5a-67f1daa6ca9c"
+        },
+        {
+          "identifier": "TT-37",
+          "title": "文件／工程交付：釐清任務關聯子任務與依賴的設計方向",
+          "id": "6166db4c-5260-4f46-aa7b-5228cabb3fc6"
+        },
+        {
+          "identifier": "TT-38",
+          "title": "歷史實作：以子任務與雙向關聯取代前置依賴",
+          "id": "f276b813-d498-4de7-b2ac-da3b0428eeb9"
+        },
+        {
+          "identifier": "TT-39",
+          "title": "歷史實作：新增子任務與按需關聯操作介面",
+          "id": "389f9f2c-762b-40d8-a3c9-e153c32e0290"
+        },
+        {
+          "identifier": "TT-41",
+          "title": "文件／工程交付：更新子任務決策與示範資料操作指引",
+          "id": "76ab7128-e68b-46c2-af2e-b343f7cdd849"
+        },
+        {
+          "identifier": "TT-42",
+          "title": "歷史實作：新增專案負責人與基本資料編輯契約",
+          "id": "2f62c2c4-02c0-4df6-860c-7fa5e51fb959"
+        },
+        {
+          "identifier": "TT-43",
+          "title": "歷史實作：首頁聚焦專案負責人與介紹並移除累計統計",
+          "id": "6855835d-96a7-4e28-a213-4945203cd21a"
+        },
+        {
+          "identifier": "TT-44",
+          "title": "歷史實作：精簡任務頁首並按需展開篩選",
+          "id": "3a0b4717-08ea-463f-8531-1637d86798d3"
+        },
+        {
+          "identifier": "TT-45",
+          "title": "文件／工程交付：說明常用視圖用途與命名提案",
+          "id": "17a01e43-7f99-4dd5-ab28-ee089d2df159"
+        },
+        {
+          "identifier": "TT-46",
+          "title": "歷史實作：將常用篩選收進篩選區並移除常駐頁籤",
+          "id": "19243bab-4c13-417d-84d8-6b0464eb2ea8"
+        },
+        {
+          "identifier": "TT-47",
+          "title": "歷史實作：移除視圖功能並記錄首頁個人清單構想",
+          "id": "0099a1cc-40d7-4860-bb79-0df479b41259"
+        },
+        {
+          "identifier": "TT-48",
+          "title": "歷史實作：以文字顯示任務類型避免符號混淆",
+          "id": "63180d8e-ea70-4e93-9157-c0ac59b10f05"
+        },
+        {
+          "identifier": "TT-49",
+          "title": "歷史實作：收斂 Issue 類型為 Epic Task Bug",
+          "id": "5fafe45b-9ea5-4a72-bb27-bb658dcfb848"
+        },
+        {
+          "identifier": "TT-50",
+          "title": "歷史實作：點選日期開啟工時填報側邊面板",
+          "id": "76a61d2d-ea59-433d-8223-943e54a491b9"
+        },
+        {
+          "identifier": "TT-51",
+          "title": "文件／工程交付：規劃看板列表與 Epic 動態收錄規則",
+          "id": "0ebf0627-bea5-4970-ba75-7cec6afa576f"
+        },
+        {
+          "identifier": "TT-53",
+          "title": "歷史實作：加入看板列表與 Epic 動態收錄介面",
+          "id": "89e91cf9-8e9c-4f5f-9540-f266cc22fd4b"
+        },
+        {
+          "identifier": "TT-54",
+          "title": "歷史實作：新增任務完整頁與上方狀態切換",
+          "id": "facf95be-84f0-4be6-bc0e-d444db226d2c"
+        },
+        {
+          "identifier": "TT-56",
+          "title": "文件／工程交付：收斂專案 ACL 與角色試用的驗收基準",
+          "id": "d1d4bb45-018d-4702-9db4-edda1bdaa843"
+        },
+        {
+          "identifier": "TT-57",
+          "title": "文件／工程交付：研究競品任務流程與使用回饋並排序功能缺口",
+          "id": "e922aced-ac2d-4fb1-8a7f-ee9432e13a45"
+        },
+        {
+          "identifier": "TT-58",
+          "title": "歷史實作：加入專案範圍授權與成員 ACL 管理",
+          "id": "e939f5ad-8041-426d-a70f-e03ec16bd790"
+        },
+        {
+          "identifier": "TT-59",
+          "title": "歷史實作：加入專案成員介面與依權限顯示操作",
+          "id": "3c05aff3-a183-4614-8976-b63c5b48433b"
+        },
+        {
+          "identifier": "TT-61",
+          "title": "歷史實作：加入首頁小待辦通知與轉卡側邊表單",
+          "id": "9ff6dbdc-0db5-47c1-9b09-f2b15790a79f"
+        },
+        {
+          "identifier": "TT-64",
+          "title": "文件／工程交付：完成雙 skill UIUX 審查與改善排序",
+          "id": "8c3162b0-3d04-4ec8-8118-f7de434da0bc"
+        },
+        {
+          "identifier": "TT-65",
+          "title": "歷史實作：改善文字可讀性與工時欄位錯誤提示",
+          "id": "4e9375ed-5b5b-476d-83c3-0b3e845456a7"
+        },
+        {
+          "identifier": "TT-66",
+          "title": "歷史實作：收斂首頁資訊並補齊鍵盤與跨尺寸操作",
+          "id": "13fcf40d-dcb2-4dc8-84a2-9f073a565d8b"
+        },
+        {
+          "identifier": "TT-67",
+          "title": "歷史實作：保留功能路由並完成 UIUX 修正回驗",
+          "id": "ea71aad6-2c3b-4e42-9f34-2588ed2a4b2c"
+        },
+        {
+          "identifier": "TT-69",
+          "title": "文件／工程交付：完成雙 skill 使用者任務流程走查",
+          "id": "cd4dabdb-7e44-460a-82dd-5f2b457fee1d"
+        },
+        {
+          "identifier": "TT-70",
+          "title": "歷史實作：保留待辦草稿並恢復跨清單操作",
+          "id": "02aae861-7158-463d-8886-541045d3c249"
+        },
+        {
+          "identifier": "TT-71",
+          "title": "歷史實作：重整後保留專案任務與工時查閱範圍",
+          "id": "683b805c-5482-4063-903f-81a81becaeae"
+        },
+        {
+          "identifier": "TT-72",
+          "title": "歷史實作：補手機速記入口並分開任務閱讀與快速編輯",
+          "id": "ea00112c-19a7-409e-b7f1-b50ae0a0818b"
+        },
+        {
+          "identifier": "TT-78",
+          "title": "歷史實作：展開工時與待辦篩選的具名條件",
+          "id": "b53e5879-24bb-4ffa-8ec8-fb46cfe1ef6b"
+        },
+        {
+          "identifier": "TT-82",
+          "title": "歷史實作：明確區分任務狀態變更與內容頁籤",
+          "id": "a77e7c43-0e39-4e4c-b4fc-f5cf5aa1f3d5"
+        },
+        {
+          "identifier": "TT-83",
+          "title": "歷史實作：精簡任務列表的重複資訊與摘要",
+          "id": "113608df-a266-4117-bd1f-9a04fd94f2b9"
+        },
+        {
+          "identifier": "TT-84",
+          "title": "歷史實作：將任務關聯集中於詳細頁側欄頁籤",
+          "id": "a2a58926-987b-47e1-addf-92a52799779a"
+        },
+        {
+          "identifier": "TT-85",
+          "title": "歷史實作：保存待辦Markdown全文並保留原稿格式",
+          "id": "a4122933-eac2-4ae6-b142-8dc71fcee924"
+        },
+        {
+          "identifier": "TT-86",
+          "title": "歷史實作：共用Markdown編輯器並支援整塊待辦速記",
+          "id": "f2963efb-e17c-42b7-a9a3-a3636e4f6356"
+        },
+        {
+          "identifier": "TT-88",
+          "title": "歷史實作：將待辦完成與重開改為明確文字操作",
+          "id": "420f6500-d917-4daa-b119-2e3de66bfd9f"
+        },
+        {
+          "identifier": "TT-89",
+          "title": "歷史實作：讓短頁頁尾維持在畫面底部",
+          "id": "40e86e2a-ac96-4aca-b6a3-2f0130514a7b"
+        },
+        {
+          "identifier": "TT-91",
+          "title": "歷史實作：加入帳號選單與工作空間設定介面",
+          "id": "67e0d137-53ad-42ba-bc76-e868fde7d653"
+        },
+        {
+          "identifier": "TT-92",
+          "title": "歷史實作：整理看板捲動與卡片操作並顯示Epic",
+          "id": "cd96988b-d6e4-45ec-a009-4616e00d786a"
+        },
+        {
+          "identifier": "TT-95",
+          "title": "歷史實作：移除側邊欄重複帳號資訊",
+          "id": "5cdb17a1-dcc4-46af-8dc0-5993e788ad64"
+        },
+        {
+          "identifier": "TT-96",
+          "title": "歷史實作：小待辦操作改為浮動選單並精簡來源提示",
+          "id": "2e6b6e5c-93a4-4d75-9a8d-64df41d2dc5c"
+        },
+        {
+          "identifier": "TT-97",
+          "title": "歷史實作：首頁聚焦小待辦並分離專案列表",
+          "id": "27b2b779-687f-48d6-8568-81488237cb8e"
+        },
+        {
+          "identifier": "TT-98",
+          "title": "歷史實作：精簡通知與設定頁技術文案",
+          "id": "a9d04ab8-5529-4b93-8fc3-c0c094a8786e"
+        },
+        {
+          "identifier": "TT-99",
+          "title": "歷史實作：移除看板卡片狀態選單並保留拖曳操作",
+          "id": "65b3751b-4616-4921-b48c-3002d41ea026"
+        },
+        {
+          "identifier": "TT-100",
+          "title": "歷史實作：任務詳細頁支援填報與修改本人工時",
+          "id": "eb0d78c9-c013-4945-8978-dcc46849e2d6"
+        },
+        {
+          "identifier": "TT-101",
+          "title": "歷史實作：開放Epic直接填報工時並調整加總",
+          "id": "95e6a861-39f9-455f-add1-3ca18a62124d"
+        },
+        {
+          "identifier": "TT-102",
+          "title": "文件／工程交付：研究Epic競品定位與介面取捨",
+          "id": "d0086d03-190c-44e7-bfe3-346c17caf126"
+        },
+        {
+          "identifier": "TT-103",
+          "title": "歷史實作：移除獨立Epic概覽並整合任務列表",
+          "id": "5e117cf9-71d3-41cf-bd4a-166289de2faf"
+        },
+        {
+          "identifier": "TT-104",
+          "title": "歷史實作：工作空間成員改用身份下拉選單",
+          "id": "f0e8a504-71db-4152-86aa-ff323fdc5cd0"
+        },
+        {
+          "identifier": "TT-105",
+          "title": "歷史實作：新增工作空間三種工時分析與權限入口",
+          "id": "8ece7b73-eb5d-4f61-a0e5-ad4a0777aebe"
+        },
+        {
+          "identifier": "TT-106",
+          "title": "歷史實作：支援既有帳號加入與切換多個工作空間",
+          "id": "b4c75ae8-7e5e-424d-a71f-ebb180c1c9b4"
+        },
+        {
+          "identifier": "TT-107",
+          "title": "歷史實作：整合工作區切換與新舊帳號邀請介面",
+          "id": "5e3d175c-be9d-417b-8410-a98b5009a484"
+        },
+        {
+          "identifier": "TT-108",
+          "title": "歷史實作：移除全站鼓勵語與常駐功能說明",
+          "id": "95e58469-19b2-49d2-b4fa-6ec5fcc27e4a"
+        },
+        {
+          "identifier": "TT-109",
+          "title": "歷史實作：移除已完成專頁並整合列表篩選",
+          "id": "206e1936-80f5-4b0c-aeb0-c1fa917dc02b"
+        },
+        {
+          "identifier": "TT-110",
+          "title": "歷史實作：建立必備open與closed狀態並移除分類設定",
+          "id": "b5944fb0-c707-4c45-a575-432670065b19"
+        },
+        {
+          "identifier": "TT-111",
+          "title": "歷史實作：將工作空間設定改為獨立頁面",
+          "id": "408b98b7-6000-419d-8b89-bf94639267fc"
+        },
+        {
+          "identifier": "TT-112",
+          "title": "歷史實作：限縮新增任務入口至列表與看板欄位",
+          "id": "468f0e5f-fc0b-4dfd-8447-63ade5874ca5"
+        },
+        {
+          "identifier": "TT-114",
+          "title": "歷史實作：改善工時分析圖表並集中DemoSeeder資料建立",
+          "id": "1acae1b2-94ee-48fd-93fd-1174bb8c03b7"
+        },
+        {
+          "identifier": "TT-115",
+          "title": "文件／工程交付：記錄工時分析長表格與分頁建議",
+          "id": "a27f33af-2234-463f-8468-d207a7162285"
+        },
+        {
+          "identifier": "TT-116",
+          "title": "歷史實作：補齊成員工時日期與卡片明細分析",
+          "id": "e06219ba-7667-4fdd-8174-ab8b252167bb"
+        },
+        {
+          "identifier": "TT-119",
+          "title": "歷史實作：拆分Vue任務查詢與互動生命週期",
+          "id": "49c6ea32-353f-4a3f-8f1b-3eabe32c5f65"
+        },
+        {
+          "identifier": "TT-121",
+          "title": "歷史實作：整理工時分析視覺圖表與明細分頁",
+          "id": "1614970a-4837-4a2c-8dd5-dd2ca88ca491"
+        },
+        {
+          "identifier": "TT-125",
+          "title": "文件／工程交付：完成 Addy 與 ECC 效能掃描及實測基準",
+          "id": "d7c124aa-b4de-4538-9c4e-4f43f1184a7d"
+        },
+        {
+          "identifier": "TT-126",
+          "title": "歷史實作：批次載入唯讀資格並移除逐工時授權查詢",
+          "id": "2d2ee0e0-5fec-482d-8659-8d7085d5a7c3"
+        },
+        {
+          "identifier": "TT-127",
+          "title": "歷史實作：合併工作區刷新並共用看板卡片索引",
+          "id": "7c8ae7a4-54c4-40b0-a1a3-fcfaad9bb76c"
+        },
+        {
+          "identifier": "TT-132",
+          "title": "歷史實作：統一返回導覽並精簡看板標題列",
+          "id": "e0332f67-008d-45cf-b6de-3f34c39853fe"
+        },
+        {
+          "identifier": "TT-138",
+          "title": "歷史實作：依 Unslop 清理介面裝飾並修正登入按鈕",
+          "id": "5dc7f17f-a2ea-40fe-8b04-05a46635f412"
+        },
+        {
+          "identifier": "TT-179",
+          "title": "評估App導覽、工作區及草稿協調的責任拆分",
+          "id": "c3e33591-3001-4964-8054-37b74fa4f1d0"
+        },
+        {
+          "identifier": "TT-181",
+          "title": "評估500卡看板DOM與虛擬化策略",
+          "id": "9cae6463-899a-40d2-a8be-044ce897bc1a"
+        },
+        {
+          "identifier": "TT-183",
+          "title": "分割初始JS與Vuetify／MDI資源",
+          "id": "6f09759a-1ceb-467f-84f0-bf74c5220918"
+        },
+        {
+          "identifier": "TT-186",
+          "title": "候選：首頁個人小工具與卡片篩選小清單",
+          "id": "bcfa7257-d3f8-44ea-8161-7b82b5c4127a"
+        },
+        {
+          "identifier": "TT-187",
+          "title": "候選：可自訂角色與permission編輯",
+          "id": "885eb200-90de-4959-a29e-a413ac589d92"
+        },
+        {
+          "identifier": "TT-188",
+          "title": "候選：專案可自訂Issue類型",
+          "id": "11433349-cdda-476d-826f-32015f8de346"
+        },
+        {
+          "identifier": "TT-189",
+          "title": "候選：實際Email寄送、偏好與可靠出站流程",
+          "id": "d7a41415-1e77-4c96-83cf-029314af1008"
+        },
+        {
+          "identifier": "TT-190",
+          "title": "候選：Issue通知收件匣、追蹤者與mention",
+          "id": "202434c1-6b4f-419c-b167-15eee1b51ec7"
+        },
+        {
+          "identifier": "TT-191",
+          "title": "候選：R2附件／圖片與授權下載",
+          "id": "714e9659-eb7e-4113-9a00-d200b710181b"
+        },
+        {
+          "identifier": "TT-192",
+          "title": "候選：Bug／任務範本",
+          "id": "5bfee185-8a98-43ca-8496-2966b4292612"
+        },
+        {
+          "identifier": "TT-193",
+          "title": "候選：批次修改與標籤管理",
+          "id": "95edca08-e032-42c1-897f-378c7a62cbf7"
+        },
+        {
+          "identifier": "TT-194",
+          "title": "候選：看板負責人分組與持久排序／WIP提醒",
+          "id": "4333a70b-08f0-40a2-9fc9-6a5f78f0584d"
+        },
+        {
+          "identifier": "TT-195",
+          "title": "候選：里程碑／版本與長期專案封存",
+          "id": "0e868ae2-ca45-45d1-b570-a7f9ecec3fdf"
+        },
+        {
+          "identifier": "TT-196",
+          "title": "候選：期間交付／cycle time與重開分析",
+          "id": "49bf6f13-7f1e-436c-b99a-34e2e6efe1f7"
+        },
+        {
+          "identifier": "TT-197",
+          "title": "候選：工時CSV匯出與對帳",
+          "id": "6b79ed13-37d6-4d5e-8bb2-98c233f13338"
+        },
+        {
+          "identifier": "TT-199",
+          "title": "候選：依現有功能編寫操作手冊",
+          "id": "8deae428-410a-4e33-964a-1cd779fb23b2"
+        },
+        {
+          "identifier": "TT-200",
+          "title": "候選：評估登入版型／分析入口／版本資訊的P3修整",
+          "id": "dab0cb20-5232-4076-a2fa-07b5adc9d937"
+        },
+        {
+          "identifier": "TT-204",
+          "title": "盤點指派／留言／@mention與通知實際行為",
+          "id": "2d80852f-6d22-405b-93bf-8a74839332d2"
+        },
+        {
+          "identifier": "TT-210",
+          "title": "建立SEO／部署／實際功能／AI整合API主題看板",
+          "id": "036c36c0-58b1-4baa-aefa-61c3ddcbc621"
+        }
+      ]
+    },
+    {
+      "name": "AI整合/API",
+      "selectedIssueIds": [
+        "07ce586a-da44-47c2-b5d5-b883ab565465",
+        "084bc5c8-77b2-45c1-8ed8-0393cdd19918",
+        "0d33fc6f-9100-4f61-a45f-a2242036b41e",
+        "1ff2eca7-343f-4230-9153-d9e32e6eef4b",
+        "24faf757-c80f-4190-8586-e998f6863183",
+        "3e8a4af3-80d9-4618-97ba-337ce87d7262",
+        "3f3a3de5-4c60-485b-8b78-42eac2a90fba",
+        "3fb66119-3096-4328-a2d7-de714df81c92",
+        "447233ee-df67-4cb9-92a0-fc9b31a466e1",
+        "5c4a0c0d-823d-46a4-b347-d7bfdb610929",
+        "5e281af2-5c8b-42da-9a14-2cf01ad5a6b9",
+        "62c13951-7953-409f-bbae-897bb0eb93da",
+        "7725aed0-9f88-4618-8efa-52f8d43e2818",
+        "8f9769eb-1aeb-4d06-990c-7132fd3de145",
+        "928d9a57-15e5-4f00-b57a-8f8ea04872b5",
+        "94fba35f-fe19-44c8-b994-169132308718",
+        "9cb6c201-b6ee-4bd2-80f7-7f2807c26083",
+        "a5159fbf-21d9-4656-a2ad-1e223a4e91c7",
+        "a72d0622-a21a-4f1d-b805-e50e8b3339a1",
+        "a9c1088b-ca9c-407a-a558-ea33501a3db9",
+        "abce3f63-6b7a-4b1c-92ab-a9c83f764305",
+        "b68ee3fb-f100-43d4-accb-638561a81cab",
+        "b7ca298d-adb1-49eb-b4a9-ad0250f83b3a",
+        "d770a8d8-d26c-437c-a26b-0678691ae83f",
+        "d8885754-be74-4a1b-a21a-c724cdfbb7b3",
+        "df4e21d5-2fd6-46b6-94f7-2860517ab51e",
+        "f905e9bc-3fbf-4325-971a-c0a9ffc83114",
+        "f91e7509-36f6-44eb-a51f-70f9bdb1183c"
+      ],
+      "expectedIssueIds": [
+        "076a8193-23b1-4afc-88b1-fb14642c42c6",
+        "07ce586a-da44-47c2-b5d5-b883ab565465",
+        "084bc5c8-77b2-45c1-8ed8-0393cdd19918",
+        "0d33fc6f-9100-4f61-a45f-a2242036b41e",
+        "0f6b84f9-f423-4fea-a3c0-068280a94ab9",
+        "1ff2eca7-343f-4230-9153-d9e32e6eef4b",
+        "24faf757-c80f-4190-8586-e998f6863183",
+        "2fc3640b-676c-4fae-9231-0d14b4468e99",
+        "3e8a4af3-80d9-4618-97ba-337ce87d7262",
+        "3f3a3de5-4c60-485b-8b78-42eac2a90fba",
+        "3fb66119-3096-4328-a2d7-de714df81c92",
+        "447233ee-df67-4cb9-92a0-fc9b31a466e1",
+        "5c4a0c0d-823d-46a4-b347-d7bfdb610929",
+        "5e281af2-5c8b-42da-9a14-2cf01ad5a6b9",
+        "62c13951-7953-409f-bbae-897bb0eb93da",
+        "67638d7c-d8af-4314-9941-5f24bbf794a2",
+        "74690f63-097b-4dcd-b3aa-47c22408b5ee",
+        "7725aed0-9f88-4618-8efa-52f8d43e2818",
+        "7a95a27a-45ca-4816-84af-2bfa03b8e17d",
+        "7e4755dc-538a-401a-93f1-04868eae2f53",
+        "87ae0ea9-464d-46cc-9d6f-97e83e7ac375",
+        "8e30f845-91fa-41e2-85a6-18bde6ec77e6",
+        "8f9769eb-1aeb-4d06-990c-7132fd3de145",
+        "928d9a57-15e5-4f00-b57a-8f8ea04872b5",
+        "94fba35f-fe19-44c8-b994-169132308718",
+        "98b7b65d-eb2b-4842-be95-b1a129fc6667",
+        "9cb6c201-b6ee-4bd2-80f7-7f2807c26083",
+        "9e3f24eb-3a6a-4f6e-b15c-38a66893e24b",
+        "a1285fe7-d0c3-44d4-884d-b00bfeae94aa",
+        "a5159fbf-21d9-4656-a2ad-1e223a4e91c7",
+        "a72d0622-a21a-4f1d-b805-e50e8b3339a1",
+        "a9c1088b-ca9c-407a-a558-ea33501a3db9",
+        "abce3f63-6b7a-4b1c-92ab-a9c83f764305",
+        "b68ee3fb-f100-43d4-accb-638561a81cab",
+        "b7ca298d-adb1-49eb-b4a9-ad0250f83b3a",
+        "cbc83d29-56d9-474d-9643-0553c23267e5",
+        "d1d10447-1c7a-443d-ba42-fa7b2e478707",
+        "d770a8d8-d26c-437c-a26b-0678691ae83f",
+        "d8885754-be74-4a1b-a21a-c724cdfbb7b3",
+        "df4e21d5-2fd6-46b6-94f7-2860517ab51e",
+        "f905e9bc-3fbf-4325-971a-c0a9ffc83114",
+        "f91e7509-36f6-44eb-a51f-70f9bdb1183c"
+      ],
+      "issues": [
+        {
+          "identifier": "TT-3",
+          "title": "標準化對外API與受限整合平台",
+          "id": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7"
+        },
+        {
+          "identifier": "TT-8",
+          "title": "文件／工程交付：設定每完成一個階段就提交的工作規範",
+          "id": "447233ee-df67-4cb9-92a0-fc9b31a466e1"
+        },
+        {
+          "identifier": "TT-30",
+          "title": "歷史實作：將協作 API 與資料相容遷移至 Laravel",
+          "id": "b7ca298d-adb1-49eb-b4a9-ad0250f83b3a"
+        },
+        {
+          "identifier": "TT-52",
+          "title": "歷史實作：建立專案看板與卡片收錄 API",
+          "id": "f905e9bc-3fbf-4325-971a-c0a9ffc83114"
+        },
+        {
+          "identifier": "TT-60",
+          "title": "歷史實作：加入私人待辦交辦通知與單向轉卡 API",
+          "id": "62c13951-7953-409f-bbae-897bb0eb93da"
+        },
+        {
+          "identifier": "TT-62",
+          "title": "文件／工程交付：收錄兩個高星 UIUX skill 與評估介紹",
+          "id": "5c4a0c0d-823d-46a4-b347-d7bfdb610929"
+        },
+        {
+          "identifier": "TT-63",
+          "title": "文件／工程交付：啟用專案 UIUX skills",
+          "id": "d770a8d8-d26c-437c-a26b-0678691ae83f"
+        },
+        {
+          "identifier": "TT-68",
+          "title": "文件／工程交付：收錄使用者流程與可用性評估 skills",
+          "id": "d8885754-be74-4a1b-a21a-c724cdfbb7b3"
+        },
+        {
+          "identifier": "TT-73",
+          "title": "文件／工程交付：記錄後端可讀性問題與暫緩重構決定",
+          "id": "3e8a4af3-80d9-4618-97ba-337ce87d7262"
+        },
+        {
+          "identifier": "TT-75",
+          "title": "文件／工程交付：搬入並適配後端開發規範與專案 skill 入口",
+          "id": "1ff2eca7-343f-4230-9153-d9e32e6eef4b"
+        },
+        {
+          "identifier": "TT-76",
+          "title": "歷史實作：拆分後端業務服務並整理授權與重試流程",
+          "id": "abce3f63-6b7a-4b1c-92ab-a9c83f764305"
+        },
+        {
+          "identifier": "TT-77",
+          "title": "歷史實作：明確分離 API 入口與 JSON 契約並建立資料模型入口",
+          "id": "5e281af2-5c8b-42da-9a14-2cf01ad5a6b9"
+        },
+        {
+          "identifier": "TT-79",
+          "title": "文件／工程交付：補齊後端程式導覽與重構驗收紀錄",
+          "id": "a72d0622-a21a-4f1d-b805-e50e8b3339a1"
+        },
+        {
+          "identifier": "TT-87",
+          "title": "文件／工程交付：限定專案內技能並補齊階段規劃紀錄",
+          "id": "3f3a3de5-4c60-485b-8b78-42eac2a90fba"
+        },
+        {
+          "identifier": "TT-90",
+          "title": "歷史實作：加入個人與工作空間設定及固定角色管理API",
+          "id": "df4e21d5-2fd6-46b6-94f7-2860517ab51e"
+        },
+        {
+          "identifier": "TT-113",
+          "title": "文件／工程交付：安裝Laravel與Vue skills並替換後端架構規範",
+          "id": "0d33fc6f-9100-4f61-a45f-a2242036b41e"
+        },
+        {
+          "identifier": "TT-117",
+          "title": "歷史實作：分離HTTP工作空間與帳號服務邊界",
+          "id": "3fb66119-3096-4328-a2d7-de714df81c92"
+        },
+        {
+          "identifier": "TT-118",
+          "title": "歷史實作：建立工時查詢DTO與租戶限定資料存取",
+          "id": "928d9a57-15e5-4f00-b57a-8f8ea04872b5"
+        },
+        {
+          "identifier": "TT-120",
+          "title": "文件／工程交付：評估前後端重構收益與剩餘架構差距",
+          "id": "7725aed0-9f88-4618-8efa-52f8d43e2818"
+        },
+        {
+          "identifier": "TT-123",
+          "title": "文件／工程交付：比較 GitHub 高星效能分析 skills 與專案適配",
+          "id": "8f9769eb-1aeb-4d06-990c-7132fd3de145"
+        },
+        {
+          "identifier": "TT-124",
+          "title": "文件／工程交付：安裝 Addy 效能診斷與 ECC 基準量測 skills",
+          "id": "9cb6c201-b6ee-4bd2-80f7-7f2807c26083"
+        },
+        {
+          "identifier": "TT-136",
+          "title": "文件／工程交付：安裝 Hallmark 與 Unslop 專案技能",
+          "id": "a9c1088b-ca9c-407a-a558-ea33501a3db9"
+        },
+        {
+          "identifier": "TT-137",
+          "title": "文件／工程交付：記錄 Unslop 審查與確認的修整範圍",
+          "id": "b68ee3fb-f100-43d4-accb-638561a81cab"
+        },
+        {
+          "identifier": "TT-139",
+          "title": "文件／工程交付：紀錄 Multi-Agent 實測與外部整合需求",
+          "id": "f91e7509-36f6-44eb-a51f-70f9bdb1183c"
+        },
+        {
+          "identifier": "TT-165",
+          "title": "個人PAT管理、Scope與撤銷／到期",
+          "id": "7e4755dc-538a-401a-93f1-04868eae2f53"
+        },
+        {
+          "identifier": "TT-166",
+          "title": "使用者／Token操作來源稽核與即時撤權",
+          "id": "98b7b65d-eb2b-4842-be95-b1a129fc6667"
+        },
+        {
+          "identifier": "TT-167",
+          "title": "定義穩定REST契約與建議OpenAPI文件",
+          "id": "d1d10447-1c7a-443d-ba42-fa7b2e478707"
+        },
+        {
+          "identifier": "TT-168",
+          "title": "提供受限身分／專案／成員／狀態與單卡查詢",
+          "id": "8e30f845-91fa-41e2-85a6-18bde6ec77e6"
+        },
+        {
+          "identifier": "TT-169",
+          "title": "提供Issue、留言與Epic／父子／關聯寫入API",
+          "id": "67638d7c-d8af-4314-9941-5f24bbf794a2"
+        },
+        {
+          "identifier": "TT-170",
+          "title": "Issue列表支援穩定cursor與增量篩選",
+          "id": "076a8193-23b1-4afc-88b1-fb14642c42c6"
+        },
+        {
+          "identifier": "TT-171",
+          "title": "建立project-scoped外部識別與upsert契約",
+          "id": "cbc83d29-56d9-474d-9643-0553c23267e5"
+        },
+        {
+          "identifier": "TT-172",
+          "title": "設計可恢復的批次匯入與逐項結果",
+          "id": "0f6b84f9-f423-4fea-a3c0-068280a94ab9"
+        },
+        {
+          "identifier": "TT-173",
+          "title": "定義全量／增量同步與刪除或歸檔語意",
+          "id": "87ae0ea9-464d-46cc-9d6f-97e83e7ac375"
+        },
+        {
+          "identifier": "TT-174",
+          "title": "建立交易一致的Webhook事件與outbox",
+          "id": "7a95a27a-45ca-4816-84af-2bfa03b8e17d"
+        },
+        {
+          "identifier": "TT-175",
+          "title": "實作Webhook簽章、退避、死信與手動重送",
+          "id": "74690f63-097b-4dcd-b3aa-47c22408b5ee"
+        },
+        {
+          "identifier": "TT-176",
+          "title": "通用整合來源稽核、補送與回音識別",
+          "id": "9e3f24eb-3a6a-4f6e-b15c-38a66893e24b"
+        },
+        {
+          "identifier": "TT-177",
+          "title": "選配：外部客戶端自行整合後的聯調驗收",
+          "id": "a1285fe7-d0c3-44d4-884d-b00bfeae94aa"
+        },
+        {
+          "identifier": "TT-178",
+          "title": "逐用例遷移任務／工時寫入的專用Request與DTO",
+          "id": "07ce586a-da44-47c2-b5d5-b883ab565465"
+        },
+        {
+          "identifier": "TT-180",
+          "title": "拆分身分／導航與目前Project查詢以減少全量Workspace",
+          "id": "24faf757-c80f-4190-8586-e998f6863183"
+        },
+        {
+          "identifier": "TT-198",
+          "title": "候選：Git commit／PR／MR連結與受限事件整合",
+          "id": "94fba35f-fe19-44c8-b994-169132308718"
+        },
+        {
+          "identifier": "TT-202",
+          "title": "建立TaskTracker自我追蹤、AI Developer與完整卡片交接",
+          "id": "084bc5c8-77b2-45c1-8ed8-0393cdd19918"
+        },
+        {
+          "identifier": "TT-203",
+          "title": "確認API-first平台範圍並同步架構與待辦",
+          "id": "2fc3640b-676c-4fae-9231-0d14b4468e99"
+        }
+      ]
+    }
+  ]
+}

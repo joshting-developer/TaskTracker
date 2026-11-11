@@ -1,3 +1,11 @@
+## 2026-11-11 依SEO／部署／實際功能／AI整合API整理看板
+
+- 已完成：四個看板5／49／110／42張，Default210；AI為Project Maintainer／Workspace user。API、前端Epic展開函式及真實Chrome逐板／手機檢查通過；原209張完整資料與revision不變，TT-210交接留言後closed。未修改產品程式、資料表或部署。
+
+- 使用者要求依四主題建立看板，保留Default與原有卡片；已查209卡，只有Default。AI Developer不含board.manage；使用者先授權一次Owner操作，後續明確要求AI在TaskTracker專案升為Maintainer；Workspace仍user。Owner完成資格調整即登出，四看板由AI建立。
+- 先完成可核對的分類清單；歷史卡依交付內容分類，跨主題Epic留Default，避免Epic動態展開混入錯誤主題。建立／重用同名看板，不更動卡片狀態、負責人或關聯。
+- Owner只調整資格後登出；由AI建立並讀回看板可見性／收錄與實際UI，確認卡片完整資料／revision未變、沒有重複或遺漏，私有登入資訊不進Git。
+
 ## 2026-11-11 公開登入入口／介紹頁／SEO只建卡
 
 - 已完成：A–D=TT-205～208 open，E沿用TT-155 open，F=TT-209 deferred／low；同步TT-151／156／2的規劃，全部AI指派。讀回欄位／狀態及5個來源key唯一性通過，204→209卡，其餘200張完整內容／revision不變。對照文件及產品紀錄已更新；未改程式／schema／部署。

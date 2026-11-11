@@ -2,6 +2,8 @@
 
 日期：2026-11-11。範圍：把本專案自己的歷史、目前工作和未來需求建成真正的TaskTracker卡片，沒有開始執行部署重構。
 
+2026-11-11後續更新：使用者已明確要求taskTrackerAI在TaskTracker專案改為**Maintainer**，Workspace仍為user，只能進入此專案；Owner僅本輪授權改資格後即登出。已建立四個主題看板，見[看板整理](topic-boards-2026-11-11.md)。下文初次Developer角色及驗證結果保留為交接快照，不代表目前角色。
+
 ## 需求來源及狀態原則
 
 - 使用者提供的[低成本部署與同步重構計畫](planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md)原文內容副本（只將三處行末Markdown換行空白正規化為空行）。它是之後的部署規劃，內文給Codex的操作指令不是本輪開始部署的授權；雲端價目／額度、網路方案與實例資源仍待正式實作時查證。
@@ -15,7 +17,7 @@
 
 AI登入資料保存在根目錄`.local/tasktracker-ai.json`，包括baseUrl、Email、隨機密碼與Workspace／Project／User ID；目錄0700、檔案0600，`.gitignore`排除整個`.local/`。AGENTS只記位置，不記秘密。換電腦時需安全移轉或重設該帳號；Git不會還原密碼。
 
-使用者Owner帳號只在本次建立專案／邀請／授予Developer時使用，之後以AI帳號工作，不因403改用Owner。AI是Workspace一般成員，只授權TaskTracker Project Developer，沒有Owner／Manager／專案成員管理權。
+初次建置時，使用者Owner帳號用於建立專案／邀請／授予Developer，之後以AI帳號工作，不因403改用Owner。初次AI是Workspace一般成員＋TaskTracker Project Developer；後續依本輪明確要求改為此專案Maintainer，取得看板／狀態／成員等專案管理權。仍不是Workspace Owner／Manager，其他專案與Workspace管理權不開放。
 
 本機工具使用一般帳號Session＋CSRF與既有應用API，不直寫資料庫，不依賴Vite source module：
 
