@@ -20,6 +20,7 @@ class TimeEntryResource extends JsonResource
         $entry = $this->resource;
 
         return ['id' => $entry->id, 'issueId' => $entry->issueId, 'projectId' => $entry->projectId,
+            'issue' => ['id' => $entry->issueId, 'projectId' => $entry->projectId, 'identifier' => $entry->issueIdentifier, 'title' => $entry->issueTitle, 'type' => $entry->issueType],
             'userId' => $entry->userId, 'userName' => $entry->userName, 'workDate' => $entry->workDate,
             'minutes' => (int) $entry->minutes, 'note' => $entry->note, 'revision' => (int) $entry->revision,
             'voidedAt' => null, 'createdAt' => DatabaseTimes::public($entry->created_at), 'updatedAt' => DatabaseTimes::public($entry->updated_at)];

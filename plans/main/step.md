@@ -1,3 +1,10 @@
+## 2026-11-12 任務列表／詳細／單卡工時接線
+
+- TT-214／215／244：ProjectTasksWorkspace共用頁面owner，列表SQL filters／scope／20筆分頁與純列表DTO，深連結hydrate最新revision與關聯，活動／子卡按需分頁；單卡工時SQL SUM／作者資格／void與20＋7分頁。
+- TT-240本階段只完成卡片表單／篩選的member／Epic／parent／related遠端選項、debounce／取消與已選保留；Project負責人、轉卡及月曆其餘用途仍inprogress，不能整張結案。
+- 真實Chrome104卡列表／我的任務／第二頁／SQL描述搜尋、103張看板卡片與跨頁候選關聯保存、詳細活動均bulkReads=0；完整工時三尺寸／409草稿／重試／去重／作者／撤權通過。memory72／3185、MySQL80／3306，Pint14檔；見docs/performance-task-pages-2026-11-12.md。
+- 原getWorkspace/getTodos在首頁及其他管理／月曆route仍待遷移；下一階段優先處理首頁／Todo與通知，之後續其餘P1。
+
 ## 2026-11-12 本地MySQL／Redis同步切換（TT-247）
 
 - 使用者追加授權因SQL RTT影響效率而切回本地，先停寫／排空Queue、33表最新完整備份、空目標匯入與全列內容雜湊核對。5818筆一致；舊庫／外部／APP_KEY保留。

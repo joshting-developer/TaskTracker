@@ -30,7 +30,7 @@ try {
   const url = issue => `http://127.0.0.1:5175/#/projects/${project.id}/issues/${issue.id}?detail=1`;
   const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
   const drawer = page.locator('.time-entry-drawer');
-  async function openIssue(issue) { await page.goto(url(issue)); await page.reload(); await detail.getByRole('tab', { name: /^工時/ }).click(); }
+  async function openIssue(issue) { await page.goto(url(issue)); await page.reload(); const response=page.waitForResponse(r => new URL(r.url()).pathname.endsWith(`/issues/${issue.id}/time`) && r.status()===200); await detail.getByRole('tab', { name: /^工時/ }).click(); const data=(await (await response).json()).data; await page.waitForFunction(count => document.querySelectorAll('.issue-detail-work').length===count,data.items.length); }
   await page.goto(`http://127.0.0.1:5175/#/projects/${project.id}/epics`);
   await page.reload();
   await page.locator(`tr[data-issue="${epic.identifier}"]`).waitFor();
@@ -39,6 +39,7 @@ try {
   assert.equal(await page.locator('tr[data-issue]').count(), 3, '三種類型共用列表');
   await page.getByRole('button', { name: '任務篩選', exact: true }).click();
   await page.getByLabel('篩選類型', { exact: true }).selectOption('epic');
+  await page.waitForFunction(() => document.querySelectorAll('tr[data-issue]').length === 1);
   assert.equal(await page.locator('tr[data-issue]').count(), 1);
   await page.locator(`tr[data-issue="${epic.identifier}"]`).getByRole('button', { name: epic.title, exact: true }).click();
   await detail.getByRole('heading', { name: epic.title, exact: true }).waitFor();

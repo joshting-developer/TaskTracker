@@ -3,17 +3,19 @@ import { computed, shallowRef } from 'vue';
 import { PRIORITIES, TYPES } from '../domain/model.js';
 import { CONDITIONS } from '../domain/filters.js';
 import Icon from './Icon.vue';
+import PagedSelect from './PagedSelect.vue';
 
-const props = defineProps({
+const props = defineProps({ lookup: Function, lookupContext: String, expanded: {type: Boolean, default: undefined},
   states: { type: Array, required: true },
   members: { type: Array, required: true },
   issues: { type: Array, required: true },
   activeFilterChips: { type: Array, required: true },
   filterWarnings: { type: Array, required: true },
 });
-const emit = defineEmits(['remove', 'clear']);
+const emit = defineEmits(['remove', 'clear', 'option', 'update:expanded']);
 const model = defineModel({ type: Object, required: true });
-const filtersOpen = shallowRef(false);
+const localExpanded = shallowRef(false);
+const filtersOpen = computed({get: () => props.expanded ?? localExpanded.value, set: value => { localExpanded.value = value; emit('update:expanded', value); }});
 const epics = computed(() => props.issues.filter(issue => issue.type === 'epic'));
 // 更新完整的篩選輸入，不直接修改父元件物件中的欄位。
 function field(key) {
@@ -65,14 +67,16 @@ const conditionFilter = field('condition'), sort = field('sort');
         <option v-for="priority in PRIORITIES" :key="priority.id" :value="priority.id">{{ priority.label }}</option>
       </select>
     </label>
-    <label>負責人
+    <PagedSelect v-if="lookup" v-model="assigneeFilter" label="篩選負責人" :options="members" :context="lookupContext" :load="(filters, options) => lookup('member', filters, options)" empty-label="所有成員" @choose="item => emit('option', {kind:'member', item})" />
+    <label v-else>負責人
       <select v-model="assigneeFilter" aria-label="篩選負責人">
         <option value="">所有成員</option>
         <option v-if="assigneeFilter && !members.some(member => member.id === assigneeFilter)" :value="assigneeFilter" disabled>成員已移除（需修正）</option>
         <option v-for="member in members" :key="member.id" :value="member.id">{{ member.name }}</option>
       </select>
     </label>
-    <label>Epic
+    <PagedSelect v-if="lookup" v-model="epicFilter" label="篩選 Epic" :options="epics" :fixed-options="[{id:'unlinked',name:'尚未掛入 Epic'}]" :context="lookupContext" :load="(filters, options) => lookup('epic', filters, options)" empty-label="所有 Epic" @choose="item => item.id !== 'unlinked' && emit('option', {kind:'epic', item})" />
+    <label v-else>Epic
       <select v-model="epicFilter" aria-label="篩選 Epic">
         <option value="">所有 Epic</option><option value="unlinked">尚未掛入 Epic</option>
         <option v-if="epicFilter && epicFilter !== 'unlinked' && !epics.some(issue => issue.id === epicFilter)" :value="epicFilter" disabled>Epic 已移除（需修正）</option>

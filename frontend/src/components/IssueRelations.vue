@@ -1,15 +1,18 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, toRef } from 'vue';
+import { useIssueActivity } from '../composables/useIssueActivity.js';
 import { isClosed, statusesFor } from '../domain/model.js';
 import Icon from './Icon.vue';
-const props = defineProps({ issue: Object, issues: Array, project: Object, type: String, parentId: String, relatedIds: Array, saving: Boolean });
-const emit = defineEmits(['parent', 'related', 'open', 'create-child']);
-const picker = ref('');
+import PagedSelect from './PagedSelect.vue';
+const props = defineProps({ activityLoader: Function, lookup: Function, issue: Object, issues: Array, project: Object, type: String, parentId: String, relatedIds: Array, saving: Boolean });
+const emit = defineEmits(['parent', 'related', 'open', 'create-child', 'candidate']);
+const picker = ref(''), selectedCandidate = ref('');
 const search = ref('');
 const childTitle = ref('');
 const creatingChild = ref(false);
 const parent = computed(() => props.issues.find(item => item.id === props.parentId));
-const children = computed(() => props.issue ? props.issues.filter(item => item.parentIssueId === props.issue.id) : []);
+const childPage = useIssueActivity({issue: toRef(props, 'issue'), tab: computed(() => props.type !== 'epic' && !props.parentId ? 'children' : ''), load: toRef(props, 'activityLoader')});
+const children = computed(() => props.activityLoader ? childPage.children.value : props.issue ? props.issues.filter(item => item.parentIssueId === props.issue.id) : []);
 const done = computed(() => children.value.filter(item => isClosed(item)).length);
 const related = computed(() => (props.relatedIds || []).map(id => props.issues.find(item => item.id === id)).filter(Boolean));
 const candidates = computed(() => props.issues.filter(item => {
@@ -20,10 +23,12 @@ const candidates = computed(() => props.issues.filter(item => {
 }).slice(0, 30));
 function openPicker(mode) { picker.value = picker.value === mode ? '' : mode; search.value = ''; }
 function select(item) {
+  emit('candidate', item);
+  if (picker.value === 'related' && props.relatedIds.includes(item.id)) return;
   if (picker.value === 'parent') { emit('parent', item.id); picker.value = ''; }
   else emit('related', [...props.relatedIds, item.id].sort());
 }
-function resetChild() { childTitle.value = ''; creatingChild.value = false; }
+function resetChild() { childTitle.value = ''; creatingChild.value = false; childPage.refresh(); }
 defineExpose({ dirty: computed(() => Boolean(childTitle.value.trim())), resetChild });
 const state = item => statusesFor(props.project).find(status => status.id === item.state)?.label || item.state;
 </script>
@@ -34,17 +39,19 @@ const state = item => statusesFor(props.project).find(status => status.id === it
       <button v-else class="text-button" :aria-expanded="picker === 'parent'" :disabled="saving" @click="openPicker('parent')">設定父任務</button>
     </div>
     <section v-if="issue && type !== 'epic' && !parentId" class="relation-group" aria-label="子任務">
-      <header><h3>子任務 <small v-if="children.length">{{ done }} / {{ children.length }} 完成</small></h3><button class="text-button" :disabled="saving" @click="creatingChild = !creatingChild">{{ creatingChild ? '收起新增' : '新增子任務' }}</button></header>
+      <header><h3>子任務 <small v-if="children.length && !activityLoader">{{ done }} / {{ children.length }} 完成</small></h3><button class="text-button" :disabled="saving" @click="creatingChild = !creatingChild">{{ creatingChild ? '收起新增' : '新增子任務' }}</button></header>
       <form v-if="creatingChild" class="child-create" @submit.prevent="emit('create-child', childTitle)"><label class="sr-only" for="child-title">子任務標題</label><input id="child-title" v-model="childTitle" placeholder="輸入子任務標題…" maxlength="180" required :disabled="saving" /><button class="button secondary" :disabled="saving || !childTitle.trim()">建立子任務</button></form>
       <div v-for="item in children" :key="item.id" class="relation-row"><button class="relation-link" :aria-label="`開啟子任務 ${item.identifier}`" :disabled="saving" @click="emit('open', item)"><span class="identifier">{{ item.identifier }}</span><span>{{ item.title }}</span></button><span class="relation-state">{{ state(item) }}</span></div>
+      <p v-if="childPage.loading.value" role="status">載入子任務中…</p><p v-if="childPage.error.value" class="error-box" role="alert">{{ childPage.error.value }}</p><button v-if="childPage.more.value" class="text-button" :disabled="childPage.loading.value" @click="childPage.fetchPage(true)">載入更多子任務</button>
     </section>
     <section class="relation-group" aria-label="關聯任務">
       <header><h3>關聯任務 <small v-if="related.length">{{ related.length }}</small></h3><button class="text-button" :aria-expanded="picker === 'related'" :disabled="saving" @click="openPicker('related')">新增關聯</button></header>
       <div v-for="item in related" :key="item.id" class="relation-row"><button class="relation-link" :aria-label="`開啟關聯任務 ${item.identifier}`" :disabled="saving" @click="emit('open', item)"><span class="identifier">{{ item.identifier }}</span><span>{{ item.title }}</span></button><span class="relation-state">{{ state(item) }}</span><button class="icon-button" :aria-label="`解除關聯 ${item.identifier}`" :disabled="saving" @click="emit('related', relatedIds.filter(id => id !== item.id))"><Icon name="close" :size="16" /></button></div>
     </section>
     <div v-if="picker" class="relation-picker" :aria-label="picker === 'parent' ? '選擇父任務' : '選擇關聯任務'">
-      <div class="relation-search"><input v-model="search" :aria-label="picker === 'parent' ? '搜尋父任務' : '搜尋關聯任務'" placeholder="搜尋任務編號或標題…" :disabled="saving" /><button class="icon-button" aria-label="關閉任務選擇" :disabled="saving" @click="picker = ''"><Icon name="close" :size="16" /></button></div>
-      <div class="relation-options"><button v-for="item in candidates" :key="item.id" :aria-label="`${picker === 'parent' ? '選為父任務' : '關聯'} ${item.identifier}`" :disabled="saving" @click="select(item)"><span class="identifier">{{ item.identifier }}</span><span>{{ item.title }}</span><span class="relation-state">{{ state(item) }}</span></button><p v-if="!candidates.length">沒有符合條件的任務</p></div>
+      <PagedSelect v-if="lookup" v-model="selectedCandidate" :label="picker === 'parent' ? '父任務' : '關聯任務'" :context="`${project.id}:${picker}`" :options="candidates" :load="(filters, options) => lookup(picker === 'parent' ? 'parent' : 'issue', filters, options)" :disabled="saving" empty-label="選擇任務" @choose="select" />
+      <template v-else><div class="relation-search"><input v-model="search" :aria-label="picker === 'parent' ? '搜尋父任務' : '搜尋關聯任務'" placeholder="搜尋任務編號或標題…" :disabled="saving" /><button class="icon-button" aria-label="關閉任務選擇" :disabled="saving" @click="picker = ''"><Icon name="close" :size="16" /></button></div>
+      <div class="relation-options"><button v-for="item in candidates" :key="item.id" :aria-label="`${picker === 'parent' ? '選為父任務' : '關聯'} ${item.identifier}`" :disabled="saving" @click="select(item)"><span class="identifier">{{ item.identifier }}</span><span>{{ item.title }}</span><span class="relation-state">{{ state(item) }}</span></button><p v-if="!candidates.length">沒有符合條件的任務</p></div></template>
     </div>
   </section>
 </template>

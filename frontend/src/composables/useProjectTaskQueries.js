@@ -1,9 +1,9 @@
 import { onScopeDispose, readonly, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 
-/** 看板查詢與備援生命週期；不管理編輯表單或DOM操作。 */
-export function useBoardQueries({ projectId, boardId, mode, context, blocked, onProject, onError, onSuccess }) {
-  const rows = shallowRef([]), board = shallowRef(null), boardPage = shallowRef(null);
+/** 專案任務查詢與備援生命週期；不管理編輯表單或DOM操作。 */
+export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId, mode, context, blocked, onProject, onError, onSuccess, listQuery, rows = shallowRef([]) }) {
+  const board = shallowRef(null), boardPage = shallowRef(null), issuePage = shallowRef(null);
   const listPage = ref(1), listSearch = ref(''), loading = ref(false), loadingCards = ref(false);
   const pageVisible = ref(!document.hidden);
   let generation = 0, request, timer, debounce, failures = 0, mounted = true;
@@ -20,7 +20,12 @@ export function useBoardQueries({ projectId, boardId, mode, context, blocked, on
         onProject(fresh);
       }
       if (!contentAllowed) return;
-      if (mode.value === 'boards') {
+      if (detailMode.value) { if (!showLoading) await onDetail(); return; }
+      if (mode.value === 'list') {
+        const data = await api.issues(projectId.value, listQuery.value, options);
+        if (current !== generation) return;
+        rows.value = data.items; issuePage.value = data;
+      } else if (mode.value === 'boards') {
         const data = await api.boards(projectId.value, { page: listPage.value, search: listSearch.value, perPage: 20 }, options);
         if (current !== generation) return;
         boardPage.value = data;
@@ -54,10 +59,11 @@ export function useBoardQueries({ projectId, boardId, mode, context, blocked, on
   function visible() { pageVisible.value = !document.hidden; if (document.hidden) { clearTimeout(timer); request?.abort(); } else { reload(false); schedule(); } }
   watch(context, () => { rows.value = []; boardPage.value = null; board.value = null; listPage.value = 1; reload(); schedule(); }, { immediate: true });
   watch([listPage, listSearch], () => { clearTimeout(debounce); debounce = setTimeout(() => reload(), 250); });
+  watch(() => mode.value === 'list' ? JSON.stringify(listQuery.value) : '', () => { if (mode.value !== 'list') return; clearTimeout(debounce); debounce = setTimeout(() => reload(), 250); });
   document.addEventListener('visibilitychange', visible);
   onScopeDispose(() => {
     mounted = false; generation++; request?.abort(); clearTimeout(timer); clearTimeout(debounce);
     document.removeEventListener('visibilitychange', visible);
   });
-  return { rows, board, boardPage, listPage, listSearch, loading, loadingCards, pageVisible: readonly(pageVisible), reload };
+  return { rows, board, boardPage, issuePage, listPage, listSearch, loading, loadingCards, pageVisible: readonly(pageVisible), reload };
 }

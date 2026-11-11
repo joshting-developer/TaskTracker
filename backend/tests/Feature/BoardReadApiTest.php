@@ -64,6 +64,19 @@ class BoardReadApiTest extends TestCase
         $page = $this->getJson($path.'/'.$board['id'].'/issues?perPage=100')->assertOk()->assertJsonPath('data.total', 107)->assertJsonCount(100, 'data.items')->json('data');
         $next = $this->getJson($path.'/'.$board['id'].'/issues?perPage=100&page=2')->assertOk()->assertJsonCount(7, 'data.items')->json('data');
         $this->assertSame([], array_intersect(array_column($page['items'], 'id'), array_column($next['items'], 'id')));
+        $childrenPath = '/api/v1/projects/'.$project['id'].'/issues/'.$epic['id'].'/children';
+        $this->getJson($childrenPath.'?perPage=100')->assertOk()->assertJsonPath('data.total', 106)->assertJsonCount(100, 'data.items');
+        $this->getJson($childrenPath.'?perPage=100&page=2')->assertOk()->assertJsonCount(6, 'data.items');
+        $optionsPath = '/api/v1/projects/'.$project['id'].'/issue-options';
+        $this->getJson($optionsPath.'?kind=epic')->assertOk()->assertJsonPath('data.total', 1)->assertJsonPath('data.items.0.id', $epic['id']);
+        $candidate = $this->getJson($optionsPath.'?search=FIRST-X99&perPage=30')->assertOk()->assertJsonPath('data.total', 1)->json('data.items.0');
+        $this->assertSame('FIRST-X99', $candidate['identifier']);
+        foreach (['description', 'comments', 'history', 'spentMinutes', 'estimateMinutes', 'revision', 'assigneeName'] as $field) {
+            $this->assertArrayNotHasKey($field, $candidate);
+        }
+        $this->getJson($optionsPath.'?kind=anything')->assertStatus(400);
+        $this->getJson($optionsPath.'?perPage=101')->assertStatus(400);
+        $this->getJson($optionsPath.'?kind=epic&exclude='.$epic['id'])->assertOk()->assertJsonPath('data.total', 0);
         foreach ($page['items'] as $item) {
             foreach (['description', 'history', 'comments', 'legacy_attributes'] as $field) {
                 $this->assertArrayNotHasKey($field, $item);

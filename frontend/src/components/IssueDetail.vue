@@ -31,8 +31,9 @@ defineExpose({ dirty, saving: isSaving, focus: () => heading.value?.focus() });
 const states = computed(() => statusesFor(props.project));
 const state = issue => states.value.find(item => item.id === issue.state);
 const memberName = id => props.members.find(member => member.id === id)?.name || id || '未指派';
-const children = computed(() => props.issues.filter(issue => props.issue.type === 'epic' ? issue.epicId === props.issue.id : issue.parentIssueId === props.issue.id));
-const timeIssues = computed(() => props.issue.type === 'epic' ? [props.issue, ...children.value] : [props.issue]);
+const relations = useIssueActivity({issue: toRef(props, 'issue'), tab: computed(() => sidebarTab.value === 'relations' ? 'children' : ''), load: toRef(props, 'activityLoader')});
+const children = computed(() => props.activityLoader ? relations.children.value : props.issues.filter(issue => props.issue.type === 'epic' ? issue.epicId === props.issue.id : issue.parentIssueId === props.issue.id));
+const timeIssues = computed(() => [...new Map([props.issue, ...children.value, ...activity.time.value.map(entry => entry.issue).filter(Boolean)].map(issue => [issue.id, issue])).values()]);
 const related = computed(() => (props.issue.relatedIssueIds || []).map(id => props.issues.find(issue => issue.id === id)).filter(Boolean));
 const epic = computed(() => props.issues.find(issue => issue.id === props.issue.epicId));
 const parent = computed(() => props.issues.find(issue => issue.id === props.issue.parentIssueId));
@@ -76,6 +77,7 @@ function openTime(entry = null) {
   if (!props.canLogTime || isSaving.value || props.busy || (entry && entry.userId !== props.userId)) return;
   editingTime.value = entry ? { ...entry } : null; timeFormKey.value++; timeOpen.value = true;
 }
+function reloadTime() { activity.refresh(); emit('reload'); }
 function timeSaved() {
   timeOpen.value = false; editingTime.value = null;
   activity.refresh();
@@ -157,7 +159,10 @@ function timeSaved() {
             <p class="subtle">版本 {{ issue.revision }} · 已儲存</p>
           </div>
           <div v-show="sidebarTab === 'relations'" id="detail-relations" class="sidebar-panel" role="tabpanel" tabindex="0" aria-labelledby="detail-relations-tab">
-            <p v-if="!relationGroups.length" class="subtle">尚無關聯卡片</p>
+            <p v-if="relations.loading.value" role="status">載入中…</p>
+            <p v-if="relations.error.value" class="error-box" role="alert">{{ relations.error.value }}</p>
+            <button v-if="relations.more.value" class="button secondary" :disabled="relations.loading.value" @click="relations.fetchPage(true)">載入更多子卡</button>
+            <p v-if="!relationGroups.length && !relations.loading.value" class="subtle">尚無關聯卡片</p>
             <section v-for="group in relationGroups" :key="group.key" class="relation-group" :aria-label="group.label">
               <h2>{{ group.label }} <span>{{ group.items.length }}</span></h2>
               <div v-for="item in group.items" :key="item.id" class="relation-item">
@@ -169,7 +174,7 @@ function timeSaved() {
         </div>
       </aside>
     </div>
-    <TimeEntryDrawer v-if="timeOpen && canLogTime" ref="timeDrawer" :key="timeFormKey" :issues="timeIssues" :default-issue-id="issue.id" lock-issue :entry="editingTime" @close="timeOpen = false; editingTime = null" @saved="timeSaved" @conflict="emit('reload')" />
+    <TimeEntryDrawer v-if="timeOpen && canLogTime" ref="timeDrawer" :key="timeFormKey" :issues="timeIssues" :default-issue-id="issue.id" lock-issue :entry="editingTime" @close="timeOpen = false; editingTime = null" @saved="timeSaved" @conflict="reloadTime" />
   </section>
   <div v-if="activityLoader && ['comments','history','time'].includes(tab)" class="activity-pagination">
     <p v-if="activity.error.value" class="error-box" role="alert">{{ activity.error.value }}</p>

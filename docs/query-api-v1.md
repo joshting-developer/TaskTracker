@@ -10,6 +10,8 @@
 | `/api/v1/projects/{project}` | 單Project屬性／狀態及本人的有效capabilities |
 | `/api/v1/projects/{project}/issues` | SQL條件、排序及有界列表摘要，不帶描述／留言／歷史 |
 | `/api/v1/projects/{project}/issues/{issue}` | 單卡描述與屬性，不自動附帶活動全集 |
+| `/api/v1/projects/{project}/issue-options` | 有界候選kind=issue／epic／parent、exclude與文字搜尋；最小參照，不含描述／活動／工時 |
+| `/api/v1/projects/{project}/issues/{issue}/children` | Epic所屬卡或直接子任務的摘要分頁 |
 | `/api/v1/projects/{project}/issues/{issue}/comments` | 指定卡片留言分頁 |
 | `/api/v1/projects/{project}/issues/{issue}/history` | 指定卡片異動分頁 |
 | `/api/v1/projects/{project}/issues/{issue}/time` | 有效工時分頁；Epic含本身與所屬卡，按本人／團隊資格限定 |
@@ -36,7 +38,7 @@ Project授權僅讀指定ID或當頁ID（最多100筆），可見範圍在SQL分
 
 | 舊預設 | 新責任邊界 | 當前狀態／退役條件 |
 | --- | --- | --- |
-| getWorkspace取得全部Projects／Issues與活動 | 身分current、Project列表／屬性、Project Issue列表／單卡／活動分頁 | v1已建立，CLI一般讀取已切換；App看板列表／內容／其內詳細與編輯已切換；其他頁面仍屬P1。須完成側欄、選項、看板及草稿依賴後移除一般頁面快照入口。 |
+| getWorkspace取得全部Projects／Issues與活動 | 身分current、Project列表／屬性、Project Issue列表／單卡／活動分頁 | v1已建立，CLI一般讀取已切換；App任務列表／我的任務、看板列表／內容／其內詳細與編輯已切換；其他頁面仍屬P1。須完成側欄、選項、看板及草稿依賴後移除一般頁面快照入口。 |
 | getTodos同時取待辦、全通知與成員選項 | 個人待辦分頁、單待辦內容、通知摘要／分頁、承辦者搜尋 | 尚未實作；不承諾保留舊組合回應。 |
 | 全Workspace輪詢／事件後全量重讀 | 依目前頁面與Project的局部同步／授權重驗 | 看板已局部刷新、隱藏停止與草稿保護；全站尚未完成；需含斷線備援、隱藏分頁、撤權與草稿測試。 |
 
@@ -50,3 +52,10 @@ Project授權僅讀指定ID或當頁ID（最多100筆），可見範圍在SQL分
 編輯先讀單卡詳細及revision，再按需讀選項；留言／歷史／工時各20筆、按tab開啟分頁。摘要不含描述與活動全文；只在有工時資格時輸出spentMinutes，Epic估時及有效投入由SQL聚合。相關卡片只有識別／標題參照，不能拿mini reference當完整編輯資料。明確關聯ID保留於詳細避免修改時覆蓋既有連結。
 
 看板route不預先呼叫getWorkspace/getTodos，也不沿用全站bulk輪詢；私有事件、可見性重連與備援只重讀當前Project／Board。未儲存或送出中的表單不被刷新更換revision，仍重驗Project資格，撤權時清除內容。成員選項、其他頁面遷移、DOM上限與全站版本同步仍有獨立待辦。
+
+
+## 任務頁面接線（2026-11-12）
+
+列表回應改為IssueListResource的純表格欄位，不附Epic／父卡參照、估時／工時SUM或活動；選項、看板摘要、詳細屬性各有不同明確投影。列表的filters／scope／page都送SQL，total／lastPage由後端決定，沒有把當頁再切片。詳細關聯最多200，查201作超限拒絕檢查；不靜默截斷後允許儲存。子卡／活動分頁最大100，預設20。選項UI每頁30，搜尋可達第一頁以外，已選值保留。
+
+ProjectTasksWorkspace與useProjectTaskQueries已取代原BoardWorkspace／useBoardQueries；詳細頁不在背景載入列表或看板全卡，按需讀單卡及活動，未儲存／送出中只重驗資格。單卡工時按timeEntry.readOwn／readTeam限制SQL，明細附最小Issue參照讓Epic下編輯子卡紀錄時仍鎖原卡。完整審查與證據見[任務頁面資料分責](performance-task-pages-2026-11-12.md)。

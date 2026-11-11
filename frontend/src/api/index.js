@@ -10,6 +10,7 @@ export const api = {
   projects: (filters, options) => queryApi('projects', filters, options),
   project: (id, options) => queryApi(`projects/${encodeURIComponent(id)}`, {}, options),
   issues: (id, filters, options) => queryApi(`projects/${encodeURIComponent(id)}/issues`, filters, options),
+  issueOptions: (project, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/issue-options`, filters, options),
   issue: (project, id, options) => queryApi(`projects/${encodeURIComponent(project)}/issues/${encodeURIComponent(id)}`, {}, options),
   boards: (project, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/boards`, filters, options),
   board: (project, id, options) => queryApi(`projects/${encodeURIComponent(project)}/boards/${encodeURIComponent(id)}`, {}, options),

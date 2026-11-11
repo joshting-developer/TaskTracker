@@ -1,9 +1,9 @@
-import { computed, ref, shallowRef, watch } from 'vue';
+import { computed, ref, shallowRef, watch, toValue } from 'vue';
 import { PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 import { CONDITIONS, filterIssues, missingFilters } from '../domain/filters.js';
 
 // 任務查詢的唯一狀態來源；路由範圍由App提供，篩選、標籤與分頁一起維護。
-export function useIssueQuery({ project, issues, boardIssues, members, userId, today, view, scope, projectId }) {
+export function useIssueQuery({ project, issues, boardIssues, members, userId, today, view, scope, projectId, remote = false }) {
   const search = shallowRef('');
   const stateFilter = ref([]);
   const priorityFilter = shallowRef(''), assigneeFilter = shallowRef(''), epicFilter = shallowRef('');
@@ -17,7 +17,7 @@ export function useIssueQuery({ project, issues, boardIssues, members, userId, t
     condition: conditionFilter.value, sort: sort.value, view: view.value,
   }));
   const filterWarnings = computed(() => project.value ? missingFilters(filters.value, project.value, members.value, issues.value) : []);
-  const visibleIssues = computed(() => project.value ? filterIssues(
+  const visibleIssues = computed(() => toValue(remote) ? issues.value : project.value ? filterIssues(
     view.value === 'board' ? boardIssues.value : issues.value, filters.value,
     { project: project.value, userId: userId.value, members: members.value, today: today.value, includeEpics: true },
   ) : []);
@@ -54,7 +54,7 @@ export function useIssueQuery({ project, issues, boardIssues, members, userId, t
     Object.keys(fields).forEach(removeFilter);
   }
   watch([search, stateFilter, priorityFilter, assigneeFilter, epicFilter, typeFilter, conditionFilter, sort, scope, projectId], () => { page.value = 1; });
-  watch(pageCount, count => { if (page.value > count) page.value = count; });
+  watch(pageCount, count => { if (!toValue(remote) && page.value > count) page.value = count; });
 
   return {
     filterInput, page, pageSize, pageCount, projectStates, visibleIssues, pagedIssues,

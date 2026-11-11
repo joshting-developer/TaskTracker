@@ -9,36 +9,43 @@ import IssueDetail from './IssueDetail.vue';
 import Icon from './Icon.vue';
 import { useBoardRealtime } from '../ui/boardRealtime.js';
 import { useIssueTransitions } from '../composables/useIssueTransitions.js';
-import { useBoardQueries } from '../composables/useBoardQueries.js';
+import { useProjectTaskQueries } from '../composables/useProjectTaskQueries.js';
 import { useIssueQuery } from '../composables/useIssueQuery.js';
 import IssueFilters from './IssueFilters.vue';
+import IssueList from './IssueList.vue';
 
-const props = defineProps({ project: Object, mode: String, boardId: String, issueId: String, detailPage: Boolean, userId: String, workspaceId: String, today: String });
+const props = defineProps({ project: Object, mode: String, scope: { type: String, default: 'all' }, boardId: String, issueId: String, detailPage: Boolean, userId: String, workspaceId: String, today: String });
 const emit = defineEmits(['board', 'list', 'issue', 'close-issue', 'notify', 'access', 'project']);
-const error = ref('');
+const error = ref(''), filtersExpanded = ref(false);
 const boardEditor = shallowRef(null), editor = shallowRef(null), detail = shallowRef(null), members = shallowRef([]), candidates = shallowRef([]);
 const boardTool = ref(null), issueTool = ref(null), detailTool = ref(null);
 const canWrite = computed(() => props.project.permissions.includes('issue.write'));
 const canManage = computed(() => props.project.permissions.includes('board.manage'));
-const scopeKey = computed(() => `${props.workspaceId}:${props.project.id}:${props.mode}:${props.boardId}`);
+const scopeKey = computed(() => `${props.workspaceId}:${props.project.id}:${props.mode}:${props.boardId}:${props.scope}:${props.detailPage ? props.issueId : 'browse'}`);
 const archiving = ref(false), archiveRequests = new Map();
 const busy = computed(() => Boolean(archiving.value || issueTool.value?.saving || detailTool.value?.saving || boardTool.value?.saving));
 const dirty = computed(() => Boolean(issueTool.value?.dirty || detailTool.value?.dirty || boardTool.value?.dirty));
 let detailRequest, optionRequest, detailGeneration = 0, optionGeneration = 0, alive = true;
-const data = useBoardQueries({ projectId: computed(() => props.project.id), boardId: computed(() => props.boardId), mode: computed(() => props.mode), context: scopeKey, blocked: computed(() => busy.value || dirty.value), onProject: value => emit('project', value), onError: handleFailure, onSuccess: () => { error.value = ''; } });
-const { rows, board, boardPage, listPage, listSearch, loading, loadingCards, pageVisible, reload } = data;
+const rows = shallowRef([]);
 const detailRows = computed(() => unique([...(detail.value?.references || []), ...(editor.value?.issue?.references || []), ...candidates.value, ...rows.value, ...(detail.value ? [detail.value] : [])]));
 const contextRows = computed(() => unique([...rows.value.map(row => row.epic).filter(Boolean), ...rows.value]));
 const memberNames = computed(() => unique([...members.value, ...rows.value.filter(row => row.assignee).map(row => ({ id: row.assignee, name: row.assigneeName })), ...(detail.value?.assignee ? [{ id: detail.value.assignee, name: detail.value.assigneeName }] : [])]));
+function rememberOption({kind, item}) {
+  if (kind === 'member') members.value = unique([...members.value, item]);
+  else candidates.value = unique([...candidates.value, item]);
+}
 function unique(items) { return [...new Map(items.map(item => [item.id, item])).values()]; }
-const localScope = ref('all'), pageView = ref('board');
-const filters = useIssueQuery({ project: computed(() => props.project), issues: contextRows, boardIssues: rows,
+const localScope = computed(() => props.scope), pageView = computed(() => props.mode === 'list' ? 'list' : 'board');
+const filters = useIssueQuery({ remote: computed(() => props.mode === 'list'), project: computed(() => props.project), issues: computed(() => unique([...contextRows.value, ...candidates.value])), boardIssues: rows,
   members: memberNames, userId: computed(() => props.userId), today: computed(() => props.today), view: pageView, scope: localScope, projectId: computed(() => props.project.id) });
 const filterInput = filters.filterInput;
+const data = useProjectTaskQueries({ onDetail: loadDetail, detailMode: computed(() => Boolean(props.issueId && props.detailPage)), projectId: computed(() => props.project.id), boardId: computed(() => props.boardId), mode: computed(() => props.mode), context: scopeKey, rows, listQuery: computed(() => ({...filterInput.value, scope: props.scope, page: filters.page.value, perPage: 20})), blocked: computed(() => busy.value || dirty.value), onProject: value => emit('project', value), onError: handleFailure, onSuccess: () => { error.value = ''; } });
+const { board, boardPage, issuePage, listPage, listSearch, loading, loadingCards, pageVisible, reload } = data;
+watch(issuePage, value => { if (value && filters.page.value > value.lastPage) filters.page.value = value.lastPage; });
 const transition = useIssueTransitions({ canWrite, contextKey: scopeKey, saved: async () => { await reload(); if (detail.value) await loadDetail(); }, refresh: reload, onError: value => { error.value = value; } });
 const moving = transition.moving;
-defineExpose({ dirty, saving: computed(() => busy.value || Boolean(moving.value)), refresh: reload });
-const realtime = useBoardRealtime({ active: computed(() => props.mode === 'board' && pageVisible.value), userId: computed(() => props.userId), workspaceId: computed(() => props.workspaceId), projectId: computed(() => props.project.id), refresh: () => reload(false) });
+defineExpose({ create: prepareEditor, dirty, saving: computed(() => busy.value || Boolean(moving.value)), refresh: reload });
+const realtime = useBoardRealtime({ active: computed(() => props.mode === 'board' && !props.detailPage && pageVisible.value), userId: computed(() => props.userId), workspaceId: computed(() => props.workspaceId), projectId: computed(() => props.project.id), refresh: () => reload(false) });
 
 function handleFailure(failure) {
   if (['ABORTED', 'STALE_RESPONSE'].includes(failure.code)) return;
@@ -51,6 +58,9 @@ function handleFailure(failure) {
 
 watch(canWrite, allowed => { if (!allowed) editor.value = null; });
 watch(canManage, allowed => { if (!allowed) boardEditor.value = null; });
+function lookup(kind, filters, options) {
+  return kind === 'member' ? api.members(props.project.id, filters, options) : api.issueOptions(props.project.id, {...filters, kind, exclude: props.issueId || ''}, options);
+}
 function loadActivity(id, kind, filters, options) { return api.activity(props.project.id, id, kind, filters, options); }
 async function loadDetail() {
   const id = props.issueId;
@@ -70,7 +80,7 @@ async function prepareEditor(issue = null, defaults = {}) {
   optionRequest?.abort(); optionRequest = new AbortController();
   const requestOptions = { signal: optionRequest.signal };
   try {
-    const [people, options] = await Promise.all([api.members(props.project.id, { perPage: 100 }, requestOptions), api.issues(props.project.id, { perPage: 100 }, requestOptions)]);
+    const [people, options] = await Promise.all([api.members(props.project.id, { perPage: 30 }, requestOptions), api.issueOptions(props.project.id, { perPage: 30, kind: 'epic' }, requestOptions)]);
     if (!alive || expected !== scopeKey.value || selected !== props.issueId || current !== optionGeneration || !canWrite.value) return;
     members.value = people.items; candidates.value = options.items;
     editor.value = { issue, ...defaults };
@@ -122,20 +132,26 @@ onBeforeUnmount(() => { alive = false; optionGeneration++; optionRequest?.abort(
   <div class="board-workspace-page">
     <div v-if="error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="reload">重新載入</button></div>
     <p v-if="loading" role="status">載入中…</p>
-    <IssueDetail v-if="detail && detailPage" ref="detailTool" :key="detail.id" :issue="detail" :project="project" :issues="detailRows" :members="memberNames" :entries="[]" :return-label="'返回看板'" :can-write="canWrite" :can-read-time="project.permissions.includes('timeEntry.readOwn') || project.permissions.includes('timeEntry.readTeam')" :can-log-time="project.permissions.includes('timeEntry.writeOwn')" :user-id="userId" :activity-loader="loadActivity" @edit="prepareEditor(detail)" @state="value => transition.moveIssue(detail, { state: value })" @open="(issue, full = true) => emit('issue', issue, full)" @close="emit('close-issue')" @saved="savedIssue" @reload="loadDetail" @time-updated="savedIssue" />
+    <IssueDetail v-if="detail && detailPage" ref="detailTool" :key="detail.id" :issue="detail" :project="project" :issues="detailRows" :members="memberNames" :entries="[]" :return-label="mode === 'list' ? '返回任務列表' : '返回看板'" :can-write="canWrite" :can-read-time="project.permissions.includes('timeEntry.readOwn') || project.permissions.includes('timeEntry.readTeam')" :can-log-time="project.permissions.includes('timeEntry.writeOwn')" :user-id="userId" :activity-loader="loadActivity" @edit="prepareEditor(detail)" @state="value => transition.moveIssue(detail, { state: value })" @open="(issue, full = true) => emit('issue', issue, full)" @close="emit('close-issue')" @saved="savedIssue" @reload="loadDetail" @time-updated="savedIssue" />
     <template v-else>
+      <section v-if="mode === 'list'" class="task-workspace">
+        <IssueFilters v-model:expanded="filtersExpanded" :lookup="lookup" :lookup-context="project.id" @option="rememberOption" v-model="filterInput" :states="filters.projectStates.value" :members="memberNames" :issues="detailRows" :active-filter-chips="filters.activeFilterChips.value" :filter-warnings="[]" @remove="filters.removeFilter" @clear="filters.clearFilters" />
+        <IssueList :issues="rows" :states="filters.projectStates.value" :members="memberNames" :can-write="canWrite" :today="today" @open="(issue, full) => emit('issue', issue, full)" />
+        <p v-if="issuePage && !issuePage.total && !loading" class="empty-state">沒有符合條件的任務</p>
+        <footer v-if="issuePage" class="table-footer"><span role="status">{{ issuePage.total }} 筆結果</span><div v-if="issuePage.lastPage > 1" class="pagination"><button class="icon-button previous" aria-label="上一頁" :disabled="filters.page.value <= 1 || loading" @click="filters.page.value--"><Icon name="chevron" :size="15" /></button><span>{{ issuePage.page }} / {{ issuePage.lastPage }}</span><button class="icon-button" aria-label="下一頁" :disabled="filters.page.value >= issuePage.lastPage || loading" @click="filters.page.value++"><Icon name="chevron" :size="15" /></button></div></footer>
+      </section>
       <template v-if="mode === 'boards' && boardPage">
         <BoardList :boards="[boardPage.defaultBoard, ...boardPage.items]" :issues="[]" :remote="true" :can-manage="canManage" :loading="loading" @search="value => { listPage = 1; listSearch = value; }" @open="id => emit('board', id)" @create="editBoard()" @edit="editBoard" />
         <div v-if="boardPage.lastPage > 1" class="pagination"><button class="button secondary" :disabled="listPage <= 1" @click="listPage--">上一頁</button><span>{{ listPage }} / {{ boardPage.lastPage }}</span><button class="button secondary" :disabled="listPage >= boardPage.lastPage" @click="listPage++">下一頁</button></div>
       </template>
       <section v-if="mode === 'board' && board" class="task-workspace">
         <header class="selected-board-heading"><div class="selected-board-identity"><button class="navigation-back" @click="emit('list')"><Icon name="chevron" :size="16" />返回看板列表</button><h3>{{ board.name }}</h3></div><div v-if="!board.isDefault && canManage" class="selected-board-actions"><button class="button secondary" @click="editBoard(board)">編輯收錄</button><button class="text-button danger-text" @click="archive">移除看板</button></div></header>
-        <IssueFilters v-model="filterInput" :states="filters.projectStates.value" :members="memberNames" :issues="contextRows" :active-filter-chips="filters.activeFilterChips.value" :filter-warnings="[]" @remove="filters.removeFilter" @clear="filters.clearFilters" />
+        <IssueFilters v-model:expanded="filtersExpanded" :lookup="lookup" :lookup-context="project.id" @option="rememberOption" v-model="filterInput" :states="filters.projectStates.value" :members="memberNames" :issues="contextRows" :active-filter-chips="filters.activeFilterChips.value" :filter-warnings="[]" @remove="filters.removeFilter" @clear="filters.clearFilters" />
         <p v-if="loadingCards" role="status">載入卡片中…</p>
         <ProjectBoard v-if="!loadingCards || rows.length" :project="project" :issues="contextRows" :visible-issues="filters.visibleIssues.value" :entries="[]" :members="memberNames" :user-id="userId" :today="today" :board-key="boardId" :sync-state="realtime" :can-write="canWrite" :can-create="canWrite && (board.isDefault || canManage)" :moving="moving" @open="(issue, full) => emit('issue', issue, full)" @move="transition.moveIssue" @create="defaults => prepareEditor(null, defaults)" />
       </section>
     </template>
     <BoardDialog v-if="boardEditor" ref="boardTool" :project="project" :issues="[]" :board="boardEditor.board" :remote="true" @close="boardEditor = null" @saved="savedBoard" @reload="reload" />
-    <IssuePanel v-if="editor && canWrite" ref="issueTool" :key="editor.issue?.id || 'create'" :issue="editor.issue" :projects="[project]" :default-project="project.id" :default-state="editor.state || project.statuses[0].id" :default-epic-id="editor.epicId || ''" :default-board-id="boardId" :members="memberNames" :issues="detailRows" :entries="[]" :activity-loader="loadActivity" :can-expand="true" @expand="emit('issue', detail, true)" @close="closeEditor" @open="(issue, full = false) => emit('issue', issue, full)" @saved="savedIssue" @reload="loadDetail" />
+    <IssuePanel :lookup="lookup" v-if="editor && canWrite" ref="issueTool" :key="editor.issue?.id || 'create'" :issue="editor.issue" :projects="[project]" :default-project="project.id" :default-type="editor.type || 'task'" :default-state="editor.state || project.statuses[0].id" :default-epic-id="editor.epicId || ''" :default-board-id="boardId" :members="memberNames" :issues="detailRows" :entries="[]" :activity-loader="loadActivity" :can-expand="true" @expand="emit('issue', detail, true)" @close="closeEditor" @open="(issue, full = false) => emit('issue', issue, full)" @saved="savedIssue" @reload="loadDetail" />
   </div>
 </template>

@@ -87,10 +87,12 @@ Route::prefix('/api/v1')->group(function () {
     Route::get('/projects', [ProjectsController::class, 'index']);
     Route::get('/projects/{project}', [ProjectsController::class, 'show']);
     Route::get('/projects/{project}/member-options', [ProjectsController::class, 'members']);
+    Route::get('/projects/{project}/issue-options', [IssuesController::class, 'options']);
     Route::get('/projects/{project}/issues', [IssuesController::class, 'index']);
     Route::get('/projects/{project}/issues/{issue}', [IssuesController::class, 'show']);
     Route::get('/projects/{project}/issues/{issue}/comments', [IssuesController::class, 'comments']);
     Route::get('/projects/{project}/issues/{issue}/history', [IssuesController::class, 'history']);
+    Route::get('/projects/{project}/issues/{issue}/children', [IssuesController::class, 'children']);
     Route::get('/projects/{project}/issues/{issue}/time', [IssuesController::class, 'time']);
 });
 

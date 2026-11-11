@@ -4,17 +4,19 @@ import { toRef } from 'vue';
 import { useIssueActivity } from '../composables/useIssueActivity.js';
 import { onTabKeydown } from '../ui/tabs.js';
 import Icon from './Icon.vue';
+import PagedSelect from './PagedSelect.vue';
 import IssueRelations from './IssueRelations.vue';
 import MarkdownEditor from './MarkdownEditor.vue';
 import MarkdownContent from './MarkdownContent.vue';
 import { api } from '../api/index.js';
 import { FIELD_LABELS, hours, ISSUE_FIELDS, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
-const props = defineProps({ activityLoader: Function, issue: Object, todo: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, defaultEpicId: String, defaultBoardId: String, members: Array, issues: Array, entries: Array, canExpand: Boolean });
+const props = defineProps({ lookup: Function, activityLoader: Function, issue: Object, todo: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, defaultEpicId: String, defaultBoardId: String, members: Array, issues: Array, entries: Array, canExpand: Boolean });
 const emit = defineEmits(['close', 'saved', 'converted', 'reload', 'open', 'expand']);
 const dialog = ref(null);
 const form = reactive({ parentIssueId: '', relatedIssueIds: [] });
-const relationsTool = ref(null);
+const relationsTool = ref(null), picked = ref([]), pickedMembers = ref([]);
+function remember(item) { picked.value = [...picked.value.filter(row => row.id !== item.id), item]; }
 const tab = ref('comments');
 
 const activity = useIssueActivity({ issue: toRef(props, 'issue'), tab, load: toRef(props, 'activityLoader') });
@@ -48,8 +50,8 @@ function resetForm() {
   pending = null;
 }
 const selectedProject = computed(() => props.projects.find(project => project.id === form.projectId));
-const availableIssues = computed(() => props.issues.filter(issue => issue.projectId === form.projectId));
-const availableMembers = computed(() => props.todo ? props.members.filter(member => selectedProject.value?.memberIds?.includes(member.id)) : props.members);
+const availableIssues = computed(() => [...new Map([...props.issues, ...picked.value].filter(issue => issue.projectId === form.projectId).map(item => [item.id, item])).values()]);
+const availableMembers = computed(() => props.todo ? props.members.filter(member => selectedProject.value?.memberIds?.includes(member.id)) : [...new Map([...props.members, ...pickedMembers.value].map(item => [item.id,item])).values()]);
 const states = computed(() => statusesFor(selectedProject.value));
 const epics = computed(() => availableIssues.value.filter((issue) => issue.type === 'epic' && issue.id !== props.issue?.id));
 const parentIssue = computed(() => availableIssues.value.find(item => item.id === form.parentIssueId));
@@ -177,13 +179,13 @@ function timestamp(value) {
             <label class="field">狀態<select v-model="form.state" aria-label="狀態" :disabled="saving"><option v-for="state in states" :key="state.id" :value="state.id">{{ state.label }}</option></select></label>
             <label class="field">類型<select v-model="form.type" aria-label="類型" :disabled="saving"><option v-for="type in TYPES" :key="type.id" :value="type.id">{{ type.label }}</option></select></label>
             <label class="field">優先級<select v-model="form.priority" aria-label="優先級" :disabled="saving"><option v-for="priority in PRIORITIES" :key="priority.id" :value="priority.id">{{ priority.label }}</option></select></label>
-            <label class="field">負責人<select v-model="form.assignee" aria-label="負責人" :disabled="saving"><option value="">未指派</option><option v-for="member in availableMembers" :key="member.id" :value="member.id">{{ member.name }}</option><option v-if="form.assignee && !availableMembers.some(member => member.id === form.assignee)" :value="form.assignee">{{ form.assignee }}（舊紀錄）</option></select></label>
+            <PagedSelect v-if="lookup" v-model="form.assignee" label="負責人" :options="availableMembers" :context="form.projectId" :load="(filters, options) => lookup('member', filters, options)" :disabled="saving" empty-label="未指派" @choose="item => { pickedMembers = [...pickedMembers.filter(row => row.id !== item.id), item]; }" /><label v-else class="field">負責人<select v-model="form.assignee" aria-label="負責人" :disabled="saving"><option value="">未指派</option><option v-for="member in availableMembers" :key="member.id" :value="member.id">{{ member.name }}</option><option v-if="form.assignee && !availableMembers.some(member => member.id === form.assignee)" :value="form.assignee">{{ form.assignee }}（舊紀錄）</option></select></label>
             <label class="field">到期日<input v-model="form.dueDate" type="date" :disabled="saving" /></label>
-            <label v-if="form.type !== 'epic'" class="field">所屬 Epic<select v-model="form.epicId" aria-label="所屬 Epic" :disabled="saving || Boolean(form.parentIssueId)"><option value="">不屬於 Epic</option><option v-for="epic in epics" :key="epic.id" :value="epic.id">{{ epic.identifier }} · {{ epic.title }}</option></select></label>
+            <PagedSelect v-if="lookup && form.type !== 'epic'" v-model="form.epicId" label="所屬 Epic" :options="epics" :context="form.projectId" :load="(filters, options) => lookup('epic', filters, options)" :disabled="saving || Boolean(form.parentIssueId)" empty-label="不屬於 Epic" @choose="remember" /><label v-else-if="form.type !== 'epic'" class="field">所屬 Epic<select v-model="form.epicId" aria-label="所屬 Epic" :disabled="saving || Boolean(form.parentIssueId)"><option value="">不屬於 Epic</option><option v-for="epic in epics" :key="epic.id" :value="epic.id">{{ epic.identifier }} · {{ epic.title }}</option></select></label>
             <label v-if="form.type !== 'epic'" class="field">預估小時<input v-model="estimateHours" type="number" min="0" max="8760" step="any" :disabled="saving" /></label>
           </div>
         </form>
-        <IssueRelations v-if="selectedProject" ref="relationsTool" :issue="issue" :issues="availableIssues" :project="selectedProject" :type="form.type" :parent-id="form.parentIssueId" :related-ids="form.relatedIssueIds" :saving="saving" @parent="form.parentIssueId = $event" @related="form.relatedIssueIds = $event" @open="jump" @create-child="createChild" />
+        <IssueRelations v-if="selectedProject" ref="relationsTool" :lookup="lookup" :activity-loader="activityLoader" :issue="issue" :issues="availableIssues" :project="selectedProject" :type="form.type" :parent-id="form.parentIssueId" :related-ids="form.relatedIssueIds" :saving="saving" @candidate="remember" @parent="form.parentIssueId = $event" @related="form.relatedIssueIds = $event" @open="jump" @create-child="createChild" />
         <p v-if="issue && form.type !== 'epic'" class="detail-spent"><Icon name="clock" :size="14" />已投入 {{ hours(spent) }} / {{ form.estimateMinutes ? `預估 ${hours(form.estimateMinutes)}` : '尚未估時' }}</p>
         <section v-if="issue" class="discussion">
           <div class="discussion-tabs" role="tablist" aria-label="任務紀錄" @keydown="onTabKeydown">

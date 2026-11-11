@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Data\IssueOptionQueryData;
 use App\Data\IssueQueryData;
 use App\Data\PageQueryData;
 use App\Models\Issue;
@@ -39,7 +40,7 @@ class IssueReadRepository
      */
     private function relations(): array
     {
-        return ['project:id,public_id', 'status:id,code', 'assignee:id,user_id', 'assignee.user:id,name', 'epic:id,public_id,title,identifier,type', 'parent:id,public_id,title,identifier,type'];
+        return ['project:id,public_id', 'status:id,code', 'assignee:id,user_id', 'assignee.user:id,name', 'epic:id,public_id,title,identifier,type,state_id', 'parent:id,public_id,title,identifier,type,state_id'];
     }
 
     /**
@@ -91,15 +92,20 @@ class IssueReadRepository
      * @param  ?int  $boardId  自訂看板內部ID，null不限制收錄
      * @param  ?string  $timeUser  僅讀本人工時的可信User ID
      * @param  bool  $teamTime  是否可讀團隊工時
+     * @param  bool  $listOnly  是否只需要列表欄位，避免看板工時／估時聚合
      * @return LengthAwarePaginator<Issue> 任務摘要分頁
      */
-    public function page(Project $project, string $userId, IssueQueryData $filters, ?int $boardId = null, ?string $timeUser = null, bool $teamTime = false): LengthAwarePaginator
+    public function page(Project $project, string $userId, IssueQueryData $filters, ?int $boardId = null, ?string $timeUser = null, bool $teamTime = false, bool $listOnly = false): LengthAwarePaginator
     {
-        $q = $this->query($project)->with($this->relations());
+        $q = $this->query($project)->with($listOnly ? ['project:id,public_id', 'status:id,code', 'assignee:id,user_id', 'assignee.user:id,name'] : $this->relations());
         if ($boardId !== null) {
             $this->boardScope->apply($q, $boardId);
         }
-        $this->timeProjection($q, $timeUser, $teamTime);
+        if ($listOnly) {
+            $q->select(['id', 'workspace_id', 'public_id', 'project_id', 'identifier', 'title', 'type', 'state_id', 'priority', 'assignee_id', 'due_date', 'revision', 'created_at', 'updated_at']);
+        } else {
+            $this->timeProjection($q, $timeUser, $teamTime);
+        }
         if ($filters->identifier !== '') {
             $q->where('identifier', $filters->identifier);
         }
@@ -146,6 +152,34 @@ class IssueReadRepository
     }
 
     /**
+     * 在SQL限制候選種類、Project、排除自己與文字搜尋，不讀描述或活動。
+     *
+     * @param  Project  $project  已授權Project
+     * @param  IssueOptionQueryData  $filters  有界選項條件
+     * @return LengthAwarePaginator<Issue> 選項分頁
+     */
+    public function options(Project $project, IssueOptionQueryData $filters): LengthAwarePaginator
+    {
+        $q = $this->query($project)->with(['status:id,code', 'epic:id,public_id', 'parent:id,public_id']);
+        if ($filters->kind === 'epic') {
+            $q->where('type', 'epic');
+        }
+        if ($filters->kind === 'parent') {
+            $q->where('type', '!=', 'epic')->whereNull('parent_issue_id');
+        }
+        if ($filters->exclude !== '') {
+            $q->where('public_id', '!=', $filters->exclude);
+        }
+        if ($filters->pagination->search !== '') {
+            $term = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($filters->pagination->search)).'%';
+            $q->where(fn ($q) => $q->whereRaw("LOWER(title) LIKE ? ESCAPE '!'", [$term])->orWhereRaw("LOWER(identifier) LIKE ? ESCAPE '!'", [$term]));
+        }
+
+        return $q->orderBy('identifier')->orderBy('public_id')->paginate($filters->pagination->perPage,
+            ['id', 'public_id', 'identifier', 'title', 'type', 'state_id', 'epic_id', 'parent_issue_id'], 'page', $filters->pagination->page);
+    }
+
+    /**
      * 讀取指定任務描述與必要關聯，活動另行取得。
      *
      * @param  Project  $project  已授權Project
@@ -156,7 +190,7 @@ class IssueReadRepository
      */
     public function find(Project $project, string $id, ?string $timeUser = null, bool $teamTime = false): ?Issue
     {
-        $q = $this->query($project)->where('public_id', $id)->with([...$this->relations(), 'relatedIssues:id,public_id,title,identifier,type,project_id']);
+        $q = $this->query($project)->where('public_id', $id)->with([...$this->relations(), 'epic.status:id,code', 'parent.status:id,code', 'relatedIssues' => fn ($related) => $related->select(['issues.id', 'issues.public_id', 'issues.title', 'issues.identifier', 'issues.type', 'issues.project_id', 'issues.state_id'])->with('status:id,code')->orderBy('issues.public_id')->limit(201)]);
         $this->timeProjection($q, $timeUser, $teamTime, true);
 
         return $q->first($this->columns(true));
@@ -202,6 +236,21 @@ class IssueReadRepository
     }
 
     /**
+     * 只查同Workspace／Project下的直接所屬卡片，不附描述或活動。
+     *
+     * @param  Issue  $issue  已授權父任務
+     * @param  PageQueryData  $filters  有界分頁
+     * @return LengthAwarePaginator<Issue> 按識別與ID穩定排序的摘要
+     */
+    public function children(Issue $issue, PageQueryData $filters): LengthAwarePaginator
+    {
+        return Issue::where('workspace_id', $issue->workspace_id)->where('project_id', $issue->project_id)
+            ->where($issue->type === 'epic' ? 'epic_id' : 'parent_issue_id', $issue->id)
+            ->with($this->relations())->orderBy('identifier')->orderBy('public_id')
+            ->paginate($filters->perPage, $this->columns(), 'page', $filters->page);
+    }
+
+    /**
      * 指定任務及Epic所屬卡片的有效工時，在SQL依資格與日期分頁。
      *
      * @param  Issue  $issue  已授權任務
@@ -219,6 +268,6 @@ class IssueReadRepository
             ->where(fn ($q) => $q->where('target.id', $issue->id)->when($issue->type === 'epic', fn ($q) => $q->orWhere('target.epic_id', $issue->id)))
             ->when(! $team, fn ($q) => $q->where('users.id', $userId))
             ->orderByDesc('entry.work_date')->orderByDesc('entry.created_at')->orderByDesc('entry.id')
-            ->paginate($filters->perPage, ['entry.public_id as id', 'source_project.public_id as projectId', 'target.public_id as issueId', 'users.id as userId', 'users.name as userName', 'entry.work_date as workDate', 'entry.minutes', 'entry.note', 'entry.revision', 'entry.created_at', 'entry.updated_at'], 'page', $filters->page);
+            ->paginate($filters->perPage, ['entry.public_id as id', 'source_project.public_id as projectId', 'target.public_id as issueId', 'target.identifier as issueIdentifier', 'target.title as issueTitle', 'target.type as issueType', 'users.id as userId', 'users.name as userName', 'entry.work_date as workDate', 'entry.minutes', 'entry.note', 'entry.revision', 'entry.created_at', 'entry.updated_at'], 'page', $filters->page);
     }
 }

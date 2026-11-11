@@ -58,7 +58,7 @@ try {
     assert.ok((await board.locator(`[data-issue="${epic.identifier}"] .context-hours`).innerText()).includes('36 h'), 'Epic工時／估時依所屬卡片加總');
     await page.getByRole('button', { name: '任務篩選', exact: true }).click();
     await page.getByLabel('篩選類型').selectOption('epic'); assert.equal(await board.locator('.issue-card').count(), 2);
-    await page.getByLabel('篩選 Epic').selectOption(epic.id); assert.equal(await board.locator('.issue-card').count(), 1);
+    await page.getByLabel('篩選 Epic', {exact: true}).selectOption(epic.id); assert.equal(await board.locator('.issue-card').count(), 1);
     await page.getByRole('button', { name: '清除全部篩選', exact: true }).click();
     await page.getByRole('button', { name: '任務篩選', exact: true }).click();
     await page.getByLabel('看板泳道').selectOption('epic'); await page.reload(); await page.getByLabel('看板泳道').waitFor();

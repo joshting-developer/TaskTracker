@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Data\IssueOptionQueryData;
 use App\Data\IssueQueryData;
 use App\Data\PageQueryData;
 use App\Domain\DomainError;
@@ -27,7 +28,20 @@ class IssueReadService
     {
         $project = $this->projects->require($actor, $projectId, 'issue.read');
 
-        return $this->issues->page($project, $actor['user']['id'], $filters);
+        return $this->issues->page($project, $actor['user']['id'], $filters, listOnly: true);
+    }
+
+    /**
+     * 只提供同Project可讀候選；選項不代表寫入授權。
+     *
+     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  string  $projectId  Project公開ID
+     * @param  IssueOptionQueryData  $filters  已驗證選項條件
+     * @return LengthAwarePaginator<Issue> 最小候選分頁
+     */
+    public function options(array $actor, string $projectId, IssueOptionQueryData $filters): LengthAwarePaginator
+    {
+        return $this->issues->options($this->projects->require($actor, $projectId, 'issue.read'), $filters);
     }
 
     /**
@@ -44,7 +58,12 @@ class IssueReadService
         $own = in_array('timeEntry.readOwn', $access->permissions, true);
         $team = in_array('timeEntry.readTeam', $access->permissions, true);
 
-        return $this->issues->find($access->project, $id, $own ? $actor['user']['id'] : null, $team) ?? DomainError::fail('NOT_FOUND', '找不到這個專案內的任務');
+        $issue = $this->issues->find($access->project, $id, $own ? $actor['user']['id'] : null, $team) ?? DomainError::fail('NOT_FOUND', '找不到這個專案內的任務');
+        if ($issue->getRelation('relatedIssues')->count() > 200) {
+            DomainError::fail('CONFLICT', '既有關聯超過支援上限，請先整理關聯資料');
+        }
+
+        return $issue;
     }
 
     /**
@@ -73,6 +92,20 @@ class IssueReadService
     public function history(array $actor, string $projectId, string $id, PageQueryData $filters): LengthAwarePaginator
     {
         return $this->issues->history($this->activityIssue($actor, $projectId, $id), $filters);
+    }
+
+    /**
+     * 在關聯tab依單卡種類分頁取得Epic所屬卡或直接子任務。
+     *
+     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  string  $projectId  Project公開ID
+     * @param  string  $id  Issue公開ID
+     * @param  PageQueryData  $filters  有界分頁
+     * @return LengthAwarePaginator<Issue> 所屬卡摘要分頁
+     */
+    public function children(array $actor, string $projectId, string $id, PageQueryData $filters): LengthAwarePaginator
+    {
+        return $this->issues->children($this->activityIssue($actor, $projectId, $id), $filters);
     }
 
     /**

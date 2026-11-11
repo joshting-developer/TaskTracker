@@ -2,6 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Data\PageQueryData;
+use App\Models\Issue;
+use App\Models\TimeEntry;
+use App\Models\User;
+use App\Models\WorkspaceMember;
+use App\Repositories\IssueReadRepository;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -86,6 +92,39 @@ class MySqlApiTest extends MySqlTestCase
         $this->getJson($base.'/boards/'.$board['id'].'/issues?type=epic')->assertOk()->assertJsonPath('data.items.0.spentMinutes', 50);
         $this->getJson($base.'/issues/'.$epic['id'])->assertOk()->assertJsonPath('data.spentMinutes', 50);
         $this->getJson($base.'/issues/'.$epic['id'].'/time')->assertOk()->assertJsonPath('data.total', 2)->assertJsonCount(2, 'data.items');
+        $source = TimeEntry::where('issue_id', Issue::where('public_id', $child['id'])->value('id'))->firstOrFail();
+        $copies = [];
+        for ($index = 0; $index < 25; $index++) {
+            $copy = $source->replicate();
+            $copy->public_id = (string) Str::uuid();
+            $copy->minutes = 1;
+            $copy->work_date = now('Asia/Taipei')->subDays($index % 5)->toDateString();
+            $copy->save();
+            $copies[] = $copy;
+        }
+        $timePath = $base.'/issues/'.$epic['id'].'/time';
+        $first = $this->getJson($timePath)->assertOk()->assertJsonPath('data.total', 27)->assertJsonCount(20, 'data.items')->json('data.items');
+        $second = $this->getJson($timePath.'?page=2')->assertOk()->assertJsonCount(7, 'data.items')->json('data.items');
+        $this->assertSame([], array_intersect(array_column($first, 'id'), array_column($second, 'id')));
+        $this->rpc('voidTime', ['id' => $copies[0]->public_id, 'expectedRevision' => $copies[0]->revision])->assertOk();
+        $this->getJson($timePath)->assertOk()->assertJsonPath('data.total', 26);
+        $this->getJson($base.'/issues/'.$epic['id'])->assertOk()->assertJsonPath('data.spentMinutes', 74);
+        $user = User::create(['id' => (string) Str::uuid(), 'name' => 'Other time author', 'email' => 'other-'.Str::uuid().'@example.test', 'password' => 'test-only-password']);
+        $member = WorkspaceMember::where('id', $source->member_id)->firstOrFail()->replicate();
+        $member->user_id = $user->id;
+        $member->role = 'user';
+        $member->save();
+        $other = $source->replicate();
+        $other->public_id = (string) Str::uuid();
+        $other->member_id = $member->id;
+        $other->minutes = 5;
+        $other->save();
+        $parent = Issue::where('public_id', $epic['id'])->firstOrFail();
+        $own = app(IssueReadRepository::class)->time($parent, $actor['user']['id'], false, new PageQueryData(1, 100));
+        $this->assertSame(26, $own->total());
+        $this->assertSame([$actor['user']['id']], array_values(array_unique(array_column($own->items(), 'userId'))));
+        $this->getJson($timePath)->assertOk()->assertJsonPath('data.total', 27);
+        $this->getJson($base.'/issues/'.$epic['id'])->assertOk()->assertJsonPath('data.spentMinutes', 79);
         $people = $this->getJson($base.'/member-options')->assertOk()->assertJsonPath('data.items.0.id', $actor['user']['id'])->json('data.items.0');
         $this->assertArrayNotHasKey('email', $people);
     }

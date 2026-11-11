@@ -245,6 +245,7 @@ class ProjectAclTest extends TestCase
         $this->getJson('/api/v1/projects')->assertOk()->assertJsonCount(1, 'data.items')->assertJsonPath('data.items.0.id', $this->first['id']);
         $path = '/api/v1/projects/'.$this->first['id'].'/issues/'.$issue['id'];
         $this->getJson($path)->assertOk()->assertJsonPath('data.title', 'Reader visible');
+        $this->getJson($path.'/children')->assertOk();
         $this->getJson($path.'/comments')->assertOk();
         $this->getJson($path.'/history')->assertOk();
         $this->getJson($path.'/time')->assertStatus(403);
@@ -252,6 +253,7 @@ class ProjectAclTest extends TestCase
         $this->getJson('/api/v1/projects/'.$this->first['id'].'/member-options')->assertOk()->assertJsonMissingPath('data.items.0.email');
         $this->getJson('/api/v1/projects/'.$this->second['id'])->assertStatus(404);
         $this->getJson('/api/v1/projects/'.$this->second['id'].'/issues')->assertStatus(404);
+        $this->getJson('/api/v1/projects/'.$this->second['id'].'/issue-options')->assertStatus(404);
         $this->getJson('/api/v1/projects/'.$this->first['id'].'/issues/'.$this->privateIssue['id'])->assertStatus(404);
         $assignment = $this->tenant->require('projectMembers', ProjectAccess::memberId($this->first['id'], $reader['id']));
         $this->tenant->put('projectMembers', $assignment['id'], [...$assignment, 'removedAt' => now()->toISOString()]);

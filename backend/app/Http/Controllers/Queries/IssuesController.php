@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Queries;
 use App\Database\DatabaseTimes;
 use App\Http\ApiExecution;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IssueOptionQueryRequest;
 use App\Http\Requests\IssueQueryRequest;
 use App\Http\Requests\PageQueryRequest;
 use App\Http\Resources\ApiResponse;
 use App\Http\Resources\Queries\IssueDetailResource;
+use App\Http\Resources\Queries\IssueListResource;
+use App\Http\Resources\Queries\IssueOptionResource;
 use App\Http\Resources\Queries\IssueSummaryResource;
 use App\Http\Resources\Queries\PageResource;
 use App\Http\Resources\Queries\TimeEntryResource;
@@ -31,7 +34,24 @@ class IssuesController extends Controller
     {
         $data = $execution->query($request, fn ($actor) => ['page' => $issues->index($actor, $project, $request->toDto())]);
 
-        return new ApiResponse(PageResource::wrap($data['page'], IssueSummaryResource::collection($data['page']->items())->resolve()));
+        return new ApiResponse(PageResource::wrap($data['page'], IssueListResource::collection($data['page']->items())->resolve()));
+    }
+
+    /**
+     * 搜尋單Project最小候選，避免編輯器載入全部卡片。
+     *
+     * @param  IssueOptionQueryRequest  $request  已驗證候選條件
+     * @param  string  $project  Project公開ID
+     * @param  ApiExecution  $execution  資格與交易邊界
+     * @param  IssueReadService  $issues  任務查詢用例
+     * @return ApiResponse 候選分頁
+     */
+    public function options(IssueOptionQueryRequest $request, string $project, ApiExecution $execution, IssueReadService $issues): ApiResponse
+    {
+        $data = $execution->query($request, fn ($actor) => ['page' => $issues->options($actor, $project, $request->toDto())]);
+        $rows = array_map(fn ($issue) => (new IssueOptionResource($issue, $project))->resolve(), $data['page']->items());
+
+        return new ApiResponse(PageResource::wrap($data['page'], $rows));
     }
 
     /**
@@ -84,6 +104,23 @@ class IssuesController extends Controller
         $data = $execution->query($request, fn ($actor) => ['page' => $issues->history($actor, $project, $issue, $request->pagination())]);
 
         return new ApiResponse(PageResource::wrap($data['page'], array_map(fn ($row) => json_decode($row->event_data, true, flags: JSON_THROW_ON_ERROR), $data['page']->items())));
+    }
+
+    /**
+     * 關聯tab按需取得有界子卡摘要。
+     *
+     * @param  PageQueryRequest  $request  分頁條件
+     * @param  string  $project  Project公開ID
+     * @param  string  $issue  Issue公開ID
+     * @param  ApiExecution  $execution  資格與交易邊界
+     * @param  IssueReadService  $issues  任務查詢用例
+     * @return ApiResponse 子卡摘要分頁
+     */
+    public function children(PageQueryRequest $request, string $project, string $issue, ApiExecution $execution, IssueReadService $issues): ApiResponse
+    {
+        $data = $execution->query($request, fn ($actor) => ['page' => $issues->children($actor, $project, $issue, $request->pagination())]);
+
+        return new ApiResponse(PageResource::wrap($data['page'], IssueSummaryResource::collection($data['page']->items())->resolve()));
     }
 
     /**

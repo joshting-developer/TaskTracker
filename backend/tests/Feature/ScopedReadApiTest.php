@@ -67,7 +67,12 @@ class ScopedReadApiTest extends TestCase
         }
         $foreign = $this->rpc('createIssue', ['projectId' => $other['id'], 'title' => 'Excluded'])->assertOk()->json('data');
         $base = '/api/v1/projects/'.$project['id'];
+        DB::enableQueryLog();
+        DB::flushQueryLog();
         $list = $this->getJson($base.'/issues')->assertOk()->json('data');
+        $this->assertCount(0, array_filter(DB::getQueryLog(), fn ($q) => str_contains($q['query'], 'time_entries') || str_contains($q['query'], 'issue_comments') || str_contains($q['query'], 'audit_events')));
+        $this->assertArrayNotHasKey('spentMinutes', $list['items'][0]);
+        $this->assertArrayNotHasKey('estimateMinutes', $list['items'][0]);
         $this->assertCount(20, $list['items']);
         $this->assertSame(23, $list['total']);
         $second = $this->getJson($base.'/issues?page=2')->assertOk()->json('data');

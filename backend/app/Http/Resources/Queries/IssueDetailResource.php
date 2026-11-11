@@ -21,6 +21,6 @@ class IssueDetailResource extends IssueSummaryResource
 
         return [...parent::toArray($request), 'description' => $issue->description,
             'relatedIssueIds' => $refs->pluck('public_id')->all(),
-            'references' => $linked->map(fn ($i) => ['id' => $i->public_id, 'projectId' => $issue->getRelation('project')->public_id, 'identifier' => $i->identifier, 'title' => $i->title, 'type' => $i->type])->values()->all()];
+            'references' => $linked->map(fn ($i) => ['id' => $i->public_id, 'projectId' => $issue->getRelation('project')->public_id, 'identifier' => $i->identifier, 'title' => $i->title, 'type' => $i->type, 'state' => $i->getRelation('status')->code])->values()->all()];
     }
 }
