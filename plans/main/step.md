@@ -1059,3 +1059,12 @@ AGENTS.md 加入持續同步規則與入口。相對連結、換行與 git diff 
 收斂第一版主要操作與登入情境, 再建立本機骨架及隔離的 GAS 讀寫驗證
 
 本輪交付 commits：bf3459d（後端關係與升級）、145e173（介面與 E2E）、8ff6dd2（指定 Seed 與測試隔離）、ada4cdc（產品文件／README／開發規範）。最終只有 planning 差異保留。指定密碼檢查改以 NUL 分隔路徑處理中文檔名後通過, 所有 tracked 檔案均無該明碼。
+
+
+## 2026-11-11：Multi-Agent 使用回饋交接
+
+- [x] 核對現行 routes、session／CSRF client、RequestReplay、Project ACL 與 Reverb 文件。
+- [x] 以使用者授權的真實專案操作驗證現有 RPC，沒有直接寫資料庫。
+- [x] 新增 `Multi-Agent-To-Tracker.md`，區分可用能力、正式整合缺口與尚未定案的方案。
+- [x] 同步產品討論紀錄；未修改 TaskTracker 功能、依賴或授權。
+- [x] 檢查文件及秘密排除；純文件交接不重跑應用 Build／測試。
