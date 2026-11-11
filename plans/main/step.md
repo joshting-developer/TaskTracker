@@ -1,3 +1,9 @@
+## 2026-11-11 個人Token與AI整合產品方向（討論）
+
+- 核對既有Session RPC、整合待辦卡與Laravel Sanctum官方文件；現況可讀卡但缺PAT與獨立分頁／單卡公開API。
+- 使用者重視AI／第三方整合的競爭力；記錄PAT管理、有效權限交集與AI友善查詢的建議，套件及細節未定案。本輪只同步產品紀錄與TT-165／167／168，不安裝套件／修改API／將功能結案。
+- 驗證：來源／差異檢查，AI帳號留言後讀回與狀態保持open；文件階段本機commit。
+
 ## 2026-11-11 TaskTracker自我追蹤專案與AI帳號
 
 - 已完成202卡匯入：136 closed／49 open／17 deferred，全部指派taskTrackerAI；本次TT-202驗收／留言後結案。完整欄位及Epic、AI僅本Project Developer、拒絕管理與他專案查詢、原81卡ID／revision不變及實際桌機／手機UI均通過。私有登入檔不進Git；交接與對照記於docs/tasktracker-self-tracking.md，未執行未來部署重構。
