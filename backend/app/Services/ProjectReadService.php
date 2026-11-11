@@ -3,26 +3,40 @@
 namespace App\Services;
 
 use App\Authorization\ProjectAccess;
+use App\Data\AuthorizedProjectData;
 use App\Data\PageQueryData;
 use App\Data\ProjectPageData;
 use App\Domain\DomainError;
+use App\Factories\RecordStoreFactory;
 use App\Models\Project;
+use App\Repositories\ProjectMemberReadRepository;
 use App\Repositories\ProjectReadRepository;
-use App\Repositories\RecordStore;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
 /** 唯讀專案授權及查詢，可供Session或後續Token適配器共用。 */
 class ProjectReadService
 {
-    /** 建立此用例的相依與唯讀資料，不從HTTP取得身分。 */
-    public function __construct(private ProjectReadRepository $projects) {}
+    /**
+     * 注入限定資料投影、Store組裝及成員選項協作者。
+     *
+     * @param  ProjectReadRepository  $projects  Project有界資料入口
+     * @param  RecordStoreFactory  $stores  可信Workspace組裝邊界
+     * @param  ProjectMemberReadRepository  $members  最小成員選項投影
+     * @return void
+     */
+    public function __construct(private ProjectReadRepository $projects, private RecordStoreFactory $stores, private ProjectMemberReadRepository $members) {}
 
-    /** 當次查詢的最小授權集合；不持久快取，也不載Project歷史。
-     * @return array{ProjectAccess, Collection}
+    /**
+     * 建立指定ID集合的當次資格快照，不持久快取或讀取歷史。
+     *
+     * @param  array<string,mixed>  $actor  交易內驗證的操作者
+     * @param  array<int,string>  $projectIds  至多100個Project公開ID
+     * @return array{ProjectAccess, Collection<int,Project>} 授權與Project參照
      */
     private function visibility(array $actor, array $projectIds): array
     {
-        $store = (new RecordStore)->forWorkspace($actor['workspace']['id']);
+        $store = $this->stores->forWorkspace($actor['workspace']['id']);
         $projects = $this->projects->references($actor['workspace']['id'], $projectIds);
         // actor已由同一交易內的AccountService重驗；不從前端或原始Session信任此資格。
         $members = [['id' => $actor['user']['id'], 'role' => $actor['role']]];
@@ -36,7 +50,13 @@ class ProjectReadService
         return [$access, $projects];
     }
 
-    /** 讓分頁與能力取自同一資格快照，禁止在Resource逐項查授權。 */
+    /**
+     * 在SQL分頁後以同一快照計算當頁能力。
+     *
+     * @param  array<string,mixed>  $actor  可信操作者
+     * @param  PageQueryData  $filters  有界分頁及搜尋
+     * @return ProjectPageData 當頁摘要與權限
+     */
     public function index(array $actor, PageQueryData $filters): ProjectPageData
     {
         // roleId只用來查permission映射，再把符合project.read的指派條件送入SQL。
@@ -51,16 +71,45 @@ class ProjectReadService
         return new ProjectPageData($page, $permissions);
     }
 
-    /** 限定資源前先驗當次有效資格，對外隱藏不可見Project存在性。 */
+    /**
+     * 取得通過指定permission驗證的Project，隱藏不可見資源存在性。
+     *
+     * @param  array<string,mixed>  $actor  可信操作者
+     * @param  string  $id  Project公開ID
+     * @param  string  $permission  必要權限，預設project.read
+     * @return Project 已授權Project
+     */
     public function require(array $actor, string $id, string $permission = 'project.read'): Project
+    {
+        return $this->authorized($actor, $id, $permission)->project;
+    }
+
+    /**
+     * 以同一授權快照提供Project及permission，避免用例再次建立資格。
+     *
+     * @param  array<string,mixed>  $actor  交易內驗證的操作者
+     * @param  string  $id  Project公開ID
+     * @param  string  $permission  必要permission
+     * @return AuthorizedProjectData 當次Project及有效權限
+     *
+     * @throws DomainError 無權或Project不存在
+     */
+    public function authorized(array $actor, string $id, string $permission = 'project.read'): AuthorizedProjectData
     {
         [$access, $projects] = $this->visibility($actor, [$id]);
         $this->authorize($access, $id, $permission);
+        $project = $projects->firstWhere('public_id', $id) ?? DomainError::fail('NOT_FOUND', '找不到專案');
 
-        return $projects->firstWhere('public_id', $id) ?? DomainError::fail('NOT_FOUND', '找不到專案');
+        return new AuthorizedProjectData($project, $access->permissions($id));
     }
 
-    /** 專案單頁需要的屬性與能力資訊，不輸出設定／ACL歷史。 */
+    /**
+     * 讀取單Project屬性、狀態與本人的能力，不附全員目錄。
+     *
+     * @param  array<string,mixed>  $actor  可信操作者
+     * @param  string  $id  Project公開ID
+     * @return array<string,mixed> Project屬性及能力
+     */
     public function show(array $actor, string $id): array
     {
         [$access] = $this->visibility($actor, [$id]);
@@ -72,7 +121,27 @@ class ProjectReadService
         ]];
     }
 
-    /** 維持不可見資源404與缺少操作權403的差異。 */
+    /**
+     * 取得同Project的最小成員選項，不公開工作區目錄或email。
+     *
+     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  string  $id  Project公開ID
+     * @param  PageQueryData  $filters  有界條件
+     * @return LengthAwarePaginator 有效成員選項
+     */
+    public function memberOptions(array $actor, string $id, PageQueryData $filters): LengthAwarePaginator
+    {
+        return $this->members->page($this->require($actor, $id, 'issue.read'), $filters);
+    }
+
+    /**
+     * 區分不可見Project及缺少操作權，依目前快照拒絕請求。
+     *
+     * @param  ProjectAccess  $access  當次授權快照
+     * @param  string  $id  Project公開ID
+     * @param  string  $permission  必要權限
+     * @return void
+     */
     private function authorize(ProjectAccess $access, string $id, string $permission): void
     {
         if (! $access->can($id, 'project.read')) {

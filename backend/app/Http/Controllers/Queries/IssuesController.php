@@ -11,13 +11,22 @@ use App\Http\Resources\ApiResponse;
 use App\Http\Resources\Queries\IssueDetailResource;
 use App\Http\Resources\Queries\IssueSummaryResource;
 use App\Http\Resources\Queries\PageResource;
+use App\Http\Resources\Queries\TimeEntryResource;
 use App\Services\IssueReadService;
 use Illuminate\Http\Request;
 
 /** 任務列表、詳細屬性及活動各自有界，不回傳整個工作空間。 */
 class IssuesController extends Controller
 {
-    /** 取得當次已授權且有界的列表，不附帶其他頁面的資料。 */
+    /**
+     * 取得當次已授權且有界的列表，不附帶其他頁面的資料。
+     *
+     * @param  IssueQueryRequest  $request  已驗證HTTP查詢
+     * @param  string  $project  Project公開ID
+     * @param  ApiExecution  $execution  資格與交易邊界
+     * @param  IssueReadService  $issues  任務查詢用例
+     * @return ApiResponse 此資源的公開投影
+     */
     public function index(IssueQueryRequest $request, string $project, ApiExecution $execution, IssueReadService $issues): ApiResponse
     {
         $data = $execution->query($request, fn ($actor) => ['page' => $issues->index($actor, $project, $request->toDto())]);
@@ -25,7 +34,16 @@ class IssuesController extends Controller
         return new ApiResponse(PageResource::wrap($data['page'], IssueSummaryResource::collection($data['page']->items())->resolve()));
     }
 
-    /** 只取得指定資源的資料，保留找不到／無權限語意。 */
+    /**
+     * 只取得指定資源的資料，保留找不到／無權限語意。
+     *
+     * @param  Request  $request  已驗證HTTP查詢
+     * @param  string  $project  Project公開ID
+     * @param  string  $issue  Issue公開ID
+     * @param  ApiExecution  $execution  資格與交易邊界
+     * @param  IssueReadService  $issues  任務查詢用例
+     * @return ApiResponse 此資源的公開投影
+     */
     public function show(Request $request, string $project, string $issue, ApiExecution $execution, IssueReadService $issues): ApiResponse
     {
         $data = $execution->query($request, fn ($actor) => ['issue' => $issues->show($actor, $project, $issue)]);
@@ -33,7 +51,16 @@ class IssuesController extends Controller
         return new ApiResponse((new IssueDetailResource($data['issue']))->resolve());
     }
 
-    /** 只查這個任務的留言分頁，不載入全部活動。 */
+    /**
+     * 只查這個任務的留言分頁，不載入全部活動。
+     *
+     * @param  PageQueryRequest  $request  已驗證HTTP查詢
+     * @param  string  $project  Project公開ID
+     * @param  string  $issue  Issue公開ID
+     * @param  ApiExecution  $execution  資格與交易邊界
+     * @param  IssueReadService  $issues  任務查詢用例
+     * @return ApiResponse 此資源的公開投影
+     */
     public function comments(PageQueryRequest $request, string $project, string $issue, ApiExecution $execution, IssueReadService $issues): ApiResponse
     {
         $data = $execution->query($request, fn ($actor) => ['page' => $issues->comments($actor, $project, $issue, $request->pagination())]);
@@ -42,11 +69,37 @@ class IssuesController extends Controller
         return new ApiResponse(PageResource::wrap($data['page'], $rows));
     }
 
-    /** 只查這個任務的異動分頁，維持穩定排序。 */
+    /**
+     * 只查這個任務的異動分頁，維持穩定排序。
+     *
+     * @param  PageQueryRequest  $request  已驗證HTTP查詢
+     * @param  string  $project  Project公開ID
+     * @param  string  $issue  Issue公開ID
+     * @param  ApiExecution  $execution  資格與交易邊界
+     * @param  IssueReadService  $issues  任務查詢用例
+     * @return ApiResponse 此資源的公開投影
+     */
     public function history(PageQueryRequest $request, string $project, string $issue, ApiExecution $execution, IssueReadService $issues): ApiResponse
     {
         $data = $execution->query($request, fn ($actor) => ['page' => $issues->history($actor, $project, $issue, $request->pagination())]);
 
         return new ApiResponse(PageResource::wrap($data['page'], array_map(fn ($row) => json_decode($row->event_data, true, flags: JSON_THROW_ON_ERROR), $data['page']->items())));
+    }
+
+    /**
+     * 單卡工時tab只讀本次分頁，不夾帶其他月份或任務資料。
+     *
+     * @param  PageQueryRequest  $request  分頁條件
+     * @param  string  $project  Project公開ID
+     * @param  string  $issue  Issue公開ID
+     * @param  ApiExecution  $execution  HTTP資格與交易邊界
+     * @param  IssueReadService  $issues  任務查詢用例
+     * @return ApiResponse 有效工時分頁
+     */
+    public function time(PageQueryRequest $request, string $project, string $issue, ApiExecution $execution, IssueReadService $issues): ApiResponse
+    {
+        $data = $execution->query($request, fn ($actor) => ['page' => $issues->time($actor, $project, $issue, $request->pagination())]);
+
+        return new ApiResponse(PageResource::wrap($data['page'], TimeEntryResource::collection($data['page']->items())->resolve()));
     }
 }

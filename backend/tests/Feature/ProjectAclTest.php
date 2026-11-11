@@ -247,6 +247,9 @@ class ProjectAclTest extends TestCase
         $this->getJson($path)->assertOk()->assertJsonPath('data.title', 'Reader visible');
         $this->getJson($path.'/comments')->assertOk();
         $this->getJson($path.'/history')->assertOk();
+        $this->getJson($path.'/time')->assertStatus(403);
+        $this->getJson($path)->assertJsonMissingPath('data.spentMinutes');
+        $this->getJson('/api/v1/projects/'.$this->first['id'].'/member-options')->assertOk()->assertJsonMissingPath('data.items.0.email');
         $this->getJson('/api/v1/projects/'.$this->second['id'])->assertStatus(404);
         $this->getJson('/api/v1/projects/'.$this->second['id'].'/issues')->assertStatus(404);
         $this->getJson('/api/v1/projects/'.$this->first['id'].'/issues/'.$this->privateIssue['id'])->assertStatus(404);

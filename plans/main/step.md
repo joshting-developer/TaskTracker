@@ -1,3 +1,10 @@
+## 2026-11-12 看板查詢接線階段
+
+- TT-237～239：共用HTTP client、Project限定Board摘要／卡片SQL分頁，BoardWorkspace／查詢與活動composables接線。真實Chrome103卡確認第2頁與bulkReads=0，描述／關聯保存、活動按需；原看板多尺寸回歸通過。
+- 新增最小成員選項及單卡工時查詢供看板使用；其餘選項／列表／工時route未宣稱完成。八項審查、原生MySQL聚合與遠端正常讀取限制見docs/performance-board-implementation-2026-11-12.md。
+- 完整回歸：memory72／3158、native MySQL80／3262、API client協定及Vite build通過；Pint20檔通過。TT-237～239依此階段驗收更新，其他P1仍未完成。
+- 下一階段：其餘頁面移除getWorkspace/getTodos及資料存取P1；不得因本階段close全效能板。
+
 ## 2026-11-12 效能卡全面實作，TT-237～239優先
 
 - 使用者授權完成效能優化卡，並同步修正違反目前規範的前後端實作；優先交付TT-237～239。先完成query client，再讓看板列表／內容透過專責API與頁面owner載入，不依賴整包Workspace。

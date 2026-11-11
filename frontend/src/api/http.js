@@ -40,7 +40,7 @@ function waitForToken(signal) {
 }
 
 /** HTTP傳輸：租戶generation、取消與逾時不與DomainError混為連線失敗。 */
-export async function requestJson(path, { method = 'GET', input, scoped = true, signal, timeoutMs = 20000, retryCsrf = true } = {}) {
+export async function requestJson(path, { method = 'GET', input, scoped = true, signal, timeoutMs = 20000, retryCsrf = true, notifyAccess = true } = {}) {
   const captured = generation;
   const controller = new AbortController();
   let timedOut = false;
@@ -63,7 +63,7 @@ export async function requestJson(path, { method = 'GET', input, scoped = true, 
     if (scoped && captured !== generation) throw failure('STALE_RESPONSE', '工作空間已切換，已捨棄舊回應');
     if (response.status === 419 && method !== 'GET' && retryCsrf) {
       csrfToken = '';
-      return await requestJson(path, { method, input, scoped, signal: controller.signal, timeoutMs, retryCsrf: false });
+      return await requestJson(path, { method, input, scoped, signal: controller.signal, timeoutMs, retryCsrf: false, notifyAccess });
     }
     let body;
     try { body = await response.json(); }
@@ -72,7 +72,7 @@ export async function requestJson(path, { method = 'GET', input, scoped = true, 
     if (!body || typeof body !== 'object' || Array.isArray(body)) throw failure('INVALID_RESPONSE', '伺服器回應格式不正確', response.status);
     if (!response.ok || body.ok === false) {
       const code = body.error?.code || ({ 401: 'UNAUTHENTICATED', 403: 'FORBIDDEN', 404: 'NOT_FOUND', 409: 'CONFLICT', 419: 'CSRF_EXPIRED', 429: 'RATE_LIMITED' }[response.status]) || 'HTTP_ERROR';
-      accessChanged(code);
+      if (notifyAccess && scoped && workspaceId) accessChanged(code);
       throw failure(code, body.error?.message || '請求失敗', response.status);
     }
     return body.ok === true ? body.data : body;

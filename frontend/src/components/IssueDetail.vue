@@ -1,5 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
+import { toRef } from 'vue';
+import { useIssueActivity } from '../composables/useIssueActivity.js';
 import { onTabKeydown } from '../ui/tabs.js';
 import Icon from './Icon.vue';
 import MarkdownEditor from './MarkdownEditor.vue';
@@ -8,9 +10,12 @@ import TimeEntryDrawer from './TimeEntryDrawer.vue';
 import { api } from '../api/index.js';
 import { FIELD_LABELS, hours, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
-const props = defineProps({ issue: Object, project: Object, issues: Array, members: Array, entries: Array, returnLabel: String, busy: Boolean, canWrite: { type: Boolean, default: true }, canReadTime: { type: Boolean, default: true }, canLogTime: { type: Boolean, default: false }, userId: String });
+const props = defineProps({ activityLoader: Function, issue: Object, project: Object, issues: Array, members: Array, entries: Array, returnLabel: String, busy: Boolean, canWrite: { type: Boolean, default: true }, canReadTime: { type: Boolean, default: true }, canLogTime: { type: Boolean, default: false }, userId: String });
 const emit = defineEmits(['close', 'open', 'edit', 'saved', 'reload', 'state', 'time-updated']);
 const tab = ref('comments'), comment = ref(''), saving = ref(false), error = ref(''), conflict = ref(false);
+
+const activity = useIssueActivity({ issue: toRef(props, 'issue'), tab, load: toRef(props, 'activityLoader') });
+const activityComments = activity.comments, activityHistory = activity.history;
 const timeOpen = ref(false), timeDrawer = ref(null), editingTime = ref(null), timeFormKey = ref(0);
 const heading = ref(null), propertiesExpanded = ref(false), sidebarTab = ref('properties');
 let pending;
@@ -37,9 +42,9 @@ const relationGroups = computed(() => [
   { key: 'children', label: props.issue.type === 'epic' ? 'Epic 所屬卡片' : '子任務', items: children.value },
   { key: 'related', label: '關聯任務', items: related.value },
 ].filter(group => group.items.length));
-const work = computed(() => props.entries.filter(entry => !entry.voidedAt && (entry.issueId === props.issue.id || (props.issue.type === 'epic' && children.value.some(issue => issue.id === entry.issueId)))).sort((a, b) => b.workDate.localeCompare(a.workDate)));
-const spent = computed(() => work.value.reduce((sum, entry) => sum + entry.minutes, 0));
-const estimate = computed(() => props.issue.type === 'epic' ? children.value.reduce((sum, issue) => sum + (issue.estimateMinutes || 0), 0) : props.issue.estimateMinutes);
+const work = computed(() => (props.activityLoader ? activity.time.value : props.entries).filter(entry => !entry.voidedAt && (props.activityLoader || entry.issueId === props.issue.id || (props.issue.type === 'epic' && children.value.some(issue => issue.id === entry.issueId)))).sort((a, b) => b.workDate.localeCompare(a.workDate)));
+const spent = computed(() => props.issue.spentMinutes ?? work.value.reduce((sum, entry) => sum + entry.minutes, 0));
+const estimate = computed(() => props.activityLoader ? props.issue.estimateMinutes : props.issue.type === 'epic' ? children.value.reduce((sum, issue) => sum + (issue.estimateMinutes || 0), 0) : props.issue.estimateMinutes);
 function timestamp(value) {
   return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 }
@@ -73,6 +78,7 @@ function openTime(entry = null) {
 }
 function timeSaved() {
   timeOpen.value = false; editingTime.value = null;
+  activity.refresh();
   emit('time-updated', '工時已儲存');
 }
 </script>
@@ -103,23 +109,23 @@ function timeSaved() {
         <section class="issue-detail-description" aria-label="任務描述"><h2>描述</h2><MarkdownContent v-if="issue.description" :source="issue.description" /><p v-else>尚未填寫描述</p></section>
         <section class="issue-detail-activity" aria-label="任務活動">
           <div class="discussion-tabs" role="tablist" aria-label="任務紀錄" @keydown="onTabKeydown">
-            <button id="detail-comments-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" :class="{ active: tab === 'comments' }" @click="tab = 'comments'">留言 <span>{{ issue.comments.length }}</span></button>
-            <button id="detail-history-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" :class="{ active: tab === 'history' }" @click="tab = 'history'">異動紀錄 <span>{{ issue.history.length }}</span></button>
+            <button id="detail-comments-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" :class="{ active: tab === 'comments' }" @click="tab = 'comments'">留言 <span>{{ activityComments.length }}</span></button>
+            <button id="detail-history-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" :class="{ active: tab === 'history' }" @click="tab = 'history'">異動紀錄 <span>{{ activityHistory.length }}</span></button>
             <button v-if="canReadTime || canLogTime" id="detail-time-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'time' ? 0 : -1" :aria-selected="tab === 'time'" :class="{ active: tab === 'time' }" @click="tab = 'time'">工時 <span v-if="canReadTime">{{ work.length }}</span></button>
           </div>
           <div id="detail-activity" role="tabpanel" tabindex="0" :aria-labelledby="`detail-${tab}-tab`">
             <template v-if="tab === 'comments'">
-              <p v-if="!issue.comments.length" class="quiet-message">尚無留言</p>
-              <article v-for="entry in issue.comments" :key="entry.id" class="comment"><div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><MarkdownContent :source="entry.content" /></div></article>
+              <p v-if="!activityComments.length" class="quiet-message">尚無留言</p>
+              <article v-for="entry in activityComments" :key="entry.id" class="comment"><div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><MarkdownContent :source="entry.content" /></div></article>
             </template>
             <template v-else-if="tab === 'history'">
-              <article v-for="entry in [...issue.history].reverse()" :key="entry.id" class="history-entry"><span class="history-dot"></span><div><p><strong>{{ entry.actor }}</strong> {{ entry.kind === 'created' ? '建立了任務' : '更新了任務' }} <time>{{ timestamp(entry.at) }}</time></p><p v-for="change in entry.changes" :key="change.field" class="history-change">{{ FIELD_LABELS[change.field] || change.field }}：{{ display(change.field, change.before) }} → {{ display(change.field, change.after) }}</p></div></article>
+              <article v-for="entry in [...activityHistory].reverse()" :key="entry.id" class="history-entry"><span class="history-dot"></span><div><p><strong>{{ entry.actor }}</strong> {{ entry.kind === 'created' ? '建立了任務' : '更新了任務' }} <time>{{ timestamp(entry.at) }}</time></p><p v-for="change in entry.changes" :key="change.field" class="history-change">{{ FIELD_LABELS[change.field] || change.field }}：{{ display(change.field, change.before) }} → {{ display(change.field, change.after) }}</p></div></article>
             </template>
             <template v-else>
               <div v-if="canLogTime" class="issue-time-toolbar"><button class="button secondary" :disabled="busy || saving || !timeIssues.length" @click="openTime()"><Icon name="plus" :size="16" />填報工時</button></div>
               <template v-if="canReadTime">
                 <p v-if="!work.length" class="quiet-message">尚無工時紀錄</p>
-                <article v-for="entry in work" :key="entry.id" class="issue-detail-work"><div><strong>{{ entry.workDate }} · {{ memberName(entry.userId) }}</strong><p>{{ entry.note || '未填說明' }}</p></div><div class="issue-work-actions"><span>{{ hours(entry.minutes) }}</span><button v-if="canLogTime && entry.userId === userId" class="text-button" :disabled="busy || saving" :aria-label="`修改工時 ${entry.id}`" @click="openTime(entry)">修改</button></div></article>
+                <article v-for="entry in work" :key="entry.id" class="issue-detail-work"><div><strong>{{ entry.workDate }} · {{ entry.userName || memberName(entry.userId) }}</strong><p>{{ entry.note || '未填說明' }}</p></div><div class="issue-work-actions"><span>{{ hours(entry.minutes) }}</span><button v-if="canLogTime && entry.userId === userId" class="text-button" :disabled="busy || saving" :aria-label="`修改工時 ${entry.id}`" @click="openTime(entry)">修改</button></div></article>
               </template>
             </template>
           </div>
@@ -165,6 +171,10 @@ function timeSaved() {
     </div>
     <TimeEntryDrawer v-if="timeOpen && canLogTime" ref="timeDrawer" :key="timeFormKey" :issues="timeIssues" :default-issue-id="issue.id" lock-issue :entry="editingTime" @close="timeOpen = false; editingTime = null" @saved="timeSaved" @conflict="emit('reload')" />
   </section>
+  <div v-if="activityLoader && ['comments','history','time'].includes(tab)" class="activity-pagination">
+    <p v-if="activity.error.value" class="error-box" role="alert">{{ activity.error.value }}</p>
+    <button v-if="activity.more.value" class="button secondary" :disabled="activity.loading.value" @click="activity.fetchPage(true)">載入更多</button>
+  </div>
 </template>
 
 <style scoped>

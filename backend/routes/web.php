@@ -7,6 +7,7 @@ use App\Http\Controllers\BoardController;
 use App\Http\Controllers\IssueController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
+use App\Http\Controllers\Queries\BoardsController;
 use App\Http\Controllers\Queries\IssuesController;
 use App\Http\Controllers\Queries\ProjectsController;
 use App\Http\Controllers\RealtimeController;
@@ -80,12 +81,17 @@ Route::post('/api/rpc/verifySmtp', [SmtpController::class, 'verify']);
 
 // v1先共用Session／CSRF可信邊界，Application Service可供後續PAT適配器沿用。
 Route::prefix('/api/v1')->group(function () {
+    Route::get('/projects/{project}/boards', [BoardsController::class, 'index']);
+    Route::get('/projects/{project}/boards/{board}', [BoardsController::class, 'show']);
+    Route::get('/projects/{project}/boards/{board}/issues', [BoardsController::class, 'issues']);
     Route::get('/projects', [ProjectsController::class, 'index']);
     Route::get('/projects/{project}', [ProjectsController::class, 'show']);
+    Route::get('/projects/{project}/member-options', [ProjectsController::class, 'members']);
     Route::get('/projects/{project}/issues', [IssuesController::class, 'index']);
     Route::get('/projects/{project}/issues/{issue}', [IssuesController::class, 'show']);
     Route::get('/projects/{project}/issues/{issue}/comments', [IssuesController::class, 'comments']);
     Route::get('/projects/{project}/issues/{issue}/history', [IssuesController::class, 'history']);
+    Route::get('/projects/{project}/issues/{issue}/time', [IssuesController::class, 'time']);
 });
 
 // 相容舊客戶端的未知／已停用操作，維持身分驗證及JSON錯誤契約。

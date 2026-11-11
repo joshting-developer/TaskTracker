@@ -12,6 +12,9 @@ export function buildIssueIndex(issues, entries) {
   for (const entry of entries) {
     if (!entry.voidedAt && byId.has(entry.issueId)) spent.set(entry.issueId, (spent.get(entry.issueId) || 0) + entry.minutes);
   }
+  for (const issue of issues) {
+    if (Number.isFinite(issue.spentMinutes)) spent.set(issue.id, issue.spentMinutes);
+  }
   for (const epic of issues) {
     if (epic.type !== 'epic') continue;
     const items = epicChildren.get(epic.id) || [];
@@ -19,7 +22,7 @@ export function buildIssueIndex(issues, entries) {
     summaries.set(epic.id, {
       children: items, done, canceled: 0, total, percent: total ? Math.round(done / total * 100) : null,
       estimateMinutes: items.reduce((sum, issue) => sum + (issue.estimateMinutes || 0), 0),
-      spentMinutes: (spent.get(epic.id) || 0) + items.reduce((sum, issue) => sum + (spent.get(issue.id) || 0), 0),
+      spentMinutes: Number.isFinite(epic.spentMinutes) ? epic.spentMinutes : (spent.get(epic.id) || 0) + items.reduce((sum, issue) => sum + (spent.get(issue.id) || 0), 0),
       needsReview: isClosed(epic) && done < total,
     });
   }

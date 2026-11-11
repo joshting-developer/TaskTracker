@@ -2,7 +2,7 @@ import { requestJson, queryApi } from './http.js';
 export { setWorkspaceContext, queryApi } from './http.js';
 
 export function callApi(operation, input = {}, group = 'rpc') {
-  return requestJson(`/api/${group}/${operation}`, { method: 'POST', input, scoped: group !== 'auth' });
+  return requestJson(`/api/${group}/${operation}`, { method: 'POST', input, scoped: group !== 'auth', notifyAccess: operation !== 'getWorkspace' });
 }
 
 export const api = {
@@ -13,6 +13,8 @@ export const api = {
   issue: (project, id, options) => queryApi(`projects/${encodeURIComponent(project)}/issues/${encodeURIComponent(id)}`, {}, options),
   boards: (project, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/boards`, filters, options),
   board: (project, id, options) => queryApi(`projects/${encodeURIComponent(project)}/boards/${encodeURIComponent(id)}`, {}, options),
+  members: (project, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/member-options`, filters, options),
+  activity: (project, issue, kind, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/issues/${encodeURIComponent(issue)}/${kind}`, filters, options),
   boardIssues: (project, id, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/boards/${encodeURIComponent(id)}/issues`, filters, options),
   listWorkspaces: () => callApi('workspaces', {}, 'auth'),
   switchWorkspace: input => callApi('switchWorkspace', input, 'auth'),

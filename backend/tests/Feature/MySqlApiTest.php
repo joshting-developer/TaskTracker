@@ -66,4 +66,27 @@ class MySqlApiTest extends MySqlTestCase
         $this->assertStringContainsString('T', $row['createdAt']);
         $this->getJson($path.'?search=%5F&sort=due')->assertOk()->assertJsonPath('data.total', 1);
     }
+
+    /**
+     * 真實MySQL驗證看板Epic展開COUNT與工時SUM相關子查詢。
+     *
+     * @return void
+     */
+    public function test_native_mysql_board_counts_and_time_projection(): void
+    {
+        $actor = $this->postJson('/api/auth/register', ['name' => 'Board SQL', 'email' => 'board-'.Str::uuid().'@example.test', 'password' => 'mysql-test-password', 'workspaceName' => 'Board'])->assertOk()->json('data');
+        $project = $this->rpc('createProject', ['name' => 'Board', 'code' => 'BOARD'])->assertOk()->json('data');
+        $epic = $this->rpc('createIssue', ['projectId' => $project['id'], 'type' => 'epic', 'title' => 'Epic'])->assertOk()->json('data');
+        $child = $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => 'Child', 'epicId' => $epic['id']])->assertOk()->json('data');
+        $this->rpc('logTime', ['issueId' => $epic['id'], 'workDate' => now('Asia/Taipei')->toDateString(), 'minutes' => 20])->assertOk();
+        $this->rpc('logTime', ['issueId' => $child['id'], 'workDate' => now('Asia/Taipei')->toDateString(), 'minutes' => 30])->assertOk();
+        $board = $this->rpc('createBoard', ['projectId' => $project['id'], 'name' => 'Delivery', 'selectedIssueIds' => [$epic['id'], $child['id']]])->assertOk()->json('data');
+        $base = '/api/v1/projects/'.$project['id'];
+        $this->getJson($base.'/boards')->assertOk()->assertJsonPath('data.items.0.issueCount', 2);
+        $this->getJson($base.'/boards/'.$board['id'].'/issues?type=epic')->assertOk()->assertJsonPath('data.items.0.spentMinutes', 50);
+        $this->getJson($base.'/issues/'.$epic['id'])->assertOk()->assertJsonPath('data.spentMinutes', 50);
+        $this->getJson($base.'/issues/'.$epic['id'].'/time')->assertOk()->assertJsonPath('data.total', 2)->assertJsonCount(2, 'data.items');
+        $people = $this->getJson($base.'/member-options')->assertOk()->assertJsonPath('data.items.0.id', $actor['user']['id'])->json('data.items.0');
+        $this->assertArrayNotHasKey('email', $people);
+    }
 }

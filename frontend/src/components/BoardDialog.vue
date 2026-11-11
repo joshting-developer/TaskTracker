@@ -4,15 +4,27 @@ import Icon from './Icon.vue';
 import { api } from '../api/index.js';
 import { TYPES } from '../domain/model.js';
 import { includedIssues } from '../domain/boards.js';
-const props = defineProps({ project: Object, issues: Array, board: Object });
+const props = defineProps({ remote: Boolean, project: Object, issues: Array, board: Object });
 const emit = defineEmits(['close', 'saved', 'reload']);
 const dialog = ref(null), busy = ref(false), error = ref(''), search = ref('');
 const form = reactive({ name: props.board?.name || '', selectedIssueIds: [...(props.board?.selectedIssueIds || [])] });
 const initial = JSON.stringify(form);
 const baseRevision = props.board?.revision;
 const dirty = computed(() => JSON.stringify(form) !== initial);
-defineExpose({ dirty });
-const candidates = computed(() => props.issues.filter(issue => [issue.title, issue.identifier, TYPES.find(type => type.id === issue.type)?.label].join(' ').toLowerCase().includes(search.value.trim().toLowerCase())));
+defineExpose({ dirty, saving: busy });
+const remoteOptions = ref([]), page = ref(1), lastPage = ref(1), optionsError = ref('');
+let optionGeneration = 0, optionTimer, optionRequest;
+async function loadOptions() {
+  if (!props.remote) return;
+  const current = ++optionGeneration; optionRequest?.abort(); optionRequest = new AbortController();
+  try { const result = await api.issues(props.project.id, { page: page.value, perPage: 30, search: search.value }, { signal: optionRequest.signal }); if (current === optionGeneration) { remoteOptions.value = result.items; lastPage.value = result.lastPage; optionsError.value = ''; } }
+  catch (failure) { if (current === optionGeneration && !['ABORTED','STALE_RESPONSE'].includes(failure.code)) optionsError.value = failure.message; }
+}
+watch(search, () => { page.value = 1; clearTimeout(optionTimer); optionTimer = setTimeout(loadOptions, 250); });
+watch(page, loadOptions);
+onMounted(loadOptions);
+onBeforeUnmount(() => { optionGeneration++; optionRequest?.abort(); clearTimeout(optionTimer); });
+const candidates = computed(() => props.remote ? remoteOptions.value : props.issues.filter(issue => [issue.title, issue.identifier, TYPES.find(type => type.id === issue.type)?.label].join(' ').toLowerCase().includes(search.value.trim().toLowerCase())));
 const preview = computed(() => includedIssues({ ...form, projectId: props.project.id }, props.issues));
 let pending;
 function close() { if (!busy.value && (!dirty.value || window.confirm('捨棄尚未儲存的看板設定？'))) emit('close'); }
@@ -42,7 +54,9 @@ async function save() {
         <label v-for="issue in candidates" :key="issue.id" class="board-picker-item"><input v-model="form.selectedIssueIds" type="checkbox" :value="issue.id" :aria-label="`收錄 ${issue.identifier}`" :disabled="busy" /><span><strong>{{ issue.identifier }} · {{ issue.title }}</strong><small>{{ TYPES.find(type => type.id === issue.type)?.label }}</small></span></label>
         <p v-if="!candidates.length" class="subtle">沒有符合條件的項目</p>
       </div>
-      <p class="board-preview" role="status">已選 {{ form.selectedIssueIds.length }} 個項目 · 目前包含 {{ preview.length }} 張卡片（含 Epic）</p>
+      <p v-if="optionsError" class="error-box" role="alert">{{ optionsError }}</p>
+      <div v-if="remote && lastPage > 1" class="pagination"><button type="button" :disabled="page === 1" @click="page--">上一頁</button><span>{{ page }} / {{ lastPage }}</span><button type="button" :disabled="page === lastPage" @click="page++">下一頁</button></div>
+      <p class="board-preview" role="status">已選 {{ form.selectedIssueIds.length }} 個項目<span v-if="!remote"> · 目前包含 {{ preview.length }} 張卡片（含 Epic）</span></p>
 
       <button class="button primary" :disabled="busy">{{ busy ? '儲存中…' : '儲存看板' }}</button>
     </form>

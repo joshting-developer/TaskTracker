@@ -31,4 +31,21 @@ class ProjectsController extends Controller
 
         return new ApiResponse([...(new ProjectResource($data['project']))->resolve(), ...$data['capabilities']]);
     }
+
+    /**
+     * 僅提供已授權Project的成員姓名分頁，不載完整ACL。
+     *
+     * @param  PageQueryRequest  $request  分頁條件
+     * @param  string  $project  Project公開ID
+     * @param  ApiExecution  $execution  HTTP資格邊界
+     * @param  ProjectReadService  $projects  Project用例
+     * @return ApiResponse 最小成員選項
+     */
+    public function members(PageQueryRequest $request, string $project, ApiExecution $execution, ProjectReadService $projects): ApiResponse
+    {
+        $data = $execution->query($request, fn ($actor) => ['page' => $projects->memberOptions($actor, $project, $request->pagination())]);
+        $items = array_map(fn ($m) => ['id' => $m->user_id, 'name' => $m->getRelation('user')->name], $data['page']->items());
+
+        return new ApiResponse(PageResource::wrap($data['page'], $items));
+    }
 }

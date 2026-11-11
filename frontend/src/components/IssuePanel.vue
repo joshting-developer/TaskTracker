@@ -1,5 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, useId, watch } from 'vue';
+import { toRef } from 'vue';
+import { useIssueActivity } from '../composables/useIssueActivity.js';
 import { onTabKeydown } from '../ui/tabs.js';
 import Icon from './Icon.vue';
 import IssueRelations from './IssueRelations.vue';
@@ -8,12 +10,15 @@ import MarkdownContent from './MarkdownContent.vue';
 import { api } from '../api/index.js';
 import { FIELD_LABELS, hours, ISSUE_FIELDS, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
-const props = defineProps({ issue: Object, todo: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, defaultEpicId: String, defaultBoardId: String, members: Array, issues: Array, entries: Array, canExpand: Boolean });
+const props = defineProps({ activityLoader: Function, issue: Object, todo: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, defaultEpicId: String, defaultBoardId: String, members: Array, issues: Array, entries: Array, canExpand: Boolean });
 const emit = defineEmits(['close', 'saved', 'converted', 'reload', 'open', 'expand']);
 const dialog = ref(null);
 const form = reactive({ parentIssueId: '', relatedIssueIds: [] });
 const relationsTool = ref(null);
 const tab = ref('comments');
+
+const activity = useIssueActivity({ issue: toRef(props, 'issue'), tab, load: toRef(props, 'activityLoader') });
+const activityComments = activity.comments, activityHistory = activity.history;
 const tabId = useId();
 const comment = ref('');
 const saving = ref(false);
@@ -57,7 +62,7 @@ watch(() => form.projectId, (value, before) => {
 watch(() => form.parentIssueId, () => { if (parentIssue.value) form.epicId = parentIssue.value.epicId; });
 const estimateHours = computed({ get: () => (form.estimateMinutes || 0) / 60, set: (value) => { form.estimateMinutes = Math.round(Number(value) * 60); } });
 watch(() => form.type, (type) => { if (type === 'epic') { form.epicId = ''; form.estimateMinutes = 0; form.parentIssueId = ''; } });
-const spent = computed(() => props.entries.filter((entry) => !entry.voidedAt && entry.issueId === props.issue?.id).reduce((sum, entry) => sum + entry.minutes, 0));
+const spent = computed(() => props.issue?.spentMinutes ?? props.entries.filter((entry) => !entry.voidedAt && entry.issueId === props.issue?.id).reduce((sum, entry) => sum + entry.minutes, 0));
 const dirty = computed(() => JSON.stringify(values()) !== savedValues.value);
 defineExpose({ dirty: computed(() => dirty.value || Boolean(comment.value.trim()) || Boolean(relationsTool.value?.dirty)), saving });
 watch(() => props.issue, () => { if (!dirty.value) resetForm(); });
@@ -182,13 +187,13 @@ function timestamp(value) {
         <p v-if="issue && form.type !== 'epic'" class="detail-spent"><Icon name="clock" :size="14" />已投入 {{ hours(spent) }} / {{ form.estimateMinutes ? `預估 ${hours(form.estimateMinutes)}` : '尚未估時' }}</p>
         <section v-if="issue" class="discussion">
           <div class="discussion-tabs" role="tablist" aria-label="任務紀錄" @keydown="onTabKeydown">
-            <button :class="{ active: tab === 'comments' }" :id="`${tabId}-comments-tab`" role="tab" :aria-controls="`${tabId}-activity`" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" @click="tab = 'comments'">留言 <span>{{ issue.comments.length }}</span></button>
-            <button :class="{ active: tab === 'history' }" :id="`${tabId}-history-tab`" role="tab" :aria-controls="`${tabId}-activity`" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" @click="tab = 'history'">異動紀錄 <span>{{ issue.history.length }}</span></button>
+            <button :class="{ active: tab === 'comments' }" :id="`${tabId}-comments-tab`" role="tab" :aria-controls="`${tabId}-activity`" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" @click="tab = 'comments'">留言 <span>{{ activityComments.length }}</span></button>
+            <button :class="{ active: tab === 'history' }" :id="`${tabId}-history-tab`" role="tab" :aria-controls="`${tabId}-activity`" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" @click="tab = 'history'">異動紀錄 <span>{{ activityHistory.length }}</span></button>
           </div>
           <div :id="`${tabId}-activity`" role="tabpanel" :aria-labelledby="`${tabId}-${tab}-tab`" tabindex="0">
           <div v-if="tab === 'comments'" class="comments">
-            <p v-if="!issue.comments.length" class="quiet-message">尚無留言</p>
-            <article v-for="entry in issue.comments" :key="entry.id" class="comment">
+            <p v-if="!activityComments.length" class="quiet-message">尚無留言</p>
+            <article v-for="entry in activityComments" :key="entry.id" class="comment">
               <div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><MarkdownContent :source="entry.content" /></div>
             </article>
             <form @submit.prevent="sendComment" class="comment-form">
@@ -197,7 +202,7 @@ function timestamp(value) {
             </form>
           </div>
           <div v-else class="history-list">
-            <article v-for="entry in [...issue.history].reverse()" :key="entry.id" class="history-entry">
+            <article v-for="entry in [...activityHistory].reverse()" :key="entry.id" class="history-entry">
               <span class="history-dot"></span><div><p><strong>{{ entry.actor }}</strong> {{ entry.kind === 'created' ? '建立了任務' : '更新了任務' }} <time>{{ timestamp(entry.at) }}</time></p><p v-for="change in entry.changes" :key="change.field" class="history-change">{{ FIELD_LABELS[change.field] || change.field }}：{{ display(change.field, change.before) }} → {{ display(change.field, change.after) }}</p></div>
             </article>
           </div>
@@ -206,5 +211,10 @@ function timestamp(value) {
       </div>
       <footer class="panel-footer"><span class="subtle">{{ dirty ? '有尚未儲存的修改' : issue ? `版本 ${issue.revision} · 已儲存` : '' }}</span><button type="submit" form="issue-form" class="button primary" :disabled="saving || (Boolean(issue) && !dirty) || (Boolean(todo) && !form.projectId)"><Icon :name="saving ? 'clock' : 'check'" :size="17" />{{ saving ? '儲存中…' : todo ? '建立卡片並完成轉換' : issue ? '儲存修改' : '建立任務' }}</button></footer>
     </div>
+    <div v-if="activityLoader && ['comments','history'].includes(tab)" class="activity-pagination">
+    <p v-if="activity.error.value" class="error-box" role="alert">{{ activity.error.value }}</p>
+    <button v-if="activity.more.value" class="button secondary" :disabled="activity.loading.value" @click="activity.fetchPage(true)">載入更多</button>
+  </div>
+
   </dialog>
 </template>
