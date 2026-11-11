@@ -1,3 +1,9 @@
+## 2026-11-12 本地MySQL／Redis同步切換（TT-247）
+
+- 使用者追加授權因SQL RTT影響效率而切回本地，先停寫／排空Queue、33表最新完整備份、空目標匯入與全列內容雜湊核對。5818筆一致；舊庫／外部／APP_KEY保留。
+- 現用本地MySQL8.4.13與Redis，獨立新volume由私有override選定；compose環境prefix明確，非直接切舊資料。AI登入及39張效能卡讀回正常，正常單次摘要49ms／卡片30ms，非p95。詳見docs/local-services-return-2026-11-12.md。
+- 任務列表／詳細接線另階段仍在實作，工作區未提交的相關變更保留；本階段僅提交infra與文件。其餘效能卡繼續處理。
+
 ## 2026-11-12 看板查詢接線階段
 
 - TT-237～239：共用HTTP client、Project限定Board摘要／卡片SQL分頁，BoardWorkspace／查詢與活動composables接線。真實Chrome103卡確認第2頁與bulkReads=0，描述／關聯保存、活動按需；原看板多尺寸回歸通過。
