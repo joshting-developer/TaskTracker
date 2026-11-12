@@ -28,6 +28,7 @@
 - TT-179：評估交付docs/app-coordination-evaluation-2026-11-13.md；App內舊整包任務UI經路由分析不可達→建TT-284移除；canLeave逐一查ref→TT-285 leave registry＋導覽／Session composable。未改產品程式；不引入Router／Pinia／TS。
 - SEO（使用者追加：實際功能完成後處理SEO，採Claude建議）：TT-205路由表docs/public-entry-routes.md＋nginx `/about`→301 `/about/`、`$uri/index.html`；容器實測。原實際功能板另有4張Codex新增大卡未動。
 - TT-206：GuestTopBar共用樣式（登入頁＋/about/），aria-current、44px、無閃爍；guest-pages-check通過；01/02登入基準差異待核准。
+- TT-207：Vite多頁靜態/about/（原始HTML正文、SVG示意、登入狀態切換TopBar／CTA），Dockerfile COPY＋VITE_SITE_ORIGIN；guest-pages-check通過。
 
 ## 2026-11-13 TT-264修復階段完成，基準核准待回覆
 
