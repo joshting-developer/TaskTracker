@@ -1,18 +1,20 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
-import BoardList from './BoardList.vue';
-import BoardDialog from './BoardDialog.vue';
-import ProjectBoard from './ProjectBoard.vue';
-import IssuePanel from './IssuePanel.vue';
-import IssueDetail from './IssueDetail.vue';
 import Icon from './Icon.vue';
+import { lazyFeature } from '../ui/lazyFeature.js';
 import { useBoardRealtime } from '../ui/boardRealtime.js';
 import { useIssueTransitions } from '../composables/useIssueTransitions.js';
 import { useProjectTaskQueries } from '../composables/useProjectTaskQueries.js';
 import { useIssueQuery } from '../composables/useIssueQuery.js';
 import IssueFilters from './IssueFilters.vue';
 import IssueList from './IssueList.vue';
+
+const BoardList = lazyFeature(() => import('./BoardList.vue'));
+const BoardDialog = lazyFeature(() => import('./BoardDialog.vue'));
+const ProjectBoard = lazyFeature(() => import('./ProjectBoard.vue'));
+const IssuePanel = lazyFeature(() => import('./IssuePanel.vue'));
+const IssueDetail = lazyFeature(() => import('./IssueDetail.vue'));
 
 const props = defineProps({ project: Object, mode: String, scope: { type: String, default: 'all' }, boardId: String, issueId: String, detailPage: Boolean, userId: String, workspaceId: String, today: String });
 const emit = defineEmits(['board', 'list', 'issue', 'close-issue', 'notify', 'access', 'project', 'board-missing', 'issue-missing']);

@@ -1,41 +1,43 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from 'vue';
 import Icon from './components/Icon.vue';
-import IssueList from './components/IssueList.vue';
-import IssueFilters from './components/IssueFilters.vue';
+import { lazyFeature } from './ui/lazyFeature.js';
 import { useIssueQuery } from './composables/useIssueQuery.js';
 import { useIssueTransitions } from './composables/useIssueTransitions.js';
 import { useToast } from './composables/useToast.js';
 import { useRefreshQueue } from './composables/useRefreshQueue.js';
 import { useWorkspaceClock } from './composables/useWorkspaceClock.js';
-import IssuePanel from './components/IssuePanel.vue';
-import IssueDetail from './components/IssueDetail.vue';
-import ProjectDialog from './components/ProjectDialog.vue';
-import ProjectBoard from './components/ProjectBoard.vue';
-import BoardList from './components/BoardList.vue';
-import ProjectTasksWorkspace from './components/ProjectTasksWorkspace.vue';
-import BoardDialog from './components/BoardDialog.vue';
 import { includedIssues } from './domain/boards.js';
 import AuthGate from './components/AuthGate.vue';
-import WorkspaceSettings from './components/WorkspaceSettings.vue';
 import AccountMenu from './components/AccountMenu.vue';
-import ProfileDialog from './components/ProfileDialog.vue';
-import TimeCalendar from './components/TimeCalendar.vue';
-import TimeAnalysis from './components/TimeAnalysis.vue';
 import { contextKey, taskScope, writeContext } from './ui/workContext.js';
 import { useBoardRealtime } from './ui/boardRealtime.js';
-import ProjectStatusWorkspace from './components/ProjectStatusWorkspace.vue';
-import ProjectMembers from './components/ProjectMembers.vue';
-import PersonalWorkspace from './components/PersonalWorkspace.vue';
-import ProjectDirectory from './components/ProjectDirectory.vue';
-import TodoConversion from './components/TodoConversion.vue';
 import { usePersonalSync } from './composables/usePersonalSync.js';
-import PersonalNotifications from './components/PersonalNotifications.vue';
-import NotificationPreview from './components/NotificationPreview.vue';
 import { api, setWorkspaceContext } from './api/index.js';
 import WorkspaceSwitcher from './components/WorkspaceSwitcher.vue';
-import WorkspaceInvitation from './components/WorkspaceInvitation.vue';
 import { statusesFor } from './domain/model.js';
+
+const IssueList = lazyFeature(() => import('./components/IssueList.vue'));
+const IssueFilters = lazyFeature(() => import('./components/IssueFilters.vue'));
+const IssuePanel = lazyFeature(() => import('./components/IssuePanel.vue'));
+const IssueDetail = lazyFeature(() => import('./components/IssueDetail.vue'));
+const ProjectDialog = lazyFeature(() => import('./components/ProjectDialog.vue'));
+const ProjectBoard = lazyFeature(() => import('./components/ProjectBoard.vue'));
+const BoardList = lazyFeature(() => import('./components/BoardList.vue'));
+const ProjectTasksWorkspace = lazyFeature(() => import('./components/ProjectTasksWorkspace.vue'));
+const BoardDialog = lazyFeature(() => import('./components/BoardDialog.vue'));
+const WorkspaceSettings = lazyFeature(() => import('./components/WorkspaceSettings.vue'));
+const ProfileDialog = lazyFeature(() => import('./components/ProfileDialog.vue'));
+const TimeCalendar = lazyFeature(() => import('./components/TimeCalendar.vue'));
+const TimeAnalysis = lazyFeature(() => import('./components/TimeAnalysis.vue'));
+const ProjectStatusWorkspace = lazyFeature(() => import('./components/ProjectStatusWorkspace.vue'));
+const ProjectMembers = lazyFeature(() => import('./components/ProjectMembers.vue'));
+const PersonalWorkspace = lazyFeature(() => import('./components/PersonalWorkspace.vue'));
+const ProjectDirectory = lazyFeature(() => import('./components/ProjectDirectory.vue'));
+const TodoConversion = lazyFeature(() => import('./components/TodoConversion.vue'));
+const PersonalNotifications = lazyFeature(() => import('./components/PersonalNotifications.vue'));
+const NotificationPreview = lazyFeature(() => import('./components/NotificationPreview.vue'));
+const WorkspaceInvitation = lazyFeature(() => import('./components/WorkspaceInvitation.vue'));
 
 const workspace = shallowRef({ projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} });
 const authenticated = shallowRef(false);
@@ -565,7 +567,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
         <IssueDetail v-if="showIssuePage" ref="detailTool" :key="selectedIssue.id" :issue="selectedIssue" :project="selectedProject" :issues="projectAllIssues" :members="projectMembers" :entries="workspace.timeEntries" :return-label="issueReturnLabel()" :busy="Boolean(moving)" :can-write="canWrite" :can-read-time="can('timeEntry.readOwn')" :can-log-time="can('timeEntry.writeOwn')" :user-id="currentUserId" @time-updated="toolUpdated" @state="state => moveIssue(selectedIssue, { state })" @close="closeIssue" @edit="canWrite && (editingDetail = true)" @open="issue => openIssue(issue, true)" @saved="savedIssue" @reload="refresh" />
         <WorkspaceSettings v-if="!selectedProject && landing === 'settings' && canManageWorkspace" :key="workspace.meta.workspace?.id" ref="teamTool" :active-tab="teamTab" :meta="workspace.meta" @navigate="openWorkspaceSettings" @saved="refresh" @access="refresh" />
         <TimeAnalysis :key="workspace.meta.workspace?.id" v-if="!selectedProject && landing === 'analysis' && canAnalyze" :mode="analysisMode" :workspace-version="workspace" @navigate="goAnalysis" />
-        <div v-if="!showIssuePage && !(isTaskRoute && selectedId) && (selectedProject || landing === 'projects')" class="page-heading"><div><h1>{{ title }}</h1><p v-if="selectedProject && section !== 'tasks' && selectedProject.description">{{ selectedProject.description }}</p></div><div class="heading-actions"><button v-if="showNewIssueAction" class="button primary" :disabled="loading" @click="newIssue"><Icon name="plus" :size="18" />新增任務</button><button v-else-if="!selectedProject && workspace.meta.permissions?.includes('project.create')" class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div></div>
+        <div v-if="!showIssuePage && !(isTaskRoute && selectedId) && (selectedProject || landing === 'projects')" class="page-heading"><div><h1>{{ title }}</h1><p v-if="selectedProject && section !== 'tasks' && selectedProject.description">{{ selectedProject.description }}</p></div><div class="heading-actions"><button v-if="showNewIssueAction" class="button primary" :disabled="loading || (isTaskRoute && !projectTasksTool)" @click="newIssue"><Icon name="plus" :size="18" />新增任務</button><button v-else-if="!selectedProject && workspace.meta.permissions?.includes('project.create')" class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div></div>
         <div v-if="!selectedProject && ['home', 'projects'].includes(landing)" :key="workspace.meta.workspace?.id" :class="landing === 'home' ? 'home-layout' : 'project-list-page'">
         <h1 v-if="landing === 'home'" class="sr-only">首頁</h1>
         <div v-if="landing === 'home' && error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="refresh({ join: true })">重新載入</button></div>

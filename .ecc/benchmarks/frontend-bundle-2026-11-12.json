@@ -1,0 +1,53 @@
+{
+  "card": "TT-183",
+  "date": "2026-11-12",
+  "environment": "Node 22.23.2 / Vite 7.3.7, production build; gzip level default, bytes without response headers",
+  "before": {
+    "js": {
+      "name": "index-DsSUae6j.js",
+      "bytes": 609020,
+      "gzipBytes": 199964
+    },
+    "css": {
+      "name": "index-BT4y-rkl.css",
+      "bytes": 694955,
+      "gzipBytes": 110713
+    },
+    "fontFiles": [
+      {
+        "name": "materialdesignicons-webfont-B7mPwVP_.ttf",
+        "bytes": 1307660,
+        "gzipBytes": 589539
+      },
+      {
+        "name": "materialdesignicons-webfont-CSr8KVlo.eot",
+        "bytes": 1307880,
+        "gzipBytes": 589634
+      },
+      {
+        "name": "materialdesignicons-webfont-Dp5v-WZN.woff2",
+        "bytes": 403216,
+        "gzipBytes": 395305
+      },
+      {
+        "name": "materialdesignicons-webfont-PXm3-2wK.woff",
+        "bytes": 587984,
+        "gzipBytes": 585247
+      }
+    ]
+  },
+  "after": {
+    "js": {
+      "name": "index-C3FtF1bl.js",
+      "bytes": 284744,
+      "gzipBytes": 100720
+    },
+    "css": {
+      "name": "index-UUmMNkvJ.css",
+      "bytes": 324028,
+      "gzipBytes": 50667
+    },
+    "fontFiles": []
+  },
+  "limitations": "Static build byte counts and local Chrome fixtures; no RUM, p95 or remote deployment claim."
+}

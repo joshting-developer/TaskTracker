@@ -21,10 +21,10 @@
     "test:time-analysis": "node tools/time-analysis-check.js",
     "test:member-time": "node tools/member-time-details-check.js",
     "test:workspaces": "node tools/workspace-switch-check.js",
-    "test:api": "node tools/api-client-check.js"
+    "test:api": "node tools/api-client-check.js",
+    "test:bundle": "node tools/bundle-check.js"
   },
   "dependencies": {
-    "@mdi/font": "7.4.47",
     "dompurify": "3.4.17",
     "marked": "18.1.3",
     "pusher-js": "8.6.0",

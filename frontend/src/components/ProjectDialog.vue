@@ -43,7 +43,7 @@ async function submit() {
       <v-text-field v-model="form.code" label="專案代碼" aria-label="專案代碼" placeholder="例如：WEB" minlength="2" maxlength="8" pattern="[A-Za-z][A-Za-z0-9]{1,7}" required :disabled="saving" :readonly="Boolean(project)" :hint="project ? '專案代碼不可修改' : '2–8 位英數字，首字為英文字母'" persistent-hint />
       <PagedSelect autoload v-if="lookup" v-model="form.leadId" label="專案負責人" :options="[...members,...(project?.leadId ? [{id:project.leadId,name:project.leadName}] : [])]" :context="project?.id || 'create'" :load="lookup" :disabled="saving" empty-label="未設定" /><label v-else class="field">專案負責人<select v-model="form.leadId" aria-label="專案負責人" :disabled="saving"><option value="">未設定</option><option v-for="member in members.filter(member => !member.disabledAt)" :key="member.id" :value="member.id">{{ member.name }}</option><option v-if="form.leadId && !members.some(member => member.id === form.leadId && !member.disabledAt)" :value="form.leadId" disabled>成員已無法使用（需重新設定）</option></select></label>
       <v-textarea v-model="form.description" label="專案介紹" aria-label="專案介紹" placeholder="輸入專案介紹…" rows="3" maxlength="500" :disabled="saving" />
-      <v-btn type="submit" color="primary" block :loading="saving" :disabled="saving || (Boolean(project) && !dirty)" :prepend-icon="project ? 'mdi-check' : 'mdi-plus'">{{ project ? '儲存專案' : '建立專案' }}</v-btn>
+      <v-btn type="submit" color="primary" block :loading="saving" :disabled="saving || (Boolean(project) && !dirty)" :prepend-icon="project ? '$complete' : '$plus'">{{ project ? '儲存專案' : '建立專案' }}</v-btn>
     </form>
   </dialog>
 </template>

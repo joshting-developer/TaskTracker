@@ -63,8 +63,12 @@ try {
   await card.dblclick();
   const editor = reader.locator('.issue-dialog'); await editor.waitFor();
   await editor.locator('[name="title"]').fill('尚未儲存的本機草稿');
+  const beforeDraftSignal = signals.length;
   await call(owner, 'updateIssue', { id: issue.id, expectedRevision: changed.revision, title: '同事已修改' });
-  await card.getByText('同事已修改', { exact: true }).waitFor({ timeout: 8000 });
+  const draftSignalDeadline = Date.now() + 8000;
+  while (signals.length <= beforeDraftSignal && Date.now() < draftSignalDeadline) await new Promise(resolve => setTimeout(resolve, 50));
+  assert(signals.length > beforeDraftSignal, '草稿期間仍收到同步訊號');
+  assert.equal(await card.getByText('跨使用者即時更新', { exact: true }).count(), 1, '草稿期間僅重驗Project，不重讀列表或偷換基準版本');
   assert.equal(await editor.locator('[name="title"]').inputValue(), '尚未儲存的本機草稿');
   const conflict = reader.waitForResponse(response => response.url().endsWith('/api/rpc/updateIssue') && response.status() === 409);
   await editor.getByRole('button', { name: '儲存修改', exact: true }).click(); await conflict;

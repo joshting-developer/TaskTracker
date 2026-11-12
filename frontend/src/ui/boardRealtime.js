@@ -1,5 +1,4 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import Pusher from 'pusher-js';
 import { api } from '../api/index.js';
 
 // 訂閱只存在目前看板範圍；訊號只觸發既有API刷新，不攜帶業務資料。
@@ -31,6 +30,8 @@ export function useBoardRealtime({ active, userId, workspaceId, projectId, refre
       if (current !== generation) return;
       if (!config.enabled) { state.value = 'polling'; return; }
       const channelName = `private-workspaces.${workspaceId.value}.projects.${projectId.value}`;
+      const { default: Pusher } = await import('pusher-js');
+      if (current !== generation) return;
       client = new Pusher(config.key, {
         cluster: 'mt1', wsHost: location.hostname, wsPort: Number(location.port || 80), wssPort: Number(location.port || 443),
         forceTLS: location.protocol === 'https:', enabledTransports: ['ws', 'wss'], wsPath: config.path, disableStats: true,

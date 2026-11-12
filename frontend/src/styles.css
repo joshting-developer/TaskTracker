@@ -256,3 +256,6 @@ dialog{border:0;padding:0;color:inherit}dialog::backdrop{background:#19162255;ba
 .status-filter-options { position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; min-width: 220px; max-height: 300px; overflow-y: auto; border: 1px solid #bfc5d4; border-radius: 6px; padding: 8px; background: white; box-shadow: 0 4px 12px #20243418; }
 .status-filter-options label { display: flex; align-items: center; min-height: 44px; gap: 10px; padding: 4px 8px; }
 .status-filter-options input[type=checkbox] { width: 18px; height: 18px; }
+
+.feature-load-state { padding: 16px 24px; color: var(--text-secondary, #50596b); }
+.feature-load-state .button { margin-right: 12px; }

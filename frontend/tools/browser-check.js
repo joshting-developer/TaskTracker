@@ -264,7 +264,9 @@ async function checkProjectAcl(page, browser, failures) {
   await page.goto(`http://127.0.0.1:5175/#/projects/${fixture.project.id}`);
   await page.getByRole('button', { name: '專案成員與權限', exact: true }).click();
   const members = page.getByRole('region', { name: '專案成員與權限', exact: true });
-  await members.getByLabel('加入專案的成員').selectOption(fixture.member.id);
+  await members.getByRole('button', { name: '搜尋加入專案的成員選項', exact: true }).click();
+  await members.getByLabel('搜尋加入專案的成員', { exact: true }).fill(fixture.member.email);
+  await members.getByLabel('加入專案的成員', { exact: true }).selectOption(fixture.member.id);
   await members.getByLabel('專案角色').selectOption('reader');
   // 另一管理者先改名單, 舊表單必須衝突並保留草稿
   await page.evaluate(async ({ project, member }) => {
@@ -274,7 +276,7 @@ async function checkProjectAcl(page, browser, failures) {
   await members.getByRole('button', { name: '儲存專案成員', exact: true }).click();
   await members.getByRole('alert').filter({ hasText: '專案成員已被更新' }).waitFor();
   assert.equal(await members.getByLabel('專案角色').inputValue(), 'reader');
-  assert.equal(await members.getByLabel('加入專案的成員').inputValue(), fixture.member.id);
+  assert.equal(await members.getByLabel('加入專案的成員', { exact: true }).inputValue(), fixture.member.id);
   page.once('dialog', dialog => dialog.accept());
   await members.getByRole('button', { name: '載入最新成員版本', exact: true }).click();
   await members.getByRole('button', { name: '編輯成員 Mei', exact: true }).click();
@@ -846,7 +848,9 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.getByRole('button', { name: '專案成員與權限', exact: true }).click();
   const membership = page.getByRole('region', { name: '專案成員與權限', exact: true });
   await membership.getByRole('button', { name: '重新載入成員', exact: true }).click();
-  await membership.getByLabel('加入專案的成員').selectOption({ label: 'Mei · mei@example.test' });
+  await membership.getByRole('button', { name: '搜尋加入專案的成員選項', exact: true }).click();
+  await membership.getByLabel('搜尋加入專案的成員', { exact: true }).fill('mei@example.test');
+  await membership.getByLabel('加入專案的成員', { exact: true }).selectOption({ label: 'Mei · mei@example.test' });
   await membership.getByLabel('專案角色').selectOption('developer');
   await membership.getByRole('button', { name: '儲存專案成員', exact: true }).click();
   await membership.getByRole('button', { name: '編輯成員 Mei', exact: true }).waitFor();

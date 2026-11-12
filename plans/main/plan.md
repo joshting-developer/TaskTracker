@@ -1,3 +1,10 @@
+## 2026-11-12 TT-183 完成
+
+- App 與 Project 任務工作區按需載入功能／抽屜；Pusher 延後到有效看板同步，載入後重驗 generation。MDI 字型改既有 Vuetify SVG aliases，移除字型依賴；新增可見載入／手動重試與重載確認，不動品牌與功能契約。
+- 初始 gzip JS199,964→100,720 B、CSS110,713→50,667 B，合計減51.3%；全功能 JS 分塊後總量略增，非 RUM／p95 宣稱。基準存 .ecc/benchmarks/frontend-bundle-2026-11-12.json。
+- build／API client／composables、production bundle離線重試／Markdown與SVG、production board三尺寸、完整dev E2E及真實獨立 Queue／Reverb同步／斷線／草稿409／撤權通過；測試環境清理。詳見 docs/performance-frontend-bundle-2026-11-12.md。
+- TT-221已先提交8068fca並結案，本卡獨立提交、驗證後再結案；其他效能卡仍按實際狀態，不push。
+
 ## 2026-11-12 TT-221 完成
 
 - 關聯驗證改指定 ID 的 readonly 摘要與 SQL exists，移除正常寫入的 all(issues)／all(timeEntries)；父項改 Epic 僅以100筆批次同步實際子項。保留跨專案拒絕、雙向容量／revision／交易與 Epic 結案規則。
