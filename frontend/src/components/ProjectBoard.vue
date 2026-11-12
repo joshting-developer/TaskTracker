@@ -30,7 +30,26 @@ const stateCounts = computed(() => {
   for (const issue of props.visibleIssues) counts.set(issue.state, (counts.get(issue.state) || 0) + 1);
   return counts;
 });
+// 大型看板跨frame分批掛載：首批先呈現，之後每frame加一批直到全部卡片；欄位計數與進度永遠用完整數量。
+// 只記數量不存卡片，範圍切換、撤權或新載入時直接依目前props重算，舊scope的卡片不會插回。
+const BATCH = 50;
+const renderLimit = ref(BATCH);
+let batchFrame = 0;
+function scheduleBatch() {
+  cancelAnimationFrame(batchFrame);
+  if (renderLimit.value >= props.visibleIssues.length) return;
+  batchFrame = requestAnimationFrame(() => { renderLimit.value += BATCH; scheduleBatch(); });
+}
+watch(() => [props.project.id, props.boardKey], () => { renderLimit.value = BATCH; scheduleBatch(); });
+watch(() => props.visibleIssues.length, (count, previous = 0) => {
+  const shown = Math.min(previous, renderLimit.value);
+  renderLimit.value = count - shown > BATCH ? shown + BATCH : Math.max(renderLimit.value, count);
+  scheduleBatch();
+}, { immediate: true });
+onBeforeUnmount(() => cancelAnimationFrame(batchFrame));
+const renderingAll = computed(() => renderLimit.value >= props.visibleIssues.length);
 const lanes = computed(() => {
+  const rendered = renderingAll.value ? null : new Set(props.visibleIssues.slice(0, renderLimit.value).map(issue => issue.id));
   let rows;
   if (group.value === 'none') rows = [{ id: '', label: '全部任務', issues: props.visibleIssues }];
   else {
@@ -46,7 +65,7 @@ const lanes = computed(() => {
   }
   return rows.map(row => {
     const columns = new Map(states.value.map(state => [state.id, []]));
-    for (const issue of row.issues) columns.get(issue.state)?.push(issue);
+    for (const issue of row.issues) if (!rendered || rendered.has(issue.id)) columns.get(issue.state)?.push(issue);
     return { ...row, columns };
   });
 });
@@ -84,9 +103,9 @@ function drop(event, state, lane) {
 </script>
 
 <template>
-  <div class="visual-board" :class="{ 'compact-cards': density === 'compact' }" aria-label="任務看板">
+  <div class="visual-board" :class="{ 'compact-cards': density === 'compact' }" aria-label="任務看板" :aria-busy="!renderingAll">
     <div class="board-tools">
-      <div><span class="board-sync" :class="{ live: syncState === 'live' }" role="status" aria-label="看板同步狀態"><i></i>{{ syncState === 'live' ? '即時同步' : syncState === 'connecting' ? '連線中…' : '定期更新' }}</span><label>泳道<select v-model="group" aria-label="看板泳道"><option value="epic">依 Epic 分組</option><option value="none">不分組</option></select></label><label>卡片<select v-model="density" aria-label="看板卡片密度"><option value="comfortable">詳細</option><option value="compact">精簡</option></select></label></div>
+      <div><span class="board-sync" :class="{ live: syncState === 'live' }" role="status" aria-label="看板同步狀態"><i></i>{{ syncState === 'live' ? '即時同步' : syncState === 'connecting' ? '連線中…' : '定期更新' }}</span><span v-if="!renderingAll" class="board-sync" role="status" aria-label="看板卡片呈現進度">顯示中 {{ Math.min(renderLimit, visibleIssues.length) }} / {{ visibleIssues.length }}</span><label>泳道<select v-model="group" aria-label="看板泳道"><option value="epic">依 Epic 分組</option><option value="none">不分組</option></select></label><label>卡片<select v-model="density" aria-label="看板卡片密度"><option value="comfortable">詳細</option><option value="compact">精簡</option></select></label></div>
     </div>
     <div class="board-scroll" tabindex="0" aria-label="看板橫向捲動區">
       <div class="board-canvas" :style="{ '--board-columns': states.length }">

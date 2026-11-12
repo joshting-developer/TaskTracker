@@ -71,3 +71,20 @@ node frontend/tools/board-performance-check.js
 ```
 
 加`E2E_REUSE_FIXTURE=1`可重用忽略的同服務fixture；`E2E_CPU_RATE=1`取消4x節流；`E2E_INTERACTIONS_ONLY=1`只驗操作、不覆寫measurements.json；`E2E_CANDIDATE_INTERACTIONS=1`可驗試驗CSS下的操作，不是啟用產品功能。不要把測例指到業務庫。
+
+## TT-256 分批掛載（2026-11-12）
+
+**單一假設**：初次長任務主要來自5頁卡片收齊後，Vue一次掛載500張卡。改為`ProjectBoard`跨frame分批掛載：首批50張，之後每frame加50張直到全部；欄位標題計數與「顯示中 x / n」進度一律用完整數量，`aria-busy`在完成前為true。只記數量、不保存卡片，Project／看板切換重設批次，撤權或新載入直接依目前props重算，舊scope的卡片不會插回。搜尋清除等一次增加超過一批時同樣分批。
+
+**量測**（`frontend/tools/board-mount-check.js`）：production build、CDP 4x CPU、真實隔離MySQL API（每頁100筆）、500卡，A（原版）／候選build交錯各3輪，取中位數；時間以最後一個卡片頁`responseEnd`為起點。
+
+| 指標（中位數） | A 原版 | 每批100 | 每批50（採用） |
+| --- | ---: | ---: | ---: |
+| API完成後最長long task | 161～179 ms | 96 ms | **62 ms** |
+| API完成後long task合計 | 274～286 ms | 298 ms | **122 ms** |
+| API完成→首張卡出現 | 約120 ms | 46 ms | 約40 ms |
+| API完成→全部卡片出現 | 291～302 ms | 361 ms | 470 ms |
+
+兩次A樣本各自與同輪候選比較（161 vs 96、179 vs 62）。代價是全部卡片晚約170 ms才全數出現，期間有進度提示，主執行緒每frame可回應輸入。這是本機Chrome實驗室樣本，不是RUM／INP或跨瀏覽器保證；API完成前的DTO解析與5頁請求等待沒有改動。
+
+**回歸**：`board-performance-check`（500卡底卡／F2／拖曳／泳道收合展開／密度／三尺寸，`E2E_INTERACTIONS_ONLY=1`）、`board-ux-check`、`board-query-check`、`poll-drafts-check`、`browser-check`通過；`board-mount-check`另斷言分批中欄位標題合計等於完整卡數。未引入虛擬化依賴，DOM最後仍是全部卡片。
