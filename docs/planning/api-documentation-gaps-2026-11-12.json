@@ -1,0 +1,104 @@
+{
+  "date": "2026-11-12",
+  "scope": "建卡後讀回快照，審查卡仍在收尾；不可重跑覆蓋後續人工進度",
+  "projectId": "5a451d5c-2fff-4110-aa49-4998ec9dbff2",
+  "boardId": "80f5c059-aba8-4caa-8ac5-8014c5c58a14",
+  "boardName": "AI整合/API",
+  "review": {
+    "id": "2bc6d408-0017-4f54-b5b6-7a6800ab545e",
+    "identifier": "TT-251",
+    "title": "盤點第三方API文件規劃缺口並補齊分類待辦",
+    "state": "inprogress",
+    "type": "task",
+    "assignee": "6eb559dc-774e-4f07-bde8-156172735eea",
+    "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7",
+    "description": "## 本輪範圍\n閱讀同步後AGENTS與第三方API文件規劃，查重250張現有卡片及相關描述；只補必要工作卡與既有驗收，按主題分類，記錄文件。\n\n## 驗收\n新增尚未實作的工作維持open、指派taskTrackerAI並收錄AI整合/API；PAT／REST既有卡補最新規則而不重開；通用文件導向驗收與選配特定工具聯調分開。讀回狀態、指派、分類及驗收文字後提交規劃紀錄，本審查卡才能結案。沒有實作PAT／文件站或改應用程式。\n\n來源：docs/third-party-api-documentation-plan.md；docs/api-first-platform.md；2026-11-12使用者要求查重及分類補卡。\n追蹤鍵：tasktracker:api-doc-gaps-2026-11-12:review",
+    "classification": "AI整合/API",
+    "membership": "Epic TT-3動態收錄並以看板精準查詢讀回"
+  },
+  "createdWork": [
+    {
+      "id": "55f47f50-cea4-486a-9f1f-f4c3ef1cf1f2",
+      "identifier": "TT-252",
+      "title": "提供第三方開發者文件入口、PAT與Agent指南及可執行範例",
+      "state": "open",
+      "type": "task",
+      "assignee": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7",
+      "description": "## 缺口\nTT-167已有公開REST與OpenAPI機器契約，但沒有獨立追蹤給人／Agent閱讀的文件入口、認證指南及完整操作範例；規劃現在將其列為必要交付。\n\n## 工作範圍\n- 提供第三方開發者入口、PAT認證／Scope／到期撤銷指南、API版本／錯誤／分頁／revision／requestId說明、Agent／CLI指南及可取得的Markdown原文。\n- 提供cURL及至少一種常用程式語言的可執行流程：查專案／狀態候選→建卡→依identifier精準讀最新詳細→更新→留言→驗證；說明列表摘要不能當編輯快照。\n- 指向TT-167的同一份正式OpenAPI；實作卡定案實際URL與發佈方式，/docs、/docs/agents等仍是候選，不把目前不存在的路由說成可用。\n- 文件及機器規格可被未登入閱讀者發現，不等於業務API公開免認證。Swagger UI是選配呈現，Try it out不得永久保存或洩漏PAT。\n\n## 驗收\n文件讀者能知道Base URL、PAT工作區綁定、read／write交集、401／403／404／409與實際驗證／限流碼及重試方式；範例能在隔離環境執行，範例只有人造資料／環境變數占位。未開放端點不刊成正式可用能力，API改動同張實作卡同步指南／範例／測試。\n\n## 分工／順序\n效能與穩定性驗收後進入第三方階段。TT-167負責REST與機器契約，本卡負責文件內容／入口／範例；契約CI與文件導向通用客戶端E2E另卡。沿用單一部署邊界，不為文件另建常駐服務；不自建MCP、模型專用Skill或Agent編排。刪除／Webhook不是第一版驗收前置。\n\n來源：docs/third-party-api-documentation-plan.md；docs/api-first-platform.md；2026-11-12使用者要求查重及分類補卡。\n追蹤鍵：tasktracker:api-doc-gaps-2026-11-12:developer-guides",
+      "classification": "AI整合/API",
+      "membership": "Epic TT-3動態收錄並以看板精準查詢讀回"
+    },
+    {
+      "id": "89dd9c95-d90c-48c6-9b94-c7b7d8370584",
+      "identifier": "TT-253",
+      "title": "建立OpenAPI與實際HTTP契約及文件範例的CI驗證",
+      "state": "open",
+      "type": "task",
+      "assignee": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7",
+      "description": "## 缺口\nTT-226追蹤資料範圍／背景請求／效能門檻，不等於公開OpenAPI契約與範例防漂移；TT-167尚未有獨立CI交付與驗收追蹤。\n\n## 工作範圍\n- 依TT-167確立的唯一可信契約來源驗證OpenAPI格式、operationId唯一性、公開路由／HTTP method、schema、必填、安全方案、Scope及有效範例。\n- 關鍵公開端點以實際隔離Laravel HTTP Contract Tests比對回應／錯誤碼、分頁上限與投影、revision／requestId；不以舊Session呼叫假裝PAT測試。\n- 在CI檢查認證指南、cURL與程式語言範例的可執行性／schema；API變更未同步正式規格／指南／範例／測試應失敗，棄用策略清楚。\n- 正式公開規格不得含未開放／私有RPC、測試接口、憑證、內部伺服器資訊；只用人造資料與受限測試PAT。\n\n## 驗收\n可重跑且有失敗範例證據：schema或必填錯誤、安全方案漏標、重複operationId、公開路由偏差與過時範例能被擋下；正常隔離環境通過。不得維護手寫及生成的兩份互相矛盾正式規格，不捏造固定SLO／限流數值。\n\n## 分工／順序\n效能／穩定性完成且TT-167契約與公開API可用後驗收。TT-167負責機器契約與發佈；文件入口／內容另卡；本卡是自動化契約防漂移，不複製TT-226的資料量／背景請求量測，也不取代無原始碼客戶端E2E。\n\n來源：docs/third-party-api-documentation-plan.md；docs/api-first-platform.md；2026-11-12使用者要求查重及分類補卡。\n追蹤鍵：tasktracker:api-doc-gaps-2026-11-12:contract-ci",
+      "classification": "AI整合/API",
+      "membership": "Epic TT-3動態收錄並以看板精準查詢讀回"
+    },
+    {
+      "id": "817ddf29-150a-404f-8cf2-e5633b947eab",
+      "identifier": "TT-254",
+      "title": "以僅讀公開文件與PAT的獨立客戶端驗收建卡流程",
+      "state": "open",
+      "type": "task",
+      "assignee": "6eb559dc-774e-4f07-bde8-156172735eea",
+      "epicId": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7",
+      "description": "## 缺口與必要性\n新規劃要求第三方整合階段必須以不讀原始碼的客戶端完成建卡流程。TT-177仍是特定外部工具自行實作後的選配聯調，不能拿它的deferred狀態代替這個必要驗收。\n\n## 工作範圍\n- 在隔離環境設置人造資料與最小權限PAT；通用HTTP客戶端只取得公開文件／OpenAPI、Base URL、合法Token與測試輸入，不讀TaskTracker原始碼／內部helper、DOM、Vite模組或資料庫。\n- 依文件完成查可見Project／狀態、建Issue、依identifier精準查最新詳細及revision、更新內容／狀態、留言、回讀驗證。\n- 測同requestId重送不重複建卡／留言，逾時沿用既有識別而非盲目重建；409依公開說明處理，不偷換舊草稿版本。\n- 驗read PAT不可寫、跨Workspace／不可見Project不洩漏、使用者撤權／停用、Token到期／撤銷立即失效，保留作者／資源限制。\n\n## 驗收\n客戶端僅憑正式公開文件及有效PAT即可跑完正向／拒絕流程，留下去識別的結果及文件缺口；不得人工補未公開路徑、Cookie或內部欄位。缺口須補文件／契約並重驗。無需MA-79、特定模型或外部插件先完成，不因此宣稱ChatGPT已自動具有API連接能力。\n\n## 分工／順序\n效能／穩定性→PAT與公開讀寫→正式OpenAPI與指南／範例→本卡驗收。這是第三方基礎必要完成條件；TT-177保留為之後選配的實際工具聯調。不新增MCP、Agent工作流、Webhook或刪除前置。\n\n來源：docs/third-party-api-documentation-plan.md；docs/api-first-platform.md；2026-11-12使用者要求查重及分類補卡。\n追蹤鍵：tasktracker:api-doc-gaps-2026-11-12:docs-only-client",
+      "classification": "AI整合/API",
+      "membership": "Epic TT-3動態收錄並以看板精準查詢讀回"
+    }
+  ],
+  "updatedExisting": [
+    {
+      "identifier": "TT-3",
+      "id": "a5159fbf-21d9-4656-a2ad-1e223a4e91c7",
+      "state": "open",
+      "title": "標準化對外API與受限整合平台"
+    },
+    {
+      "identifier": "TT-165",
+      "id": "7e4755dc-538a-401a-93f1-04868eae2f53",
+      "state": "open",
+      "title": "個人PAT管理、Scope與撤銷／到期"
+    },
+    {
+      "identifier": "TT-166",
+      "id": "98b7b65d-eb2b-4842-be95-b1a129fc6667",
+      "state": "open",
+      "title": "使用者／Token操作來源稽核與即時撤權"
+    },
+    {
+      "identifier": "TT-167",
+      "id": "d1d10447-1c7a-443d-ba42-fa7b2e478707",
+      "state": "open",
+      "title": "定義公開REST契約與必要OpenAPI機器規格"
+    },
+    {
+      "identifier": "TT-168",
+      "id": "8e30f845-91fa-41e2-85a6-18bde6ec77e6",
+      "state": "open",
+      "title": "提供受限身分／專案／成員／狀態與單卡查詢"
+    },
+    {
+      "identifier": "TT-169",
+      "id": "67638d7c-d8af-4314-9941-5f24bbf794a2",
+      "state": "open",
+      "title": "提供Issue、留言與Epic／父子／關聯寫入API"
+    },
+    {
+      "identifier": "TT-177",
+      "id": "a1285fe7-d0c3-44d4-884d-b00bfeae94aa",
+      "state": "deferred",
+      "title": "選配：外部客戶端自行整合後的聯調驗收"
+    }
+  ],
+  "source": "docs/third-party-api-documentation-plan.md",
+  "initialCardCount": 250,
+  "finalCardCount": 254
+}

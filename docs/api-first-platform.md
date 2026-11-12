@@ -86,3 +86,7 @@ Laravel Sanctum是優先評估的既有認證機制；套件版本、Token儲存
 ## 本輪規劃交付驗證
 
 已完成文件與README／架構／AGENTS入口同步、本地連結及diff檢查；以taskTrackerAI更新並讀回10張既有整合卡的最新範圍、指派與狀態。TT-174／175／177為deferred／low，其餘核心卡維持open；規劃子卡TT-203留言交接後closed。沒有將文件結案誤作API功能完成，初次匯入快照不重寫。未安裝套件、修改產品程式／schema／部署或操作其他專案卡片；純文件不額外跑產品測試。
+
+## 2026-11-12 文件工作拆卡
+
+OpenAPI與第三方文件已確認為整合階段必要交付。TT-167承接正式REST／機器契約，TT-252提供開發者入口／PAT與Agent指南及可執行範例，TT-253驗契約CI，TT-254做只憑公開文件／有效PAT的必要通用客戶端E2E。TT-177仍是選配特定工具聯調，維持deferred；不能因其暫緩而省略TT-254。新工作均open、尚未實作，並收錄AI整合/API；完整[查重與讀回證據](api-documentation-gap-review-2026-11-12.md)。
