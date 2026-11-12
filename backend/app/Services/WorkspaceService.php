@@ -102,15 +102,17 @@ class WorkspaceService
             'loadDemo' => $this->demo->loadProject($services->workspaceSession),
             default => DomainError::fail('NOT_FOUND', '找不到這個操作'),
         };
-        // 卡片／工時寫入只回有界結果（同時是receipt保存的內容），最新內容由GET按需讀取。
+        // 專案／看板／卡片／工時寫入只回有界結果（同時是receipt保存的內容），最新內容由GET按需讀取。
         $result = match (true) {
+            in_array($operation, WriteResults::PROJECT_OPERATIONS, true) => WriteResults::resource($result),
+            in_array($operation, WriteResults::BOARD_OPERATIONS, true) => WriteResults::board($result),
             in_array($operation, WriteResults::ISSUE_OPERATIONS, true) => WriteResults::issue($result),
             in_array($operation, WriteResults::TIME_OPERATIONS, true) => WriteResults::timeEntry($result),
             default => $result,
         };
         $projectId = match ($operation) {
             'createProject', 'updateProject', 'updateStatuses' => $result['id'],
-            'archiveBoard' => $services->store->require('boards', $result['id'])['projectId'],
+            'archiveBoard' => $result['projectId'],
             default => $result['projectId'] ?? '',
         };
         $services->signals()->changed($projectId);

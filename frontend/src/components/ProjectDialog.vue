@@ -27,7 +27,7 @@ async function submit() {
   error.value = '';
   const signature = JSON.stringify(form);
   if (pending?.signature !== signature) pending = { signature, requestId: crypto.randomUUID() };
-  try { emit('created', await api[props.project ? 'updateProject' : 'createProject']({ ...form, ...(props.project ? { id: props.project.id, expectedRevision: baseRevision } : {}), requestId: pending.requestId })); }
+  try { emit('created', await api[props.project ? 'updateProject' : 'createProject']({ ...form, ...(props.project ? { id: props.project.id, expectedRevision: baseRevision } : {}), requestId: pending.requestId }), form.name); }
   catch (failure) { error.value = failure.code === 'REVISION_CONFLICT' ? '專案已被更新, 你的輸入已保留。請關閉後重新開啟表單取得最新設定' : failure.message; }
   finally { saving.value = false; }
 }

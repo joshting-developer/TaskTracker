@@ -6,6 +6,7 @@ use App\Authorization\ProjectAccess;
 use App\Authorization\WorkspacePermissions;
 use App\Database\ProjectAclUpgrade;
 use App\Domain\DomainError;
+use App\Domain\Fields;
 use App\Factories\RecordStoreFactory;
 use App\Factories\WorkspaceServicesFactory;
 use App\Models\User;
@@ -137,7 +138,7 @@ class DemoSeeder extends Seeder
             $run = fn ($op, $input) => $service($op, [...$input, 'requestId' => (string) Str::uuid()]);
             foreach (['first', 'second'] as $index => $name) {
                 $project = $run('createProject', ['name' => $name, 'code' => strtoupper($name), 'description' => $name.' 的示範工作, 可自由修改；重設 seed 可還原']);
-                $run('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => [...$project['statuses'], ['id' => 'review', 'label' => '待驗收', 'color' => '#8757b3']]]);
+                $run('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => [...Fields::STATES, ['id' => 'review', 'label' => '待驗收', 'color' => '#8757b3']]]);
                 $this->seedAssignments($tenant);
                 // 非開發者成員不能在 second 被指派新工作
                 $create = fn ($title, $fields = []) => $run('createIssue', ['projectId' => $project['id'], 'title' => $title, 'assignee' => self::ACCOUNTS[$index ? 'maintainer' : 'developer']['id'], ...$fields]);

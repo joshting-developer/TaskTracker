@@ -28,7 +28,8 @@ try {
   await page.evaluate(async () => {
     const { api } = await import('/src/api/index.js');
     const ws = await api.getWorkspace();
-    const project = await api.createProject({ name: '篩選 first', code: 'FLT', requestId: crypto.randomUUID() });
+    let project = await api.createProject({ name: '篩選 first', code: 'FLT', requestId: crypto.randomUUID() });
+    project = await api.project(project.id);
     await api.createIssue({ projectId: project.id, title: '待規劃卡', assignee: ws.meta.userId, requestId: crypto.randomUUID() });
     await api.createIssue({ projectId: project.id, title: '進行卡', state: 'inprogress', assignee: ws.meta.userId, requestId: crypto.randomUUID() });
   });

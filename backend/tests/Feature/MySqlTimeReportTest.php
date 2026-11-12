@@ -21,6 +21,7 @@ class MySqlTimeReportTest extends MySqlTestCase
     {
         $identity = $this->postJson('/api/auth/register', ['name' => 'report', 'email' => Str::uuid().'@example.test', 'password' => 'report-native-test', 'workspaceName' => 'report'])->assertOk()->json('data');
         $project = $this->postJson('/api/rpc/createProject', ['name' => 'report', 'code' => 'REPORT', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $project = $this->getJson('/api/v1/projects/'.$project['id'])->assertOk()->json('data');
         $ids = [];
         for ($n = 0; $n < 30; $n++) {
             $issue = $this->postJson('/api/rpc/createIssue', ['projectId' => $project['id'], 'title' => 'card'.$n, 'type' => $n === 0 ? 'epic' : 'task', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');

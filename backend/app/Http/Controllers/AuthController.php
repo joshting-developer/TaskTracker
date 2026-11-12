@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\AccountSessionBoundary;
-use App\Http\Requests\JsonOperationRequest;
+use App\Http\Requests\Writes\AccountWriteRequest;
 use App\Http\Resources\ApiResponse;
 use Illuminate\Http\Request;
 
@@ -22,12 +22,12 @@ class AuthController extends Controller
     /**
      * 驗證註冊或邀請後建立帳號並更新Session。
      *
-     * @param  JsonOperationRequest  $request  目前HTTP請求與Session
+     * @param  AccountWriteRequest  $request  目前HTTP請求與Session
      * @return ApiResponse
      */
-    public function register(JsonOperationRequest $request): ApiResponse
+    public function register(AccountWriteRequest $request): ApiResponse
     {
-        $input = $request->payload();
+        $input = $request->toDto()->input();
 
         return new ApiResponse($this->accounts->handle($request, 'register', $input), true);
     }
@@ -35,12 +35,12 @@ class AuthController extends Controller
     /**
      * 驗證帳號並在必要時升級舊密碼雜湊。
      *
-     * @param  JsonOperationRequest  $request  目前HTTP請求與Session
+     * @param  AccountWriteRequest  $request  目前HTTP請求與Session
      * @return ApiResponse
      */
-    public function login(JsonOperationRequest $request): ApiResponse
+    public function login(AccountWriteRequest $request): ApiResponse
     {
-        $input = $request->payload();
+        $input = $request->toDto()->input();
 
         return new ApiResponse($this->accounts->handle($request, 'login', $input), true);
     }
@@ -70,12 +70,12 @@ class AuthController extends Controller
     /**
      * 處理工作區清單、切換與邀請，資格由Session及單次token驗證。
      *
-     * @param  JsonOperationRequest  $request  JSON輸入及登入Session
+     * @param  AccountWriteRequest  $request  JSON輸入及登入Session
      * @param  string  $operation  固定路由操作
      * @return ApiResponse 公開資格或邀請資訊
      */
-    public function workspace(JsonOperationRequest $request, string $operation): ApiResponse
+    public function workspace(AccountWriteRequest $request, string $operation): ApiResponse
     {
-        return new ApiResponse($this->accounts->handle($request, $operation, $request->payload()), true);
+        return new ApiResponse($this->accounts->handle($request, $operation, $request->toDto()->input()), true);
     }
 }

@@ -319,7 +319,6 @@ function openBoard(id) {
   location.hash = projectHash(projectId.value, '', 'board', id); readHash(true); sidebarOpen.value = false;
 }
 async function boardSaved(board) {
-  workspace.value = { ...workspace.value, boards: [...(workspace.value.boards || []).filter(item => item.id !== board.id), board] };
   boardEditor.value = null; await nextTick(); openBoard(board.id); await refresh(); notify('看板已儲存');
 }
 const boardArchiveRequests = new Map();
@@ -455,16 +454,15 @@ async function savedIssue(issue, isNew) {
   if (isNew) await closeIssue();
   await refresh();
 }
-async function createdProject(project) {
+async function createdProject(project, name) {
   ++refreshGeneration; ++refreshScope;
-  workspace.value = { ...workspace.value, projects: [...projects.value.filter(item => item.id !== project.id), project] };
   const wasEditing = Boolean(editingProject.value);
   creatingProject.value = false;
   editingProject.value = null;
   goProjects();
   await refresh();
   await projectDirectoryTool.value?.refresh();
-  notify(wasEditing ? '專案設定已儲存' : `已建立「${project.name}」`);
+  notify(wasEditing ? '專案設定已儲存' : `已建立「${name}」`);
 }
 async function loadDemo() {
   if (demoLoading.value) return;

@@ -1,3 +1,15 @@
+## 2026-11-12 TT-246完成
+
+- 7領域專用Request／readonly Data及28路由矩陣；原始簽章與舊receipt原結果保留，Project／Board新結果只回定位／revision。前端不把部分結果當read model，表單與測試fixture依需要GET。
+- memory155／7855assertions通過、66skip；原生MySQL65項已驗（64初跑＋報表fixture修正後重測1）；完整瀏覽器及build設定／工作區切換通過，api／composables／PHPDoc258檔846方法／Pint／diff檢查通過。詳見docs/other-write-contracts-2026-11-12.md。
+- 舊領域array相容入口仍明列，不宣稱全庫DTO化或所有效能待辦完成；沒有主庫seed／reset、未push，獨立測試Compose用畢清理。完成提交後回填卡片closed並讀回。
+
+## 2026-11-12 TT-246開始
+
+- TT-262完成bf17af3／closed後claim246，codex承辦inprogress。
+- 非Issue／Time領域按端點建立專用Request／typed Data，有界結果及前端按需讀取；保留原始receipt簽章／舊結果與重播前授權，更新契約矩陣。
+- 驗證傳輸型別／未知欄位／缺漏語意、撤權、revision／requestId、舊receipt／資料量、真MySQL及真Laravel瀏覽器；只用codex獨立13069隔離DB。
+
 ## 2026-11-12 TT-262完成，準備領取TT-246
 
 - 21Controller／84action建構子注入，公開Project／Issue／Changes拆分；帳號／PAT／稽核／訊號資料經Repository，歷史升級移Database。AST／Container無SQL及領域隔離／替換依賴門檻與ReceiptCodec設定生命週期補齊。

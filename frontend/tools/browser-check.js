@@ -97,7 +97,9 @@ async function checkIssueDetailPage(page) {
   const fixture = await page.evaluate(async () => {
     const { api } = await import('/src/api/index.js');
     let project = await api.createProject({ name: '任務閱讀頁', code: 'DETAIL', requestId: crypto.randomUUID() });
+    project = await api.project(project.id);
     project = await api.updateStatuses({ projectId: project.id, expectedRevision: project.revision, statuses: [...project.statuses, { id: 'detail_review', label: '待驗收', color: '#8761b5' }], requestId: crypto.randomUUID() });
+    project = await api.project(project.id);
     // 寫入只回有界結果（TT-178），fixture合併輸入欄位供後續斷言使用。
     const create = async input => ({ ...input, ...(await api.createIssue({ projectId: project.id, requestId: crypto.randomUUID(), ...input })) });
     const epic = await create({ title: '完整頁交付', type: 'epic' });
@@ -105,7 +107,8 @@ async function checkIssueDetailPage(page) {
     const child = await create({ title: '確認手機閱讀', parentIssueId: task.id, estimateMinutes: 60 });
     const related = await create({ title: '修正通知', type: 'bug', relatedIssueIds: [task.id] });
     await api.logTime({ issueId: child.id, workDate: '2026-10-20', minutes: 30, note: '檢查看板返回位置', requestId: crypto.randomUUID() });
-    const board = await api.createBoard({ projectId: project.id, name: '閱讀頁看板', selectedIssueIds: [epic.id, related.id], requestId: crypto.randomUUID() });
+    let board = await api.createBoard({ projectId: project.id, name: '閱讀頁看板', selectedIssueIds: [epic.id, related.id], requestId: crypto.randomUUID() });
+    board = await api.board(board.projectId, board.id);
     for (let index = 0; index < 21; index++) await create({ title: `分頁驗證 ${index + 1}` });
     return { project, epic, task, child, related, board };
   });
@@ -252,13 +255,17 @@ async function checkProjectAcl(page, browser, failures) {
   const fixture = await page.evaluate(async () => {
     const { api } = await import('/src/api/index.js');
     const member = (await api.getWorkspace()).members.find(member => member.email === 'mei@example.test');
-    const project = await api.createProject({ name: 'ACL 閱讀專案', code: `AR${crypto.randomUUID().slice(0, 5)}`, requestId: crypto.randomUUID() });
-    const other = await api.createProject({ name: 'ACL 開發專案', code: `AD${crypto.randomUUID().slice(0, 5)}`, requestId: crypto.randomUUID() });
-    const hidden = await api.createProject({ name: 'ACL 未授權專案', code: `AH${crypto.randomUUID().slice(0, 5)}`, requestId: crypto.randomUUID() });
+    let project = await api.createProject({ name: 'ACL 閱讀專案', code: `AR${crypto.randomUUID().slice(0, 5)}`, requestId: crypto.randomUUID() });
+    project = await api.project(project.id);
+    let other = await api.createProject({ name: 'ACL 開發專案', code: `AD${crypto.randomUUID().slice(0, 5)}`, requestId: crypto.randomUUID() });
+    other = await api.project(other.id);
+    let hidden = await api.createProject({ name: 'ACL 未授權專案', code: `AH${crypto.randomUUID().slice(0, 5)}`, requestId: crypto.randomUUID() });
+    hidden = await api.project(hidden.id);
     const issue = await api.createIssue({ projectId: project.id, title: '受保護的閱讀卡片', requestId: crypto.randomUUID() });
     const task = await api.createIssue({ projectId: other.id, title: '受保護的開發卡片', requestId: crypto.randomUUID() });
     await api.createIssue({ projectId: hidden.id, title: '不可洩露的卡片', requestId: crypto.randomUUID() });
-    const board = await api.createBoard({ projectId: other.id, name: '開發者唯讀收錄', selectedIssueIds: [task.id], requestId: crypto.randomUUID() });
+    let board = await api.createBoard({ projectId: other.id, name: '開發者唯讀收錄', selectedIssueIds: [task.id], requestId: crypto.randomUUID() });
+    board = await api.board(board.projectId, board.id);
     await api.setProjectMember({ projectId: other.id, userId: member.id, roleId: 'developer', expectedRevision: 0, requestId: crypto.randomUUID() });
     return { project, other, hidden, issue, task, member, board };
   });
@@ -378,7 +385,8 @@ async function checkProjectDetails(page, browser) {
   await page.setViewportSize({ width: 1440, height: 1050 });
   const project = await page.evaluate(async () => {
     const { api } = await import('/src/api/index.js');
-    const project = await api.createProject({ name: '入口資訊測試', code: 'INFO', description: '說明這個專案的用途', requestId: crypto.randomUUID() });
+    let project = await api.createProject({ name: '入口資訊測試', code: 'INFO', description: '說明這個專案的用途', requestId: crypto.randomUUID() });
+    project = await api.project(project.id);
     const member = (await api.getWorkspace()).members.find(member => member.email === 'mei@example.test');
     const acl = await api.getProjectMembers({ projectId: project.id });
     await api.setProjectMember({ projectId: project.id, userId: member.id, roleId: 'reader', expectedRevision: acl.revision, requestId: crypto.randomUUID() });
@@ -472,7 +480,8 @@ async function checkBoardWorkflow(page) {
   await page.setViewportSize({ width: 1440, height: 1050 });
   const { project, first, second } = await page.evaluate(async () => {
     const { api } = await import('/src/api/index.js');
-    const project = await api.createProject({ name: '視覺協作', code: 'VISUAL', requestId: crypto.randomUUID() });
+    let project = await api.createProject({ name: '視覺協作', code: 'VISUAL', requestId: crypto.randomUUID() });
+    project = await api.project(project.id);
     const first = await api.createIssue({ projectId: project.id, title: '第一個交付', type: 'epic', requestId: crypto.randomUUID() });
     const second = await api.createIssue({ projectId: project.id, title: '第二個交付', type: 'epic', requestId: crypto.randomUUID() });
     return { project, first, second };
@@ -522,7 +531,8 @@ async function checkCustomBoards(page) {
   await page.setViewportSize({ width: 1440, height: 1050 });
   const fixture = await page.evaluate(async () => {
     const { api } = await import('/src/api/index.js');
-    const project = await api.createProject({ name: '收錄測試', code: 'CURATE', requestId: crypto.randomUUID() });
+    let project = await api.createProject({ name: '收錄測試', code: 'CURATE', requestId: crypto.randomUUID() });
+    project = await api.project(project.id);
     const create = async input => ({ ...input, ...(await api.createIssue({ projectId: project.id, requestId: crypto.randomUUID(), ...input })) });
     const epic = await create({ title: '本次交付', type: 'epic' });
     const otherEpic = await create({ title: '之後交付', type: 'epic' });

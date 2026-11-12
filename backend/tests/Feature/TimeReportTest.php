@@ -87,6 +87,8 @@ class TimeReportTest extends TestCase
             'name' => '第二專案',
             'code' => 'SECOND',
         ])->assertOk()->json('data');
+        $first = $this->getJson('/api/v1/projects/'.$first['id'])->assertOk()->json('data');
+        $second = $this->getJson('/api/v1/projects/'.$second['id'])->assertOk()->json('data');
         $epic = $this->rpc('createIssue', [
             'projectId' => $first['id'],
             'title' => '大目標',
@@ -352,6 +354,7 @@ class TimeReportTest extends TestCase
         foreach (['first' => 45, 'foreign' => 900] as $name => $minutes) {
             $identity = $this->register('repository-'.$name.'@example.test');
             $project = $this->rpc('createProject', ['name' => $name, 'code' => strtoupper($name)])->assertOk()->json('data');
+            $project = $this->getJson('/api/v1/projects/'.$project['id'])->assertOk()->json('data');
             $issue = $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => $name])->assertOk()->json('data');
             $entry = $this->rpc('logTime', ['issueId' => $issue['id'], 'workDate' => $today, 'minutes' => $minutes, 'note' => $name.'私有說明'])->assertOk()->json('data');
             $fixtures[$name] = compact('identity', 'project', 'issue', 'entry');

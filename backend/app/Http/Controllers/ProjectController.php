@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\JsonOperationRequest;
+use App\Http\Requests\Writes\ProjectWriteRequest;
 use App\Http\Resources\ApiResponse;
 use App\Http\WorkspaceRpc;
 
@@ -21,13 +21,13 @@ class ProjectController extends Controller
     /**
      * 驗證JSON後建立專案，回傳既有API格式。
      *
-     * @param  JsonOperationRequest  $request  目前HTTP請求與Session
+     * @param  ProjectWriteRequest  $request  目前HTTP請求與Session
      * @return ApiResponse
      */
-    public function store(JsonOperationRequest $request): ApiResponse
+    public function store(ProjectWriteRequest $request): ApiResponse
     {
-        $input = $request->payload();
-        $result = $this->rpc->execute($request, 'createProject', $input);
+        $input = $request->toDto();
+        $result = $this->rpc->executeData($request, $input);
 
         return new ApiResponse($result);
     }
@@ -35,13 +35,13 @@ class ProjectController extends Controller
     /**
      * 驗證JSON後更新專案資訊，回傳既有API格式。
      *
-     * @param  JsonOperationRequest  $request  目前HTTP請求與Session
+     * @param  ProjectWriteRequest  $request  目前HTTP請求與Session
      * @return ApiResponse
      */
-    public function update(JsonOperationRequest $request): ApiResponse
+    public function update(ProjectWriteRequest $request): ApiResponse
     {
-        $input = $request->payload();
-        $result = $this->rpc->execute($request, 'updateProject', $input);
+        $input = $request->toDto();
+        $result = $this->rpc->executeData($request, $input);
 
         return new ApiResponse($result);
     }
@@ -49,13 +49,13 @@ class ProjectController extends Controller
     /**
      * 驗證JSON後更新自訂狀態，回傳既有API格式。
      *
-     * @param  JsonOperationRequest  $request  目前HTTP請求與Session
+     * @param  ProjectWriteRequest  $request  目前HTTP請求與Session
      * @return ApiResponse
      */
-    public function statuses(JsonOperationRequest $request): ApiResponse
+    public function statuses(ProjectWriteRequest $request): ApiResponse
     {
-        $input = $request->payload();
-        $result = $this->rpc->execute($request, 'updateStatuses', $input);
+        $input = $request->toDto();
+        $result = $this->rpc->executeData($request, $input);
 
         return new ApiResponse($result);
     }

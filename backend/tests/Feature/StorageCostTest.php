@@ -12,7 +12,7 @@ use Tests\TestCase;
 /** 驗證資料量增加時，不以重寫舊子列或建立Session實作小型操作。 */
 class StorageCostTest extends TestCase
 {
-    use StoredWriteResults, RefreshDatabase;
+    use RefreshDatabase, StoredWriteResults;
 
     private function rpc(string $operation, array $input = [])
     {
@@ -44,7 +44,7 @@ class StorageCostTest extends TestCase
         $referenceReads = array_filter($queries, fn ($q) => str_contains($q['query'], 'project_public_id') && str_starts_with($q['query'], 'select'));
         $this->assertCount(1, $referenceReads);
         $pivotIds = DB::table('board_issues')->pluck('id')->all();
-        $this->rpc('updateBoard', ['id' => $board['id'], 'name' => 'Renamed', 'selectedIssueIds' => $board['selectedIssueIds'], 'expectedRevision' => $board['revision']])->assertOk();
+        $this->rpc('updateBoard', ['id' => $board['id'], 'name' => 'Renamed', 'selectedIssueIds' => array_column($issues, 'id'), 'expectedRevision' => $board['revision']])->assertOk();
         $this->assertSame($pivotIds, DB::table('board_issues')->pluck('id')->all());
 
         $store = (new RecordStore)->forWorkspace($identity['workspace']['id']);

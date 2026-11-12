@@ -32,7 +32,9 @@ class WorkspaceApiTest extends TestCase
 
     private function project(string $code = 'TEST'): array
     {
-        return $this->rpc('createProject', ['name' => '專案', 'code' => $code])->assertOk()->json('data');
+        $result = $this->rpc('createProject', ['name' => '專案', 'code' => $code])->assertOk()->json('data');
+
+        return $this->getJson('/api/v1/projects/'.$result['id'])->assertOk()->json('data');
     }
 
     private function issue(array $project, array $fields = []): array
@@ -134,7 +136,8 @@ class WorkspaceApiTest extends TestCase
         $this->assertSame($owner['user']['id'], $project['leadId']);
         $issue = $this->issue($project);
         $change = ['id' => $project['id'], 'expectedRevision' => 1, 'name' => '長期維護專案', 'description' => '負責產品維護', 'leadId' => '', 'requestId' => 'project-update'];
-        $this->rpc('updateProject', $change)->assertOk()->assertJsonPath('data.revision', 2)->assertJsonPath('data.leadId', '');
+        $this->rpc('updateProject', $change)->assertOk()->assertJsonPath('data.revision', 2);
+        $this->getJson('/api/v1/projects/'.$project['id'])->assertOk()->assertJsonPath('data.leadId', '');
         $this->rpc('updateProject', $change)->assertJsonPath('data.revision', 2);
         $this->rpc('updateProject', ['id' => $project['id'], 'expectedRevision' => 1, 'name' => '過期修改'])->assertStatus(409);
         $this->rpc('updateProject', ['id' => $project['id'], 'expectedRevision' => 2, 'leadId' => 'other-member'])->assertStatus(400);
@@ -452,7 +455,8 @@ class WorkspaceApiTest extends TestCase
         $states[2]['label'] = '封存結案';
         $requestId = (string) Str::uuid();
         $input = ['requestId' => $requestId, 'projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => $states];
-        $this->rpc('updateStatuses', $input)->assertOk()->assertJsonPath('data.statuses.0.label', '新工作');
+        $this->rpc('updateStatuses', $input)->assertOk();
+        $this->getJson('/api/v1/projects/'.$project['id'])->assertOk()->assertJsonPath('data.statuses.0.label', '新工作');
         $this->rpc('updateStatuses', $input)->assertOk()->assertJsonPath('data.revision', 2);
         $this->rpc('updateStatuses', [...$input, 'requestId' => (string) Str::uuid()])->assertStatus(409);
         $issue = $this->issue($project);

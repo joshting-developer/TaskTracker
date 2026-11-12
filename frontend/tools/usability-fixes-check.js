@@ -53,8 +53,10 @@ try {
     const ws = await api.getWorkspace(), person = ws.members.find(item => item.email === email);
     for (let i = 1; i <= 4; i++) await api.createTodo({ title: `個人摘要 ${i}`, requestId: crypto.randomUUID() });
     for (let i = 1; i <= 5; i++) await api.createTodo({ title: `交辦事項 ${i}`, assigneeId: person.id, requestId: crypto.randomUUID() });
-    const project = await api.createProject({ name: '流程 first', code: 'FLOW', requestId: crypto.randomUUID() });
-    const second = await api.createProject({ name: '流程 second', code: 'SECOND', requestId: crypto.randomUUID() });
+    let project = await api.createProject({ name: '流程 first', code: 'FLOW', requestId: crypto.randomUUID() });
+    project = await api.project(project.id);
+    let second = await api.createProject({ name: '流程 second', code: 'SECOND', requestId: crypto.randomUUID() });
+    second = await api.project(second.id);
     const issue = await api.createIssue({ projectId: project.id, title: '閱讀與編輯的分工', assignee: ws.meta.userId, requestId: crypto.randomUUID() });
     await api.createIssue({ projectId: project.id, title: '其他未指派工作', requestId: crypto.randomUUID() });
     return { memberId: person.id, ownerId: ws.meta.userId, project, second, issue };

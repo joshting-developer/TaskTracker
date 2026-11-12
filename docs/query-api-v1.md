@@ -107,3 +107,8 @@ ProjectTasksWorkspace與useProjectTaskQueries已取代原BoardWorkspace／useBoa
   - 本人在此Project的有效permission清單（權限變更即重讀）。
 - 前端用法：先取版本再讀Project／看板／卡片，背景輪次版本相同就略過；期間有變更時下次版本必不同，最多多讀一次。寫入仍沿用`expectedRevision`／`requestId`與409衝突處理，這是最終一致性檢查，不取代寫入版本保護。
 - 量測（隔離MySQL、3張卡）：版本回應168 bytes；同輪完整重讀為Project＋看板屬性＋卡片頁1404 bytes，卡片越多差距越大。前景載入多一個版本請求（board-query-check 45→47次）。
+
+
+## 2026-11-12 TT-246 寫入結果收斂
+
+Project建立／修改／狀態更新新結果為`{id, revision}`，Board建立／修改／移除為`{id, projectId, revision}`；不附描述、設定歷史或收錄清單。需要最新內容時使用上列單Project／Board查詢；寫入結果不得作完整read model或草稿基準。舊receipt仍回第一次保存的原結果，先重驗資格，不能為改契約重新執行業務。其餘領域專用Request／typed Data、前端與逐端點矩陣見[TT-246契約](other-write-contracts-2026-11-12.md)。

@@ -89,7 +89,7 @@ class ReceiptCodecTest extends TestCase
         $identity = $this->postJson('/api/auth/register', ['name' => 'Codec', 'email' => 'codec-'.Str::uuid().'@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Codec'])->assertOk()->json('data');
         $userId = $identity['user']['id'];
         $project = $this->rpc('createProject', ['name' => 'Codec', 'code' => 'CDC'])->assertOk()->json('data');
-        // TT-178後卡片寫入結果已有界（不會超過門檻），改用結果較大的Project建立驗證編碼。
+        // TT-246後Project也回固定結果；明確建立歷史大receipt fixture測雙讀及損壞拒絕。
         $plainInput = ['name' => 'Plain', 'code' => 'PLN', 'description' => str_repeat('舊格式 ', 120), 'requestId' => 'codec-plain'];
         $plain = $this->rpc('createProject', $plainInput)->assertOk()->json('data');
         $this->assertArrayNotHasKey(ReceiptCodec::MARKER, $this->stored($userId, 'codec-plain'), '預設json不編碼');
@@ -97,6 +97,9 @@ class ReceiptCodecTest extends TestCase
         config(['tasktracker.receipts.codec' => 'gzip-v1', 'tasktracker.receipts.min_bytes' => 256]);
         $input = ['name' => 'Encoded', 'code' => 'ENC', 'description' => str_repeat('需求內容 ', 90), 'requestId' => 'codec-encoded'];
         $first = $this->rpc('createProject', $input)->assertOk()->json('data');
+        $this->assertArrayNotHasKey(ReceiptCodec::MARKER, $this->stored($userId, 'codec-encoded'), '新Project結果固定且小於壓縮門檻');
+        $first = [...$first, 'description' => str_repeat('歷史大結果 ', 90)];
+        DB::table('operation_receipts')->where('public_id', $userId.':codec-encoded')->update(['result' => json_encode((new ReceiptCodec('gzip-v1', 256))->encode($first))]);
         $this->assertSame('gzip-v1', $this->stored($userId, 'codec-encoded')[ReceiptCodec::MARKER]);
         $count = Project::count();
         $this->assertSame($first, $this->rpc('createProject', $input)->assertOk()->json('data'), '同key回原結果');
@@ -129,7 +132,8 @@ class ReceiptCodecTest extends TestCase
         $results = [];
         for ($n = 0; $n < 7; $n++) {
             $inputs[$n] = ['name' => 'Batch '.$n, 'code' => 'BT'.chr(65 + $n), 'description' => str_repeat('批次 ', 160), 'requestId' => 'batch-'.$n];
-            $results[$n] = $this->rpc('createProject', $inputs[$n])->assertOk()->json('data');
+            $results[$n] = [...$this->rpc('createProject', $inputs[$n])->assertOk()->json('data'), 'description' => str_repeat('歷史批次 ', 160)];
+            DB::table('operation_receipts')->where('public_id', $userId.':batch-'.$n)->update(['result' => json_encode($results[$n])]);
         }
         $plainRows = DB::table('operation_receipts')->orderBy('id')->pluck('result', 'id')->map(fn ($text) => json_decode($text, true))->all();
         config(['tasktracker.receipts.min_bytes' => 256]);

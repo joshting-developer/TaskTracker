@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\JsonOperationRequest;
+use App\Http\Requests\Writes\ProjectMemberWriteRequest;
 use App\Http\Resources\ApiResponse;
 use App\Http\WorkspaceRpc;
 
@@ -35,13 +36,13 @@ class ProjectMemberController extends Controller
     /**
      * 驗證JSON後加入成員或更新角色權限組合，回傳既有API格式。
      *
-     * @param  JsonOperationRequest  $request  目前HTTP請求與Session
+     * @param  ProjectMemberWriteRequest  $request  目前HTTP請求與Session
      * @return ApiResponse
      */
-    public function save(JsonOperationRequest $request): ApiResponse
+    public function save(ProjectMemberWriteRequest $request): ApiResponse
     {
-        $input = $request->payload();
-        $result = $this->rpc->execute($request, 'setProjectMember', $input);
+        $input = $request->toDto();
+        $result = $this->rpc->executeData($request, $input);
 
         return new ApiResponse($result);
     }
@@ -49,13 +50,13 @@ class ProjectMemberController extends Controller
     /**
      * 驗證JSON後撤回專案成員資格，回傳既有API格式。
      *
-     * @param  JsonOperationRequest  $request  目前HTTP請求與Session
+     * @param  ProjectMemberWriteRequest  $request  目前HTTP請求與Session
      * @return ApiResponse
      */
-    public function remove(JsonOperationRequest $request): ApiResponse
+    public function remove(ProjectMemberWriteRequest $request): ApiResponse
     {
-        $input = $request->payload();
-        $result = $this->rpc->execute($request, 'removeProjectMember', $input);
+        $input = $request->toDto();
+        $result = $this->rpc->executeData($request, $input);
 
         return new ApiResponse($result);
     }

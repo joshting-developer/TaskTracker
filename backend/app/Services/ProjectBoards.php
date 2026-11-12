@@ -159,7 +159,7 @@ class ProjectBoards
             'revision' => $board['revision'] + 1,
         ]);
 
-        return ['id' => $board['id']];
+        return ['id' => $board['id'], 'projectId' => $board['projectId'], 'revision' => $board['revision'] + 1];
     }
 
     /**

@@ -48,3 +48,18 @@ assert.equal(accessEvents, 0, 'GET 404不觸發全域重驗');
 await assert.rejects(requestJson('/write', { method: 'POST', input }), e => e.code === 'NOT_FOUND');
 assert.equal(accessEvents, 1, '撤權寫入的NOT_FOUND觸發重驗');
 console.log('API client: query, scope, domain/HTTP errors, malformed JSON, network, timeout, abort, stale generation, CSRF replay, write NOT_FOUND access refresh passed');
+
+// TT-246：新寫入結果不是read model；重試／未知欄位原樣保留，不偷偷多打一輪GET。
+const { api } = await import('../src/api/index.js');
+calls = [];
+const writeResult = { id: 'project-id', revision: 1 };
+globalThis.fetch = async (url, options) => {
+  calls.push({ url, options });
+  return url === '/api/csrf-cookie' ? reply({ csrfToken: 'token' }) : reply({ ok: true, data: writeResult });
+};
+const projectInput = { name: '  original  ', code: 'FIXED', requestId: 'fixed-result', extra: { value: null } };
+assert.deepEqual(await api.createProject(projectInput), writeResult);
+assert.equal(calls.filter(c => c.url !== '/api/csrf-cookie').length, 1);
+assert.ok(calls.filter(c => c.url !== '/api/csrf-cookie').every(c => c.options.method === 'POST'));
+assert.deepEqual(JSON.parse(calls.find(c => c.url === '/api/rpc/createProject').options.body), projectInput);
+console.log('PASS: fixed resource write result, no implicit GET, original retry payload');

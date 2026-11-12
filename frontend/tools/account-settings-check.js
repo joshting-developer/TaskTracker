@@ -53,6 +53,7 @@ try {
   const touch = await avatar.boundingBox(); assert.ok(touch.width >= 44 && touch.height >= 44);
   await avatar.focus(); await owner.keyboard.press('ArrowDown'); await menu.waitFor();
   assert.equal(await menu.getByRole('menuitem', { name: '個人資料', exact: true }).evaluate(el => el === document.activeElement), true);
+  await owner.keyboard.press('ArrowDown'); assert.equal(await menu.getByRole('menuitem', { name: '個人 API Token', exact: true }).evaluate(el => el === document.activeElement), true);
   await owner.keyboard.press('ArrowDown'); assert.equal(await menu.getByRole('menuitem', { name: '登出', exact: true }).evaluate(el => el === document.activeElement), true);
   await screenshots('menu', menu);
   await owner.keyboard.press('Escape'); await menu.waitFor({ state: 'hidden' }); assert.equal(await avatar.evaluate(el => el === document.activeElement), true);
@@ -151,7 +152,7 @@ try {
   await owner.setViewportSize({ width: 1440, height: 1000 });
   await openProjectList(owner);
   await owner.getByRole('button', { name: '進入專案：權限測試專案', exact: true }).click(); const hash = await owner.evaluate(() => location.hash);
-  await choose('工作空間設定'); assert.equal(await owner.evaluate(() => location.hash), '#/workspace/settings');
+  await owner.getByRole('button', { name: '工作空間設定', exact: true }).click(); assert.equal(await owner.evaluate(() => location.hash), '#/workspace/settings');
   await owner.goBack(); await owner.getByRole('button', { name: '專案成員與權限', exact: true }).waitFor(); assert.equal(await owner.evaluate(() => location.hash), hash);
   await owner.getByRole('button', { name: '專案成員與權限', exact: true }).click(); await owner.getByRole('region', { name: '專案成員與權限', exact: true }).waitFor(); await owner.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await owner.getByLabel('快速新增待辦', { exact: true }).fill('未保存的速記'); owner.once('dialog', dialog => dialog.dismiss()); await choose('登出'); assert.equal(await owner.getByLabel('快速新增待辦', { exact: true }).inputValue(), '未保存的速記');

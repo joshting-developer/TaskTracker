@@ -40,6 +40,8 @@ class ProjectAclTest extends TestCase
         $this->tenant = (new RecordStore)->forWorkspace($this->owner['workspace']['id']);
         $this->first = $this->rpc('createProject', ['name' => '公開給指定成員', 'code' => 'FIRST'])->assertOk()->json('data');
         $this->second = $this->rpc('createProject', ['name' => '私有薪資專案', 'code' => 'SECRET'])->assertOk()->json('data');
+        $this->first = $this->tenant->require('projects', $this->first['id']);
+        $this->second = $this->tenant->require('projects', $this->second['id']);
         $this->privateIssue = $this->rpc('createIssue', ['projectId' => $this->second['id'], 'title' => '不可洩漏的薪資', 'type' => 'epic'])->assertOk()->json('data');
         $task = $this->rpc('createIssue', ['projectId' => $this->second['id'], 'title' => '薪資子卡', 'epicId' => $this->privateIssue['id']])->assertOk()->json('data');
         $this->privateTime = $this->rpc('logTime', ['issueId' => $task['id'], 'workDate' => '2026-01-01', 'minutes' => 30])->assertOk()->json('data');

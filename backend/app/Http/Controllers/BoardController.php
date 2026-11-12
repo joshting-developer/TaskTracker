@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\JsonOperationRequest;
+use App\Http\Requests\Writes\BoardWriteRequest;
 use App\Http\Resources\ApiResponse;
 use App\Http\WorkspaceRpc;
 
@@ -21,13 +21,13 @@ class BoardController extends Controller
     /**
      * 驗證JSON後建立自訂看板，回傳既有API格式。
      *
-     * @param  JsonOperationRequest  $request  目前HTTP請求與Session
+     * @param  BoardWriteRequest  $request  目前HTTP請求與Session
      * @return ApiResponse
      */
-    public function store(JsonOperationRequest $request): ApiResponse
+    public function store(BoardWriteRequest $request): ApiResponse
     {
-        $input = $request->payload();
-        $result = $this->rpc->execute($request, 'createBoard', $input);
+        $input = $request->toDto();
+        $result = $this->rpc->executeData($request, $input);
 
         return new ApiResponse($result);
     }
@@ -35,13 +35,13 @@ class BoardController extends Controller
     /**
      * 驗證JSON後更新看板收錄，回傳既有API格式。
      *
-     * @param  JsonOperationRequest  $request  目前HTTP請求與Session
+     * @param  BoardWriteRequest  $request  目前HTTP請求與Session
      * @return ApiResponse
      */
-    public function update(JsonOperationRequest $request): ApiResponse
+    public function update(BoardWriteRequest $request): ApiResponse
     {
-        $input = $request->payload();
-        $result = $this->rpc->execute($request, 'updateBoard', $input);
+        $input = $request->toDto();
+        $result = $this->rpc->executeData($request, $input);
 
         return new ApiResponse($result);
     }
@@ -49,13 +49,13 @@ class BoardController extends Controller
     /**
      * 驗證JSON後移除看板並保留任務，回傳既有API格式。
      *
-     * @param  JsonOperationRequest  $request  目前HTTP請求與Session
+     * @param  BoardWriteRequest  $request  目前HTTP請求與Session
      * @return ApiResponse
      */
-    public function archive(JsonOperationRequest $request): ApiResponse
+    public function archive(BoardWriteRequest $request): ApiResponse
     {
-        $input = $request->payload();
-        $result = $this->rpc->execute($request, 'archiveBoard', $input);
+        $input = $request->toDto();
+        $result = $this->rpc->executeData($request, $input);
 
         return new ApiResponse($result);
     }

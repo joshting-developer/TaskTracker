@@ -5,6 +5,9 @@ export function callApi(operation, input = {}, group = 'rpc') {
   return requestJson(`/api/${group}/${operation}`, { method: 'POST', input, scoped: group !== 'auth', notifyAccess: operation !== 'getWorkspace' });
 }
 
+/** @typedef {{id:string, revision:number}} ResourceWriteResult */
+/** @typedef {{id:string, projectId:string, revision:number}} BoardWriteResult */
+// 寫入回固定結果；表單不以此當read model或新草稿基準，資料由目前畫面按需GET。
 export const api = {
   personalTokens: filters => queryApi('personal-tokens', filters),
   createPersonalToken: input => requestJson('/api/v1/personal-tokens', { method: 'POST', input }),
@@ -71,15 +74,21 @@ export const api = {
   getProjectMembers: (input) => callApi('getProjectMembers', input),
   setProjectMember: (input) => callApi('setProjectMember', input),
   removeProjectMember: (input) => callApi('removeProjectMember', input),
+  /** @returns {Promise<BoardWriteResult>} 新結果；不含selectedIssueIds。 */
   createBoard: (input) => callApi('createBoard', input),
+  /** @returns {Promise<BoardWriteResult>} 新結果；不含selectedIssueIds。 */
   updateBoard: (input) => callApi('updateBoard', input),
+  /** @returns {Promise<BoardWriteResult>} 新結果；不含selectedIssueIds。 */
   archiveBoard: (input) => callApi('archiveBoard', input),
+  /** @returns {Promise<ResourceWriteResult>} 新結果；舊receipt可能帶既存欄位。 */
   createProject: (input) => callApi('createProject', input),
+  /** @returns {Promise<ResourceWriteResult>} 新結果；舊receipt可能帶既存欄位。 */
   updateProject: (input) => callApi('updateProject', input),
   createIssue: (input) => callApi('createIssue', input),
   updateIssue: (input) => callApi('updateIssue', input),
   addComment: (input) => callApi('addComment', input),
   loadDemo: (input) => callApi('loadDemo', input),
+  /** @returns {Promise<ResourceWriteResult>} 新結果；舊receipt可能帶既存欄位。 */
   updateStatuses: (input) => callApi('updateStatuses', input),
   logTime: (input) => callApi('logTime', input),
   updateTime: (input) => callApi('updateTime', input),

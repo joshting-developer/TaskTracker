@@ -5,6 +5,7 @@ namespace App\Http;
 use App\Authorization\WorkspacePermissions;
 use App\Data\TimeReportData;
 use App\Data\WorkspaceContext;
+use App\Data\Writes\RpcWriteData;
 use App\Domain\DomainError;
 use App\Factories\AccountSettingsFactory;
 use App\Factories\TodosFactory;
@@ -44,6 +45,18 @@ class WorkspaceRpc
      * @param  WorkspaceServicesFactory  $services  單次操作服務組
      */
     public function __construct(private WorkspaceTransaction $transaction, private AccountService $accounts, private SmtpService $smtp, private AccountSettingsFactory $settings, private TodosFactory $todos, private WorkspaceService $workspaces, private WorkspaceServicesFactory $services) {}
+
+    /**
+     * 接收各領域Request建立的型別資料，沿用原交易與業務入口。
+     *
+     * @param  Request  $request  可信Session邊界
+     * @param  RpcWriteData  $data  專用Request建立的輸入
+     * @return array<string,mixed> 有界寫入結果或歷史receipt原結果
+     */
+    public function executeData(Request $request, RpcWriteData $data): array
+    {
+        return $this->execute($request, $data->operation, $data->input());
+    }
 
     /**
      * 執行舊RPC操作。

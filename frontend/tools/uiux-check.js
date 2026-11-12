@@ -27,7 +27,8 @@ try {
   await page.getByRole('heading', { name: '首頁', exact: true }).waitFor();
   const fixture = await page.evaluate(async () => {
     const { api } = await import('/src/api/index.js');
-    const project = await api.createProject({ name: 'UI 驗證專案', code: 'UX', requestId: crypto.randomUUID() });
+    let project = await api.createProject({ name: 'UI 驗證專案', code: 'UX', requestId: crypto.randomUUID() });
+    project = await api.project(project.id);
     const issue = await api.createIssue({ projectId: project.id, title: '閱讀詳細需求', description: '第一段背景與驗收條件\n確認日期、權限與畫面流程', requestId: crypto.randomUUID() });
     return { project, issue };
   });

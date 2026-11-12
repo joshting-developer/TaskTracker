@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Fields;
 use App\Repositories\RecordStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
@@ -41,7 +42,8 @@ class BackendArchitectureTest extends TestCase
         $project = $this->postJson('/api/rpc/createProject', [
             'name' => 'Before', 'code' => 'REPLAY', 'requestId' => 'create-project',
         ])->assertOk()->json('data');
-        $saved = [...$project, 'name' => 'Old replay', 'revision' => 2];
+        $store = (new RecordStore)->forWorkspace($actor['workspace']['id']);
+        $saved = [...$store->require('projects', $project['id']), 'name' => 'Old replay', 'revision' => 2];
         $store = (new RecordStore)->forWorkspace($actor['workspace']['id']);
         $store->put('projects', $project['id'], $saved);
         // 這是舊演算法輸出的固定JSON順序，不呼叫新canonical自我驗證。
@@ -106,13 +108,13 @@ class BackendArchitectureTest extends TestCase
     public function record_store_success_preserve_payload_and_namespace(): void
     {
         $global = new RecordStore;
-        foreach (['first-fixture','second-fixture'] as $workspaceId) {
+        foreach (['first-fixture', 'second-fixture'] as $workspaceId) {
             $global->put('workspaces', $workspaceId, ['id' => $workspaceId, 'name' => $workspaceId]);
             $global->forWorkspace($workspaceId)->put('projects', 'project', ['id' => 'project', 'name' => 'Fixture', 'code' => 'FIXTURE']);
         }
         $first = $global->forWorkspace('first-fixture');
         $second = $global->forWorkspace('second-fixture');
-        $payload = ['id' => 'same', 'projectId' => 'project', 'identifier' => 'FIXTURE-1', ...\App\Domain\Fields::issue(['title' => '中文'], ['statuses' => \App\Domain\Fields::STATES]), 'revision' => 1, 'comments' => [], 'history' => [], 'nullable' => null, 'list' => [], 'flag' => false, 'minutes' => 30, 'fraction' => 1.5];
+        $payload = ['id' => 'same', 'projectId' => 'project', 'identifier' => 'FIXTURE-1', ...Fields::issue(['title' => '中文'], ['statuses' => Fields::STATES]), 'revision' => 1, 'comments' => [], 'history' => [], 'nullable' => null, 'list' => [], 'flag' => false, 'minutes' => 30, 'fraction' => 1.5];
         $first->put('issues', 'same', $payload);
         $first->put('issues', 'next', [...$payload, 'id' => 'next', 'identifier' => 'FIXTURE-2']);
         $second->put('issues', 'same', [...$payload, 'title' => '另一空間']);
