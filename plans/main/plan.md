@@ -1,3 +1,15 @@
+## 2026-11-12 TT-254 驗收完成
+
+- 獨立空目錄／python -I／公開OpenAPI operationId及Markdown，建卡／重播／409草稿／Scope／隱藏及跨Workspace／Reader撤權receipt／移除／停用／到期／撤銷等10階段通過；作者實際Token帳號，無Session。
+- 本地完整CI memory22通過／13原生類略過2286assertions、MySQL14通過508assertions、py／sh／Chrome／限流及官方負向皆通過。記錄docs/public-api-independent-client-acceptance.md，非其他真人／模型外部聯調。
+- 提交本卡明確檔案，保留同工作區其他PHPDoc變更；回填結案後續接TT-170穩定cursor及增量查詢。
+
+## 2026-11-12 TT-254 開始
+
+- 空目錄單一通用HTTP客戶端／python -I，只接公開文件與OpenAPI、PAT與不透明fixture輸入，不讀原始碼／DB／Cookie／內部helper；依operationId找公開路徑。
+- fixture獨立在13049／tasktracker_test建人造帳號，僅測試環境CLI限制schema／帳號及人造email，控制資格／到期；正向＋重播／409／Scope／跨Workspace／移除／停用／到期／撤銷。
+- 同步CI runner，發現contract.md規格版號過時，改以唯一OpenAPI的info.version為準。驗完回填／提交才結案。
+
 ## 2026-11-12 TT-253 驗證完成
 
 - 全新獨立CI／13049通過：memory22／13原生類略過2285assertions；MySQL14通過508assertions；官方Schema、3種結構／7種契約負向、下載py／sh、Chrome15頁尺寸及鍵盤、真HTTP限流通過，結束自動清理獨立環境。

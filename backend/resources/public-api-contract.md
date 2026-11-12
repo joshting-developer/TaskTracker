@@ -1,6 +1,6 @@
 # TaskTracker HTTP API 契約 v1
 
-規格版號：0.4.0；更新：2026-11-12。正式機器契約：[OpenAPI](/api/public/openapi.json)。本文是版本／使用規則，OpenAPI是唯一端點及Schema來源；不另維護一份規格。本文與規格可匿名取得，不代表業務資料可匿名存取。
+HTTP契約v1；規格版號以OpenAPI的info.version為準；更新：2026-11-12。正式機器契約：[OpenAPI](/api/public/openapi.json)。本文是版本／使用規則，OpenAPI是唯一端點及Schema來源；不另維護一份規格。本文與規格可匿名取得，不代表業務資料可匿名存取。
 
 ## 已開放能力與入口
 

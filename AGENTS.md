@@ -245,3 +245,7 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 ### 2026-11-12 TT-253 公開契約CI
 
 公開API變更須維護唯一backend/resources/openapi.json與FormRequest／路由／Scope／範例一致；tools/api-contract-ci.sh於獨立tasktracker-contract-ci、13049、tasktracker_test跑官方Schema、漂移負向、HTTP／MySQL／下載範例／文件Chrome驗證並清理自身環境。GitHub Actions使用相同runner，不需正式秘密；未push不宣稱遠端job成功。見docs/public-api-contract-ci.md。
+
+### 2026-11-12 TT-254 公開文件客戶端驗收
+
+已交付source-free標準HTTP客戶端，空目錄python -I只憑公開OpenAPI／指南／PAT驗建卡、更新、留言、冪等、409、Scope、跨Workspace、撤權、停用、到期與撤銷；獨立tasktracker_test實跑並接入契約CI。fixture不進產品HTTP，不得用主庫執行。這不是特定外部模型聯調或自動連接器，見docs/public-api-independent-client-acceptance.md。
