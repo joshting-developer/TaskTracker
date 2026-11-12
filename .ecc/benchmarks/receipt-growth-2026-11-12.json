@@ -1,0 +1,128 @@
+{
+  "card": "TT-227",
+  "date": "2026-11-12",
+  "environment": "Isolated tasktracker-perf-test / MySQL 8.4 / tasktracker_test, DatabaseTransactions rollback",
+  "workload": {
+    "issueCount": 1,
+    "rounds": 64,
+    "operationsPerRound": [
+      "update title",
+      "append comment"
+    ],
+    "description": "100 repeated synthetic Chinese phrases",
+    "comment": "40 repeated synthetic Chinese phrases + round counter",
+    "todoUpdates": 32
+  },
+  "samples": 2,
+  "metrics": {
+    "driver": "mysql",
+    "checkpoints": [
+      {
+        "rounds": 0,
+        "receiptCount": 1,
+        "jsonTextBytes": 1898,
+        "jsonStorageBytes": 1923,
+        "maxReceiptBytes": 1923
+      },
+      {
+        "rounds": 8,
+        "receiptCount": 17,
+        "jsonTextBytes": 95972,
+        "jsonStorageBytes": 97883,
+        "maxReceiptBytes": 9755
+      },
+      {
+        "rounds": 16,
+        "receiptCount": 33,
+        "jsonTextBytes": 312837,
+        "jsonStorageBytes": 319316,
+        "maxReceiptBytes": 17608
+      },
+      {
+        "rounds": 32,
+        "receiptCount": 65,
+        "jsonTextBytes": 1115589,
+        "jsonStorageBytes": 1139268,
+        "maxReceiptBytes": 33320
+      },
+      {
+        "rounds": 64,
+        "receiptCount": 129,
+        "jsonTextBytes": 4197219,
+        "jsonStorageBytes": 4287524,
+        "maxReceiptBytes": 64744
+      }
+    ],
+    "currentIssueJsonBytes": 61858,
+    "currentIssueAuditJsonStorageBytes": 20362,
+    "losslessCompressionCandidate": {
+      "receiptCount": 129,
+      "jsonBytes": 4197219,
+      "gzipBytes": 381359,
+      "encodeMicroseconds": 25573,
+      "decodeMicroseconds": 5400
+    },
+    "todo": {
+      "receiptCount": 33,
+      "jsonStorageBytes": 2178,
+      "minReceiptBytes": 66,
+      "maxReceiptBytes": 66
+    }
+  },
+  "limits": "JSON_STORAGE_SIZE is native binary JSON payload, not allocated InnoDB disk pages/indexes/backups. Compression only a per-receipt in-memory gzip level 6 experiment; no production codec/schema/TTL change, no latency p95 claim.",
+  "repeatMetrics": {
+    "driver": "mysql",
+    "checkpoints": [
+      {
+        "rounds": 0,
+        "receiptCount": 1,
+        "jsonTextBytes": 1898,
+        "jsonStorageBytes": 1923,
+        "maxReceiptBytes": 1923
+      },
+      {
+        "rounds": 8,
+        "receiptCount": 17,
+        "jsonTextBytes": 95972,
+        "jsonStorageBytes": 97883,
+        "maxReceiptBytes": 9755
+      },
+      {
+        "rounds": 16,
+        "receiptCount": 33,
+        "jsonTextBytes": 312837,
+        "jsonStorageBytes": 319316,
+        "maxReceiptBytes": 17608
+      },
+      {
+        "rounds": 32,
+        "receiptCount": 65,
+        "jsonTextBytes": 1115589,
+        "jsonStorageBytes": 1139268,
+        "maxReceiptBytes": 33320
+      },
+      {
+        "rounds": 64,
+        "receiptCount": 129,
+        "jsonTextBytes": 4197219,
+        "jsonStorageBytes": 4287524,
+        "maxReceiptBytes": 64744
+      }
+    ],
+    "currentIssueJsonBytes": 61858,
+    "currentIssueAuditJsonStorageBytes": 20362,
+    "losslessCompressionCandidate": {
+      "receiptCount": 129,
+      "jsonBytes": 4197219,
+      "gzipBytes": 382055,
+      "encodeMicroseconds": 20556,
+      "decodeMicroseconds": 5276
+    },
+    "todo": {
+      "receiptCount": 33,
+      "jsonStorageBytes": 2178,
+      "minReceiptBytes": 66,
+      "maxReceiptBytes": 66
+    }
+  }
+}
