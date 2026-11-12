@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\Concerns\IssueLinkQueryCases;
 use Tests\Concerns\ProjectAclReadCases;
+use Tests\Concerns\RecordContextCases;
 use Tests\Concerns\WorkspaceSettingsReadCases;
 use Tests\MySqlTestCase;
 
@@ -22,6 +23,7 @@ class MySqlApiTest extends MySqlTestCase
     use DatabaseTransactions, \Tests\Concerns\ProjectTimeReadCases, \Tests\Concerns\ProjectUtilityReadCases;
     use IssueLinkQueryCases;
     use ProjectAclReadCases;
+    use RecordContextCases;
     use WorkspaceSettingsReadCases;
 
     private function rpc(string $operation, array $input = [])

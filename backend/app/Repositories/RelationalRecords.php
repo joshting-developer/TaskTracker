@@ -22,6 +22,8 @@ class RelationalRecords
 
     private array $users = [];
 
+    private array $states = [];
+
     private ?bool $hasTodoContent = null;
 
     private RelationalChildren $children;
@@ -79,13 +81,13 @@ class RelationalRecords
      */
     public function get(string $kind, string $id): ?array
     {
-        $this->identities = [];
         $this->users = [];
+        $this->states = [];
         $row = $this->query($kind)->where($this->publicColumn($kind), $id)->first();
         if (! $row) {
             return null;
         }
-        $this->children->prepare($kind, [$row->id]);
+        $this->prepareRead($kind, [$row]);
 
         return $this->serialize($kind, $row);
     }
@@ -96,14 +98,14 @@ class RelationalRecords
      */
     public function all(string $kind): array
     {
-        $this->identities = [];
         $this->users = [];
+        $this->states = [];
         $query = $this->query($kind);
         if ($kind === 'issues') {
             $query->orderBy('storage_position');
         }
         $rows = $query->orderBy('id')->get();
-        $this->children->prepare($kind, $rows->pluck('id')->all());
+        $this->prepareRead($kind, $rows->all());
 
         return $rows->map(fn ($row) => $this->serialize($kind, $row))->all();
     }
@@ -223,17 +225,74 @@ class RelationalRecords
             ->sum('time_entries.minutes');
     }
 
-    /** 批次建立不可變識別碼對照，避免每張卡查詢所有關聯。
-     * @param  string  $kind  目標種類
-     * @return array
+    /** 批次解析實際使用的外鍵，每批最多100；只暫存正向不可變ID，不保存資格或Model。
+     *
+     * @param  string  $kind  實體種類
+     * @param  array<int|string>  $ids  指定內部主鍵或公開ID
+     * @param  bool  $internal  是否以內部主鍵查詢
+     * @return void
      */
-    private function identities(string $kind): array
+    private function primeIdentities(string $kind, array $ids, bool $internal): void
     {
-        if (! isset($this->identities[$kind])) {
-            $this->identities[$kind] = $this->query($kind)->pluck($this->publicColumn($kind), 'id')->all();
+        $known = $this->identities[$kind] ?? [];
+        $missing = array_values(array_unique(array_filter($ids, fn ($id) => $id !== null && $id !== ''
+            && ($internal ? ! isset($known[$id]) : ! in_array($id, $known, true)))));
+        foreach (array_chunk($missing, 100) as $batch) {
+            $rows = $this->query($kind)->whereIn($internal ? 'id' : $this->publicColumn($kind), $batch)
+                ->pluck($this->publicColumn($kind), 'id')->all();
+            $this->identities[$kind] = ($this->identities[$kind] ?? []) + $rows;
+        }
+    }
+
+    /** 每次讀取以當次主列預載所需對照及成員欄位，不掃全部Workspace參照。
+     *
+     * @param  string  $kind  實體種類
+     * @param  array<object>  $rows  當次實際讀取的主列
+     * @return void
+     */
+    private function prepareRead(string $kind, array $rows): void
+    {
+        $this->children->prepare($kind, array_map(fn ($row) => $row->id, $rows));
+        $references = ['issues' => $this->children->issueReferenceIds($kind)];
+        $stateIds = [];
+        foreach ($rows as $row) {
+            $this->identities[$kind][$row->id] = $row->{$this->publicColumn($kind)};
+            foreach ($this->fields($kind) as [$field, $column, $type, $default, $reference]) {
+                if ($type === 'ref') {
+                    $references[$reference][] = $row->{$column};
+                } elseif ($type === 'state') {
+                    $stateIds[] = $row->{$column};
+                }
+            }
+        }
+        foreach ($references as $reference => $ids) {
+            $this->primeIdentities($reference, $ids, true);
+        }
+        foreach (array_chunk(array_values(array_unique($stateIds)), 100) as $ids) {
+            $this->states += DB::table('project_statuses')->where('workspace_id', $this->workspaceId())->whereIn('id', $ids)->pluck('code', 'id')->all();
+        }
+        if ($kind === 'members') {
+            foreach (array_chunk(array_map(fn ($row) => $row->user_id, $rows), 100) as $ids) {
+                $this->users += User::whereIn('id', $ids)->get(['id', 'name', 'email'])->keyBy('id')->all();
+            }
+        }
+    }
+
+    /** 批次讀指定子集合參照，回傳ID對照，不增加內容或資格快取。
+     *
+     * @param  string  $kind  實體種類
+     * @param  array<int>  $ids  明確參照的內部主鍵
+     * @return array<int, string>
+     */
+    public function publicIds(string $kind, array $ids): array
+    {
+        $this->primeIdentities($kind, $ids, true);
+        $result = [];
+        foreach ($ids as $id) {
+            $result[$id] = $this->publicId($kind, $id);
         }
 
-        return $this->identities[$kind];
+        return $result;
     }
 
     /**
@@ -264,7 +323,9 @@ class RelationalRecords
             return '';
         }
 
-        return (string) ($this->identities($kind)[$id] ?? throw new \RuntimeException('關聯資料不存在'));
+        $this->primeIdentities($kind, [$id], true);
+
+        return (string) ($this->identities[$kind][$id] ?? throw new \RuntimeException('關聯資料不存在'));
     }
 
     /** 由公開ID查詢同租戶內部主鍵。
@@ -274,7 +335,8 @@ class RelationalRecords
      */
     public function internalId(string $kind, string $id): int
     {
-        $key = array_search($id, $this->identities($kind), true);
+        $this->primeIdentities($kind, [$id], false);
+        $key = array_search($id, $this->identities[$kind] ?? [], true);
         if ($key === false) {
             DomainError::fail('INVALID_INPUT', '關聯資料不存在或不屬於目前工作空間');
         }
@@ -291,10 +353,6 @@ class RelationalRecords
     {
         $value = ['id' => $row->{$this->publicColumn($kind)}];
         if ($kind === 'members') {
-            if (! $this->users) {
-                $ids = $this->query('members')->pluck('user_id');
-                $this->users = User::whereIn('id', $ids)->get()->keyBy('id')->all();
-            }
             $user = $this->users[$row->user_id];
             $value += [
                 'name' => $user->name,
@@ -312,12 +370,9 @@ class RelationalRecords
                 }
                 $value[$field] = $this->publicId($reference, $raw);
             } elseif ($type === 'workspace_ref') {
-                $value[$field] = Workspace::findOrFail($row->workspace_id)->public_id;
+                $value[$field] = $this->publicId('workspaces', $row->workspace_id);
             } elseif ($type === 'state') {
-                if (! isset($this->identities['states'])) {
-                    $this->identities['states'] = DB::table('project_statuses')->where('workspace_id', $row->workspace_id)->pluck('code', 'id')->all();
-                }
-                $value[$field] = $this->identities['states'][$raw];
+                $value[$field] = $this->states[$raw];
             } elseif ($type === 'time' && $raw === null && ! in_array($field, ['completedAt', 'returnedAt', 'removedAt', 'readAt', 'consumedAt'], true)) {
                 continue;
             } elseif ($type === 'time') {
@@ -353,51 +408,70 @@ class RelationalRecords
      */
     public function put(string $kind, string $id, array $value): void
     {
-        DB::transaction(function () use ($kind, $id, $value) {
+        try {
+            DB::transaction(function () use ($kind, $id, $value) {
+                $this->identities = [];
+                $this->users = [];
+                $definition = EntityDefinitions::ENTITIES[$kind];
+                $attributes = [];
+                if ($kind !== 'workspaces') {
+                    $workspace = $definition['scope'] === 'global' ? $value['workspaceId'] ?? $id : $this->workspacePublicId;
+                    $attributes['workspace_id'] = ($workspace === $this->workspacePublicId ? $this->workspaceId() : Workspace::where('public_id', $workspace)->value('id'))
+                        ?? throw new \RuntimeException('工作空間不存在');
+                }
+                if ($kind === 'projectAcls') {
+                    $value['projectId'] = $id;
+                }
+                $handled = ['id', ...match ($kind) {
+                    'projects' => ['statuses', 'settingsHistory', 'detailsHistory'],
+                    'issues' => ['comments', 'relatedIssueIds', 'history'],
+                    'boards' => ['selectedIssueIds', 'isDefault'],
+                    'timeEntries', 'todos', 'projectAcls' => ['history'],
+                    default => [],
+                }];
+                if ($kind === 'members') {
+                    $handled = [...$handled, 'name', 'email'];
+                }
+                $references = [];
+                foreach ($this->fields($kind) as [$field, $column, $type, $default, $reference]) {
+                    if ($type === 'ref') {
+                        $references[$reference][] = $value[$field] ?? $default;
+                    }
+                }
+                if (in_array($kind, ['issues', 'boards'], true)) {
+                    $references['issues'] = [...($references['issues'] ?? []), ...($value[$kind === 'issues' ? 'relatedIssueIds' : 'selectedIssueIds'] ?? [])];
+                }
+                foreach ($references as $reference => $ids) {
+                    $this->primeIdentities($reference, $ids, false);
+                }
+                foreach ($this->fields($kind) as [$field, $column, $type, $default, $reference]) {
+                    $handled[] = $field;
+                    $raw = $value[$field] ?? $default;
+                    if ($type === 'ref') {
+                        $attributes[$column] = $raw === '' || $raw === null ? null : $this->internalId($reference, $raw);
+                    } elseif ($type === 'state') {
+                        $attributes[$column] = DB::table('project_statuses')->where('project_id', $attributes['project_id'])->where('code', $raw)->value('id') ?? throw new \RuntimeException('任務狀態不存在');
+                    } elseif ($type === 'time') {
+                        $attributes[$column] = DatabaseTimes::store($raw === '' ? null : $raw);
+                    } elseif ($type === 'workspace_ref') {
+                        // 全球邀請的Workspace外鍵已由受信任ID設定。
+                        continue;
+                    } else {
+                        $attributes[$column] = $raw === '' && in_array($type, ['time', 'date'], true) ? null : $raw;
+                    }
+                }
+                if ($kind === 'issues' && ! $this->query($kind)->where('public_id', $id)->exists()) {
+                    $attributes['storage_position'] = (int) $this->query($kind)->max('storage_position') + 1;
+                }
+                $attributes['legacy_attributes'] = array_diff_key($value, array_flip($handled));
+                $row = $this->query($kind)->updateOrCreate([$this->publicColumn($kind) => $id], $attributes);
+                $this->identities[$kind][$row->id] = $row->{$this->publicColumn($kind)};
+                $this->children->write($kind, $row, $value, $this);
+            });
+        } finally {
             $this->identities = [];
             $this->users = [];
-            $definition = EntityDefinitions::ENTITIES[$kind];
-            $attributes = [];
-            if ($kind !== 'workspaces') {
-                $workspace = $definition['scope'] === 'global' ? $value['workspaceId'] ?? $id : $this->workspacePublicId;
-                $attributes['workspace_id'] = Workspace::where('public_id', $workspace)->value('id') ?? throw new \RuntimeException('工作空間不存在');
-            }
-            if ($kind === 'projectAcls') {
-                $value['projectId'] = $id;
-            }
-            $handled = ['id', ...match ($kind) {
-                'projects' => ['statuses', 'settingsHistory', 'detailsHistory'],
-                'issues' => ['comments', 'relatedIssueIds', 'history'],
-                'boards' => ['selectedIssueIds', 'isDefault'],
-                'timeEntries', 'todos', 'projectAcls' => ['history'],
-                default => [],
-            }];
-            if ($kind === 'members') {
-                $handled = [...$handled, 'name', 'email'];
-            }
-            foreach ($this->fields($kind) as [$field, $column, $type, $default, $reference]) {
-                $handled[] = $field;
-                $raw = $value[$field] ?? $default;
-                if ($type === 'ref') {
-                    $attributes[$column] = $raw === '' || $raw === null ? null : $this->internalId($reference, $raw);
-                } elseif ($type === 'state') {
-                    $attributes[$column] = DB::table('project_statuses')->where('project_id', $attributes['project_id'])->where('code', $raw)->value('id') ?? throw new \RuntimeException('任務狀態不存在');
-                } elseif ($type === 'time') {
-                    $attributes[$column] = DatabaseTimes::store($raw === '' ? null : $raw);
-                } elseif ($type === 'workspace_ref') {
-                    // 全球邀請的Workspace外鍵已由受信任ID設定。
-                    continue;
-                } else {
-                    $attributes[$column] = $raw === '' && in_array($type, ['time', 'date'], true) ? null : $raw;
-                }
-            }
-            if ($kind === 'issues' && ! $this->query($kind)->where('public_id', $id)->exists()) {
-                $attributes['storage_position'] = (int) $this->query($kind)->max('storage_position') + 1;
-            }
-            $attributes['legacy_attributes'] = array_diff_key($value, array_flip($handled));
-            $row = $this->query($kind)->updateOrCreate([$this->publicColumn($kind) => $id], $attributes);
-            $this->identities = [];
-            $this->children->write($kind, $row, $value, $this);
-        });
+            $this->states = [];
+        }
     }
 }

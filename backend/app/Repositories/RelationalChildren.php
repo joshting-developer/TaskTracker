@@ -34,6 +34,28 @@ class RelationalChildren
         $this->rows['audit_events'] = DB::table('audit_events')->where('entity_type', $kind)->whereIn('entity_id', $ids)->orderBy('position')->get()->groupBy('entity_id')->all();
     }
 
+    /** 收集當次預載子集合的必要Issue外鍵，供序列化前分批解析。
+     *
+     * @param  string  $kind  實體種類
+     * @return array<int> 只含已預載父列的卡片主鍵
+     */
+    public function issueReferenceIds(string $kind): array
+    {
+        [$table, $column] = match ($kind) {
+            'issues' => ['issue_relations', 'related_issue_id'],
+            'boards' => ['board_issues', 'issue_id'],
+            default => ['', ''],
+        };
+        $ids = [];
+        foreach ($this->rows[$table] ?? [] as $rows) {
+            foreach ($rows as $row) {
+                $ids[] = $row->{$column};
+            }
+        }
+
+        return array_values(array_unique($ids));
+    }
+
     /** 將已批次取得的子表還原成既有DTO集合。
      * @param  string  $kind  實體種類
      * @param  object  $row  主表紀錄
@@ -52,7 +74,8 @@ class RelationalChildren
             $result['settingsHistory'] = [];
         }
         if ($kind === 'issues') {
-            $result['relatedIssueIds'] = array_map(fn ($edge) => $records->publicId('issues', $edge->related_issue_id), $this->items('issue_relations', $row->id));
+            $ids = array_map(fn ($edge) => $edge->related_issue_id, $this->items('issue_relations', $row->id));
+            $result['relatedIssueIds'] = array_values($records->publicIds('issues', $ids));
             $result['comments'] = array_map(fn ($comment) => [
                 'id' => $comment->public_id,
                 'content' => $comment->content,
@@ -62,7 +85,8 @@ class RelationalChildren
             $result['history'] = [];
         }
         if ($kind === 'boards') {
-            $result['selectedIssueIds'] = array_map(fn ($item) => $records->publicId('issues', $item->issue_id), $this->items('board_issues', $row->id));
+            $ids = array_map(fn ($item) => $item->issue_id, $this->items('board_issues', $row->id));
+            $result['selectedIssueIds'] = array_values($records->publicIds('issues', $ids));
             $result['isDefault'] = false;
         }
         if (in_array($kind, ['timeEntries', 'todos', 'projectAcls'], true)) {

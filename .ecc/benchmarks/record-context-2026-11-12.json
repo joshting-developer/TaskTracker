@@ -1,0 +1,26 @@
+{
+  "card": "TT-225",
+  "date": "2026-11-12",
+  "environment": "Isolated tasktracker-perf-test / MySQL 8.4 / tasktracker_test, warm DB; single synthetic Store sequence, no real workspace data",
+  "workload": "8 repeated reads of one Issue, one Project, one assignee, one related peer plus 80 unrelated Issues",
+  "samplesPerVersion": 1,
+  "before": {
+    "driver": "mysql",
+    "reads": 8,
+    "unrelatedIssues": 80,
+    "queries": 65,
+    "identityQueries": 24,
+    "sqlMs": 7.49,
+    "elapsedMs": 10.169
+  },
+  "after": {
+    "driver": "mysql",
+    "reads": 8,
+    "unrelatedIssues": 80,
+    "queries": 44,
+    "identityQueries": 3,
+    "sqlMs": 8.52,
+    "elapsedMs": 12.198
+  },
+  "limitations": "Counts and bounded reference projection are deterministic. Single SQL/elapsed timings vary and do not establish latency speedup, HTTP p95, RUM, or remote RTT savings."
+}
