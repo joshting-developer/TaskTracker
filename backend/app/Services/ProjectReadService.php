@@ -2,15 +2,16 @@
 
 namespace App\Services;
 
-use App\Data\WorkspaceContext;
 use App\Authorization\ProjectAccess;
 use App\Authorization\WorkspacePermissions;
 use App\Data\AuthorizedProjectData;
 use App\Data\PageQueryData;
 use App\Data\ProjectPageData;
+use App\Data\WorkspaceContext;
 use App\Domain\DomainError;
 use App\Factories\RecordStoreFactory;
 use App\Models\Project;
+use App\Models\ProjectStatus;
 use App\Repositories\ProjectMemberReadRepository;
 use App\Repositories\ProjectReadRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -175,6 +176,23 @@ class ProjectReadService
             'permissions' => $access->permissions($id), 'accessSource' => $access->source($id),
             // 成員選項改由獨立有界查詢提供，不在專案屬性附帶全員名單。
         ]];
+    }
+
+    /**
+     * 只取已授權Project的有界狀態候選，不載Project描述或其他設定。
+     *
+     * @param  WorkspaceContext  $context  交易內重驗的可信資格
+     * @param  string  $id  Project公開ID
+     * @return Collection<int,ProjectStatus> 設定排序的狀態
+     */
+    public function statuses(WorkspaceContext $context, string $id): Collection
+    {
+        $statuses = $this->projects->statuses($this->require($context, $id));
+        if ($statuses->count() > 20) {
+            DomainError::fail('CONFLICT', '既有狀態超過支援上限，請先整理狀態');
+        }
+
+        return $statuses;
     }
 
     /**

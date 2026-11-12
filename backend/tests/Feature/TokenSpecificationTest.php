@@ -19,7 +19,7 @@ class TokenSpecificationTest extends TestCase
         foreach ($spec['paths'] as $path => $methods) {
             foreach ($methods as $method => $operation) {
                 $operations[] = $operation['operationId'];
-                $route = $this->app['router']->getRoutes()->match(Request::create(str_replace('{token}', '1', $path), strtoupper($method)));
+                $route = $this->app['router']->getRoutes()->match(Request::create(str_replace(['{token}', '{project}', '{issue}'], '1', $path), strtoupper($method)));
                 $this->assertNotNull($route->getAction('controller'));
                 $this->assertArrayHasKey('200', $operation['responses']);
                 $this->assertArrayHasKey('401', $operation['responses']);
@@ -27,9 +27,9 @@ class TokenSpecificationTest extends TestCase
             }
         }
         $this->assertSame(count($operations), count(array_unique($operations)));
-        $this->assertSame(5, count($operations));
+        $this->assertSame(12, count($operations));
         $this->assertSame([['bearerPat' => []]], $spec['paths']['/api/public/v1/me']['get']['security']);
-        $this->assertCount(4, $spec['paths']);
+        $this->assertCount(11, $spec['paths']);
         $this->assertStringNotContainsString('plainTextToken', json_encode($spec['components']['schemas']['Token']));
     }
 }

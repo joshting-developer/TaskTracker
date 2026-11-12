@@ -6,12 +6,25 @@ use App\Data\PageQueryData;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\ProjectMember;
+use App\Models\ProjectStatus;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
 /** 專案讀取投影；呼叫者提供已驗證工作區與有效公開ID集合。 */
 class ProjectReadRepository
 {
+    /**
+     * 已授權Project只讀狀態欄位；多取一筆偵測歷史超限，不靜默截斷。
+     *
+     * @param  Project  $project  已通過權限檢查的Project參照
+     * @return Collection<int,ProjectStatus> 至多21筆狀態，不查描述／成員／卡片
+     */
+    public function statuses(Project $project): Collection
+    {
+        return ProjectStatus::where('workspace_id', $project->workspace_id)->where('project_id', $project->id)
+            ->orderBy('position')->orderBy('id')->limit(21)->get(['code', 'label', 'color']);
+    }
+
     /** 只供當次授權組合使用，不載入專案內容或歷史。
      * @return Collection<int, Project>
      */

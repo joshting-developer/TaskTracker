@@ -18,7 +18,7 @@ try {
   const csrfMissing = await page.request.post('http://127.0.0.1:5175/api/v1/personal-tokens', { data: {}, headers: { Accept: 'application/json' } });
   assert.equal(csrfMissing.status(), 419);
   const spec = await page.evaluate(async () => (await (await fetch('/api/public/openapi.json')).json()));
-  assert.equal(spec.openapi, '3.1.0'); assert.equal(Object.keys(spec.paths).length, 4);
+  assert.equal(spec.openapi, '3.1.0'); assert.equal(Object.keys(spec.paths).length, 11);
   await page.reload();
   async function open() {
     await page.getByRole('button', { name: '帳號選單', exact: true }).click();

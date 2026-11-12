@@ -1,3 +1,16 @@
+## 2026-11-12 TT-168 驗證完成
+
+- 已交付7個公開Bearer只讀端點，既有身分加總8個公開GET；正式規格11paths／12operations，版0.3.0。共用既有Service／Resource，不複製授權與SQL；狀態新增最小有界資料投影。
+- memory完整124通過／45原生類略過5463assertions；MySQL相關10通過337assertions。最終受影響跨引擎＋規格19通過950assertions，涵蓋狀態超限409、SQL列表不讀描述／活動／工時、狀態不讀Project描述、無Session與資格撤銷。
+- 只用標準HTTP與私有環境PAT的Python範例通過：Project列表／詳細、成員／狀態、卡號精準定位、最新revision2、詳細與留言。未匯入App原始碼，測後撤銷Token。既有Chrome PAT流程／三尺寸、Pint與官方OpenAPI結構通過。
+- 本機載入新版公開JSON／Markdown，無migration／seed／reset主庫；公開寫入仍TT-169，CI／完整文件站／全流程驗收仍TT-252～254，不推送遠端。
+
+## 2026-11-12 TT-168 開始
+
+- Codex領取公開只讀API，沿BearerTokenSession.read與現有ProjectReadService／IssueReadService及Resource，不複製授權或資料存取。
+- 公開Project列表／詳細、成員選項、狀態、Issue列表／詳細／留言；SQL分頁20預設100上限、identifier精準定位、單卡最新revision、活動分開讀取。不增加寫入或前端輪詢。
+- 同卡更新OpenAPI／匿名Markdown／範例，隔離memory＋MySQL及獨立HTTP驗證不同Project／Workspace／撤權、無Cookie與讀取範圍，保留TT-169寫入及TT-254最終建卡驗收。
+
 ## 2026-11-12 TT-167 驗證完成
 
 - 正式OpenAPI3.1規格版0.2.0與匿名Markdown契約已交付，僅列實作5操作；另交接TT-168／169的REST目標，不提前放入正式spec。

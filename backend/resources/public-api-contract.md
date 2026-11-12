@@ -1,14 +1,21 @@
 # TaskTracker HTTP API 契約 v1
 
-規格版號：0.2.0；更新：2026-11-12。正式機器契約：[OpenAPI](./openapi.json)。本文是版本／使用規則，OpenAPI是唯一端點及Schema來源；不另維護一份規格。本文與規格可匿名取得，不代表業務資料可匿名存取。
+規格版號：0.3.0；更新：2026-11-12。正式機器契約：[OpenAPI](./openapi.json)。本文是版本／使用規則，OpenAPI是唯一端點及Schema來源；不另維護一份規格。本文與規格可匿名取得，不代表業務資料可匿名存取。
 
 ## 已開放能力與入口
 
-Base URL是你實際部署TaskTracker的origin。公開Bearer前綴為`/api/public/v1`，目前**只有GET /me**。不要以PAT呼叫Session RPC。公開專案、卡片、留言讀寫尚未交付；不提供刪除、MCP或工具專屬介面。
+Base URL是你實際部署TaskTracker的origin。公開Bearer前綴為`/api/public/v1`，目前提供身分、可見專案／成員／狀態、任務摘要／單卡詳細及留言查詢。不要以PAT呼叫Session RPC。公開寫入尚未交付；不提供刪除、MCP或工具專屬介面。
 
 | Method／path | 認證／用途 | 限流 |
 | --- | --- | --- |
 | GET /api/public/v1/me | Bearer PAT；固定Token Workspace的本人識別及能力 | 每client IP 120次／60秒 |
+| GET /api/public/v1/projects | Bearer；可見Project摘要分頁 | 公開v1共用IP配額 |
+| GET /api/public/v1/projects/{project} | Bearer；Project詳細、狀態及本人有效permissions | 同上 |
+| GET /api/public/v1/projects/{project}/members | Bearer；有效成員id／name候選分頁，不帶email | 同上 |
+| GET /api/public/v1/projects/{project}/statuses | Bearer；排序的狀態id／label／color，設定上限20 | 同上 |
+| GET /api/public/v1/projects/{project}/issues | Bearer；SQL篩選的任務摘要分頁，identifier可精準查卡號 | 同上 |
+| GET /api/public/v1/projects/{project}/issues/{issue} | Bearer；單卡詳細／revision與有限關聯，無活動全集 | 同上 |
+| GET /api/public/v1/projects/{project}/issues/{issue}/comments | Bearer；該卡留言分頁 | 同上 |
 | GET /api/v1/personal-tokens | Session；本人目前Workspace憑證metadata | 本版未設路由限流 |
 | POST /api/v1/personal-tokens | Session／CSRF；建立憑證、一次顯示原文 | 每使用者20次／60秒，未登入以IP計 |
 | POST /api/v1/personal-tokens/{token}/revoke | Session／CSRF；撤銷自己的憑證 | 每使用者60次／60秒，未登入以IP計 |
@@ -46,9 +53,19 @@ Session管理沿用網頁登入與CSRF機制；變更操作需符合Laravel可�
 
 Token與來源清單只讀本人目前Session Workspace，固定每頁20筆、id倒序。page為1～1000000整數，預設1，不接受perPage。**Token清單超出範圍回最後一頁；來源清單超出範圍回空items**。data包含items/page/perPage/total/lastPage。COUNT／OFFSET仍會隨資料量成長，沒有固定延遲承諾；不需要定期刷新清單。Token建立需最多50000 bytes的JSON物件，未知欄位忽略且不授予任何權限。
 
+## 公開查詢的範圍與篩選
+
+Project／成員／Issue／留言分頁皆為page（預設1，上限1000000）、perPage（預設20，上限100）；超出最後頁回空items。Project與成員可search（最長200字），SQL處理字面%／_。Project依updatedAt降序、id穩定排序；成員依user ID；留言依建立順序與穩定id。狀態依Project設定排序，自訂type不可硬編成固定enum；open／closed必備。
+
+Issue列表接受identifier（精準卡號，上限100）、state[]=open&state[]=closed（最多30項，每項40字）、priority（urgent/high/normal/low）、type（epic/task/bug）、assignee（User ID）、epicId（Epic ID或unlinked）、scope（all/mine）、condition（overdue/unassigned）、sort（updated/priority/due）。欄位缺省不篩選，sort預設updated；同排序值用穩定ID決勝。條件在SQL執行，不先載入Workspace。未知query忽略，不會改變可信使用者／工作區。
+
+identifier查詢仍是摘要列表；得到Issue ID後再GET詳細取得最新revision。詳細提供description、epicId、parentIssueId、relatedIssueIds與references；最多200個關聯，超限409 CONFLICT而非靜默截斷。references最多包含兩個上層參照與200關聯。estimateMinutes在Epic為所屬卡估時加總；spentMinutes僅具工時讀取資格時回傳。列表不回描述／關聯／活動或工時。留言獨立分頁，不在詳細附完整comments／history。
+
+公開Project回傳本人的有效permission，這不是承諾Token可做所有permission：仍要和read／write交集。成員候選含擁有全專案可見權限者及有效Project成員，只回id/name。Session管理讀者與Token讀者共用相同Service／Resource；本版沒有公開寫入、歷史或工時明細端點。
+
 ## 限流與重試
 
-上表每個受限操作各自計數，不與其他操作共用配額。公開v1目前依client IP計數，因此同IP多個工具會共享120次；Token管理依登入使用者計數，不依Token原文作cache key。失敗請求也可能消耗配額，429可先於認證錯誤發生。反向代理必須正確設可信代理，不能信任任意X-Forwarded-For偽造IP。
+Session建立／撤銷各自計數；公開v1所有讀取操作共用client IP配額，因此同IP多個工具與不同公開查詢合計共享120次／60秒；Token管理依登入使用者計數，不依Token原文作cache key。失敗請求也可能消耗配額，429可先於認證錯誤發生。反向代理必須正確設可信代理，不能信任任意X-Forwarded-For偽造IP。
 
 受限操作的成功回應提供X-RateLimit-Limit與X-RateLimit-Remaining；429另提供Retry-After（秒）及X-RateLimit-Reset（Unix秒），保留JSON錯誤envelope。其他失敗不保證帶剩餘配額Header；沒有公開負載／可用性SLA。不要以併發或換Token規避限流。
 
@@ -75,3 +92,17 @@ curl --fail-with-body -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
 ```
 
 OpenAPI中的Token字串是明確的假值，不可登入使用。規格與本文不內嵌真實帳號、Cookie、內部主機或PAT。
+
+查詢範例（先用Project列表取得PROJECT_ID，再用卡號精準定位）：
+
+```sh
+curl --fail-with-body -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
+  "$BASE_URL/api/public/v1/projects?perPage=20"
+curl --fail-with-body --get -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
+  --data-urlencode "identifier=$ISSUE_IDENTIFIER" \
+  "$BASE_URL/api/public/v1/projects/$PROJECT_ID/issues"
+curl --fail-with-body -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
+  "$BASE_URL/api/public/v1/projects/$PROJECT_ID/issues/$ISSUE_ID"
+curl --fail-with-body -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
+  "$BASE_URL/api/public/v1/projects/$PROJECT_ID/issues/$ISSUE_ID/comments?perPage=20"
+```
