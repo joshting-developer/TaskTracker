@@ -1,0 +1,49 @@
+{
+  "date": "2026-11-13",
+  "card": "TT-268",
+  "scope": "Fresh read-only host sessions; explicit file-read smoke, not automatic skill discovery or four-case selection acceptance",
+  "codex": {
+    "commands": [
+      {
+        "command": "/opt/homebrew/bin/zsh -lc 'pwd; cat AGENTS.md; cat /Users/josh/workspace/side-project/skills/PROJECT-BASELINE.md; cat /Users/josh/workspace/side-project/skills/registry.json'",
+        "exitCode": 0
+      },
+      {
+        "command": "/opt/homebrew/bin/zsh -lc 'realpath /Users/josh/workspace/side-project/skills/01-common/ponytail/SKILL.md; cat /Users/josh/workspace/side-project/skills/01-common/ponytail/SKILL.md'",
+        "exitCode": 0
+      }
+    ],
+    "readSmokePassed": true,
+    "configuredLevel": "lite",
+    "canonicalPonytail": "/Users/josh/workspace/side-project/skills/01-common/vendor/ponytail/skills/ponytail/SKILL.md",
+    "rawLocalTraceSha256": "a02d23e802deaf48fd6d38f85035f1ab0280332a4fe9fd5d63aabc311453fbac"
+  },
+  "claude": {
+    "fileReads": [
+      {
+        "path": "/Users/josh/Projects/workspace/SideProjects/TaskTracker/AGENTS.md",
+        "success": true,
+        "returnedCharacters": 3154
+      },
+      {
+        "path": "/Users/josh/workspace/side-project/skills/PROJECT-BASELINE.md",
+        "success": true,
+        "returnedCharacters": 1502
+      },
+      {
+        "path": "/Users/josh/workspace/side-project/skills/registry.json",
+        "success": true,
+        "returnedCharacters": 2423
+      },
+      {
+        "path": "/Users/josh/workspace/side-project/skills/01-common/ponytail/SKILL.md",
+        "success": true,
+        "returnedCharacters": 3646
+      }
+    ],
+    "readSmokePassed": true,
+    "sessionFinishedNormally": false,
+    "limitation": "Read tools succeeded; final model report stopped by 5-hour quota, resets 01:10 Asia/Taipei. Four-case selection not accepted.",
+    "rawLocalTraceSha256": "2b872dc00cb3fa6b171f3876b530069a34d2abb32c297f9d2de7f4bc4c69159d"
+  }
+}

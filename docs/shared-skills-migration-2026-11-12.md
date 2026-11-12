@@ -40,3 +40,9 @@ CLAUDE／frontend及backend入口只指向現行AGENTS與共用庫，不複製�
 尚未完成：Codex與Claude全新工作階段的讀取證據（現有工具清單更新不是證明）、TT-269完整觸發矩陣與四類案例、TT-270核准視覺baseline及TT-271獨立驗收。Claude CLI目前不在PATH；本輪不擅自安裝host或宣稱已驗證。TT-268雖已完成可獨立提交的搬移階段，整卡仍保留進行中直到原驗收條件補齊，不將Epic假結案。
 
 共用庫階段commit：`53bb5a4`。上游原文匯入仍含其既有尾端空白，為保持原始hash未重排；自有規範／工具／索引的staged diff空白檢查通過。
+
+## 2026-11-13 TT-268宿主可讀性補驗
+
+Codex與既有VSCode Claude native binary各啟動全新、唯讀、不持久化session，停用hook／MCP或使用ignore-user-config。兩者實際讀根AGENTS、共用baseline、registry與Ponytail；Claude四次Read全部成功。Codex亦驗canonical與lite優先順序。這是明確引用的可讀性，不宣稱宿主自動發現。
+
+Claude讀完後觸及額度限制，最終報告沒有完成，因此不能用這次結果聲稱TT-269四案例已通過；可讀性仍由實際成功tool_result證明。[去敏證據](evidence/skill-host-read-2026-11-13.json)記命令／路徑／結果與本地原始trace hash，完整原始trace留忽略artifacts。TT-268原可讀性驗收已滿足，後續四案例與視覺由269／270續辦。

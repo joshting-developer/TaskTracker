@@ -1,3 +1,15 @@
+## 2026-11-13 TT-268可讀性收尾
+
+- Codex新session兩次命令exit0，Claude擴充套件native binary新session四次Read成功，實際讀AGENTS／baseline／registry／Ponytail，無Memory／私有設定／業務操作。來源、14入口、379hash、358vendor及2項負向工具測試重驗通過。
+- Claude最終報告受5-hour quota限制（訊息01:10台北恢復），不宣稱四案例選用已驗；268只驗明確引用可讀，已具tool_result證據可結案。提交後closed再claim269；另繼續可獨立完成的矩陣／視覺工具，不以額度缺口假PASS。
+
+## 2026-11-13 結構優化看板收尾計畫
+
+- 使用共用工程／驗證、Ponytail lite及task-tracker-usage；實際路徑由.agents連結解析至Side Project共用庫。先補TT-268兩個全新host唯讀session；Claude使用現有VSCode native binary，不安裝全域工具／hook。
+- 再按卡片claim269，建立唯一機器矩陣／diff＋tag門檻，四類任務各用Codex與Claude新session驗選擇／實際讀取；缺host證據不能假PASS。
+- TT-270沿既有Playwright與隔離Laravel建三尺寸候選與比較／退化注入，準備具體review bundle，核准baseline前不洗成PASS。TT-271第二輪驗收後才關Epic；有實質進度持續回填，逐卡提交。
+- 不改產品UI／業務、不碰主庫、不自動push；共用與產品repo分別提交，保持AGENTS規範／Memory記憶分工。
+
 ## 2026-11-12 TT-268共用搬移／Memory階段
 
 - 全12份原Skill搬共用分類庫，泛化工程／Laravel；加既有TaskTracker使用及固定Ponytail共14份，原路徑改symlink。358原vendor hash一致，379完整公開檔案hash／引用／12啟用入口通過，2項隔離工具負向測試通過。
