@@ -3,6 +3,7 @@
 use App\Http\Controllers\Integrations\ApiSpecificationController;
 use App\Http\Controllers\Integrations\DeveloperDocumentationController;
 use App\Http\Controllers\Integrations\PersonalTokensController;
+use App\Http\Controllers\Integrations\PublicIssueExternalController;
 use App\Http\Controllers\Integrations\PublicIssuesController;
 use App\Http\Controllers\Integrations\PublicQueriesController;
 use App\Http\Controllers\Integrations\TokenIdentityController;
@@ -38,6 +39,7 @@ Route::prefix('/api/public/v1')->middleware('throttle:public-api-v1')->withoutMi
     Route::get('/projects/{project}/issue-changes', [$queries, 'changes']);
     Route::get('/projects/{project}/issues/{issue}', [$queries, 'issue']);
     Route::get('/projects/{project}/issues/{issue}/comments', [$queries, 'comments']);
+    Route::get('/projects/{project}/issues/external/{source}/{externalId}', [PublicIssueExternalController::class, 'show']);
 });
 
 Route::prefix('/api/public/v1/projects/{project}/issues')->middleware('throttle:public-api-v1')->withoutMiddleware([
@@ -47,6 +49,7 @@ Route::prefix('/api/public/v1/projects/{project}/issues')->middleware('throttle:
     Route::post('/', [$writes, 'execute'])->name('public.issues.create');
     Route::patch('/{issue}', [$writes, 'execute'])->name('public.issues.update');
     Route::post('/{issue}/comments', [$writes, 'execute'])->name('public.issues.comment');
+    Route::put('/external/{source}/{externalId}', [PublicIssueExternalController::class, 'upsert'])->name('public.issues.upsert');
 });
 
 Route::prefix('/api/public/docs')->withoutMiddleware([

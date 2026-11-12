@@ -160,6 +160,7 @@ class RelationalStorageTest extends TestCase
         $this->seedWorkspace();
         $before = $this->snapshot();
         $migration = require database_path('migrations/2026_11_04_000000_create_relational_business_tables.php');
+        Schema::dropIfExists('issue_external_refs'); // 後續migration的FK表；正常rollback會先撤它
         $migration->down();
         $this->assertFalse(Schema::hasTable('issues'));
         // 舊重試payload沒有id，真正識別碼位於records.id。
@@ -195,6 +196,7 @@ class RelationalStorageTest extends TestCase
     {
         $this->seedWorkspace();
         $migration = require database_path('migrations/2026_11_04_000000_create_relational_business_tables.php');
+        Schema::dropIfExists('issue_external_refs'); // 後續migration的FK表；正常rollback會先撤它
         $migration->down();
         $archive = (new LegacyRecordStore)->forWorkspace(DemoSeeder::WORKSPACE_ID);
         $issue = $archive->all('issues')[1];

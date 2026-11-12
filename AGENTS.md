@@ -257,3 +257,7 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 ### 2026-11-12 嚴格分層與建構子DI（TT-262）
 
 使用者確認後端採嚴格Controller → Service → Repository，含簡單CRUD；Controller穩定協作者與Service的Repository皆由建構子注入。正式責任／例外維護於[Laravel Architecture嚴格分層](skills/laravel-architecture/references/strict-layering.md)及[DI reference](skills/tasktracker-development-standards/references/dependency-injection.md)，取代舊HTTP寬泛方法注入及簡單CRUD直用Eloquent例外。既有程式尚待TT-262遷移，本輪只盤點建卡與skill更新，不視為程式重構完成；TT-262保持open未指派，AI/API仍暫停。
+
+### 2026-11-12 TT-171 外部識別upsert
+
+公開v1新增Project範圍外部識別GET／PUT `issues/external/{source}/{externalId}`，OpenAPI0.6.0。獨立issue_external_refs表（同Project唯一、區分大小寫），已綁定卡片upsert必須帶expectedRevision（使用者確認）；requestId仍只做冪等。共用writeOnce／executePublicIssue，新Controller→Service→Repository建構子注入。批次與同步語意續TT-172／173，見docs/public-external-ids.md。

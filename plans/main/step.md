@@ -1545,3 +1545,11 @@ AGENTS.md 加入持續同步規則與入口。相對連結、換行與 git diff 
 - [x] claude帳號領卡；隔離API（13029）＋真實Chrome重現Target crashed，最小HTML確認為focusout同步關閉details所致。
 - [x] 修正IssueFilters.vue關閉邏輯；新增回歸檢查，修正前失敗／修正後headless、headed通過；npm run build通過。
 - [ ] 限制：完整browser-check因共用隔離庫已有固定josh@example.test帳號，在註冊步驟即停止，未重置他人使用中的隔離庫；已人工核對其狀態篩選步驟與新關閉行為相容。
+
+## 2026-11-12 TT-171 外部識別與upsert（Claude）
+
+- [x] 使用者改派：TT-262／246交Codex（已釋出），Claude做AI整合/API；建立TT-263給Josh的白話備忘。
+- [x] 設計確認：已綁定時upsert必須帶expectedRevision；主庫先備份再migrate。
+- [x] 實作issue_external_refs、Repository／Service／Controller／Request，OpenAPI0.6.0與契約／Agent指南。
+- [x] 隔離MySQL完整203通過、官方OpenAPI結構檢查通過。
+- [x] 契約CI完整通過（Chrome路徑）；主庫備份（私有.local）→migrate只新增空表、35表筆數一致；重建backend／queue／websocket，主站OpenAPI0.6.0。

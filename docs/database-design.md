@@ -2,6 +2,8 @@
 
 ## 2026-11-12 操作來源資料表（TT-166）
 
+2026-11-12 TT-171新增issue_external_refs：Project範圍外部識別(source, external_id)唯一、MySQL utf8mb4_bin區分大小寫，卡片／Project刪除時連帶刪除綁定；不改issues表。見[外部識別](public-external-ids.md)。
+
 新增integration_audits，同交易記成功寫入的User／Token識別、名稱及能力快照、固定operation與resource識別；沒有內容／秘密／IP。Workspace FK與本人工作區分頁索引保留隔離；User／Token以識別快照避免刪除歷史來源。只新增表，不回填既有卡片歷史，無清理TTL。見[來源契約](token-authorization-and-audit.md)。
 
 

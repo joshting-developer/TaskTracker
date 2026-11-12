@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -115,6 +116,7 @@ class TodoTest extends TestCase
         $markdown = require database_path('migrations/2026_11_05_000000_add_todo_markdown_content.php');
         $relational = require database_path('migrations/2026_11_04_000000_create_relational_business_tables.php');
         $markdown->down();
+        Schema::dropIfExists('issue_external_refs'); // 後續migration的FK表；正常rollback會先撤它
         $relational->down();
         $relational->up();
         $markdown->up();
