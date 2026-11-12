@@ -14,7 +14,8 @@ try {
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   page.setDefaultTimeout(20000);
-  const errors = [], calls = [];
+  const errors = [], calls = [], confirmations = [];
+  page.on('dialog', async dialog => { confirmations.push(dialog.message()); await dialog.dismiss(); });
   page.on('pageerror', error => errors.push(error.message));
   page.on('request', request => { if (request.url().includes('/api/')) calls.push(new URL(request.url()).pathname); });
   const base = 'http://127.0.0.1:5175';
@@ -100,6 +101,8 @@ try {
   await last.press('F2');
   const editor = page.locator('.issue-dialog'); await editor.waitFor();
   await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
+  await editor.waitFor({ state: 'detached' });
+  assert.deepEqual(confirmations, [], '既有Epic開啟後未修改，關閉不應誤判為草稿');
   await page.getByLabel('看板泳道', { exact: true }).selectOption('epic');
   await page.waitForFunction(() => document.querySelectorAll('.board-lane').length >= 5);
   assert.equal(await page.locator('.issue-card').count(), 500);

@@ -1,3 +1,9 @@
+## 2026-11-12 TT-181 最長欄底卡補驗證
+
+- 評估提交後把底卡定位改為實際最大bottom，揭露Epic彙總估時初始化造成假dirty；首次補驗證失敗時本卡維持inprogress，未結案。
+- IssuePanel先正規化Epic寫入值再存草稿基準，保留真正修改時的確認。真實500卡F2開啟／不修改關閉不跳確認、抽屜卸載、泳道400→500、最長欄底卡三尺寸、DnD／搜尋／密度通過；production既有看板與composables亦通過。
+- 渲染CSS／v-memo仍全部撤回；TT-256保持open。以同卡另筆提交保留歷史，已讀取期間新增的AGENTS無AI署名規則。
+
 ## 2026-11-12 TT-181 500卡評估完成
 
 - 真實隔離MySQL／production Chrome，5 Epic＋495 Task、100筆HTTP共5頁、約1.2萬DOM，4x CPU交錯每組3次量layout／style／長任務／捲動／dragover。CSS局部收益在完整元件整合後反轉，v-memo無穩定收益，兩者已撤回，ProjectBoard保持原樣。

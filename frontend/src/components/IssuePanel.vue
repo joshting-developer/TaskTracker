@@ -46,6 +46,8 @@ function resetForm() {
     ...(props.todo ? { title: props.todo.title, description: props.todo.content ?? props.todo.note } : {}),
     ...(props.issue || {}), projectId: props.issue?.projectId || props.defaultProject || (props.todo ? '' : props.projects[0]?.id) || '',
   });
+  // 詳細DTO的Epic估時是彙總顯示值；編輯基準須先採寫入允許的值，避免初始化即誤判草稿。
+  if (form.type === 'epic') { form.epicId = ''; form.estimateMinutes = 0; form.parentIssueId = ''; }
   savedValues.value = JSON.stringify(values());
   error.value = '';
   conflict.value = false;
