@@ -167,8 +167,14 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 
 ## API-first平台邊界（2026-11-11）
 
-使用者已確認第三方走標準REST API＋個人PAT／Scope／撤銷與期限管理，沿用有效permission＋Workspace／Project及資源條件。Web與外部API共用Application Service、集中授權、交易與資料層；先盤點既有API，不複製第二套業務或無故另開服務，維持Session／CSRF與授權語意；RPC可依資料存取審查改版或退役，須同步呼叫端與測試。OpenAPI建議提供。TaskTracker暫不自建MCP、不製作Codex／Claude或其他工具專屬整合、不實作Agent編排工作流；這些由外部依API自行完成。通用來源稽核保留，Webhook為後續低優先候選。具體契約／技術實作另依當輪授權，見[API-first架構決策](docs/api-first-platform.md)。
+使用者已確認第三方走標準REST API＋個人PAT／Scope／撤銷與期限管理，沿用有效permission＋Workspace／Project及資源條件。Web與外部API共用Application Service、集中授權、交易與資料層；先盤點既有API，不複製第二套業務或無故另開服務，維持Session／CSRF與授權語意；RPC可依資料存取審查改版或退役，須同步呼叫端與測試。OpenAPI機器可讀規格與第三方使用文件為第三方整合階段必要交付，Swagger UI為建議介面。TaskTracker暫不自建MCP、不製作Codex／Claude或其他工具專屬整合、不實作Agent編排工作流；這些由外部依API自行完成。通用來源稽核保留，Webhook為後續低優先候選。具體契約／技術實作另依當輪授權，見[API-first架構決策](docs/api-first-platform.md)。
 
+
+### 第三方 API 文件與 Agent 整合驗收（2026-11-12）
+
+使用者已確認開發順序為**先完成效能與穩定性 → 再完成 PAT／公開 REST API／第三方可讀文件 → 之後才擴充功能**。處理第三方 API、PAT、OpenAPI、文件站、外部 Agent 整合或相關卡片時，**必須先讀 [第三方 API 文件與 AI Agent 整合指南規劃](docs/third-party-api-documentation-plan.md)**，並搭配[API-first 架構決策](docs/api-first-platform.md)及[分責查詢契約](docs/query-api-v1.md)；新 API 或既有 API 變更須同步正式機器契約、使用範例與測試，不把 API 寫完才補文件。
+
+對外需提供工具中立、機器可讀的 OpenAPI 與人類／Agent 可理解的認證、授權、分頁、revision／requestId、錯誤處理及工作流程說明。最終驗收為**不讀原始碼的獨立客戶端只憑公開文件與有效 PAT，即可查專案、建立／查詢／更新卡片與留言**；同時驗證撤權、跨 Workspace、版本衝突與冪等。公開文件不代表 ChatGPT 或其他 Agent 自動具有 API 呼叫能力；仍須外部整合入口及使用者授權。這是規劃目標，**目前尚未完成公開 PAT API、OpenAPI 文件站或 Agent 連接器**，不得假稱已可直接開卡。實作前依既有 TT-165～169／177 卡片查重與確認狀態，文件規劃提交不算功能結案。
 
 ## TaskTracker主題看板（2026-11-11）
 
