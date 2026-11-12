@@ -1,5 +1,10 @@
 # TaskTracker 開發指引
 
+## 2026-11-12 TT-252 開發者文件入口
+
+匿名 `/api/public/docs` 已提供快速開始、authentication／examples／agents／contract及.md原文、examples.py／examples.sh下載。內容／HTML共用Markdown來源，範例與下載同源；無Token表單／腳本／Cookie／業務DB查詢，不增常駐服務。正式OpenAPI0.4.1由Link與x-developer-documentation-url連入口。公開API異動同卡同步這些指南與範例；安全及驗證見[文件交付](docs/developer-documentation-delivery.md)。CI及獨立全流程驗收續TT-253／254。
+
+
 ## 2026-11-12 TT-169 公開寫入
 
 已提供Bearer write的POST Issue、PATCH部分更新與POST留言；expectedRevision／requestId、當下permission與同Workspace／Project資源條件生效。共用WorkspaceService.executePublicIssue／IssueService；Bearer writeOnce負責交易／鎖後重驗、receipt與首次來源，原結果重播不重複業務／通知／audit。HTTP與新receipt結果固定id/projectId/identifier/revision，不改舊Session契約／receipt。OpenAPI0.4.0（11paths／15operations）、匿名契約與[寫入文件](docs/public-write-api-v1.md)同步，後續文件站／CI／獨立全流程驗收仍TT-252～254。

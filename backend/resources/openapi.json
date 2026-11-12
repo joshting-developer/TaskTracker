@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker API",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "description": "公開Bearer v1讀取及Issue建立／PATCH／留言；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。"
   },
   "servers": [
@@ -5520,5 +5520,6 @@
       "description": "有界結果、版本與冪等保護，共用Web業務"
     }
   ],
-  "x-documentation-url": "/api/public/contract.md"
+  "x-documentation-url": "/api/public/contract.md",
+  "x-developer-documentation-url": "/api/public/docs"
 }

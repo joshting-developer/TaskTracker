@@ -23,7 +23,8 @@
     "test:workspaces": "node tools/workspace-switch-check.js",
     "test:tokens": "node tools/personal-tokens-check.js",
     "test:api": "node tools/api-client-check.js",
-    "test:bundle": "node tools/bundle-check.js"
+    "test:bundle": "node tools/bundle-check.js",
+    "test:docs": "node tools/developer-docs-check.js"
   },
   "dependencies": {
     "dompurify": "3.4.17",

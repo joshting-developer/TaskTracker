@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Integrations\ApiSpecificationController;
+use App\Http\Controllers\Integrations\DeveloperDocumentationController;
 use App\Http\Controllers\Integrations\PersonalTokensController;
 use App\Http\Controllers\Integrations\PublicIssuesController;
 use App\Http\Controllers\Integrations\PublicQueriesController;
@@ -45,4 +46,13 @@ Route::prefix('/api/public/v1/projects/{project}/issues')->middleware('throttle:
     Route::post('/', [$writes, 'execute'])->name('public.issues.create');
     Route::patch('/{issue}', [$writes, 'execute'])->name('public.issues.update');
     Route::post('/{issue}/comments', [$writes, 'execute'])->name('public.issues.comment');
+});
+
+Route::prefix('/api/public/docs')->withoutMiddleware([
+    StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class,
+])->group(function () {
+    $docs = DeveloperDocumentationController::class;
+    Route::get('/assets/styles.css', [$docs, 'styles']);
+    Route::get('/examples.{language}', [$docs, 'example'])->where('language', 'py|sh');
+    Route::get('/{page?}', [$docs, 'show']);
 });

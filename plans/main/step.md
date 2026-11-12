@@ -1,3 +1,16 @@
+## 2026-11-12 TT-252 驗證完成
+
+- 五頁匿名文件、Markdown原文、同源py／sh範例下載與唯一OpenAPI0.4.1發現連結完成。安全渲染固定slug、CSP無腳本／表單／Session，查業務DB為0。
+- 完整memory131通過／51原生類略過5806assertions；文件與契約8通過617assertions。真實Chrome五頁×三尺寸／鍵盤skip／無水平頁面溢出／Cookie皆通過，已看桌面及手機截圖，程式碼14px。
+- 兩種範例從公開URL下載後執行，各自完成身分／Project／狀態→建卡一次→卡號→最新詳細→PATCH closed→留言一次及重播，最終revision3。測完撤銷PAT並登出。
+- 本機載入同部署文件，無migration／seed／reset主庫，不推送；提交／回填後續接TT-253契約CI。各階段在TT-252已留言，無需重新猜測進度。
+
+## 2026-11-12 TT-252 開始
+
+- 接續3ff79e6已領文件入口；匿名/api/public/docs及authentication／examples／agents／contract，.md原文與可下載py／sh共用內容來源。Laravel同部署、無Session／PAT表單、無新常駐服務。
+- 沿品牌做文件閱讀版型：TaskTracker識別、5項導覽、單欄內容、程式碼／表格內捲動、手機折行、鍵盤skip與focus。UIUX本地搜尋確認keyboard／nav規則；非行銷hero，不造KPI／裝飾。
+- 安全Markdown轉HTML、固定slug allowlist、CSP無腳本、無Cookie／業務DB查詢；加入匿名頁面及瀏覽器三尺寸證據。完整curl／Python範例以隔離HTTP實跑，再提交／回填進度。
+
 ## 2026-11-12 TT-169 驗證完成
 
 - 公開POST Issue／PATCH／POST留言沿既有IssueService，writeOnce先資格與路徑資源重驗再讀RequestReplay；首次成功業務／來源／receipt同交易，重播無重複通知或audit。

@@ -12,7 +12,7 @@ class ApiSpecificationController extends Controller
     /** @return JsonResponse 專案單一來源的正式OpenAPI，不包含秘密或未開放端點。 */
     public function show(): JsonResponse
     {
-        return response()->json(json_decode(file_get_contents(resource_path('openapi.json')), true, flags: JSON_THROW_ON_ERROR));
+        return response()->json(json_decode(file_get_contents(resource_path('openapi.json')), true, flags: JSON_THROW_ON_ERROR))->header('Link', '</api/public/docs>; rel="describedby"');
     }
 
     /**

@@ -1,5 +1,10 @@
 # TaskTracker
 
+## 第三方開發者文件
+
+啟動後開啟 `/api/public/docs`（本機 http://127.0.0.1:5174/api/public/docs），可匿名閱讀認證、Agent指南與cURL／Python完整操作範例。頁面不收集PAT，機器規格仍為 `/api/public/openapi.json`；[文件交付](docs/developer-documentation-delivery.md)。
+
+
 ## 公開寫入API
 
 PAT write已可建立Issue、PATCH部分更新與留言，支援版本與相同請求重播；[公開寫入契約](docs/public-write-api-v1.md)。無刪除／封存。
