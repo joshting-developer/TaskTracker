@@ -1,3 +1,16 @@
+## 2026-11-12 TT-257 Agent分立與領卡
+
+- 使用者確認改用codex／claude獨立帳號；兩者Workspace user、TT Project maintainer。隨機密碼存忽略的.local各自私有檔，Owner本輪授權完成即登出。
+- 透過既有Session API清除65張open卡片指派；其他191張狀態、指派與revision保持不變，不刪共用帳號作者歷史。
+- 開工先指派自己再inprogress，CLI新增--agent／claim，避免搶領他人卡；維持驗證、卡號commit、留言、closed。TT-257以codex實際依此流程領取。
+- 驗證完成：兩帳號重新登入，Workspace user＋Project maintainer；65張open未指派、其他191張指派與revision逐卡保留；CLI 5項測試通過，真實重複claim不寫入。只調整本機帳號／工具與規範，沒有修改產品後端或部署。
+
+## 2026-11-12 Agent 分立帳號與領卡流程
+
+- 依本輪Owner授權建立codex／claude，Workspace一般成員、TaskTracker Project Maintainer；秘密僅存忽略的.local。
+- 只清除TT專案open卡片指派，保留其他狀態／歷史；透過Session API與revision逐卡更新、讀回驗證。
+- 更新工具／AGENTS與交接：依Agent選帳號，先指派自己，再inprogress；驗證、提交、留言後closed。
+
 ## 2026-11-12 TT-181 最長欄底卡補驗證
 
 - 評估提交後把底卡定位改為實際最大bottom，揭露Epic彙總估時初始化造成假dirty；首次補驗證失敗時本卡維持inprogress，未結案。

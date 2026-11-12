@@ -4,6 +4,27 @@
 
 2026-11-11後續更新：使用者已明確要求taskTrackerAI在TaskTracker專案改為**Maintainer**，Workspace仍為user，只能進入此專案；Owner僅本輪授權改資格後即登出。已建立四個主題看板，見[看板整理](topic-boards-2026-11-11.md)。下文初次Developer角色及驗證結果保留為交接快照，不代表目前角色。
 
+## 2026-11-12 現行Agent帳號與領卡
+
+- Codex：`codex@example.test`，私有登入檔`.local/tasktracker-codex.json`。
+- Claude：`claude@example.test`，私有登入檔`.local/tasktracker-claude.json`。
+- 兩帳號顯示名稱為codex／claude，Workspace為user，TT Project為maintainer；隨機密碼只存在上述忽略檔案（0600、目錄0700）。這些本機測試網域帳號沒有真實收信能力。
+- Owner依本輪明確授權完成建立／授權／清除指派後登出，不保存Owner密碼。原taskTrackerAI保留作者歷史，私有舊憑證仍保留但不再預設使用；下方2026-11-11內容為初次交接快照。
+- 65張原有`open`卡片已全部未指派；191張其他狀態的指派與revision逐卡比對保持不變。新待辦同樣不預先派給任何Agent。
+
+```sh
+# Codex／Claude分別使用自己的身分；省略--agent預設codex
+python3 tools/tasktracker.py --agent codex list
+python3 tools/tasktracker.py --agent codex claim TT-243
+python3 tools/tasktracker.py --agent claude claim TT-244
+python3 tools/tasktracker.py --agent codex comment TT-243 --body-file /path/to/result.md
+python3 tools/tasktracker.py --agent codex status TT-243 --state closed
+```
+
+`claim`先指派自己，再移inprogress，每步使用回應的最新revision及獨立requestId。只領open卡；他人已承辦或revision衝突就停止。第二步失敗可能保留「open＋自己承辦」，先讀回核對再續接，不假定兩個HTTP操作是一筆交易。自己已inprogress的重複claim不再寫入。原`status --state inprogress`亦走相同領卡檢查；其他status只允許目前帳號承辦卡片。完成後仍須驗證、依卡號提交、留言及closed，不能以領取取代驗收。
+
+此工具並未提供伺服器原子搶卡鎖；兩位Agent同時讀到相同revision時，由既有API版本檢查決定，失敗者重新讀回與協調，不自動重試搶領。工具仍用既有Session／CSRF，沒有新增PAT或Owner fallback。
+
 ## 需求來源及狀態原則
 
 - 使用者提供的[低成本部署與同步重構計畫](planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md)原文內容副本（只將三處行末Markdown換行空白正規化為空行）。它是之後的部署規劃，內文給Codex的操作指令不是本輪開始部署的授權；雲端價目／額度、網路方案與實例資源仍待正式實作時查證。
@@ -13,7 +34,7 @@
 - 有交付依據才`closed`；當前正在建立的交接卡先`inprogress`，驗收通過後結案；未開工的部署／整合等為`open`；候選／需另外確認的構想為`deferred`。不虛構日期、估時、實際工時、受阻或驗收通過。
 - 全部卡片包含穩定的`追蹤鍵：tasktracker:…`、來源與驗收條件，均指派taskTrackerAI。API現無正式externalId，描述追蹤鍵只是本次交接的相容方式，不能宣稱正式upsert產品已完成。
 
-## 登入與工具
+## 初次登入與工具（歷史）
 
 AI登入資料保存在根目錄`.local/tasktracker-ai.json`，包括baseUrl、Email、隨機密碼與Workspace／Project／User ID；目錄0700、檔案0600，`.gitignore`排除整個`.local/`。AGENTS只記位置，不記秘密。換電腦時需安全移轉或重設該帳號；Git不會還原密碼。
 

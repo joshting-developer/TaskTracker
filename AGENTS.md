@@ -154,16 +154,18 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 
 ## TaskTracker自我追蹤與AI登入（2026-11-11）
 
-本專案已在本機TaskTracker的SideProject工作區建立TaskTracker／TT專案，Project ID `5a451d5c-2fff-4110-aa49-4998ec9dbff2`。使用者已要求既有及未來工作均建卡並指派AI，狀態須對應實際進度；開工前查閱／建立相應卡片，進行中、受阻、驗收與完成如實更新，不以commit自動假定整項功能完成。
+本專案已在本機TaskTracker的SideProject工作區建立TaskTracker／TT專案，Project ID `5a451d5c-2fff-4110-aa49-4998ec9dbff2`。使用者已要求既有及未來工作均建卡；2026-11-12改為待辦先未指派，Agent開工時才領卡，狀態須對應實際進度；開工前查閱／建立相應卡片，進行中、受阻、驗收與完成如實更新，不以commit自動假定整項功能完成。
 
 2026-11-12使用者要求**處理任務以卡片為單位**：
 
 - 尚未動工的卡片放待辦（`open`），不提前移到進行中。
-- 開始處理某張卡片前，先將該卡拉到進行中（`python3 tools/tasktracker.py status TT-243 --state inprogress`），再開始調整。
+- 開始處理某張卡片前，使用目前Agent的獨立帳號，**先指派給自己，再移到進行中**：Codex執行`python3 tools/tasktracker.py --agent codex claim TT-243`；Claude執行`python3 tools/tasktracker.py --agent claude claim TT-243`。工具依序送出兩次revision保護的更新；已由他人承辦或發生衝突即停止，不搶領、不自動覆蓋。第二步失敗先讀回，再用同一帳號續接。
 - 該卡的commit訊息格式為`<卡號> <卡片標題>`，例如`TT-243 狀態設定以Project狀態使用摘要取代完整卡片掃描`；一張卡分多次提交時沿用同一格式。
 - 調整與測試完成後，依實際結果更新卡片狀態（完成改`closed`；未通過或受阻則維持／標示並留言說明），不在測試前結案。
 
-專用身分為taskTrackerAI（Workspace一般成員＋此Project Maintainer；2026-11-11使用者後續明確授權由Developer調整）；登入資訊在忽略的`.local/tasktracker-ai.json`，目錄0700／檔案0600，不將密碼、Cookie或邀請token寫入Git／卡片／日誌。後續以此帳號操作，不因權限失敗回退到使用者Owner。來源、清單、網址及工具見[自我追蹤交接](docs/tasktracker-self-tracking.md)。`python3 tools/tasktracker.py list`讀取目前卡片；初始manifest只供首次盤點與核對，不能覆蓋後來的人工進度。換機需安全移轉私有登入檔或重設帳號。
+2026-11-12起改用獨立帳號：**codex**（`codex@example.test`）與**claude**（`claude@example.test`），兩者為SideProject Workspace一般成員＋TaskTracker Project Maintainer。登入資料分別存忽略的`.local/tasktracker-codex.json`與`.local/tasktracker-claude.json`，目錄0700／檔案0600；不將密碼、Cookie或邀請token寫入Git／卡片／日誌。Codex工具預設使用codex；Claude必須帶`--agent claude`，不得共用codex。所有list／claim／status／comment均使用同一Agent選項，不因權限失敗回退Owner或舊共用帳號。
+
+舊taskTrackerAI與`.local/tasktracker-ai.json`僅留歷史，不再作日常工具預設、不刪既有作者與已完成卡片。此次Owner授權僅用於帳號／資格及清除65張open卡指派，已登出；191張其他狀態卡的指派與revision保留。後續新卡待辦先未指派，僅正式開工才領取。來源、登入位置及操作見[自我追蹤交接](docs/tasktracker-self-tracking.md)；初始manifest只供首次盤點，不覆蓋人工進度。換機須安全移轉私有憑證或重設帳號。
 
 
 ## API-first平台邊界（2026-11-11）

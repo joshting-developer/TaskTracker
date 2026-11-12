@@ -12,7 +12,7 @@ import urllib.request
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_CREDENTIALS = ROOT / '.local/tasktracker-ai.json'
+DEFAULT_CREDENTIALS = ROOT / '.local/tasktracker-codex.json'
 MANIFEST = ROOT / 'docs/planning/tasktracker-backlog.json'
 
 
@@ -118,6 +118,22 @@ def key_for(issue):
     return next((line.removeprefix('追蹤鍵：tasktracker:') for line in issue['description'].splitlines() if line.startswith('追蹤鍵：tasktracker:')), None)
 
 
+def claim_issue(client, issue):
+    """先以revision領取open卡，再變更狀態；衝突停止，不搶領他人任務。"""
+    actor = client.config['userId']
+    if issue.get('assignee') not in ('', None, actor):
+        raise RuntimeError('卡片已指派其他帳號；停止領卡，請先協調')
+    if issue['state'] == 'inprogress' and issue.get('assignee') == actor:
+        return issue
+    if issue['state'] != 'open':
+        raise RuntimeError('只能領取open待辦；其他狀態請先確認實際進度')
+    if issue.get('assignee') != actor:
+        issue = client.rpc('updateIssue', id=issue['id'], assignee=actor,
+                           expectedRevision=issue['revision'], requestId=str(uuid.uuid4()))
+    return client.rpc('updateIssue', id=issue['id'], state='inprogress',
+                      expectedRevision=issue['revision'], requestId=str(uuid.uuid4()))
+
+
 def import_cards(client, manifest):
     existing = {key_for(i): i for i in client.project_issues(client.workspace())}
     for card in manifest['cards']:
@@ -127,19 +143,25 @@ def import_cards(client, manifest):
         if card.get('epic') and not epic:
             raise RuntimeError('Epic尚未建立：' + card['key'])
         payload = {k: card[k] for k in ('title', 'description', 'state', 'priority', 'type')}
-        issue = client.rpc('createIssue', **payload, projectId=client.config['projectId'], assignee=client.config['userId'], epicId=epic['id'] if epic else '', requestId=str(uuid.uuid5(uuid.NAMESPACE_URL, 'tasktracker-bootstrap-v1:' + card['key'])))
+        issue = client.rpc('createIssue', **payload, projectId=client.config['projectId'], assignee='' if card['state'] == 'open' else client.config['userId'], epicId=epic['id'] if epic else '', requestId=str(uuid.uuid5(uuid.NAMESPACE_URL, 'tasktracker-bootstrap-v1:' + card['key'])))
         existing[card['key']] = issue
         print(issue['identifier'], issue['state'], flush=True)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['list', 'import', 'verify', 'status', 'comment'])
+    parser.add_argument('--agent', choices=['codex', 'claude'], default='codex', help='執行者；Claude必須指定--agent claude')
+    parser.add_argument('command', choices=['list', 'import', 'verify', 'claim', 'status', 'comment'])
     parser.add_argument('identifier', nargs='?')
     parser.add_argument('--state')
     parser.add_argument('--body-file', type=Path)
     args = parser.parse_args()
-    config = json.loads(DEFAULT_CREDENTIALS.read_text())
+    if args.command in ('claim', 'status', 'comment') and not args.identifier:
+        parser.error('此操作需要卡號')
+    credentials = ROOT / f'.local/tasktracker-{args.agent}.json'
+    config = json.loads(credentials.read_text())
+    if config.get('displayName') != args.agent:
+        raise RuntimeError('憑證與指定Agent不符；不回退共用或Owner帳號')
     client = Client(config)
     client.login()
     try:
@@ -161,12 +183,16 @@ def main():
                 assert issue['assignee'] == config['userId'], card['key']
                 assert issue['epicId'] == (by_key[card['epic']]['id'] if card.get('epic') else ''), card['key']
             print(f'PASS: {len(issues)} cards; fields, status, assignment and Epic links')
-        elif args.command in ('status', 'comment'):
+        elif args.command in ('claim', 'status', 'comment'):
             issue = next(i for i in issues if i['identifier'] == args.identifier)
             request_id = str(uuid.uuid4())
-            if args.command == 'status':
+            if args.command == 'claim' or (args.command == 'status' and args.state == 'inprogress'):
+                claim_issue(client, issue)
+            elif args.command == 'status':
                 if not args.state:
                     parser.error('status需要--state')
+                if issue.get('assignee') != config['userId']:
+                    raise RuntimeError('只能更新自己承辦的任務狀態；不自動搶領')
                 client.rpc('updateIssue', id=issue['id'], state=args.state, expectedRevision=issue['revision'], requestId=request_id)
             else:
                 if not args.body_file:
