@@ -76,7 +76,7 @@ const refresh = useRefreshQueue({
   scope: () => `${refreshScope}:${authenticated.value}:${switchingWorkspace.value}:${workspace.value.meta.workspace?.id || ''}:${projectId.value}:${view.value}:${section.value}`,
   load: refreshWorkspace,
 });
-const isScopedRoute=computed(()=>isTaskRoute.value || (projectId.value && ['settings','notifications','time'].includes(section.value)) || (!projectId.value && ['home','projects','settings','analysis'].includes(landing.value)));
+const isScopedRoute=computed(()=>isTaskRoute.value || (projectId.value && ['settings','notifications','time','members'].includes(section.value)) || (!projectId.value && ['home','projects','settings','analysis'].includes(landing.value)));
 const personalSync=usePersonalSync({active:computed(()=>authenticated.value&&!switchingWorkspace.value&&workspace.value.meta.permissions?.includes('todo.read')),context:computed(()=>`${workspace.value.meta.userId}:${workspace.value.meta.workspace?.id}`),onError:failure=>{if(['UNAUTHENTICATED','FORBIDDEN','WORKSPACE_CHANGED'].includes(failure.code))refresh({join:true});}});
 const today = useWorkspaceClock({ active: computed(() => authenticated.value && !switchingWorkspace.value && !isScopedRoute.value), refresh: () => refresh({ join: true }) });
 let refreshGeneration = 0, refreshScope = 0;
@@ -593,7 +593,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
         <div v-if="error && section !== 'tasks'" class="error-box" role="alert">{{ error }}</div>
         <TimeCalendar :can-write="can('timeEntry.writeOwn')" v-if="section === 'time' && can('timeEntry.readOwn')" ref="workspaceTool" :key="workContextKey" :context-key="workContextKey" :project="selectedProject" :can-read-team="can('timeEntry.readTeam')" :user-id="currentUserId" @updated="toolUpdated" @open="openIssue" @access="refresh" />
         <ProjectStatusWorkspace v-if="section === 'settings' && can('project.statuses.update')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" @access="refresh" />
-        <ProjectMembers v-if="section === 'members' && can('project.members.manage')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" />
+        <ProjectMembers @access="refresh" v-if="section === 'members' && can('project.members.manage')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" />
         <NotificationPreview ref="workspaceTool" v-if="section === 'notifications'" :project="selectedProject" :permissions="workspace.meta.permissions || []" @open="openIssue" @access="refresh" />
         </template>
         <footer v-show="!showIssuePage" class="page-footer"><span>TaskTracker <b>v0.2</b></span></footer>

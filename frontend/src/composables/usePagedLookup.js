@@ -18,5 +18,5 @@ export function usePagedLookup({ context, load }) {
   watch(page, () => { if (active) { clearTimeout(debounce); debounce = setTimeout(fetchPage, 0); } });
   watch(context, () => { generation++; controller?.abort(); result.value = null; search.value = ''; page.value = 1; loading.value = false; error.value = ''; if (active) fetchPage(); });
   onScopeDispose(() => { generation++; controller?.abort(); clearTimeout(debounce); });
-  return {search, page, result, loading, error, open, reload: fetchPage};
+  return {search, page, result, loading, error, open, reload: () => { active = true; return fetchPage(); }};
 }

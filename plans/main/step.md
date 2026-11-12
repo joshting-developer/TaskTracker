@@ -1,3 +1,17 @@
+## 2026-11-12 TT-242驗收完成
+
+- 新增ACL metadata／有效成員／候選／歷史四個分責GET；SQL先限定Workspace／Project與有效資格、每頁20／最大100，批次當頁指派，不逐人成員get或讀歷史。
+- ProjectMembers接分頁／搜尋、候選與歷史按需、保留跨頁已選及ACL草稿基準；繼承來源／可授予permission交集及canChange不變。App此頁改最小殼，不呼叫getWorkspace/getProjectMembers/getTodos。
+- memory79／3670（13 native skips）、獨立MySQL92／4055；Chrome26成員20＋6、候選／歷史lazy、跨頁編輯與409、歷史20＋7、撤權、三尺寸及bulkReads=0；build與Pint通過。詳見docs/performance-project-acl-2026-11-12.md。
+- 依指定順序完成本卡後才開始TT-241；其他效能與legacy入口退役仍按原卡追蹤，不宣稱全面完成。
+
+## 2026-11-12 使用者指定順序：TT-242 → TT-241
+
+- 先完成TT-242專案ACL管理有界成員、候選、metadata及按需歷史，前後端一起接線；驗證有效permission／可授予交集、繼承來源、revision／撤權／草稿與Network資料範圍。已在開始前將TT-242改inprogress。
+- TT-242驗證並以「TT-242 專案成員ACL讀取改批次分頁並拆出候選與歷史」提交及更新卡片後，才開始TT-241；未開始前TT-241保持open。
+- TT-241拆Workspace一般設定／角色選項／有界成員目錄，按tab載入，維持既有Owner入口與API permission、canChange／revision／跨WS清理。
+- 使用專案Laravel／Vue與自有工程／資料存取skills，實際隔離MySQL及Chrome，不對業務庫seed／壓測、不push。最新工作區起點8d09bf8乾淨，AGENTS已更新為每卡提交格式；不重寫既有提交。
+
 ## 2026-11-12 TT-223 工時月曆依Project與月份取得必要紀錄
 
 - 新增time-calendar月份SQL摘要（日／成員／卡片／Epic去重，各上限100）與time-entries當日分頁；前端月曆改按月／按日讀取、遠端成員與任務候選，填報後局部重讀，工時頁不再getWorkspace。

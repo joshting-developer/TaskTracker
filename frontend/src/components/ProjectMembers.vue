@@ -1,61 +1,117 @@
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
+import { usePagedLookup } from '../composables/usePagedLookup.js';
+import PagedSelect from './PagedSelect.vue';
 import Icon from './Icon.vue';
 const props = defineProps({ project: Object });
-const emit = defineEmits(['updated']);
-const data = ref(null), loading = ref(false), busy = ref(false), error = ref(''), conflict = ref(false);
-const userId = ref(''), roleId = ref('developer');
+const emit = defineEmits(['updated', 'access']);
+const data = shallowRef(null), loading = ref(false), busy = ref(false), error = ref(''), conflict = ref(false);
+const userId = ref(''), roleId = ref('developer'), chosenMember = shallowRef(null), historyOpen = ref(false);
+const context = computed(() => props.project.id);
 const dirty = computed(() => Boolean(userId.value));
-defineExpose({ dirty });
-let pending;
-let generation = 0;
+let pending, generation = 0, controller;
+
+function handleFailure(failure) {
+  if (['NOT_FOUND', 'FORBIDDEN', 'UNAUTHENTICATED', 'WORKSPACE_CHANGED'].includes(failure.code)) {
+    data.value = null;
+    userId.value = '';
+    emit('access');
+  }
+}
+async function guardedLoad(loader, filters, options) {
+  try { return await loader(props.project.id, { ...filters, perPage: 20 }, options); }
+  catch (failure) { handleFailure(failure); throw failure; }
+}
+const members = usePagedLookup({ context, load: (...args) => guardedLoad(api.projectAclMembers, ...args) });
+const history = usePagedLookup({ context, load: (...args) => guardedLoad(api.projectAclHistory, ...args) });
+const candidates = (filters, options) => guardedLoad(api.projectAclCandidates, filters, options);
+const selectedOptions = computed(() => chosenMember.value ? [chosenMember.value] : []);
 const roleLabel = id => data.value?.roles.find(role => role.id === id)?.label || id;
+
 async function load() {
   const current = ++generation;
+  controller?.abort();
+  controller = new AbortController();
   loading.value = true;
+  error.value = '';
   try {
-    const result = await api.getProjectMembers({ projectId: props.project.id });
+    const result = await api.projectAcl(props.project.id, { signal: controller.signal });
     if (current !== generation) return;
-    data.value = result; error.value = ''; conflict.value = false;
+    data.value = result;
+    conflict.value = false;
     roleId.value = result.roles.some(role => role.id === 'developer') ? 'developer' : result.roles[0]?.id || '';
-  } catch (failure) { if (current === generation) { error.value = failure.message; if (['FORBIDDEN', 'NOT_FOUND'].includes(failure.code)) data.value = null; } }
-  finally { if (current === generation) loading.value = false; }
+    await members.reload();
+    if (historyOpen.value) await history.reload();
+  } catch (failure) {
+    if (current === generation && !['ABORTED', 'STALE_RESPONSE'].includes(failure.code)) {
+      error.value = failure.message;
+      handleFailure(failure);
+    }
+  } finally { if (current === generation) loading.value = false; }
 }
-watch(() => props.project.id, () => { data.value = null; userId.value = ''; load(); }, { immediate: true });
-onBeforeUnmount(() => { generation++; });
-function edit(member) { if (busy.value) return; if (dirty.value && !window.confirm('捨棄尚未儲存的成員設定？')) return; userId.value = member.userId; roleId.value = member.roleId; }
-async function reload() { if (dirty.value && !window.confirm('重新載入會捨棄成員設定, 要繼續嗎？')) return; userId.value = ''; pending = null; await load(); }
+function cancelEdit() { userId.value = ''; chosenMember.value = null; pending = null; }
+function edit(member) {
+  if (busy.value || loading.value || !member.canChange) return;
+  if (dirty.value && !window.confirm('捨棄尚未儲存的成員設定？')) return;
+  chosenMember.value = { id: member.userId, name: member.name, email: member.email };
+  userId.value = member.userId;
+  roleId.value = member.roleId;
+}
+async function reload() {
+  if (busy.value) return;
+  if (dirty.value && !window.confirm('重新載入會捨棄成員設定, 要繼續嗎？')) return;
+  cancelEdit();
+  await load();
+}
 async function save(removeId = '') {
-  if (busy.value || !data.value) return;
+  if (busy.value || !data.value || loading.value) return;
   if (removeId && !window.confirm(`${dirty.value ? '尚未儲存的成員設定會捨棄。' : ''}移除此成員的專案資格？既有任務、工時與歷史會保留, 空間管理權限不受影響`)) return;
-  busy.value = true; error.value = ''; conflict.value = false;
+  busy.value = true;
+  error.value = '';
+  conflict.value = false;
   const operation = removeId ? 'removeProjectMember' : 'setProjectMember';
   const payload = { projectId: props.project.id, userId: removeId || userId.value, expectedRevision: data.value.revision, ...(removeId ? {} : { roleId: roleId.value }) };
   const signature = JSON.stringify([operation, payload]);
   if (pending?.signature !== signature) pending = { signature, requestId: crypto.randomUUID() };
   try {
     await api[operation]({ ...payload, requestId: pending.requestId });
-    pending = null; userId.value = ''; await load(); emit('updated', '專案成員已更新');
-  } catch (failure) { error.value = failure.message; conflict.value = failure.code === 'REVISION_CONFLICT'; }
-  finally { busy.value = false; }
+    cancelEdit();
+    await load();
+    emit('updated', '專案成員已更新');
+  } catch (failure) {
+    error.value = failure.message;
+    conflict.value = failure.code === 'REVISION_CONFLICT';
+    handleFailure(failure);
+  } finally { busy.value = false; }
 }
+function toggleHistory(event) {
+  historyOpen.value = event.target.open;
+  if (historyOpen.value) history.open();
+}
+watch(() => props.project.id, () => { data.value = null; cancelEdit(); historyOpen.value = false; load(); }, { immediate: true });
+watch(() => members.result.value, result => { if (result && members.page.value > result.lastPage) members.page.value = result.lastPage; });
+onScopeDispose(() => { generation++; controller?.abort(); });
+defineExpose({ dirty, saving: busy, refresh: reload });
 </script>
 <template>
   <section class="project-members" aria-label="專案成員與權限">
-    <header class="section-title"><div><h2>專案成員與權限</h2></div><button class="button secondary" :disabled="busy || loading" @click="reload"><Icon name="refresh" :size="16" />重新載入成員</button></header>
+    <header class="section-title"><h2>專案成員與權限</h2><button class="button secondary" :disabled="busy || loading" @click="reload"><Icon name="refresh" :size="16" />重新載入成員</button></header>
     <p v-if="loading" role="status">正在載入成員…</p>
     <div v-if="error" class="error-box" role="alert">{{ error }}<button v-if="conflict" class="text-button" :disabled="busy" @click="reload">載入最新成員版本</button></div>
     <template v-if="data">
       <form class="project-member-form" @submit.prevent="save()">
-        <label class="field">工作空間成員<select v-model="userId" aria-label="加入專案的成員" :disabled="busy" required><option value="" disabled>選擇成員</option><option v-for="member in data.candidates" :key="member.id" :value="member.id">{{ member.name }} · {{ member.email }}</option></select></label>
-        <label class="field">專案角色<select v-model="roleId" aria-label="專案角色" :disabled="busy" required><option v-for="role in data.roles" :key="role.id" :value="role.id">{{ role.label }}</option></select></label>
-        <button class="button primary" :disabled="busy || !userId">{{ busy ? '儲存中…' : '儲存專案成員' }}</button>
-        <button v-if="dirty" class="text-button" type="button" :disabled="busy" @click="userId = ''; pending = null">取消修改</button>
+        <PagedSelect v-model="userId" label="加入專案的成員" :context="project.id" :load="candidates" :options="selectedOptions" :disabled="busy || loading" required empty-label="選擇成員" @choose="chosenMember = $event" />
+        <label class="field">專案角色<select v-model="roleId" aria-label="專案角色" :disabled="busy || loading" required><option v-for="role in data.roles" :key="role.id" :value="role.id">{{ role.label }}</option></select></label>
+        <button class="button primary" :disabled="busy || loading || !userId">{{ busy ? '儲存中…' : '儲存專案成員' }}</button>
+        <button v-if="dirty" class="text-button" type="button" :disabled="busy" @click="cancelEdit">取消修改</button>
       </form>
-
-      <div class="project-member-list"><article v-for="member in data.members" :key="member.userId" class="project-member-row"><div><strong>{{ member.name }}</strong><span>{{ member.email }}</span></div><span>{{ member.source === 'workspace' ? '工作空間管理權限' : roleLabel(member.roleId) }}</span><div v-if="member.source === 'project'" class="member-actions"><button class="button secondary" :aria-label="`編輯成員 ${member.name}`" :disabled="busy" @click="edit(member)">編輯</button><button class="text-button danger-text" :aria-label="`移除成員 ${member.name}`" :disabled="busy" @click="save(member.userId)">移除</button></div></article></div>
-      <details class="membership-history"><summary>授權異動紀錄（{{ data.history.length }}）</summary><p v-if="!data.history.length">尚無異動紀錄</p><article v-for="(entry, index) in [...data.history].reverse()" :key="index"><strong>{{ entry.actor }}</strong> · {{ data.candidates.find(member => member.id === entry.userId)?.name || entry.userId }}：{{ entry.before ? roleLabel(entry.before) : '未加入' }} → {{ entry.after ? roleLabel(entry.after) : '已移除' }}<time>{{ new Date(entry.at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }) }}</time></article></details>
+      <label class="field">搜尋專案成員<input v-model="members.search.value" aria-label="搜尋專案成員" placeholder="姓名或信箱" /></label>
+      <p v-if="members.loading.value" role="status">載入成員中…</p>
+      <p v-if="members.error.value" class="error-box" role="alert">{{ members.error.value }}<button class="text-button" @click="members.reload">重試</button></p>
+      <div class="project-member-list"><article v-for="member in members.result.value?.items || []" :key="member.userId" class="project-member-row"><div><strong>{{ member.name }}</strong><span>{{ member.email }}</span></div><span>{{ member.source === 'workspace' ? '工作空間管理權限' : roleLabel(member.roleId) }}</span><div v-if="member.canChange" class="member-actions"><button class="button secondary" :aria-label="`編輯成員 ${member.name}`" :disabled="busy || loading" @click="edit(member)">編輯</button><button class="text-button danger-text" :aria-label="`移除成員 ${member.name}`" :disabled="busy || loading" @click="save(member.userId)">移除</button></div></article></div>
+      <div v-if="members.result.value?.lastPage > 1" class="pagination" aria-label="專案成員分頁"><button class="text-button" :disabled="members.loading.value || members.page.value <= 1" @click="members.page.value--">上一頁</button><span>{{ members.page.value }} / {{ members.result.value.lastPage }}</span><button class="text-button" :disabled="members.loading.value || members.page.value >= members.result.value.lastPage" @click="members.page.value++">下一頁</button></div>
+      <details class="membership-history" @toggle="toggleHistory"><summary>授權異動紀錄</summary><p v-if="history.loading.value" role="status">載入紀錄中…</p><p v-if="history.error.value" role="alert">{{ history.error.value }}<button class="text-button" @click="history.reload">重試</button></p><p v-if="history.result.value && !history.result.value.items.length">尚無異動紀錄</p><article v-for="entry in history.result.value?.items || []" :key="entry.id"><strong>{{ entry.actor }}</strong> · {{ entry.targetName || entry.userId }}：{{ entry.before ? roleLabel(entry.before) : '未加入' }} → {{ entry.after ? roleLabel(entry.after) : '已移除' }}<time>{{ new Date(entry.at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }) }}</time></article><div v-if="history.result.value?.lastPage > 1" class="pagination" aria-label="授權歷史分頁"><button class="text-button" :disabled="history.loading.value || history.page.value <= 1" @click="history.page.value--">上一頁</button><span>{{ history.page.value }} / {{ history.result.value.lastPage }}</span><button class="text-button" :disabled="history.loading.value || history.page.value >= history.result.value.lastPage" @click="history.page.value++">下一頁</button></div></details>
       <p class="subtle">成員設定版本 {{ data.revision }}</p>
     </template>
   </section>

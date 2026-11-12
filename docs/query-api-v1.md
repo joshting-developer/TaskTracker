@@ -81,3 +81,7 @@ ProjectTasksWorkspace與useProjectTaskQueries已取代原BoardWorkspace／useBoa
 - `GET /api/v1/projects/{project}/time-entries?date=YYYY-MM-DD&member=&page=&perPage=`（TT-223）：當日有效工時分頁，欄位同單卡工時。
 
 月曆八項審查與限制見[工時月曆查詢](performance-time-calendar-2026-11-12.md)。
+
+## 2026-11-12 Project ACL管理查詢（TT-242）
+
+`GET /api/v1/projects/{project}/acl`只回revision及可授予角色；`/acl/members`有效成員管理分頁、`/acl/candidates`候選搜尋分頁、`/acl/history`按需歷史分頁。四者均要求project.members.manage，與只回姓名的member-options不同；UI每頁20、最大100，source／canChange由當次permission判斷。細節與證據見[ACL讀取拆分](performance-project-acl-2026-11-12.md)。

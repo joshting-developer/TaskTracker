@@ -98,3 +98,19 @@ assert.equal(index.spent.get('child'), 5);
 assert.deepEqual(index.children.get('parent'), [fixtures[2]]);
 assert.equal(buildIssueIndex(fixtures, []).spent.size, 0, '刷新替換資料後不沿用舊索引');
 console.log('PASS: 刷新合併／寫後尾端重讀／跨scope、共享卡片關聯與有效工時索引');
+
+const { usePagedLookup } = await import('../src/composables/usePagedLookup.js');
+const lookupScope = effectScope(), lookupContext = shallowRef('workspace:project');
+const lookupCalls = [];
+const lookup = lookupScope.run(() => usePagedLookup({ context: lookupContext, load: async (filters, options) => {
+  lookupCalls.push({ page: filters.page, signal: options.signal });
+  return { items: [], page: filters.page, lastPage: 3, total: 60 };
+} }));
+await lookup.reload();
+lookup.page.value = 2;
+await nextTick();
+await new Promise(resolve => setTimeout(resolve, 10));
+assert.deepEqual(lookupCalls.map(call => call.page), [1, 2], '明確reload啟動的管理列表，之後分頁仍須發請求');
+lookupScope.stop();
+assert.equal(lookupCalls.at(-1).signal.aborted, true, '卸載取消最後的分頁請求');
+console.log('PASS: 管理列表手動載入後的分頁與卸載取消');
