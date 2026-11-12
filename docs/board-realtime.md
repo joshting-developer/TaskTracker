@@ -56,7 +56,10 @@ PHP：`docker compose exec -T backend php artisan test --do-not-cache-result`。
 
 真實瀏覽器測試使用獨立Compose專案及全新volume，絕不指向主服務。從專案根目錄啟動：
 
+**必須先設定`COMPOSE_FILE=docker-compose.yml`**：根目錄`.env`的`COMPOSE_FILE`包含`.local/local-volumes.yml`，會把`mysql-data`指到現用業務volume（`tasktracker_mysql-local-20261112`）。沒有覆寫的話，測試專案會掛載現用庫。啟動前可用`docker compose -p tasktracker-realtime-test config --volumes`確認，volume名稱應帶`tasktracker-realtime-test_`前綴（2026-11-12補）。
+
 ```sh
+export COMPOSE_FILE=docker-compose.yml
 TASKTRACKER_API_PORT=13024 TASKTRACKER_WS_PORT=18080 TASKTRACKER_PORT=5175 \
   docker compose -p tasktracker-realtime-test up -d backend queue websocket redis
 cd frontend

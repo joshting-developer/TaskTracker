@@ -52,7 +52,7 @@ class SmtpService
         if (! $port) {
             DomainError::fail('INVALID_INPUT', 'SMTP_PORT 設定不正確');
         }
-        $transport = $this->transports->make((string) $config['host'], $port, (bool) $config['secure']);
+        $transport = $this->transports->make((string) $config['host'], $port, $config['secure'] === null ? null : (bool) $config['secure']);
         $transport->setRequireTls(true);
         $transport->getStream()->setTimeout(10);
         if ($config['user']) {

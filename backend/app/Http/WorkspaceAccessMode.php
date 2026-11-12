@@ -10,7 +10,7 @@ enum WorkspaceAccessMode
     /** 先鎖User再鎖Workspace，於一般交易內重驗資格後寫入。 */
     case Write;
 
-    /** 不取寫入鎖；SQLite使用query_only唯讀交易，供v1查詢與報表。 */
+    /** 不取寫入鎖；SQLite使用query_only唯讀交易，供v1查詢、工時報表與舊整包getWorkspace。 */
     case Read;
 
     /** 不取寫入鎖的一般交易；保留給舊RPC讀取（可能有相容性的延遲初始化寫入），不使用query_only。 */

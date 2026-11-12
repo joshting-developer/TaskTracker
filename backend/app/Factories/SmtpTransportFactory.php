@@ -14,10 +14,10 @@ class SmtpTransportFactory
      *
      * @param  string  $host  SMTP主機
      * @param  int  $port  埠號
-     * @param  bool  $secure  是否直接以TLS連線
+     * @param  bool|null  $secure  是否直接以TLS連線；null交給Symfony依埠號判斷（465自動TLS）
      * @return EsmtpTransport 尚未start的transport
      */
-    public function make(string $host, int $port, bool $secure): EsmtpTransport
+    public function make(string $host, int $port, ?bool $secure): EsmtpTransport
     {
         return new EsmtpTransport($host, $port, $secure);
     }

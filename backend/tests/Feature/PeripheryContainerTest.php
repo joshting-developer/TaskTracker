@@ -58,10 +58,10 @@ class PeripheryContainerTest extends TestCase
              *
              * @param  string  $host  主機
              * @param  int  $port  埠
-             * @param  bool  $secure  TLS
+             * @param  bool|null  $secure  TLS
              * @return EsmtpTransport 不連線的transport
              */
-            public function make(string $host, int $port, bool $secure): EsmtpTransport
+            public function make(string $host, int $port, ?bool $secure): EsmtpTransport
             {
                 $this->made[] = "{$host}:{$port}";
 
