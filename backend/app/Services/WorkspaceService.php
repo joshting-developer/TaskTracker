@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Data\Writes\WriteResults;
 use App\Domain\DomainError;
 use App\Factories\WorkspaceOperationServices;
 use App\Factories\WorkspaceServicesFactory;
@@ -100,6 +101,12 @@ class WorkspaceService
             'removeProjectMember' => $services->members()->change($input, true),
             'loadDemo' => $this->demo->loadProject($services->workspaceSession),
             default => DomainError::fail('NOT_FOUND', '找不到這個操作'),
+        };
+        // 卡片／工時寫入只回有界結果（同時是receipt保存的內容），最新內容由GET按需讀取。
+        $result = match (true) {
+            in_array($operation, WriteResults::ISSUE_OPERATIONS, true) => WriteResults::issue($result),
+            in_array($operation, WriteResults::TIME_OPERATIONS, true) => WriteResults::timeEntry($result),
+            default => $result,
         };
         $projectId = match ($operation) {
             'createProject', 'updateProject', 'updateStatuses' => $result['id'],

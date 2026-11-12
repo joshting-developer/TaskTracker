@@ -8,12 +8,13 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
+use Tests\Concerns\StoredWriteResults;
 use Tests\MySqlTestCase;
 
-/** 在隔離MySQL量測receipt容量，並鎖定不可因精簡而破壞的重播契約。 */
+/** 在隔離MySQL量測receipt容量（TT-178後為有界結果），並鎖定不可因精簡而破壞的重播契約。 */
 class ReceiptGrowthTest extends MySqlTestCase
 {
-    use DatabaseTransactions;
+    use StoredWriteResults, DatabaseTransactions;
 
     /** 真實HTTP操作，每次預設建立獨立requestId，重播案例則明確指定。
      *
@@ -45,12 +46,15 @@ class ReceiptGrowthTest extends MySqlTestCase
                 $checkpoints[] = $this->measureReceipts($identity['user']['id'], $step);
             }
         }
-        $this->assertCount(64, $issue['comments']);
-        $this->assertCount(65, $issue['history']);
+        $stored = $this->storedIssue($issue);
+        $this->assertCount(64, $stored['comments']);
+        $this->assertCount(65, $stored['history']);
         $this->assertSame(129, $issue['revision']);
         $last = end($checkpoints);
         $this->assertSame(129, $last['receiptCount']);
-        $this->assertGreaterThan($checkpoints[3]['jsonStorageBytes'] * 3, $last['jsonStorageBytes'], '累積完整快照呈超線性成長');
+        // TT-178：寫入結果有界後，每筆receipt大小固定，總量隨操作次數線性成長（TT-227時為超線性）。
+        $this->assertLessThan(400, $last['maxReceiptBytes'], '單筆receipt不隨卡片歷史成長');
+        $this->assertLessThan($checkpoints[3]['jsonStorageBytes'] * 2.2, $last['jsonStorageBytes'], '32→64輪約為兩倍，呈線性');
         $beforeReplay = $last['jsonStorageBytes'];
         $this->assertDtoSame($initial, $this->rpc('createIssue', $create)->assertOk()->json('data'));
         $this->assertSame($beforeReplay, $this->measureReceipts($identity['user']['id'], 64)['jsonStorageBytes']);
@@ -68,7 +72,7 @@ class ReceiptGrowthTest extends MySqlTestCase
         $model = Issue::where('public_id', $issue['id'])->firstOrFail();
         $compression = $this->compressionCandidate($identity['user']['id']);
         $auditBytes = (int) DB::table('audit_events')->where('entity_type', 'issues')->where('entity_id', $model->id)->sum(DB::raw('JSON_STORAGE_SIZE(event_data)'));
-        fwrite(STDERR, 'TT227_METRICS '.json_encode(['driver' => DB::getDriverName(), 'checkpoints' => $checkpoints, 'currentIssueJsonBytes' => strlen(json_encode($issue, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)), 'currentIssueAuditJsonStorageBytes' => $auditBytes, 'losslessCompressionCandidate' => $compression, 'todo' => ['receiptCount' => (int) $todoStats->receipt_count, 'jsonStorageBytes' => (int) $todoStats->storage_bytes, 'minReceiptBytes' => (int) $todoStats->min_bytes, 'maxReceiptBytes' => (int) $todoStats->max_bytes]], JSON_THROW_ON_ERROR).PHP_EOL);
+        fwrite(STDERR, 'TT227_METRICS '.json_encode(['driver' => DB::getDriverName(), 'checkpoints' => $checkpoints, 'currentIssueJsonBytes' => strlen(json_encode($stored, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)), 'currentIssueAuditJsonStorageBytes' => $auditBytes, 'losslessCompressionCandidate' => $compression, 'todo' => ['receiptCount' => (int) $todoStats->receipt_count, 'jsonStorageBytes' => (int) $todoStats->storage_bytes, 'minReceiptBytes' => (int) $todoStats->min_bytes, 'maxReceiptBytes' => (int) $todoStats->max_bytes]], JSON_THROW_ON_ERROR).PHP_EOL);
         // 即使receipt仍在，當次Workspace資格失效也不得讀舊結果。
         WorkspaceMember::where('workspace_id', $model->workspace_id)->where('user_id', $identity['user']['id'])->update(['disabled_at' => now()]);
         $this->rpc('createIssue', $create)->assertStatus(401);

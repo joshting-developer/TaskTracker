@@ -6,12 +6,13 @@ use App\Repositories\RecordStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Tests\Concerns\StoredWriteResults;
 use Tests\TestCase;
 
 /** 驗證資料量增加時，不以重寫舊子列或建立Session實作小型操作。 */
 class StorageCostTest extends TestCase
 {
-    use RefreshDatabase;
+    use StoredWriteResults, RefreshDatabase;
 
     private function rpc(string $operation, array $input = [])
     {
@@ -47,7 +48,7 @@ class StorageCostTest extends TestCase
         $this->assertSame($pivotIds, DB::table('board_issues')->pluck('id')->all());
 
         $store = (new RecordStore)->forWorkspace($identity['workspace']['id']);
-        $issue = $issues[0];
+        $issue = $this->storedIssue($issues[0]);
         $issue['comments'] = [];
         for ($index = 0; $index < 100; $index++) {
             $issue['comments'][] = ['id' => (string) Str::uuid(), 'content' => 'Old '.$index, 'author' => 'Cost', 'createdAt' => now()->toISOString()];
@@ -59,7 +60,7 @@ class StorageCostTest extends TestCase
         $writes = array_filter(DB::getQueryLog(), fn ($q) => str_contains($q['query'], 'issue_comments') && ! str_starts_with($q['query'], 'select'));
         $this->assertCount(1, $writes);
         $this->assertSame($ids, DB::table('issue_comments')->orderBy('id')->limit(100)->pluck('id')->all());
-        $this->assertCount(101, $changed['comments']);
+        $this->assertCount(101, $this->storedIssue($changed)['comments']);
         DB::flushQueryLog();
         $this->rpc('updateIssue', ['id' => $changed['id'], 'state' => 'inprogress', 'expectedRevision' => $changed['revision']])->assertOk();
         $this->assertCount(0, array_filter(DB::getQueryLog(), fn ($q) => str_contains($q['query'], 'issue_comments') && ! str_starts_with($q['query'], 'select')));

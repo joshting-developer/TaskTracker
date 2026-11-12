@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\WorkspaceRpc;
-use App\Http\Requests\JsonOperationRequest;
+use App\Http\Requests\Writes\TimeEntryWriteRequest;
 use App\Http\Requests\TimeReportRequest;
 use App\Http\Resources\ApiResponse;
 
@@ -29,14 +29,13 @@ class TimeEntryController extends Controller
     /**
      * 驗證JSON後填報本人工時，回傳既有API格式。
      *
-     * @param  JsonOperationRequest  $request  目前HTTP請求與Session
+     * @param  TimeEntryWriteRequest  $request  已檢查型別的寫入輸入
      * @param  WorkspaceRpc  $rpc  舊RPC分派與交易邊界
      * @return ApiResponse
      */
-    public function store(JsonOperationRequest $request, WorkspaceRpc $rpc): ApiResponse
+    public function store(TimeEntryWriteRequest $request, WorkspaceRpc $rpc): ApiResponse
     {
-        $input = $request->payload();
-        $result = $rpc->execute($request, 'logTime', $input);
+        $result = $rpc->execute($request, 'logTime', $request->toDto()->input());
 
         return new ApiResponse($result);
     }
@@ -44,14 +43,13 @@ class TimeEntryController extends Controller
     /**
      * 驗證JSON後修改本人工時，回傳既有API格式。
      *
-     * @param  JsonOperationRequest  $request  目前HTTP請求與Session
+     * @param  TimeEntryWriteRequest  $request  已檢查型別的寫入輸入
      * @param  WorkspaceRpc  $rpc  舊RPC分派與交易邊界
      * @return ApiResponse
      */
-    public function update(JsonOperationRequest $request, WorkspaceRpc $rpc): ApiResponse
+    public function update(TimeEntryWriteRequest $request, WorkspaceRpc $rpc): ApiResponse
     {
-        $input = $request->payload();
-        $result = $rpc->execute($request, 'updateTime', $input);
+        $result = $rpc->execute($request, 'updateTime', $request->toDto()->input());
 
         return new ApiResponse($result);
     }
@@ -59,14 +57,13 @@ class TimeEntryController extends Controller
     /**
      * 驗證JSON後作廢本人工時，回傳既有API格式。
      *
-     * @param  JsonOperationRequest  $request  目前HTTP請求與Session
+     * @param  TimeEntryWriteRequest  $request  已檢查型別的寫入輸入
      * @param  WorkspaceRpc  $rpc  舊RPC分派與交易邊界
      * @return ApiResponse
      */
-    public function invalidate(JsonOperationRequest $request, WorkspaceRpc $rpc): ApiResponse
+    public function invalidate(TimeEntryWriteRequest $request, WorkspaceRpc $rpc): ApiResponse
     {
-        $input = $request->payload();
-        $result = $rpc->execute($request, 'voidTime', $input);
+        $result = $rpc->execute($request, 'voidTime', $request->toDto()->input());
 
         return new ApiResponse($result);
     }

@@ -12,11 +12,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Tests\Concerns\StoredWriteResults;
 use Tests\TestCase;
 
 class DemoSeedTest extends TestCase
 {
-    use RefreshDatabase;
+    use StoredWriteResults, RefreshDatabase;
 
     public function test_seed_is_repeatable_scoped_and_creates_real_relations_and_time(): void
     {
@@ -108,7 +109,7 @@ class DemoSeedTest extends TestCase
             $rpc('smtpStatus')->assertStatus($role === 'owner' ? 200 : 403);
             $issue = $rpc('createIssue', ['projectId' => $project['id'], 'title' => $role.' 的任務'])->assertOk()->json('data');
             $rpc('addComment', ['id' => $issue['id'], 'expectedRevision' => $issue['revision'], 'content' => '可以留言'])->assertOk();
-            $entry = $rpc('logTime', ['issueId' => $issue['id'], 'workDate' => '2026-10-01', 'minutes' => 15, 'note' => $role])->assertOk()->json('data');
+            $entry = $this->storedTimeEntry($rpc('logTime', ['issueId' => $issue['id'], 'workDate' => '2026-10-01', 'minutes' => 15, 'note' => $role])->assertOk()->json('data'));
             $this->assertSame($account['id'], $entry['userId']);
             $rpc('updateTime', ['id' => $entry['id'], 'expectedRevision' => $entry['revision'], 'issueId' => $issue['id'], 'workDate' => '2026-10-01', 'minutes' => 20])->assertOk();
             $other = array_values(array_filter($tenant->all('timeEntries'), fn ($item) => $item['userId'] !== $account['id']))[0];

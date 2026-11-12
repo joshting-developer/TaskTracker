@@ -10,11 +10,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Tests\Concerns\StoredWriteResults;
 use Tests\TestCase;
 
 class WorkspaceApiTest extends TestCase
 {
-    use RefreshDatabase;
+    use StoredWriteResults, RefreshDatabase;
 
     private function register(string $email = 'josh@example.test'): array
     {
@@ -34,7 +35,7 @@ class WorkspaceApiTest extends TestCase
 
     private function issue(array $project, array $fields = []): array
     {
-        return $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => '登入任務', ...$fields])->assertOk()->json('data');
+        return $this->storedIssue($this->rpc('createIssue', ['projectId' => $project['id'], 'title' => '登入任務', ...$fields])->assertOk()->json('data'));
     }
 
     /** Markdown縮排與硬換行不可被一般文字trim改寫。
@@ -47,7 +48,7 @@ class WorkspaceApiTest extends TestCase
         $source = "    echo '縮排';\n\n第一行  \n第二行\n";
         $issue = $this->issue($project, ['description' => $source]);
         $this->assertSame($source, $issue['description']);
-        $this->rpc('addComment', ['id' => $issue['id'], 'expectedRevision' => 1, 'content' => $source])->assertOk()->assertJsonPath('data.comments.0.content', $source);
+        $this->assertSame($source, $this->storedIssue($this->rpc('addComment', ['id' => $issue['id'], 'expectedRevision' => 1, 'content' => $source])->assertOk()->json('data'))['comments'][0]['content']);
         $this->rpc('getWorkspace')->assertJsonPath('data.issues.0.description', $source);
     }
 
@@ -78,7 +79,7 @@ class WorkspaceApiTest extends TestCase
         $this->rpc('updateIssue', ['id' => $issue['id'], 'expectedRevision' => 1, 'title' => '新標題'])->assertJsonPath('data.revision', 2);
         $this->rpc('updateIssue', ['id' => $issue['id'], 'expectedRevision' => 1, 'title' => '覆寫'])->assertStatus(409);
         $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => '日期', 'dueDate' => '2026-02-30'])->assertStatus(400);
-        $this->rpc('addComment', ['id' => $issue['id'], 'expectedRevision' => 2, 'content' => '<script>unsafe</script>'])->assertJsonPath('data.comments.0.content', '<script>unsafe</script>');
+        $this->assertSame('<script>unsafe</script>', $this->storedIssue($this->rpc('addComment', ['id' => $issue['id'], 'expectedRevision' => 2, 'content' => '<script>unsafe</script>'])->assertOk()->json('data'))['comments'][0]['content']);
     }
 
     public function test_three_issue_types_and_feature_upgrade_preserve_data_and_revisions(): void
@@ -193,7 +194,7 @@ class WorkspaceApiTest extends TestCase
             'note' => '規劃與協調',
             'requestId' => 'direct-epic-time',
         ];
-        $entry = $this->rpc('logTime', $input)->assertOk()->json('data');
+        $entry = $this->storedTimeEntry($this->rpc('logTime', $input)->assertOk()->json('data'));
         $this->assertSame($epic['id'], $entry['issueId']);
         $this->assertSame($owner['user']['id'], $entry['userId']);
         $this->rpc('logTime', $input)->assertJsonPath('data.id', $entry['id']);

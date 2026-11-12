@@ -158,7 +158,7 @@ class ProjectAclTest extends TestCase
         $this->login($member);
         $this->rpc('createIssue', $input)->assertStatus(404);
         $this->rpc('getWorkspace')->assertJsonCount(0, 'data.projects')->assertJsonCount(0, 'data.issues');
-        $this->assertSame($issue['title'], $this->tenant->require('issues', $issue['id'])['title']);
+        $this->assertSame($input['title'], $this->tenant->require('issues', $issue['id'])['title']);
         $this->grant($member, 'maintainer');
         $this->login($member);
         $this->rpc('setProjectMember', ['projectId' => $this->first['id'], 'userId' => $member['id'], 'roleId' => 'owner', 'expectedRevision' => 3])->assertStatus(400);

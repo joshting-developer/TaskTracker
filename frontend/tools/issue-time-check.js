@@ -24,9 +24,9 @@ try {
   const token = crypto.randomUUID(), password = 'issue-time-test-only-password';
   const identity = await call(page, 'register', { name: '工時負責人', email: `time-owner-${token}@example.test`, password, workspaceName: '工時驗證' }, 'auth');
   const project = await call(page, 'createProject', { name: '詳細頁填報', code: 'TIME' });
-  const task = await call(page, 'createIssue', { projectId: project.id, title: '整理操作說明', type: 'task' });
-  const epic = await call(page, 'createIssue', { projectId: project.id, title: '發佈準備', type: 'epic' });
-  const child = await call(page, 'createIssue', { projectId: project.id, title: '上線前檢查', type: 'bug', epicId: epic.id });
+  const task = { ...{ projectId: project.id, title: '整理操作說明', type: 'task' }, ...(await call(page, 'createIssue', { projectId: project.id, title: '整理操作說明', type: 'task' })) }; // 寫入只回有界結果（TT-178）
+  const epic = { ...{ projectId: project.id, title: '發佈準備', type: 'epic' }, ...(await call(page, 'createIssue', { projectId: project.id, title: '發佈準備', type: 'epic' })) }; // 寫入只回有界結果（TT-178）
+  const child = { ...{ projectId: project.id, title: '上線前檢查', type: 'bug', epicId: epic.id }, ...(await call(page, 'createIssue', { projectId: project.id, title: '上線前檢查', type: 'bug', epicId: epic.id })) }; // 寫入只回有界結果（TT-178）
   const url = issue => `http://127.0.0.1:5175/#/projects/${project.id}/issues/${issue.id}?detail=1`;
   const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
   const drawer = page.locator('.time-entry-drawer');

@@ -98,7 +98,8 @@ async function checkIssueDetailPage(page) {
     const { api } = await import('/src/api/index.js');
     let project = await api.createProject({ name: '任務閱讀頁', code: 'DETAIL', requestId: crypto.randomUUID() });
     project = await api.updateStatuses({ projectId: project.id, expectedRevision: project.revision, statuses: [...project.statuses, { id: 'detail_review', label: '待驗收', color: '#8761b5' }], requestId: crypto.randomUUID() });
-    const create = input => api.createIssue({ projectId: project.id, requestId: crypto.randomUUID(), ...input });
+    // 寫入只回有界結果（TT-178），fixture合併輸入欄位供後續斷言使用。
+    const create = async input => ({ ...input, ...(await api.createIssue({ projectId: project.id, requestId: crypto.randomUUID(), ...input })) });
     const epic = await create({ title: '完整頁交付', type: 'epic' });
     const task = await create({ title: '整理任務完整頁', description: '驗收條件\n<script>不可執行</script>', epicId: epic.id, estimateMinutes: 120 });
     const child = await create({ title: '確認手機閱讀', parentIssueId: task.id, estimateMinutes: 60 });
@@ -522,7 +523,7 @@ async function checkCustomBoards(page) {
   const fixture = await page.evaluate(async () => {
     const { api } = await import('/src/api/index.js');
     const project = await api.createProject({ name: '收錄測試', code: 'CURATE', requestId: crypto.randomUUID() });
-    const create = input => api.createIssue({ projectId: project.id, requestId: crypto.randomUUID(), ...input });
+    const create = async input => ({ ...input, ...(await api.createIssue({ projectId: project.id, requestId: crypto.randomUUID(), ...input })) });
     const epic = await create({ title: '本次交付', type: 'epic' });
     const otherEpic = await create({ title: '之後交付', type: 'epic' });
     const task = await create({ title: '父工作', epicId: epic.id });

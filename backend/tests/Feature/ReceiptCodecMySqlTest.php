@@ -8,12 +8,13 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
+use Tests\Concerns\StoredWriteResults;
 use Tests\MySqlTestCase;
 
-/** TT-255：隔離MySQL量測gzip-v1對receipt儲存、編解碼CPU與程序內重播延遲的影響。 */
+/** TT-255：隔離MySQL量測gzip-v1對舊式完整receipt的儲存、編解碼CPU與程序內重播延遲影響（TT-178後新receipt已有界）。 */
 class ReceiptCodecMySqlTest extends MySqlTestCase
 {
-    use DatabaseTransactions;
+    use StoredWriteResults, DatabaseTransactions;
 
     /**
      * 透過正式HTTP寫入建立人造測試資料。
@@ -39,6 +40,19 @@ class ReceiptCodecMySqlTest extends MySqlTestCase
             ->selectRaw('COUNT(*) AS n, SUM(JSON_STORAGE_SIZE(result)) AS storage, SUM(OCTET_LENGTH(CAST(result AS CHAR CHARACTER SET utf8mb4))) AS text')->first();
 
         return ['rows' => (int) $row->n, 'storage' => (int) $row->storage, 'text' => (int) $row->text];
+    }
+
+    /**
+     * 把receipt改成當時的完整卡片，模擬TT-178前保存完整結果的舊receipt；壓縮現在主要用在這類舊資料。
+     *
+     * @param  string  $userId  操作者
+     * @param  string  $requestId  操作識別碼
+     * @param  array{id:string,projectId:string}  $result  寫入回傳的有界結果
+     * @return void
+     */
+    private function asLegacy(string $userId, string $requestId, array $result): void
+    {
+        DB::table('operation_receipts')->where('public_id', $userId.':'.$requestId)->update(['result' => json_encode($this->storedIssue($result), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)]);
     }
 
     /**
@@ -71,12 +85,15 @@ class ReceiptCodecMySqlTest extends MySqlTestCase
         $userId = $identity['user']['id'];
         $project = $this->rpc('createProject', ['name' => 'Codec', 'code' => 'CDM'])->assertOk()->json('data');
         $issue = $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => 'Initial', 'description' => str_repeat('需求內容 ', 100), 'requestId' => 'codec-create'])->assertOk()->json('data');
+        $this->asLegacy($userId, 'codec-create', $issue);
         $replayInput = null;
         for ($step = 1; $step <= 64; $step++) {
             $edit = ['id' => $issue['id'], 'expectedRevision' => $issue['revision'], 'title' => '調整 '.$step.' '.str_repeat('A', 50), 'requestId' => 'codec-edit-'.$step];
             $issue = $this->rpc('updateIssue', $edit)->assertOk()->json('data');
+            $this->asLegacy($userId, 'codec-edit-'.$step, $issue);
             $replayInput = $edit;
             $issue = $this->rpc('addComment', ['id' => $issue['id'], 'expectedRevision' => $issue['revision'], 'content' => '第'.$step.'次 '.str_repeat('進度記錄 ', 40), 'requestId' => 'codec-comment-'.$step])->assertOk()->json('data');
+            $this->asLegacy($userId, 'codec-comment-'.$step, $issue);
         }
         $original = $this->rpc('updateIssue', $replayInput)->assertOk()->json('data');
         $plain = $this->storage($userId);

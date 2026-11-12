@@ -25,8 +25,8 @@ try {
   await call(page, 'register', { name: '工時負責人', email: `member-detail-${token}@example.test`, password: 'detail-test-password', workspaceName: '成員明細測試' }, 'auth');
   const first = await call(page, 'createProject', { name: '會員服務', code: 'MEMBERS' });
   const second = await call(page, 'createProject', { name: '通知服務', code: 'NOTIFY' });
-  const task = await call(page, 'createIssue', { projectId: first.id, title: '會員登入與錯誤處理', type: 'task' });
-  const epic = await call(page, 'createIssue', { projectId: second.id, title: '通知整合', type: 'epic' });
+  const task = { ...{ projectId: first.id, title: '會員登入與錯誤處理', type: 'task' }, ...(await call(page, 'createIssue', { projectId: first.id, title: '會員登入與錯誤處理', type: 'task' })) }; // 寫入只回有界結果（TT-178）
+  const epic = { ...{ projectId: second.id, title: '通知整合', type: 'epic' }, ...(await call(page, 'createIssue', { projectId: second.id, title: '通知整合', type: 'epic' })) }; // 寫入只回有界結果（TT-178）
   for (let day = 0; day < 23; day++) {
     const date = new Date(`${today}T12:00:00Z`); date.setUTCDate(date.getUTCDate() - day);
     await call(page, 'logTime', { issueId: task.id, workDate: date.toISOString().slice(0, 10), minutes: 30, note: `處理會員登入流程，第 ${day + 1} 次測試` });

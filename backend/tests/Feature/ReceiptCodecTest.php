@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Domain\DomainError;
-use App\Models\Issue;
+use App\Models\Project;
 use App\Services\ReceiptCodec;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
@@ -89,28 +89,29 @@ class ReceiptCodecTest extends TestCase
         $identity = $this->postJson('/api/auth/register', ['name' => 'Codec', 'email' => 'codec-'.Str::uuid().'@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Codec'])->assertOk()->json('data');
         $userId = $identity['user']['id'];
         $project = $this->rpc('createProject', ['name' => 'Codec', 'code' => 'CDC'])->assertOk()->json('data');
-        $plainInput = ['projectId' => $project['id'], 'title' => 'Plain', 'description' => str_repeat('舊格式 ', 300), 'requestId' => 'codec-plain'];
-        $plain = $this->rpc('createIssue', $plainInput)->assertOk()->json('data');
+        // TT-178後卡片寫入結果已有界（不會超過門檻），改用結果較大的Project建立驗證編碼。
+        $plainInput = ['name' => 'Plain', 'code' => 'PLN', 'description' => str_repeat('舊格式 ', 120), 'requestId' => 'codec-plain'];
+        $plain = $this->rpc('createProject', $plainInput)->assertOk()->json('data');
         $this->assertArrayNotHasKey(ReceiptCodec::MARKER, $this->stored($userId, 'codec-plain'), '預設json不編碼');
 
-        config(['tasktracker.receipts.codec' => 'gzip-v1', 'tasktracker.receipts.min_bytes' => 1024]);
-        $input = ['projectId' => $project['id'], 'title' => 'Encoded', 'description' => str_repeat('需求內容 ', 300), 'requestId' => 'codec-encoded'];
-        $first = $this->rpc('createIssue', $input)->assertOk()->json('data');
+        config(['tasktracker.receipts.codec' => 'gzip-v1', 'tasktracker.receipts.min_bytes' => 256]);
+        $input = ['name' => 'Encoded', 'code' => 'ENC', 'description' => str_repeat('需求內容 ', 90), 'requestId' => 'codec-encoded'];
+        $first = $this->rpc('createProject', $input)->assertOk()->json('data');
         $this->assertSame('gzip-v1', $this->stored($userId, 'codec-encoded')[ReceiptCodec::MARKER]);
-        $count = Issue::count();
-        $this->assertSame($first, $this->rpc('createIssue', $input)->assertOk()->json('data'), '同key回原結果');
-        $this->assertSame($plain, $this->rpc('createIssue', $plainInput)->assertOk()->json('data'), '舊純JSON receipt雙讀');
-        $this->rpc('createIssue', [...$input, 'title' => 'Changed'])->assertStatus(409)->assertJsonPath('error.code', 'REQUEST_CONFLICT');
-        $this->assertSame($count, Issue::count(), '重播與衝突不新增卡片');
+        $count = Project::count();
+        $this->assertSame($first, $this->rpc('createProject', $input)->assertOk()->json('data'), '同key回原結果');
+        $this->assertSame($plain, $this->rpc('createProject', $plainInput)->assertOk()->json('data'), '舊純JSON receipt雙讀');
+        $this->rpc('createProject', [...$input, 'name' => 'Changed'])->assertStatus(409)->assertJsonPath('error.code', 'REQUEST_CONFLICT');
+        $this->assertSame($count, Project::count(), '重播與衝突不新增Project');
         $small = $this->rpc('createTodo', ['content' => '短', 'requestId' => 'codec-todo'])->assertOk()->json('data');
         $this->assertArrayNotHasKey(ReceiptCodec::MARKER, json_decode(DB::table('todo_operation_receipts')->where('public_id', $userId.':codec-todo')->value('result'), true), '小結果不編碼');
         $this->assertSame($small, $this->rpc('createTodo', ['content' => '短', 'requestId' => 'codec-todo'])->assertOk()->json('data'));
 
         $broken = [...$this->stored($userId, 'codec-encoded'), 'data' => base64_encode('broken')];
         DB::table('operation_receipts')->where('public_id', $userId.':codec-encoded')->update(['result' => json_encode($broken)]);
-        $response = $this->rpc('createIssue', $input);
+        $response = $this->rpc('createProject', $input);
         $this->assertSame('RECEIPT_UNREADABLE', $response->json('error.code'));
-        $this->assertSame($count, Issue::count(), '損壞receipt不重新執行');
+        $this->assertSame($count, Project::count(), '損壞receipt不重新執行');
         $this->assertNotNull(DB::table('operation_receipts')->where('public_id', $userId.':codec-encoded')->value('id'), '保留key');
     }
 
@@ -127,18 +128,18 @@ class ReceiptCodecTest extends TestCase
         $inputs = [];
         $results = [];
         for ($n = 0; $n < 7; $n++) {
-            $inputs[$n] = ['projectId' => $project['id'], 'title' => 'Card '.$n, 'description' => str_repeat('批次 ', 600), 'requestId' => 'batch-'.$n];
-            $results[$n] = $this->rpc('createIssue', $inputs[$n])->assertOk()->json('data');
+            $inputs[$n] = ['name' => 'Batch '.$n, 'code' => 'BT'.chr(65 + $n), 'description' => str_repeat('批次 ', 160), 'requestId' => 'batch-'.$n];
+            $results[$n] = $this->rpc('createProject', $inputs[$n])->assertOk()->json('data');
         }
         $plainRows = DB::table('operation_receipts')->orderBy('id')->pluck('result', 'id')->map(fn ($text) => json_decode($text, true))->all();
-        config(['tasktracker.receipts.min_bytes' => 1024]);
+        config(['tasktracker.receipts.min_bytes' => 256]);
 
         $this->assertSame(0, Artisan::call('tasktracker:receipt-codec', ['mode' => 'encode', '--batch' => 3, '--dry-run' => true]));
         $this->assertArrayNotHasKey(ReceiptCodec::MARKER, $this->stored($userId, 'batch-0'), 'dry-run不寫入');
         $this->assertSame(0, Artisan::call('tasktracker:receipt-codec', ['mode' => 'encode', '--batch' => 3]));
         for ($n = 0; $n < 7; $n++) {
             $this->assertSame('gzip-v1', $this->stored($userId, 'batch-'.$n)[ReceiptCodec::MARKER]);
-            $this->assertSame($results[$n], $this->rpc('createIssue', $inputs[$n])->assertOk()->json('data'), '轉換後重播原結果');
+            $this->assertSame($results[$n], $this->rpc('createProject', $inputs[$n])->assertOk()->json('data'), '轉換後重播原結果');
         }
         $this->assertSame(0, Artisan::call('tasktracker:receipt-codec', ['mode' => 'encode', '--batch' => 3]), '重跑冪等');
 

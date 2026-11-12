@@ -16,13 +16,14 @@ use Tests\Concerns\IssueLinkQueryCases;
 use Tests\Concerns\ProjectAclReadCases;
 use Tests\Concerns\RecordContextCases;
 use Tests\Concerns\WorkspaceSettingsReadCases;
+use Tests\Concerns\StoredWriteResults;
 use Tests\MySqlTestCase;
 
 /** 真實InnoDB驗證資料型別、DTO、關聯、receipt及作者／租戶邊界。 */
 class MySqlApiTest extends MySqlTestCase
 {
     use BoardVersionCases;
-    use DatabaseTransactions, \Tests\Concerns\ProjectTimeReadCases, \Tests\Concerns\ProjectUtilityReadCases;
+    use DatabaseTransactions, StoredWriteResults, \Tests\Concerns\ProjectTimeReadCases, \Tests\Concerns\ProjectUtilityReadCases;
     use IssueLinkQueryCases;
     use ProjectAclReadCases;
     use RecordContextCases;
@@ -45,8 +46,8 @@ class MySqlApiTest extends MySqlTestCase
         $this->rpc('logTime', [...$input, 'requestId' => (string) Str::uuid(), 'minutes' => 41])->assertStatus(400);
         $data = $this->rpc('getWorkspace')->assertOk()->json('data');
         $saved = collect($data['issues'])->firstWhere('id', $issue['id']);
-        $this->assertDtoSame($issue, $saved);
-        $this->assertDtoSame($entry, collect($data['timeEntries'])->firstWhere('id', $entry['id']));
+        $this->assertDtoSame($this->storedIssue($issue), $saved);
+        $this->assertDtoSame($this->storedTimeEntry($entry), collect($data['timeEntries'])->firstWhere('id', $entry['id']));
         $this->assertMatchesRegularExpression('/\.\d{6}Z$/', $saved['createdAt']);
         $this->rpc('updateIssue', ['id' => $issue['id'], 'expectedRevision' => 0, 'title' => '過期'])->assertStatus(409);
         $this->rpc('getTimeReport', ['startDate' => $input['workDate'], 'endDate' => $input['workDate']])->assertOk()->assertJsonPath('data.summary.totalMinutes', 1400);
@@ -60,12 +61,13 @@ class MySqlApiTest extends MySqlTestCase
         $project = $this->rpc('createProject', ['name' => 'Native', 'code' => 'NATIVE'])->assertOk()->json('data');
         $issue = $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => 'Native JSON'])->assertOk()->json('data');
         $first = $this->rpc('addComment', ['id' => $issue['id'], 'content' => 'First', 'expectedRevision' => $issue['revision']])->assertOk()->json('data');
-        $commentId = DB::table('issue_comments')->where('public_id', $first['comments'][0]['id'])->value('id');
+        $commentPublicId = $this->storedIssue($first)['comments'][0]['id'];
+        $commentId = DB::table('issue_comments')->where('public_id', $commentPublicId)->value('id');
         DB::enableQueryLog();
         DB::flushQueryLog();
         $this->rpc('addComment', ['id' => $issue['id'], 'content' => 'Second', 'expectedRevision' => $first['revision']])->assertOk();
         $this->assertCount(0, array_filter(DB::getQueryLog(), fn ($q) => str_contains($q['query'], 'audit_events') && ! str_starts_with($q['query'], 'select')));
-        $this->assertSame($commentId, DB::table('issue_comments')->where('public_id', $first['comments'][0]['id'])->value('id'));
+        $this->assertSame($commentId, DB::table('issue_comments')->where('public_id', $commentPublicId)->value('id'));
     }
 
     /** 原生MySQL確認literal LIKE與最小欄位投影，不以SQLite結果推論。 */

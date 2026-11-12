@@ -145,7 +145,7 @@ def import_cards(client, manifest):
         payload = {k: card[k] for k in ('title', 'description', 'state', 'priority', 'type')}
         issue = client.rpc('createIssue', **payload, projectId=client.config['projectId'], assignee='' if card['state'] == 'open' else client.config['userId'], epicId=epic['id'] if epic else '', requestId=str(uuid.uuid5(uuid.NAMESPACE_URL, 'tasktracker-bootstrap-v1:' + card['key'])))
         existing[card['key']] = issue
-        print(issue['identifier'], issue['state'], flush=True)
+        print(issue['identifier'], card['state'], flush=True)  # 寫入只回有界結果（TT-178）
 
 
 def main():

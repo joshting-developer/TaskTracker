@@ -7,12 +7,13 @@ use App\Repositories\RecordStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Tests\Concerns\StoredWriteResults;
 use Tests\TestCase;
 
 /** 有界讀取API的權限、投影、分頁及跨租戶契約。 */
 class ScopedReadApiTest extends TestCase
 {
-    use RefreshDatabase;
+    use StoredWriteResults, RefreshDatabase;
 
     private function rpc(string $operation, array $input = [])
     {
@@ -97,7 +98,7 @@ class ScopedReadApiTest extends TestCase
         $this->assertArrayNotHasKey('settingsHistory', $details);
 
         $store = (new RecordStore)->forWorkspace($actor['workspace']['id']);
-        $issue = $items[0];
+        $issue = $this->storedIssue($items[0]);
         $issue['comments'] = [];
         for ($i = 0; $i < 25; $i++) {
             $issue['comments'][] = ['id' => (string) Str::uuid(), 'content' => 'Comment '.$i, 'author' => 'Query', 'createdAt' => now()->toISOString()];
