@@ -1,3 +1,16 @@
+## 2026-11-12 TT-169 驗證完成
+
+- 公開POST Issue／PATCH／POST留言沿既有IssueService，writeOnce先資格與路徑資源重驗再讀RequestReplay；首次成功業務／來源／receipt同交易，重播無重複通知或audit。
+- 有界回應四欄位，舊Session／receipt不改，公開operation namespace獨立。PATCH省略保留，expectedRevision嚴格整數與requestId UUID必填；Epic／父子／關聯沿同一規則。
+- memory完整130通過／51原生類略過5735assertions；MySQL寫入／撤銷競態8通過285assertions，受影響契約17通過976assertions。獨立HTTP寫入PASS（建卡一次、closed、留言一次、最終revision3），官方OpenAPI與Pint通過。
+- 新版本機資源核對，無migration／seed／reset主庫，不推送；完成提交與卡片回填後接TT-252。各階段已留TT-169進度三則，避免只在對話保存。
+
+## 2026-11-12 持續完成API看板／TT-169開始
+
+- 使用者授權一路依序處理AI整合/API看板，每張有進度即留言，驗證／commit／結案後領下一張，不僅在對話交代。
+- TT-169已領：共用既有IssueService及通知／關聯規則，Bearer冪等寫入先重驗目標後才讀receipt，限定結果避免全歷史；PATCH只改明確欄位、expectedRevision與requestId必填。
+- 後續TT-252／253／254，再同步／Webhook卡；deferred與外部依賴逐卡核對，不偽造已驗證狀態。
+
 ## 2026-11-12 TT-168 驗證完成
 
 - 已交付7個公開Bearer只讀端點，既有身分加總8個公開GET；正式規格11paths／12operations，版0.3.0。共用既有Service／Resource，不複製授權與SQL；狀態新增最小有界資料投影。

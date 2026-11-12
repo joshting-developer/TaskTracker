@@ -1,5 +1,10 @@
 # API-first平台架構與第三方整合邊界
 
+## 2026-11-12 TT-169 公開寫入交付
+
+已提供Issue建立／部分更新／留言，沿現有業務與權限、來源、revision及requestId原結果契約，回應與新receipt固定四欄位。見[寫入契約](public-write-api-v1.md)；TT-252～254文件／CI／獨立全流程驗收仍後續，不因API可呼叫便全部結案。
+
+
 ## 2026-11-12 TT-168 只讀能力
 
 公開Project／成員／狀態／Issue／留言讀取已落地，沿TT-166的Bearer邊界及既有查詢服務，不複製業務邏輯。Token資格交集、分頁及最新revision與範例見[只讀契約](public-query-api-v1.md)。正式OpenAPI0.3.0只列已交付能力；TT-169寫入、TT-252文件站／253 CI／254最終建卡驗收仍待完成。

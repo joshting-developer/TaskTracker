@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Integrations\ApiSpecificationController;
 use App\Http\Controllers\Integrations\PersonalTokensController;
+use App\Http\Controllers\Integrations\PublicIssuesController;
 use App\Http\Controllers\Integrations\PublicQueriesController;
 use App\Http\Controllers\Integrations\TokenIdentityController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -35,4 +36,13 @@ Route::prefix('/api/public/v1')->middleware('throttle:public-api-v1')->withoutMi
     Route::get('/projects/{project}/issues', [$queries, 'issues']);
     Route::get('/projects/{project}/issues/{issue}', [$queries, 'issue']);
     Route::get('/projects/{project}/issues/{issue}/comments', [$queries, 'comments']);
+});
+
+Route::prefix('/api/public/v1/projects/{project}/issues')->middleware('throttle:public-api-v1')->withoutMiddleware([
+    StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class,
+])->group(function () {
+    $writes = PublicIssuesController::class;
+    Route::post('/', [$writes, 'execute'])->name('public.issues.create');
+    Route::patch('/{issue}', [$writes, 'execute'])->name('public.issues.update');
+    Route::post('/{issue}/comments', [$writes, 'execute'])->name('public.issues.comment');
 });

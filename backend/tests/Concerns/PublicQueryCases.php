@@ -94,7 +94,7 @@ trait PublicQueryCases
         $this->assertSame([], $this->publicRead($plain, $prefix.'/issues?page=999', '/projects/{project}/issues')['data']['items']);
         $this->assertSame(0, $this->publicRead($plain, '/projects?search=%25', '/projects')['data']['total']);
         $this->assertSame(1, $this->publicRead($plain, $prefix.'/issues?identifier='.urlencode($issue['identifier']).'&workspaceId=forged&actor=forged', '/projects/{project}/issues')['data']['total']);
-        $this->postJson('/api/public/v1/projects/'.$project['id'].'/issues', [], ['Authorization' => 'Bearer '.$plain])->assertStatus(405);
+        $this->postJson('/api/public/v1/projects/'.$project['id'].'/issues', ['title' => 'no write', 'requestId' => (string) Str::uuid()], ['Authorization' => 'Bearer '.$plain])->assertStatus(403);
 
         $this->assertSame($auditCount, IntegrationAudit::count());
         $this->assertNull(PersonalAccessToken::findOrFail($token['token']['id'])->last_used_at);

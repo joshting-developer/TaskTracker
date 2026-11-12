@@ -7,11 +7,13 @@ use App\Database\WorkspaceSqliteConnection;
 use App\Database\WriteLocks;
 use App\Domain\DomainError;
 use App\Factories\ProjectAccessFactory;
+use App\Factories\RecordStoreFactory;
 use App\Factories\WorkspaceContextFactory;
 use App\Models\PersonalAccessToken;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Integrations\IntegrationAudits;
+use App\Services\RequestReplay;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +22,7 @@ use Illuminate\Support\Facades\DB;
 class BearerTokenSession
 {
     /** 注入現行鎖／資格／Project授權與來源紀錄，不複製業務權限映射。 */
-    public function __construct(private WorkspaceContextFactory $contexts, private WriteLocks $locks, private ProjectAccessFactory $projects, private IntegrationAudits $audits) {}
+    public function __construct(private WorkspaceContextFactory $contexts, private WriteLocks $locks, private ProjectAccessFactory $projects, private IntegrationAudits $audits, private RecordStoreFactory $stores, private RequestReplay $replay) {}
 
     /**
      * 以PAT回傳最小身分，既有Session與X-Workspace-ID不改變Token綁定。
@@ -71,6 +73,31 @@ class BearerTokenSession
 
             return $result;
         }, $projectId, $permission);
+    }
+
+    /**
+     * 授權後才讀原結果；只有首次真正寫入同交易追加來源，重播不再發通知／audit。
+     *
+     * @param  Request  $request  純Bearer HTTP
+     * @param  string  $operation  伺服器固定且與Session分離的操作名
+     * @param  array  $input  已驗allowlist及路徑資源；用於requestId簽章
+     * @param  Closure(TokenContext):void  $authorize  資源條件重驗，必須在receipt前執行
+     * @param  Closure(TokenContext):array  $use  共用業務用例，回傳有界結果
+     * @param  string  $projectId  Project公開ID
+     * @return array 首次結果或相同請求原結果
+     */
+    public function writeOnce(Request $request, string $operation, array $input, Closure $authorize, Closure $use, string $projectId): array
+    {
+        return $this->run($request, true, function (TokenContext $token) use ($operation, $input, $authorize, $use) {
+            $authorize($token);
+
+            return $this->replay->execute($this->stores->forContext($token->workspace), 'requests', $token->workspace->userId, $operation, $input, function () use ($token, $operation, $use) {
+                $result = $use($token);
+                $this->audits->append($token->workspace, $operation, $result['id'], $token);
+
+                return $result;
+            });
+        }, $projectId, 'issue.write');
     }
 
     /**

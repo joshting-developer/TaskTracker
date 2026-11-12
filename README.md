@@ -1,18 +1,23 @@
 # TaskTracker
 
+## 公開寫入API
+
+PAT write已可建立Issue、PATCH部分更新與留言，支援版本與相同請求重播；[公開寫入契約](docs/public-write-api-v1.md)。無刪除／封存。
+
+
 ## 公開查詢API
 
-PAT已可查可見專案、成員候選、狀態、卡號精準摘要、單卡最新詳細與留言。公開前綴 `/api/public/v1`，不需要Cookie；[查詢契約與純HTTP範例](docs/public-query-api-v1.md)。公開寫入尚未開放。
+PAT已可查可見專案、成員候選、狀態、卡號精準摘要、單卡最新詳細與留言。公開前綴 `/api/public/v1`，不需要Cookie；[查詢契約與純HTTP範例](docs/public-query-api-v1.md)。公開寫入現已另提供，見上方寫入契約。
 
 
 ## 公開API契約
 
-目前公開Bearer提供身分與專案／任務只讀查詢；[OpenAPI](backend/resources/openapi.json)對外入口 `/api/public/openapi.json`，[版本與使用規則](backend/resources/public-api-contract.md)入口 `/api/public/contract.md`。公開寫入尚未開放，既有契約交付沿革見[REST契約交付](docs/public-rest-contract-v1.md)。
+目前公開Bearer提供身分與專案／任務只讀查詢；[OpenAPI](backend/resources/openapi.json)對外入口 `/api/public/openapi.json`，[版本與使用規則](backend/resources/public-api-contract.md)入口 `/api/public/contract.md`。公開寫入見上方契約，既有契約交付沿革見[REST契約交付](docs/public-rest-contract-v1.md)。
 
 
 ## 個人 API Token
 
-右上帳號選單 → 個人 API Token，可建立目前工作空間的個人憑證、設定read／write與到期日、撤銷憑證。公開API已提供Bearer只讀查詢，寫入尚未開放；見[Token契約與使用方式](docs/personal-access-tokens.md)。OpenAPI入口為 `/api/public/openapi.json`。
+右上帳號選單 → 個人 API Token，可建立目前工作空間的個人憑證、設定read／write與到期日、撤銷憑證。公開API已提供Bearer只讀查詢，寫入見上方契約；見[Token契約與使用方式](docs/personal-access-tokens.md)。OpenAPI入口為 `/api/public/openapi.json`。
 
 
 專案管理平台 Side Project, 以 Workspace → Project → Issue 組織多人協作

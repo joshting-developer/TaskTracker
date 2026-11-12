@@ -52,6 +52,26 @@ class WorkspaceService
     }
 
     /**
+     * 公開Issue寫入共用同一業務／關聯／通知流程，receipt由外層Bearer writeOnce擁有。
+     *
+     * @param  array  $identity  交易內重驗的可信資格
+     * @param  string  $operation  僅createIssue／updateIssue／addComment
+     * @param  array  $input  已驗輸入與路徑目標
+     * @return array{id:string,projectId:string,identifier:string,revision:int} 有界首次寫入結果
+     */
+    public function executePublicIssue(array $identity, string $operation, array $input): array
+    {
+        if (! in_array($operation, ['createIssue', 'updateIssue', 'addComment'], true)) {
+            DomainError::fail('NOT_FOUND', '找不到這個操作');
+        }
+        $services = $this->services->forSession($identity);
+        $services->operationAccess()->authorize($operation, $input);
+        $result = $this->write($services, $operation, $input);
+
+        return ['id' => $result['id'], 'projectId' => $result['projectId'], 'identifier' => $result['identifier'], 'revision' => $result['revision']];
+    }
+
+    /**
      * 依操作只取得需要的領域服務並寫入，完成後依結果決定要通知的Project。
      *
      * @param  WorkspaceOperationServices  $services  本次操作的服務組

@@ -1,5 +1,10 @@
 # TaskTracker 開發指引
 
+## 2026-11-12 TT-169 公開寫入
+
+已提供Bearer write的POST Issue、PATCH部分更新與POST留言；expectedRevision／requestId、當下permission與同Workspace／Project資源條件生效。共用WorkspaceService.executePublicIssue／IssueService；Bearer writeOnce負責交易／鎖後重驗、receipt與首次來源，原結果重播不重複業務／通知／audit。HTTP與新receipt結果固定id/projectId/identifier/revision，不改舊Session契約／receipt。OpenAPI0.4.0（11paths／15operations）、匿名契約與[寫入文件](docs/public-write-api-v1.md)同步，後續文件站／CI／獨立全流程驗收仍TT-252～254。
+
+
 ## 2026-11-12 TT-168 公開只讀API
 
 公開Bearer v1已提供身分與Project列表／詳細、有效成員候選、實際狀態、Issue篩選列表／單卡完整屬性及留言分頁；同一Token固定Workspace，共用Web的Application Service／permission與SQL投影。列表摘要不作編輯基準；單卡回最新revision，活動分責。OpenAPI版0.3.0（11 paths／12 operations），匿名契約同步，共用每IP120次／60秒。公開寫入仍待TT-169；查詢流程／範例及範圍審查見[公開查詢API](docs/public-query-api-v1.md)。
@@ -173,6 +178,8 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 使用者要求安裝兩份skill並以Unslop去AI化掃描。入口`.agents/skills/hallmark`及`.agents/skills/unslop`，原文固定版本位於skills/vendor；先讀docs/anti-slop-skills.md。Unslop為heydamir的UI版本，作者Damir Sokolovsky／CC BY 4.0，保留署名與授權。使用者既有品牌、app資料工作區、功能與內容優先，不把Hallmark網站hero／限寬或風格禁令直接套入。未明確說直接實作時依Unslop先交審查及五行方向，等確認再改介面；安裝不代表已執行兩份重設計或去AI化完成。
 
 ## TaskTracker自我追蹤與AI登入（2026-11-11）
+
+2026-11-12使用者要求：持續依序處理AI整合/API看板，一張驗證／提交／回填完成後領下一張。有實質進度即在對應卡片留言（已完成、驗證、未完成／阻礙與接手下一步），不能只留對話或等額度耗盡才交接；狀態仍反映實際成果，不為完成清單假結案。
 
 本專案已在本機TaskTracker的SideProject工作區建立TaskTracker／TT專案，Project ID `5a451d5c-2fff-4110-aa49-4998ec9dbff2`。使用者已要求既有及未來工作均建卡；2026-11-12改為待辦先未指派，Agent開工時才領卡，狀態須對應實際進度；開工前查閱／建立相應卡片，進行中、受阻、驗收與完成如實更新，不以commit自動假定整項功能完成。
 

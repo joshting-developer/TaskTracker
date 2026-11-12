@@ -27,7 +27,7 @@ class TokenSpecificationTest extends TestCase
             }
         }
         $this->assertSame(count($operations), count(array_unique($operations)));
-        $this->assertSame(12, count($operations));
+        $this->assertSame(15, count($operations));
         $this->assertSame([['bearerPat' => []]], $spec['paths']['/api/public/v1/me']['get']['security']);
         $this->assertCount(11, $spec['paths']);
         $this->assertStringNotContainsString('plainTextToken', json_encode($spec['components']['schemas']['Token']));
