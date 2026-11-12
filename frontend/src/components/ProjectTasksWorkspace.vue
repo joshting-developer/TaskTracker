@@ -71,10 +71,16 @@ async function loadDetail() {
   if (!id) { detail.value = null; return; }
   try {
     const value = await api.issue(props.project.id, id, { signal: detailRequest.signal });
-    if (current !== detailGeneration) return;
+    if (current !== detailGeneration) return false;
     detail.value = value;
     if (!props.detailPage && canWrite.value) await prepareEditor(value);
-  } catch (failure) { if (current === detailGeneration) handleFailure(failure); }
+    return current === detailGeneration;
+  } catch (failure) { if (current === detailGeneration) handleFailure(failure); return false; }
+}
+// 編輯器衝突後重讀：取得最新版本才重設表單，無論成功與否都結束儲存狀態。
+async function reloadEditor(reset, settled) {
+  try { if (await loadDetail()) { await nextTick(); reset?.(); } }
+  finally { settled?.(); }
 }
 watch([() => props.issueId, () => props.detailPage], () => { editor.value = null; loadDetail(); }, { immediate: true });
 async function prepareEditor(issue = null, defaults = {}) {
@@ -154,6 +160,6 @@ onBeforeUnmount(() => { alive = false; optionGeneration++; optionRequest?.abort(
       </section>
     </template>
     <BoardDialog v-if="boardEditor" ref="boardTool" :project="project" :issues="[]" :board="boardEditor.board" :remote="true" @close="boardEditor = null" @saved="savedBoard" @reload="reload" />
-    <IssuePanel :lookup="lookup" v-if="editor && canWrite" ref="issueTool" :key="editor.issue?.id || 'create'" :issue="editor.issue" :projects="[project]" :default-project="project.id" :default-type="editor.type || 'task'" :default-state="editor.state || project.statuses[0].id" :default-epic-id="editor.epicId || ''" :default-board-id="boardId" :members="memberNames" :issues="detailRows" :entries="[]" :activity-loader="loadActivity" :can-expand="true" @expand="emit('issue', detail, true)" @close="closeEditor" @open="(issue, full = false) => emit('issue', issue, full)" @saved="savedIssue" @reload="loadDetail" />
+    <IssuePanel :lookup="lookup" v-if="editor && canWrite" ref="issueTool" :key="editor.issue?.id || 'create'" :issue="editor.issue" :projects="[project]" :default-project="project.id" :default-type="editor.type || 'task'" :default-state="editor.state || project.statuses[0].id" :default-epic-id="editor.epicId || ''" :default-board-id="boardId" :members="memberNames" :issues="detailRows" :entries="[]" :activity-loader="loadActivity" :can-expand="true" @expand="emit('issue', detail, true)" @close="closeEditor" @open="(issue, full = false) => emit('issue', issue, full)" @saved="savedIssue" @reload="reloadEditor" />
   </div>
 </template>
