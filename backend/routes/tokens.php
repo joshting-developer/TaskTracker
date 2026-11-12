@@ -8,6 +8,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
+Route::get('/api/v1/personal-token-audits', [PersonalTokensController::class, 'audits'])->block(10, 10);
 Route::get('/api/v1/personal-tokens', [PersonalTokensController::class, 'index'])->block(10, 10);
 Route::post('/api/v1/personal-tokens', [PersonalTokensController::class, 'store'])->middleware('throttle:20,1')->block(10, 10);
 Route::post('/api/v1/personal-tokens/{token}/revoke', [PersonalTokensController::class, 'revoke'])->middleware('throttle:60,1')->block(10, 10);

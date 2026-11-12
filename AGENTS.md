@@ -1,5 +1,10 @@
 # TaskTracker 開發指引
 
+## 2026-11-12 TT-166 Token來源與授權邊界
+
+公開API統一經BearerTokenSession：只取Bearer，write採User→Workspace鎖後重驗Token／Scope／當下資格及目標Project permission；業務Service仍負責資源／作者／revision／requestId。成功寫入來源以integration_audits同交易追加，不保存秘密／payload，唯讀不追加。PAT建立／首次撤銷已記Session來源；本人清單GET /api/v1/personal-token-audits每頁20筆，僅Session且限目前Workspace。無獨立稽核UI；公開卡片REST尚待TT-168／169接線。撤權的時序、現有Workspace成員停用範圍與驗證見[Token授權與來源](docs/token-authorization-and-audit.md)。
+
+
 ## 2026-11-12 TT-165 個人PAT現況
 
 已提供帳號選單的個人API Token管理、Workspace綁定、read／write、期限／撤銷與一次顯示原文；Sanctum保存雜湊。公開入口目前只有純Bearer `GET /api/public/v1/me`，正式規格為 `backend/resources/openapi.json`，匿名取得 `/api/public/openapi.json`。公開專案／卡片／留言操作仍由TT-168／169等後續卡承接，不可拿PAT呼叫Session RPC或宣稱整體外部整合已完成。見[操作與安全契約](docs/personal-access-tokens.md)。

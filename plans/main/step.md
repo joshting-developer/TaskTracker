@@ -1,3 +1,15 @@
+## 2026-11-12 TT-166 完成驗證
+
+- Bearer read/write邊界、TokenContext、成功來源表與本人有界查詢已實作；PAT管理已接Session來源，公開卡片操作留TT-168／169。讀取不追加稽核且只查一次Token；寫入保留鎖前hint／鎖後驗證。
+- memory完整113通過／40原生類略過；MySQL相關10通過；最終跨引擎／規格14通過353 assertions。含真實獨立PDO撤銷競態、Project降權／撤權、同人跨Workspace、來源分頁與audit失敗原子rollback。Chrome及Pint通過。
+- 新integration_audits migration batch3、本機新版服務及OpenAPI一致性已確認，無seed／reset主庫。只提交本卡相關檔案，不推送遠端。
+
+## 2026-11-12 TT-166 開始
+
+- 領取使用者／Token來源稽核與即時撤權；以可信TokenContext及Bearer交易邊界共用WorkspaceContextFactory／ProjectAccess，不依賴瀏覽器Session。
+- 寫入採User→Workspace鎖後重查Token、Scope及資格；成功寫入同交易追加來源metadata，失敗rollback。只記user／token ID與名稱、scope及受信任操作識別，不保存秘密或payload；讀取不寫稽核。
+- PAT建立／撤銷亦記Session來源；提供本人目前工作區的有界稽核清單。測試有效權限交集、撤銷／到期／停用、跨租戶、原子rollback與MySQL並行撤銷。公開業務REST仍留TT-168／169。
+
 ## 2026-11-12 TT-165 開始
 
 ## 2026-11-12 TT-165 驗證與交付

@@ -1,5 +1,10 @@
 # API-first平台架構與第三方整合邊界
 
+## 2026-11-12 TT-166 實作更新
+
+已建立可信TokenContext及Bearer read/write交易邊界：Scope與當下Workspace／Project有效permission取交集；寫入鎖後重驗並原子保存成功操作來源。PAT建立／撤銷已記Session來源，來源清單只限本人目前工作區；讀取不逐次寫日誌。見[契約與撤權時序](token-authorization-and-audit.md)。TT-168／169必須沿此邊界使用既有Service，不可重複建立授權或業務流程；本輪沒有新增公開卡片端點、全站帳號停用欄位、專屬稽核UI或MCP。
+
+
 ## 2026-11-12 TT-165 實作更新
 
 先前「尚未安裝／全部待辦」為規劃當時狀態。TT-165已安裝Sanctum4.4.0，交付Session管理介面、個人Workspace綁定PAT、read／write、最長兩年、一次揭露、雜湊／撤銷與到期管理；純Bearer身分端點 `/api/public/v1/me` 與正式OpenAPI同步。詳細[實作契約](personal-access-tokens.md)。TT-166來源稽核、TT-167完整REST契約、TT-168／169業務端點、TT-252～254文件站／CI／獨立客戶端驗收仍另行處理，不因此結案。

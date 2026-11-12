@@ -76,6 +76,10 @@ TT-165完成的是PAT生命週期與可驗證的Bearer身分入口；TT-166的�
 
 依據：[Laravel13 Sanctum官方文件](https://laravel.com/framework/docs/sanctum)、[官方HasApiTokens實作](https://github.com/laravel/sanctum/blob/4.x/src/HasApiTokens.php)（2026-11-12查證），產品規則依[API-first決策](api-first-platform.md)。
 
+## TT-166 後續更新
+
+PAT建立／首次撤銷現在會同交易記Session來源；純Bearer共用鎖後重驗與最小來源邊界。本人來源清單為GET /api/v1/personal-token-audits，固定每頁20筆。正式OpenAPI現有4個path／5個operation；歷史TT-165測試數仍是當時結果。詳見[來源及撤權契約](token-authorization-and-audit.md)。
+
 ## 本輪驗證（2026-11-12）
 
 - 隔離memory完整回歸：108 passed、32 skipped（原生MySQL類另跑），4645 assertions。

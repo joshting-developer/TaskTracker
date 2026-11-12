@@ -1,5 +1,10 @@
 # TaskTracker 關聯式資料設計
 
+## 2026-11-12 操作來源資料表（TT-166）
+
+新增integration_audits，同交易記成功寫入的User／Token識別、名稱及能力快照、固定operation與resource識別；沒有內容／秘密／IP。Workspace FK與本人工作區分頁索引保留隔離；User／Token以識別快照避免刪除歷史來源。只新增表，不回填既有卡片歷史，無清理TTL。見[來源契約](token-authorization-and-audit.md)。
+
+
 ## 2026-11-12 個人PAT資料表
 
 TT-165新增 `personal_access_tokens`，User UUID外鍵、Workspace外鍵、雜湊唯一索引、必填expires_at、revoked_at與本人issuance_request_id唯一限制。使用Sanctum模型，不將秘密寫入重播快照；清單只投影metadata，每頁20筆、id倒序。既有業務表與資料不改寫，見[Token契約](personal-access-tokens.md)。

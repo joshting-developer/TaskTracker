@@ -510,7 +510,165 @@
               }
             }
           }
-        }
+        },
+        "description": "僅接受Bearer PAT，不接受Session。每次重驗Token、到期、撤銷及固定Workspace有效資格；不依目前網頁Workspace，不寫入讀取稽核或last_used_at。已開始的唯讀請求使用該次交易快照，不宣稱撤銷能收回已回傳內容。"
+      }
+    },
+    "/api/v1/personal-token-audits": {
+      "get": {
+        "operationId": "personalTokenAudits",
+        "summary": "列出本人目前工作區成功操作的來源紀錄",
+        "tags": [
+          "Personal tokens"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "items",
+                        "page",
+                        "perPage",
+                        "total",
+                        "lastPage"
+                      ],
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "maxItems": 20,
+                          "items": {
+                            "$ref": "#/components/schemas/IntegrationAudit"
+                          }
+                        },
+                        "page": {
+                          "type": "integer"
+                        },
+                        "perPage": {
+                          "const": 20
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "lastPage": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "輸入不合法",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登入或Token無效／過期／撤銷／資格失效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Scope或來源不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "找不到本人Token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Workspace已切換或相同建立requestId已使用",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "Session CSRF過期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "請求過於頻繁",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Workspace-ID",
+            "schema": {
+              "type": "string"
+            },
+            "description": "建議提供，與Session目前工作區不同則409；不是指定可任意操作的Workspace"
+          }
+        ],
+        "description": "僅Session管理入口；每頁20筆id倒序。只保存成功寫入的來源metadata；不含請求內容／Token原文或雜湊，不提供其他使用者紀錄。"
       }
     }
   },
@@ -661,6 +819,74 @@
                 "write"
               ]
             }
+          }
+        }
+      },
+      "IntegrationAudit": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "userId",
+          "source",
+          "tokenId",
+          "tokenName",
+          "abilities",
+          "operation",
+          "resourceId",
+          "occurredAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "session",
+              "token"
+            ]
+          },
+          "tokenId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tokenName": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 60
+          },
+          "abilities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "read",
+                "write"
+              ]
+            }
+          },
+          "operation": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "resourceId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 64
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       }

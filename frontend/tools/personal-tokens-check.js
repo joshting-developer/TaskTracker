@@ -18,7 +18,7 @@ try {
   const csrfMissing = await page.request.post('http://127.0.0.1:5175/api/v1/personal-tokens', { data: {}, headers: { Accept: 'application/json' } });
   assert.equal(csrfMissing.status(), 419);
   const spec = await page.evaluate(async () => (await (await fetch('/api/public/openapi.json')).json()));
-  assert.equal(spec.openapi, '3.1.0'); assert.equal(Object.keys(spec.paths).length, 3);
+  assert.equal(spec.openapi, '3.1.0'); assert.equal(Object.keys(spec.paths).length, 4);
   await page.reload();
   async function open() {
     await page.getByRole('button', { name: '帳號選單', exact: true }).click();
@@ -55,10 +55,14 @@ try {
   await dialog.getByRole('button', { name: '撤銷', exact: true }).click();
   await dialog.getByText(/已撤銷/).waitFor();
   assert.equal(await page.evaluate(async token => (await fetch('/api/public/v1/me', { headers: { Authorization: `Bearer ${token}` } })).status, plain), 401);
+  const audit = await page.evaluate(async () => (await (await fetch('/api/v1/personal-token-audits')).json()).data);
+  assert.deepEqual(audit.items.map(row => row.operation), ['personalTokens.revoke', 'personalTokens.create']);
+  assert(audit.items.every(row => row.source === 'session' && row.tokenId === null));
+  assert(!JSON.stringify(audit).includes(plain));
   const leaks = await page.evaluate(token => [...Object.values(localStorage), ...Object.values(sessionStorage)].some(v => v.includes(token)), plain);
   assert.equal(leaks, false);
   assert.deepEqual(errors, []);
-  console.log('PASS: 帳號選單、PAT建立一次顯示、Bearer身分、重開不洩漏、撤銷401、無storage秘密、三尺寸');
+  console.log('PASS: 帳號選單、PAT建立一次顯示、Bearer身分、重開不洩漏、撤銷401、無storage秘密、三尺寸、Session來源稽核');
 } finally {
   await browser?.close();
   await new Promise(resolve => server ? server.httpServer.close(resolve) : resolve());

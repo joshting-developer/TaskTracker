@@ -13,6 +13,9 @@ use Illuminate\Database\Eloquent\Builder;
 /** 本人Token資料操作；交易、User鎖與Session資格由共用WorkspaceTransaction擁有。 */
 class PersonalTokens
 {
+    /** 注入同交易的來源紀錄，不在Service取得HTTP或Session。 */
+    public function __construct(private IntegrationAudits $audits) {}
+
     /**
      * 以擁有者與固定工作區在SQL限定範圍，穩定倒序分頁metadata。
      *
@@ -59,6 +62,7 @@ class PersonalTokens
             DomainError::fail('INVALID_INPUT', '請填寫Token名稱');
         }
         $token->save();
+        $this->audits->append($context, 'personalTokens.create', (string) $token->id);
 
         return ['token' => $this->metadata($token), 'plainTextToken' => $token->getKey().'|'.$plain];
     }
@@ -79,6 +83,7 @@ class PersonalTokens
         if ($token->revoked_at === null) {
             $token->revoked_at = now();
             $token->save();
+            $this->audits->append($context, 'personalTokens.revoke', (string) $token->id);
         }
 
         return $this->metadata($token);

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Integrations\CreateTokenRequest;
 use App\Http\Resources\ApiResponse;
 use App\Http\WorkspaceTransaction;
+use App\Services\Integrations\IntegrationAudits;
 use App\Services\Integrations\PersonalTokens;
 use Illuminate\Http\Request;
 
@@ -15,7 +16,7 @@ use Illuminate\Http\Request;
 class PersonalTokensController extends Controller
 {
     /** 注入共用交易／Session重驗邊界與個人Token用例，不在Controller查DB。 */
-    public function __construct(private WorkspaceTransaction $transactions, private PersonalTokens $tokens) {}
+    public function __construct(private WorkspaceTransaction $transactions, private PersonalTokens $tokens, private IntegrationAudits $audits) {}
 
     /**
      * 只讀本人目前工作區Token metadata，不讀取原文／雜湊。
@@ -31,6 +32,22 @@ class PersonalTokensController extends Controller
         }
 
         return new ApiResponse($this->transactions->read($request, fn (WorkspaceContext $context) => $this->tokens->listing($context, $page)));
+    }
+
+    /**
+     * 只列本人目前工作區成功操作的安全來源metadata。
+     *
+     * @param  Request  $request  Session身分及頁碼
+     * @return ApiResponse 每頁20筆，無Token秘密或請求內容
+     */
+    public function audits(Request $request): ApiResponse
+    {
+        $page = filter_var($request->query('page', 1), FILTER_VALIDATE_INT);
+        if ($page === false || $page < 1 || $page > 1000000) {
+            DomainError::fail('INVALID_INPUT', '頁碼無效');
+        }
+
+        return new ApiResponse($this->transactions->read($request, fn (WorkspaceContext $context) => $this->audits->listing($context, $page)));
     }
 
     /**
