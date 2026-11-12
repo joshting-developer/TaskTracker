@@ -1,3 +1,15 @@
+## 2026-11-12 TT-253 驗證完成
+
+- 全新獨立CI／13049通過：memory22／13原生類略過2285assertions；MySQL14通過508assertions；官方Schema、3種結構／7種契約負向、下載py／sh、Chrome15頁尺寸及鍵盤、真HTTP限流通過，結束自動清理獨立環境。
+- 修正Docker context漏resources，公開文件及規格不靠人工copy。GitHub Actions已配置但未push／未觸發遠端job；非TT-254獨立拒絕流程或p95證據。
+- 完成提交／回填TT-253後領TT-254；進度已留卡，不碰現用主庫。
+
+## 2026-11-12 TT-253 契約CI開始
+
+- 雙向路由／Scope／認證／FormRequest必填與正式Schema範例驗證，七種負向漂移必須失敗。
+- 獨立tasktracker-contract-ci／13049／tasktracker_test，不使用現用主庫或Agent憑證；公開下載範例、真HTTP、文件瀏覽器共用可重跑入口。
+- GitHub Actions加入相同門檻；本輪只驗本地等價流程，不推送或聲稱遠端job已執行。
+
 ## 2026-11-12 TT-252 驗證完成
 
 - 五頁匿名文件、Markdown原文、同源py／sh範例下載與唯一OpenAPI0.4.1發現連結完成。安全渲染固定slug、CSP無腳本／表單／Session，查業務DB為0。

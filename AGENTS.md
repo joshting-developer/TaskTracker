@@ -241,3 +241,7 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 新增或修改HTTP API、Repository、資料查詢、前端資料載入或輪詢時，**必須執行** [API資料存取八項審查](skills/tasktracker-development-standards/references/data-access.md)。2026-11-12使用者提供的八項完整規則已移至此reference作為正式規範，後續調整同樣適用。
 
 既有API契約可以為合理資料範圍改版／退役，須同步呼叫端、文件與測試；安全、租戶隔離、資料保存、revision及requestId語意維持。不得以歷史相容保留整包Workspace，也不得用本機SQLite代替遠端MySQL／實際拓樸驗證或將未完成P1宣稱整體通過。
+
+### 2026-11-12 TT-253 公開契約CI
+
+公開API變更須維護唯一backend/resources/openapi.json與FormRequest／路由／Scope／範例一致；tools/api-contract-ci.sh於獨立tasktracker-contract-ci、13049、tasktracker_test跑官方Schema、漂移負向、HTTP／MySQL／下載範例／文件Chrome驗證並清理自身環境。GitHub Actions使用相同runner，不需正式秘密；未push不宣稱遠端job成功。見docs/public-api-contract-ci.md。

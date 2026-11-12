@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
-if (process.env.E2E_API_URL !== 'http://127.0.0.1:13029') throw new Error('只允許隔離文件測試API');
+if (!['http://127.0.0.1:13029', 'http://127.0.0.1:13049'].includes(process.env.E2E_API_URL)) throw new Error('只允許隔離文件測試API');
 let server, browser;
 try {
   server = await preview({ preview: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });

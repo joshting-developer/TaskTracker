@@ -1,0 +1,33 @@
+name: Public API contract
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Prepare offline validator and browser
+        run: |
+          python3 -m venv .local/openapi-validation
+          .local/openapi-validation/bin/pip install -r tools/requirements-openapi.txt
+          npm --prefix frontend ci
+          npm --prefix frontend run build
+          cd frontend
+          npx playwright install --with-deps chromium
+      - name: Verify schema, HTTP contracts, downloaded examples and documentation
+        run: sh tools/api-contract-ci.sh

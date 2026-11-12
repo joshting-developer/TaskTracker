@@ -61,7 +61,7 @@ services:
       - ./backend/tools:/app/tools:ro
       - app-secret:/run/tasktracker-app:ro
     ports:
-      - "127.0.0.1:13029:3002"
+      - "127.0.0.1:${TASKTRACKER_TEST_PORT:-13029}:3002"
     depends_on:
       mysql:
         condition: service_healthy

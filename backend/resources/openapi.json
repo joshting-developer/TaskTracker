@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker API",
-    "version": "0.4.1",
+    "version": "0.4.2",
     "description": "公開Bearer v1讀取及Issue建立／PATCH／留言；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。"
   },
   "servers": [
@@ -1107,7 +1107,8 @@
           "windowSeconds": 60,
           "key": "client IP; shared across public v1 routes",
           "sharedWithOtherOperations": true
-        }
+        },
+        "x-required-token-ability": "read"
       }
     },
     "/api/v1/personal-token-audits": {
@@ -1690,7 +1691,8 @@
             "description": "字面搜尋，%與_不當萬用字元"
           }
         ],
-        "x-required-permission": "project.read"
+        "x-required-permission": "project.read",
+        "x-required-token-ability": "read"
       }
     },
     "/api/public/v1/projects/{project}": {
@@ -1974,7 +1976,8 @@
             "description": "公開資源ID；不是內部SQL ID"
           }
         ],
-        "x-required-permission": "project.read"
+        "x-required-permission": "project.read",
+        "x-required-token-ability": "read"
       }
     },
     "/api/public/v1/projects/{project}/members": {
@@ -2304,7 +2307,8 @@
             "description": "字面搜尋，%與_不當萬用字元"
           }
         ],
-        "x-required-permission": "issue.read"
+        "x-required-permission": "issue.read",
+        "x-required-token-ability": "read"
       }
     },
     "/api/public/v1/projects/{project}/statuses": {
@@ -2603,7 +2607,8 @@
             "description": "公開資源ID；不是內部SQL ID"
           }
         ],
-        "x-required-permission": "project.read"
+        "x-required-permission": "project.read",
+        "x-required-token-ability": "read"
       }
     },
     "/api/public/v1/projects/{project}/issues": {
@@ -3039,7 +3044,8 @@
             }
           }
         ],
-        "x-required-permission": "issue.read"
+        "x-required-permission": "issue.read",
+        "x-required-token-ability": "read"
       },
       "post": {
         "operationId": "createPublicIssue",
@@ -3329,7 +3335,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-token-ability": "write"
       }
     },
     "/api/public/v1/projects/{project}/issues/{issue}": {
@@ -3632,7 +3639,8 @@
             "description": "公開資源ID；不是內部SQL ID"
           }
         ],
-        "x-required-permission": "issue.read"
+        "x-required-permission": "issue.read",
+        "x-required-token-ability": "read"
       },
       "patch": {
         "operationId": "updatePublicIssue",
@@ -3932,7 +3940,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-token-ability": "write"
       }
     },
     "/api/public/v1/projects/{project}/issues/{issue}/comments": {
@@ -4264,7 +4273,8 @@
             }
           }
         ],
-        "x-required-permission": "issue.read"
+        "x-required-permission": "issue.read",
+        "x-required-token-ability": "read"
       },
       "post": {
         "operationId": "createPublicIssueComment",
@@ -4564,7 +4574,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-token-ability": "write"
       }
     }
   },
