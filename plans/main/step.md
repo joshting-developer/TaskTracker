@@ -1,3 +1,16 @@
+## 2026-11-12 TT-232 完成
+
+- 完成248個自有PHP／artisan逐檔token盤點，含Docker／config／migration／tests／tools；351個new、40個app及11個容器位置，57條顯式constructor邊未見循環。分類與限制／外部SMTP例外、待遷移72處及TT-233／234後續在docs/backend-context-boundaries-2026-11-12.md；清單不是全庫DI合規證書。
+- 新readonly WorkspaceContext、WorkspaceContextFactory、ProjectAccessFactory與Store.forContext；Session以可信來源重驗，Realtime實際接線，舊array用例明確轉接。無新singleton／任意Service Locator或API契約變更。
+- 完整memory91／3893（28原生項略過）；原生Context＋API20／548；真實獨立MySQL＋背景Queue＋Reverb雙使用者同步／草稿／衝突／重連／撤權及三尺寸通過。Container替換、A→B→A、假身分、資格失效及SQL範圍通過。
+- 其他對話前端變更保留；本卡只提交後端與盤點文件。全庫DI／PHPDoc與長駐工作遷移仍TT-233～236／249，未結案其他卡片。
+
+## 2026-11-12 TT-232 開始
+
+- codex已先領卡再inprogress。盤點全部自有PHP（app／seeders／Console／tools／tests／migration／config等），逐檔記new／app／resolve、例外與仍待遷移項，建立可重跑的token掃描，不把字串／註解當依賴。
+- 建WorkspaceContext與驗證Factory，Session來源重驗後建立不可變值；Store／Access明確Factory接Context。先接Realtime授權作端到端示範，既有array API留顯式轉接，不在本卡擴成TT-233／234全面DI或TT-249責任拆分。
+- 測Container解析／可替換協作者、跨Actor／Workspace連續呼叫、假HTTP身分不採信及撤權；比較SQL／回應不增加資料範圍，原生MySQL與相關Realtime流程驗證。前端現有修改保留、不納入本卡。
+
 ## 2026-11-12 TT-224 完成
 
 - 四worker／真實HTTP12秒請求已重現舊10秒TTL造成Session覆寫；改現用MySQL連線級命名鎖涵蓋Session讀取到保存，保留10秒等待上限。交易前後與保存前重驗持有權，finally釋放／失敗關PDO。

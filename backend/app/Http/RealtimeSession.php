@@ -35,7 +35,7 @@ class RealtimeSession
     public function authorize(Request $request, array $input): array
     {
         return DB::transaction(function () use ($request, $input) {
-            $context = $this->session->context($request);
+            $context = $this->session->verified($request);
             $channel = Fields::text($input['channel_name'] ?? null, '頻道', 200, true);
             $socket = Fields::text($input['socket_id'] ?? null, '連線', 64, true);
             $this->access->authorize($context, $channel, $socket);

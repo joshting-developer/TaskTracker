@@ -1,0 +1,5559 @@
+{
+    "format": 1,
+    "scope": "owned PHP only; no vendor/storage/bootstrap cache; lexical first-class constructor graph, not full type/call analysis",
+    "fileCount": 248,
+    "siteCounts": {
+        "app": 40,
+        "container.bind": 1,
+        "container.instance": 1,
+        "container.make": 9,
+        "new": 351
+    },
+    "constructorGraph": {
+        "edges": {
+            "App\\Authorization\\ProjectAccess": [
+                "App\\Repositories\\RecordStore"
+            ],
+            "App\\Authorization\\ProjectChannelAccess": [
+                "App\\Factories\\ProjectAccessFactory"
+            ],
+            "App\\Authorization\\WorkspaceOperationAccess": [
+                "App\\Repositories\\RecordStore"
+            ],
+            "App\\Authorization\\WorkspacePermissions": [],
+            "App\\Console\\Commands\\CheckInfrastructure": [],
+            "App\\Console\\Commands\\ImportLegacy": [],
+            "App\\Console\\Commands\\ImportSqlite": [],
+            "App\\Console\\Commands\\SeedDemo": [],
+            "App\\Data\\AuthenticatedAccountData": [
+                "App\\Models\\User"
+            ],
+            "App\\Data\\AuthorizedProjectData": [
+                "App\\Models\\Project"
+            ],
+            "App\\Data\\IssueLinkData": [],
+            "App\\Data\\IssueOptionQueryData": [
+                "App\\Data\\PageQueryData"
+            ],
+            "App\\Data\\IssueQueryData": [
+                "App\\Data\\PageQueryData"
+            ],
+            "App\\Data\\PageQueryData": [],
+            "App\\Data\\PersonalReadContext": [],
+            "App\\Data\\ProjectAclHistoryData": [],
+            "App\\Data\\ProjectMemberSummaryData": [],
+            "App\\Data\\ProjectPageData": [],
+            "App\\Data\\ProjectTimeQueryData": [
+                "App\\Data\\PageQueryData"
+            ],
+            "App\\Data\\TimeReportData": [],
+            "App\\Data\\TodoPageData": [],
+            "App\\Data\\TodoQueryData": [
+                "App\\Data\\PageQueryData"
+            ],
+            "App\\Data\\WorkspaceContext": [],
+            "App\\Data\\WorkspaceMemberSummaryData": [],
+            "App\\Database\\DatabaseTimes": [],
+            "App\\Database\\WorkspaceSqliteConnection": [],
+            "App\\Database\\WriteLocks": [],
+            "App\\Domain\\DomainError": [],
+            "App\\Domain\\Fields": [],
+            "App\\Domain\\RecordRevision": [],
+            "App\\Domain\\TodoContent": [],
+            "App\\Events\\ProjectChanged": [],
+            "App\\Factories\\AccountSettingsFactory": [
+                "App\\Factories\\RecordStoreFactory",
+                "App\\Repositories\\SettingsRepository",
+                "App\\Services\\RequestReplay"
+            ],
+            "App\\Factories\\ProjectAccessFactory": [
+                "App\\Factories\\RecordStoreFactory"
+            ],
+            "App\\Factories\\RecordStoreFactory": [],
+            "App\\Factories\\SessionLockFactory": [],
+            "App\\Factories\\WorkspaceContextFactory": [
+                "App\\Services\\AccountService"
+            ],
+            "App\\Http\\ApiExecution": [
+                "App\\Factories\\AccountSettingsFactory",
+                "App\\Http\\WorkspaceSession",
+                "App\\Repositories\\TimeReportRepository",
+                "App\\Services\\AccountService",
+                "App\\Services\\SmtpService"
+            ],
+            "App\\Http\\Controllers\\AccountSettingsController": [],
+            "App\\Http\\Controllers\\ApiController": [],
+            "App\\Http\\Controllers\\AuthController": [],
+            "App\\Http\\Controllers\\BoardController": [],
+            "App\\Http\\Controllers\\Controller": [],
+            "App\\Http\\Controllers\\IssueController": [],
+            "App\\Http\\Controllers\\ProjectController": [],
+            "App\\Http\\Controllers\\ProjectMemberController": [],
+            "App\\Http\\Controllers\\Queries\\BoardsController": [],
+            "App\\Http\\Controllers\\Queries\\IssuesController": [],
+            "App\\Http\\Controllers\\Queries\\ProjectMembersController": [],
+            "App\\Http\\Controllers\\Queries\\ProjectNotificationsController": [],
+            "App\\Http\\Controllers\\Queries\\ProjectTimeController": [],
+            "App\\Http\\Controllers\\Queries\\ProjectsController": [],
+            "App\\Http\\Controllers\\Queries\\TodosController": [],
+            "App\\Http\\Controllers\\Queries\\WorkspaceSettingsController": [],
+            "App\\Http\\Controllers\\RealtimeController": [],
+            "App\\Http\\Controllers\\SmtpController": [],
+            "App\\Http\\Controllers\\SystemController": [],
+            "App\\Http\\Controllers\\TimeEntryController": [],
+            "App\\Http\\Controllers\\TodoController": [],
+            "App\\Http\\Controllers\\WorkspaceController": [],
+            "App\\Http\\Middleware\\ApiBoundary": [],
+            "App\\Http\\Middleware\\GuardedStartSession": [
+                "App\\Factories\\SessionLockFactory"
+            ],
+            "App\\Http\\RealtimeSession": [
+                "App\\Authorization\\ProjectChannelAccess",
+                "App\\Http\\WorkspaceSession"
+            ],
+            "App\\Http\\Requests\\IssueOptionQueryRequest": [],
+            "App\\Http\\Requests\\IssueQueryRequest": [],
+            "App\\Http\\Requests\\JsonOperationRequest": [],
+            "App\\Http\\Requests\\PageQueryRequest": [],
+            "App\\Http\\Requests\\ProjectLeadQueryRequest": [],
+            "App\\Http\\Requests\\ProjectTimeQueryRequest": [],
+            "App\\Http\\Requests\\TimeReportRequest": [],
+            "App\\Http\\Requests\\TodoQueryRequest": [],
+            "App\\Http\\Resources\\ApiResponse": [],
+            "App\\Http\\Resources\\Queries\\BoardSummaryResource": [
+                "App\\Models\\Board"
+            ],
+            "App\\Http\\Resources\\Queries\\IssueDetailResource": [],
+            "App\\Http\\Resources\\Queries\\IssueListResource": [],
+            "App\\Http\\Resources\\Queries\\IssueOptionResource": [
+                "App\\Models\\Issue"
+            ],
+            "App\\Http\\Resources\\Queries\\IssueSummaryResource": [],
+            "App\\Http\\Resources\\Queries\\PageResource": [],
+            "App\\Http\\Resources\\Queries\\ProjectMemberResource": [],
+            "App\\Http\\Resources\\Queries\\ProjectNotificationResource": [],
+            "App\\Http\\Resources\\Queries\\ProjectResource": [],
+            "App\\Http\\Resources\\Queries\\TimeEntryResource": [],
+            "App\\Http\\Resources\\Queries\\TodoDetailResource": [],
+            "App\\Http\\Resources\\Queries\\TodoNotificationResource": [],
+            "App\\Http\\Resources\\Queries\\TodoSummaryResource": [
+                "App\\Models\\Todo"
+            ],
+            "App\\Http\\Resources\\Queries\\WorkspaceMemberResource": [],
+            "App\\Http\\Session\\SessionLease": [],
+            "App\\Http\\WorkspaceSession": [
+                "App\\Factories\\WorkspaceContextFactory"
+            ],
+            "App\\Jobs\\InfrastructureProbe": [],
+            "App\\Models\\AuditEvent": [],
+            "App\\Models\\Board": [],
+            "App\\Models\\BoardIssue": [],
+            "App\\Models\\DemoSeedState": [],
+            "App\\Models\\Issue": [],
+            "App\\Models\\IssueComment": [],
+            "App\\Models\\IssueNotification": [],
+            "App\\Models\\IssueRelation": [],
+            "App\\Models\\OperationReceipt": [],
+            "App\\Models\\Project": [],
+            "App\\Models\\ProjectAccessControl": [],
+            "App\\Models\\ProjectMember": [],
+            "App\\Models\\ProjectStatus": [],
+            "App\\Models\\RetiredSavedView": [],
+            "App\\Models\\StoredRecord": [],
+            "App\\Models\\TimeEntry": [],
+            "App\\Models\\Todo": [],
+            "App\\Models\\TodoNotification": [],
+            "App\\Models\\TodoOperationReceipt": [],
+            "App\\Models\\User": [],
+            "App\\Models\\Workspace": [],
+            "App\\Models\\WorkspaceInvitation": [],
+            "App\\Models\\WorkspaceMember": [],
+            "App\\Models\\WorkspaceUpgrade": [],
+            "App\\Providers\\AppServiceProvider": [],
+            "App\\Queries\\BoardIssueScope": [],
+            "App\\Repositories\\BoardReadRepository": [
+                "App\\Queries\\BoardIssueScope"
+            ],
+            "App\\Repositories\\EntityDefinitions": [],
+            "App\\Repositories\\IssueReadRepository": [
+                "App\\Queries\\BoardIssueScope"
+            ],
+            "App\\Repositories\\LegacyRecordStore": [],
+            "App\\Repositories\\MembershipRepository": [],
+            "App\\Repositories\\ProjectAclReadRepository": [],
+            "App\\Repositories\\ProjectMemberReadRepository": [],
+            "App\\Repositories\\ProjectNotificationReadRepository": [],
+            "App\\Repositories\\ProjectReadRepository": [],
+            "App\\Repositories\\ProjectTimeReadRepository": [],
+            "App\\Repositories\\RecordStore": [],
+            "App\\Repositories\\RelationalChildren": [],
+            "App\\Repositories\\RelationalRecords": [],
+            "App\\Repositories\\SettingsRepository": [],
+            "App\\Repositories\\TimeReportRepository": [],
+            "App\\Repositories\\TodoReadRepository": [],
+            "App\\Services\\AccountService": [],
+            "App\\Services\\AccountSettings": [
+                "App\\Factories\\RecordStoreFactory",
+                "App\\Repositories\\SettingsRepository",
+                "App\\Services\\ProjectSignals",
+                "App\\Services\\RequestReplay"
+            ],
+            "App\\Services\\BoardReadService": [
+                "App\\Repositories\\BoardReadRepository",
+                "App\\Repositories\\IssueReadRepository",
+                "App\\Services\\ProjectReadService"
+            ],
+            "App\\Services\\IssueReadService": [
+                "App\\Repositories\\IssueReadRepository",
+                "App\\Services\\ProjectReadService"
+            ],
+            "App\\Services\\IssueRelationsUpgrade": [],
+            "App\\Services\\IssueService": [
+                "App\\Repositories\\RecordStore"
+            ],
+            "App\\Services\\IssueTypesUpgrade": [],
+            "App\\Services\\ProjectAclReadService": [
+                "App\\Repositories\\ProjectAclReadRepository",
+                "App\\Services\\ProjectReadService"
+            ],
+            "App\\Services\\ProjectAclUpgrade": [],
+            "App\\Services\\ProjectBoards": [
+                "App\\Repositories\\RecordStore"
+            ],
+            "App\\Services\\ProjectMembers": [
+                "App\\Repositories\\RecordStore"
+            ],
+            "App\\Services\\ProjectNotificationReadService": [
+                "App\\Repositories\\ProjectNotificationReadRepository",
+                "App\\Services\\ProjectReadService"
+            ],
+            "App\\Services\\ProjectReadService": [
+                "App\\Factories\\RecordStoreFactory",
+                "App\\Repositories\\ProjectMemberReadRepository",
+                "App\\Repositories\\ProjectReadRepository"
+            ],
+            "App\\Services\\ProjectService": [
+                "App\\Repositories\\RecordStore"
+            ],
+            "App\\Services\\ProjectSignals": [],
+            "App\\Services\\ProjectStatusTypesUpgrade": [],
+            "App\\Services\\ProjectTimeReadService": [
+                "App\\Repositories\\ProjectTimeReadRepository",
+                "App\\Services\\ProjectReadService"
+            ],
+            "App\\Services\\RelationalDataMigration": [],
+            "App\\Services\\RequestReplay": [],
+            "App\\Services\\SmtpService": [],
+            "App\\Services\\TimeEntryService": [
+                "App\\Repositories\\RecordStore"
+            ],
+            "App\\Services\\TodoReadService": [
+                "App\\Repositories\\TodoReadRepository",
+                "App\\Services\\ProjectReadService"
+            ],
+            "App\\Services\\Todos": [],
+            "App\\Services\\WorkspaceMemberships": [],
+            "App\\Services\\WorkspaceQuery": [
+                "App\\Repositories\\RecordStore"
+            ],
+            "App\\Services\\WorkspaceService": [],
+            "App\\Services\\WorkspaceSettingsReadService": [
+                "App\\Repositories\\SettingsRepository"
+            ],
+            "App\\Services\\WorkspaceTimeReport": [
+                "App\\Repositories\\RecordStore",
+                "App\\Repositories\\TimeReportRepository"
+            ],
+            "Database\\Factories\\UserFactory": [],
+            "Database\\Seeders\\DatabaseSeeder": [],
+            "Database\\Seeders\\DemoSeeder": [],
+            "Tests\\Concerns\\IssueLinkQueryCases": [],
+            "Tests\\Concerns\\ProjectAclReadCases": [],
+            "Tests\\Concerns\\ProjectTimeReadCases": [],
+            "Tests\\Concerns\\ProjectUtilityReadCases": [],
+            "Tests\\Concerns\\RecordContextCases": [],
+            "Tests\\Concerns\\WorkspaceContextCases": [],
+            "Tests\\Concerns\\WorkspaceSettingsReadCases": [],
+            "Tests\\Feature\\AccountDomainTest": [],
+            "Tests\\Feature\\AccountSettingsTest": [],
+            "Tests\\Feature\\BackendArchitectureTest": [],
+            "Tests\\Feature\\BoardReadApiTest": [],
+            "Tests\\Feature\\DemoSeedTest": [],
+            "Tests\\Feature\\IssueLinkQueryTest": [],
+            "Tests\\Feature\\IssueLocationTest": [],
+            "Tests\\Feature\\LegacyImportTest": [],
+            "Tests\\Feature\\MySqlApiTest": [],
+            "Tests\\Feature\\MySqlConcurrencyTest": [],
+            "Tests\\Feature\\MySqlImportTest": [],
+            "Tests\\Feature\\MySqlSessionConcurrencyTest": [],
+            "Tests\\Feature\\MySqlTimeReportTest": [],
+            "Tests\\Feature\\MySqlWorkspaceContextTest": [],
+            "Tests\\Feature\\ProjectAclReadTest": [],
+            "Tests\\Feature\\ProjectAclTest": [],
+            "Tests\\Feature\\ProjectBoardsTest": [],
+            "Tests\\Feature\\ProjectTimeReadTest": [],
+            "Tests\\Feature\\ProjectUtilityReadTest": [],
+            "Tests\\Feature\\ReadPerformanceTest": [],
+            "Tests\\Feature\\ReadTransactionTest": [],
+            "Tests\\Feature\\RealtimeTest": [],
+            "Tests\\Feature\\ReceiptGrowthTest": [],
+            "Tests\\Feature\\RecordContextTest": [],
+            "Tests\\Feature\\RelationalStorageTest": [],
+            "Tests\\Feature\\ScopedReadApiTest": [],
+            "Tests\\Feature\\StorageCostTest": [],
+            "Tests\\Feature\\TimeReportTest": [],
+            "Tests\\Feature\\TodoTest": [],
+            "Tests\\Feature\\WorkspaceApiTest": [],
+            "Tests\\Feature\\WorkspaceContextTest": [],
+            "Tests\\Feature\\WorkspaceMembershipTest": [],
+            "Tests\\Feature\\WorkspaceSettingsReadTest": [],
+            "Tests\\MySqlTestCase": [],
+            "Tests\\Support\\DependencyInventory": [],
+            "Tests\\Support\\LegacyMemberTimeDetails": [],
+            "Tests\\TestCase": [],
+            "Tests\\Unit\\DependencyInventoryTest": [],
+            "Tests\\Unit\\MemberTimeDetailsTest": []
+        },
+        "cycles": []
+    },
+    "files": [
+        {
+            "path": "app/Authorization/ProjectAccess.php",
+            "class": "App\\Authorization\\ProjectAccess",
+            "constructorParameters": [
+                {
+                    "name": "$store",
+                    "types": [
+                        "App\\Repositories\\RecordStore"
+                    ]
+                },
+                {
+                    "name": "$workspaceSession",
+                    "types": [
+                        "array"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 47,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 204,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Authorization/ProjectChannelAccess.php",
+            "class": "App\\Authorization\\ProjectChannelAccess",
+            "constructorParameters": [
+                {
+                    "name": "$accesses",
+                    "types": [
+                        "App\\Factories\\ProjectAccessFactory"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Authorization/WorkspaceOperationAccess.php",
+            "class": "App\\Authorization\\WorkspaceOperationAccess",
+            "constructorParameters": [
+                {
+                    "name": "$store",
+                    "types": [
+                        "App\\Repositories\\RecordStore"
+                    ]
+                },
+                {
+                    "name": "$workspaceSession",
+                    "types": [
+                        "array"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 26,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Authorization/WorkspacePermissions.php",
+            "class": "App\\Authorization\\WorkspacePermissions",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Console/Commands/CheckInfrastructure.php",
+            "class": "App\\Console\\Commands\\CheckInfrastructure",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 21,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 27,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 30,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 44,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Console/Commands/ImportLegacy.php",
+            "class": "App\\Console\\Commands\\ImportLegacy",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 34,
+                    "kind": "new",
+                    "target": "PDO",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 39,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 40,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 44,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 45,
+                    "kind": "new",
+                    "target": "App\\Models\\User",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Console/Commands/ImportSqlite.php",
+            "class": "App\\Console\\Commands\\ImportSqlite",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 33,
+                    "kind": "new",
+                    "target": "PDO",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 38,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 44,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 53,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 64,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 69,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 76,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 88,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 112,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Console/Commands/SeedDemo.php",
+            "class": "App\\Console\\Commands\\SeedDemo",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Data/AuthenticatedAccountData.php",
+            "class": "App\\Data\\AuthenticatedAccountData",
+            "constructorParameters": [
+                {
+                    "name": "$user",
+                    "types": [
+                        "App\\Models\\User"
+                    ]
+                },
+                {
+                    "name": "$workspaceId",
+                    "types": [
+                        "string"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Data/AuthorizedProjectData.php",
+            "class": "App\\Data\\AuthorizedProjectData",
+            "constructorParameters": [
+                {
+                    "name": "$project",
+                    "types": [
+                        "App\\Models\\Project"
+                    ]
+                },
+                {
+                    "name": "$permissions",
+                    "types": [
+                        "array"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Data/IssueLinkData.php",
+            "class": "App\\Data\\IssueLinkData",
+            "constructorParameters": [
+                {
+                    "name": "$id",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$projectId",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$type",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$parentIssueId",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$epicId",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$relatedCount",
+                    "types": [
+                        "int"
+                    ]
+                },
+                {
+                    "name": "$alreadyRelated",
+                    "types": [
+                        "bool"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Data/IssueOptionQueryData.php",
+            "class": "App\\Data\\IssueOptionQueryData",
+            "constructorParameters": [
+                {
+                    "name": "$pagination",
+                    "types": [
+                        "App\\Data\\PageQueryData"
+                    ]
+                },
+                {
+                    "name": "$kind",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$exclude",
+                    "types": [
+                        "string"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Data/IssueQueryData.php",
+            "class": "App\\Data\\IssueQueryData",
+            "constructorParameters": [
+                {
+                    "name": "$pagination",
+                    "types": [
+                        "App\\Data\\PageQueryData"
+                    ]
+                },
+                {
+                    "name": "$states",
+                    "types": [
+                        "array"
+                    ]
+                },
+                {
+                    "name": "$priority",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$type",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$assignee",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$epicId",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$condition",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$sort",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$scope",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$identifier",
+                    "types": [
+                        "string"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Data/PageQueryData.php",
+            "class": "App\\Data\\PageQueryData",
+            "constructorParameters": [
+                {
+                    "name": "$page",
+                    "types": [
+                        "int"
+                    ]
+                },
+                {
+                    "name": "$perPage",
+                    "types": [
+                        "int"
+                    ]
+                },
+                {
+                    "name": "$search",
+                    "types": [
+                        "string"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Data/PersonalReadContext.php",
+            "class": "App\\Data\\PersonalReadContext",
+            "constructorParameters": [
+                {
+                    "name": "$workspaceId",
+                    "types": [
+                        "int"
+                    ]
+                },
+                {
+                    "name": "$memberId",
+                    "types": [
+                        "int"
+                    ]
+                },
+                {
+                    "name": "$userId",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$roleRevision",
+                    "types": [
+                        "int"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Data/ProjectAclHistoryData.php",
+            "class": "App\\Data\\ProjectAclHistoryData",
+            "constructorParameters": [
+                {
+                    "name": "$id",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$event",
+                    "types": [
+                        "array"
+                    ]
+                },
+                {
+                    "name": "$targetName",
+                    "types": [
+                        "string"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Data/ProjectMemberSummaryData.php",
+            "class": "App\\Data\\ProjectMemberSummaryData",
+            "constructorParameters": [
+                {
+                    "name": "$userId",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$name",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$email",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$source",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$roleId",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$canChange",
+                    "types": [
+                        "bool"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Data/ProjectPageData.php",
+            "class": "App\\Data\\ProjectPageData",
+            "constructorParameters": [
+                {
+                    "name": "$page",
+                    "types": [
+                        "Illuminate\\Contracts\\Pagination\\LengthAwarePaginator"
+                    ]
+                },
+                {
+                    "name": "$permissions",
+                    "types": [
+                        "array"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Data/ProjectTimeQueryData.php",
+            "class": "App\\Data\\ProjectTimeQueryData",
+            "constructorParameters": [
+                {
+                    "name": "$from",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$to",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$member",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$page",
+                    "types": [
+                        "App\\Data\\PageQueryData"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 18,
+                    "kind": "new",
+                    "target": "App\\Data\\PageQueryData",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 32,
+                    "kind": "new",
+                    "target": "DateTimeImmutable",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 34,
+                    "kind": "new",
+                    "target": "App\\Data\\ProjectTimeQueryData",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 51,
+                    "kind": "new",
+                    "target": "App\\Data\\ProjectTimeQueryData",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Data/TimeReportData.php",
+            "class": "App\\Data\\TimeReportData",
+            "constructorParameters": [
+                {
+                    "name": "$startDate",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$endDate",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$projectId",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$userId",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$detailGroup",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$detailPage",
+                    "types": [
+                        "int"
+                    ]
+                },
+                {
+                    "name": "$entryGroupKey",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$entryPage",
+                    "types": [
+                        "int"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 43,
+                    "kind": "new",
+                    "target": "DateTimeImmutable",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 43,
+                    "kind": "new",
+                    "target": "DateTimeImmutable",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 51,
+                    "kind": "new",
+                    "target": "App\\Data\\TimeReportData",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Data/TodoPageData.php",
+            "class": "App\\Data\\TodoPageData",
+            "constructorParameters": [
+                {
+                    "name": "$page",
+                    "types": [
+                        "Illuminate\\Contracts\\Pagination\\LengthAwarePaginator"
+                    ]
+                },
+                {
+                    "name": "$links",
+                    "types": [
+                        "array"
+                    ]
+                },
+                {
+                    "name": "$capabilities",
+                    "types": [
+                        "array"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Data/TodoQueryData.php",
+            "class": "App\\Data\\TodoQueryData",
+            "constructorParameters": [
+                {
+                    "name": "$pagination",
+                    "types": [
+                        "App\\Data\\PageQueryData"
+                    ]
+                },
+                {
+                    "name": "$scope",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$state",
+                    "types": [
+                        "string"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Data/WorkspaceContext.php",
+            "class": "App\\Data\\WorkspaceContext",
+            "constructorParameters": [
+                {
+                    "name": "$identity",
+                    "types": [
+                        "array"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Data/WorkspaceMemberSummaryData.php",
+            "class": "App\\Data\\WorkspaceMemberSummaryData",
+            "constructorParameters": [
+                {
+                    "name": "$id",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$name",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$email",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$roleId",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$revision",
+                    "types": [
+                        "int"
+                    ]
+                },
+                {
+                    "name": "$canChange",
+                    "types": [
+                        "bool"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Database/DatabaseTimes.php",
+            "class": "App\\Database\\DatabaseTimes",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Database/WorkspaceSqliteConnection.php",
+            "class": "App\\Database\\WorkspaceSqliteConnection",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Database/WriteLocks.php",
+            "class": "App\\Database\\WriteLocks",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Domain/DomainError.php",
+            "class": "App\\Domain\\DomainError",
+            "constructorParameters": [
+                {
+                    "name": "$errorCode",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$message",
+                    "types": [
+                        "string"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 33,
+                    "kind": "new",
+                    "target": "App\\Domain\\DomainError",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Domain/Fields.php",
+            "class": "App\\Domain\\Fields",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Domain/RecordRevision.php",
+            "class": "App\\Domain\\RecordRevision",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Domain/TodoContent.php",
+            "class": "App\\Domain\\TodoContent",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Events/ProjectChanged.php",
+            "class": "App\\Events\\ProjectChanged",
+            "constructorParameters": [
+                {
+                    "name": "$workspaceId",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$projectId",
+                    "types": [
+                        "string"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 27,
+                    "kind": "new",
+                    "target": "Illuminate\\Broadcasting\\PrivateChannel",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Factories/AccountSettingsFactory.php",
+            "class": "App\\Factories\\AccountSettingsFactory",
+            "constructorParameters": [
+                {
+                    "name": "$settings",
+                    "types": [
+                        "App\\Repositories\\SettingsRepository"
+                    ]
+                },
+                {
+                    "name": "$stores",
+                    "types": [
+                        "App\\Factories\\RecordStoreFactory"
+                    ]
+                },
+                {
+                    "name": "$replay",
+                    "types": [
+                        "App\\Services\\RequestReplay"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 30,
+                    "kind": "new",
+                    "target": "App\\Services\\AccountSettings",
+                    "decision": "composition-root-exception-candidate"
+                },
+                {
+                    "line": 30,
+                    "kind": "new",
+                    "target": "App\\Services\\ProjectSignals",
+                    "decision": "composition-root-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Factories/ProjectAccessFactory.php",
+            "class": "App\\Factories\\ProjectAccessFactory",
+            "constructorParameters": [
+                {
+                    "name": "$stores",
+                    "types": [
+                        "App\\Factories\\RecordStoreFactory"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 22,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "composition-root-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Factories/RecordStoreFactory.php",
+            "class": "App\\Factories\\RecordStoreFactory",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 19,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "composition-root-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Factories/SessionLockFactory.php",
+            "class": "App\\Factories\\SessionLockFactory",
+            "constructorParameters": [
+                {
+                    "name": "$database",
+                    "types": [
+                        "Illuminate\\Database\\DatabaseManager"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 39,
+                    "kind": "new",
+                    "target": "App\\Http\\Session\\SessionLease",
+                    "decision": "composition-root-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Factories/WorkspaceContextFactory.php",
+            "class": "App\\Factories\\WorkspaceContextFactory",
+            "constructorParameters": [
+                {
+                    "name": "$accounts",
+                    "types": [
+                        "App\\Services\\AccountService"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 24,
+                    "kind": "new",
+                    "target": "App\\Data\\WorkspaceContext",
+                    "decision": "composition-root-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/ApiExecution.php",
+            "class": "App\\Http\\ApiExecution",
+            "constructorParameters": [
+                {
+                    "name": "$accounts",
+                    "types": [
+                        "App\\Services\\AccountService"
+                    ]
+                },
+                {
+                    "name": "$smtp",
+                    "types": [
+                        "App\\Services\\SmtpService"
+                    ]
+                },
+                {
+                    "name": "$session",
+                    "types": [
+                        "App\\Http\\WorkspaceSession"
+                    ]
+                },
+                {
+                    "name": "$timeReports",
+                    "types": [
+                        "App\\Repositories\\TimeReportRepository"
+                    ]
+                },
+                {
+                    "name": "$settings",
+                    "types": [
+                        "App\\Factories\\AccountSettingsFactory"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 56,
+                    "kind": "new",
+                    "target": "App\\Database\\WriteLocks",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 65,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceMemberships",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 72,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceMemberships",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 122,
+                    "kind": "new",
+                    "target": "App\\Services\\Todos",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 133,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceService",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 147,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 149,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceTimeReport",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 173,
+                    "kind": "new",
+                    "target": "App\\Database\\WriteLocks",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/AccountSettingsController.php",
+            "class": "App\\Http\\Controllers\\AccountSettingsController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 20,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/ApiController.php",
+            "class": "App\\Http\\Controllers\\ApiController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 26,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/AuthController.php",
+            "class": "App\\Http\\Controllers\\AuthController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 26,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 40,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 52,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 64,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 77,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/BoardController.php",
+            "class": "App\\Http\\Controllers\\BoardController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 26,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 41,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 56,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/Controller.php",
+            "class": "App\\Http\\Controllers\\Controller",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/IssueController.php",
+            "class": "App\\Http\\Controllers\\IssueController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 26,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 41,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 56,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/ProjectController.php",
+            "class": "App\\Http\\Controllers\\ProjectController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 26,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 41,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 56,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/ProjectMemberController.php",
+            "class": "App\\Http\\Controllers\\ProjectMemberController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 26,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 41,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 56,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/Queries/BoardsController.php",
+            "class": "App\\Http\\Controllers\\Queries\\BoardsController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 31,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\Queries\\BoardSummaryResource",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 33,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 48,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 65,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/Queries/IssuesController.php",
+            "class": "App\\Http\\Controllers\\Queries\\IssuesController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 37,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 52,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\Queries\\IssueOptionResource",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 54,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 71,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 71,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\Queries\\IssueDetailResource",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 85,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 103,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 120,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 137,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 154,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/Queries/ProjectMembersController.php",
+            "class": "App\\Http\\Controllers\\Queries\\ProjectMembersController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 28,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 44,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 60,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 76,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/Queries/ProjectNotificationsController.php",
+            "class": "App\\Http\\Controllers\\Queries\\ProjectNotificationsController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 30,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 47,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 47,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\Queries\\ProjectNotificationResource",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/Queries/ProjectTimeController.php",
+            "class": "App\\Http\\Controllers\\Queries\\ProjectTimeController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 27,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 43,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/Queries/ProjectsController.php",
+            "class": "App\\Http\\Controllers\\Queries\\ProjectsController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 30,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\Queries\\ProjectResource",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 32,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 47,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 62,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 78,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 78,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\Queries\\ProjectResource",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 95,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 109,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/Queries/TodosController.php",
+            "class": "App\\Http\\Controllers\\Queries\\TodosController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 32,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\Queries\\TodoSummaryResource",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 34,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 50,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 50,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\Queries\\TodoDetailResource",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 66,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 79,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 92,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 107,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 120,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 135,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/Queries/WorkspaceSettingsController.php",
+            "class": "App\\Http\\Controllers\\Queries\\WorkspaceSettingsController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 27,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 42,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 55,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/RealtimeController.php",
+            "class": "App\\Http\\Controllers\\RealtimeController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 21,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 31,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/SmtpController.php",
+            "class": "App\\Http\\Controllers\\SmtpController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 26,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 41,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/SystemController.php",
+            "class": "App\\Http\\Controllers\\SystemController",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/TimeEntryController.php",
+            "class": "App\\Http\\Controllers\\TimeEntryController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 26,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 41,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 56,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 71,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/TodoController.php",
+            "class": "App\\Http\\Controllers\\TodoController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 26,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 41,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 56,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 71,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 86,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 101,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 116,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 131,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 146,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Controllers/WorkspaceController.php",
+            "class": "App\\Http\\Controllers\\WorkspaceController",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 26,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 41,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 56,
+                    "kind": "new",
+                    "target": "App\\Http\\Resources\\ApiResponse",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Middleware/ApiBoundary.php",
+            "class": "App\\Http\\Middleware\\ApiBoundary",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Middleware/GuardedStartSession.php",
+            "class": "App\\Http\\Middleware\\GuardedStartSession",
+            "constructorParameters": [
+                {
+                    "name": "$manager",
+                    "types": [
+                        "Illuminate\\Session\\SessionManager"
+                    ]
+                },
+                {
+                    "name": "$cache",
+                    "types": [
+                        "Illuminate\\Contracts\\Cache\\Factory"
+                    ]
+                },
+                {
+                    "name": "$locks",
+                    "types": [
+                        "App\\Factories\\SessionLockFactory"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/RealtimeSession.php",
+            "class": "App\\Http\\RealtimeSession",
+            "constructorParameters": [
+                {
+                    "name": "$session",
+                    "types": [
+                        "App\\Http\\WorkspaceSession"
+                    ]
+                },
+                {
+                    "name": "$access",
+                    "types": [
+                        "App\\Authorization\\ProjectChannelAccess"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 46,
+                    "kind": "new",
+                    "target": "Illuminate\\Http\\Request",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Requests/IssueOptionQueryRequest.php",
+            "class": "App\\Http\\Requests\\IssueOptionQueryRequest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 30,
+                    "kind": "new",
+                    "target": "App\\Data\\IssueOptionQueryData",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Requests/IssueQueryRequest.php",
+            "class": "App\\Http\\Requests\\IssueQueryRequest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 31,
+                    "kind": "new",
+                    "target": "App\\Data\\IssueQueryData",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Requests/JsonOperationRequest.php",
+            "class": "App\\Http\\Requests\\JsonOperationRequest",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Requests/PageQueryRequest.php",
+            "class": "App\\Http\\Requests\\PageQueryRequest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 30,
+                    "kind": "new",
+                    "target": "App\\Data\\PageQueryData",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Requests/ProjectLeadQueryRequest.php",
+            "class": "App\\Http\\Requests\\ProjectLeadQueryRequest",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Requests/ProjectTimeQueryRequest.php",
+            "class": "App\\Http\\Requests\\ProjectTimeQueryRequest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 57,
+                    "kind": "new",
+                    "target": "App\\Data\\PageQueryData",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Requests/TimeReportRequest.php",
+            "class": "App\\Http\\Requests\\TimeReportRequest",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Requests/TodoQueryRequest.php",
+            "class": "App\\Http\\Requests\\TodoQueryRequest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 30,
+                    "kind": "new",
+                    "target": "App\\Data\\TodoQueryData",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Resources/ApiResponse.php",
+            "class": "App\\Http\\Resources\\ApiResponse",
+            "constructorParameters": [
+                {
+                    "name": "$resource",
+                    "types": [
+                        "mixed"
+                    ]
+                },
+                {
+                    "name": "$includeCsrf",
+                    "types": [
+                        "bool"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Resources/Queries/BoardSummaryResource.php",
+            "class": "App\\Http\\Resources\\Queries\\BoardSummaryResource",
+            "constructorParameters": [
+                {
+                    "name": "$resource",
+                    "types": [
+                        "App\\Models\\Board"
+                    ]
+                },
+                {
+                    "name": "$projectId",
+                    "types": [
+                        "string"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Resources/Queries/IssueDetailResource.php",
+            "class": "App\\Http\\Resources\\Queries\\IssueDetailResource",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Resources/Queries/IssueListResource.php",
+            "class": "App\\Http\\Resources\\Queries\\IssueListResource",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Resources/Queries/IssueOptionResource.php",
+            "class": "App\\Http\\Resources\\Queries\\IssueOptionResource",
+            "constructorParameters": [
+                {
+                    "name": "$resource",
+                    "types": [
+                        "App\\Models\\Issue"
+                    ]
+                },
+                {
+                    "name": "$projectId",
+                    "types": [
+                        "string"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Resources/Queries/IssueSummaryResource.php",
+            "class": "App\\Http\\Resources\\Queries\\IssueSummaryResource",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Resources/Queries/PageResource.php",
+            "class": "App\\Http\\Resources\\Queries\\PageResource",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Resources/Queries/ProjectMemberResource.php",
+            "class": "App\\Http\\Resources\\Queries\\ProjectMemberResource",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Resources/Queries/ProjectNotificationResource.php",
+            "class": "App\\Http\\Resources\\Queries\\ProjectNotificationResource",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Resources/Queries/ProjectResource.php",
+            "class": "App\\Http\\Resources\\Queries\\ProjectResource",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Resources/Queries/TimeEntryResource.php",
+            "class": "App\\Http\\Resources\\Queries\\TimeEntryResource",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Resources/Queries/TodoDetailResource.php",
+            "class": "App\\Http\\Resources\\Queries\\TodoDetailResource",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Resources/Queries/TodoNotificationResource.php",
+            "class": "App\\Http\\Resources\\Queries\\TodoNotificationResource",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Resources/Queries/TodoSummaryResource.php",
+            "class": "App\\Http\\Resources\\Queries\\TodoSummaryResource",
+            "constructorParameters": [
+                {
+                    "name": "$resource",
+                    "types": [
+                        "App\\Models\\Todo"
+                    ]
+                },
+                {
+                    "name": "$capabilities",
+                    "types": [
+                        "array"
+                    ]
+                },
+                {
+                    "name": "$link",
+                    "types": [
+                        "array"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Resources/Queries/WorkspaceMemberResource.php",
+            "class": "App\\Http\\Resources\\Queries\\WorkspaceMemberResource",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/Session/SessionLease.php",
+            "class": "App\\Http\\Session\\SessionLease",
+            "constructorParameters": [
+                {
+                    "name": "$connection",
+                    "types": [
+                        "Illuminate\\Database\\Connection"
+                    ]
+                },
+                {
+                    "name": "$name",
+                    "types": [
+                        "string"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Http/WorkspaceSession.php",
+            "class": "App\\Http\\WorkspaceSession",
+            "constructorParameters": [
+                {
+                    "name": "$contexts",
+                    "types": [
+                        "App\\Factories\\WorkspaceContextFactory"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Jobs/InfrastructureProbe.php",
+            "class": "App\\Jobs\\InfrastructureProbe",
+            "constructorParameters": [
+                {
+                    "name": "$key",
+                    "types": [
+                        "string"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/AuditEvent.php",
+            "class": "App\\Models\\AuditEvent",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/Board.php",
+            "class": "App\\Models\\Board",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/BoardIssue.php",
+            "class": "App\\Models\\BoardIssue",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/DemoSeedState.php",
+            "class": "App\\Models\\DemoSeedState",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/Issue.php",
+            "class": "App\\Models\\Issue",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/IssueComment.php",
+            "class": "App\\Models\\IssueComment",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/IssueNotification.php",
+            "class": "App\\Models\\IssueNotification",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/IssueRelation.php",
+            "class": "App\\Models\\IssueRelation",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/OperationReceipt.php",
+            "class": "App\\Models\\OperationReceipt",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/Project.php",
+            "class": "App\\Models\\Project",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/ProjectAccessControl.php",
+            "class": "App\\Models\\ProjectAccessControl",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/ProjectMember.php",
+            "class": "App\\Models\\ProjectMember",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/ProjectStatus.php",
+            "class": "App\\Models\\ProjectStatus",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/RetiredSavedView.php",
+            "class": "App\\Models\\RetiredSavedView",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/StoredRecord.php",
+            "class": "App\\Models\\StoredRecord",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/TimeEntry.php",
+            "class": "App\\Models\\TimeEntry",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/Todo.php",
+            "class": "App\\Models\\Todo",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/TodoNotification.php",
+            "class": "App\\Models\\TodoNotification",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/TodoOperationReceipt.php",
+            "class": "App\\Models\\TodoOperationReceipt",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/User.php",
+            "class": "App\\Models\\User",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/Workspace.php",
+            "class": "App\\Models\\Workspace",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/WorkspaceInvitation.php",
+            "class": "App\\Models\\WorkspaceInvitation",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/WorkspaceMember.php",
+            "class": "App\\Models\\WorkspaceMember",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Models/WorkspaceUpgrade.php",
+            "class": "App\\Models\\WorkspaceUpgrade",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Providers/AppServiceProvider.php",
+            "class": "App\\Providers\\AppServiceProvider",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 18,
+                    "kind": "container.bind",
+                    "target": "Illuminate\\Session\\Middleware\\StartSession",
+                    "decision": "composition-root-exception-candidate"
+                },
+                {
+                    "line": 19,
+                    "kind": "new",
+                    "target": "App\\Database\\WorkspaceSqliteConnection",
+                    "decision": "composition-root-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Queries/BoardIssueScope.php",
+            "class": "App\\Queries\\BoardIssueScope",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Repositories/BoardReadRepository.php",
+            "class": "App\\Repositories\\BoardReadRepository",
+            "constructorParameters": [
+                {
+                    "name": "$scope",
+                    "types": [
+                        "App\\Queries\\BoardIssueScope"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Repositories/EntityDefinitions.php",
+            "class": "App\\Repositories\\EntityDefinitions",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Repositories/IssueReadRepository.php",
+            "class": "App\\Repositories\\IssueReadRepository",
+            "constructorParameters": [
+                {
+                    "name": "$boardScope",
+                    "types": [
+                        "App\\Queries\\BoardIssueScope"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Repositories/LegacyRecordStore.php",
+            "class": "App\\Repositories\\LegacyRecordStore",
+            "constructorParameters": [
+                {
+                    "name": "$prefix",
+                    "types": [
+                        "string"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 30,
+                    "kind": "new",
+                    "target": "App\\Repositories\\LegacyRecordStore",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Repositories/MembershipRepository.php",
+            "class": "App\\Repositories\\MembershipRepository",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Repositories/ProjectAclReadRepository.php",
+            "class": "App\\Repositories\\ProjectAclReadRepository",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Repositories/ProjectMemberReadRepository.php",
+            "class": "App\\Repositories\\ProjectMemberReadRepository",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Repositories/ProjectNotificationReadRepository.php",
+            "class": "App\\Repositories\\ProjectNotificationReadRepository",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Repositories/ProjectReadRepository.php",
+            "class": "App\\Repositories\\ProjectReadRepository",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 21,
+                    "kind": "new",
+                    "target": "LogicException",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Repositories/ProjectTimeReadRepository.php",
+            "class": "App\\Repositories\\ProjectTimeReadRepository",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Repositories/RecordStore.php",
+            "class": "App\\Repositories\\RecordStore",
+            "constructorParameters": [
+                {
+                    "name": "$workspaceId",
+                    "types": [
+                        "string"
+                    ]
+                },
+                {
+                    "name": "$legacy",
+                    "types": [
+                        "bool"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 28,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RelationalRecords",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 29,
+                    "kind": "new",
+                    "target": "App\\Repositories\\LegacyRecordStore",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 29,
+                    "kind": "new",
+                    "target": "App\\Repositories\\LegacyRecordStore",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 38,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 101,
+                    "kind": "new",
+                    "target": "App\\Data\\IssueLinkData",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 194,
+                    "kind": "new",
+                    "target": "LogicException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 216,
+                    "kind": "new",
+                    "target": "LogicException",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Repositories/RelationalChildren.php",
+            "class": "App\\Repositories\\RelationalChildren",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Repositories/RelationalRecords.php",
+            "class": "App\\Repositories\\RelationalRecords",
+            "constructorParameters": [
+                {
+                    "name": "$workspacePublicId",
+                    "types": [
+                        "string"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 37,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RelationalChildren",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 152,
+                    "kind": "new",
+                    "target": "App\\Data\\IssueLinkData",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 328,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 420,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 453,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Repositories/SettingsRepository.php",
+            "class": "App\\Repositories\\SettingsRepository",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Repositories/TimeReportRepository.php",
+            "class": "App\\Repositories\\TimeReportRepository",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Repositories/TodoReadRepository.php",
+            "class": "App\\Repositories\\TodoReadRepository",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 140,
+                    "kind": "new",
+                    "target": "LogicException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 157,
+                    "kind": "new",
+                    "target": "LogicException",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/AccountService.php",
+            "class": "App\\Services\\AccountService",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 84,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 130,
+                    "kind": "new",
+                    "target": "App\\Data\\AuthenticatedAccountData",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 162,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceMemberships",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 172,
+                    "kind": "new",
+                    "target": "App\\Data\\AuthenticatedAccountData",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 187,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 200,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/AccountSettings.php",
+            "class": "App\\Services\\AccountSettings",
+            "constructorParameters": [
+                {
+                    "name": "$context",
+                    "types": [
+                        "array"
+                    ]
+                },
+                {
+                    "name": "$repository",
+                    "types": [
+                        "App\\Repositories\\SettingsRepository"
+                    ]
+                },
+                {
+                    "name": "$stores",
+                    "types": [
+                        "App\\Factories\\RecordStoreFactory"
+                    ]
+                },
+                {
+                    "name": "$replay",
+                    "types": [
+                        "App\\Services\\RequestReplay"
+                    ]
+                },
+                {
+                    "name": "$signals",
+                    "types": [
+                        "App\\Services\\ProjectSignals"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/BoardReadService.php",
+            "class": "App\\Services\\BoardReadService",
+            "constructorParameters": [
+                {
+                    "name": "$projects",
+                    "types": [
+                        "App\\Services\\ProjectReadService"
+                    ]
+                },
+                {
+                    "name": "$boards",
+                    "types": [
+                        "App\\Repositories\\BoardReadRepository"
+                    ]
+                },
+                {
+                    "name": "$issues",
+                    "types": [
+                        "App\\Repositories\\IssueReadRepository"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/IssueReadService.php",
+            "class": "App\\Services\\IssueReadService",
+            "constructorParameters": [
+                {
+                    "name": "$projects",
+                    "types": [
+                        "App\\Services\\ProjectReadService"
+                    ]
+                },
+                {
+                    "name": "$issues",
+                    "types": [
+                        "App\\Repositories\\IssueReadRepository"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/IssueRelationsUpgrade.php",
+            "class": "App\\Services\\IssueRelationsUpgrade",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 21,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/IssueService.php",
+            "class": "App\\Services\\IssueService",
+            "constructorParameters": [
+                {
+                    "name": "$store",
+                    "types": [
+                        "App\\Repositories\\RecordStore"
+                    ]
+                },
+                {
+                    "name": "$workspaceSession",
+                    "types": [
+                        "array"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 28,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 86,
+                    "kind": "new",
+                    "target": "App\\Services\\ProjectBoards",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/IssueTypesUpgrade.php",
+            "class": "App\\Services\\IssueTypesUpgrade",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 21,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/ProjectAclReadService.php",
+            "class": "App\\Services\\ProjectAclReadService",
+            "constructorParameters": [
+                {
+                    "name": "$projects",
+                    "types": [
+                        "App\\Services\\ProjectReadService"
+                    ]
+                },
+                {
+                    "name": "$acl",
+                    "types": [
+                        "App\\Repositories\\ProjectAclReadRepository"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 61,
+                    "kind": "new",
+                    "target": "App\\Data\\ProjectMemberSummaryData",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 96,
+                    "kind": "new",
+                    "target": "App\\Data\\ProjectAclHistoryData",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/ProjectAclUpgrade.php",
+            "class": "App\\Services\\ProjectAclUpgrade",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 19,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/ProjectBoards.php",
+            "class": "App\\Services\\ProjectBoards",
+            "constructorParameters": [
+                {
+                    "name": "$store",
+                    "types": [
+                        "App\\Repositories\\RecordStore"
+                    ]
+                },
+                {
+                    "name": "$workspaceSession",
+                    "types": [
+                        "array"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 174,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/ProjectMembers.php",
+            "class": "App\\Services\\ProjectMembers",
+            "constructorParameters": [
+                {
+                    "name": "$store",
+                    "types": [
+                        "App\\Repositories\\RecordStore"
+                    ]
+                },
+                {
+                    "name": "$workspaceSession",
+                    "types": [
+                        "array"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 26,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/ProjectNotificationReadService.php",
+            "class": "App\\Services\\ProjectNotificationReadService",
+            "constructorParameters": [
+                {
+                    "name": "$projects",
+                    "types": [
+                        "App\\Services\\ProjectReadService"
+                    ]
+                },
+                {
+                    "name": "$notifications",
+                    "types": [
+                        "App\\Repositories\\ProjectNotificationReadRepository"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/ProjectReadService.php",
+            "class": "App\\Services\\ProjectReadService",
+            "constructorParameters": [
+                {
+                    "name": "$projects",
+                    "types": [
+                        "App\\Repositories\\ProjectReadRepository"
+                    ]
+                },
+                {
+                    "name": "$stores",
+                    "types": [
+                        "App\\Factories\\RecordStoreFactory"
+                    ]
+                },
+                {
+                    "name": "$members",
+                    "types": [
+                        "App\\Repositories\\ProjectMemberReadRepository"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 72,
+                    "kind": "new",
+                    "target": "App\\Data\\ProjectPageData",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 158,
+                    "kind": "new",
+                    "target": "App\\Data\\AuthorizedProjectData",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/ProjectService.php",
+            "class": "App\\Services\\ProjectService",
+            "constructorParameters": [
+                {
+                    "name": "$store",
+                    "types": [
+                        "App\\Repositories\\RecordStore"
+                    ]
+                },
+                {
+                    "name": "$workspaceSession",
+                    "types": [
+                        "array"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 28,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/ProjectSignals.php",
+            "class": "App\\Services\\ProjectSignals",
+            "constructorParameters": [
+                {
+                    "name": "$context",
+                    "types": [
+                        "array"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 32,
+                    "kind": "new",
+                    "target": "App\\Events\\ProjectChanged",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/ProjectStatusTypesUpgrade.php",
+            "class": "App\\Services\\ProjectStatusTypesUpgrade",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 18,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/ProjectTimeReadService.php",
+            "class": "App\\Services\\ProjectTimeReadService",
+            "constructorParameters": [
+                {
+                    "name": "$projects",
+                    "types": [
+                        "App\\Services\\ProjectReadService"
+                    ]
+                },
+                {
+                    "name": "$entries",
+                    "types": [
+                        "App\\Repositories\\ProjectTimeReadRepository"
+                    ]
+                }
+            ],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/RelationalDataMigration.php",
+            "class": "App\\Services\\RelationalDataMigration",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 20,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 22,
+                    "kind": "new",
+                    "target": "App\\Repositories\\LegacyRecordStore",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 23,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 78,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 88,
+                    "kind": "new",
+                    "target": "App\\Repositories\\LegacyRecordStore",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 89,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/RequestReplay.php",
+            "class": "App\\Services\\RequestReplay",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/SmtpService.php",
+            "class": "App\\Services\\SmtpService",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 48,
+                    "kind": "new",
+                    "target": "Symfony\\Component\\Mailer\\Transport\\Smtp\\EsmtpTransport",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/TimeEntryService.php",
+            "class": "App\\Services\\TimeEntryService",
+            "constructorParameters": [
+                {
+                    "name": "$store",
+                    "types": [
+                        "App\\Repositories\\RecordStore"
+                    ]
+                },
+                {
+                    "name": "$workspaceSession",
+                    "types": [
+                        "array"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 28,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/TodoReadService.php",
+            "class": "App\\Services\\TodoReadService",
+            "constructorParameters": [
+                {
+                    "name": "$todos",
+                    "types": [
+                        "App\\Repositories\\TodoReadRepository"
+                    ]
+                },
+                {
+                    "name": "$projects",
+                    "types": [
+                        "App\\Services\\ProjectReadService"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 39,
+                    "kind": "new",
+                    "target": "App\\Data\\PersonalReadContext",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 58,
+                    "kind": "new",
+                    "target": "App\\Data\\TodoPageData",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/Todos.php",
+            "class": "App\\Services\\Todos",
+            "constructorParameters": [
+                {
+                    "name": "$workspaceSession",
+                    "types": [
+                        "array"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 33,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 80,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 86,
+                    "kind": "new",
+                    "target": "App\\Services\\RequestReplay",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 195,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 296,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceService",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/WorkspaceMemberships.php",
+            "class": "App\\Services\\WorkspaceMemberships",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 22,
+                    "kind": "new",
+                    "target": "App\\Repositories\\MembershipRepository",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 37,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 54,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 77,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/WorkspaceQuery.php",
+            "class": "App\\Services\\WorkspaceQuery",
+            "constructorParameters": [
+                {
+                    "name": "$store",
+                    "types": [
+                        "App\\Repositories\\RecordStore"
+                    ]
+                },
+                {
+                    "name": "$workspaceSession",
+                    "types": [
+                        "array"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 27,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 60,
+                    "kind": "new",
+                    "target": "App\\Services\\ProjectBoards",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/WorkspaceService.php",
+            "class": "App\\Services\\WorkspaceService",
+            "constructorParameters": [
+                {
+                    "name": "$workspaceSession",
+                    "types": [
+                        "array"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 28,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 29,
+                    "kind": "new",
+                    "target": "App\\Authorization\\WorkspaceOperationAccess",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 42,
+                    "kind": "app",
+                    "target": "Database\\Seeders\\DemoSeeder",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 46,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceTimeReport",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 46,
+                    "kind": "app",
+                    "target": "App\\Repositories\\TimeReportRepository",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 49,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceQuery",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 52,
+                    "kind": "new",
+                    "target": "App\\Services\\ProjectMembers",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 55,
+                    "kind": "new",
+                    "target": "App\\Services\\RequestReplay",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 67,
+                    "kind": "new",
+                    "target": "App\\Services\\ProjectService",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 68,
+                    "kind": "new",
+                    "target": "App\\Services\\IssueService",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 69,
+                    "kind": "new",
+                    "target": "App\\Services\\TimeEntryService",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 70,
+                    "kind": "new",
+                    "target": "App\\Services\\ProjectBoards",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 71,
+                    "kind": "new",
+                    "target": "App\\Services\\ProjectMembers",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 88,
+                    "kind": "app",
+                    "target": "Database\\Seeders\\DemoSeeder",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 96,
+                    "kind": "new",
+                    "target": "App\\Services\\ProjectSignals",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/WorkspaceSettingsReadService.php",
+            "class": "App\\Services\\WorkspaceSettingsReadService",
+            "constructorParameters": [
+                {
+                    "name": "$settings",
+                    "types": [
+                        "App\\Repositories\\SettingsRepository"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 47,
+                    "kind": "new",
+                    "target": "App\\Data\\WorkspaceMemberSummaryData",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "app/Services/WorkspaceTimeReport.php",
+            "class": "App\\Services\\WorkspaceTimeReport",
+            "constructorParameters": [
+                {
+                    "name": "$store",
+                    "types": [
+                        "App\\Repositories\\RecordStore"
+                    ]
+                },
+                {
+                    "name": "$workspaceSession",
+                    "types": [
+                        "array"
+                    ]
+                },
+                {
+                    "name": "$reports",
+                    "types": [
+                        "App\\Repositories\\TimeReportRepository"
+                    ]
+                }
+            ],
+            "sites": [
+                {
+                    "line": 62,
+                    "kind": "new",
+                    "target": "DateTimeImmutable",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "artisan",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 16,
+                    "kind": "new",
+                    "target": "Symfony\\Component\\Console\\Input\\ArgvInput",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "bootstrap/app.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "bootstrap/providers.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "config/app.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "config/auth.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "config/broadcasting.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "config/cache.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "config/database.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "config/filesystems.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "config/logging.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "config/mail.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "config/queue.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "config/reverb.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "config/services.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "config/session.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "config/tasktracker.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "database/factories/UserFactory.php",
+            "class": "Database\\Factories\\UserFactory",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "database/migrations/0001_01_01_000000_create_users_table.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 7,
+                    "kind": "new",
+                    "target": "(dynamic/anonymous)",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "database/migrations/0001_01_01_000001_create_cache_table.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 7,
+                    "kind": "new",
+                    "target": "(dynamic/anonymous)",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "database/migrations/0001_01_01_000002_create_jobs_table.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 7,
+                    "kind": "new",
+                    "target": "(dynamic/anonymous)",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "database/migrations/2026_10_19_000000_create_tasktracker_records.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 7,
+                    "kind": "new",
+                    "target": "(dynamic/anonymous)",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "database/migrations/2026_10_20_000000_replace_issue_dependencies.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 6,
+                    "kind": "new",
+                    "target": "(dynamic/anonymous)",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "database/migrations/2026_10_20_000001_simplify_issue_types.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 6,
+                    "kind": "new",
+                    "target": "(dynamic/anonymous)",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "database/migrations/2026_10_30_000000_add_project_acl.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 6,
+                    "kind": "new",
+                    "target": "(dynamic/anonymous)",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "database/migrations/2026_11_04_000000_create_relational_business_tables.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 9,
+                    "kind": "new",
+                    "target": "(dynamic/anonymous)",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "database/migrations/2026_11_05_000000_add_todo_markdown_content.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 8,
+                    "kind": "new",
+                    "target": "(dynamic/anonymous)",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "database/migrations/2026_11_05_000001_add_settings_revisions.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 7,
+                    "kind": "new",
+                    "target": "(dynamic/anonymous)",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "database/migrations/2026_11_06_000000_require_open_closed_statuses.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 6,
+                    "kind": "new",
+                    "target": "(dynamic/anonymous)",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "database/migrations/2026_11_09_000000_create_transaction_guards.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 8,
+                    "kind": "new",
+                    "target": "(dynamic/anonymous)",
+                    "decision": "value-framework-dynamic-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "database/seeders/DatabaseSeeder.php",
+            "class": "Database\\Seeders\\DatabaseSeeder",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "database/seeders/DemoSeeder.php",
+            "class": "Database\\Seeders\\DemoSeeder",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 48,
+                    "kind": "app",
+                    "target": "(binding/expression)",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 62,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 73,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 75,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 77,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 90,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceService",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 116,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceService",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 138,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "value-framework-dynamic-review"
+                },
+                {
+                    "line": 175,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 176,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceService",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 272,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 273,
+                    "kind": "new",
+                    "target": "App\\Services\\ProjectService",
+                    "decision": "needs-di-migration-review"
+                },
+                {
+                    "line": 274,
+                    "kind": "new",
+                    "target": "App\\Services\\IssueService",
+                    "decision": "needs-di-migration-review"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "docker/initialize-mysql.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 10,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "composition-root-exception-candidate"
+                },
+                {
+                    "line": 20,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "composition-root-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "docker/initialize.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 7,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "composition-root-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "public/index.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "routes/console.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "routes/web.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "tests/Concerns/IssueLinkQueryCases.php",
+            "class": "Tests\\Concerns\\IssueLinkQueryCases",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 61,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 88,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Concerns/ProjectAclReadCases.php",
+            "class": "Tests\\Concerns\\ProjectAclReadCases",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "tests/Concerns/ProjectTimeReadCases.php",
+            "class": "Tests\\Concerns\\ProjectTimeReadCases",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 44,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Concerns/ProjectUtilityReadCases.php",
+            "class": "Tests\\Concerns\\ProjectUtilityReadCases",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 41,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 68,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Concerns/RecordContextCases.php",
+            "class": "Tests\\Concerns\\RecordContextCases",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 27,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 59,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 90,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Concerns/WorkspaceContextCases.php",
+            "class": "Tests\\Concerns\\WorkspaceContextCases",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 38,
+                    "kind": "app",
+                    "target": "App\\Factories\\WorkspaceContextFactory",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 39,
+                    "kind": "app",
+                    "target": "App\\Factories\\ProjectAccessFactory",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 40,
+                    "kind": "app",
+                    "target": "App\\Factories\\RecordStoreFactory",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 42,
+                    "kind": "app",
+                    "target": "(binding/expression)",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 68,
+                    "kind": "new",
+                    "target": "Illuminate\\Session\\Store",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 68,
+                    "kind": "new",
+                    "target": "Illuminate\\Session\\ArraySessionHandler",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 72,
+                    "kind": "app",
+                    "target": "App\\Http\\WorkspaceSession",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 75,
+                    "kind": "app",
+                    "target": "App\\Http\\WorkspaceSession",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 92,
+                    "kind": "app",
+                    "target": "App\\Factories\\WorkspaceContextFactory",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 97,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 97,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 102,
+                    "kind": "app",
+                    "target": "App\\Authorization\\ProjectChannelAccess",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 116,
+                    "kind": "app",
+                    "target": "App\\Factories\\WorkspaceContextFactory",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 117,
+                    "kind": "app",
+                    "target": "App\\Factories\\ProjectAccessFactory",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 120,
+                    "kind": "container.instance",
+                    "target": "App\\Factories\\ProjectAccessFactory",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 122,
+                    "kind": "container.make",
+                    "target": "App\\Authorization\\ProjectChannelAccess",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 123,
+                    "kind": "new",
+                    "target": "ReflectionClass",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Concerns/WorkspaceSettingsReadCases.php",
+            "class": "Tests\\Concerns\\WorkspaceSettingsReadCases",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 41,
+                    "kind": "new",
+                    "target": "App\\Services\\ProjectSignals",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/AccountDomainTest.php",
+            "class": "Tests\\Feature\\AccountDomainTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 20,
+                    "kind": "app",
+                    "target": "App\\Services\\AccountService",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 32,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/AccountSettingsTest.php",
+            "class": "Tests\\Feature\\AccountSettingsTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 133,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/BackendArchitectureTest.php",
+            "class": "Tests\\Feature\\BackendArchitectureTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 45,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 108,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/BoardReadApiTest.php",
+            "class": "Tests\\Feature\\BoardReadApiTest",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/DemoSeedTest.php",
+            "class": "Tests\\Feature\\DemoSeedTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 24,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 27,
+                    "kind": "app",
+                    "target": "Database\\Seeders\\DemoSeeder",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 59,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 71,
+                    "kind": "app",
+                    "target": "Database\\Seeders\\DemoSeeder",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 76,
+                    "kind": "app",
+                    "target": "Database\\Seeders\\DemoSeeder",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 81,
+                    "kind": "app",
+                    "target": "Database\\Seeders\\DemoSeeder",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 87,
+                    "kind": "app",
+                    "target": "Database\\Seeders\\DemoSeeder",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 88,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 128,
+                    "kind": "app",
+                    "target": "(binding/expression)",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 131,
+                    "kind": "app",
+                    "target": "(binding/expression)",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 134,
+                    "kind": "app",
+                    "target": "Database\\Seeders\\DemoSeeder",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 142,
+                    "kind": "app",
+                    "target": "(binding/expression)",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 143,
+                    "kind": "app",
+                    "target": "Database\\Seeders\\DemoSeeder",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 144,
+                    "kind": "app",
+                    "target": "(binding/expression)",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 153,
+                    "kind": "app",
+                    "target": "Database\\Seeders\\DemoSeeder",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 155,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/IssueLinkQueryTest.php",
+            "class": "Tests\\Feature\\IssueLinkQueryTest",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/IssueLocationTest.php",
+            "class": "Tests\\Feature\\IssueLocationTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 53,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/LegacyImportTest.php",
+            "class": "Tests\\Feature\\LegacyImportTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 19,
+                    "kind": "new",
+                    "target": "PDO",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 31,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 32,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 37,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/MySqlApiTest.php",
+            "class": "Tests\\Feature\\MySqlApiTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 131,
+                    "kind": "app",
+                    "target": "App\\Repositories\\IssueReadRepository",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 131,
+                    "kind": "new",
+                    "target": "App\\Data\\PageQueryData",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/MySqlConcurrencyTest.php",
+            "class": "Tests\\Feature\\MySqlConcurrencyTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 34,
+                    "kind": "new",
+                    "target": "Symfony\\Component\\Process\\Process",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 106,
+                    "kind": "new",
+                    "target": "App\\Database\\WriteLocks",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 110,
+                    "kind": "new",
+                    "target": "App\\Services\\AccountService",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 111,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceService",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/MySqlImportTest.php",
+            "class": "Tests\\Feature\\MySqlImportTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 21,
+                    "kind": "new",
+                    "target": "Symfony\\Component\\Process\\Process",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 25,
+                    "kind": "new",
+                    "target": "PDO",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/MySqlSessionConcurrencyTest.php",
+            "class": "Tests\\Feature\\MySqlSessionConcurrencyTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 28,
+                    "kind": "new",
+                    "target": "GuzzleHttp\\Client",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 28,
+                    "kind": "new",
+                    "target": "GuzzleHttp\\Cookie\\CookieJar",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 58,
+                    "kind": "new",
+                    "target": "Symfony\\Component\\Process\\Process",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 140,
+                    "kind": "new",
+                    "target": "Symfony\\Component\\Process\\Process",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 150,
+                    "kind": "app",
+                    "target": "App\\Factories\\SessionLockFactory",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 170,
+                    "kind": "new",
+                    "target": "Illuminate\\Session\\Store",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 170,
+                    "kind": "new",
+                    "target": "Illuminate\\Session\\ArraySessionHandler",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 178,
+                    "kind": "app",
+                    "target": "App\\Http\\ApiExecution",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 216,
+                    "kind": "new",
+                    "target": "Symfony\\Component\\Process\\Process",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/MySqlTimeReportTest.php",
+            "class": "Tests\\Feature\\MySqlTimeReportTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 86,
+                    "kind": "new",
+                    "target": "Tests\\Support\\LegacyMemberTimeDetails",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/MySqlWorkspaceContextTest.php",
+            "class": "Tests\\Feature\\MySqlWorkspaceContextTest",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/ProjectAclReadTest.php",
+            "class": "Tests\\Feature\\ProjectAclReadTest",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/ProjectAclTest.php",
+            "class": "Tests\\Feature\\ProjectAclTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 40,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 133,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 138,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceService",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 205,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceService",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 207,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceService",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 211,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceService",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/ProjectBoardsTest.php",
+            "class": "Tests\\Feature\\ProjectBoardsTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 87,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceService",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/ProjectTimeReadTest.php",
+            "class": "Tests\\Feature\\ProjectTimeReadTest",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/ProjectUtilityReadTest.php",
+            "class": "Tests\\Feature\\ProjectUtilityReadTest",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/ReadPerformanceTest.php",
+            "class": "Tests\\Feature\\ReadPerformanceTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 36,
+                    "kind": "app",
+                    "target": "Database\\Seeders\\DemoSeeder",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 37,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 41,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 50,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceQuery",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 64,
+                    "kind": "new",
+                    "target": "App\\Authorization\\ProjectAccess",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 70,
+                    "kind": "app",
+                    "target": "Database\\Seeders\\DemoSeeder",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 71,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 75,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceQuery",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/ReadTransactionTest.php",
+            "class": "Tests\\Feature\\ReadTransactionTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 62,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 79,
+                    "kind": "new",
+                    "target": "PDO",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 80,
+                    "kind": "new",
+                    "target": "PDO",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 85,
+                    "kind": "new",
+                    "target": "App\\Database\\WorkspaceSqliteConnection",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/RealtimeTest.php",
+            "class": "Tests\\Feature\\RealtimeTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 144,
+                    "kind": "new",
+                    "target": "App\\Events\\ProjectChanged",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 162,
+                    "kind": "new",
+                    "target": "App\\Services\\ProjectSignals",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 167,
+                    "kind": "new",
+                    "target": "App\\Services\\ProjectSignals",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 202,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/ReceiptGrowthTest.php",
+            "class": "Tests\\Feature\\ReceiptGrowthTest",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/RecordContextTest.php",
+            "class": "Tests\\Feature\\RecordContextTest",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/RelationalStorageTest.php",
+            "class": "Tests\\Feature\\RelationalStorageTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 30,
+                    "kind": "app",
+                    "target": "Database\\Seeders\\DemoSeeder",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 35,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 71,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 174,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 199,
+                    "kind": "new",
+                    "target": "App\\Repositories\\LegacyRecordStore",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/ScopedReadApiTest.php",
+            "class": "Tests\\Feature\\ScopedReadApiTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 99,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/StorageCostTest.php",
+            "class": "Tests\\Feature\\StorageCostTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 49,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/TimeReportTest.php",
+            "class": "Tests\\Feature\\TimeReportTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 219,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceTimeReport",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 219,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 219,
+                    "kind": "app",
+                    "target": "App\\Repositories\\TimeReportRepository",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 237,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceTimeReport",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 237,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 237,
+                    "kind": "app",
+                    "target": "App\\Repositories\\TimeReportRepository",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 244,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceTimeReport",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 244,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 244,
+                    "kind": "app",
+                    "target": "App\\Repositories\\TimeReportRepository",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 251,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceTimeReport",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 251,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 251,
+                    "kind": "app",
+                    "target": "App\\Repositories\\TimeReportRepository",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 364,
+                    "kind": "app",
+                    "target": "App\\Repositories\\TimeReportRepository",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/TodoTest.php",
+            "class": "Tests\\Feature\\TodoTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 32,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/WorkspaceApiTest.php",
+            "class": "Tests\\Feature\\WorkspaceApiTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 96,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 99,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 100,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 335,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 342,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 343,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 390,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 414,
+                    "kind": "app",
+                    "target": "(binding/expression)",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 417,
+                    "kind": "app",
+                    "target": "(binding/expression)",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 421,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 487,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/WorkspaceContextTest.php",
+            "class": "Tests\\Feature\\WorkspaceContextTest",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/WorkspaceMembershipTest.php",
+            "class": "Tests\\Feature\\WorkspaceMembershipTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 90,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 128,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Feature/WorkspaceSettingsReadTest.php",
+            "class": "Tests\\Feature\\WorkspaceSettingsReadTest",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "tests/MySqlTestCase.php",
+            "class": "Tests\\MySqlTestCase",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 39,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 42,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 50,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Support/DependencyInventory.php",
+            "class": "Tests\\Support\\DependencyInventory",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "tests/Support/LegacyMemberTimeDetails.php",
+            "class": "Tests\\Support\\LegacyMemberTimeDetails",
+            "constructorParameters": [],
+            "sites": [],
+            "limitations": []
+        },
+        {
+            "path": "tests/TestCase.php",
+            "class": "Tests\\TestCase",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 23,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Unit/DependencyInventoryTest.php",
+            "class": "Tests\\Unit\\DependencyInventoryTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 14,
+                    "kind": "new",
+                    "target": "Tests\\Support\\DependencyInventory",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tests/Unit/MemberTimeDetailsTest.php",
+            "class": "Tests\\Unit\\MemberTimeDetailsTest",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 23,
+                    "kind": "new",
+                    "target": "Tests\\Support\\LegacyMemberTimeDetails",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tools/audit-dependencies.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 8,
+                    "kind": "new",
+                    "target": "Tests\\Support\\DependencyInventory",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 10,
+                    "kind": "new",
+                    "target": "RecursiveDirectoryIterator",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 11,
+                    "kind": "new",
+                    "target": "RecursiveCallbackFilterIterator",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 17,
+                    "kind": "new",
+                    "target": "RecursiveIteratorIterator",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tools/mysql-race-worker.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 14,
+                    "kind": "container.make",
+                    "target": "Illuminate\\Contracts\\Console\\Kernel",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 16,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 22,
+                    "kind": "new",
+                    "target": "Illuminate\\Session\\Store",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 22,
+                    "kind": "new",
+                    "target": "Illuminate\\Session\\ArraySessionHandler",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 30,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 35,
+                    "kind": "container.make",
+                    "target": "App\\Http\\ApiExecution",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tools/profile-reads.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 26,
+                    "kind": "container.make",
+                    "target": "Illuminate\\Contracts\\Console\\Kernel",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 30,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 33,
+                    "kind": "container.make",
+                    "target": "Database\\Seeders\\DemoSeeder",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 65,
+                    "kind": "new",
+                    "target": "App\\Repositories\\RecordStore",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 66,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceQuery",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 67,
+                    "kind": "new",
+                    "target": "App\\Services\\WorkspaceTimeReport",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 67,
+                    "kind": "new",
+                    "target": "App\\Repositories\\TimeReportRepository",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 75,
+                    "kind": "new",
+                    "target": "DateTimeImmutable",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tools/profile-sqlite-locks.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 9,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 13,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 17,
+                    "kind": "new",
+                    "target": "PDO",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 18,
+                    "kind": "new",
+                    "target": "PDO",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tools/session-http-worker.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 8,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 12,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 14,
+                    "kind": "new",
+                    "target": "GuzzleHttp\\Client",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tools/session-lock-worker.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 9,
+                    "kind": "container.make",
+                    "target": "Illuminate\\Contracts\\Console\\Kernel",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 11,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 13,
+                    "kind": "container.make",
+                    "target": "App\\Factories\\SessionLockFactory",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        },
+        {
+            "path": "tools/session-race-router.php",
+            "class": "",
+            "constructorParameters": [],
+            "sites": [
+                {
+                    "line": 11,
+                    "kind": "container.make",
+                    "target": "Illuminate\\Contracts\\Http\\Kernel",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 14,
+                    "kind": "new",
+                    "target": "RuntimeException",
+                    "decision": "test-tool-exception-candidate"
+                },
+                {
+                    "line": 20,
+                    "kind": "container.make",
+                    "target": "App\\Http\\ApiExecution",
+                    "decision": "test-tool-exception-candidate"
+                }
+            ],
+            "limitations": []
+        }
+    ]
+}
