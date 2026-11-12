@@ -1,5 +1,12 @@
 # TaskTracker
 
+## 開發規範與前端驗證
+
+先讀[AGENTS](AGENTS.md)，專案現況按需查[Memory](Memory.md)。所有side project的Skill規則集中於 `/Users/josh/workspace/side-project/skills`；本專案只保留入口，不另維護前端審查規則副本。每次前端新增／修改依共用Skill審查及按影響範圍驗證，頻率以共用verification為準。
+
+三尺寸視覺／行為檢查、基準取得與人工核准見[視覺回歸操作](docs/visual-regression.md)，本輪實測與限制見[結構優化驗收](docs/structure-optimization-acceptance-2026-11-13.md)。核准圖留忽略artifacts；換機須還原符合approval digest的bundle，不能直接生成新圖當PASS。
+
+
 ## 第三方開發者文件
 
 啟動後開啟 `/api/public/docs`（本機 http://127.0.0.1:5174/api/public/docs），可匿名閱讀認證、Agent指南與cURL／Python完整操作範例。頁面不收集PAT，機器規格仍為 `/api/public/openapi.json`；[文件交付](docs/developer-documentation-delivery.md)。

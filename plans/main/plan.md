@@ -1,3 +1,10 @@
+## 2026-11-13 TT-271最終收尾
+
+- 初審及獨立Codex複核發現的P1／P2已修正：harness含實際helpers、完整sourceRoots集合、舊PASS失效／source與approval綁定、平台分檔／CI範圍、atomic lock。四種harness變更及新增來源實測拒絕，還原gate PASS；最後校準與正式compare重跑通過。
+- 使用者核准48圖及AA設定保持fcf9ee11原digest，沒有洗baseline或改UI業務。共用規範owner已依使用者要求集中、頻率沿階段驗證配置：每階段驗影響流程，共用變更擴相關頁／三尺寸，大階段完整回歸；frontend/AGENTS只7行入口。共用repo最後1406d35／be12b56已提交。
+- cd05f47已交付270並回填closed；本階段提交271後回填closed／讀回，再claim並closed Epic266，結構優化原6卡全部按證據收尾。TT-273遠端Linux啟用歸部署、TT-274時間戳排序歸實際功能，均open未指派且未擴張實作。
+- 純交接／入口／核對清單檢查來源hash／引用／語法／diff，不重跑已通過的相同完整測試。只有本機提交，不push；原始trace／圖片及帳密不進Git，本次測試資源清理。
+
 ## 2026-11-13 TT-270三尺寸正式驗收完成
 
 - 16×3=48合成候選經使用者明確核准，manifest fcf9ee11不變；正式比較3／3通過。校準原樣0／spacing、overflow、hide-action各1＋真實diff／還原0；調高容忍度及刪shot亦被harness lock拒絕，還原通過。

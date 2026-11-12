@@ -1,5 +1,7 @@
-# TaskTracker前端
+# TaskTracker前端入口
 
-先讀根AGENTS與docs/project-engineering-bindings.md，再依Side Project共用庫README／PROJECT-BASELINE／registry載入共通工程及Vue Best Practices。涉及畫面、互動、文案、資料載入呈現時加UI UX Pro Max及Design Taste的app-screen流程；效能依Addy＋ECC。
+先讀根AGENTS與docs/project-engineering-bindings.md，再依Side Project共用庫README／PROJECT-BASELINE／registry選Skill。
 
-沿用Vue＋Vuetify、JavaScript／script setup與現有API模組，不因Skill範例改框架或移除授權、草稿、revision保護。UI需實際隔離瀏覽器驗證；未具核准baseline時不能宣稱視覺回歸通過。Ponytail lite不得略過必要驗證。
+所有前端異動的審查、證據與執行頻率，統一依共用 `01-common/side-project-development-standards/references/verification.md` 的「每次前端異動／前端驗證頻率」；本檔不維護規則副本。TaskTracker以vue tag搭配必要ui／data-access選用，僅透過根tools/check-task-skills.py轉交共用矩陣。
+
+本專案Vue＋Vuetify、JavaScript／script setup及API安全契約維持；不因Skill範例換框架或略過草稿／revision保護。

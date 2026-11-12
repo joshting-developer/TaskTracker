@@ -44,3 +44,16 @@
 本機核准為darwin-arm64／Chrome157.0.8103.52／Playwright1.63.0，不能取代Linux。尚未授權push，未執行遠端GitHub job；Linux首批artifact／核准及Required Check啟用已另建**TT-273，部署看板、open未指派**。目前Linux workflow會因缺核准基準明確失敗，不能宣稱遠端綠燈或直接設Required Check。這是後續部署啟用範圍，不假裝本地圖已跨平台驗收。
 
 視覺校準觀測到新專案SQL時間戳為NULL、排序退回UUID，已另建**TT-274，實際功能看板、Bug／open未指派**；只讀確認隔離庫，未查或修主庫。此產品資料問題與結構門檻分開，受限fixture只是穩定合成資料，不冒充修正。
+
+## 最後對照清單（本地交付）
+
+- [x] 單一canonical、合法LICENSE／references及所有consumer入口完整。
+- [x] 官方固定Ponytail／lite且無全域plugin／hook，安全／分層／PHPDoc優先。
+- [x] Codex／Claude新session實際讀取與四類任務8／8，非只列名字。
+- [x] 唯一矩陣＋失敗／缺失／過期來源／未核准視覺證據拒絕。
+- [x] 三尺寸48圖有使用者明確核准，正式比較與環境綁定通過。
+- [x] 三種退化有真實diff並FAIL、還原PASS；四種harness竄改及新增來源皆拒絕。
+- [x] 既有完整前端行為、後端隔離／權限／revision及新增fixture安全測試未退化。
+- [x] 原repo階段提交、持續回填、秘密與圖片不入Git，測試拓樸清理，沒有push或主庫修改。
+
+TT-270實作commit cd05f47；TT-271本階段交付包含前端短入口、共用規範分工與這份驗收清單。遠端Linux啟用TT-273與產品排序Bug TT-274如前節明確分責，不冒充已實作。

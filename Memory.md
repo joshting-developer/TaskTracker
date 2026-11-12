@@ -4,6 +4,8 @@
 
 ## 目前有效摘要與查閱入口
 
+- Skill／AGENTS記憶分工、前端按階段驗證與本機三尺寸基準：docs/structure-optimization-acceptance-2026-11-13.md、docs/visual-regression.md；長期規範仍在Side Project共用庫。核准影像不入Git，跨平台／遠端啟用不可沿用本機圖。
+
 - Skill已統一到 `/Users/josh/workspace/side-project/skills`；原專案路徑為連結，不再維護副本。舊project-only決策已被取代，見docs/shared-skills-migration-2026-11-12.md。
 - Vue＋Vuetify／Laravel前後端分離，現用本機MySQL8.4／Redis；外部庫為歷史，禁止直接切回覆蓋新進度。環境見docs/local-services-return-2026-11-12.md。
 - 工程產品綁定見docs/project-engineering-bindings.md；資料表見docs/database-design.md；分責查詢見docs/query-api-v1.md。
