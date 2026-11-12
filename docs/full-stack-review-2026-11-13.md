@@ -74,6 +74,8 @@
 
 `/Users/josh/workspace/side-project/skills/01-common/task-tracker-usage/references/classification-and-time.md`是唯一分類／工時正文，Skill入口引用；TaskTracker AGENTS只留指向。共用庫提交 **2c70629**。全14Skills／380 hash／358原vendor校驗通過。
 
+本輪TT-275已實測：預估120分鐘、以Codex本人Session填報14分鐘正式工時並讀回（自建立追蹤卡起、按分鐘估計，未回補領卡前探索）。預估保留作偏差對照，不在結案時覆蓋成實際值。
+
 新規範：開工前正式estimateMinutes、指派自己後inprogress；階段／交接／結案前填本人正式time entry，寫進度與偏差理由，讀回再結案。實際工時不以預估回填、不由留言冒充、不為舊closed卡補造；不能把等待與並行工作重複計費。公開PAT目前沒有工時接口，consumer已授權的Session或Web流程才填，不自行新增或繞過權限。
 
 ## 證據與限制
