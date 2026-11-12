@@ -145,65 +145,34 @@ async function refreshWorkspace() {
   const generation = ++refreshGeneration;
   error.value = '';
   try {
-    if (isScopedRoute.value) {
-      const identity = await api.current();
-      if (generation !== refreshGeneration) return;
-      const previousWorkspace=workspace.value.meta.workspace?.id;
-      if(previousWorkspace&&previousWorkspace!==identity.workspace.id){
-        setWorkspaceContext(identity.workspace.id);
-        workspace.value={projects:[],issues:[],boards:[],timeEntries:[],notifications:[],members:[identity.user],meta:{actor:identity.user.name,userId:identity.user.id,workspace:identity.workspace,permissions:identity.permissions}};
-        resetWorkspaceUI();notify('工作空間已在其他分頁切換');
-      }
-      setWorkspaceContext(identity.workspace.id);
-      const project = projectId.value ? await api.project(projectId.value) : null;
-      if (generation !== refreshGeneration) return;
-      workspace.value = { projects: project ? [project] : [], issues: [], boards: [], timeEntries: [], notifications: [], members: [identity.user],
-        meta: { actor: identity.user.name, userId: identity.user.id, workspace: identity.workspace, permissions: identity.permissions } };
-      authenticated.value = true;
-      if(editingProject.value){
-        try{const current=await api.project(editingProject.value.id);if(!current.permissions.includes('project.update')){editingProject.value=null;notify('專案編輯資格已變更');}}
-        catch(failure){if(['NOT_FOUND','FORBIDDEN'].includes(failure.code)){editingProject.value=null;notify('專案編輯資格已變更');}else throw failure;}
-      }
-      ensureSectionAccess();
-      if (selectedId.value && !projectId.value) {
-        try {
-          const found = await api.issueLocation(selectedId.value);
-          if (generation !== refreshGeneration) return;
-          history.replaceState(null, '', projectHash(found.projectId, found.id)); readHash(true);
-        } catch (failure) { if (failure.code !== 'NOT_FOUND') throw failure; notify('找不到這個任務'); goHome(true); }
-      }
-      await nextTick();
-      return;
-    }
-    const data = await api.getWorkspace();
+    // 所有頁面都只取身分＋目前Project；整包getWorkspace已退役，見docs/workspace-payload-retirement-2026-11-12.md。
+    const identity = await api.current();
     if (generation !== refreshGeneration) return;
-    const previousWorkspace = workspace.value.meta.workspace?.id;
-    if (previousWorkspace && previousWorkspace !== data.meta.workspace?.id) {
-      resetWorkspaceUI(); notify('工作空間已切換，已關閉原工作空間的畫面');
+    const previousWorkspace=workspace.value.meta.workspace?.id;
+    if(previousWorkspace&&previousWorkspace!==identity.workspace.id){
+      setWorkspaceContext(identity.workspace.id);
+      workspace.value={projects:[],issues:[],boards:[],timeEntries:[],notifications:[],members:[identity.user],meta:{actor:identity.user.name,userId:identity.user.id,workspace:identity.workspace,permissions:identity.permissions}};
+      resetWorkspaceUI();notify('工作空間已在其他分頁切換');
     }
-    setWorkspaceContext(data.meta.workspace?.id || '');
-    workspace.value = data;
+    setWorkspaceContext(identity.workspace.id);
+    const project = projectId.value ? await api.project(projectId.value) : null;
+    if (generation !== refreshGeneration) return;
+    workspace.value = { projects: project ? [project] : [], issues: [], boards: [], timeEntries: [], notifications: [], members: [identity.user],
+      meta: { actor: identity.user.name, userId: identity.user.id, workspace: identity.workspace, permissions: identity.permissions } };
     authenticated.value = true;
-    if (!data.meta.permissions?.includes('project.create')) creatingProject.value = false;
-    if (editingProject.value && !projectCan(data.projects.find(item => item.id === editingProject.value.id), 'project.update')) editingProject.value = null;
-    if (projectId.value && !selectedProject.value) {
-      selectedId.value = ''; detailPage.value = false; editingDetail.value = false; creatingIssue.value = false; boardEditor.value = null; issueReturn = null;
-      section.value = 'tasks'; projectId.value = ''; view.value = 'list'; boardId.value = 'default';
-      clearFilters(); history.replaceState(null, '', '#/'); notify('專案不存在或你的存取權限已變更');
+    if(editingProject.value){
+      try{const current=await api.project(editingProject.value.id);if(!current.permissions.includes('project.update')){editingProject.value=null;notify('專案編輯資格已變更');}}
+      catch(failure){if(['NOT_FOUND','FORBIDDEN'].includes(failure.code)){editingProject.value=null;notify('專案編輯資格已變更');}else throw failure;}
     }
-    if (!canWrite.value) { creatingIssue.value = false; editingDetail.value = false; }
-    if (!can('board.manage')) boardEditor.value = null;
     ensureSectionAccess();
     if (selectedId.value && !projectId.value) {
-      const legacyIssue = data.issues.find((item) => item.id === selectedId.value);
-      if (legacyIssue) { history.replaceState(null, '', projectHash(legacyIssue.projectId, legacyIssue.id)); readHash(); }
-      else { notify('找不到這個任務'); goHome(true); }
+      try {
+        const found = await api.issueLocation(selectedId.value);
+        if (generation !== refreshGeneration) return;
+        history.replaceState(null, '', projectHash(found.projectId, found.id)); readHash(true);
+      } catch (failure) { if (failure.code !== 'NOT_FOUND') throw failure; notify('找不到這個任務'); goHome(true); }
     }
-    if (projectId.value && !data.projects.some((item) => item.id === projectId.value)) { notify('找不到這個專案'); goHome(true); }
-    if (projectId.value && view.value === 'board' && !selectedBoard.value) { notify('看板不存在或已移除'); navigate('all', projectId.value, 'boards'); }
-    if (selectedId.value && !selectedIssue.value) { notify('找不到這個專案內的任務'); history.replaceState(null, '', projectHash(projectId.value)); readHash(); }
-    if (convertingTodo.value) { const current=await api.todo(convertingTodo.value.id); if(!current.capabilities.convert){convertingTodo.value=null;notify('待辦資格已改變');} }
-
+    await nextTick();
   } catch (failure) { if (generation === refreshGeneration) { if (failure.code === 'UNAUTHENTICATED') { authenticated.value = false; convertingTodo.value = null; todoNotificationsOpen.value = false; profileOpen.value = false; creatingProject.value = false; editingProject.value = null; boardEditor.value = null; creatingIssue.value = false; selectedId.value = ''; detailPage.value = false; editingDetail.value = false; workspace.value = { projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} }; } else if (isScopedRoute.value && ['FORBIDDEN', 'NOT_FOUND', 'WORKSPACE_CHANGED'].includes(failure.code)) {
       workspace.value = { ...workspace.value, projects: [], issues: [], boards: [] };
       selectedId.value = ''; creatingIssue.value = false; boardEditor.value = null;
@@ -405,10 +374,7 @@ function readHash(skipGuard = false) {
     nextProject = route || featureRoute ? decodeURIComponent((route || featureRoute)[1]) : '';
     nextIssue = route?.[4] ? decodeURIComponent(route[4]) : legacyId ? decodeURIComponent(legacyId) : '';
     if (route?.[2] === 'board' && route[3]) nextBoard = decodeURIComponent(route[3]);
-    if (legacyId) {
-      const issue = issues.value.find((item) => item.id === nextIssue);
-      if (issue) { nextProject = issue.projectId; history.replaceState(null, '', projectHash(nextProject, nextIssue, 'list')); }
-    }
+    // 舊#/issue/<id>由refresh以issue-locations解析可讀位置，不再從整包Issue查找。
   } catch { history.replaceState(null, '', '#/'); }
   const analysisRoute = path.match(/^#\/time-analysis(?:\/(members|projects|trend))?$/);
   const nextAnalysis = analysisRoute?.[1] || 'index';
