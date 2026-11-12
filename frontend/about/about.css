@@ -1,3 +1,5 @@
+/* 共用訪客TopBar在CSS層內嵌，避免與App入口產生共享JS chunk（登入頁維持單一JS）。 */
+@import '../src/guest-topbar.css';
 /* TT-207：公開介紹頁；無JS也完整可讀，沿用品牌紫與深色TopBar。 */
 :root { --ink: #2b2734; --muted: #5f5a6b; --accent: #6a5bd6; --accent-ink: #ffffff; --line: #e3e0ec; --ground: #f6f5fa; --surface: #ffffff; }
 * { box-sizing: border-box; }

@@ -70,6 +70,15 @@ try {
     const raw = await (await fetch(`${origin}/about/`)).text();
     for (const pattern of [/<title>[^<]*TaskTracker[^<]*<\/title>/, /<meta name="description" content="[^"]{40,}"/, /<h1[^>]*>[^<]+<\/h1>/, /<meta property="og:title"/, /<meta property="og:image"/, /<html lang="zh-Hant"/]) assert.match(raw, pattern);
     assert.doesNotMatch(raw, /@example\.test|workspaceId|api\/v1/, '公開HTML不含私人資料或API');
+    if (built) {
+      const robots = await (await fetch(`${origin}/robots.txt`)).text();
+      assert.match(robots, /Allow: \/about\//); assert.match(robots, /Disallow: \/api\//);
+      const sitemap = await (await fetch(`${origin}/sitemap.xml`)).text();
+      assert.deepEqual([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]), [`${origin}/about/`], 'sitemap只列公開頁');
+      const image = await fetch(raw.match(/og:image" content="([^"]+)"/)[1]);
+      assert.equal(image.headers.get('content-type'), 'image/png');
+      assert.match(await (await fetch(`${origin}/`)).text(), /<meta name="robots" content="noindex, follow"/);
+    }
     const noJs = await browser.newPage({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
     await noJs.goto(`${origin}/about/`);
     assert.ok(await noJs.locator('.guest-topbar').isVisible(), '無JS仍可看到訪客導覽');

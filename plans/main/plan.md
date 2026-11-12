@@ -29,6 +29,7 @@
 - SEO（使用者追加：實際功能完成後處理SEO，採Claude建議）：TT-205路由表docs/public-entry-routes.md＋nginx `/about`→301 `/about/`、`$uri/index.html`；容器實測。原實際功能板另有4張Codex新增大卡未動。
 - TT-206：GuestTopBar共用樣式（登入頁＋/about/），aria-current、44px、無閃爍；guest-pages-check通過；01/02登入基準差異待核准。
 - TT-207：Vite多頁靜態/about/（原始HTML正文、SVG示意、登入狀態切換TopBar／CTA），Dockerfile COPY＋VITE_SITE_ORIGIN；guest-pages-check通過。
+- TT-208：about metadata／OG／canonical（VITE_SITE_ORIGIN）、og-image、robots、sitemap、`/` noindex；polyfill關閉與CSS內嵌保住登入單一JS；build＋preview驗證。視覺候選913321c8只有01／02／07九張差異，待Josh核准。
 
 ## 2026-11-13 TT-264修復階段完成，基準核准待回覆
 
