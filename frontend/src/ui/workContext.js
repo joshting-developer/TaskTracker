@@ -19,8 +19,9 @@ export function taskScope(key) {
 export function timeSelection(key, members, userId, today) {
   const saved = readContext(key).time || {};
   const month = typeof saved.month === 'string' && /^(?:[1-9]\d{3})-(?:0[1-9]|1[0-2])$/.test(saved.month) ? saved.month : today.slice(0, 7);
-  const own = members.some(person => person.id === userId) ? userId : '';
-  const memberValid = saved.member === '' || members.some(person => person.id === saved.member);
+  // members為null代表成員改由遠端有界候選提供，只驗證格式，資格由伺服器決定可讀範圍。
+  const own = members === null || members.some(person => person.id === userId) ? userId : '';
+  const memberValid = saved.member === '' || (members === null ? typeof saved.member === 'string' && saved.member.length <= 100 : members.some(person => person.id === saved.member));
   const member = memberValid ? saved.member : own;
   const validDate = typeof saved.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(saved.date)
     && saved.date.startsWith(`${month}-`) && !Number.isNaN(Date.parse(saved.date)) && new Date(saved.date).toISOString().slice(0, 10) === saved.date;

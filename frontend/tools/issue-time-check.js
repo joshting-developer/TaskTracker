@@ -57,7 +57,7 @@ try {
   console.log('PASS: 移除Epic入口、舊網址回專案、列表包含三種類型、Epic篩選與完整頁返回、三尺寸');
   await openIssue(task);
   await detail.getByRole('button', { name: '填報工時', exact: true }).click();
-  assert.equal(await drawer.getByLabel('工時任務').inputValue(), task.id); assert.equal(await drawer.getByLabel('工時任務').isDisabled(), true);
+  assert.equal(await drawer.getByRole('combobox', { name: '工時任務', exact: true }).inputValue(), task.id); assert.equal(await drawer.getByRole('combobox', { name: '工時任務', exact: true }).isDisabled(), true);
   assert.equal(await drawer.getByLabel('工作日期', { exact: true }).inputValue(), dateInTaipei());
   let saves = 0; page.on('request', req => { if (req.url().endsWith('/api/rpc/logTime')) saves++; });
   await drawer.getByLabel('投入小時', { exact: true }).fill('0.017'); await drawer.getByRole('button', { name: '登記工時', exact: true }).click();
@@ -104,8 +104,8 @@ try {
   assert.equal(retryIds.length, 2); assert.equal(retryIds[0], retryIds[1]);
   assert.equal((await call(page, 'getWorkspace')).timeEntries.filter(item => item.note === '網路重試工時').length, 1);
   await openIssue(epic); await detail.getByRole('button', { name: '填報工時', exact: true }).click();
-  assert.equal(await drawer.getByLabel('工時任務').inputValue(), epic.id);
-  assert.equal(await drawer.getByLabel('工時任務').isDisabled(), true);
+  assert.equal(await drawer.getByRole('combobox', { name: '工時任務', exact: true }).inputValue(), epic.id);
+  assert.equal(await drawer.getByRole('combobox', { name: '工時任務', exact: true }).isDisabled(), true);
   assert.equal(await drawer.locator('.time-form-note').count(), 0);
   await drawer.getByLabel('投入小時', { exact: true }).fill('0.25'); await drawer.getByLabel('工時說明').fill('Epic直接投入');
   await drawer.getByRole('button', { name: '登記工時', exact: true }).click(); await drawer.waitFor({ state: 'detached' });
@@ -121,11 +121,11 @@ try {
   const rollup = epicSummary(epic, workspace.issues, workspace.timeEntries, workspace.projects[0]);
   assert.equal(rollup.spentMinutes, 45, 'Epic直接30與子卡15各計一次，作廢不計');
   await detail.getByRole('button', { name: `修改工時 ${workspace.timeEntries.find(item => item.issueId === child.id).id}`, exact: true }).click();
-  assert.equal(await drawer.getByLabel('工時任務').inputValue(), child.id, '從Epic改子卡工時不能改掛Epic');
+  assert.equal(await drawer.getByRole('combobox', { name: '工時任務', exact: true }).inputValue(), child.id, '從Epic改子卡工時不能改掛Epic');
   await drawer.getByRole('button', { name: '關閉工時面板', exact: true }).click();
   await page.getByRole('button', { name: '工時月曆', exact: true }).click();
   await page.getByRole('button', { name: new RegExp(`${dateInTaipei()} 工時`) }).click();
-  await drawer.getByLabel('工時任務').selectOption(epic.id); await drawer.getByLabel('投入小時', { exact: true }).fill('0.25'); await drawer.getByLabel('工時說明').fill('月曆直接填Epic');
+  await drawer.getByRole('combobox', { name: '工時任務', exact: true }).selectOption(epic.id); await drawer.getByLabel('投入小時', { exact: true }).fill('0.25'); await drawer.getByLabel('工時說明').fill('月曆直接填Epic');
   await drawer.getByRole('button', { name: '登記工時', exact: true }).click(); await drawer.waitFor({ state: 'detached' });
   await page.locator('.time-entry').filter({ hasText: '月曆直接填Epic' }).waitFor();
   workspace = await call(page, 'getWorkspace');
@@ -160,7 +160,7 @@ try {
     await detail.getByRole('button', { name: '填報工時', exact: true }).click();
     await drawer.evaluate(async el => { await Promise.all(el.getAnimations().map(animation => animation.finished)); });
     if (width === 390) await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
-    assert.equal(await drawer.getByLabel('工時任務').inputValue(), task.id);
+    assert.equal(await drawer.getByRole('combobox', { name: '工時任務', exact: true }).inputValue(), task.id);
     const box = await drawer.boundingBox(); assert.ok(box.x >= 0 && box.x + box.width <= width + 1, JSON.stringify(box));
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await page.screenshot({ path: `artifacts/issue-time/drawer-${width}.png` });

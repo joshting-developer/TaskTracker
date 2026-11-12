@@ -10,6 +10,7 @@ use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\Queries\BoardsController;
 use App\Http\Controllers\Queries\IssuesController;
 use App\Http\Controllers\Queries\ProjectsController;
+use App\Http\Controllers\Queries\ProjectTimeController;
 use App\Http\Controllers\Queries\ProjectNotificationsController;
 use App\Http\Controllers\Queries\TodosController;
 use App\Http\Controllers\RealtimeController;
@@ -101,6 +102,8 @@ Route::prefix('/api/v1')->group(function () {
     Route::get('/projects/{project}/status-usage', [ProjectsController::class, 'statusUsage']);
     Route::get('/projects/{project}/notifications', [ProjectNotificationsController::class, 'index']);
     Route::get('/projects/{project}/notifications/{notification}', [ProjectNotificationsController::class, 'show']);
+    Route::get('/projects/{project}/time-calendar', [ProjectTimeController::class, 'calendar']);
+    Route::get('/projects/{project}/time-entries', [ProjectTimeController::class, 'day']);
     Route::get('/projects/{project}/member-options', [ProjectsController::class, 'members']);
     Route::get('/issue-locations/{issue}', [IssuesController::class, 'locate']);
     Route::get('/projects/{project}/issue-options', [IssuesController::class, 'options']);

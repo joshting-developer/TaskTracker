@@ -909,14 +909,14 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   const timeDrawer = teammate.getByRole('dialog', { name: '填報你的工時', exact: true });
   await timeDrawer.waitFor();
   assert.equal(await timeDrawer.getByLabel('工作日期', { exact: true }).inputValue(), previousWorkDate);
-  await timeDrawer.getByLabel('工時任務').selectOption({ label: 'TEST-1 · 我建立的任務 <script>alert(1)</script>' });
+  await timeDrawer.getByRole('combobox', { name: '工時任務', exact: true }).selectOption({ label: 'TEST-1 · 我建立的任務 <script>alert(1)</script>' });
   for (const action of ['close', 'escape', 'backdrop']) {
     teammate.once('dialog', dialog => dialog.dismiss());
     if (action === 'close') await timeDrawer.getByRole('button', { name: '關閉工時面板', exact: true }).click();
     else if (action === 'escape') await teammate.keyboard.press('Escape');
     else await teammate.mouse.click(5, 400);
     assert.equal(await timeDrawer.isVisible(), true, '取消捨棄時保留面板');
-    assert.ok(await timeDrawer.getByLabel('工時任務').inputValue(), '只選任務也視為未儲存變更');
+    assert.ok(await timeDrawer.getByRole('combobox', { name: '工時任務', exact: true }).inputValue(), '只選任務也視為未儲存變更');
   }
   await teammate.screenshot({ path: 'artifacts/time-drawer-desktop.png', fullPage: true });
   teammate.once('dialog', dialog => dialog.accept());
@@ -926,7 +926,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await teammate.getByRole('button', { name: '今天', exact: true }).click();
   await teammate.getByRole('button', { name: new RegExp(`^${dateInTaipei()} 工時 `) }).click();
 
-  await teammate.getByLabel('工時任務').selectOption({ label: 'TEST-1 · 我建立的任務 <script>alert(1)</script>' });
+  await teammate.getByRole('combobox', { name: '工時任務', exact: true }).selectOption({ label: 'TEST-1 · 我建立的任務 <script>alert(1)</script>' });
   await teammate.getByLabel('投入小時', { exact: true }).fill('1.5');
   await teammate.getByLabel('工時說明').fill('完成會員登入');
   await teammate.getByRole('button', { name: '登記工時' }).click();
@@ -953,11 +953,11 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await teammate.getByRole('button', { name: new RegExp(`^${dateInTaipei()} 工時 2 h$`) }).waitFor();
   await page.getByRole('button', { name: '工時月曆', exact: true }).click();
   await page.getByRole('button', { name: '重新整理工作空間' }).click();
-  await page.getByLabel('工時成員').selectOption('');
+  await page.getByRole('combobox', { name: '工時成員', exact: true }).selectOption('');
   await page.locator('.time-entry').waitFor();
   assert.equal(await page.getByRole('button', { name: /^修改工時 / }).count(), 0);
   await page.getByRole('button', { name: new RegExp(`^${dateInTaipei()} 工時 `) }).click();
-  await page.getByLabel('工時任務').selectOption({ label: 'TEST-1 · 我建立的任務 <script>alert(1)</script>' });
+  await page.getByRole('combobox', { name: '工時任務', exact: true }).selectOption({ label: 'TEST-1 · 我建立的任務 <script>alert(1)</script>' });
   await page.getByLabel('投入小時', { exact: true }).fill('0.5');
   await page.getByLabel('工時說明').fill('一起驗收');
   await page.getByRole('button', { name: '登記工時' }).click();
@@ -987,7 +987,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: '開啟導覽' }).click();
   await page.getByRole('button', { name: '工時月曆', exact: true }).click();
-  await page.getByLabel('工時成員').selectOption('');
+  await page.getByRole('combobox', { name: '工時成員', exact: true }).selectOption('');
   await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
   await page.screenshot({ path: 'artifacts/mobile-time-calendar.png', fullPage: true });
   await page.getByRole('button', { name: new RegExp(`^${dateInTaipei()} 工時 `) }).click();

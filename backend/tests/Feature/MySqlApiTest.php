@@ -16,7 +16,7 @@ use Tests\MySqlTestCase;
 /** 真實InnoDB驗證資料型別、DTO、關聯、receipt及作者／租戶邊界。 */
 class MySqlApiTest extends MySqlTestCase
 {
-    use DatabaseTransactions, \Tests\Concerns\ProjectUtilityReadCases;
+    use DatabaseTransactions, \Tests\Concerns\ProjectTimeReadCases, \Tests\Concerns\ProjectUtilityReadCases;
 
     private function rpc(string $operation, array $input = [])
     {

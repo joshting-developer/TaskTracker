@@ -1,3 +1,9 @@
+## 2026-11-12 TT-223 工時月曆依Project與月份取得必要紀錄
+
+- 新增time-calendar月份SQL摘要（日／成員／卡片／Epic去重，各上限100）與time-entries當日分頁；前端月曆改按月／按日讀取、遠端成員與任務候選，填報後局部重讀，工時頁不再getWorkspace。
+- 驗證：memory78／3617、獨立MySQL90／3949、Pint、api-client／composables、build；time-calendar-check×3（摘要972 bytes、bulkReads=0）、browser-check、issue-time、home、board-ux、account-settings、workspace-switch、markdown、member-time-details通過。發現先前階段跑建置版檢查時dist未含TT-237／217修正，本輪以新build重跑全部通過。
+- 限制：缺Project＋work_date索引屬TT-182；usability-fixes-check與time-analysis-check為先前改版遺留的過期斷言，未處理。詳見docs/performance-time-calendar-2026-11-12.md。
+
 ## 2026-11-12 長版E2E恢復與分責查詢回歸修正
 
 - 長版browser-check自11-12分責查詢後未重跑；本輪恢復全程通過（連續3次）並修正其揭露的真實回歸，每項依卡片重開→修正→提交：TT-237寫入NOT_FOUND未觸發撤權重驗；TT-238 BoardDialog缺watch匯入致新增／編輯收錄無法開啟、移除看板深連結未回列表；TT-214衝突後重新載入卡在儲存中；TT-215完整頁狀態送出中未停用、衝突後未重讀詳細、不存在卡片深連結未回Project；TT-217通知定位待辦退回後殘留；TT-180舊版#/issue/<id>深連結（新增issue-locations最小查詢）。
