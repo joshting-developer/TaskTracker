@@ -13,6 +13,13 @@ use Closure;
 class RequestReplay
 {
     /**
+     * 注入結果編碼；未指定時依config建立。
+     *
+     * @param  ReceiptCodec  $codec  版本化無損編碼
+     */
+    public function __construct(private ReceiptCodec $codec = new ReceiptCodec) {}
+
+    /**
      * 依原始輸入簽章重用已授權操作結果，或保存此次寫入結果。
      *
      * @param  RecordStore  $store  限定工作空間的資料存取入口
@@ -34,13 +41,14 @@ class RequestReplay
                 DomainError::fail('REQUEST_CONFLICT', '操作識別碼已使用, 請重新送出');
             }
 
-            return $previous['result'];
+            // 先比對簽章（呼叫前已完成當次授權）再解碼；損壞或未知codec明確失敗，不重新執行。
+            return $this->codec->decode($previous['result']);
         }
         $result = $write();
         $store->put($kind, $key, [
             'id' => $key,
             'signature' => $signature,
-            'result' => $result,
+            'result' => $this->codec->encode($result),
         ]);
 
         return $result;
