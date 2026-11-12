@@ -15,7 +15,13 @@ use Illuminate\Http\Request;
 /** 僅Session／CSRF可管理本人Token；不讓Bearer建立更多憑證。 */
 class PersonalTokensController extends Controller
 {
-    /** 注入共用交易／Session重驗邊界與個人Token用例，不在Controller查DB。 */
+    /**
+     * 注入共用交易／Session重驗邊界與個人Token用例，不在Controller查DB。
+     *
+     * @param  WorkspaceTransaction  $transactions  交易內重驗Session與租戶
+     * @param  PersonalTokens  $tokens  個人Token管理用例
+     * @param  IntegrationAudits  $audits  整合來源紀錄查詢
+     */
     public function __construct(private WorkspaceTransaction $transactions, private PersonalTokens $tokens, private IntegrationAudits $audits) {}
 
     /**

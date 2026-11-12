@@ -12,7 +12,11 @@ use Illuminate\Support\Str;
 /** 同一可信Store只重用識別碼，領域資料與授權不得重用過期快照。 */
 trait RecordContextCases
 {
-    /** 對照查詢需限定實際參照，無關卡片成長不能擴大映射資料。 */
+    /**
+     * 對照查詢需限定實際參照，無關卡片成長不能擴大映射資料。
+     *
+     * @return void
+     */
     public function test_record_context_limits_and_reuses_identity_queries(): void
     {
         $identity = $this->postJson('/api/auth/register', ['name' => 'Context', 'email' => Str::uuid().'@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Context'])->assertOk()->json('data');
@@ -50,7 +54,11 @@ trait RecordContextCases
         $this->assertSame(19, $fresh['revision']);
     }
 
-    /** 成員欄位每次按指定帳號重讀，不把姓名、資格或停用狀態保留在ID快取。 */
+    /**
+     * 成員欄位每次按指定帳號重讀，不把姓名、資格或停用狀態保留在ID快取。
+     *
+     * @return void
+     */
     public function test_record_context_does_not_cache_member_or_cross_workspace_data(): void
     {
         $first = $this->postJson('/api/auth/register', ['name' => 'First', 'email' => Str::uuid().'@example.test', 'password' => 'test-local-password', 'workspaceName' => 'First'])->assertOk()->json('data');
@@ -71,7 +79,11 @@ trait RecordContextCases
         $this->assertSame('First', $store->require('issues', $issue['id'])['title']);
     }
 
-    /** 大型子集合對照分批，不退化為每列查詢或全Workspace映射。 */
+    /**
+     * 大型子集合對照分批，不退化為每列查詢或全Workspace映射。
+     *
+     * @return void
+     */
     public function test_record_context_batches_child_references_and_clears_after_failed_write(): void
     {
         $identity = $this->postJson('/api/auth/register', ['name' => 'Batch', 'email' => Str::uuid().'@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Batch'])->assertOk()->json('data');

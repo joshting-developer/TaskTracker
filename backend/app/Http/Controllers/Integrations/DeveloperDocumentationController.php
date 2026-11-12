@@ -10,7 +10,11 @@ use Illuminate\Http\Response;
 /** 同部署邊界的匿名開發者文件，不收集Token、不建立Session或另開服務。 */
 class DeveloperDocumentationController extends Controller
 {
-    /** 注入固定內容／安全Markdown轉換入口。 */
+    /**
+     * 注入固定內容／安全Markdown轉換入口。
+     *
+     * @param  DeveloperDocumentation  $documents  固定內容與安全Markdown轉換
+     */
     public function __construct(private DeveloperDocumentation $documents) {}
 
     /**

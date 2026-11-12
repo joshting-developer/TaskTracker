@@ -178,9 +178,14 @@ class RelationalChildren
         }
     }
 
-    /** 保留未異動子列的主鍵，只寫新增／刪除／改變的項目；交易由呼叫者擁有。
+    /**
+     * 保留未異動子列的主鍵，只寫新增／刪除／改變的項目；交易由呼叫者擁有。
+     *
+     * @param  string  $table  子表名稱
      * @param  array<string, mixed>  $scope  可信的父列條件
+     * @param  string  $key  子列唯一鍵欄位
      * @param  array<int, array<string, mixed>>  $rows  有序子列投影
+     * @return void
      */
     private function syncRows(string $table, array $scope, string $key, array $rows): void
     {
@@ -218,7 +223,12 @@ class RelationalChildren
         }
     }
 
-    /** JSON物件鍵順序不影響歷史內容，陣列順序與型別仍需保留。 */
+    /**
+     * JSON物件鍵順序不影響歷史內容，陣列順序與型別仍需保留。
+     *
+     * @param  mixed  $value  待正規化的值
+     * @return mixed 鍵值排序後的值
+     */
     private function canonical(mixed $value): mixed
     {
         if (! is_array($value)) {

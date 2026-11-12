@@ -8,11 +8,19 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 
+/**
+ * 驗證Redis、Queue worker消費與Reverb WebSocket握手的維運檢查指令；不寄信、不發業務事件。
+ */
 class CheckInfrastructure extends Command
 {
     protected $signature = 'tasktracker:check-infrastructure';
     protected $description = '驗證 Redis、Queue worker 與 Reverb WebSocket 握手, 不寄信或發布業務事件';
 
+    /**
+     * 依序檢查Redis連線、Queue實際消費與Reverb握手，任一失敗即回報。
+     *
+     * @return int 指令結束碼
+     */
     public function handle(): int
     {
         try {

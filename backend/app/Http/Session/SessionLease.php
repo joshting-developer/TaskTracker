@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Log;
 final class SessionLease
 {
     /**
+     * 保存本請求持有的Session命名鎖。
+     *
      * @param  Connection  $connection  實際取得GET_LOCK的連線
      * @param  string  $name  不含明文Session ID的鎖名稱
      */

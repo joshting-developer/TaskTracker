@@ -13,7 +13,11 @@ use Illuminate\Database\Eloquent\Builder;
 /** 本人Token資料操作；交易、User鎖與Session資格由共用WorkspaceTransaction擁有。 */
 class PersonalTokens
 {
-    /** 注入同交易的來源紀錄，不在Service取得HTTP或Session。 */
+    /**
+     * 注入同交易的來源紀錄，不在Service取得HTTP或Session。
+     *
+     * @param  IntegrationAudits  $audits  同交易的整合來源紀錄
+     */
     public function __construct(private IntegrationAudits $audits) {}
 
     /**
@@ -90,6 +94,8 @@ class PersonalTokens
     }
 
     /**
+     * 本人在目前工作區的Token查詢。
+     *
      * @param  WorkspaceContext  $context  可信資格
      * @return Builder 本人及工作區限定查詢
      */
@@ -100,6 +106,8 @@ class PersonalTokens
     }
 
     /**
+     * 轉成可公開的Token資訊，不含原文或雜湊。
+     *
      * @param  PersonalAccessToken  $token  已限定擁有者的Model
      * @return array 對外安全投影，不自動serializeModel
      */

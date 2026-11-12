@@ -10,7 +10,11 @@ use Illuminate\Support\Str;
 /** 驗證關聯寫入僅讀取目標與必要子項，供SQLite與獨立MySQL共用。 */
 trait IssueLinkQueryCases
 {
-    /** 無關專案成長不增加建立卡片時的Issue hydration，且不讀全部工時。 */
+    /**
+     * 無關專案成長不增加建立卡片時的Issue hydration，且不讀全部工時。
+     *
+     * @return void
+     */
     public function test_issue_link_validation_does_not_hydrate_unrelated_issues(): void
     {
         $this->postJson('/api/auth/register', ['name' => 'Links', 'email' => Str::uuid().'@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Links'])->assertOk();
@@ -41,7 +45,11 @@ trait IssueLinkQueryCases
         }
     }
 
-    /** 父子同步、雙向關聯、型別與Epic結案規則不因限定查詢而放寬。 */
+    /**
+     * 父子同步、雙向關聯、型別與Epic結案規則不因限定查詢而放寬。
+     *
+     * @return void
+     */
     public function test_issue_link_queries_preserve_relationship_rules(): void
     {
         $identity = $this->postJson('/api/auth/register', ['name' => 'Rules', 'email' => Str::uuid().'@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Rules'])->assertOk()->json('data');
@@ -69,7 +77,11 @@ trait IssueLinkQueryCases
         $this->assertSame([], $store->require('issues', $peer['id'])['relatedIssueIds']);
     }
 
-    /** 反向200筆容量以聚合驗證；既有連結可保留，超額／不存在不能部分寫入。 */
+    /**
+     * 反向200筆容量以聚合驗證；既有連結可保留，超額／不存在不能部分寫入。
+     *
+     * @return void
+     */
     public function test_issue_link_capacity_and_minimal_projection(): void
     {
         $identity = $this->postJson('/api/auth/register', ['name' => 'Capacity', 'email' => Str::uuid().'@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Capacity'])->assertOk()->json('data');
@@ -104,7 +116,11 @@ trait IssueLinkQueryCases
         $this->assertSame(200, $store->issueLinks([$target['id']])[$target['id']]->relatedCount);
     }
 
-    /** 超過一批的子項仍全部同步，不更新同專案的無關卡片。 */
+    /**
+     * 超過一批的子項仍全部同步，不更新同專案的無關卡片。
+     *
+     * @return void
+     */
     public function test_issue_epic_propagation_crosses_bounded_batches(): void
     {
         $this->postJson('/api/auth/register', ['name' => 'Batch', 'email' => Str::uuid().'@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Batch'])->assertOk();

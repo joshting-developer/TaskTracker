@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 /** 只接受獨立Compose測試帳號，預設測試仍由TestCase強制memory SQLite。 */
@@ -9,6 +10,11 @@ abstract class MySqlTestCase extends BaseTestCase
 {
     protected string $testDatabase = 'tasktracker_test';
 
+    /**
+     * 未開啟獨立MySQL測試旗標時略過，避免預設測試連到MySQL。
+     *
+     * @return void
+     */
     protected function setUp(): void
     {
         if (getenv('TASKTRACKER_MYSQL_TEST') !== '1') {
@@ -17,7 +23,13 @@ abstract class MySqlTestCase extends BaseTestCase
         parent::setUp();
     }
 
-    /** JSON物件key順序不屬於契約；保留list順序及所有值的嚴格型別比較。 */
+    /**
+     * JSON物件key順序不屬於契約；保留list順序及所有值的嚴格型別比較。
+     *
+     * @param  array  $expected  預期DTO
+     * @param  array  $actual  實際DTO
+     * @return void
+     */
     protected function assertDtoSame(array $expected, array $actual): void
     {
         $normalize = function ($value) use (&$normalize) {
@@ -33,6 +45,11 @@ abstract class MySqlTestCase extends BaseTestCase
         $this->assertSame($normalize($expected), $normalize($actual));
     }
 
+    /**
+     * 只接受獨立Compose的tasktracker_test帳號與允許的schema，強制改用隔離MySQL連線後建立應用程式。
+     *
+     * @return Application 測試用應用程式
+     */
     public function createApplication()
     {
         if (! in_array($this->testDatabase, ['tasktracker_test', 'tasktracker_test_import'], true)) {

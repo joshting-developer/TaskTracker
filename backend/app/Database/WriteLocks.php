@@ -7,6 +7,12 @@ use Illuminate\Support\Facades\DB;
 /** MySQL寫入先鎖穩定資料列，再重新取得資格／版本；鎖隨外層交易釋放。 */
 class WriteLocks
 {
+    /**
+     * 在交易內鎖定操作者的User資料列，所有寫入都先鎖User再鎖Workspace，避免死鎖。
+     *
+     * @param  ?string  $userId  操作者User ID；未登入時略過
+     * @return void
+     */
     public function account(?string $userId): void
     {
         if (DB::getDriverName() === 'mysql' && $userId) {
@@ -14,6 +20,12 @@ class WriteLocks
         }
     }
 
+    /**
+     * 在交易內鎖定目前Workspace資料列，讓同空間的寫入依序執行。
+     *
+     * @param  ?string  $workspaceId  Workspace公開ID；未選擇時略過
+     * @return void
+     */
     public function workspace(?string $workspaceId): void
     {
         if (DB::getDriverName() === 'mysql' && $workspaceId) {
@@ -21,7 +33,14 @@ class WriteLocks
         }
     }
 
-    /** 註冊／登入／接受邀請的低頻帳號流程先取得固定guard，防止空集合競爭。 */
+    /**
+     * 註冊／登入／接受邀請的低頻帳號流程先取得固定guard，防止空集合競爭。
+     *
+     * @param  string  $operation  帳號／Session操作名稱
+     * @param  array  $input  此次操作的原始輸入
+     * @param  ?string  $userId  目前登入者User ID
+     * @return void
+     */
     public function authentication(string $operation, array $input, ?string $userId): void
     {
         if (DB::getDriverName() !== 'mysql' || ! in_array($operation, ['register', 'login', 'acceptWorkspaceInvite'], true)) {

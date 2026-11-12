@@ -110,7 +110,10 @@ class RelationalRecords
         return $rows->map(fn ($row) => $this->serialize($kind, $row))->all();
     }
 
-    /** 批次取得同工作區任務所屬Project，不載入內容／留言／歷史；資格由Service判斷。
+    /**
+     * 批次取得同工作區任務所屬Project，不載入內容／留言／歷史；資格由Service判斷。
+     *
+     * @param  array  $ids  卡片公開ID
      * @return array<string, string>
      */
     public function issueProjects(array $ids): array
@@ -211,8 +214,13 @@ class RelationalRecords
         }
     }
 
-    /** 讀取本人當日有效分鐘，不取得其他作者／日期的原始紀錄。
+    /**
+     * 讀取本人當日有效分鐘，不取得其他作者／日期的原始紀錄。
+     *
+     * @param  string  $userId  填報者User ID
+     * @param  string  $date  工作日（Asia/Taipei）
      * @param  string  $excludeId  修改時排除原公開ID
+     * @return int 當日有效工時分鐘數
      */
     public function dailyMinutes(string $userId, string $date, string $excludeId = ''): int
     {

@@ -71,7 +71,10 @@ class RecordStore
         return $this->usesRelational($kind) ? $this->records->all($kind) : $this->archive->all($kind);
     }
 
-    /** 相容入口的批次參照投影；不擴大租戶或代替領域授權。
+    /**
+     * 相容入口的批次參照投影；不擴大租戶或代替領域授權。
+     *
+     * @param  array  $ids  卡片公開ID
      * @return array<string, string>
      */
     public function issueProjects(array $ids): array
@@ -161,7 +164,14 @@ class RecordStore
         }
     }
 
-    /** 交易鎖與資格已由上層確認；這裡只負責當人當日SQL聚合。 */
+    /**
+     * 交易鎖與資格已由上層確認；這裡只負責當人當日SQL聚合。
+     *
+     * @param  string  $userId  填報者User ID
+     * @param  string  $date  工作日（Asia/Taipei）
+     * @param  string  $excludeId  要排除的工時公開ID（修改時排除自己）
+     * @return int 當日有效工時分鐘數
+     */
     public function dailyMinutes(string $userId, string $date, string $excludeId = ''): int
     {
         if ($this->usesRelational('timeEntries')) {

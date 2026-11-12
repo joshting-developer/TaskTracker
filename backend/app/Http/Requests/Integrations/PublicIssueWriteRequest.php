@@ -10,13 +10,21 @@ use Illuminate\Validation\Rule;
 /** 公開Issue輸入allowlist，路徑資源／操作者不取自payload，PATCH保留省略欄位。 */
 class PublicIssueWriteRequest extends JsonOperationRequest
 {
-    /** @return void 只驗JSON物件／大小，保留省略語意。 */
+    /**
+     * 驗證前先確認輸入是JSON物件且大小在上限內。
+     *
+     * @return void 只驗JSON物件／大小，保留省略語意。
+     */
     protected function prepareForValidation(): void
     {
         $this->replace($this->payload());
     }
 
-    /** @return array HTTP欄位與限制；跨資源規則交既有業務Service。 */
+    /**
+     * 公開卡片寫入的HTTP欄位驗證規則。
+     *
+     * @return array HTTP欄位與限制；跨資源規則交既有業務Service。
+     */
     public function rules(): array
     {
         $base = ['requestId' => ['required', 'uuid']];

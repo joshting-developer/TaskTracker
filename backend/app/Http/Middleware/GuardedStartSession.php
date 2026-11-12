@@ -14,7 +14,13 @@ use Illuminate\Session\SessionManager;
 /** 保留框架Session／CSRF生命週期，MySQL以無租期連線鎖避免慢請求覆寫新Session。 */
 class GuardedStartSession extends StartSession
 {
-    /** 注入框架Session／Cache與鎖組裝邊界，不在長駐singleton保留租戶。 */
+    /**
+     * 注入框架Session／Cache與鎖組裝邊界，不在長駐singleton保留租戶。
+     *
+     * @param  SessionManager  $manager  Laravel Session管理
+     * @param  Factory  $cache  Session blocking用的cache
+     * @param  SessionLockFactory  $locks  依Session資料庫建立命名鎖
+     */
     public function __construct(SessionManager $manager, Factory $cache, private SessionLockFactory $locks)
     {
         parent::__construct($manager, fn () => $cache);

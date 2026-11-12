@@ -14,7 +14,12 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 /** 任務讀取的application service；未來Token入口沿用相同permission與scope。 */
 class IssueReadService
 {
-    /** 建立此用例的相依與唯讀資料，不從HTTP取得身分。 */
+    /**
+     * 建立此用例的相依與唯讀資料，不從HTTP取得身分。
+     *
+     * @param  ProjectReadService  $projects  單Project資格入口
+     * @param  IssueReadRepository  $issues  有界卡片讀取
+     */
     public function __construct(private ProjectReadService $projects, private IssueReadRepository $issues) {}
 
     /**

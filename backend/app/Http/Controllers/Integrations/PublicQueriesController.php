@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Integrations;
 
 use App\Data\TokenContext;
+use App\Http\Requests\Integrations\IssueChangesRequest;
+use App\Services\Integrations\IssueChangeService;
 use App\Database\DatabaseTimes;
 use App\Http\Controllers\Controller;
 use App\Http\Integrations\BearerTokenSession;
@@ -20,7 +22,11 @@ use Illuminate\Http\Request;
 /** 公開PAT只讀適配器；授權／SQL及投影均沿既有用例，不依賴Session或SPA狀態。 */
 class PublicQueriesController extends Controller
 {
-    /** 注入Bearer可信交易邊界；其餘查詢服務由各方法按需解析。 */
+    /**
+     * 注入Bearer可信交易邊界；其餘查詢服務由各方法按需解析。
+     *
+     * @param  BearerTokenSession  $tokens  Bearer Token交易與資格邊界
+     */
     public function __construct(private BearerTokenSession $tokens) {}
 
     /**
@@ -103,6 +109,22 @@ class PublicQueriesController extends Controller
             $page = $issues->index($token->workspace, $project, $request->toDto());
 
             return PageResource::wrap($page, IssueListResource::collection($page->items())->resolve());
+        }));
+    }
+
+    /**
+     * @param IssueChangesRequest $request 有界增量／接續條件
+     * @param string $project Project公開ID
+     * @param IssueChangeService $changes 共用資格與最小摘要用例
+     * @return ApiResponse 增量摘要、接續cursor及本輪固定水位
+     */
+    public function changes(IssueChangesRequest $request, string $project, IssueChangeService $changes): ApiResponse
+    {
+        return new ApiResponse($this->tokens->read($request, function (TokenContext $token) use ($request, $project, $changes) {
+            $result = $changes->read($token->workspace, $project, $request->toChangesDto());
+            $result['items'] = IssueListResource::collection($result['items'])->resolve();
+
+            return $result;
         }));
     }
 

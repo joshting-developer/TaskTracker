@@ -9,10 +9,18 @@ use Illuminate\Database\DatabaseManager;
 /** 在現用MySQL連線取得完整Session生命週期的命名鎖；不建立額外資料庫連線。 */
 class SessionLockFactory
 {
-    /** 注入穩定資料庫管理器，Session ID只在acquire傳入。 */
+    /**
+     * 注入穩定資料庫管理器，Session ID只在acquire傳入。
+     *
+     * @param  DatabaseManager  $database  取得Session所在的資料庫連線
+     */
     public function __construct(private DatabaseManager $database) {}
 
-    /** @return bool 正式MySQL用連線級鎖；SQLite僅沿用隔離快測的框架鎖。 */
+    /**
+     * 目前Session資料庫是否支援命名鎖（MySQL才支援）。
+     *
+     * @return bool 正式MySQL用連線級鎖；SQLite僅沿用隔離快測的框架鎖。
+     */
     public function supported(): bool
     {
         return $this->database->connection()->getDriverName() === 'mysql';

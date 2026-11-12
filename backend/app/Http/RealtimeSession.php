@@ -12,10 +12,17 @@ use Illuminate\Support\Facades\DB;
 /** Reverb的HTTP協調：同交易驗證身分／頻道後簽章，不在Controller查資料。 */
 class RealtimeSession
 {
-    /** 注入HTTP身分與獨立頻道授權，兩者均不由Controller查資料。 */
+    /**
+     * 注入HTTP身分與獨立頻道授權，兩者均不由Controller查資料。
+     *
+     * @param  WorkspaceSession  $session  由Laravel Session重驗可信資格
+     * @param  ProjectChannelAccess  $access  私有Project頻道授權
+     */
     public function __construct(private WorkspaceSession $session, private ProjectChannelAccess $access) {}
 
     /**
+     * 回傳目前登入者可用的Reverb連線設定，不含任何業務資料。
+     *
      * @param  Request  $request  目前HTTP與Session
      * @return array 可公開的Reverb設定
      */
@@ -28,6 +35,8 @@ class RealtimeSession
     }
 
     /**
+     * 在交易內重驗資格與頻道權限，產生Reverb私有頻道的授權回應。
+     *
      * @param  Request  $request  目前HTTP與Session
      * @param  array  $input  JSON傳輸輸入
      * @return array Pusher協定的認證簽章

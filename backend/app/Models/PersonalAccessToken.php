@@ -9,7 +9,11 @@ class PersonalAccessToken extends \Laravel\Sanctum\PersonalAccessToken
 
     protected $hidden = ['token', 'issuance_request_id'];
 
-    /** @return array<string,string> 日期及Scope的儲存型別 */
+    /**
+     * 欄位型別轉換：權限清單與時間欄位。
+     *
+     * @return array<string,string> 日期及Scope的儲存型別
+     */
     protected function casts(): array
     {
         return [...parent::casts(), 'revoked_at' => 'datetime'];

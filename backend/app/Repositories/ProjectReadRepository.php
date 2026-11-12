@@ -25,7 +25,11 @@ class ProjectReadRepository
             ->orderBy('position')->orderBy('id')->limit(21)->get(['code', 'label', 'color']);
     }
 
-    /** 只供當次授權組合使用，不載入專案內容或歷史。
+    /**
+     * 只供當次授權組合使用，不載入專案內容或歷史。
+     *
+     * @param  string  $workspaceId  Workspace內部ID
+     * @param  array  $ids  Project公開ID
      * @return Collection<int, Project>
      */
     public function references(string $workspaceId, array $ids): Collection
@@ -38,7 +42,12 @@ class ProjectReadRepository
             ->whereIn('public_id', $ids)->limit(count($ids))->get(['id', 'workspace_id', 'public_id']);
     }
 
-    /** 單人讀取資格只查本人的Project指派，不載入整個工作區成員配置。
+    /**
+     * 單人讀取資格只查本人的Project指派，不載入整個工作區成員配置。
+     *
+     * @param  string  $workspaceId  Workspace內部ID
+     * @param  string  $userId  操作者User ID
+     * @param  array  $projectIds  Project內部ID
      * @return Collection<int, ProjectMember>
      */
     public function assignments(string $workspaceId, string $userId, array $projectIds): Collection
@@ -50,7 +59,16 @@ class ProjectReadRepository
             ->limit(count($projectIds))->get(['id', 'public_id', 'project_id', 'member_id', 'role_id', 'removed_at']);
     }
 
-    /** 由SQL執行搜尋與分頁，不讓未授權Project進入回傳集合。 */
+    /**
+     * 由SQL執行搜尋與分頁，不讓未授權Project進入回傳集合。
+     *
+     * @param  string  $workspaceId  Workspace內部ID
+     * @param  string  $userId  操作者User ID
+     * @param  bool  $readAny  是否可讀全部Project
+     * @param  array  $readRoleIds  具Project讀取權限的角色
+     * @param  PageQueryData  $filters  分頁與搜尋
+     * @return LengthAwarePaginator Project分頁
+     */
     public function page(string $workspaceId, string $userId, bool $readAny, array $readRoleIds, PageQueryData $filters): LengthAwarePaginator
     {
         return Project::whereHas('workspace', fn ($q) => $q->where('public_id', $workspaceId))
@@ -89,7 +107,13 @@ class ProjectReadRepository
         return $q->orderBy('name')->orderBy('public_id')->paginate($filters->perPage, ['id', 'public_id', 'name', 'code'], 'page', $filters->page);
     }
 
-    /** 讀取同工作區指定專案及此頁需要的關聯。 */
+    /**
+     * 讀取同工作區指定專案及此頁需要的關聯。
+     *
+     * @param  string  $workspaceId  Workspace內部ID
+     * @param  string  $id  Project公開ID
+     * @return Project|null 存在時的Project
+     */
     public function find(string $workspaceId, string $id): ?Project
     {
         return Project::whereHas('workspace', fn ($q) => $q->where('public_id', $workspaceId))

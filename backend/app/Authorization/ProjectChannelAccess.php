@@ -9,10 +9,16 @@ use App\Factories\ProjectAccessFactory;
 /** 私有看板頻道的領域授權，不負責HTTP或Broadcast簽章。 */
 class ProjectChannelAccess
 {
-    /** 注入當次Project授權組裝邊界，不在頻道規則中手工建立Store。 */
+    /**
+     * 注入當次Project授權組裝邊界，不在頻道規則中手工建立Store。
+     *
+     * @param  ProjectAccessFactory  $accesses  依可信Context建立Project權限檢查
+     */
     public function __construct(private ProjectAccessFactory $accesses) {}
 
     /**
+     * 驗證私有Project頻道名稱與目前工作區一致，且操作者對該Project有讀取權限；不符即拒絕訂閱。
+     *
      * @param  WorkspaceContext  $context  從Session重新驗證的工作空間資格
      * @param  string  $channel  固定格式的私有頻道
      * @param  string  $socket  Pusher socket識別碼

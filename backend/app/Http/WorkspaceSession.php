@@ -9,10 +9,16 @@ use Illuminate\Http\Request;
 /** HTTP與領域服務的身分邊界，只從Laravel Session取得操作者與工作空間。 */
 class WorkspaceSession
 {
-    /** 注入每次重驗資格的Context組裝邊界，避免領域服務反向依賴HTTP。 */
+    /**
+     * 注入每次重驗資格的Context組裝邊界，避免領域服務反向依賴HTTP。
+     *
+     * @param  WorkspaceContextFactory  $contexts  重驗帳號與工作區資格後建立WorkspaceContext
+     */
     public function __construct(private WorkspaceContextFactory $contexts) {}
 
     /**
+     * 回傳重驗後的資格array，給尚未改用WorkspaceContext的舊用例。
+     *
      * @param  Request  $request  目前HTTP與Session
      * @return array 經資料庫重驗的身分與有效權限
      */

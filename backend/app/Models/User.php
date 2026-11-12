@@ -11,6 +11,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * 登入帳號；工作區資格與角色另由WorkspaceMember保存。
+ */
 #[Fillable(['id', 'name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token', 'legacy_salt', 'legacy_hash'])]
 class User extends Authenticatable

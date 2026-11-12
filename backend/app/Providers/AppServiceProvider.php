@@ -13,10 +13,15 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 
+/**
+ * 註冊無法自動解析的容器綁定與啟動設定；一般concrete class直接由Container自動解析。
+ */
 class AppServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
+     *
+     * @return void
      */
     public function register(): void
     {
@@ -26,6 +31,8 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap any application services.
+     *
+     * @return void
      */
     public function boot(): void
     {

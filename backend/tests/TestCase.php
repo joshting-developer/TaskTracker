@@ -2,10 +2,19 @@
 
 namespace Tests;
 
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
+/**
+ * 預設測試基底：強制memory SQLite與隔離設定，避免測試碰到本機業務資料庫。
+ */
 abstract class TestCase extends BaseTestCase
 {
+    /**
+     * 建立強制使用memory SQLite的測試應用程式。
+     *
+     * @return Application 測試用應用程式
+     */
     public function createApplication()
     {
         // Compose 的真實程序環境優先於 PHPUnit env；在 framework bootstrap 前強制隔離

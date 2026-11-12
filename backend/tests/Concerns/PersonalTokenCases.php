@@ -7,10 +7,16 @@ use App\Models\User;
 use App\Models\WorkspaceMember;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 
 /** memory與MySQL共用PAT的真實HTTP安全及資料契約。 */
 trait PersonalTokenCases
 {
+    /**
+     * 註冊測試帳號並回傳身分。
+     *
+     * @return array<string,mixed> 登入身分
+     */
     private function tokenRegister(): array
     {
         Auth::forgetGuards();
@@ -18,11 +24,24 @@ trait PersonalTokenCases
         return $this->postJson('/api/auth/register', ['name' => 'token', 'email' => Str::uuid().'@example.test', 'password' => 'token-test-password', 'workspaceName' => 'tokens'])->assertOk()->json('data');
     }
 
+    /**
+     * 以目前Session建立個人Token。
+     *
+     * @param  array  $extra  覆寫的建立欄位
+     * @return array<string,mixed> 含一次性原文的建立結果
+     */
     private function tokenIssue(array $extra = []): array
     {
         return $this->postJson('/api/v1/personal-tokens', ['name' => 'tool', 'abilities' => ['read'], 'requestId' => (string) Str::uuid(), ...$extra])->assertOk()->json('data');
     }
 
+    /**
+     * 只帶Bearer Token（不帶Session）呼叫身分端點並檢查狀態。
+     *
+     * @param  string  $plain  Token原文
+     * @param  int  $status  預期HTTP狀態
+     * @return TestResponse 回應
+     */
     private function bearerIdentity(string $plain, int $status = 200)
     {
         Auth::forgetGuards();
@@ -30,6 +49,11 @@ trait PersonalTokenCases
         return $this->getJson('/api/public/v1/me', ['Authorization' => 'Bearer '.$plain])->assertStatus($status)->assertCookieMissing(config('session.cookie'));
     }
 
+    /**
+     * Token原文只顯示一次、只存雜湊；Scope、到期、撤銷與工作區資格失效都會拒絕。
+     *
+     * @return void
+     */
     public function test_token_once_hash_scope_expiry_revoke_and_workspace_qualification(): void
     {
         $identity = $this->tokenRegister();
@@ -66,6 +90,11 @@ trait PersonalTokenCases
         $this->bearerIdentity($active['plainTextToken'], 401);
     }
 
+    /**
+     * Token只限本人與目前工作區、可分頁，且不能拿來呼叫Session RPC。
+     *
+     * @return void
+     */
     public function test_tokens_are_owner_and_workspace_scoped_paginated_and_not_rpc_credentials(): void
     {
         $first = $this->tokenRegister();

@@ -16,7 +16,11 @@ if (! $app->environment('testing') || getenv('TASKTRACKER_MYSQL_TEST') !== '1' |
 $fixture = json_decode(file_get_contents($argv[1]), true, flags: JSON_THROW_ON_ERROR);
 $app->instance(WriteLocks::class, new class($fixture['ready']) extends WriteLocks
 {
-    /** 記錄已完成鎖前hint查詢，接著進入真實InnoDB鎖。 */
+    /**
+     * 記錄已完成鎖前hint查詢，接著進入真實InnoDB鎖。
+     *
+     * @param  string  $ready  鎖前hint查詢完成時要寫入的標記檔路徑
+     */
     public function __construct(private string $ready) {}
 
     /**

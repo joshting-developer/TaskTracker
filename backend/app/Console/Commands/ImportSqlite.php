@@ -17,6 +17,11 @@ class ImportSqlite extends Command
 
     protected $description = '將現行SQLite完整匯入空MySQL，逐表核對筆數及正規化內容；不修改來源';
 
+    /**
+     * 把舊SQLite備份逐表匯入目前資料庫；目標非空即拒絕，匯入後以內容摘要核對一致。
+     *
+     * @return int 指令結束碼
+     */
     public function handle(): int
     {
         if (DB::getDriverName() !== 'mysql') {
@@ -132,6 +137,13 @@ class ImportSqlite extends Command
         }
     }
 
+    /**
+     * 依欄位型別把SQLite原值轉成目標資料庫可保存的值。
+     *
+     * @param  mixed  $value  SQLite讀出的原值
+     * @param  string  $type  目標欄位型別
+     * @return mixed 轉換後的值
+     */
     private function stored(mixed $value, string $type): mixed
     {
         if ($value !== null && in_array($type, ['datetime', 'timestamp'], true)) {
@@ -141,7 +153,13 @@ class ImportSqlite extends Command
         return $value;
     }
 
-    /** JSON物件key順序不影響內容；數字／日期先依目標型別正規化。 */
+    /**
+     * JSON物件key順序不影響內容；數字／日期先依目標型別正規化。
+     *
+     * @param  array  $rows  要比對的資料列
+     * @param  array  $columns  納入摘要的欄位
+     * @return string 內容的sha256摘要
+     */
     private function digest(array $rows, array $columns): string
     {
         $lines = [];
@@ -165,6 +183,12 @@ class ImportSqlite extends Command
         return hash('sha256', implode("\n", $lines));
     }
 
+    /**
+     * 遞迴排序陣列鍵值，讓兩邊資料用相同順序計算摘要。
+     *
+     * @param  mixed  $value  待正規化的值
+     * @return mixed 排序後的值
+     */
     private function canonical(mixed $value): mixed
     {
         if ($value instanceof \stdClass) {

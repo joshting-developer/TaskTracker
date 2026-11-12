@@ -60,7 +60,11 @@ trait PublicWriteCases
         return [$identity, $project, $this->tokenIssue(['abilities' => ['write']])];
     }
 
-    /** @return void */
+    /**
+     * 公開建立、修改與留言是原子操作、可安全重播，且不清空省略的欄位。
+     *
+     * @return void
+     */
     public function test_public_create_patch_and_comment_are_atomic_replay_safe_and_do_not_clear_omitted_fields(): void
     {
         [$actor,$project,$token] = $this->writeFixture();
@@ -100,7 +104,11 @@ trait PublicWriteCases
         $this->assertSame($before, IntegrationAudit::count());
     }
 
-    /** @return void */
+    /**
+     * 公開寫入在重播前先檢查目前Scope、Project與關聯限制。
+     *
+     * @return void
+     */
     public function test_public_write_enforces_current_scope_project_and_relation_constraints_before_replay(): void
     {
         [$a,$pa,$ta] = $this->writeFixture();
@@ -123,7 +131,11 @@ trait PublicWriteCases
         $this->publicWrite($tb['plainTextToken'], 'POST', '/projects/'.$pb['id'].'/issues', ['title' => 'revoked', 'requestId' => (string) Str::uuid()], 401);
     }
 
-    /** @return void */
+    /**
+     * 公開修改父卡、Epic與關聯時沿用既有規則，失敗的關聯會整筆回滾。
+     *
+     * @return void
+     */
     public function test_public_parent_epic_and_related_updates_keep_existing_rules_and_failed_links_roll_back(): void
     {
         [, $project, $token] = $this->writeFixture();

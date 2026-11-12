@@ -9,13 +9,21 @@ use Illuminate\Contracts\Validation\Validator;
 /** 僅驗證個人Token輸入，Actor與工作區從Session重新驗證。 */
 class CreateTokenRequest extends JsonOperationRequest
 {
-    /** @return void 正規化JSON物件後交由FormRequest驗證，不讀可信資格。 */
+    /**
+     * 驗證前先把輸入正規化為JSON物件。
+     *
+     * @return void 正規化JSON物件後交由FormRequest驗證，不讀可信資格。
+     */
     protected function prepareForValidation(): void
     {
         $this->replace($this->payload());
     }
 
-    /** @return array<string,array> 有限Scope及固定日期格式 */
+    /**
+     * 建立個人Token的驗證規則。
+     *
+     * @return array<string,array> 有限Scope及固定日期格式
+     */
     public function rules(): array
     {
         return ['name' => ['required', 'string', 'max:60'], 'abilities' => ['required', 'array', 'min:1', 'max:2'],

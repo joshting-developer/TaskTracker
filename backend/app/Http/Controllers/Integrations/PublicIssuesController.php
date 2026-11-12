@@ -14,7 +14,13 @@ use App\Services\WorkspaceService;
 /** 公開Issue寫入薄適配器，使用既有業務、授權與有界冪等回應。 */
 class PublicIssuesController extends Controller
 {
-    /** 注入當次Bearer交易與共用應用服務；不操作DB或Session。 */
+    /**
+     * 注入當次Bearer交易與共用應用服務；不操作DB或Session。
+     *
+     * @param  BearerTokenSession  $tokens  Bearer Token交易與資格邊界
+     * @param  WorkspaceService  $workspaces  沿用的卡片寫入RPC用例
+     * @param  IssueReadService  $issues  卡片讀取用例
+     */
     public function __construct(private BearerTokenSession $tokens, private WorkspaceService $workspaces, private IssueReadService $issues) {}
 
     /**

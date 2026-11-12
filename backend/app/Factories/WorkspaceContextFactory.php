@@ -9,7 +9,11 @@ use App\Services\AccountService;
 /** 每次用例重驗伺服器身分後建立Context；不快取Actor、Workspace或有效權限。 */
 class WorkspaceContextFactory
 {
-    /** 注入既有資格驗證協作者，不複製另一套角色或授權判斷。 */
+    /**
+     * 注入既有資格驗證協作者，不複製另一套角色或授權判斷。
+     *
+     * @param  AccountService  $accounts  重驗帳號與工作區資格
+     */
     public function __construct(private AccountService $accounts) {}
 
     /**

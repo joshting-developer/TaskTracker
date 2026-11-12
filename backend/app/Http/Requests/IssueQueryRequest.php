@@ -8,7 +8,11 @@ use Illuminate\Validation\Rule;
 /** 任務篩選allowlist，未知欄位不進查詢服務。 */
 class IssueQueryRequest extends PageQueryRequest
 {
-    /** 僅接受此查詢需要的欄位與有界值。 */
+    /**
+     * 僅接受此查詢需要的欄位與有界值。
+     *
+     * @return array<string,mixed> 驗證規則
+     */
     public function rules(): array
     {
         return [...parent::rules(),
@@ -23,7 +27,11 @@ class IssueQueryRequest extends PageQueryRequest
         ];
     }
 
-    /** 將allowlist欄位轉成與HTTP無關的查詢條件。 */
+    /**
+     * 將allowlist欄位轉成與HTTP無關的查詢條件。
+     *
+     * @return IssueQueryData 已驗證的卡片查詢條件
+     */
     public function toDto(): IssueQueryData
     {
         $d = $this->validated();

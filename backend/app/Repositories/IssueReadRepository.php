@@ -106,6 +106,26 @@ class IssueReadRepository
         } else {
             $this->timeProjection($q, $timeUser, $teamTime);
         }
+        $this->applyFilters($q, $userId, $filters);
+        if ($filters->sort === 'priority') {
+            $q->orderByRaw("CASE priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END");
+        } elseif ($filters->sort === 'due') {
+            $q->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')->orderBy('due_date');
+        }
+
+        return $q->orderByDesc('updated_at')->orderBy('identifier')->orderBy('public_id')
+            ->paginate($filters->pagination->perPage, $this->columns(), 'page', $filters->pagination->page);
+    }
+
+    /**
+     * 共用篩選只組合已限定Project的SQL，不載入任務或承擔業務授權。
+     * @param Builder $q 已限定租戶／Project
+     * @param string $userId 可信操作者
+     * @param IssueQueryData $filters 已驗證篩選
+     * @return void
+     */
+    private function applyFilters(Builder $q, string $userId, IssueQueryData $filters): void
+    {
         if ($filters->identifier !== '') {
             $q->where('identifier', $filters->identifier);
         }
@@ -141,14 +161,36 @@ class IssueReadRepository
                     ->orWhereHas('assignee.user', fn ($q) => $q->whereRaw("LOWER(name) LIKE ? ESCAPE '!'", [$term]));
             });
         }
-        if ($filters->sort === 'priority') {
-            $q->orderByRaw("CASE priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END");
-        } elseif ($filters->sort === 'due') {
-            $q->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')->orderBy('due_date');
+    }
+
+    /**
+     * 時間＋唯一ID keyset；多讀一筆判斷續頁，禁止COUNT／OFFSET或活動聚合。
+     * @param Project $project 已授權Project
+     * @param string $userId 可信操作者
+     * @param IssueQueryData $filters 共用篩選
+     * @param ?string $since 包含邊界水位；null包含歷史無日期資料
+     * @param string $until 固定本輪截止水位
+     * @param ?array $after 上一批實際DB時間及內部ID
+     * @return \Illuminate\Database\Eloquent\Collection<int,Issue> 至多perPage+1筆最小摘要
+     */
+    public function changes(Project $project, string $userId, IssueQueryData $filters, ?string $since, string $until, ?array $after): \Illuminate\Database\Eloquent\Collection
+    {
+        $q = $this->query($project)->select(['id', 'workspace_id', 'public_id', 'project_id', 'identifier', 'title', 'type', 'state_id', 'priority', 'assignee_id', 'due_date', 'revision', 'created_at', 'updated_at'])
+            ->with(['project:id,public_id', 'status:id,code', 'assignee:id,user_id', 'assignee.user:id,name']);
+        $this->applyFilters($q, $userId, $filters);
+        $q->where(fn ($q) => $q->where('updated_at', '<=', \App\Database\DatabaseTimes::store($until))->orWhereNull('updated_at'));
+        if ($since !== null) $q->where('updated_at', '>=', \App\Database\DatabaseTimes::store($since));
+        if ($after !== null) {
+            $q->where(function ($q) use ($after) {
+                if ($after['time'] === null) {
+                    $q->whereNotNull('updated_at')->orWhere(fn ($q) => $q->whereNull('updated_at')->where('id', '>', $after['id']));
+                } else {
+                    $q->where('updated_at', '>', $after['time'])->orWhere(fn ($q) => $q->where('updated_at', $after['time'])->where('id', '>', $after['id']));
+                }
+            });
         }
 
-        return $q->orderByDesc('updated_at')->orderBy('identifier')->orderBy('public_id')
-            ->paginate($filters->pagination->perPage, $this->columns(), 'page', $filters->pagination->page);
+        return $q->orderBy('updated_at')->orderBy('id')->limit($filters->pagination->perPage + 1)->get();
     }
 
     /**

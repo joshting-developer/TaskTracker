@@ -63,7 +63,11 @@ trait TokenAuthorizationCases
         }
     }
 
-    /** @return void */
+    /**
+     * Token交易與即時Project權限取交集，失敗時來源紀錄一起回滾。
+     *
+     * @return void
+     */
     public function test_token_transaction_intersects_live_project_permissions_and_rolls_back_audit(): void
     {
         [$identity, $project, $issued] = $this->integrationFixture();
@@ -125,7 +129,11 @@ trait TokenAuthorizationCases
         $this->assertSame($count, IntegrationAudit::count());
     }
 
-    /** @return void */
+    /**
+     * 重複使用同一邊界時，Scope、撤銷、到期與跨工作區都會重新判斷。
+     *
+     * @return void
+     */
     public function test_token_scope_revocation_expiry_and_cross_workspace_are_fresh_on_reused_boundary(): void
     {
         [$a, $pa, $write] = $this->integrationFixture();
@@ -145,7 +153,11 @@ trait TokenAuthorizationCases
         $this->assertSame($b['workspace']['id'], $boundary->identity($this->integrationRequest($other['plainTextToken']))['workspaceId']);
     }
 
-    /** @return void */
+    /**
+     * 來源紀錄管理限本人Session、有上限，重試撤銷不會重複寫入。
+     *
+     * @return void
+     */
     public function test_audit_management_is_session_scoped_bounded_and_revoke_retry_is_not_duplicated(): void
     {
         $a = $this->tokenRegister();

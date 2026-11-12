@@ -55,7 +55,11 @@ trait PublicQueryCases
         return [$identity, $project, $issue, $this->tokenIssue()];
     }
 
-    /** @return void */
+    /**
+     * 公開查詢共用既有投影與篩選，read Token只能讀。
+     *
+     * @return void
+     */
     public function test_public_queries_share_projection_filters_and_read_only_scope(): void
     {
         [$identity, $project, $issue, $token] = $this->publicFixture();
@@ -100,7 +104,11 @@ trait PublicQueryCases
         $this->assertNull(PersonalAccessToken::findOrFail($token['token']['id'])->last_used_at);
     }
 
-    /** @return void */
+    /**
+     * 公開查詢每次重驗工作區與Project資格；瀏覽器Session不能當作Bearer認證的退路。
+     *
+     * @return void
+     */
     public function test_public_queries_revalidate_workspace_project_and_session_is_not_an_authentication_fallback(): void
     {
         [$a, $pa, $ia, $ta] = $this->publicFixture();
@@ -128,7 +136,11 @@ trait PublicQueryCases
         $this->getJson('/api/public/v1/projects')->assertStatus(401);
     }
 
-    /** @return void */
+    /**
+     * 公開查詢的資料範圍仍限定在目前Project，不受無關內容影響。
+     *
+     * @return void
+     */
     public function test_public_query_data_bounds_remain_project_scoped_with_unrelated_content(): void
     {
         [$identity,$project,$issue,$token] = $this->publicFixture();
@@ -162,7 +174,11 @@ trait PublicQueryCases
         }
     }
 
-    /** @return void */
+    /**
+     * 狀態候選超過上限時明確拒絕，不靜默截斷。
+     *
+     * @return void
+     */
     public function test_status_candidates_reject_legacy_overflow_instead_of_silently_truncating(): void
     {
         [, $project, , $token] = $this->publicFixture();

@@ -8,6 +8,8 @@ use App\Models\User;
 final readonly class AuthenticatedAccountData
 {
     /**
+     * 保存登入／註冊驗證後的帳號與要寫入Session的工作區。
+     *
      * @param  User  $user  已通過憑證或註冊驗證的帳號
      * @param  string  $workspaceId  已驗證的工作空間資格
      */

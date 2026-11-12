@@ -9,7 +9,18 @@ use DateTimeImmutable;
 /** 不可變工時查詢條件；不包含操作者、角色或可信工作區。 */
 final readonly class TimeReportData
 {
-    /** 僅由from建立已驗證的純值，呼叫者不能建立未檢查的查詢條件。 */
+    /**
+     * 僅由from建立已驗證的純值，呼叫者不能建立未檢查的查詢條件。
+     *
+     * @param  string  $startDate  起始工作日（Asia/Taipei）
+     * @param  string  $endDate  結束工作日
+     * @param  string  $projectId  Project公開ID，空字串代表全部
+     * @param  string  $userId  成員User ID，空字串代表全部
+     * @param  ?string  $detailGroup  要展開明細的群組；null代表不展開
+     * @param  int  $detailPage  明細群組頁碼
+     * @param  string  $entryGroupKey  要展開工時列的群組鍵
+     * @param  int  $entryPage  工時列頁碼
+     */
     private function __construct(
         public string $startDate,
         public string $endDate,
@@ -59,7 +70,11 @@ final readonly class TimeReportData
         );
     }
 
-    /** @return array 純聚合器所需的分頁契約，不傳整個查詢或HTTP Request。 */
+    /**
+     * 轉成舊工時明細用例需要的輸入陣列。
+     *
+     * @return array 純聚合器所需的分頁契約，不傳整個查詢或HTTP Request。
+     */
     public function detailInput(): array
     {
         return ['detailGroup' => $this->detailGroup, 'detailPage' => $this->detailPage, 'entryGroupKey' => $this->entryGroupKey, 'entryPage' => $this->entryPage];

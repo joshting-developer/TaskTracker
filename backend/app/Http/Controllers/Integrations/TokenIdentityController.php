@@ -10,7 +10,11 @@ use Illuminate\Http\Request;
 /** 第一個純Bearer身分入口；未開放現有Session RPC。 */
 class TokenIdentityController extends Controller
 {
-    /** 注入不依賴瀏覽器Session的認證／資格邊界。 */
+    /**
+     * 注入不依賴瀏覽器Session的認證／資格邊界。
+     *
+     * @param  BearerTokenSession  $tokens  Bearer Token交易與資格邊界
+     */
     public function __construct(private BearerTokenSession $tokens) {}
 
     /**

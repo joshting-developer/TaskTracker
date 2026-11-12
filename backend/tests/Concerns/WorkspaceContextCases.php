@@ -24,7 +24,11 @@ use Illuminate\Support\Str;
 /** memory與原生MySQL共用Context／Factory的真資料資格與生命周期案例。 */
 trait WorkspaceContextCases
 {
-    /** @return void */
+    /**
+     * Context工廠可由Container解析、不同Session互不共用，且每次都重驗工作區資格。
+     *
+     * @return void
+     */
     public function test_context_factories_are_container_resolvable_isolated_and_revalidate_membership(): void
     {
         $fixtures = [];
@@ -83,7 +87,11 @@ trait WorkspaceContextCases
         }
     }
 
-    /** @return void */
+    /**
+     * 即時頻道授權路徑不重複建立Store，讀取仍限定在目前Workspace與Project。
+     *
+     * @return void
+     */
     public function test_context_channel_path_reduces_duplicate_store_setup_and_keeps_scoped_reads(): void
     {
         $identity = $this->postJson('/api/auth/register', ['name' => 'context', 'email' => Str::uuid().'@example.test', 'password' => 'context-test-password', 'workspaceName' => 'context'])->assertOk()->json('data');

@@ -40,6 +40,7 @@ class ProjectAccess
      * @param  array  $context  已重新驗證的操作者
      * @param  array  $projects  本次已讀取的專案
      * @param  array  $members  本次已讀取的成員
+     * @param  ?array  $assignments  預先批次讀取的本人Project指派；null時由ACL自行查詢
      * @return self 不可跨請求或用於寫入授權的讀取快照
      */
     public static function forRead(RecordStore $store, array $context, array $projects, array $members, ?array $assignments = null): self

@@ -8,7 +8,11 @@ use App\Data\WorkspaceContext;
 /** 為當次可信Context組裝限定租戶的ProjectAccess，不保存資格／讀取快照。 */
 class ProjectAccessFactory
 {
-    /** 注入明確Store組裝邊界，不提供依名稱任意解析服務的能力。 */
+    /**
+     * 注入明確Store組裝邊界，不提供依名稱任意解析服務的能力。
+     *
+     * @param  RecordStoreFactory  $stores  依工作區建立資料入口
+     */
     public function __construct(private RecordStoreFactory $stores) {}
 
     /**

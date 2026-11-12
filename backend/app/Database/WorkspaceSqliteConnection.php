@@ -31,7 +31,11 @@ class WorkspaceSqliteConnection extends SQLiteConnection
         }
     }
 
-    /** 唯讀用DEFERRED，其他交易仍沿用資料庫設定的IMMEDIATE。 */
+    /**
+     * 唯讀用DEFERRED，其他交易仍沿用資料庫設定的IMMEDIATE。
+     *
+     * @return void
+     */
     protected function executeBeginTransactionStatement()
     {
         if ($this->reading) {

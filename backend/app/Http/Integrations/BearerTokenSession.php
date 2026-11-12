@@ -21,7 +21,16 @@ use Illuminate\Support\Facades\DB;
 /** 純Bearer交易及來源邊界；每次重新驗證，不使用Auth guard已快取的操作者。 */
 class BearerTokenSession
 {
-    /** 注入現行鎖／資格／Project授權與來源紀錄，不複製業務權限映射。 */
+    /**
+     * 注入現行鎖／資格／Project授權與來源紀錄，不複製業務權限映射。
+     *
+     * @param  WorkspaceContextFactory  $contexts  重驗帳號與工作區資格
+     * @param  WriteLocks  $locks  User→Workspace寫入鎖
+     * @param  ProjectAccessFactory  $projects  依Context建立Project權限檢查
+     * @param  IntegrationAudits  $audits  整合來源紀錄
+     * @param  RecordStoreFactory  $stores  依工作區建立資料入口
+     * @param  RequestReplay  $replay  防重複提交與原結果重播
+     */
     public function __construct(private WorkspaceContextFactory $contexts, private WriteLocks $locks, private ProjectAccessFactory $projects, private IntegrationAudits $audits, private RecordStoreFactory $stores, private RequestReplay $replay) {}
 
     /**
