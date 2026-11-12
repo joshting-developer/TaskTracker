@@ -1,0 +1,132 @@
+{
+  "summary": {
+    "status": "passed",
+    "approved": true,
+    "comparisonExitCode": 0,
+    "environmentMatches": true,
+    "sourceFingerprint": "6dac7c6195058b92e1d90c07a54597f3599afe7170a6da976f1ffaa3c73d9b5a",
+    "sourceRoots": [
+      "frontend/src",
+      "backend/app",
+      "backend/routes",
+      "backend/config",
+      "frontend/tools/visual"
+    ],
+    "harnessSha256": "0210a213011d3f680ec3e8d0b5962aa37f41f03df162084a620930a0a2e46267",
+    "approvalFile": "docs/visual-baselines/darwin-arm64.json",
+    "manifestSha256": "fcf9ee11af9987abe9a5dc70ba1e4827b78872cf7763091c8194f169275ca491",
+    "sourceFileCount": 319,
+    "fullSummarySha256": "4fcef40bb3e973e4d4ea851550ec78231c21287c4dfa00ced6fc279a54290816"
+  },
+  "regressionProof": {
+    "kind": "calibration-only-not-human-approval",
+    "passed": true,
+    "manifestSha256": "fcf9ee11af9987abe9a5dc70ba1e4827b78872cf7763091c8194f169275ca491",
+    "sourceFingerprint": "6dac7c6195058b92e1d90c07a54597f3599afe7170a6da976f1ffaa3c73d9b5a",
+    "harnessSha256": "0210a213011d3f680ec3e8d0b5962aa37f41f03df162084a620930a0a2e46267",
+    "environment": {
+      "platform": "darwin",
+      "arch": "arm64",
+      "browser": "157.0.8103.52",
+      "playwright": "1.63.0",
+      "dpr": 1,
+      "locale": "zh-TW",
+      "timezone": "Asia/Taipei",
+      "clock": "2026-11-13T04:00:00.000Z",
+      "colorScheme": "light",
+      "reducedMotion": "reduce",
+      "chromiumArgs": [
+        "--disable-gpu"
+      ],
+      "comparison": {
+        "maxDiffPixels": 0,
+        "threshold": 0.02
+      }
+    },
+    "results": [
+      {
+        "fault": null,
+        "exitCode": 0,
+        "expectedFailure": false,
+        "diffs": [],
+        "passed": true
+      },
+      {
+        "fault": "spacing",
+        "exitCode": 1,
+        "expectedFailure": true,
+        "diffs": [
+          "calibration-spacing/results/flows-representative-workspace-flows-desktop/05-issues-diff.png"
+        ],
+        "passed": true
+      },
+      {
+        "fault": "overflow",
+        "exitCode": 1,
+        "expectedFailure": true,
+        "diffs": [
+          "calibration-overflow/results/flows-representative-workspace-flows-desktop/05-issues-diff.png"
+        ],
+        "passed": true
+      },
+      {
+        "fault": "hide-action",
+        "exitCode": 1,
+        "expectedFailure": true,
+        "diffs": [
+          "calibration-hide-action/results/flows-representative-workspace-flows-desktop/05-issues-diff.png"
+        ],
+        "passed": true
+      },
+      {
+        "fault": null,
+        "exitCode": 0,
+        "expectedFailure": false,
+        "diffs": [],
+        "passed": true
+      }
+    ]
+  },
+  "harnessTamperProof": {
+    "passed": true,
+    "restoredPreflightPassed": true,
+    "harnessSha256": "0210a213011d3f680ec3e8d0b5962aa37f41f03df162084a620930a0a2e46267",
+    "results": [
+      {
+        "probe": "tolerance",
+        "blocked": true,
+        "message": "Visual harness changed since review; review and explicitly bind the changed harness before comparison"
+      },
+      {
+        "probe": "coverage",
+        "blocked": true,
+        "message": "Visual harness changed since review; review and explicitly bind the changed harness before comparison"
+      },
+      {
+        "probe": "navigation-helper",
+        "blocked": true,
+        "message": "Visual harness changed since review; review and explicitly bind the changed harness before comparison"
+      },
+      {
+        "probe": "board-helper",
+        "blocked": true,
+        "message": "Visual harness changed since review; review and explicitly bind the changed harness before comparison"
+      }
+    ]
+  },
+  "sourceSetTamperProof": {
+    "passed": true,
+    "newSourceRejected": {
+      "passed": false,
+      "errors": [
+        "visual source file set changed: frontend/src"
+      ]
+    },
+    "restored": {
+      "passed": true,
+      "errors": []
+    }
+  },
+  "candidateImageCount": 48,
+  "scope": "Local synthetic real-Laravel/MySQL validation only. Original 48 approved images unchanged. Complete sourceFiles retained in ignored summary. No remote CI success claim."
+}

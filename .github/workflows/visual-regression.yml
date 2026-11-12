@@ -1,0 +1,90 @@
+name: Visual regression
+on:
+  pull_request:
+    paths:
+      - 'frontend/**'
+      - 'backend/app/**'
+      - 'backend/routes/**'
+      - 'backend/config/**'
+      - 'backend/tools/visual-fixture-clock.php'
+      - 'backend/tests/Unit/VisualFixtureGuardTest.php'
+      - 'docker-compose.mysql-test.yml'
+      - 'docs/visual-baselines/**'
+      - 'tools/visual*'
+      - '.github/workflows/visual-regression.yml'
+  workflow_dispatch:
+    inputs:
+      baseline_run_id:
+        description: Reviewed visual-candidate artifact run ID (must match committed approval digest)
+        required: false
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install locked tests and browser
+        run: |
+          npm --prefix frontend ci
+          cd frontend
+          npx playwright install --with-deps chromium
+      - name: Capture synthetic candidate and calibrate failures
+        run: |
+          python3 tools/test_visual_baseline.py
+          sh tools/visual-check.sh candidate
+          sh tools/visual-check.sh prove
+      - name: Choose reviewed baseline artifact
+        id: baseline
+        env:
+          REQUESTED_RUN: ${{ inputs.baseline_run_id }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          approval = Path('docs/visual-baselines/linux-x86_64.json')
+          recorded = (json.loads(approval.read_text()).get('artifactRunId') or '') if approval.exists() else ''
+          run = os.environ.get('REQUESTED_RUN') or str(recorded)
+          if run and not run.isdecimal():
+              raise SystemExit('Baseline run ID must contain digits only')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as stream:
+              stream.write('run=' + run + '\n')
+          PY
+      - uses: actions/download-artifact@v4
+        if: steps.baseline.outputs.run != ''
+        with:
+          name: visual-candidate
+          path: artifacts/visual/approved-linux-x86_64
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.baseline.outputs.run }}
+      - name: Compare immutable approved baseline (missing approval fails)
+        run: sh tools/visual-check.sh compare
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-candidate
+          path: artifacts/visual/candidate/
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-results
+          path: |
+            artifacts/visual/comparison/
+            artifacts/visual/calibration-*/
+            artifacts/visual/*proof.json
+            artifacts/visual/summary.json
+          retention-days: 14

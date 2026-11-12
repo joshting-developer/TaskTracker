@@ -1,3 +1,10 @@
+## 2026-11-13 TT-270三尺寸正式驗收完成
+
+- 16×3=48合成候選經使用者明確核准，manifest fcf9ee11不變；正式比較3／3通過。校準原樣0／spacing、overflow、hide-action各1＋真實diff／還原0；調高容忍度及刪shot亦被harness lock拒絕，還原通過。
+- 獨立初審P1／P2已補完整harness綁定、sourceFiles／approval過期檢查、舊PASS失效、平台分檔、CI觸發及atomic lock。參數單一policy，版本來自實際安裝；核准圖／參數未改。
+- 完整既有browser-check、build／composables／API、既有memory155／7855、新guard3／6、Python4及共用2＋4＋3、Pint／語法通過。產品frontend/src及backend/app／routes無變更，所有專屬服務／volumes／lock清理。
+- 前端持續驗證與頻率移共用Skill；本地入口不重複規則。遠端Linux首次基準／Required Check因無push授權另建部署TT-273 open未指派，不冒充遠端CI成功。TT-270提交後closed；TT-271最終獨立複核中。
+
 ## 2026-11-13 TT-269驗收完成
 
 - 唯一registry selectionRules＋實際consumer framework偵測；TaskTracker僅runpy adapter，間接UI／資料流tags只增補。check_evidence拒缺失／失敗／過期來源／矩陣縮減／未核准visual；4選用＋2證據＋原2工具測試通過。

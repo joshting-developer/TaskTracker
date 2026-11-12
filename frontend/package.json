@@ -24,7 +24,10 @@
     "test:tokens": "node tools/personal-tokens-check.js",
     "test:api": "node tools/api-client-check.js",
     "test:bundle": "node tools/bundle-check.js",
-    "test:docs": "node tools/developer-docs-check.js"
+    "test:docs": "node tools/developer-docs-check.js",
+    "test:visual": "cd .. && sh tools/visual-check.sh compare",
+    "test:visual:candidate": "cd .. && sh tools/visual-check.sh candidate",
+    "test:visual:prove": "cd .. && sh tools/visual-check.sh prove"
   },
   "dependencies": {
     "dompurify": "3.4.17",
@@ -34,6 +37,7 @@
     "vuetify": "4.2.6"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@vitejs/plugin-vue": "6.0.9",
     "playwright": "1.63.0",
     "typescript": "^5.9.3",
