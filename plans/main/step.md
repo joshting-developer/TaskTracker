@@ -1,3 +1,16 @@
+## 2026-11-12 TT-165 開始
+
+## 2026-11-12 TT-165 驗證與交付
+
+- 完成個人Token管理、純Bearer身分與機器規格；公開專案／任務／留言仍未提供。
+- 隔離memory回歸108通過／32略過（原生MySQL類）；原生MySQL相關23通過。PAT包含雜湊、期限、撤銷、本人／工作區隔離、Scope、重送及有界分頁；實際瀏覽器驗一次性原文、重新開啟、撤銷401、無storage秘密與三尺寸。
+- 本機只載入新映像與新增PAT表，不seed／reset主庫；獨立測試庫與主庫分離。最終commit與TT-165結案於驗證完成後。
+
+
+- codex負責AI整合/API，先領TT-165再inprogress。採Sanctum4.4.0與既有Laravel13，保留Session／CSRF；不改Claude進行中的ApiExecution／WorkspaceServices依賴重構。
+- 個人Token管理頁：工作區綁定、read/write（write含read）、預設一個月／最長兩年、建立原文一次、雜湊保存／撤銷／到期顯示。新增獨立管理服務、路由檔及受限Bearer身分驗證入口，不自動開內部RPC或越卡實作所有業務REST。
+- 同卡同步OpenAPI／文件／隔離SQLite及原生MySQL／真實瀏覽器。效能／安全：本人SQL分頁、穩定排序、重新驗工作區資格、不可管理別人Token；秘密不進Git／log／localStorage。
+
 ## 2026-11-12 TT-259 API看板分類整理
 
 - 使用者確認AI整合/API聚焦個人Token與外部直接HTTP操作；內部DI／PHPDoc／Request DTO／效能歸效能改進，UI／一般功能與沿革歸實際功能。

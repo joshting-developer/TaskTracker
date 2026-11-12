@@ -139,3 +139,5 @@ foreach (Route::getRoutes() as $route) {
         $route->block(10, 10);
     }
 }
+
+require __DIR__.'/tokens.php';

@@ -1,5 +1,10 @@
 # TaskTracker
 
+## 個人 API Token
+
+右上帳號選單 → 個人 API Token，可建立目前工作空間的個人憑證、設定read／write與到期日、撤銷憑證。公開API目前只有Bearer身分驗證，任務操作尚未開放；見[Token契約與使用方式](docs/personal-access-tokens.md)。OpenAPI入口為 `/api/public/openapi.json`。
+
+
 專案管理平台 Side Project, 以 Workspace → Project → Issue 組織多人協作
 
 產品原始碼採前後端分離, 不使用 Inertia：

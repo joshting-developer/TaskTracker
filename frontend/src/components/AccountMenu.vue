@@ -1,7 +1,7 @@
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref, useId } from 'vue';
 const props = defineProps({ name: String, email: String, workspaceName: String });
-const emit = defineEmits(['profile', 'logout']);
+const emit = defineEmits(['profile', 'tokens', 'logout']);
 const root = ref(null), trigger = ref(null), menu = ref(null), open = ref(false), id = useId();
 function focus() { trigger.value?.focus(); }
 defineExpose({ focus });
@@ -27,6 +27,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', outside));
     <div v-if="open" :id="id" ref="menu" class="account-dropdown" role="menu" aria-label="帳號選項" @keydown="keydown">
       <div class="account-summary" role="presentation"><strong>{{ name }}</strong><span>{{ email }}</span><span>{{ workspaceName }}</span></div>
       <button type="button" role="menuitem" tabindex="-1" @click="choose('profile')">個人資料</button>
+      <button type="button" role="menuitem" tabindex="-1" @click="choose('tokens')">個人 API Token</button>
       <button type="button" role="menuitem" tabindex="-1" class="account-logout" @click="choose('logout')">登出</button>
     </div>
   </div>

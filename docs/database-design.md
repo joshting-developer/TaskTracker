@@ -1,5 +1,10 @@
 # TaskTracker 關聯式資料設計
 
+## 2026-11-12 個人PAT資料表
+
+TT-165新增 `personal_access_tokens`，User UUID外鍵、Workspace外鍵、雜湊唯一索引、必填expires_at、revoked_at與本人issuance_request_id唯一限制。使用Sanctum模型，不將秘密寫入重播快照；清單只投影metadata，每頁20筆、id倒序。既有業務表與資料不改寫，見[Token契約](personal-access-tokens.md)。
+
+
 2026-11-06：狀態`code`沿用為英文Type（API `id`）；open／closed必備。`category`為舊schema相容欄，已退出API與規則判斷；只有closed算結案。新增資料升級migration補齊必要狀態，不改Issue.state_id／歷史／工時。見[狀態設計](status-types.md)。
 
 更新：2026-11-04（Asia/Taipei）。使用者要求以正常關聯式資料儲存取代原型的 `records.payload`。目前資料庫保留 SQLite，API／前端 DTO 保留；不是以清空資料換架構。

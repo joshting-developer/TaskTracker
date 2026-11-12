@@ -20,7 +20,7 @@ class User extends Authenticatable
     protected $keyType = 'string';
 
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, \Laravel\Sanctum\HasApiTokens, Notifiable;
 
     /**
      * 取得帳號在各工作空間的成員資格。

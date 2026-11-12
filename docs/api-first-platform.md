@@ -1,5 +1,10 @@
 # API-first平台架構與第三方整合邊界
 
+## 2026-11-12 TT-165 實作更新
+
+先前「尚未安裝／全部待辦」為規劃當時狀態。TT-165已安裝Sanctum4.4.0，交付Session管理介面、個人Workspace綁定PAT、read／write、最長兩年、一次揭露、雜湊／撤銷與到期管理；純Bearer身分端點 `/api/public/v1/me` 與正式OpenAPI同步。詳細[實作契約](personal-access-tokens.md)。TT-166來源稽核、TT-167完整REST契約、TT-168／169業務端點、TT-252～254文件站／CI／獨立客戶端驗收仍另行處理，不因此結案。
+
+
 日期：2026-11-11。狀態：**使用者已確認產品方向，尚未實作PAT或公開REST API**。本文件採用使用者提供GPT討論的最後收斂，取代先前「TaskTracker自行提供MCP與工具整合」的候選順序；保留前段討論作沿革。
 
 ## 產品責任

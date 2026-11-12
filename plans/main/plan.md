@@ -1,3 +1,14 @@
+## 2026-11-12 TT-165 開始
+
+## 2026-11-12 TT-165 收尾
+
+完成Sanctum PAT管理與最小Bearer入口；與Claude共用WorkspaceTransaction／Context，不修改其DI任務。新增正式OpenAPI、使用文件、限本人及Workspace的SQL分頁、撤銷／期限／防重送與跨工作區測試。登出清除一次性原文視窗；Sanctum使用實際 `last_used_at=false` 配置，測試驗證Bearer讀取不回寫Token。完整業務REST留後續卡。
+
+
+- codex負責AI整合/API，先領TT-165再inprogress。採Sanctum4.4.0與既有Laravel13，保留Session／CSRF；不改Claude進行中的ApiExecution／WorkspaceServices依賴重構。
+- 個人Token管理頁：工作區綁定、read/write（write含read）、預設一個月／最長兩年、建立原文一次、雜湊保存／撤銷／到期顯示。新增獨立管理服務、路由檔及受限Bearer身分驗證入口，不自動開內部RPC或越卡實作所有業務REST。
+- 同卡同步OpenAPI／文件／隔離SQLite及原生MySQL／真實瀏覽器。效能／安全：本人SQL分頁、穩定排序、重新驗工作區資格、不可管理別人Token；秘密不進Git／log／localStorage。
+
 ## 2026-11-12 TT-259 API看板分類整理
 
 - 使用者確認AI整合/API聚焦個人Token與外部直接HTTP操作；內部DI／PHPDoc／Request DTO／效能歸效能改進，UI／一般功能與沿革歸實際功能。

@@ -1,5 +1,10 @@
 # TaskTracker 開發指引
 
+## 2026-11-12 TT-165 個人PAT現況
+
+已提供帳號選單的個人API Token管理、Workspace綁定、read／write、期限／撤銷與一次顯示原文；Sanctum保存雜湊。公開入口目前只有純Bearer `GET /api/public/v1/me`，正式規格為 `backend/resources/openapi.json`，匿名取得 `/api/public/openapi.json`。公開專案／卡片／留言操作仍由TT-168／169等後續卡承接，不可拿PAT呼叫Session RPC或宣稱整體外部整合已完成。見[操作與安全契約](docs/personal-access-tokens.md)。
+
+
 2026-11-06：已移除獨立Epic概覽與未掛Epic提醒，Epic保留可選卡片類型，列表／類型篩選及詳細頁共用入口，既有資料、關聯與工時保留。
 
 
