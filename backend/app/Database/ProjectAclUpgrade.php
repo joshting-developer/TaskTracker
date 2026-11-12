@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Database;
 
 use App\Repositories\RecordStore;
 use Illuminate\Support\Facades\DB;
@@ -10,7 +10,8 @@ class ProjectAclUpgrade
 {
     /**
      * 以指定儲存模式升級資料；正常業務預設使用關聯表。
-     * @param bool $legacy 是否只操作待匯入的舊records
+     *
+     * @param  bool  $legacy  是否只操作待匯入的舊records
      * @return void
      */
     public static function run(bool $legacy = false): void
@@ -19,10 +20,14 @@ class ProjectAclUpgrade
             $store = new RecordStore(legacy: $legacy);
             foreach ($store->all('workspaces') as $workspace) {
                 $tenant = $store->forWorkspace($workspace['id']);
-                if ($tenant->get('upgrades', 'project-acl-v1')) continue;
+                if ($tenant->get('upgrades', 'project-acl-v1')) {
+                    continue;
+                }
                 $changes = [];
                 foreach ($tenant->all('members') as $member) {
-                    $role = match ($member['role'] ?? '') { 'admin' => 'manager', 'member', 'maintainer', 'developer' => 'user', default => $member['role'] ?? '' };
+                    $role = match ($member['role'] ?? '') {
+                        'admin' => 'manager', 'member', 'maintainer', 'developer' => 'user', default => $member['role'] ?? ''
+                    };
                     if ($role !== ($member['role'] ?? '')) {
                         $changes[] = ['userId' => $member['id'], 'before' => $member['role'], 'after' => $role];
                         $tenant->put('members', $member['id'], [...$member, 'role' => $role]);

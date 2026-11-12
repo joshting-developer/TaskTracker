@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Authorization\WorkspacePermissions;
+use App\Database\ProjectStatusTypesUpgrade;
 use App\Domain\Fields;
 use App\Models\User;
 use App\Repositories\RecordStore;
@@ -20,6 +21,7 @@ class WorkspaceApiTest extends TestCase
     private function register(string $email = 'josh@example.test'): array
     {
         Auth::logout();
+
         return $this->postJson('/api/auth/register', ['name' => 'Josh', 'email' => $email, 'password' => 'test-local-password', 'workspaceName' => '產品團隊'])->assertOk()->json('data');
     }
 
@@ -299,7 +301,9 @@ class WorkspaceApiTest extends TestCase
         $child = $this->issue($project, ['parentIssueId' => $parent['id'], 'estimateMinutes' => 60]);
         $this->assertSame($epic['id'], $child['epicId']);
         $external = $this->issue($other);
-        foreach ([$child['id'], $parent['id'], $external['id'], $epic['id']] as $id) $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 1, 'parentIssueId' => $id])->assertStatus(400);
+        foreach ([$child['id'], $parent['id'], $external['id'], $epic['id']] as $id) {
+            $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 1, 'parentIssueId' => $id])->assertStatus(400);
+        }
         $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => '孫任務', 'parentIssueId' => $child['id']])->assertStatus(400);
         $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 1, 'type' => 'epic', 'epicId' => ''])->assertStatus(400);
         $this->rpc('updateIssue', ['id' => $parent['id'], 'expectedRevision' => 1, 'state' => 'closed'])->assertOk();
@@ -428,7 +432,7 @@ class WorkspaceApiTest extends TestCase
     /** 必備type不可移除，名稱可改，舊分類與重複type被拒絕。
      * @return void
      */
-    public function test_updateStatuses_Success_Required_types_and_validation(): void
+    public function test_update_statuses_success_required_types_and_validation(): void
     {
         $this->register();
         $project = $this->project();
@@ -460,7 +464,7 @@ class WorkspaceApiTest extends TestCase
     /** done只是中間狀態，只有closed滿足Epic結案條件。
      * @return void
      */
-    public function test_updateIssue_Success_Done_is_not_closed(): void
+    public function test_update_issue_success_done_is_not_closed(): void
     {
         $this->register();
         $project = $this->project();
@@ -480,7 +484,7 @@ class WorkspaceApiTest extends TestCase
     /** 補必要狀態時保留卡片外鍵與歷史，重跑不增加版本。
      * @return void
      */
-    public function test_run_Success_Status_upgrade_preserves_existing_cards(): void
+    public function test_run_success_status_upgrade_preserves_existing_cards(): void
     {
         $this->register();
         $project = $this->project();
@@ -494,7 +498,7 @@ class WorkspaceApiTest extends TestCase
         $issue = $this->issue($project, ['state' => 'done']);
         $old = $tenant->require('issues', $issue['id']);
         $stateId = DB::table('issues')->where('public_id', $issue['id'])->value('state_id');
-        \App\Services\ProjectStatusTypesUpgrade::run();
+        ProjectStatusTypesUpgrade::run();
         $upgraded = $tenant->require('projects', $project['id']);
         $this->assertSame(['todo', 'done', 'open', 'closed'], array_column($upgraded['statuses'], 'id'));
         $this->assertSame('待規劃 (open)', $upgraded['statuses'][2]['label']);
@@ -502,9 +506,8 @@ class WorkspaceApiTest extends TestCase
         $this->assertSame($stateId, DB::table('issues')->where('public_id', $issue['id'])->value('state_id'));
         $this->assertSame(2, $upgraded['revision']);
         $this->assertFalse(Fields::isClosed($old));
-        \App\Services\ProjectStatusTypesUpgrade::run();
+        ProjectStatusTypesUpgrade::run();
         $this->assertSame($upgraded, $tenant->require('projects', $project['id']));
         $this->assertSame([], DB::select('PRAGMA foreign_key_check'));
     }
-
 }

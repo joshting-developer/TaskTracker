@@ -2,6 +2,7 @@
 
 namespace App\Factories;
 
+use App\Repositories\ProjectReadRepository;
 use App\Repositories\TimeReportRepository;
 
 /**
@@ -14,8 +15,9 @@ class WorkspaceServicesFactory
      *
      * @param  RecordStoreFactory  $stores  依Workspace建立資料入口
      * @param  TimeReportRepository  $timeReports  工時分析查詢
+     * @param  ProjectReadRepository  $projects  訊號目標專案資料入口
      */
-    public function __construct(private RecordStoreFactory $stores, private TimeReportRepository $timeReports) {}
+    public function __construct(private RecordStoreFactory $stores, private TimeReportRepository $timeReports, private ProjectReadRepository $projects) {}
 
     /**
      * 建立本次操作專用的服務組；每次呼叫都是新的實例，不跨操作共用。
@@ -25,6 +27,6 @@ class WorkspaceServicesFactory
      */
     public function forSession(array $workspaceSession): WorkspaceOperationServices
     {
-        return new WorkspaceOperationServices($this->stores->forWorkspace($workspaceSession['workspace']['id']), $workspaceSession, $this->timeReports);
+        return new WorkspaceOperationServices($this->stores->forWorkspace($workspaceSession['workspace']['id']), $workspaceSession, $this->timeReports, $this->projects);
     }
 }

@@ -4,12 +4,12 @@ namespace Database\Seeders;
 
 use App\Authorization\ProjectAccess;
 use App\Authorization\WorkspacePermissions;
+use App\Database\ProjectAclUpgrade;
 use App\Domain\DomainError;
 use App\Factories\RecordStoreFactory;
 use App\Factories\WorkspaceServicesFactory;
 use App\Models\User;
 use App\Repositories\RecordStore;
-use App\Services\ProjectAclUpgrade;
 use App\Services\WorkspaceService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
@@ -21,7 +21,9 @@ use Illuminate\Support\Str;
 class DemoSeeder extends Seeder
 {
     public const EMAIL = 'owner@example.test';
+
     public const USER_ID = '00000000-0000-4000-8000-000000000201';
+
     public const WORKSPACE_ID = 'tasktracker-seed-f-ws';
 
     public const ACCOUNTS = [
@@ -78,13 +80,14 @@ class DemoSeeder extends Seeder
     }
 
     /** 建立或補齊指定示範namespace，不覆寫現有使用者資料。
-     * @param bool $reset 是否精確重設seed工作區
-     * @param ?string $password 初次建立的本機測試密碼
+     * @param  bool  $reset  是否精確重設seed工作區
+     * @param  ?string  $password  初次建立的本機測試密碼
      * @return array 建立／升級結果與workspaceId
      */
     public function seed(bool $reset = false, ?string $password = null): array
     {
         $this->assertEnvironment();
+
         return DB::transaction(function () use ($reset, $password) {
             $store = $this->stores->global();
             $marker = $store->get('demoSeeds', self::WORKSPACE_ID);
@@ -92,16 +95,23 @@ class DemoSeeder extends Seeder
                 ProjectAclUpgrade::run();
                 $workspace = $store->require('workspaces', self::WORKSPACE_ID);
                 $upgraded = $this->seedAnalysisTimes($store->forWorkspace(self::WORKSPACE_ID), $workspace);
+
                 return ['created' => false, 'upgraded' => $upgraded, 'workspaceId' => self::WORKSPACE_ID];
             }
             foreach (self::ACCOUNTS as $account) {
                 $existing = User::where('email', $account['email'])->orWhere('id', $account['id'])->first();
                 $member = $store->forWorkspace(self::WORKSPACE_ID)->get('members', $account['id']);
-                if ($existing && ($existing->id !== $account['id'] || $existing->email !== $account['email'] || !$marker || !$member)) throw new \RuntimeException('示範信箱或 ID 已被其他帳號使用, 不覆蓋既有帳號');
+                if ($existing && ($existing->id !== $account['id'] || $existing->email !== $account['email'] || ! $marker || ! $member)) {
+                    throw new \RuntimeException('示範信箱或 ID 已被其他帳號使用, 不覆蓋既有帳號');
+                }
             }
-            if (!$marker && $store->get('workspaces', self::WORKSPACE_ID)) throw new \RuntimeException('示範空間 ID 已被使用, 不覆蓋既有空間');
+            if (! $marker && $store->get('workspaces', self::WORKSPACE_ID)) {
+                throw new \RuntimeException('示範空間 ID 已被使用, 不覆蓋既有空間');
+            }
             $password ??= env('TASKTRACKER_SEED_PASSWORD');
-            if (!is_string($password) || strlen($password) < 10) throw new \RuntimeException('請在本機環境設定 TASKTRACKER_SEED_PASSWORD（至少 10 字）, 不將密碼提交 Git');
+            if (! is_string($password) || strlen($password) < 10) {
+                throw new \RuntimeException('請在本機環境設定 TASKTRACKER_SEED_PASSWORD（至少 10 字）, 不將密碼提交 Git');
+            }
             if ($reset && $marker) {
                 // 精確限定這組 seed namespace, 不清空資料庫或其他 Workspace
                 $store->forWorkspace(self::WORKSPACE_ID)->clearWorkspace();
@@ -116,10 +126,11 @@ class DemoSeeder extends Seeder
                 $tenant->put('members', $user->id, ['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $role, 'joinedAt' => now()->utc()->toISOString()]);
                 $services[$role] = $this->actAs(['user' => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email], 'workspace' => $workspace, 'role' => $role, 'permissions' => WorkspacePermissions::resolve($role)]);
             }
-            if ($marker && !$reset) {
+            if ($marker && ! $reset) {
                 $this->seedAssignments($tenant);
                 ProjectAclUpgrade::run();
                 $store->put('demoSeeds', self::WORKSPACE_ID, [...$marker, 'version' => 2, 'upgradedAt' => now()->utc()->toISOString()]);
+
                 return ['created' => false, 'upgraded' => true, 'workspaceId' => self::WORKSPACE_ID];
             }
             $service = $services['owner'];
@@ -149,13 +160,14 @@ class DemoSeeder extends Seeder
             ProjectAclUpgrade::run();
             $this->seedAnalysisTimes($tenant, $workspace);
             $store->put('demoSeeds', self::WORKSPACE_ID, ['id' => self::WORKSPACE_ID, 'version' => 2, 'seededAt' => now()->utc()->toISOString()]);
+
             return ['created' => true, 'upgraded' => false, 'workspaceId' => self::WORKSPACE_ID];
         });
     }
 
     /** 由seed既有交易呼叫，按月冪等補最近28天，保留使用者修改。
-     * @param RecordStore $tenant 已限定seed工作區的資料入口
-     * @param array $workspace seed工作區
+     * @param  RecordStore  $tenant  已限定seed工作區的資料入口
+     * @param  array  $workspace  seed工作區
      * @return bool 是否新增示範工時
      */
     private function seedAnalysisTimes(RecordStore $tenant, array $workspace): bool
@@ -264,21 +276,29 @@ class DemoSeeder extends Seeder
     }
 
     /** 為明確seed帳號加入示範專案資格，不改一般成員規則。
-     * @param RecordStore $tenant 示範工作區資料入口
+     * @param  RecordStore  $tenant  示範工作區資料入口
      * @return void
      */
     private function seedAssignments(RecordStore $tenant): void
     {
         foreach ($tenant->all('projects') as $project) {
             foreach (['maintainer', 'developer'] as $role) {
-                if ($role === 'developer' && ($project['code'] ?? '') !== 'FIRST') continue;
-                if (!in_array($project['code'] ?? '', ['FIRST', 'SECOND'], true)) continue;
+                if ($role === 'developer' && ($project['code'] ?? '') !== 'FIRST') {
+                    continue;
+                }
+                if (! in_array($project['code'] ?? '', ['FIRST', 'SECOND'], true)) {
+                    continue;
+                }
                 $userId = self::ACCOUNTS[$role]['id'];
                 $member = $tenant->get('members', $userId);
-                if (!$member || !empty($member['disabledAt'])) continue;
+                if (! $member || ! empty($member['disabledAt'])) {
+                    continue;
+                }
                 $tenant->put('members', $userId, [...$member, 'role' => 'user']);
                 $id = ProjectAccess::memberId($project['id'], $userId);
-                if ($tenant->get('projectMembers', $id)) continue;
+                if ($tenant->get('projectMembers', $id)) {
+                    continue;
+                }
                 $tenant->put('projectMembers', $id, ['id' => $id, 'projectId' => $project['id'], 'userId' => $userId, 'roleId' => $role, 'revision' => 1, 'removedAt' => null, 'updatedAt' => now()->utc()->toISOString()]);
                 $acl = $tenant->get('projectAcls', $project['id']) ?? ['id' => $project['id'], 'revision' => 0, 'history' => []];
                 $tenant->put('projectAcls', $project['id'], [...$acl, 'revision' => $acl['revision'] + 1, 'history' => [...$acl['history'], ['actorId' => 'system', 'actor' => '系統：Seed ACL', 'userId' => $userId, 'before' => null, 'after' => $role, 'at' => now()->utc()->toISOString()]]]);
@@ -289,7 +309,7 @@ class DemoSeeder extends Seeder
     /**
      * 建立單一示範專案及其預設任務。
      *
-     * @param array $workspaceSession 後端重新驗證的工作區身分
+     * @param  array  $workspaceSession  後端重新驗證的工作區身分
      * @return array
      */
     public function loadProject(array $workspaceSession): array

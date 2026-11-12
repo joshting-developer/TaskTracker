@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Database;
 
 use App\Repositories\EntityDefinitions;
 use App\Repositories\LegacyRecordStore;

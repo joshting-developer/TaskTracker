@@ -6,10 +6,9 @@ use App\Authorization\WorkspacePermissions;
 use App\Data\AuthenticatedAccountData;
 use App\Domain\DomainError;
 use App\Domain\Fields;
-use App\Models\User;
-use App\Models\Workspace;
-use App\Models\WorkspaceMember;
 use App\Factories\RecordStoreFactory;
+use App\Models\User;
+use App\Repositories\AccountRepository;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -23,8 +22,20 @@ class AccountService
      *
      * @param  RecordStoreFactory  $stores  依範圍建立資料入口
      * @param  WorkspaceMemberships  $memberships  工作區清單、切換與邀請
+     * @param  AccountRepository  $accounts  帳號與最小資格資料入口
      */
-    public function __construct(private RecordStoreFactory $stores, private WorkspaceMemberships $memberships) {}
+    public function __construct(private RecordStoreFactory $stores, private WorkspaceMemberships $memberships, private AccountRepository $accounts) {}
+
+    /**
+     * 重新取得HTTP伺服器所指定的帳號，不接受前端actor。
+     *
+     * @param  ?string  $id  可信User ID
+     * @return ?User 當次帳號
+     */
+    public function freshUser(?string $id): ?User
+    {
+        return $this->accounts->find($id);
+    }
 
     /**
      * 回傳不含密碼及驗證秘密的帳號資訊。
@@ -54,9 +65,8 @@ class AccountService
             DomainError::fail('UNAUTHENTICATED', '請先登入');
         }
         // 此處只驗當次資格，不透過相容RecordStore附帶讀取歷史／全部欄位。
-        $workspace = Workspace::where('public_id', $workspaceId)->first(['id', 'name']);
-        $member = $workspace ? WorkspaceMember::where('workspace_id', $workspace->id)
-            ->where('user_id', $user->id)->whereNull('disabled_at')->first(['role']) : null;
+        $workspace = $this->accounts->workspace($workspaceId);
+        $member = $workspace ? $this->accounts->membership($workspace->id, $user->id) : null;
         if (! $workspace || ! $member) {
             DomainError::fail('UNAUTHENTICATED', '工作空間資格已失效');
         }
@@ -86,7 +96,7 @@ class AccountService
         if (mb_strlen($password) < 10) {
             DomainError::fail('INVALID_INPUT', '密碼至少 10 字');
         }
-        if (User::where('email', $email)->exists()) {
+        if ($this->accounts->emailExists($email)) {
             DomainError::fail('CONFLICT', '此 Email 已註冊, 請登入');
         }
         $store = $this->stores->global();
@@ -112,7 +122,7 @@ class AccountService
             $first = ! $store->all('workspaces');
             $store->put('workspaces', $workspace['id'], $workspace);
         }
-        $user = User::create([
+        $user = $this->accounts->create([
             'id' => (string) Str::uuid(),
             'name' => $name,
             'email' => $email,
@@ -148,18 +158,18 @@ class AccountService
     {
         $email = $this->email($input['email'] ?? null);
         $password = Fields::text($input['password'] ?? null, '密碼', 128, true);
-        $user = User::where('email', $email)->first();
+        $user = $this->accounts->byEmail($email);
         $valid = false;
         if ($user && $user->legacy_salt) {
             // Node scrypt 預設 N=16384,r=8,p=1；舊 salt 是 32 字元 hex 字串
             $derived = sodium_crypto_pwhash_scryptsalsa208sha256(64, $password, $user->legacy_salt, 524288, 16777216);
             $valid = hash_equals($user->legacy_hash, bin2hex($derived));
             if ($valid) {
-                $user->forceFill([
+                $this->accounts->update($user, [
                     'password' => Hash::make($password),
                     'legacy_salt' => null,
                     'legacy_hash' => null,
-                ])->save();
+                ]);
             }
         } elseif ($user) {
             $valid = Hash::check($password, $user->password);
@@ -191,7 +201,7 @@ class AccountService
     {
         WorkspacePermissions::authorize($context, 'workspace.invite');
         $email = $this->email($input['email'] ?? null);
-        $existing = User::where('email', $email)->first();
+        $existing = $this->accounts->byEmail($email);
         if ($existing && $this->stores->forWorkspace($context['workspace']['id'])->get('members', $existing->id)) {
             DomainError::fail('CONFLICT', '此帳號已是工作空間成員');
         }

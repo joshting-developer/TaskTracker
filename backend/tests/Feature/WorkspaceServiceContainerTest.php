@@ -7,8 +7,12 @@ use App\Factories\TodosFactory;
 use App\Factories\WorkspaceOperationServices;
 use App\Factories\WorkspaceServicesFactory;
 use App\Http\AccountSessionBoundary;
+use App\Http\WorkspaceRpc;
+use App\Http\WorkspaceTransaction;
+use App\Repositories\ProjectReadRepository;
 use App\Repositories\RecordStore;
 use App\Repositories\TimeReportRepository;
+use App\Services\ReceiptCodec;
 use App\Services\RequestReplay;
 use App\Services\WorkspaceService;
 use Closure;
@@ -36,18 +40,19 @@ class WorkspaceServiceContainerTest extends TestCase
     {
         parent::setUp();
         $bundles = $this->bundles = new \ArrayObject;
-        $this->app->bind(WorkspaceServicesFactory::class, fn ($app) => new class($app->make(RecordStoreFactory::class), $app->make(TimeReportRepository::class), $bundles) extends WorkspaceServicesFactory
+        $this->app->bind(WorkspaceServicesFactory::class, fn ($app) => new class($app->make(RecordStoreFactory::class), $app->make(TimeReportRepository::class), $app->make(ProjectReadRepository::class), $bundles) extends WorkspaceServicesFactory
         {
             /**
              * 保留紀錄陣列參照。
              *
              * @param  RecordStoreFactory  $stores  Store工廠
              * @param  TimeReportRepository  $reports  報表查詢
+             * @param  ProjectReadRepository  $projects  訊號目標查詢
              * @param  \ArrayObject  $bundles  紀錄
              */
-            public function __construct(RecordStoreFactory $stores, TimeReportRepository $reports, private \ArrayObject $bundles)
+            public function __construct(RecordStoreFactory $stores, TimeReportRepository $reports, ProjectReadRepository $projects, private \ArrayObject $bundles)
             {
-                parent::__construct($stores, $reports);
+                parent::__construct($stores, $reports, $projects);
             }
 
             /**
@@ -114,7 +119,7 @@ class WorkspaceServiceContainerTest extends TestCase
      */
     public function test_core_entry_points_resolve_without_cycles(): void
     {
-        foreach ([AccountSessionBoundary::class, \App\Http\WorkspaceTransaction::class, \App\Http\WorkspaceRpc::class, WorkspaceService::class, TodosFactory::class, DemoSeeder::class] as $class) {
+        foreach ([AccountSessionBoundary::class, WorkspaceTransaction::class, WorkspaceRpc::class, WorkspaceService::class, TodosFactory::class, DemoSeeder::class] as $class) {
             $this->assertInstanceOf($class, $this->app->make($class));
         }
         $this->assertNotSame($this->app->make(WorkspaceService::class), $this->app->make(WorkspaceService::class), '不註冊為共享實例');
@@ -149,16 +154,17 @@ class WorkspaceServiceContainerTest extends TestCase
     public function test_replay_collaborator_is_replaceable_through_container(): void
     {
         $calls = new \ArrayObject;
-        $this->app->bind(RequestReplay::class, fn () => new class($calls) extends RequestReplay
+        $this->app->bind(RequestReplay::class, fn ($app) => new class($calls, $app->make(ReceiptCodec::class)) extends RequestReplay
         {
             /**
              * 保留計數參照。
              *
              * @param  \ArrayObject  $calls  呼叫紀錄
+             * @param  ReceiptCodec  $codec  結果編碼協作者
              */
-            public function __construct(private \ArrayObject $calls)
+            public function __construct(private \ArrayObject $calls, ReceiptCodec $codec)
             {
-                parent::__construct();
+                parent::__construct($codec);
             }
 
             /**

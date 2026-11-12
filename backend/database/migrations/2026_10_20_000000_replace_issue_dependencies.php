@@ -1,6 +1,6 @@
 <?php
 
-use App\Services\IssueRelationsUpgrade;
+use App\Database\IssueRelationsUpgrade;
 use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration

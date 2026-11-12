@@ -4,6 +4,7 @@ namespace App\Http;
 
 use App\Data\WorkspaceContext;
 use App\Factories\WorkspaceContextFactory;
+use App\Services\AccountService;
 use Illuminate\Http\Request;
 
 /** HTTP與領域服務的身分邊界，只從Laravel Session取得操作者與工作空間。 */
@@ -13,8 +14,9 @@ class WorkspaceSession
      * 注入每次重驗資格的Context組裝邊界，避免領域服務反向依賴HTTP。
      *
      * @param  WorkspaceContextFactory  $contexts  重驗帳號與工作區資格後建立WorkspaceContext
+     * @param  AccountService  $accounts  當次帳號新鮮讀取
      */
-    public function __construct(private WorkspaceContextFactory $contexts) {}
+    public function __construct(private WorkspaceContextFactory $contexts, private AccountService $accounts) {}
 
     /**
      * 回傳重驗後的資格array，給尚未改用WorkspaceContext的舊用例。
@@ -35,6 +37,6 @@ class WorkspaceSession
      */
     public function verified(Request $request): WorkspaceContext
     {
-        return $this->contexts->verify($request->user()?->fresh(), $request->session()->get('workspace_id'));
+        return $this->contexts->verify($this->accounts->freshUser($request->user()?->getAuthIdentifier()), $request->session()->get('workspace_id'));
     }
 }

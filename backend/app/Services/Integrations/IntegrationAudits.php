@@ -4,12 +4,18 @@ namespace App\Services\Integrations;
 
 use App\Data\TokenContext;
 use App\Data\WorkspaceContext;
-use App\Models\IntegrationAudit;
-use App\Models\Workspace;
+use App\Repositories\IntegrationAuditRepository;
 
 /** 同業務交易追加最小來源，唯讀查詢不新增稽核寫量。 */
 class IntegrationAudits
 {
+    /**
+     * 注入限定資料來源，不在服務組合SQL。
+     *
+     * @param  IntegrationAuditRepository  $records  稽核保存與本人分頁
+     */
+    public function __construct(private IntegrationAuditRepository $records) {}
+
     /**
      * 記錄已成功的受信任用例識別，失敗時隨外層交易回滾。
      *
@@ -23,8 +29,7 @@ class IntegrationAudits
      */
     public function append(WorkspaceContext $workspace, string $operation, ?string $resourceId = null, ?TokenContext $token = null, ?int $revision = null, ?string $clientReference = null): void
     {
-        IntegrationAudit::create([
-            'workspace_id' => Workspace::where('public_id', $workspace->workspaceId)->sole(['id'])->id,
+        $this->records->append($workspace, [
             'actor_user_id' => $workspace->userId, 'source' => $token ? 'token' : 'session',
             'token_id' => $token?->tokenId, 'token_name' => $token?->tokenName,
             'abilities' => $token?->abilities ?? [], 'operation' => $operation,
@@ -41,10 +46,9 @@ class IntegrationAudits
      */
     public function listing(WorkspaceContext $context, int $page): array
     {
-        $query = IntegrationAudit::where('actor_user_id', $context->userId)
-            ->whereIn('workspace_id', Workspace::where('public_id', $context->workspaceId)->select('id'));
-        $total = $query->count();
-        $items = $query->orderByDesc('id')->forPage($page, 20)->get(['id', 'actor_user_id', 'source', 'token_id', 'token_name', 'abilities', 'operation', 'resource_id', 'resource_revision', 'client_reference', 'occurred_at']);
+        $result = $this->records->page($context, $page);
+        $items = $result['items'];
+        $total = $result['total'];
 
         return ['items' => $items->map(fn ($row) => ['id' => (string) $row->id, 'userId' => $row->actor_user_id,
             'source' => $row->source, 'tokenId' => $row->token_id, 'tokenName' => $row->token_name,

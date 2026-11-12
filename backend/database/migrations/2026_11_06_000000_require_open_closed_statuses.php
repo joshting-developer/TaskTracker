@@ -1,6 +1,6 @@
 <?php
 
-use App\Services\ProjectStatusTypesUpgrade;
+use App\Database\ProjectStatusTypesUpgrade;
 use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration

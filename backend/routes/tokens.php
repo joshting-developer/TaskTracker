@@ -3,8 +3,10 @@
 use App\Http\Controllers\Integrations\ApiSpecificationController;
 use App\Http\Controllers\Integrations\DeveloperDocumentationController;
 use App\Http\Controllers\Integrations\PersonalTokensController;
+use App\Http\Controllers\Integrations\PublicIssueChangesController;
 use App\Http\Controllers\Integrations\PublicIssueExternalController;
 use App\Http\Controllers\Integrations\PublicIssuesController;
+use App\Http\Controllers\Integrations\PublicProjectsController;
 use App\Http\Controllers\Integrations\PublicQueriesController;
 use App\Http\Controllers\Integrations\TokenIdentityController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -31,12 +33,13 @@ Route::prefix('/api/public/v1')->middleware('throttle:public-api-v1')->withoutMi
     StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class,
 ])->group(function () {
     $queries = PublicQueriesController::class;
-    Route::get('/projects', [$queries, 'projects']);
-    Route::get('/projects/{project}', [$queries, 'project']);
-    Route::get('/projects/{project}/members', [$queries, 'members']);
-    Route::get('/projects/{project}/statuses', [$queries, 'statuses']);
+    $projects = PublicProjectsController::class;
+    Route::get('/projects', [$projects, 'projects']);
+    Route::get('/projects/{project}', [$projects, 'project']);
+    Route::get('/projects/{project}/members', [$projects, 'members']);
+    Route::get('/projects/{project}/statuses', [$projects, 'statuses']);
     Route::get('/projects/{project}/issues', [$queries, 'issues']);
-    Route::get('/projects/{project}/issue-changes', [$queries, 'changes']);
+    Route::get('/projects/{project}/issue-changes', [PublicIssueChangesController::class, 'changes']);
     Route::get('/projects/{project}/issues/{issue}', [$queries, 'issue']);
     Route::get('/projects/{project}/issues/{issue}/comments', [$queries, 'comments']);
     Route::get('/projects/{project}/issues/external/{source}/{externalId}', [PublicIssueExternalController::class, 'show']);

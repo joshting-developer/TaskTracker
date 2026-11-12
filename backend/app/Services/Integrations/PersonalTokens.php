@@ -5,10 +5,8 @@ namespace App\Services\Integrations;
 use App\Data\WorkspaceContext;
 use App\Domain\DomainError;
 use App\Models\PersonalAccessToken;
-use App\Models\User;
-use App\Models\Workspace;
+use App\Repositories\PersonalTokenRepository;
 use Carbon\CarbonImmutable;
-use Illuminate\Database\Eloquent\Builder;
 
 /** 本人Token資料操作；交易、User鎖與Session資格由共用WorkspaceTransaction擁有。 */
 class PersonalTokens
@@ -17,8 +15,9 @@ class PersonalTokens
      * 注入同交易的來源紀錄，不在Service取得HTTP或Session。
      *
      * @param  IntegrationAudits  $audits  同交易的整合來源紀錄
+     * @param  PersonalTokenRepository  $tokens  本人限定PAT資料入口
      */
-    public function __construct(private IntegrationAudits $audits) {}
+    public function __construct(private IntegrationAudits $audits, private PersonalTokenRepository $tokens) {}
 
     /**
      * 以擁有者與固定工作區在SQL限定範圍，穩定倒序分頁metadata。
@@ -29,13 +28,9 @@ class PersonalTokens
      */
     public function listing(WorkspaceContext $context, int $page): array
     {
-        $query = $this->owned($context);
-        $total = $query->count();
-        $last = max(1, (int) ceil($total / 20));
-        $page = min($page, $last);
-        $items = $query->orderByDesc('id')->forPage($page, 20)->get(['id', 'name', 'abilities', 'created_at', 'expires_at', 'revoked_at']);
+        $result = $this->tokens->page($context, $page);
 
-        return ['items' => $items->map(fn ($token) => $this->metadata($token))->all(), 'page' => $page, 'perPage' => 20, 'total' => $total, 'lastPage' => $last];
+        return [...$result, 'items' => $result['items']->map(fn ($token) => $this->metadata($token))->all(), 'perPage' => 20];
     }
 
     /**
@@ -47,7 +42,7 @@ class PersonalTokens
      */
     public function create(WorkspaceContext $context, array $input): array
     {
-        if (PersonalAccessToken::where('tokenable_id', $context->userId)->where('issuance_request_id', $input['requestId'])->exists()) {
+        if ($this->tokens->issued($context->userId, $input['requestId'])) {
             DomainError::fail('REQUEST_CONFLICT', '此建立請求已處理；原文不會再次顯示，請從清單核對後撤銷或另建');
         }
         $today = CarbonImmutable::now('Asia/Taipei')->startOfDay();
@@ -56,16 +51,12 @@ class PersonalTokens
             DomainError::fail('INVALID_INPUT', '到期日須在未來且最多兩年');
         }
         // Workspace必填欄位需與Sanctum雜湊同次INSERT；沿用官方generateTokenString／findToken格式。
-        $plain = User::findOrFail($context->userId)->generateTokenString();
-        $token = new PersonalAccessToken;
-        $token->forceFill(['tokenable_type' => User::class, 'tokenable_id' => $context->userId,
-            'workspace_id' => Workspace::where('public_id', $context->workspaceId)->sole(['id'])->id,
-            'name' => trim($input['name']), 'abilities' => array_values(array_unique($input['abilities'])),
-            'token' => hash('sha256', $plain), 'expires_at' => $expires, 'issuance_request_id' => $input['requestId']]);
-        if ($token->name === '') {
+        $name = trim($input['name']);
+        if ($name === '') {
             DomainError::fail('INVALID_INPUT', '請填寫Token名稱');
         }
-        $token->save();
+        $plain = $this->tokens->generatePlain($context->userId);
+        $token = $this->tokens->create($context, ['name' => $name, 'abilities' => array_values(array_unique($input['abilities'])), 'token' => hash('sha256', $plain), 'expires_at' => $expires, 'issuance_request_id' => $input['requestId']]);
         $this->audits->append($context, 'personalTokens.create', (string) $token->id);
 
         return ['token' => $this->metadata($token), 'plainTextToken' => $token->getKey().'|'.$plain];
@@ -80,29 +71,17 @@ class PersonalTokens
      */
     public function revoke(WorkspaceContext $context, string $id): array
     {
-        $token = $this->owned($context)->whereKey($id)->first();
+        $token = $this->tokens->findOwned($context, $id);
         if (! $token) {
             DomainError::fail('NOT_FOUND', '找不到Token');
         }
         if ($token->revoked_at === null) {
             $token->revoked_at = now();
-            $token->save();
+            $this->tokens->save($token);
             $this->audits->append($context, 'personalTokens.revoke', (string) $token->id);
         }
 
         return $this->metadata($token);
-    }
-
-    /**
-     * 本人在目前工作區的Token查詢。
-     *
-     * @param  WorkspaceContext  $context  可信資格
-     * @return Builder 本人及工作區限定查詢
-     */
-    private function owned(WorkspaceContext $context): Builder
-    {
-        return PersonalAccessToken::query()->where('tokenable_type', User::class)->where('tokenable_id', $context->userId)
-            ->whereIn('workspace_id', Workspace::where('public_id', $context->workspaceId)->select('id'));
     }
 
     /**

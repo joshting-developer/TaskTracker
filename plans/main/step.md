@@ -1,3 +1,15 @@
+## 2026-11-12 TT-262完成，準備領取TT-246
+
+- 21Controller／84action建構子注入，公開Project／Issue／Changes拆分；帳號／PAT／稽核／訊號資料經Repository，歷史升級移Database。AST／Container無SQL及領域隔離／替換依賴門檻與ReceiptCodec設定生命週期補齊。
+- memory152通過／63skip／7718assertions；原生MySQL62／2012通過（大型既有報表需512MB）；真Laravel完整瀏覽器流程通過；PHPDoc241檔811方法零required缺漏。見docs/strict-layering-delivery-2026-11-12.md。
+- TT-262提交／回填closed後才claim246；未改主庫資料、未推遠端、未擴張公開API。
+
+## 2026-11-12 TT-262開始，之後TT-246
+
+- 使用者授權先262嚴格分層／建構子DI，完成測試／提交／回填才領246其餘寫入Request／DTO與前端契約。
+- 工作區開始乾淨，29個Controller中21個84個action待遷移；新external／audit／HTTP資格邊界一併盤點，保留交易／鎖／租戶／revision／receipt。
+- 隔離baseline、一般Controller constructor與公開領域拆分、Service資料入口Repository化、架構防退化／容器範圍／PHPDoc、memory／MySQL／HTTP與瀏覽器驗證；有進度寫卡。只操作獨立測試DB，不動主庫seed／reset。
+
 ## 2026-11-12 TT-265 公開API實際操作確認
 
 - 使用者要求確認Claude交付AI/API能力能否用於操作；讀即時看板與部署OpenAPI0.9.0／19operations，核心closed，TT-3仍open及Webhook／選配聯調deferred。

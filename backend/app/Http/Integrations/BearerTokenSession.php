@@ -9,10 +9,9 @@ use App\Domain\DomainError;
 use App\Factories\ProjectAccessFactory;
 use App\Factories\RecordStoreFactory;
 use App\Factories\WorkspaceContextFactory;
-use App\Models\PersonalAccessToken;
 use App\Models\User;
-use App\Models\Workspace;
 use App\Services\Integrations\IntegrationAudits;
+use App\Services\Integrations\TokenIdentityService;
 use App\Services\RequestReplay;
 use Closure;
 use Illuminate\Http\Request;
@@ -30,8 +29,9 @@ class BearerTokenSession
      * @param  IntegrationAudits  $audits  整合來源紀錄
      * @param  RecordStoreFactory  $stores  依工作區建立資料入口
      * @param  RequestReplay  $replay  防重複提交與原結果重播
+     * @param  TokenIdentityService  $identities  無快取的Token及帳號資料用例
      */
-    public function __construct(private WorkspaceContextFactory $contexts, private WriteLocks $locks, private ProjectAccessFactory $projects, private IntegrationAudits $audits, private RecordStoreFactory $stores, private RequestReplay $replay) {}
+    public function __construct(private WorkspaceContextFactory $contexts, private WriteLocks $locks, private ProjectAccessFactory $projects, private IntegrationAudits $audits, private RecordStoreFactory $stores, private RequestReplay $replay, private TokenIdentityService $identities) {}
 
     /**
      * 以PAT回傳最小身分，既有Session與X-Workspace-ID不改變Token綁定。
@@ -149,23 +149,23 @@ class BearerTokenSession
     private function run(Request $request, bool $write, Closure $use, ?string $projectId, string $permission): mixed
     {
         $plain = $request->bearerToken();
-        $hint = $write && $plain ? PersonalAccessToken::findToken($plain) : null;
+        $hint = $write && $plain ? $this->identities->token($plain) : null;
         if (! $plain || ($write && (! $hint || $hint->tokenable_type !== User::class))) {
             DomainError::fail('UNAUTHENTICATED', 'Token無效、已過期或已撤銷');
         }
-        $workspaceId = $hint ? Workspace::whereKey($hint->workspace_id)->value('public_id') : null;
+        $workspaceId = $hint ? $this->identities->workspaceId($hint->workspace_id) : null;
         $execute = function () use ($plain, $hint, $workspaceId, $write, $use, $projectId, $permission) {
             if ($write) {
                 $this->locks->account($hint->tokenable_id);
                 $this->locks->workspace($workspaceId);
             }
-            $token = PersonalAccessToken::findToken($plain);
+            $token = $this->identities->token($plain);
             if (! $token || $token->tokenable_type !== User::class || $token->revoked_at !== null || ! $token->expires_at || $token->expires_at->isPast()
                 || ($hint && ($token->tokenable_id !== $hint->tokenable_id || $token->workspace_id !== $hint->workspace_id))) {
                 DomainError::fail('UNAUTHENTICATED', 'Token無效、已過期或已撤銷');
             }
-            $currentWorkspaceId = $write ? $workspaceId : Workspace::whereKey($token->workspace_id)->value('public_id');
-            $workspace = $this->contexts->verify(User::find($token->tokenable_id), $currentWorkspaceId);
+            $currentWorkspaceId = $write ? $workspaceId : $this->identities->workspaceId($token->workspace_id);
+            $workspace = $this->contexts->verify($this->identities->user($token->tokenable_id), $currentWorkspaceId);
             if (! $token->can($write ? 'write' : 'read')) {
                 DomainError::fail('FORBIDDEN', 'Token未授權此操作');
             }

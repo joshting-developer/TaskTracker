@@ -13,11 +13,11 @@ use Closure;
 class RequestReplay
 {
     /**
-     * 注入結果編碼；未指定時依config建立。
+     * 由Container注入結果編碼，不在預設參數手動建立協作者。
      *
      * @param  ReceiptCodec  $codec  版本化無損編碼
      */
-    public function __construct(private ReceiptCodec $codec = new ReceiptCodec) {}
+    public function __construct(private ReceiptCodec $codec) {}
 
     /**
      * 依原始輸入簽章重用已授權操作結果，或保存此次寫入結果。

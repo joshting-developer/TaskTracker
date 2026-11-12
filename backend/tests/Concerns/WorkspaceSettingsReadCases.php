@@ -6,6 +6,7 @@ use App\Events\ProjectChanged;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Models\WorkspaceMember;
+use App\Repositories\ProjectReadRepository;
 use App\Services\ProjectSignals;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -38,7 +39,7 @@ trait WorkspaceSettingsReadCases
         config(['broadcasting.default' => 'reverb']);
         DB::enableQueryLog();
         DB::flushQueryLog();
-        (new ProjectSignals($owner))->workspaceChanged();
+        (new ProjectSignals($owner, app(ProjectReadRepository::class)))->workspaceChanged();
         $this->assertCount(0, array_filter(DB::getQueryLog(), fn ($q) => str_contains($q['query'], 'audit_events') || str_contains($q['query'], 'description') || str_contains($q['query'], 'project_statuses')));
         config(['broadcasting.default' => 'null']);
         DB::flushQueryLog();

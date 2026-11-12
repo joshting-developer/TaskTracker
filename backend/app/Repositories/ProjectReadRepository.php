@@ -9,10 +9,22 @@ use App\Models\ProjectMember;
 use App\Models\ProjectStatus;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\LazyCollection;
 
 /** 專案讀取投影；呼叫者提供已驗證工作區與有效公開ID集合。 */
 class ProjectReadRepository
 {
+    /**
+     * 依工作區逐筆讀訊號目標，僅公開ID，不載歷史或卡片。
+     *
+     * @param  string  $workspaceId  可信Workspace公開ID
+     * @return LazyCollection<int,Project> 有界逐列讀取
+     */
+    public function signalTargets(string $workspaceId): LazyCollection
+    {
+        return Project::whereHas('workspace', fn ($query) => $query->where('public_id', $workspaceId))->orderBy('id')->select('public_id')->cursor();
+    }
+
     /**
      * 已授權Project只讀狀態欄位；多取一筆偵測歷史超限，不靜默截斷。
      *

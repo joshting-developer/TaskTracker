@@ -3,10 +3,10 @@
 namespace Tests\Feature;
 
 use App\Authorization\ProjectAccess;
+use App\Database\ProjectAclUpgrade;
 use App\Domain\DomainError;
 use App\Models\User;
 use App\Repositories\RecordStore;
-use App\Services\ProjectAclUpgrade;
 use App\Services\WorkspaceService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;

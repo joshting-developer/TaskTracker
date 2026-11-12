@@ -55,7 +55,7 @@ class AccountSessionBoundary
                 return $this->memberships->preview($input);
             }
             if (in_array($operation, ['workspaces', 'switchWorkspace', 'acceptWorkspaceInvite'], true)) {
-                $user = $request->user()?->fresh();
+                $user = $this->accounts->freshUser($request->user()?->getAuthIdentifier());
                 if (! $user) {
                     DomainError::fail('UNAUTHENTICATED', '請先登入');
                 }

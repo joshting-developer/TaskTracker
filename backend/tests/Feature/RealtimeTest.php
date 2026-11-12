@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Events\ProjectChanged;
 use App\Models\User;
+use App\Repositories\ProjectReadRepository;
 use App\Services\ProjectSignals;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
@@ -159,12 +160,12 @@ class RealtimeTest extends TestCase
         $this->enable();
         Event::fake([ProjectChanged::class]);
         DB::beginTransaction();
-        (new ProjectSignals($context))->changed($project['id']);
+        (new ProjectSignals($context, app(ProjectReadRepository::class)))->changed($project['id']);
         Event::assertNotDispatched(ProjectChanged::class);
         DB::rollBack();
         Event::assertNotDispatched(ProjectChanged::class);
         DB::beginTransaction();
-        (new ProjectSignals($context))->changed($project['id']);
+        (new ProjectSignals($context, app(ProjectReadRepository::class)))->changed($project['id']);
         Event::assertNotDispatched(ProjectChanged::class);
         DB::commit();
         Event::assertDispatchedTimes(ProjectChanged::class, 1);

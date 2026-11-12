@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Events\ProjectChanged;
-use App\Models\Project;
+use App\Repositories\ProjectReadRepository;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -13,9 +13,10 @@ class ProjectSignals
 {
     /** 保存可信Session的空間範圍。
      * @param  array  $context  後端重新取得的身分
+     * @param  ProjectReadRepository  $projects  同Workspace專案訊號候選
      * @return void
      */
-    public function __construct(private array $context) {}
+    public function __construct(private array $context, private ProjectReadRepository $projects) {}
 
     /** 在交易commit後才派送；rollback不執行，Redis故障只記受控log。
      * @param  string  $projectId  已完成寫入的專案ID
@@ -44,8 +45,7 @@ class ProjectSignals
         if (config('broadcasting.default') !== 'reverb') {
             return;
         }
-        $projects = Project::whereHas('workspace', fn ($query) => $query->where('public_id', $this->context['workspace']['id']))
-            ->orderBy('id')->select('public_id')->cursor();
+        $projects = $this->projects->signalTargets($this->context['workspace']['id']);
         foreach ($projects as $project) {
             $this->changed($project->public_id);
         }

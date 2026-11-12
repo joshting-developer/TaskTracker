@@ -4,6 +4,7 @@ namespace App\Factories;
 
 use App\Authorization\ProjectAccess;
 use App\Authorization\WorkspaceOperationAccess;
+use App\Repositories\ProjectReadRepository;
 use App\Repositories\RecordStore;
 use App\Repositories\TimeReportRepository;
 use App\Services\IssueService;
@@ -30,8 +31,9 @@ final class WorkspaceOperationServices
      * @param  RecordStore  $store  已限定目前Workspace的資料入口
      * @param  array<string,mixed>  $workspaceSession  交易內由Session重驗的身分、工作區與權限
      * @param  TimeReportRepository  $timeReports  工時分析查詢（無租戶狀態）
+     * @param  ProjectReadRepository  $projects  訊號目標專案資料入口
      */
-    public function __construct(public readonly RecordStore $store, public readonly array $workspaceSession, private TimeReportRepository $timeReports) {}
+    public function __construct(public readonly RecordStore $store, public readonly array $workspaceSession, private TimeReportRepository $timeReports, private ProjectReadRepository $projects) {}
 
     /**
      * 取得或建立指定協作者並記錄名稱。
@@ -154,6 +156,6 @@ final class WorkspaceOperationServices
      */
     public function signals(): ProjectSignals
     {
-        return $this->once('signals', fn () => new ProjectSignals($this->workspaceSession));
+        return $this->once('signals', fn () => new ProjectSignals($this->workspaceSession, $this->projects));
     }
 }

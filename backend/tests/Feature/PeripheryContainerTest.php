@@ -6,6 +6,7 @@ use App\Console\Commands\ImportLegacy;
 use App\Events\ProjectChanged;
 use App\Factories\SmtpTransportFactory;
 use App\Factories\TodosFactory;
+use App\Repositories\ProjectReadRepository;
 use App\Services\AccountService;
 use App\Services\ProjectSignals;
 use App\Services\SmtpService;
@@ -97,7 +98,7 @@ class PeripheryContainerTest extends TestCase
         config(['broadcasting.default' => 'reverb']);
         Event::fake([ProjectChanged::class]);
         foreach ([['ws-a', 'project-a'], ['ws-b', 'project-b'], ['ws-a', 'project-c']] as [$workspace, $project]) {
-            DB::transaction(fn () => (new ProjectSignals(['workspace' => ['id' => $workspace], 'user' => ['id' => 'u']]))->changed($project));
+            DB::transaction(fn () => (new ProjectSignals(['workspace' => ['id' => $workspace], 'user' => ['id' => 'u']], app(ProjectReadRepository::class)))->changed($project));
         }
         $channels = [];
         Event::assertDispatched(ProjectChanged::class, function (ProjectChanged $event) use (&$channels) {

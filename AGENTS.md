@@ -273,3 +273,8 @@ issue-changes項目附externalRefs；syncUntil往前退settle秒（預設10，TA
 ### 2026-11-12 TT-176 來源參照與回音
 
 公開寫入可帶選填`X-Client-Reference`（只進integration_audits，不進卡片或receipt簽章）；稽核記resource_revision，issue-changes附`lastWrite`（僅目前revision由公開API寫入時有值，sameToken／sameUser，不揭露他人Token）。批次逐項稽核；補送沿receipt不重複。OpenAPI0.9.0，migration新增稽核欄位，見docs/public-source-audit-echo.md。
+
+
+## 2026-11-12 TT-262 嚴格分層交付
+
+Controller穩定依賴已改建構子注入，公開Project／Issue／Changes查詢分責；帳號／PAT／稽核／訊號資料存取經Repository。歷史升級工具移至App\Database，不是一般Service例外。AST與Container／無初始化SQL門檻隨測試執行，詳見[分層交付](docs/strict-layering-delivery-2026-11-12.md)。既有WorkspaceTransaction、動態scope Factory與User→Workspace鎖保留；其餘領域寫入Request／DTO仍由TT-246承接。

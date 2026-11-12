@@ -12,17 +12,23 @@ use App\Http\WorkspaceRpc;
 class ApiController extends Controller
 {
     /**
+     * 注入此Controller共用的交易邊界與應用用例，不在建構時取得租戶或查詢。
+     *
+     * @param  WorkspaceRpc  $rpc  此Controller的穩定協作者
+     */
+    public function __construct(private WorkspaceRpc $rpc) {}
+
+    /**
      * 對未知或已停用操作套用一致的登入與JSON錯誤契約。
      *
      * @param  JsonOperationRequest  $request  目前HTTP請求與Session
      * @param  string  $operation  已允許的操作名稱
-     * @param  WorkspaceRpc  $rpc  舊RPC分派與交易邊界
      * @return ApiResponse
      */
-    public function unknown(JsonOperationRequest $request, string $operation, WorkspaceRpc $rpc): ApiResponse
+    public function unknown(JsonOperationRequest $request, string $operation): ApiResponse
     {
         $input = $request->payload();
 
-        return new ApiResponse($rpc->execute($request, $operation, $input));
+        return new ApiResponse($this->rpc->execute($request, $operation, $input));
     }
 }

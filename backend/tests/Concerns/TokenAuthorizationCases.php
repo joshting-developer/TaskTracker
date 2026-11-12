@@ -13,6 +13,7 @@ use App\Models\Project;
 use App\Models\ProjectMember;
 use App\Models\User;
 use App\Models\WorkspaceMember;
+use App\Repositories\IntegrationAuditRepository;
 use App\Services\Integrations\IntegrationAudits;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -98,7 +99,7 @@ trait TokenAuthorizationCases
         }, $project['id']));
         $this->assertSame('accepted', $projectModel->fresh()->description);
         $this->assertSame($count, IntegrationAudit::count());
-        $this->app->instance(IntegrationAudits::class, new class extends IntegrationAudits
+        $this->app->instance(IntegrationAudits::class, new class(app(IntegrationAuditRepository::class)) extends IntegrationAudits
         {
             /**
              * 寫入來源後故意失敗，確認業務與稽核都不能部分提交。

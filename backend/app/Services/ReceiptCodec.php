@@ -17,16 +17,12 @@ class ReceiptCodec
     public const GZIP_V1 = 'gzip-v1';
 
     /**
-     * 建立編碼設定；未指定時讀config。
+     * 接受明確覆寫值；未指定時每次編碼讀目前config，避免長駐協作者凍結設定。
      *
      * @param  string|null  $codec  寫入用codec（json＝不編碼）
      * @param  int|null  $minBytes  啟用編碼的最小JSON bytes
      */
-    public function __construct(private ?string $codec = null, private ?int $minBytes = null)
-    {
-        $this->codec ??= (string) config('tasktracker.receipts.codec', 'json');
-        $this->minBytes ??= (int) config('tasktracker.receipts.min_bytes', 4096);
-    }
+    public function __construct(private ?string $codec = null, private ?int $minBytes = null) {}
 
     /**
      * 依設定把原結果轉為可存入JSON欄位的值；小結果或壓縮收益不足時原樣保存。
@@ -37,11 +33,13 @@ class ReceiptCodec
      */
     public function encode(array $result, bool $force = false): array
     {
-        if (! $force && $this->codec !== self::GZIP_V1) {
+        $codec = $this->codec ?? (string) config('tasktracker.receipts.codec', 'json');
+        $minBytes = $this->minBytes ?? (int) config('tasktracker.receipts.min_bytes', 4096);
+        if (! $force && $codec !== self::GZIP_V1) {
             return $result;
         }
         $json = json_encode($result, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
-        if (strlen($json) < $this->minBytes) {
+        if (strlen($json) < $minBytes) {
             return $result;
         }
         $envelope = [self::MARKER => self::GZIP_V1, 'sha256' => hash('sha256', $json), 'bytes' => strlen($json), 'data' => base64_encode(gzencode($json, 6))];
