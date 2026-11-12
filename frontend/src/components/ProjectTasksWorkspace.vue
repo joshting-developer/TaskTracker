@@ -29,6 +29,8 @@ const busy = computed(() => Boolean(archiving.value || issueTool.value?.saving |
 const dirty = computed(() => Boolean(issueTool.value?.dirty || detailTool.value?.dirty || boardTool.value?.dirty));
 let detailRequest, optionRequest, detailGeneration = 0, optionGeneration = 0, alive = true;
 const rows = shallowRef([]);
+// 拖曳中或移動送出中暫停背景換列，避免輪詢／即時通知把卡片換回舊位置或中斷拖曳。
+const dragging = ref(false), holdBackground = shallowRef(false);
 const detailRows = computed(() => unique([...(detail.value?.references || []), ...(editor.value?.issue?.references || []), ...candidates.value, ...rows.value, ...(detail.value ? [detail.value] : [])]));
 const contextRows = computed(() => unique([...rows.value.map(row => row.epic).filter(Boolean), ...rows.value]));
 const memberNames = computed(() => unique([...members.value, ...rows.value.filter(row => row.assignee).map(row => ({ id: row.assignee, name: row.assigneeName })), ...(detail.value?.assignee ? [{ id: detail.value.assignee, name: detail.value.assigneeName }] : [])]));
@@ -41,11 +43,21 @@ const localScope = computed(() => props.scope), pageView = computed(() => props.
 const filters = useIssueQuery({ remote: computed(() => props.mode === 'list'), project: computed(() => props.project), issues: computed(() => unique([...contextRows.value, ...candidates.value])), boardIssues: rows,
   members: memberNames, userId: computed(() => props.userId), today: computed(() => props.today), view: pageView, scope: localScope, projectId: computed(() => props.project.id) });
 const filterInput = filters.filterInput;
-const data = useProjectTaskQueries({ onDetail: loadDetail, detailMode: computed(() => Boolean(props.issueId && props.detailPage)), projectId: computed(() => props.project.id), boardId: computed(() => props.boardId), mode: computed(() => props.mode), context: scopeKey, rows, listQuery: computed(() => ({...filterInput.value, scope: props.scope, page: filters.page.value, perPage: 20})), blocked: computed(() => busy.value || dirty.value), onProject: value => emit('project', value), onError: handleFailure, onSuccess: () => { error.value = ''; } });
+const data = useProjectTaskQueries({ onDetail: loadDetail, detailMode: computed(() => Boolean(props.issueId && props.detailPage)), projectId: computed(() => props.project.id), boardId: computed(() => props.boardId), mode: computed(() => props.mode), context: scopeKey, rows, listQuery: computed(() => ({...filterInput.value, scope: props.scope, page: filters.page.value, perPage: 20})), blocked: computed(() => busy.value || dirty.value), hold: holdBackground, onProject: value => emit('project', value), onError: handleFailure, onSuccess: () => { error.value = ''; } });
 const { board, boardPage, issuePage, listPage, listSearch, loading, loadingCards, pageVisible, reload } = data;
 watch(issuePage, value => { if (value && filters.page.value > value.lastPage) filters.page.value = value.lastPage; });
-const transition = useIssueTransitions({ canWrite, contextKey: scopeKey, saved: async () => { await reload(); if (detail.value) await loadDetail(); }, refresh: async () => { await reload(); if (detail.value) await loadDetail(); }, onError: value => { error.value = value; } });
+const transition = useIssueTransitions({ canWrite, contextKey: scopeKey, saved: async () => { await reload(); if (detail.value) await loadDetail(); }, refresh: async () => { await reload(); if (detail.value) await loadDetail(); }, onError: value => { error.value = value; }, apply: applyMove });
 const moving = transition.moving;
+watch([dragging, moving], () => { holdBackground.value = dragging.value || Boolean(moving.value); }, { flush: 'sync' });
+watch(scopeKey, () => { dragging.value = false; });
+/** 拖曳放下即先移動卡片；失敗時若列仍是本次套用的版本才還原，避免覆蓋之後的伺服器資料。 */
+function applyMove(issue, fields) {
+  const original = rows.value.find(row => row.id === issue.id);
+  if (!original) return undefined;
+  const moved = { ...original, ...fields };
+  rows.value = rows.value.map(row => row === original ? moved : row);
+  return () => { if (rows.value.includes(moved)) rows.value = rows.value.map(row => row === moved ? original : row); };
+}
 defineExpose({ create: prepareEditor, dirty, saving: computed(() => busy.value || Boolean(moving.value)), refresh: reload });
 const realtime = useBoardRealtime({ active: computed(() => props.mode === 'board' && !props.detailPage && pageVisible.value), userId: computed(() => props.userId), workspaceId: computed(() => props.workspaceId), projectId: computed(() => props.project.id), refresh: () => reload(false) });
 
@@ -164,7 +176,7 @@ onBeforeUnmount(() => { alive = false; optionGeneration++; optionRequest?.abort(
         <header class="selected-board-heading"><div class="selected-board-identity"><button class="navigation-back" @click="emit('list')"><Icon name="chevron" :size="16" />返回看板列表</button><h3>{{ board.name }}</h3></div><div v-if="!board.isDefault && canManage" class="selected-board-actions"><button class="button secondary" @click="editBoard(board)">編輯收錄</button><button class="text-button danger-text" @click="archive">移除看板</button></div></header>
         <IssueFilters v-model:expanded="filtersExpanded" :lookup="lookup" :lookup-context="project.id" @option="rememberOption" v-model="filterInput" :states="filters.projectStates.value" :members="memberNames" :issues="contextRows" :active-filter-chips="filters.activeFilterChips.value" :filter-warnings="[]" @remove="filters.removeFilter" @clear="filters.clearFilters" />
         <p v-if="loadingCards" role="status">載入卡片中…</p>
-        <ProjectBoard v-if="!loadingCards || rows.length" :project="project" :issues="contextRows" :visible-issues="filters.visibleIssues.value" :entries="[]" :members="memberNames" :user-id="userId" :today="today" :board-key="boardId" :sync-state="realtime" :can-write="canWrite" :can-create="canWrite && (board.isDefault || canManage)" :moving="moving" @open="(issue, full) => emit('issue', issue, full)" @move="transition.moveIssue" @create="defaults => prepareEditor(null, defaults)" />
+        <ProjectBoard v-if="!loadingCards || rows.length" :project="project" :issues="contextRows" :visible-issues="filters.visibleIssues.value" :entries="[]" :members="memberNames" :user-id="userId" :today="today" :board-key="boardId" :sync-state="realtime" :can-write="canWrite" :can-create="canWrite && (board.isDefault || canManage)" :moving="moving" @open="(issue, full) => emit('issue', issue, full)" @drag="value => { dragging = value; }" @move="transition.moveIssue" @create="defaults => prepareEditor(null, defaults)" />
       </section>
     </template>
     <BoardDialog v-if="boardEditor" ref="boardTool" :project="project" :issues="[]" :board="boardEditor.board" :remote="true" @close="boardEditor = null" @saved="savedBoard" @reload="reload" />

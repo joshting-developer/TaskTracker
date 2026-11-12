@@ -107,6 +107,7 @@ try {
     const destination = page.getByRole('region', { name: '泳道 會員功能第一版', exact: true }).locator('[data-column="inprogress"]');
     await page.locator(`[data-issue="${otherEpic.identifier}"]`).dragTo(destination, { sourcePosition: { x: 10, y: 10 }, targetPosition: { x: 5, y: 5 } });
     await page.locator(`[data-column="inprogress"] [data-issue="${otherEpic.identifier}"]`).waitFor();
+    await page.locator('.issue-card.moving').waitFor({ state: 'detached' }); // 卡片先移到目標欄，等送出完成
     const moved = (await call(page, 'getWorkspace')).issues.find(issue => issue.id === otherEpic.id); assert.equal(moved.epicId, ''); assert.equal(moved.state, 'inprogress');
     await page.goto(boardUrl); await page.getByLabel('看板泳道').waitFor(); assert.equal(await page.getByLabel('看板泳道').inputValue(), 'epic', '看板偏好獨立保存');
     await page.addInitScript(() => { Storage.prototype.getItem = () => { throw new Error('storage disabled'); }; Storage.prototype.setItem = () => { throw new Error('storage disabled'); }; });

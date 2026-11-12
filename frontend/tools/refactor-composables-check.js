@@ -59,6 +59,31 @@ assert.deepEqual(saved, ['i'], '離頁後不呼叫已卸載畫面');
 assert.equal(transitions.moving.value, '');
 console.log('PASS: 任務篩選／移除狀態／分頁收斂、重試識別、送出防重複、跨工作區與卸載過期回應');
 
+// 拖曳立即套用：失敗還原並提示，衝突先還原再重讀；成功不還原；換範圍後的舊失敗不還原新畫面。
+{
+  const scope = effectScope(), key = shallowRef('u:w:p'), log = [];
+  let outcome = 'fail', release;
+  const moves = scope.run(() => useIssueTransitions({
+    contextKey: key, canWrite: shallowRef(true), saved: async () => log.push('saved'), refresh: async () => log.push('refresh'), onError: message => log.push(`error:${message}`),
+    apply: (issue, fields) => { log.push(`apply:${fields.state}`); return () => log.push('rollback'); },
+    update: () => new Promise((resolve, reject) => { release = () => outcome === 'ok' ? resolve({ id: 'm' }) : reject(Object.assign(new Error(outcome === 'conflict' ? '任務已被更新' : '儲存失敗'), { code: outcome === 'conflict' ? 'REVISION_CONFLICT' : 'HTTP_ERROR' })); }),
+  }));
+  const card = { id: 'm', revision: 1, state: 'open' };
+  let pendingMove = moves.moveIssue(card, { state: 'closed' });
+  assert.deepEqual(log, ['apply:closed'], '送出前已套用');
+  assert.equal(moves.moving.value, 'm');
+  release(); await pendingMove;
+  assert.deepEqual(log.splice(0), ['apply:closed', 'rollback', 'error:儲存失敗']);
+  outcome = 'conflict'; pendingMove = moves.moveIssue(card, { state: 'closed' }); release(); await pendingMove;
+  assert.deepEqual(log.splice(0), ['apply:closed', 'rollback', 'refresh', 'error:任務已被更新, 清單已更新']);
+  outcome = 'ok'; pendingMove = moves.moveIssue(card, { state: 'closed' }); release(); await pendingMove;
+  assert.deepEqual(log.splice(0), ['apply:closed', 'saved'], '成功不還原');
+  outcome = 'fail'; pendingMove = moves.moveIssue({ ...card, revision: 2 }, { state: 'closed' }); key.value = 'u:other:p'; release(); await pendingMove;
+  assert.deepEqual(log.splice(0), ['apply:closed'], '換範圍後不還原、不提示');
+  scope.stop();
+  console.log('PASS: 拖曳立即套用、失敗／衝突還原、成功保留與跨範圍不還原');
+}
+
 // 一般重讀可合併，寫入後／即時訊號要尾端再讀；跨scope不等舊請求。
 const { useRefreshQueue } = await import('../src/composables/useRefreshQueue.js');
 const refreshScope = effectScope();

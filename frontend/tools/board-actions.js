@@ -1,5 +1,6 @@
 // 使用真實看板互動；保留所在Epic泳道，只把卡片拖到指定狀態欄。
-export async function moveBoardCard(page, identifier, state) {
+// 放下後卡片會先移到目標欄；預設再等送出完成（無送出中卡片），settle:false供刻意攔住寫入的測試。
+export async function moveBoardCard(page, identifier, state, { settle = true } = {}) {
   const card = page.locator(`.issue-card[data-issue="${identifier}"]`);
   const lane = page.locator('.board-lane').filter({ has: card });
   const target = lane.locator(`[data-column="${state}"]`);
@@ -10,8 +11,10 @@ export async function moveBoardCard(page, identifier, state) {
     // 長欄位在卡片旁邊落下，不要求拖回欄位最上方。
     const y = Math.max(5, Math.min(targetBox.height - 5, sourceBox.y + 10 - targetBox.y));
     await card.dragTo(target, { sourcePosition: { x: 10, y: 10 }, targetPosition: { x: 10, y } });
-    try { await target.locator(`[data-issue="${identifier}"]`).waitFor({ timeout: attempt ? 15000 : 4000 }); return; }
-    catch (failure) { if (attempt) throw failure; }
+    try { await target.locator(`[data-issue="${identifier}"]`).waitFor({ timeout: attempt ? 15000 : 4000 }); }
+    catch (failure) { if (attempt) throw failure; continue; }
+    if (settle) await page.locator('.issue-card.moving').waitFor({ state: 'detached', timeout: 15000 });
+    return;
   }
 }
 

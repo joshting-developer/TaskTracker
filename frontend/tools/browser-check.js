@@ -365,7 +365,8 @@ async function checkProjectAcl(page, browser, failures) {
   page.once('dialog', dialog => dialog.accept());
   await members.getByRole('button', { name: '移除成員 Mei', exact: true }).click();
   await members.getByText('成員設定版本 3', { exact: false }).waitFor();
-  assert.equal(await members.getByRole('button', { name: '編輯成員 Mei', exact: true }).count(), 0);
+  // 版本與分頁成員清單分開重讀，等清單也更新後才判定。
+  await members.getByRole('button', { name: '編輯成員 Mei', exact: true }).waitFor({ state: 'detached' });
   const preserved = await page.evaluate(async id => (await (await import('/src/api/index.js')).api.getWorkspace()).issues.find(issue => issue.id === id), fixture.task.id);
   assert.equal(preserved.title, '受保護的開發卡片');
   await teammate.close();
@@ -489,6 +490,7 @@ async function checkBoardWorkflow(page) {
   await firstLane.getByRole('button', { name: '從泳道新增的工作', exact: true }).waitFor();
   await firstLane.locator('[data-issue="VISUAL-3"][draggable="true"]').dragTo(secondLane.locator('[data-column="inprogress"]'), { sourcePosition: { x: 10, y: 10 }, targetPosition: { x: 5, y: 5 } });
   await secondLane.locator('[data-column="inprogress"] [data-issue="VISUAL-3"]').waitFor();
+  await page.locator('.issue-card.moving').waitFor({ state: 'detached' }); // 卡片先移到目標欄，等送出完成
   const task = await page.evaluate(async () => (await (await import('/src/api/index.js')).api.getWorkspace()).issues.find(issue => issue.identifier === 'VISUAL-3'));
   assert.equal(task.epicId, second.id);
   assert.equal(task.state, 'inprogress');
@@ -949,6 +951,8 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   assert.equal(await teammate.getByLabel('投入小時', { exact: true }).inputValue(), '2', '工時版本衝突保留草稿');
   teammate.once('dialog', dialog => dialog.accept());
   await teammate.getByRole('button', { name: '關閉工時面板', exact: true }).click();
+  // 衝突後月曆會重讀；等列表出現另一分頁的版本再編輯，避免點到重讀前的舊列。
+  await teammate.locator('.time-entry').filter({ hasText: '另一個分頁已更新' }).waitFor();
   await teammate.getByRole('button', { name: /^修改工時 / }).click();
   assert.equal(await teammate.getByLabel('工時說明').inputValue(), '另一個分頁已更新');
   await teammate.getByLabel('投入小時', { exact: true }).fill('2');
@@ -1109,6 +1113,7 @@ try {
   await page.locator('.board-cell[data-column="closed"] [data-issue="DEMO-3"]').waitFor();
   await page.locator('[data-issue="DEMO-4"][draggable="true"]').dragTo(page.locator('.board-cell[data-column="open"]'), { sourcePosition: { x: 10, y: 10 }, targetPosition: { x: 5, y: 5 } });
   await page.locator('.board-cell[data-column="open"] [data-issue="DEMO-4"]').waitFor();
+  await page.locator('.issue-card.moving').waitFor({ state: 'detached' }); // 卡片先移到目標欄，等送出完成
   await page.screenshot({ path: 'artifacts/desktop-board.png', fullPage: true });
   const boardUrl = page.url();
   assert.ok(boardUrl.endsWith('/board'), '看板有獨立網址');

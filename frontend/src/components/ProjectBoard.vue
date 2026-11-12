@@ -6,7 +6,7 @@ import { buildIssueIndex } from '../domain/issueIndex.js';
 import { isClosed, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
 const props = defineProps({ syncState: { type: String, default: 'polling' }, project: Object, issues: Array, visibleIssues: Array, entries: Array, members: Array, userId: String, moving: String, today: String, boardKey: String, includedEpicIds: Array, canWrite: { type: Boolean, default: true }, canCreate: { type: Boolean, default: true } });
-const emit = defineEmits(['open', 'move', 'create']);
+const emit = defineEmits(['open', 'move', 'create', 'drag']);
 const group = ref('none');
 const density = ref('comfortable');
 const collapsed = ref([]);
@@ -68,17 +68,18 @@ function keyboardEdit(issue, event) {
   event.preventDefault(); edit(issue);
 }
 watch(() => props.moving, clearReading);
-onBeforeUnmount(clearReading);
+onBeforeUnmount(() => { clearReading(); emit('drag', false); });
 function toggle(id) { collapsed.value = collapsed.value.includes(id) ? collapsed.value.filter(item => item !== id) : [...collapsed.value, id]; }
 function memberName(id) { return membersById.value.get(id) || id || '未指派'; }
 function option(items, id) { return items.find(item => item.id === id); }
 function overdue(issue) { return issue.dueDate && issue.dueDate < props.today && !isClosed(issue); }
-function startDrag(event, issue) { clearReading(); event.dataTransfer.setData('text/plain', issue.id); event.dataTransfer.effectAllowed = 'move'; }
+function startDrag(event, issue) { clearReading(); emit('drag', true); event.dataTransfer.setData('text/plain', issue.id); event.dataTransfer.effectAllowed = 'move'; }
 function drop(event, state, lane) {
   dragOver.value = '';
-  if (props.moving || !props.canWrite) return;
-  const issue = props.visibleIssues.find(item => item.id === event.dataTransfer.getData('text/plain'));
+  const issue = !props.moving && props.canWrite && props.visibleIssues.find(item => item.id === event.dataTransfer.getData('text/plain'));
   if (issue) emit('move', issue, { state, ...(group.value === 'epic' && issue.type !== 'epic' ? { epicId: lane.id } : {}) });
+  // 先送move讓送出中狀態接手暫停，再解除拖曳；卡片被樂觀移動後dragend可能不會觸發。
+  emit('drag', false);
 }
 </script>
 
@@ -102,7 +103,7 @@ function drop(event, state, lane) {
           </header>
           <div v-if="group === 'none' || !collapsed.includes(lane.id)" class="lane-columns">
             <div v-for="state in states" :key="state.id" class="board-cell" :class="{ 'drag-over': dragOver === `${lane.id}:${state.id}` }" :data-column="state.id" @dragover.prevent="dragOver = `${lane.id}:${state.id}`" @dragleave.self="dragOver = ''" @drop.prevent="drop($event, state.id, lane)">
-              <article v-for="issue in lane.columns.get(state.id)" :key="issue.id" class="issue-card" :class="{ moving: moving === issue.id }" :draggable="canWrite && !moving" :data-issue="issue.identifier" tabindex="0" :aria-label="`${issue.identifier} ${issue.title} · ${state.label}`" @dblclick="edit(issue, $event)" @keydown.f2="keyboardEdit(issue, $event)" @dragstart="startDrag($event, issue)" @dragend="dragOver = ''">
+              <article v-for="issue in lane.columns.get(state.id)" :key="issue.id" class="issue-card" :class="{ moving: moving === issue.id }" :draggable="canWrite && !moving" :data-issue="issue.identifier" tabindex="0" :aria-label="`${issue.identifier} ${issue.title} · ${state.label}`" @dblclick="edit(issue, $event)" @keydown.f2="keyboardEdit(issue, $event)" @dragstart="startDrag($event, issue)" @dragend="dragOver = ''; emit('drag', false)">
                 <div class="card-top"><span class="identifier">{{ issue.identifier }}</span><span class="type-tag">{{ option(TYPES, issue.type)?.label }}</span><span v-if="density === 'comfortable'" class="priority-label" :style="{ '--priority-color': option(PRIORITIES, issue.priority)?.color }" :title="`優先級：${option(PRIORITIES, issue.priority)?.label}`"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span></span><button v-if="canWrite" type="button" class="icon-button card-edit" :aria-label="`編輯 ${issue.identifier}`" title="編輯任務（也可雙擊卡片或按 F2）" :disabled="Boolean(moving)" @click="clearReading(); emit('open', issue, false)"><Icon name="edit" :size="15" /></button></div>
                 <button class="card-title" @click="read(issue, $event)">{{ issue.title }}</button>
                 <p v-if="density === 'comfortable' && issue.description" class="board-card-description">{{ issue.description }}</p>

@@ -4,11 +4,15 @@ import { usePolling } from './usePolling.js';
 import { pollIntervals } from '../ui/pollingConfig.js';
 
 /** 專案任務查詢與備援生命週期；不管理編輯表單或DOM操作。 */
-export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId, mode, context, blocked, onProject, onError, onSuccess, listQuery, rows = shallowRef([]) }) {
+export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId, mode, context, blocked, onProject, onError, onSuccess, listQuery, rows = shallowRef([]), hold = shallowRef(false) }) {
   const board = shallowRef(null), boardPage = shallowRef(null), issuePage = shallowRef(null);
   const listPage = ref(1), listSearch = ref(''), loading = ref(false), loadingCards = ref(false);
-  let generation = 0, request, debounce;
+  let generation = 0, request, debounce, silent = false, deferred = false;
   async function reload(showLoading = true) {
+    // 拖曳或移動送出中不換掉列資料：背景重讀（輪詢／即時通知）延後到解除後補一次。
+    if (!showLoading && hold.value) { deferred = true; return; }
+    if (showLoading) deferred = false;
+    silent = !showLoading;
     const contentAllowed = !blocked.value;
     const current = ++generation;
     request?.abort(); request = new AbortController();
@@ -49,7 +53,7 @@ export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId
       }
       poller.report(null); onSuccess?.();
     } catch (failure) { if (current === generation) { poller.report(failure); if (['UNAUTHENTICATED','FORBIDDEN','NOT_FOUND','WORKSPACE_CHANGED'].includes(failure.code)) { rows.value = []; boardPage.value = null; board.value = null; } onError(failure); } }
-    finally { if (current === generation) { loading.value = false; loadingCards.value = false; } }
+    finally { if (current === generation) { silent = false; loading.value = false; loadingCards.value = false; } }
   }
   const poller = usePolling({
     task: () => reload(false),
@@ -57,7 +61,11 @@ export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId
     // 只中止請求，讓同一世代的finally仍可收回loading狀態。
     onPause: () => request?.abort(),
   });
-  watch(context, () => { rows.value = []; boardPage.value = null; board.value = null; listPage.value = 1; reload(); poller.start(); }, { immediate: true });
+  watch(hold, value => {
+    if (value && silent) { generation++; request?.abort(); silent = false; loadingCards.value = false; deferred = true; }
+    else if (!value && deferred) { deferred = false; reload(false); }
+  });
+  watch(context, () => { deferred = false; rows.value = []; boardPage.value = null; board.value = null; listPage.value = 1; reload(); poller.start(); }, { immediate: true });
   watch([listPage, listSearch], () => { clearTimeout(debounce); debounce = setTimeout(() => reload(), 250); });
   watch(() => mode.value === 'list' ? JSON.stringify(listQuery.value) : '', () => { if (mode.value !== 'list') return; clearTimeout(debounce); debounce = setTimeout(() => reload(), 250); });
   onScopeDispose(() => { generation++; request?.abort(); clearTimeout(debounce); });
