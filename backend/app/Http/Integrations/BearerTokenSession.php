@@ -97,16 +97,41 @@ class BearerTokenSession
      */
     public function writeOnce(Request $request, string $operation, array $input, Closure $authorize, Closure $use, string $projectId): array
     {
-        return $this->run($request, true, function (TokenContext $token) use ($operation, $input, $authorize, $use) {
+        $reference = $this->clientReference($request);
+
+        return $this->run($request, true, function (TokenContext $token) use ($operation, $input, $authorize, $use, $reference) {
             $authorize($token);
 
-            return $this->replay->execute($this->stores->forContext($token->workspace), 'requests', $token->workspace->userId, $operation, $input, function () use ($token, $operation, $use) {
+            return $this->replay->execute($this->stores->forContext($token->workspace), 'requests', $token->workspace->userId, $operation, $input, function () use ($token, $operation, $use, $reference) {
                 $result = $use($token);
-                $this->audits->append($token->workspace, $operation, $result['id'] ?? null, $token);
+                // 批次逐項記錄成功寫入；重播不會進到這裡，所以補送不重複來源。
+                $writes = isset($result['items']) ? array_filter($result['items'], fn ($item) => in_array($item['status'], ['created', 'updated'], true)) : [$result];
+                foreach ($writes as $write) {
+                    $this->audits->append($token->workspace, $operation, $write['id'] ?? null, $token, $write['revision'] ?? null, $reference);
+                }
 
                 return $result;
             });
         }, $projectId, 'issue.write');
+    }
+
+    /**
+     * TT-176：選填X-Client-Reference（外部run等參照），只進來源稽核，不進卡片或receipt簽章。
+     *
+     * @param  Request  $request  Bearer請求
+     * @return string|null 已驗參照
+     */
+    private function clientReference(Request $request): ?string
+    {
+        $value = $request->header('X-Client-Reference');
+        if ($value === null || $value === '') {
+            return null;
+        }
+        if (! is_string($value) || preg_match('/^[A-Za-z0-9._:\/@#-]{1,120}$/', $value) !== 1) {
+            DomainError::fail('INVALID_INPUT', 'X-Client-Reference只接受英數與._:/@#-，最多120字');
+        }
+
+        return $value;
     }
 
     /**

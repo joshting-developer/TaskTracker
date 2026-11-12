@@ -242,4 +242,48 @@ trait PublicExternalRefCases
         $this->assertContains($late->public_id, $next->all(), '邊界內較晚提交不遺漏');
         $this->assertContains($linked['id'], $next->all(), '重讀緩衝內項目，由客戶端以id／revision去重');
     }
+
+    /**
+     * TT-176：X-Client-Reference只進來源稽核；補送不重複；lastWrite只在目前revision由公開API寫入時出現，Web修改後清空；批次逐項稽核。
+     *
+     * @return void
+     */
+    public function test_client_reference_audit_and_echo_detection(): void
+    {
+        [$project, $plain] = $this->externalFixture('ECH');
+        $other = $this->tokenIssue(['abilities' => ['write']])['plainTextToken'];
+        $headers = fn (string $token, ?string $ref = null) => ['Authorization' => 'Bearer '.$token, ...($ref ? ['X-Client-Reference' => $ref] : [])];
+        $input = ['title' => 'from run', 'requestId' => (string) Str::uuid()];
+        Auth::forgetGuards();
+        $card = $this->putJson('/api/public/v1/projects/'.$project['id'].'/issues/external/ci/run-1', $input, $headers($plain, 'run-42/step#1'))->assertOk()->json('data');
+        $audits = IntegrationAudit::where('resource_id', $card['id'])->count();
+        Auth::forgetGuards();
+        $this->putJson('/api/public/v1/projects/'.$project['id'].'/issues/external/ci/run-1', $input, $headers($plain, 'other-run'))->assertOk();
+        $this->assertSame($audits, IntegrationAudit::where('resource_id', $card['id'])->count(), '同requestId補送不新增來源');
+        $audit = IntegrationAudit::where('resource_id', $card['id'])->sole();
+        $this->assertSame(['run-42/step#1', 1], [$audit->client_reference, $audit->resource_revision]);
+        Auth::forgetGuards();
+        $this->putJson('/api/public/v1/projects/'.$project['id'].'/issues/external/ci/run-2', ['title' => 'x', 'requestId' => (string) Str::uuid()], $headers($plain, 'bad ref with spaces'))->assertStatus(400);
+        $this->assertNull(Issue::where('title', 'x')->first(), '參照格式錯誤不寫入');
+        $this->getJson('/api/v1/personal-token-audits')->assertOk()->assertJsonPath('data.items.0.clientReference', 'run-42/step#1')->assertJsonPath('data.items.0.resourceRevision', 1);
+
+        $changes = function (string $token) use ($project) {
+            Auth::forgetGuards();
+
+            return collect($this->getJson('/api/public/v1/projects/'.$project['id'].'/issue-changes?perPage=100', ['Authorization' => 'Bearer '.$token])->assertOk()->json('data.items'))->keyBy('id');
+        };
+        $this->assertSame(['sameToken' => true, 'sameUser' => true, 'clientReference' => 'run-42/step#1'], $changes($plain)[$card['id']]['lastWrite']);
+        $this->assertSame(['sameToken' => false, 'sameUser' => true, 'clientReference' => 'run-42/step#1'], $changes($other)[$card['id']]['lastWrite']);
+
+        // Web（Session）修改產生新revision，沒有公開API來源 → 不是回音。
+        $this->postJson('/api/rpc/updateIssue', ['id' => $card['id'], 'title' => 'human edit', 'expectedRevision' => 1, 'requestId' => (string) Str::uuid()])->assertOk();
+        $this->assertNull($changes($plain)[$card['id']]['lastWrite']);
+
+        $batch = $this->batchUpsert($plain, $project['id'], ['requestId' => (string) Str::uuid(), 'items' => [
+            ['source' => 'ci', 'externalId' => 'b-1', 'title' => 'b1'], ['source' => 'ci', 'externalId' => 'b-2'], ['source' => 'ci', 'externalId' => 'b-3', 'title' => 'b3'],
+        ]])['data'];
+        $created = array_column(array_filter($batch['items'], fn ($item) => $item['status'] === 'created'), 'id');
+        $this->assertCount(2, $created);
+        $this->assertSame(2, IntegrationAudit::whereIn('resource_id', $created)->where('operation', 'public.v1.batchUpsertIssues')->count(), '批次逐項記錄成功寫入');
+    }
 }

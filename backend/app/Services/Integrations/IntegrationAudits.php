@@ -17,16 +17,18 @@ class IntegrationAudits
      * @param  string  $operation  伺服器固定operationId，不能用HTTP path或payload代替
      * @param  string|null  $resourceId  已授權資源識別，不含業務內容
      * @param  TokenContext|null  $token  Bearer來源；null代表Session管理操作
+     * @param  int|null  $revision  寫入後的資源revision，供回音辨識
+     * @param  string|null  $clientReference  外部系統提供的run等參照，已驗格式
      * @return void
      */
-    public function append(WorkspaceContext $workspace, string $operation, ?string $resourceId = null, ?TokenContext $token = null): void
+    public function append(WorkspaceContext $workspace, string $operation, ?string $resourceId = null, ?TokenContext $token = null, ?int $revision = null, ?string $clientReference = null): void
     {
         IntegrationAudit::create([
             'workspace_id' => Workspace::where('public_id', $workspace->workspaceId)->sole(['id'])->id,
             'actor_user_id' => $workspace->userId, 'source' => $token ? 'token' : 'session',
             'token_id' => $token?->tokenId, 'token_name' => $token?->tokenName,
             'abilities' => $token?->abilities ?? [], 'operation' => $operation,
-            'resource_id' => $resourceId, 'occurred_at' => now(),
+            'resource_id' => $resourceId, 'resource_revision' => $revision, 'client_reference' => $clientReference, 'occurred_at' => now(),
         ]);
     }
 
@@ -42,11 +44,12 @@ class IntegrationAudits
         $query = IntegrationAudit::where('actor_user_id', $context->userId)
             ->whereIn('workspace_id', Workspace::where('public_id', $context->workspaceId)->select('id'));
         $total = $query->count();
-        $items = $query->orderByDesc('id')->forPage($page, 20)->get(['id', 'actor_user_id', 'source', 'token_id', 'token_name', 'abilities', 'operation', 'resource_id', 'occurred_at']);
+        $items = $query->orderByDesc('id')->forPage($page, 20)->get(['id', 'actor_user_id', 'source', 'token_id', 'token_name', 'abilities', 'operation', 'resource_id', 'resource_revision', 'client_reference', 'occurred_at']);
 
         return ['items' => $items->map(fn ($row) => ['id' => (string) $row->id, 'userId' => $row->actor_user_id,
             'source' => $row->source, 'tokenId' => $row->token_id, 'tokenName' => $row->token_name,
             'abilities' => $row->abilities, 'operation' => $row->operation, 'resourceId' => $row->resource_id,
+            'resourceRevision' => $row->resource_revision, 'clientReference' => $row->client_reference,
             'occurredAt' => $row->occurred_at->utc()->toISOString()])->all(),
             'page' => $page, 'perPage' => 20, 'total' => $total, 'lastPage' => max(1, (int) ceil($total / 20))];
     }

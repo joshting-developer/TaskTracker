@@ -107,11 +107,13 @@ trait TokenAuthorizationCases
              * @param  string  $operation  固定用例識別
              * @param  string|null  $resourceId  目標識別
              * @param  TokenContext|null  $token  當次Token
+             * @param  int|null  $revision  寫入後revision
+             * @param  string|null  $clientReference  外部參照
              * @return void
              */
-            public function append(WorkspaceContext $workspace, string $operation, ?string $resourceId = null, ?TokenContext $token = null): void
+            public function append(WorkspaceContext $workspace, string $operation, ?string $resourceId = null, ?TokenContext $token = null, ?int $revision = null, ?string $clientReference = null): void
             {
-                parent::append($workspace, $operation, $resourceId, $token);
+                parent::append($workspace, $operation, $resourceId, $token, $revision, $clientReference);
                 DomainError::fail('CONFLICT', 'audit failure');
             }
         });

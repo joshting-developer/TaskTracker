@@ -162,4 +162,17 @@ curl --fail-with-body -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
 - **離開範圍**：撤銷Project權限時，整個Project回404，請停止同步並視情況封存本地資料。
   - 帶type／state等篩選時，卡片改成不符合條件後就不會再出現。要做鏡像同步，請不要帶篩選，或定期跑一次全量。
   - 全量對帳：讀完全部，把本輪沒出現的本地紀錄視為已離開範圍。
-- **回音辨識**：外部系統自己寫回的變更也會出現在增量裡。目前可用revision或externalRefs自行辨識，通用的來源與回音識別屬TT-176。
+- **回音辨識**：外部系統自己寫回的變更也會出現在增量裡。每個項目附`lastWrite`：
+  - 只有卡片目前的revision是由公開API寫入產生時才有值，並標出sameToken／sameUser。
+  - sameToken為true代表這是你自己的寫入，可以略過，避免同步來回循環。
+  - 之後若有人在Web修改，revision變大，lastWrite就變成null。
+  - 不揭露他人的Token或參照。
+
+## 來源參照與稽核
+
+公開寫入（建立、PATCH、留言、upsert、批次）可以帶選填標頭`X-Client-Reference`，放外部的run、工作或交付物參照，格式為英數與`._:/@#-`，最多120字，格式不符400。
+
+- 參照只寫入來源稽核，不進卡片內容，也不屬於requestId簽章。不要放密碼、Token或其他秘密。
+- 本人可在Session的`GET /api/v1/personal-token-audits`看到每筆成功寫入的operation、resourceId、resourceRevision與clientReference。
+- 補送：同requestId重送只回原結果，不新增稽核，所以補送保持同一個冪等身分。
+- 批次每個成功項目各記一筆稽核；失敗項目保存在該批次receipt的逐項結果，用原requestId重送即可取回。

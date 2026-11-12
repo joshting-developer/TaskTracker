@@ -269,3 +269,7 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 ### 2026-11-12 TT-173 同步語意
 
 issue-changes項目附externalRefs；syncUntil往前退settle秒（預設10，TASKTRACKER_SYNC_SETTLE_SECONDS）補讀較晚提交，客戶端依id／revision去重。目前沒有刪除／封存操作所以無tombstone，日後新增刪除須先提供刪除事件；離開範圍以不帶篩選或定期全量對帳偵測。OpenAPI0.8.0，見docs/public-sync-semantics.md。
+
+### 2026-11-12 TT-176 來源參照與回音
+
+公開寫入可帶選填`X-Client-Reference`（只進integration_audits，不進卡片或receipt簽章）；稽核記resource_revision，issue-changes附`lastWrite`（僅目前revision由公開API寫入時有值，sameToken／sameUser，不揭露他人Token）。批次逐項稽核；補送沿receipt不重複。OpenAPI0.9.0，migration新增稽核欄位，見docs/public-source-audit-echo.md。

@@ -124,8 +124,9 @@ class PublicQueriesController extends Controller
     public function changes(IssueChangesRequest $request, string $project, IssueChangeService $changes): ApiResponse
     {
         return new ApiResponse($this->tokens->read($request, function (TokenContext $token) use ($request, $project, $changes) {
-            $result = $changes->read($token->workspace, $project, $request->toChangesDto());
-            $result['items'] = IssueChangeResource::collection($result['items'])->resolve();
+            $result = $changes->read($token->workspace, $project, $request->toChangesDto(), $token->tokenId);
+            $result['items'] = array_map(fn ($item) => [...$item, 'lastWrite' => $result['lastWrites'][$item['id']] ?? null], IssueChangeResource::collection($result['items'])->resolve());
+            unset($result['lastWrites']);
 
             return $result;
         }));

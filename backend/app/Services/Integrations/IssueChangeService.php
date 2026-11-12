@@ -4,6 +4,7 @@ namespace App\Services\Integrations;
 
 use App\Data\IssueChangesQueryData;
 use App\Data\WorkspaceContext;
+use App\Repositories\IntegrationAuditReadRepository;
 use App\Repositories\IssueReadRepository;
 use App\Services\ProjectReadService;
 use Carbon\CarbonImmutable;
@@ -18,8 +19,9 @@ class IssueChangeService
      * @param  ProjectReadService  $projects  既有Project授權用例
      * @param  IssueReadRepository  $issues  共用篩選與最小投影
      * @param  IssueCursorCodec  $cursors  認證加密接續識別
+     * @param  IntegrationAuditReadRepository  $audits  來源稽核查詢（回音辨識）
      */
-    public function __construct(private ProjectReadService $projects, private IssueReadRepository $issues, private IssueCursorCodec $cursors) {}
+    public function __construct(private ProjectReadService $projects, private IssueReadRepository $issues, private IssueCursorCodec $cursors, private IntegrationAuditReadRepository $audits) {}
 
     /**
      * 組合當次Project授權、共用摘要查詢與cursor接續，不保存權限快照。
@@ -27,9 +29,10 @@ class IssueChangeService
      * @param  WorkspaceContext  $context  當次資格
      * @param  string  $projectId  Project公開ID
      * @param  IssueChangesQueryData  $query  已驗證的查詢
-     * @return array{items: Collection,perPage:int,nextCursor:?string,syncUntil:string} 有界摘要及水位，沒有COUNT
+     * @param  string|null  $tokenId  目前Bearer Token ID，用來判斷sameToken
+     * @return array{items: Collection,perPage:int,nextCursor:?string,syncUntil:string,lastWrites:array<string,array{sameToken:bool,sameUser:bool,clientReference:?string}>} 有界摘要、水位與回音資訊，沒有COUNT
      */
-    public function read(WorkspaceContext $context, string $projectId, IssueChangesQueryData $query): array
+    public function read(WorkspaceContext $context, string $projectId, IssueChangesQueryData $query, ?string $tokenId = null): array
     {
         $project = $this->projects->require($context, $projectId, 'issue.read');
         $binding = hash('sha256', json_encode([$context->userId, $context->workspaceId, $projectId, $query->filters, $query->updatedSince], JSON_THROW_ON_ERROR));
@@ -48,6 +51,11 @@ class IssueChangeService
             $settled = CarbonImmutable::parse($query->updatedSince);
         }
 
-        return ['items' => $rows, 'perPage' => $size, 'nextCursor' => $cursor, 'syncUntil' => $settled->utc()->toISOString()];
+        // TT-176：只有目前revision由公開API寫入產生時才回lastWrite；不揭露他人Token ID或參照。
+        $writes = $this->audits->tokenWrites($project, $rows->mapWithKeys(fn ($row) => [$row->public_id => (int) $row->revision])->all());
+        $lastWrites = array_map(fn ($write) => ['sameToken' => $tokenId !== null && $write['tokenId'] === $tokenId, 'sameUser' => $write['userId'] === $context->userId,
+            'clientReference' => $write['userId'] === $context->userId ? $write['clientReference'] : null], $writes);
+
+        return ['items' => $rows, 'perPage' => $size, 'nextCursor' => $cursor, 'syncUntil' => $settled->utc()->toISOString(), 'lastWrites' => $lastWrites];
     }
 }

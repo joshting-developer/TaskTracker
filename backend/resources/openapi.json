@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker API",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "description": "公開Bearer v1讀取及Issue建立／PATCH／留言及外部識別查詢／upsert／批次；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。"
   },
   "servers": [
@@ -1187,7 +1187,9 @@
                         "abilities": [],
                         "operation": "personalTokens.create",
                         "resourceId": "42",
-                        "occurredAt": "2026-11-12T00:00:00Z"
+                        "occurredAt": "2026-11-12T00:00:00Z",
+                        "resourceRevision": null,
+                        "clientReference": null
                       }
                     ],
                     "page": 1,
@@ -3319,6 +3321,16 @@
               "type": "string"
             },
             "description": "公開資源ID；不是內部SQL ID"
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Reference",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._:/@#-]{1,120}$"
+            },
+            "description": "選填。外部run、工作或交付物參照，只寫入來源稽核（本人可在personal-token-audits查到），不進卡片、不屬requestId簽章；同requestId重送不會新增紀錄。不要放秘密。格式不符400。"
           }
         ],
         "x-required-permission": "issue.write",
@@ -3923,6 +3935,16 @@
               "type": "string"
             },
             "description": "公開資源ID；不是內部SQL ID"
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Reference",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._:/@#-]{1,120}$"
+            },
+            "description": "選填。外部run、工作或交付物參照，只寫入來源稽核（本人可在personal-token-audits查到），不進卡片、不屬requestId簽章；同requestId重送不會新增紀錄。不要放秘密。格式不符400。"
           }
         ],
         "x-required-permission": "issue.write",
@@ -4557,6 +4579,16 @@
               "type": "string"
             },
             "description": "公開資源ID；不是內部SQL ID"
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Reference",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._:/@#-]{1,120}$"
+            },
+            "description": "選填。外部run、工作或交付物參照，只寫入來源稽核（本人可在personal-token-audits查到），不進卡片、不屬requestId簽章；同requestId重送不會新增紀錄。不要放秘密。格式不符400。"
           }
         ],
         "x-required-permission": "issue.write",
@@ -4662,7 +4694,8 @@
                         "revision": 1,
                         "createdAt": "2026-11-12T00:00:00Z",
                         "updatedAt": "2026-11-12T00:00:00Z",
-                        "externalRefs": []
+                        "externalRefs": [],
+                        "lastWrite": null
                       }
                     ],
                     "perPage": 20,
@@ -5620,6 +5653,16 @@
               "pattern": "^[A-Za-z0-9._~:@-]{1,200}$"
             },
             "description": "該來源內的識別，區分大小寫，最多200字；不支援斜線，含其他字元請先自行對應"
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Reference",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._:/@#-]{1,120}$"
+            },
+            "description": "選填。外部run、工作或交付物參照，只寫入來源稽核（本人可在personal-token-audits查到），不進卡片、不屬requestId簽章；同requestId重送不會新增紀錄。不要放秘密。格式不符400。"
           }
         ],
         "x-required-permission": "issue.write",
@@ -5920,6 +5963,16 @@
               "type": "string"
             },
             "description": "公開資源ID；不是內部SQL ID"
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Reference",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._:/@#-]{1,120}$"
+            },
+            "description": "選填。外部run、工作或交付物參照，只寫入來源稽核（本人可在personal-token-audits查到），不進卡片、不屬requestId簽章；同requestId重送不會新增紀錄。不要放秘密。格式不符400。"
           }
         ],
         "x-required-permission": "issue.write",
@@ -6126,7 +6179,9 @@
           "abilities",
           "operation",
           "resourceId",
-          "occurredAt"
+          "occurredAt",
+          "resourceRevision",
+          "clientReference"
         ],
         "properties": {
           "id": {
@@ -6179,6 +6234,20 @@
           "occurredAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "resourceRevision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "寫入後的資源revision"
+          },
+          "clientReference": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "寫入時提供的X-Client-Reference"
           }
         }
       },
@@ -7236,7 +7305,8 @@
           "revision",
           "createdAt",
           "updatedAt",
-          "externalRefs"
+          "externalRefs",
+          "lastWrite"
         ],
         "additionalProperties": false,
         "properties": {
@@ -7314,6 +7384,34 @@
                 "externalId": {
                   "type": "string"
                 }
+              }
+            }
+          },
+          "lastWrite": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "required": [
+              "sameToken",
+              "sameUser",
+              "clientReference"
+            ],
+            "description": "只有卡片目前revision是由公開API寫入產生時才有值；Web修改或更早的資料為null。用來辨識自己寫回的回音，避免同步循環。不揭露他人Token或參照",
+            "properties": {
+              "sameToken": {
+                "type": "boolean"
+              },
+              "sameUser": {
+                "type": "boolean"
+              },
+              "clientReference": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "僅sameUser時回傳"
               }
             }
           }

@@ -1567,3 +1567,9 @@ AGENTS.md 加入持續同步規則與入口。相對連結、換行與 git diff 
 - [x] syncUntil settle緩衝、issue-changes附externalRefs、契約同步語意章節、OpenAPI0.8.0、docs/public-sync-semantics.md。
 - [x] 隔離MySQL完整209通過。
 - [x] 契約CI完整通過；重建backend／queue／websocket，主站OpenAPI0.8.0，主容器memory147通過；無migration。
+
+## 2026-11-12 TT-176 來源參照與回音（Claude）
+
+- [x] X-Client-Reference、稽核resource_revision／client_reference、lastWrite回音辨識、批次逐項稽核、OpenAPI0.9.0、文件。
+- [x] 隔離MySQL完整211通過、OpenAPI結構檢查、Pint。
+- [x] 契約CI完整通過；主庫私有備份→migrate只改migrations筆數；重建後主站OpenAPI0.9.0、主容器memory148通過。
