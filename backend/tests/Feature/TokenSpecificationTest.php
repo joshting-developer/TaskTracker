@@ -23,7 +23,7 @@ class TokenSpecificationTest extends TestCase
                 $this->assertNotNull($route->getAction('controller'));
                 $this->assertArrayHasKey('200', $operation['responses']);
                 $this->assertArrayHasKey('401', $operation['responses']);
-                $this->assertArrayHasKey('429', $operation['responses']);
+                $this->assertSame(isset($operation['x-rate-limit']), isset($operation['responses']['429']));
             }
         }
         $this->assertSame(count($operations), count(array_unique($operations)));

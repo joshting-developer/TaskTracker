@@ -1,5 +1,10 @@
 # TaskTracker 開發指引
 
+## 2026-11-12 TT-167 公開契約
+
+已提供正式OpenAPI3.1（規格版0.2.0）與匿名Markdown `/api/public/contract.md`；來源分別backend/resources/openapi.json、public-api-contract.md。只有已交付5個operation，公開業務API仍由TT-168／169實作。限流與Retry-After、錯誤／分頁／重試／棄用規則見[公開契約交付](docs/public-rest-contract-v1.md)；後續endpoint須同卡更新正式spec／範例／實際HTTP Schema測試。官方結構離線檢查tools/check_openapi.py與PHP資料Schema驗證互補；TT-253的CI尚未完成，不因本卡結案宣稱整體第三方建卡驗收通過。
+
+
 ## 2026-11-12 TT-166 Token來源與授權邊界
 
 公開API統一經BearerTokenSession：只取Bearer，write採User→Workspace鎖後重驗Token／Scope／當下資格及目標Project permission；業務Service仍負責資源／作者／revision／requestId。成功寫入來源以integration_audits同交易追加，不保存秘密／payload，唯讀不追加。PAT建立／首次撤銷已記Session來源；本人清單GET /api/v1/personal-token-audits每頁20筆，僅Session且限目前Workspace。無獨立稽核UI；公開卡片REST尚待TT-168／169接線。撤權的時序、現有Workspace成員停用範圍與驗證見[Token授權與來源](docs/token-authorization-and-audit.md)。

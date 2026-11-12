@@ -1,3 +1,17 @@
+## 2026-11-12 TT-167 驗證完成
+
+- 正式OpenAPI3.1規格版0.2.0與匿名Markdown契約已交付，僅列實作5操作；另交接TT-168／169的REST目標，不提前放入正式spec。
+- 修正具名限流桶、429 Retry-After／rate headers、405 Allow與公開非預期500；未知版本404，來源拒絕保留no-store／nosniff。未更動業務SQL／資料／輪詢。
+- memory完整119通過／40原生類略過5169assertions；MySQL相關10通過262assertions；契約7通過418assertions。官方結構／負向規格、實際HTTP持續限流及Chrome流程通過，Pint6檔通過。
+- 構造驗證採固定官方Schema＋專案Python venv，實際回應採Opis標準資料Schema；不自製validator、不改官方dynamicRef。工具鎖版及授權一併保存，CI留TT-253。
+- 本機新版公開資源與來源核對，不seed／reset主庫，不推送遠端。
+
+## 2026-11-12 TT-167 開始
+
+- 領取公開REST契約與必要OpenAPI規格；保持正式spec只列已實作5個操作，不越卡實作TT-168／169。
+- 核對每操作status／security／parameters／schema及範例、URL v1與規格版號、限流與Retry-After、防重送／revision及棄用規則。新增匿名Markdown契約入口，完整文件站／CI仍TT-252／253。
+- 修正限流回應Header丟失與不同操作共用計數的問題，補真實HTTP與標準JSON Schema驗證，不自製schema validator、不測主庫。
+
 ## 2026-11-12 TT-166 完成驗證
 
 - Bearer read/write邊界、TokenContext、成功來源表與本人有界查詢已實作；PAT管理已接Session來源，公開卡片操作留TT-168／169。讀取不追加稽核且只查一次Token；寫入保留鎖前hint／鎖後驗證。

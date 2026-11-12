@@ -1,5 +1,10 @@
 # API-first平台架構與第三方整合邊界
 
+## 2026-11-12 TT-167 正式契約
+
+已交付唯一OpenAPI、匿名Markdown契約及實際回應Schema／限流測試，見[交付與後續目標矩陣](public-rest-contract-v1.md)。正式機器規格只列已交付操作；TT-168／169仍未實作，完整文件站、CI及獨立建卡驗收仍TT-252～254，不能視為本卡一併完成。
+
+
 ## 2026-11-12 TT-166 實作更新
 
 已建立可信TokenContext及Bearer read/write交易邊界：Scope與當下Workspace／Project有效permission取交集；寫入鎖後重驗並原子保存成功操作來源。PAT建立／撤銷已記Session來源，來源清單只限本人目前工作區；讀取不逐次寫日誌。見[契約與撤權時序](token-authorization-and-audit.md)。TT-168／169必須沿此邊界使用既有Service，不可重複建立授權或業務流程；本輪沒有新增公開卡片端點、全站帳號停用欄位、專屬稽核UI或MCP。

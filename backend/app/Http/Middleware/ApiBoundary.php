@@ -28,7 +28,7 @@ class ApiBoundary
                         'code' => 'FORBIDDEN',
                         'message' => '不允許這個請求來源',
                     ],
-                ], 403);
+                ], 403)->header('Cache-Control', 'no-store')->header('X-Content-Type-Options', 'nosniff');
             }
         }
         $response = $next($request);

@@ -26,7 +26,12 @@ $app = Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $error, Request $request) {
             if (!$request->is('api/*')) return null;
             $status = $error->getStatusCode();
-            return response()->json(['ok' => false, 'error' => ['code' => match ($status) { 419 => 'CSRF_EXPIRED', 429 => 'RATE_LIMIT', 404 => 'NOT_FOUND', default => 'INVALID_INPUT' }, 'message' => match ($status) { 419 => '登入表單已過期, 請重試', 429 => '操作太頻繁, 請稍後再試', 404 => '找不到這個操作', default => '請求無法處理' }]], $status)->header('Cache-Control', 'no-store');
+            $headers = array_filter($error->getHeaders(), fn ($name) => in_array(strtolower($name), ['retry-after', 'x-ratelimit-limit', 'x-ratelimit-remaining', 'x-ratelimit-reset', 'allow'], true), ARRAY_FILTER_USE_KEY);
+            return response()->json(['ok' => false, 'error' => ['code' => match ($status) { 419 => 'CSRF_EXPIRED', 429 => 'RATE_LIMIT', 404 => 'NOT_FOUND', 405 => 'METHOD_NOT_ALLOWED', default => 'INVALID_INPUT' }, 'message' => match ($status) { 419 => '登入表單已過期, 請重試', 429 => '操作太頻繁, 請稍後再試', 404 => '找不到這個操作', 405 => '不支援這個HTTP方法', default => '請求無法處理' }]], $status)->withHeaders($headers)->header('Cache-Control', 'no-store');
+        });
+        $exceptions->render(function (\Throwable $error, Request $request) {
+            if (! $request->is('api/public/v1/*')) return null;
+            return response()->json(['ok' => false, 'error' => ['code' => 'INTERNAL_ERROR', 'message' => '服務暫時無法處理請求']], 500)->header('Cache-Control', 'no-store');
         });
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),

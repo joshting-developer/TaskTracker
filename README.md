@@ -1,5 +1,10 @@
 # TaskTracker
 
+## 公開API契約
+
+目前公開Bearer只有身分驗證；[OpenAPI](backend/resources/openapi.json)對外入口 `/api/public/openapi.json`，[版本與使用規則](backend/resources/public-api-contract.md)入口 `/api/public/contract.md`。公開專案／卡片操作尚未開放，實作與驗證分工見[REST契約交付](docs/public-rest-contract-v1.md)。
+
+
 ## 個人 API Token
 
 右上帳號選單 → 個人 API Token，可建立目前工作空間的個人憑證、設定read／write與到期日、撤銷憑證。公開API目前只有Bearer身分驗證，任務操作尚未開放；見[Token契約與使用方式](docs/personal-access-tokens.md)。OpenAPI入口為 `/api/public/openapi.json`。

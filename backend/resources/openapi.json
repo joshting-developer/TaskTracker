@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker API",
-    "version": "0.1.0",
-    "description": "TT-165 PAT第一階段。Token管理僅瀏覽器Session／CSRF；公開業務CRUD尚未交付，現有RPC不接受PAT。"
+    "version": "0.2.0",
+    "description": "已實作的公開Bearer v1與Session個人憑證管理契約。只列可呼叫操作；卡片／專案公開REST尚待TT-168／169。Session入口不是第三方PAT業務API。 [HTTP契約](/api/public/contract.md)。"
   },
   "servers": [
     {
@@ -56,90 +56,180 @@
                           }
                         },
                         "page": {
-                          "type": "integer"
+                          "type": "integer",
+                          "minimum": 1
                         },
                         "perPage": {
                           "const": 20
                         },
                         "total": {
-                          "type": "integer"
+                          "type": "integer",
+                          "minimum": 0
                         },
                         "lastPage": {
-                          "type": "integer"
+                          "type": "integer",
+                          "minimum": 1
                         }
                       }
                     }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "items": [
+                      {
+                        "id": "42",
+                        "name": "CLI example",
+                        "abilities": [
+                          "read"
+                        ],
+                        "createdAt": "2026-11-12T00:00:00Z",
+                        "expiresAt": "2026-12-11T16:00:00Z",
+                        "status": "active"
+                      }
+                    ],
+                    "page": 1,
+                    "perPage": 20,
+                    "total": 1,
+                    "lastPage": 1
                   }
                 }
               }
             }
           },
           "400": {
-            "description": "輸入不合法",
+            "description": "輸入無效",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "INVALID_INPUT"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "輸入無效"
+                  }
                 }
               }
             }
           },
           "401": {
-            "description": "未登入或Token無效／過期／撤銷／資格失效",
+            "description": "認證／成員資格失效",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "UNAUTHENTICATED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "認證／成員資格失效"
+                  }
                 }
               }
             }
           },
           "403": {
-            "description": "Scope或來源不足",
+            "description": "來源、Scope或操作權限不足",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "找不到本人Token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "FORBIDDEN"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "來源、Scope或操作權限不足"
+                  }
                 }
               }
             }
           },
           "409": {
-            "description": "Workspace已切換或相同建立requestId已使用",
+            "description": "工作空間已變更",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "419": {
-            "description": "Session CSRF過期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "請求過於頻繁",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "WORKSPACE_CHANGED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "WORKSPACE_CHANGED",
+                    "message": "工作空間已變更"
+                  }
                 }
               }
             }
@@ -164,7 +254,10 @@
             },
             "description": "建議提供，與Session目前工作區不同則409；不是指定可任意操作的Workspace"
           }
-        ]
+        ],
+        "deprecated": false,
+        "x-tasktracker-context": "session-workspace",
+        "description": "本人目前Session Workspace，20筆id倒序；超出最後頁會回最後一頁。只有metadata，無原文／雜湊；不定期輪詢。"
       },
       "post": {
         "operationId": "createPersonalToken",
@@ -210,77 +303,250 @@
                       }
                     }
                   }
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "token": {
+                      "id": "42",
+                      "name": "CLI example",
+                      "abilities": [
+                        "read"
+                      ],
+                      "createdAt": "2026-11-12T00:00:00Z",
+                      "expiresAt": "2026-12-11T16:00:00Z",
+                      "status": "active"
+                    },
+                    "plainTextToken": "42|tt_EXAMPLE_ONLY_NOT_A_VALID_CREDENTIAL"
+                  }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
               }
             }
           },
           "400": {
-            "description": "輸入不合法",
+            "description": "輸入無效",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "INVALID_INPUT"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "輸入無效"
+                  }
                 }
               }
             }
           },
           "401": {
-            "description": "未登入或Token無效／過期／撤銷／資格失效",
+            "description": "認證／成員資格失效",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "UNAUTHENTICATED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "認證／成員資格失效"
+                  }
                 }
               }
             }
           },
           "403": {
-            "description": "Scope或來源不足",
+            "description": "來源、Scope或操作權限不足",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "找不到本人Token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "FORBIDDEN"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "來源、Scope或操作權限不足"
+                  }
                 }
               }
             }
           },
           "409": {
-            "description": "Workspace已切換或相同建立requestId已使用",
+            "description": "工作空間已變更",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "WORKSPACE_CHANGED",
+                                "REQUEST_CONFLICT"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "WORKSPACE_CHANGED",
+                    "message": "工作空間已變更"
+                  }
                 }
               }
             }
           },
           "419": {
-            "description": "Session CSRF過期",
+            "description": "Session CSRF失效",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "CSRF_EXPIRED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "CSRF_EXPIRED",
+                    "message": "Session CSRF失效"
+                  }
                 }
               }
             }
           },
           "429": {
-            "description": "請求過於頻繁",
+            "description": "請求超過限額",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "RATE_LIMIT"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "RATE_LIMIT",
+                    "message": "請求超過限額"
+                  }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateReset"
               }
             }
           }
@@ -291,6 +557,13 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateToken"
+              },
+              "example": {
+                "name": "CLI example",
+                "abilities": [
+                  "read"
+                ],
+                "requestId": "33333333-3333-4333-8333-333333333333"
               }
             }
           }
@@ -304,7 +577,16 @@
             },
             "description": "建議提供，與Session目前工作區不同則409；不是指定可任意操作的Workspace"
           }
-        ]
+        ],
+        "deprecated": false,
+        "x-tasktracker-context": "session-workspace",
+        "x-rate-limit": {
+          "requests": 20,
+          "windowSeconds": 60,
+          "key": "authenticated user; guest IP",
+          "sharedWithOtherOperations": false
+        },
+        "description": "Session／CSRF建立本人目前Workspace的PAT。原文僅成功時出現；同requestId重送409 REQUEST_CONFLICT，不重播秘密。預設一個月、最多兩年，到期日Asia/Taipei 00:00。最長50000 bytes JSON物件。"
       }
     },
     "/api/v1/personal-tokens/{token}/revoke": {
@@ -339,77 +621,246 @@
                       "$ref": "#/components/schemas/Token"
                     }
                   }
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "id": "42",
+                    "name": "CLI example",
+                    "abilities": [
+                      "read"
+                    ],
+                    "createdAt": "2026-11-12T00:00:00Z",
+                    "expiresAt": "2026-12-11T16:00:00Z",
+                    "status": "revoked"
+                  }
                 }
               }
-            }
-          },
-          "400": {
-            "description": "輸入不合法",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
               }
             }
           },
           "401": {
-            "description": "未登入或Token無效／過期／撤銷／資格失效",
+            "description": "認證／成員資格失效",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "UNAUTHENTICATED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "認證／成員資格失效"
+                  }
                 }
               }
             }
           },
           "403": {
-            "description": "Scope或來源不足",
+            "description": "來源、Scope或操作權限不足",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "FORBIDDEN"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "來源、Scope或操作權限不足"
+                  }
                 }
               }
             }
           },
           "404": {
-            "description": "找不到本人Token",
+            "description": "找不到或無權存取資源",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "NOT_FOUND"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "找不到或無權存取資源"
+                  }
                 }
               }
             }
           },
           "409": {
-            "description": "Workspace已切換或相同建立requestId已使用",
+            "description": "工作空間已變更",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "WORKSPACE_CHANGED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "WORKSPACE_CHANGED",
+                    "message": "工作空間已變更"
+                  }
                 }
               }
             }
           },
           "419": {
-            "description": "Session CSRF過期",
+            "description": "Session CSRF失效",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "CSRF_EXPIRED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "CSRF_EXPIRED",
+                    "message": "Session CSRF失效"
+                  }
                 }
               }
             }
           },
           "429": {
-            "description": "請求過於頻繁",
+            "description": "請求超過限額",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "RATE_LIMIT"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "RATE_LIMIT",
+                    "message": "請求超過限額"
+                  }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateReset"
               }
             }
           }
@@ -432,7 +883,16 @@
             },
             "description": "建議提供，與Session目前工作區不同則409；不是指定可任意操作的Workspace"
           }
-        ]
+        ],
+        "deprecated": false,
+        "x-tasktracker-context": "session-workspace",
+        "x-rate-limit": {
+          "requests": 60,
+          "windowSeconds": 60,
+          "key": "authenticated user; guest IP",
+          "sharedWithOtherOperations": false
+        },
+        "description": "Session／CSRF撤銷本人目前Workspace的指定Token。相同Token重試為200，不重複稽核；無requestId或revision輸入。"
       }
     },
     "/api/public/v1/me": {
@@ -440,7 +900,7 @@
         "operationId": "getTokenIdentity",
         "summary": "以Bearer驗證Token固定工作區資格，write隱含read",
         "tags": [
-          "Public API"
+          "Identity"
         ],
         "security": [
           {
@@ -466,52 +926,188 @@
                       "$ref": "#/components/schemas/Identity"
                     }
                   }
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "userId": "11111111-1111-4111-8111-111111111111",
+                    "workspaceId": "22222222-2222-4222-8222-222222222222",
+                    "abilities": [
+                      "read"
+                    ]
+                  }
                 }
               }
-            }
-          },
-          "400": {
-            "description": "輸入不合法",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
               }
             }
           },
           "401": {
-            "description": "未登入或Token無效／過期／撤銷／資格失效",
+            "description": "認證／成員資格失效",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "UNAUTHENTICATED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "認證／成員資格失效"
+                  }
                 }
               }
             }
           },
           "403": {
-            "description": "Scope或來源不足",
+            "description": "來源、Scope或操作權限不足",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "FORBIDDEN"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "來源、Scope或操作權限不足"
+                  }
                 }
               }
             }
           },
           "429": {
-            "description": "請求過於頻繁",
+            "description": "請求超過限額",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "RATE_LIMIT"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "RATE_LIMIT",
+                    "message": "請求超過限額"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateReset"
+              }
+            }
+          },
+          "500": {
+            "description": "服務暫時無法處理請求",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "INTERNAL_ERROR"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "服務暫時無法處理請求"
+                  }
                 }
               }
             }
           }
         },
-        "description": "僅接受Bearer PAT，不接受Session。每次重驗Token、到期、撤銷及固定Workspace有效資格；不依目前網頁Workspace，不寫入讀取稽核或last_used_at。已開始的唯讀請求使用該次交易快照，不宣稱撤銷能收回已回傳內容。"
+        "description": "僅接受Bearer PAT，不接受Session。每次重驗Token、到期、撤銷及固定Workspace有效資格；不依目前網頁Workspace，不寫入讀取稽核或last_used_at。已開始的唯讀請求使用該次交易快照，不宣稱撤銷能收回已回傳內容。",
+        "deprecated": false,
+        "x-tasktracker-context": "token-workspace",
+        "x-rate-limit": {
+          "requests": 120,
+          "windowSeconds": 60,
+          "key": "client IP",
+          "sharedWithOtherOperations": false
+        }
       }
     },
     "/api/v1/personal-token-audits": {
@@ -559,90 +1155,181 @@
                           }
                         },
                         "page": {
-                          "type": "integer"
+                          "type": "integer",
+                          "minimum": 1
                         },
                         "perPage": {
                           "const": 20
                         },
                         "total": {
-                          "type": "integer"
+                          "type": "integer",
+                          "minimum": 0
                         },
                         "lastPage": {
-                          "type": "integer"
+                          "type": "integer",
+                          "minimum": 1
                         }
                       }
                     }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "items": [
+                      {
+                        "id": "9",
+                        "userId": "11111111-1111-4111-8111-111111111111",
+                        "source": "session",
+                        "tokenId": null,
+                        "tokenName": null,
+                        "abilities": [],
+                        "operation": "personalTokens.create",
+                        "resourceId": "42",
+                        "occurredAt": "2026-11-12T00:00:00Z"
+                      }
+                    ],
+                    "page": 1,
+                    "perPage": 20,
+                    "total": 1,
+                    "lastPage": 1
                   }
                 }
               }
             }
           },
           "400": {
-            "description": "輸入不合法",
+            "description": "輸入無效",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "INVALID_INPUT"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "輸入無效"
+                  }
                 }
               }
             }
           },
           "401": {
-            "description": "未登入或Token無效／過期／撤銷／資格失效",
+            "description": "認證／成員資格失效",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "UNAUTHENTICATED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "認證／成員資格失效"
+                  }
                 }
               }
             }
           },
           "403": {
-            "description": "Scope或來源不足",
+            "description": "來源、Scope或操作權限不足",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "找不到本人Token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "FORBIDDEN"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "來源、Scope或操作權限不足"
+                  }
                 }
               }
             }
           },
           "409": {
-            "description": "Workspace已切換或相同建立requestId已使用",
+            "description": "工作空間已變更",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "419": {
-            "description": "Session CSRF過期",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "請求過於頻繁",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "WORKSPACE_CHANGED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "WORKSPACE_CHANGED",
+                    "message": "工作空間已變更"
+                  }
                 }
               }
             }
@@ -668,7 +1355,9 @@
             "description": "建議提供，與Session目前工作區不同則409；不是指定可任意操作的Workspace"
           }
         ],
-        "description": "僅Session管理入口；每頁20筆id倒序。只保存成功寫入的來源metadata；不含請求內容／Token原文或雜湊，不提供其他使用者紀錄。"
+        "description": "本人目前Session Workspace，20筆id倒序；超出最後頁回空items。無秘密／payload／其他使用者資料，不定期輪詢。",
+        "deprecated": false,
+        "x-tasktracker-context": "session-workspace"
       }
     }
   },
@@ -713,9 +1402,11 @@
               "message": {
                 "type": "string"
               }
-            }
+            },
+            "additionalProperties": false
           }
-        }
+        },
+        "additionalProperties": false
       },
       "Token": {
         "type": "object",
@@ -730,10 +1421,12 @@
         "additionalProperties": false,
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[0-9]+$"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 60
           },
           "abilities": {
             "type": "array",
@@ -772,7 +1465,8 @@
           "name": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 60
+            "maxLength": 60,
+            "pattern": "\\S"
           },
           "abilities": {
             "type": "array",
@@ -795,7 +1489,8 @@
             "type": "string",
             "format": "uuid"
           }
-        }
+        },
+        "description": "只取已宣告欄位；未知欄位被忽略，不能用actor／workspace／role提權。requestId必填UUID；JSON物件最多50000 bytes。"
       },
       "Identity": {
         "type": "object",
@@ -890,6 +1585,49 @@
           }
         }
       }
+    },
+    "headers": {
+      "RetryAfter": {
+        "description": "429後至少等待的秒數；等待後以相同requestId重試寫入",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "RateLimit": {
+        "description": "目前操作所屬時間窗的請求上限",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "RateRemaining": {
+        "description": "目前時間窗剩餘請求數",
+        "schema": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "RateReset": {
+        "description": "429計數重設的Unix秒數",
+        "schema": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     }
-  }
+  },
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "tags": [
+    {
+      "name": "Identity",
+      "description": "公開Bearer身分，固定Token Workspace"
+    },
+    {
+      "name": "Personal tokens",
+      "description": "僅Session的個人憑證及來源管理，不接受PAT作替代"
+    }
+  ],
+  "x-documentation-url": "/api/public/contract.md"
 }
