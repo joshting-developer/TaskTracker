@@ -15,7 +15,7 @@ import IssueFilters from './IssueFilters.vue';
 import IssueList from './IssueList.vue';
 
 const props = defineProps({ project: Object, mode: String, scope: { type: String, default: 'all' }, boardId: String, issueId: String, detailPage: Boolean, userId: String, workspaceId: String, today: String });
-const emit = defineEmits(['board', 'list', 'issue', 'close-issue', 'notify', 'access', 'project', 'board-missing']);
+const emit = defineEmits(['board', 'list', 'issue', 'close-issue', 'notify', 'access', 'project', 'board-missing', 'issue-missing']);
 const error = ref(''), filtersExpanded = ref(false);
 const boardEditor = shallowRef(null), editor = shallowRef(null), detail = shallowRef(null), members = shallowRef([]), candidates = shallowRef([]);
 const boardTool = ref(null), issueTool = ref(null), detailTool = ref(null);
@@ -42,7 +42,7 @@ const filterInput = filters.filterInput;
 const data = useProjectTaskQueries({ onDetail: loadDetail, detailMode: computed(() => Boolean(props.issueId && props.detailPage)), projectId: computed(() => props.project.id), boardId: computed(() => props.boardId), mode: computed(() => props.mode), context: scopeKey, rows, listQuery: computed(() => ({...filterInput.value, scope: props.scope, page: filters.page.value, perPage: 20})), blocked: computed(() => busy.value || dirty.value), onProject: value => emit('project', value), onError: handleFailure, onSuccess: () => { error.value = ''; } });
 const { board, boardPage, issuePage, listPage, listSearch, loading, loadingCards, pageVisible, reload } = data;
 watch(issuePage, value => { if (value && filters.page.value > value.lastPage) filters.page.value = value.lastPage; });
-const transition = useIssueTransitions({ canWrite, contextKey: scopeKey, saved: async () => { await reload(); if (detail.value) await loadDetail(); }, refresh: reload, onError: value => { error.value = value; } });
+const transition = useIssueTransitions({ canWrite, contextKey: scopeKey, saved: async () => { await reload(); if (detail.value) await loadDetail(); }, refresh: async () => { await reload(); if (detail.value) await loadDetail(); }, onError: value => { error.value = value; } });
 const moving = transition.moving;
 defineExpose({ create: prepareEditor, dirty, saving: computed(() => busy.value || Boolean(moving.value)), refresh: reload });
 const realtime = useBoardRealtime({ active: computed(() => props.mode === 'board' && !props.detailPage && pageVisible.value), userId: computed(() => props.userId), workspaceId: computed(() => props.workspaceId), projectId: computed(() => props.project.id), refresh: () => reload(false) });
@@ -75,7 +75,13 @@ async function loadDetail() {
     detail.value = value;
     if (!props.detailPage && canWrite.value) await prepareEditor(value);
     return current === detailGeneration;
-  } catch (failure) { if (current === detailGeneration) handleFailure(failure); return false; }
+  } catch (failure) {
+    if (current !== detailGeneration) return false;
+    // Project仍可讀但卡片不存在／不可見時回Project首頁；Project失效則走一般撤權流程。
+    if (failure.code === 'NOT_FOUND') { detail.value = null; editor.value = null; emit('issue-missing'); }
+    else handleFailure(failure);
+    return false;
+  }
 }
 // 編輯器衝突後重讀：取得最新版本才重設表單，無論成功與否都結束儲存狀態。
 async function reloadEditor(reset, settled) {
@@ -140,7 +146,7 @@ onBeforeUnmount(() => { alive = false; optionGeneration++; optionRequest?.abort(
   <div class="board-workspace-page">
     <div v-if="error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="reload">重新載入</button></div>
     <p v-if="loading" role="status">載入中…</p>
-    <IssueDetail v-if="detail && detailPage" ref="detailTool" :key="detail.id" :issue="detail" :project="project" :issues="detailRows" :members="memberNames" :entries="[]" :return-label="mode === 'list' ? '返回任務列表' : '返回看板'" :can-write="canWrite" :can-read-time="project.permissions.includes('timeEntry.readOwn') || project.permissions.includes('timeEntry.readTeam')" :can-log-time="project.permissions.includes('timeEntry.writeOwn')" :user-id="userId" :activity-loader="loadActivity" @edit="prepareEditor(detail)" @state="value => transition.moveIssue(detail, { state: value })" @open="(issue, full = true) => emit('issue', issue, full)" @close="emit('close-issue')" @saved="savedIssue" @reload="loadDetail" @time-updated="savedIssue" />
+    <IssueDetail v-if="detail && detailPage" ref="detailTool" :key="detail.id" :issue="detail" :busy="Boolean(transition.moving.value)" :project="project" :issues="detailRows" :members="memberNames" :entries="[]" :return-label="mode === 'list' ? '返回任務列表' : '返回看板'" :can-write="canWrite" :can-read-time="project.permissions.includes('timeEntry.readOwn') || project.permissions.includes('timeEntry.readTeam')" :can-log-time="project.permissions.includes('timeEntry.writeOwn')" :user-id="userId" :activity-loader="loadActivity" @edit="prepareEditor(detail)" @state="value => transition.moveIssue(detail, { state: value })" @open="(issue, full = true) => emit('issue', issue, full)" @close="emit('close-issue')" @saved="savedIssue" @reload="loadDetail" @time-updated="savedIssue" />
     <template v-else>
       <section v-if="mode === 'list'" class="task-workspace">
         <IssueFilters v-model:expanded="filtersExpanded" :lookup="lookup" :lookup-context="project.id" @option="rememberOption" v-model="filterInput" :states="filters.projectStates.value" :members="memberNames" :issues="detailRows" :active-filter-chips="filters.activeFilterChips.value" :filter-warnings="[]" @remove="filters.removeFilter" @clear="filters.clearFilters" />
