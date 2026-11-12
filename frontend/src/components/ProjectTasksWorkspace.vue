@@ -15,7 +15,7 @@ import IssueFilters from './IssueFilters.vue';
 import IssueList from './IssueList.vue';
 
 const props = defineProps({ project: Object, mode: String, scope: { type: String, default: 'all' }, boardId: String, issueId: String, detailPage: Boolean, userId: String, workspaceId: String, today: String });
-const emit = defineEmits(['board', 'list', 'issue', 'close-issue', 'notify', 'access', 'project']);
+const emit = defineEmits(['board', 'list', 'issue', 'close-issue', 'notify', 'access', 'project', 'board-missing']);
 const error = ref(''), filtersExpanded = ref(false);
 const boardEditor = shallowRef(null), editor = shallowRef(null), detail = shallowRef(null), members = shallowRef([]), candidates = shallowRef([]);
 const boardTool = ref(null), issueTool = ref(null), detailTool = ref(null);
@@ -52,7 +52,9 @@ function handleFailure(failure) {
   error.value = failure.message;
   if (['UNAUTHENTICATED', 'FORBIDDEN', 'NOT_FOUND', 'WORKSPACE_CHANGED'].includes(failure.code)) {
     detail.value = null; editor.value = null; boardEditor.value = null;
-    emit('access');
+    // 自訂看板已移除時回看板列表；若連Project也失效，列表查詢會再走一般撤權流程。
+    if (failure.code === 'NOT_FOUND' && props.mode === 'board' && !props.issueId && props.boardId !== 'default') emit('board-missing');
+    else emit('access');
   }
 }
 

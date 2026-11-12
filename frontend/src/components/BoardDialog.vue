@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import Icon from './Icon.vue';
 import { api } from '../api/index.js';
 import { TYPES } from '../domain/model.js';
