@@ -1,0 +1,291 @@
+{
+  "tracking": "TT-259",
+  "title": "收斂AI整合API看板為PAT與對外介面並整理工程分類",
+  "beforeCount": 55,
+  "afterCount": 19,
+  "moved": [
+    {
+      "identifier": "TT-178",
+      "title": "逐用例遷移任務／工時寫入的專用Request與DTO",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-202",
+      "title": "建立TaskTracker自我追蹤、AI Developer與完整卡片交接",
+      "destination": "實際功能"
+    },
+    {
+      "identifier": "TT-113",
+      "title": "文件／工程交付：安裝Laravel與Vue skills並替換後端架構規範",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-75",
+      "title": "文件／工程交付：搬入並適配後端開發規範與專案 skill 入口",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-180",
+      "title": "拆分身分／導航與目前Project查詢以減少全量Workspace",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-234",
+      "title": "完成其餘後端協作者與長駐工作之DI遷移",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-73",
+      "title": "文件／工程交付：記錄後端可讀性問題與暫緩重構決定",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-87",
+      "title": "文件／工程交付：限定專案內技能並補齊階段規劃紀錄",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-117",
+      "title": "歷史實作：分離HTTP工作空間與帳號服務邊界",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-233",
+      "title": "以Container與按需組裝重構後端核心依賴鏈",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-8",
+      "title": "文件／工程交付：設定每完成一個階段就提交的工作規範",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-236",
+      "title": "完成全面DI與PHPDoc的隔離整合與交付驗收",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-62",
+      "title": "文件／工程交付：收錄兩個高星 UIUX skill 與評估介紹",
+      "destination": "實際功能"
+    },
+    {
+      "identifier": "TT-235",
+      "title": "統一全自有後端PHPDoc並產生型別覆蓋與例外清單",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-77",
+      "title": "歷史實作：明確分離 API 入口與 JSON 契約並建立資料模型入口",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-60",
+      "title": "歷史實作：加入私人待辦交辦通知與單向轉卡 API",
+      "destination": "實際功能"
+    },
+    {
+      "identifier": "TT-230",
+      "title": "工程規範：整理TaskTracker自有開發skill與AGENTS引用",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-120",
+      "title": "文件／工程交付：評估前後端重構收益與剩餘架構差距",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-249",
+      "title": "拆分ApiExecution責任並改善交易執行邊界可讀性",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-123",
+      "title": "文件／工程交付：比較 GitHub 高星效能分析 skills 與專案適配",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-118",
+      "title": "歷史實作：建立工時查詢DTO與租戶限定資料存取",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-198",
+      "title": "候選：Git commit／PR／MR連結與受限事件整合",
+      "destination": "實際功能"
+    },
+    {
+      "identifier": "TT-124",
+      "title": "文件／工程交付：安裝 Addy 效能診斷與 ECC 基準量測 skills",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-79",
+      "title": "文件／工程交付：補齊後端程式導覽與重構驗收紀錄",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-136",
+      "title": "文件／工程交付：安裝 Hallmark 與 Unslop 專案技能",
+      "destination": "實際功能"
+    },
+    {
+      "identifier": "TT-232",
+      "title": "盤點全後端依賴並建立可信Context與Factory組裝邊界",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-76",
+      "title": "歷史實作：拆分後端業務服務並整理授權與重試流程",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-137",
+      "title": "文件／工程交付：記錄 Unslop 審查與確認的修整範圍",
+      "destination": "實際功能"
+    },
+    {
+      "identifier": "TT-30",
+      "title": "歷史實作：將協作 API 與資料相容遷移至 Laravel",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-255",
+      "title": "以版本化無損編碼精簡重播快照並驗證雙讀回退",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-63",
+      "title": "文件／工程交付：啟用專案 UIUX skills",
+      "destination": "實際功能"
+    },
+    {
+      "identifier": "TT-68",
+      "title": "文件／工程交付：收錄使用者流程與可用性評估 skills",
+      "destination": "實際功能"
+    },
+    {
+      "identifier": "TT-90",
+      "title": "歷史實作：加入個人與工作空間設定及固定角色管理API",
+      "destination": "實際功能"
+    },
+    {
+      "identifier": "TT-246",
+      "title": "其餘領域寫入改用專用Request與DTO並同步前端契約",
+      "destination": "效能改進"
+    },
+    {
+      "identifier": "TT-52",
+      "title": "歷史實作：建立專案看板與卡片收錄 API",
+      "destination": "實際功能"
+    },
+    {
+      "identifier": "TT-139",
+      "title": "文件／工程交付：紀錄 Multi-Agent 實測與外部整合需求",
+      "destination": "實際功能"
+    }
+  ],
+  "remaining": [
+    {
+      "identifier": "TT-170",
+      "title": "Issue列表支援穩定cursor與增量篩選",
+      "state": "open"
+    },
+    {
+      "identifier": "TT-171",
+      "title": "建立project-scoped外部識別與upsert契約",
+      "state": "open"
+    },
+    {
+      "identifier": "TT-172",
+      "title": "設計可恢復的批次匯入與逐項結果",
+      "state": "open"
+    },
+    {
+      "identifier": "TT-173",
+      "title": "定義全量／增量同步與刪除或歸檔語意",
+      "state": "open"
+    },
+    {
+      "identifier": "TT-176",
+      "title": "通用整合來源稽核、補送與回音識別",
+      "state": "open"
+    },
+    {
+      "identifier": "TT-3",
+      "title": "標準化對外API與受限整合平台",
+      "state": "open"
+    },
+    {
+      "identifier": "TT-165",
+      "title": "個人PAT管理、Scope與撤銷／到期",
+      "state": "open"
+    },
+    {
+      "identifier": "TT-166",
+      "title": "使用者／Token操作來源稽核與即時撤權",
+      "state": "open"
+    },
+    {
+      "identifier": "TT-167",
+      "title": "定義公開REST契約與必要OpenAPI機器規格",
+      "state": "open"
+    },
+    {
+      "identifier": "TT-254",
+      "title": "以僅讀公開文件與PAT的獨立客戶端驗收建卡流程",
+      "state": "open"
+    },
+    {
+      "identifier": "TT-168",
+      "title": "提供受限身分／專案／成員／狀態與單卡查詢",
+      "state": "open"
+    },
+    {
+      "identifier": "TT-252",
+      "title": "提供第三方開發者文件入口、PAT與Agent指南及可執行範例",
+      "state": "open"
+    },
+    {
+      "identifier": "TT-253",
+      "title": "建立OpenAPI與實際HTTP契約及文件範例的CI驗證",
+      "state": "open"
+    },
+    {
+      "identifier": "TT-169",
+      "title": "提供Issue、留言與Epic／父子／關聯寫入API",
+      "state": "open"
+    },
+    {
+      "identifier": "TT-251",
+      "title": "盤點第三方API文件規劃缺口並補齊分類待辦",
+      "state": "closed"
+    },
+    {
+      "identifier": "TT-177",
+      "title": "選配：外部客戶端自行整合後的聯調驗收",
+      "state": "deferred"
+    },
+    {
+      "identifier": "TT-203",
+      "title": "確認API-first平台範圍並同步架構與待辦",
+      "state": "closed"
+    },
+    {
+      "identifier": "TT-175",
+      "title": "實作Webhook簽章、退避、死信與手動重送",
+      "state": "deferred"
+    },
+    {
+      "identifier": "TT-174",
+      "title": "建立交易一致的Webhook事件與outbox",
+      "state": "deferred"
+    }
+  ],
+  "preservedIssueCount": 258,
+  "changedBoards": [
+    "效能改進",
+    "實際功能",
+    "AI整合/API"
+  ]
+}

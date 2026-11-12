@@ -1,3 +1,10 @@
+## 2026-11-12 TT-259 API看板分類整理
+
+- 使用者確認AI整合/API聚焦個人Token與外部直接HTTP操作；內部DI／PHPDoc／Request DTO／效能歸效能改進，UI／一般功能與沿革歸實際功能。
+- 實際看板55→19張，36張移出（效能改進25、實際功能11），目的板原收錄保留。API只收專屬TT-3，動態展開18張；首批PAT／REST／文件與後續同步／Webhook分清，不修改卡片優先與狀態。
+- 既有258張摘要與revision逐欄未變；看板分頁API讀回有效集合、目的板保留與移入逐項核對。新TT-259由codex先領再inprogress，驗證與提交後結案。不實作API產品、不重跑seed／build；保留frontend/tools/load-baseline.js既有未追蹤檔。
+- 文件docs/api-board-classification-2026-11-12.md、JSON快照、AGENTS及主題看板規則同步，未改Claude已完成的卡片進度。
+
 ## 2026-11-12 TT-232 完成
 
 - 完成248個自有PHP／artisan逐檔token盤點，含Docker／config／migration／tests／tools；351個new、40個app及11個容器位置，57條顯式constructor邊未見循環。分類與限制／外部SMTP例外、待遷移72處及TT-233／234後續在docs/backend-context-boundaries-2026-11-12.md；清單不是全庫DI合規證書。

@@ -184,6 +184,10 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 已依使用者要求建立SEO、部署、實際功能、AI整合/API四板，Default保留所有卡片；分類與網址見[看板交接](docs/topic-boards-2026-11-11.md)。未來建卡依工作主題帶boardId或更新收錄，保持實際狀態與指派；API Epic TT-3會動態展開，跨主題總覽Epic不可整包收錄導致混板。日期版分類JSON只作本次快照，不能覆蓋後來人工調整。使用者已明確將AI的TaskTracker專案資格改為maintainer，Workspace仍user；權限來自後端有效permission，Owner僅本輪授權改資格後登出，不保留其密碼或延續Owner操作。
 
 
+### 2026-11-12 看板分類收斂
+
+「AI整合/API」只收個人PAT、Scope／期限／撤銷、外部REST操作、OpenAPI／使用文件與獨立客戶端驗收；外部同步／批次／Webhook屬後續能力，不是最小Token操作流程的前置。內部DI／Factory／Context／PHPDoc、Request／DTO與分責／效能重構歸「效能改進」（含架構品質），UI／一般功能與skills沿革歸「實際功能」；不能只因名稱含API或AI就收進對外整合看板。只有專屬TT-3可在API板動態展開，不整包收跨主題Epic。現行分類與移動清單見[2026-11-12盤點](docs/api-board-classification-2026-11-12.md)，取代早期把工程skills也收API板的規則。分類不代表自動變更進度或新增開發授權。
+
 ## 現用本地MySQL／Redis（2026-11-12）
 
 使用者因遠端SQL RTT影響效率，授權完整反向同步後切回本地。33表／5818筆全內容雜湊一致才切換，現用MySQL8.4.13／tasktracker與本地Redis；根忽略.env選docker-compose.yml及.local/local-volumes.yml，指向全新mysql-local-20261112／redis-local-20261112 volumes。原本地volume／外部庫保留但不再同步，不能直接切回覆蓋新資料。APP_KEY／資格／Session保留，Redis namespace仍由env指定；本地現用庫同樣不能拿來seed／RefreshDatabase／壓測。見docs/local-services-return-2026-11-12.md。下節為歷史外部設定。
