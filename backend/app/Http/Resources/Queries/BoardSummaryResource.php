@@ -21,7 +21,7 @@ class BoardSummaryResource extends JsonResource
     }
 
     /**
-     * 明確列出列表需要的六個欄位。
+     * 明確列出列表需要的七個欄位。
      *
      * @param  Request  $request  HTTP格式邊界
      * @return array<string,mixed> 不含收錄ID與活動的摘要
@@ -31,6 +31,7 @@ class BoardSummaryResource extends JsonResource
         $board = $this->resource;
 
         return ['id' => $board->public_id, 'projectId' => $this->projectId, 'name' => $board->name,
-            'revision' => (int) $board->revision, 'isDefault' => false, 'issueCount' => (int) $board->issue_count];
+            'revision' => (int) $board->revision, 'isDefault' => false, 'issueCount' => (int) $board->issue_count,
+            'closedCount' => (int) $board->closed_count];
     }
 }

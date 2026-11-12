@@ -127,6 +127,6 @@ class BoardReadService
     {
         return ['id' => $board?->public_id ?? 'default', 'projectId' => $project->public_id,
             'name' => $board?->name ?? 'Default', 'isDefault' => $board === null,
-            'revision' => $board?->revision ?? 0, 'issueCount' => $this->boards->count($project, $board)];
+            'revision' => $board?->revision ?? 0, ...$this->boards->count($project, $board)];
     }
 }

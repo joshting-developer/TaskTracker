@@ -10,3 +10,7 @@ export function includedIssues(board, issues) {
 export function boardCount(board, issues) {
   return includedIssues(board, issues).length;
 }
+// 只有狀態 type closed 算已完成, 不依顯示名稱
+export function boardClosedCount(board, issues) {
+  return includedIssues(board, issues).filter(issue => issue.state === 'closed').length;
+}

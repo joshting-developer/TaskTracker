@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Fields;
 use App\Models\Issue;
 use App\Models\WorkspaceMember;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -91,5 +92,36 @@ class BoardReadApiTest extends TestCase
         $this->getJson($path.'/'.$board['id'].'/issues')->assertStatus(404);
         WorkspaceMember::where('user_id', $actor['user']['id'])->update(['role' => 'user']);
         $this->getJson($path.'/default/issues')->assertStatus(404);
+    }
+
+    /**
+     * TT-248：已完成數只計狀態type＝closed，與總數同一收錄／Epic展開／去重條件，Default與單一看板一致。
+     *
+     * @return void
+     */
+    public function test_board_summaries_count_closed_type_with_epic_expansion(): void
+    {
+        $this->postJson('/api/auth/register', ['name' => 'Done', 'email' => 'board-done@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Done'])->assertOk();
+        $project = $this->rpc('createProject', ['name' => 'Done', 'code' => 'DONE'])->assertOk()->json('data');
+        $other = $this->rpc('createProject', ['name' => 'Noise', 'code' => 'NOISE'])->assertOk()->json('data');
+        $statuses = [...Fields::STATES, ['id' => 'done', 'label' => '完成', 'color' => '#71a2d5']];
+        $this->rpc('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => $statuses])->assertOk();
+        $create = fn (string $projectId, array $input) => $this->rpc('createIssue', ['projectId' => $projectId, ...$input])->assertOk()->json('data');
+        $epic = $create($project['id'], ['title' => 'Epic', 'type' => 'epic']);
+        $closedChild = $create($project['id'], ['title' => 'Closed child', 'epicId' => $epic['id'], 'state' => 'closed']);
+        $create($project['id'], ['title' => 'Open child', 'epicId' => $epic['id']]);
+        $create($project['id'], ['title' => '顯示名稱完成但非closed', 'state' => 'done']);
+        $create($project['id'], ['title' => 'Closed outside board', 'state' => 'closed']);
+        $create($other['id'], ['title' => 'Other closed', 'state' => 'closed']);
+        $board = $this->rpc('createBoard', ['projectId' => $project['id'], 'name' => 'Epic board', 'selectedIssueIds' => [$epic['id'], $closedChild['id']]])->assertOk()->json('data');
+        $path = '/api/v1/projects/'.$project['id'].'/boards';
+
+        $data = $this->getJson($path)->assertOk()->json('data');
+        $this->assertSame([5, 2], [$data['defaultBoard']['issueCount'], $data['defaultBoard']['closedCount']]);
+        $this->assertSame([3, 1], [$data['items'][0]['issueCount'], $data['items'][0]['closedCount']]);
+        $show = $this->getJson($path.'/'.$board['id'])->assertOk()->json('data');
+        $this->assertSame([3, 1], [$show['issueCount'], $show['closedCount']]);
+        $this->getJson($path.'/default')->assertOk()->assertJsonPath('data.closedCount', 2);
+        $this->getJson('/api/v1/projects/'.$other['id'].'/boards')->assertOk()->assertJsonPath('data.defaultBoard.closedCount', 1);
     }
 }

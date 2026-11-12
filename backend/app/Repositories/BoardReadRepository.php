@@ -8,6 +8,7 @@ use App\Models\Issue;
 use App\Models\Project;
 use App\Queries\BoardIssueScope;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 /** 以Project為範圍的看板投影及SQL去重數量。 */
@@ -21,7 +22,7 @@ class BoardReadRepository
     public function __construct(private BoardIssueScope $scope) {}
 
     /**
-     * 取得自訂看板分頁；每列卡數在同SQL聚合，不載入卡片內容。
+     * 取得自訂看板分頁；每列卡數與結案數在同SQL聚合，不載入卡片內容。
      *
      * @param  Project  $project  已授權Project
      * @param  PageQueryData  $filters  有界搜尋與分頁
@@ -31,10 +32,12 @@ class BoardReadRepository
     {
         $count = Issue::whereColumn('issues.project_id', 'boards.project_id')->whereColumn('issues.workspace_id', 'boards.workspace_id');
         $this->scope->apply($count, null);
+        $closed = $this->closed(clone $count);
         $term = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($filters->search)).'%';
 
         return Board::where('workspace_id', $project->workspace_id)->where('project_id', $project->id)->whereNull('archived_at')
             ->select(['id', 'public_id', 'project_id', 'name', 'revision'])->selectSub($count->selectRaw('COUNT(*)'), 'issue_count')
+            ->selectSub($closed->selectRaw('COUNT(*)'), 'closed_count')
             ->when($filters->search !== '', fn ($q) => $q->whereRaw("LOWER(name) LIKE ? ESCAPE '!'", [$term]))
             ->orderBy('name')->orderBy('public_id')->paginate($filters->perPage, ['*'], 'page', $filters->page);
     }
@@ -53,20 +56,32 @@ class BoardReadRepository
     }
 
     /**
-     * 計算指定Project或看板的去重卡數。
+     * 計算指定Project或看板的去重卡數與其中已結案數，與收錄／Epic展開同一條件。
      *
      * @param  Project  $project  已授權Project
      * @param  Board|null  $board  null表示Default
-     * @return int 符合收錄的卡數
+     * @return array{issueCount:int,closedCount:int} 符合收錄的卡數與結案數
      */
-    public function count(Project $project, ?Board $board): int
+    public function count(Project $project, ?Board $board): array
     {
         $q = Issue::where('workspace_id', $project->workspace_id)->where('project_id', $project->id);
         if ($board) {
             $this->scope->apply($q, $board->id);
         }
 
-        return $q->count();
+        return ['issueCount' => (clone $q)->count(), 'closedCount' => $this->closed($q)->count()];
+    }
+
+    /**
+     * 限定為結案卡：只有狀態type（project_statuses.code）為closed才算，不依顯示名稱。
+     *
+     * @param  Builder<Issue>  $issues  已套用Project與看板收錄條件的任務查詢
+     * @return Builder<Issue> 仍待執行的結案卡查詢
+     */
+    private function closed(Builder $issues): Builder
+    {
+        return $issues->whereIn('issues.state_id', fn ($q) => $q->select('project_statuses.id')->from('project_statuses')
+            ->whereColumn('project_statuses.project_id', 'issues.project_id')->where('project_statuses.code', 'closed'));
     }
 
     /**

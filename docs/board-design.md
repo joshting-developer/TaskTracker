@@ -63,3 +63,11 @@ API：getWorkspace.boards 包含每個可讀 Project 的虛擬 Default（id=defa
 驗證：完整browser-check、U01–U08 UIUX及F01–F04可用性回歸通過；build通過。在`frontend/`執行`E2E_API_URL=http://127.0.0.1:13024 npm run test:board`使用真實隔離API，`E2E_PREVIEW=1`可驗編譯版本；18張執行卡與2張Epic、1440／768／390px、實際滾輪／底卡／密度／偏好／storage失效、Epic篩選與加總、雙擊／鍵盤／手機、真實拖曳與自訂看板去重。腳本占用5175，與其他瀏覽器驗證分開執行。產物在忽略的`frontend/artifacts/board-ux-*`，不提交；不使用業務資料測試。
 
 本輪只修改前端／文件，無migration、無Seed reset；本機來源掛載即時套用。長看板原本1440px內層高度700px／內容5293px，改後內層高度等於內容4539px（含Epic及調整後卡片高度），垂直捲動交給頁面；三尺寸底卡完整可見、無整頁橫向溢位。雙skill採既有app-screen方向及單元件人工檢視，未宣稱上游inspector全部規則通過或真人可用性研究。日誌`/tmp/tasktracker-board-ux-*.log`，不提交截圖／量測產物。
+
+## 2026-11-13 看板列表已完成數與編輯收錄入口（TT-248）
+
+- 每張看板卡顯示「N 張卡片」「已完成 M」與一條細進度軌（M／N，軌道只作視覺輔助、`aria-hidden`；數字以`aria-describedby`接到開啟按鈕）。已完成只計狀態type＝closed，不看顯示名稱；Default與自訂看板一致。
+- 後端`/boards`摘要與單看板`show`多回`closedCount`，與`issueCount`同一收錄／Epic動態展開／去重條件；列表仍是單一SQL的關聯子查詢（perPage上限100），Default／單看板多一個COUNT，不讀卡片內容。
+- 「編輯收錄」由底線文字連結改為卡片底部的次要外框按鈕＋鉛筆圖示，桌機36px、觸控／窄螢幕44px；無`board.manage`與Default仍不顯示。無障礙名稱「編輯收錄 {看板名}」包含可見文字。
+- 驗證：`E2E_API_URL=http://127.0.0.1:<隔離埠> node tools/board-list-summary-check.js`（frontend；`E2E_BEFORE=1`拍修改前）驗計數、Epic去重、closed type、權限、鍵盤焦點、三尺寸無橫向溢出與不讀整包Workspace。截圖在忽略的`frontend/artifacts/tt248/`。
+- 看板列表頁不在48張核准視覺情境內；既有48張compare通過未變。若要把此頁納入視覺基準，需另行人工核准新情境，不自行洗baseline。

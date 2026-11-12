@@ -121,7 +121,9 @@ class MySqlApiTest extends MySqlTestCase
         $this->rpc('logTime', ['issueId' => $child['id'], 'workDate' => now('Asia/Taipei')->toDateString(), 'minutes' => 30])->assertOk();
         $board = $this->rpc('createBoard', ['projectId' => $project['id'], 'name' => 'Delivery', 'selectedIssueIds' => [$epic['id'], $child['id']]])->assertOk()->json('data');
         $base = '/api/v1/projects/'.$project['id'];
-        $this->getJson($base.'/boards')->assertOk()->assertJsonPath('data.items.0.issueCount', 2);
+        $this->getJson($base.'/boards')->assertOk()->assertJsonPath('data.items.0.issueCount', 2)->assertJsonPath('data.items.0.closedCount', 0);
+        $this->rpc('updateIssue', ['id' => $child['id'], 'expectedRevision' => $child['revision'], 'state' => 'closed'])->assertOk();
+        $this->getJson($base.'/boards')->assertOk()->assertJsonPath('data.items.0.closedCount', 1)->assertJsonPath('data.defaultBoard.closedCount', 1);
         $this->getJson($base.'/boards/'.$board['id'].'/issues?type=epic')->assertOk()->assertJsonPath('data.items.0.spentMinutes', 50);
         $this->getJson($base.'/issues/'.$epic['id'])->assertOk()->assertJsonPath('data.spentMinutes', 50);
         $this->getJson($base.'/issues/'.$epic['id'].'/time')->assertOk()->assertJsonPath('data.total', 2)->assertJsonCount(2, 'data.items');
