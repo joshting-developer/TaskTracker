@@ -1,3 +1,15 @@
+## 2026-11-12 TT-181 500卡評估完成
+
+- 真實隔離MySQL／production Chrome，5 Epic＋495 Task、100筆HTTP共5頁、約1.2萬DOM，4x CPU交錯每組3次量layout／style／長任務／捲動／dragover。CSS局部收益在完整元件整合後反轉，v-memo無穩定收益，兩者已撤回，ProjectBoard保持原樣。
+- 完成500卡底卡／F2／真實拖曳／Epic泳道／密度／搜尋復原／三尺寸；production既有看板與composables回歸、build通過。工具 frontend/tools/board-performance-check.js，原始去識別基準 .ecc/benchmarks/board-dom-2026-11-12.json，文件 docs/performance-board-dom-2026-11-12.md。
+- 本卡按「評估500卡DOM與虛擬化策略」交付，未宣稱大型看板已完全改善。首次掛載仍有100–250ms級長任務；已另建TT-256分批掛載／trace定位，open、指派AI、效能改進＋實際功能。先保留完整卡片與原生DnD／焦點，不盲目導入虛擬列表。
+
+## 2026-11-12 TT-181 開始
+
+- TT-240已提交4b13519且結案後才將本卡移inprogress。
+- 先以500卡／5個Epic、不同狀態、標題與參照、真實分頁API及production Chrome建立DOM／layout／長任務／捲動／編輯量測。試驗只針對渲染瓶頸，不預設導入虛擬化或將未渲染卡片從DOM移除。
+- 比較相同頁面與快取條件、同資料；驗證卡片總數、底卡、DnD／F2、泳道、密度／篩選、手機。改善不成立則保留基準與不採用理由，不為效能犧牲操作。
+
 ## 2026-11-12 TT-240 完成
 
 - 完成卡片／篩選／Project負責人／Todo承辦與轉卡／月曆／單卡固定工時／看板用途盤點；看板候選改issue-options最小30筆，取消／分頁／重試共用lookup。修第二頁搜尋繞過debounce，及當頁外父項reference缺epicId導致編輯子卡清空Epic。

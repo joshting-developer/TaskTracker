@@ -1,0 +1,761 @@
+{
+  "card": "TT-181",
+  "date": "2026-11-12",
+  "method": "Production build, isolated MySQL HTTP, Chrome CDP counters and Long Tasks observer, 500 cards, CPU4x, 3 samples per variant per experiment, warm browser assets",
+  "decision": "No CSS containment or v-memo shipped; no virtual list introduced. Preserve all500 DOM cards and existing interaction. TT-256 follows initial mount long tasks.",
+  "limitations": "Counter durations are synthetic layout/style/interaction lab metrics, not RUM/INP/p95; navigation timing includes real local API and client work. Long tasks are phase-classified only in the final run. No allocation/GC/memory or cross-browser capacity claim.",
+  "experiments": {
+    "isolatedCssPrototype": {
+      "build": "before-memo",
+      "browser": "157.0.8103.52",
+      "viewport": "1440x1000",
+      "samples": [
+        {
+          "variant": "baseline",
+          "scrollResizeElapsedMs": 690,
+          "dragFeedbackMs": 443,
+          "dragScriptMs": 1.93,
+          "layoutMs": 94.5,
+          "styleMs": 12.38,
+          "scriptMs": 0.67,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34763,
+          "longTasks": [
+            {
+              "start": 172.30000019073486,
+              "duration": 62
+            },
+            {
+              "start": 654,
+              "duration": 142
+            },
+            {
+              "start": 796.4000005722046,
+              "duration": 190
+            }
+          ]
+        },
+        {
+          "variant": "containment",
+          "scrollResizeElapsedMs": 470,
+          "dragFeedbackMs": 347,
+          "dragScriptMs": 1.71,
+          "layoutMs": 56.61,
+          "styleMs": 27.39,
+          "scriptMs": 2.98,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34763,
+          "longTasks": [
+            {
+              "start": 830.1999998092651,
+              "duration": 120
+            },
+            {
+              "start": 951.1000003814697,
+              "duration": 158
+            },
+            {
+              "start": 1124.3000001907349,
+              "duration": 69
+            }
+          ]
+        },
+        {
+          "variant": "baseline",
+          "scrollResizeElapsedMs": 731,
+          "dragFeedbackMs": 497,
+          "dragScriptMs": 2.66,
+          "layoutMs": 104.78,
+          "styleMs": 13.81,
+          "scriptMs": 0.81,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34763,
+          "longTasks": [
+            {
+              "start": 364,
+              "duration": 110
+            },
+            {
+              "start": 474.3999996185303,
+              "duration": 170
+            }
+          ]
+        },
+        {
+          "variant": "containment",
+          "scrollResizeElapsedMs": 480,
+          "dragFeedbackMs": 353,
+          "dragScriptMs": 2.07,
+          "layoutMs": 57.32,
+          "styleMs": 27.57,
+          "scriptMs": 1.52,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34763,
+          "longTasks": [
+            {
+              "start": 470,
+              "duration": 112
+            },
+            {
+              "start": 582.3999996185303,
+              "duration": 180
+            },
+            {
+              "start": 778.7999992370605,
+              "duration": 63
+            }
+          ]
+        },
+        {
+          "variant": "baseline",
+          "scrollResizeElapsedMs": 629,
+          "dragFeedbackMs": 453,
+          "dragScriptMs": 1.17,
+          "layoutMs": 76.94,
+          "styleMs": 10.8,
+          "scriptMs": 1.52,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34763,
+          "longTasks": [
+            {
+              "start": 418.30000019073486,
+              "duration": 134
+            },
+            {
+              "start": 552.3000001907349,
+              "duration": 136
+            }
+          ]
+        },
+        {
+          "variant": "containment",
+          "scrollResizeElapsedMs": 454,
+          "dragFeedbackMs": 335,
+          "dragScriptMs": 1.41,
+          "layoutMs": 54.29,
+          "styleMs": 26.66,
+          "scriptMs": 1.36,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34763,
+          "longTasks": [
+            {
+              "start": 381.1000003814697,
+              "duration": 106
+            },
+            {
+              "start": 487.80000019073486,
+              "duration": 161
+            },
+            {
+              "start": 658.3999996185303,
+              "duration": 68
+            }
+          ]
+        }
+      ],
+      "cpuRate": 4,
+      "totalCards": 500,
+      "data": "5 Epic + 495 tasks, real isolated MySQL HTTP 100/page",
+      "cache": "warm Chrome assets; API requests are real; CSS experiment added after load; drag feedback uses20 alternating dragover events plus real DnD below",
+      "note": "CDP layout/style/script counters measure scroll+resize; longTasks include navigation and initial render, not RUM/INP."
+    },
+    "memoPrototypeRejected": {
+      "build": "after-memo",
+      "browser": "157.0.8103.52",
+      "viewport": "1440x1000",
+      "samples": [
+        {
+          "variant": "baseline",
+          "scrollResizeElapsedMs": 659,
+          "dragFeedbackMs": 543,
+          "dragScriptMs": 4.09,
+          "layoutMs": 92.78,
+          "styleMs": 13.49,
+          "scriptMs": 0.6,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34561,
+          "longTasks": [
+            {
+              "start": 167,
+              "duration": 54
+            },
+            {
+              "start": 550,
+              "duration": 138
+            },
+            {
+              "start": 688.5,
+              "duration": 178
+            }
+          ]
+        },
+        {
+          "variant": "containment",
+          "scrollResizeElapsedMs": 534,
+          "dragFeedbackMs": 401,
+          "dragScriptMs": 0.78,
+          "layoutMs": 67.22,
+          "styleMs": 31.94,
+          "scriptMs": 2.78,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34561,
+          "longTasks": [
+            {
+              "start": 418.30000019073486,
+              "duration": 119
+            },
+            {
+              "start": 537.5,
+              "duration": 179
+            },
+            {
+              "start": 730.9000005722046,
+              "duration": 73
+            }
+          ]
+        },
+        {
+          "variant": "baseline",
+          "scrollResizeElapsedMs": 715,
+          "dragFeedbackMs": 490,
+          "dragScriptMs": 3.63,
+          "layoutMs": 105.56,
+          "styleMs": 13.72,
+          "scriptMs": 1.34,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34561,
+          "longTasks": [
+            {
+              "start": 430,
+              "duration": 107
+            },
+            {
+              "start": 537.6000003814697,
+              "duration": 162
+            }
+          ]
+        },
+        {
+          "variant": "containment",
+          "scrollResizeElapsedMs": 431,
+          "dragFeedbackMs": 336,
+          "dragScriptMs": 1.46,
+          "layoutMs": 54.37,
+          "styleMs": 24.8,
+          "scriptMs": 1.87,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34561,
+          "longTasks": [
+            {
+              "start": 414.3999996185303,
+              "duration": 109
+            },
+            {
+              "start": 523.6999998092651,
+              "duration": 168
+            },
+            {
+              "start": 702.7999992370605,
+              "duration": 60
+            }
+          ]
+        },
+        {
+          "variant": "baseline",
+          "scrollResizeElapsedMs": 735,
+          "dragFeedbackMs": 664,
+          "dragScriptMs": 1.86,
+          "layoutMs": 101.22,
+          "styleMs": 14.37,
+          "scriptMs": 2.06,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34561,
+          "longTasks": [
+            {
+              "start": 369.79999923706055,
+              "duration": 118
+            },
+            {
+              "start": 488.3999996185303,
+              "duration": 167
+            },
+            {
+              "start": 1641.5,
+              "duration": 67
+            }
+          ]
+        },
+        {
+          "variant": "containment",
+          "scrollResizeElapsedMs": 484,
+          "dragFeedbackMs": 486,
+          "dragScriptMs": 1.98,
+          "layoutMs": 55.5,
+          "styleMs": 25.45,
+          "scriptMs": 1.13,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34561,
+          "longTasks": [
+            {
+              "start": 465.1000003814697,
+              "duration": 114
+            },
+            {
+              "start": 579.5,
+              "duration": 167
+            },
+            {
+              "start": 770,
+              "duration": 59
+            },
+            {
+              "start": 1540.3000001907349,
+              "duration": 71
+            }
+          ]
+        }
+      ],
+      "cpuRate": 4,
+      "totalCards": 500,
+      "data": "5 Epic + 495 tasks, real isolated MySQL HTTP 100/page",
+      "cache": "warm Chrome assets; API requests are real; CSS experiment added after load; drag feedback uses20 alternating dragover events plus real DnD below",
+      "note": "CDP layout/style/script counters measure scroll+resize; longTasks include navigation and initial render, not RUM/INP."
+    },
+    "integratedCssPrototypeRejected": {
+      "build": "production-containment",
+      "browser": "157.0.8103.52",
+      "viewport": "1440x1000",
+      "samples": [
+        {
+          "variant": "baseline",
+          "scrollResizeElapsedMs": 666,
+          "dragFeedbackMs": 412,
+          "dragScriptMs": 3.36,
+          "layoutMs": 91.54,
+          "styleMs": 12.62,
+          "scriptMs": 0.81,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34353,
+          "longTasks": [
+            {
+              "start": 193.5,
+              "duration": 55
+            },
+            {
+              "start": 504.29999923706055,
+              "duration": 136
+            },
+            {
+              "start": 640.5999994277954,
+              "duration": 63
+            },
+            {
+              "start": 729.0999994277954,
+              "duration": 168
+            }
+          ]
+        },
+        {
+          "variant": "containment",
+          "scrollResizeElapsedMs": 549,
+          "dragFeedbackMs": 399,
+          "dragScriptMs": 0.44,
+          "layoutMs": 119.82,
+          "styleMs": 74.88,
+          "scriptMs": 1.25,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34353,
+          "longTasks": [
+            {
+              "start": 375.19999980926514,
+              "duration": 109
+            }
+          ]
+        },
+        {
+          "variant": "baseline",
+          "scrollResizeElapsedMs": 676,
+          "dragFeedbackMs": 523,
+          "dragScriptMs": 0.42,
+          "layoutMs": 95.67,
+          "styleMs": 13.59,
+          "scriptMs": 0.51,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34353,
+          "longTasks": [
+            {
+              "start": 491.8999996185303,
+              "duration": 101
+            },
+            {
+              "start": 643,
+              "duration": 156
+            }
+          ]
+        },
+        {
+          "variant": "containment",
+          "scrollResizeElapsedMs": 623,
+          "dragFeedbackMs": 370,
+          "dragScriptMs": 1.22,
+          "layoutMs": 125.72,
+          "styleMs": 76.14,
+          "scriptMs": 3.02,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34353,
+          "longTasks": [
+            {
+              "start": 379.9000005722046,
+              "duration": 107
+            }
+          ]
+        },
+        {
+          "variant": "baseline",
+          "scrollResizeElapsedMs": 666,
+          "dragFeedbackMs": 576,
+          "dragScriptMs": 2.4,
+          "layoutMs": 89.04,
+          "styleMs": 12.94,
+          "scriptMs": 2.08,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34353,
+          "longTasks": [
+            {
+              "start": 398,
+              "duration": 105
+            },
+            {
+              "start": 567.5999994277954,
+              "duration": 149
+            }
+          ]
+        },
+        {
+          "variant": "containment",
+          "scrollResizeElapsedMs": 503,
+          "dragFeedbackMs": 338,
+          "dragScriptMs": 0.53,
+          "layoutMs": 108.96,
+          "styleMs": 69.69,
+          "scriptMs": 1.08,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 34353,
+          "longTasks": [
+            {
+              "start": 408.5,
+              "duration": 113
+            }
+          ]
+        }
+      ],
+      "cpuRate": 4,
+      "totalCards": 500,
+      "data": "5 Epic + 495 tasks, real isolated MySQL HTTP 100/page",
+      "cache": "warm Chrome assets; API requests are real; CSS experiment added after load; drag feedback uses20 alternating dragover events plus real DnD below",
+      "note": "CDP layout/style/script counters measure scroll+resize; longTasks include navigation and initial render, not RUM/INP."
+    },
+    "unchangedProductionFinal": {
+      "interactionVariant": "unchanged-production",
+      "build": "unchanged-production",
+      "browser": "157.0.8103.52",
+      "viewport": "1440x1000",
+      "samples": [
+        {
+          "variant": "baseline",
+          "readyAtMs": 1372,
+          "initialLongTasks": [
+            {
+              "start": 373.19999980926514,
+              "duration": 89
+            },
+            {
+              "start": 935.3000001907349,
+              "duration": 157
+            },
+            {
+              "start": 1092.6999998092651,
+              "duration": 216
+            }
+          ],
+          "scenarioLongTasks": [],
+          "scrollResizeElapsedMs": 735,
+          "dragFeedbackMs": 420,
+          "dragScriptMs": 1.77,
+          "layoutMs": 112.41,
+          "styleMs": 13.73,
+          "scriptMs": 1.05,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 33942,
+          "longTasks": [
+            {
+              "start": 373.19999980926514,
+              "duration": 89
+            },
+            {
+              "start": 935.3000001907349,
+              "duration": 157
+            },
+            {
+              "start": 1092.6999998092651,
+              "duration": 216
+            }
+          ]
+        },
+        {
+          "variant": "containment",
+          "readyAtMs": 1290,
+          "initialLongTasks": [
+            {
+              "start": 815.8999996185303,
+              "duration": 135
+            },
+            {
+              "start": 950.8999996185303,
+              "duration": 175
+            },
+            {
+              "start": 1140.3999996185303,
+              "duration": 116
+            }
+          ],
+          "scenarioLongTasks": [
+            {
+              "start": 2146.8999996185303,
+              "duration": 78
+            }
+          ],
+          "scrollResizeElapsedMs": 546,
+          "dragFeedbackMs": 424,
+          "dragScriptMs": 0.64,
+          "layoutMs": 67.95,
+          "styleMs": 34.57,
+          "scriptMs": 2.36,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 33942,
+          "longTasks": [
+            {
+              "start": 815.8999996185303,
+              "duration": 135
+            },
+            {
+              "start": 950.8999996185303,
+              "duration": 175
+            },
+            {
+              "start": 1140.3999996185303,
+              "duration": 116
+            },
+            {
+              "start": 2146.8999996185303,
+              "duration": 78
+            }
+          ]
+        },
+        {
+          "variant": "baseline",
+          "readyAtMs": 967,
+          "initialLongTasks": [
+            {
+              "start": 624.9000005722046,
+              "duration": 131
+            },
+            {
+              "start": 756.5,
+              "duration": 174
+            }
+          ],
+          "scenarioLongTasks": [
+            {
+              "start": 1649.6999998092651,
+              "duration": 61
+            },
+            {
+              "start": 2286.199999809265,
+              "duration": 90
+            }
+          ],
+          "scrollResizeElapsedMs": 1131,
+          "dragFeedbackMs": 609,
+          "dragScriptMs": 1.39,
+          "layoutMs": 151.87,
+          "styleMs": 16.6,
+          "scriptMs": 1.89,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 33942,
+          "longTasks": [
+            {
+              "start": 624.9000005722046,
+              "duration": 131
+            },
+            {
+              "start": 756.5,
+              "duration": 174
+            },
+            {
+              "start": 1649.6999998092651,
+              "duration": 61
+            },
+            {
+              "start": 2286.199999809265,
+              "duration": 90
+            }
+          ]
+        },
+        {
+          "variant": "containment",
+          "readyAtMs": 907,
+          "initialLongTasks": [
+            {
+              "start": 504.6000003814697,
+              "duration": 116
+            },
+            {
+              "start": 620.8000001907349,
+              "duration": 178
+            },
+            {
+              "start": 806.8000001907349,
+              "duration": 68
+            }
+          ],
+          "scenarioLongTasks": [],
+          "scrollResizeElapsedMs": 532,
+          "dragFeedbackMs": 337,
+          "dragScriptMs": 2.24,
+          "layoutMs": 66.58,
+          "styleMs": 30.43,
+          "scriptMs": 4.06,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 33942,
+          "longTasks": [
+            {
+              "start": 504.6000003814697,
+              "duration": 116
+            },
+            {
+              "start": 620.8000001907349,
+              "duration": 178
+            },
+            {
+              "start": 806.8000001907349,
+              "duration": 68
+            }
+          ]
+        },
+        {
+          "variant": "baseline",
+          "readyAtMs": 1392,
+          "initialLongTasks": [
+            {
+              "start": 964.6000003814697,
+              "duration": 133
+            },
+            {
+              "start": 1097.6999998092651,
+              "duration": 236
+            }
+          ],
+          "scenarioLongTasks": [
+            {
+              "start": 2192,
+              "duration": 159
+            }
+          ],
+          "scrollResizeElapsedMs": 747,
+          "dragFeedbackMs": 725,
+          "dragScriptMs": 2.31,
+          "layoutMs": 102.49,
+          "styleMs": 16.04,
+          "scriptMs": 1.04,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 33942,
+          "longTasks": [
+            {
+              "start": 964.6000003814697,
+              "duration": 133
+            },
+            {
+              "start": 1097.6999998092651,
+              "duration": 236
+            },
+            {
+              "start": 2192,
+              "duration": 159
+            }
+          ]
+        },
+        {
+          "variant": "containment",
+          "readyAtMs": 928,
+          "initialLongTasks": [
+            {
+              "start": 481.1000003814697,
+              "duration": 132
+            },
+            {
+              "start": 613.6999998092651,
+              "duration": 161
+            },
+            {
+              "start": 831.1999998092651,
+              "duration": 64
+            }
+          ],
+          "scenarioLongTasks": [],
+          "scrollResizeElapsedMs": 533,
+          "dragFeedbackMs": 370,
+          "dragScriptMs": 1.74,
+          "layoutMs": 73.06,
+          "styleMs": 32.45,
+          "scriptMs": 1.88,
+          "domNodes": 11975,
+          "cards": 500,
+          "scrollHeight": 33942,
+          "longTasks": [
+            {
+              "start": 481.1000003814697,
+              "duration": 132
+            },
+            {
+              "start": 613.6999998092651,
+              "duration": 161
+            },
+            {
+              "start": 831.1999998092651,
+              "duration": 64
+            }
+          ]
+        }
+      ],
+      "cpuRate": 4,
+      "totalCards": 500,
+      "data": "5 Epic + 495 tasks, real isolated MySQL HTTP 100/page",
+      "cache": "warm Chrome assets; API requests are real; CSS experiment added after load; drag feedback uses20 alternating dragover events plus real DnD below",
+      "note": "CDP layout/style/script counters measure scroll+resize; initialLongTasks end before settled500-card readyAtMs; scenarioLongTasks are scroll/resize/drag feedback; not RUM/INP."
+    }
+  }
+}
