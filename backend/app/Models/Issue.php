@@ -108,6 +108,16 @@ class Issue extends Model
         return $this->belongsToMany(Issue::class, 'issue_relations', 'issue_id', 'related_issue_id')->withPivot(['workspace_id', 'project_id', 'position'])->orderByPivot('position');
     }
 
+    /**
+     * TT-173：外部識別對照，供增量同步附來源識別。
+     *
+     * @return HasMany<IssueExternalRef, $this> 同卡外部識別
+     */
+    public function externalRefs(): HasMany
+    {
+        return $this->hasMany(IssueExternalRef::class, 'issue_id');
+    }
+
     /** 回傳JSON快照及歷史相容欄位的型別。
      * @return array
      */

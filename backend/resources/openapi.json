@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker API",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "description": "公開Bearer v1讀取及Issue建立／PATCH／留言及外部識別查詢／upsert／批次；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。"
   },
   "servers": [
@@ -4619,7 +4619,7 @@
                         "items": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/components/schemas/IssueList"
+                            "$ref": "#/components/schemas/IssueChange"
                           },
                           "maxItems": 100
                         },
@@ -4637,7 +4637,8 @@
                         },
                         "syncUntil": {
                           "type": "string",
-                          "format": "date-time"
+                          "format": "date-time",
+                          "description": "下一輪包含邊界的updatedSince。為涵蓋較晚提交的寫入，會比本輪讀取時間早數秒（預設10秒），下一輪會重讀這段時間的項目，請依id／revision去重"
                         }
                       }
                     }
@@ -4660,7 +4661,8 @@
                         "dueDate": "",
                         "revision": 1,
                         "createdAt": "2026-11-12T00:00:00Z",
-                        "updatedAt": "2026-11-12T00:00:00Z"
+                        "updatedAt": "2026-11-12T00:00:00Z",
+                        "externalRefs": []
                       }
                     ],
                     "perPage": 20,
@@ -4864,7 +4866,7 @@
             }
           }
         },
-        "description": "updated_at、唯一ID升冪keyset；最大100筆，無COUNT或OFFSET。syncUntil固定本輪上界，nextCursor為null表示本輪讀完。下一輪以syncUntil作包含邊界的updatedSince並依id／revision去重。不是跨請求snapshot或刪除事件feed。",
+        "description": "updated_at、唯一ID升冪keyset；最大100筆，無COUNT或OFFSET。nextCursor為null表示本輪讀完。syncUntil是下一輪的包含邊界updatedSince，會比本輪讀取時間早一個緩衝（預設10秒），用來重讀較晚提交的寫入，請依id／revision去重。項目附externalRefs供對應外部紀錄。卡片目前沒有刪除或封存操作（closed是狀態），所以沒有tombstone；撤權或篩選條件變化造成的離開範圍，請用不帶篩選的定期全量對帳偵測。不是跨請求snapshot。",
         "deprecated": false,
         "x-tasktracker-context": "token-workspace",
         "x-rate-limit": {
@@ -7217,6 +7219,106 @@
             }
           }
         }
+      },
+      "IssueChange": {
+        "type": "object",
+        "required": [
+          "id",
+          "projectId",
+          "identifier",
+          "title",
+          "state",
+          "assignee",
+          "assigneeName",
+          "dueDate",
+          "type",
+          "priority",
+          "revision",
+          "createdAt",
+          "updatedAt",
+          "externalRefs"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "identifier": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "assignee": {
+            "type": "string"
+          },
+          "assigneeName": {
+            "type": "string"
+          },
+          "dueDate": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "epic",
+              "task",
+              "bug"
+            ]
+          },
+          "priority": {
+            "enum": [
+              "urgent",
+              "high",
+              "normal",
+              "low"
+            ]
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "createdAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "externalRefs": {
+            "type": "array",
+            "description": "TT-171外部識別；同步時用來對應外部紀錄，不解析描述。每個source最多一筆",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "externalId"
+              ],
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "externalId": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "description": "增量摘要項目：列表欄位加externalRefs"
       }
     },
     "headers": {

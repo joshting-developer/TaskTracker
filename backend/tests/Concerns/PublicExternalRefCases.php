@@ -2,8 +2,10 @@
 
 namespace Tests\Concerns;
 
+use App\Database\DatabaseTimes;
 use App\Models\IntegrationAudit;
 use App\Models\Issue;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -207,5 +209,37 @@ trait PublicExternalRefCases
         $read = $this->tokenIssue()['plainTextToken'];
         $this->batchUpsert($read, $project['id'], ['requestId' => (string) Str::uuid(), 'items' => [$item]], 403);
         $this->assertSame(0, $this->issuesIn($project['id']));
+    }
+
+    /**
+     * TT-173：增量項目附外部識別；下一輪水位往前退settle秒，邊界內較晚提交的寫入在下一輪仍讀得到。
+     *
+     * @return void
+     */
+    public function test_issue_changes_include_external_refs_and_settled_watermark_catches_late_commits(): void
+    {
+        config(['tasktracker.sync.settle_seconds' => 10]);
+        [$project, $plain] = $this->externalFixture('SYN');
+        $linked = $this->external($plain, 'PUT', $project['id'], 'github/repo-1', ['title' => 'linked', 'requestId' => (string) Str::uuid()])['data'];
+        Auth::forgetGuards();
+        $plainCard = $this->postJson('/api/public/v1/projects/'.$project['id'].'/issues', ['title' => 'plain', 'requestId' => (string) Str::uuid()], ['Authorization' => 'Bearer '.$plain])->assertOk()->json('data');
+        $read = fn (array $query) => $this->getJson('/api/public/v1/projects/'.$project['id'].'/issue-changes?'.http_build_query($query), ['Authorization' => 'Bearer '.$plain])->assertOk()->json('data');
+
+        $round = $read(['perPage' => 100]);
+        $items = collect($round['items'])->keyBy('id');
+        $this->assertSame([['source' => 'github', 'externalId' => 'repo-1']], $items[$linked['id']]['externalRefs']);
+        $this->assertSame([], $items[$plainCard['id']]['externalRefs']);
+        $until = CarbonImmutable::parse($round['syncUntil']);
+        $this->assertTrue($until->lessThan(CarbonImmutable::parse($items[$linked['id']]['updatedAt'])), '水位比本輪最新項目早，留有settle緩衝');
+
+        // 模擬較晚提交：時間戳落在水位與上一輪讀取時間之間的寫入，上一輪看不到，下一輪仍會讀到。
+        $late = Issue::where('public_id', $plainCard['id'])->firstOrFail()->replicate();
+        $late->public_id = (string) Str::uuid();
+        $late->identifier = 'SYN-99';
+        $late->updated_at = DatabaseTimes::store($until->addSeconds(3)->toISOString());
+        $late->save();
+        $next = collect($read(['perPage' => 100, 'updatedSince' => $round['syncUntil']])['items'])->pluck('id');
+        $this->assertContains($late->public_id, $next->all(), '邊界內較晚提交不遺漏');
+        $this->assertContains($linked['id'], $next->all(), '重讀緩衝內項目，由客戶端以id／revision去重');
     }
 }

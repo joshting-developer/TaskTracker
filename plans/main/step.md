@@ -1560,3 +1560,10 @@ AGENTS.md 加入持續同步規則與入口。相對連結、換行與 git diff 
 - [x] Request／Service／Repository／路由、OpenAPI0.7.0、契約／Agent指南／docs/public-external-batch.md。
 - [x] 隔離MySQL完整207通過、OpenAPI結構檢查、Pint。
 - [x] 契約CI完整通過；重建backend／queue／websocket，主站OpenAPI0.7.0，主容器memory146通過；無migration。
+
+## 2026-11-12 TT-173 同步語意（Claude）
+
+- [x] 查核：無刪除／封存操作；syncUntil=now有較晚提交遺漏風險。
+- [x] syncUntil settle緩衝、issue-changes附externalRefs、契約同步語意章節、OpenAPI0.8.0、docs/public-sync-semantics.md。
+- [x] 隔離MySQL完整209通過。
+- [x] 契約CI完整通過；重建backend／queue／websocket，主站OpenAPI0.8.0，主容器memory147通過；無migration。

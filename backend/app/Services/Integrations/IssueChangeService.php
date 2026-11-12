@@ -6,6 +6,7 @@ use App\Data\IssueChangesQueryData;
 use App\Data\WorkspaceContext;
 use App\Repositories\IssueReadRepository;
 use App\Services\ProjectReadService;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 
 /** 同Project的有界live增量摘要；每批先驗當前權限，不保存授權快照。 */
@@ -41,6 +42,12 @@ class IssueChangeService
         $last = $rows->last();
         $cursor = $hasMore ? $this->cursors->encode(['version' => 1, 'binding' => $binding, 'until' => $until, 'time' => $last->updated_at, 'id' => (int) $last->id]) : null;
 
-        return ['items' => $rows, 'perPage' => $size, 'nextCursor' => $cursor, 'syncUntil' => $until];
+        // 本輪項目仍到until為止；下一輪水位往前退settle秒，重讀邊界內較晚提交的寫入（以id／revision去重）。
+        $settled = CarbonImmutable::parse($until)->subSeconds(max(0, (int) config('tasktracker.sync.settle_seconds', 10)));
+        if ($query->updatedSince !== null && $settled->lessThan(CarbonImmutable::parse($query->updatedSince))) {
+            $settled = CarbonImmutable::parse($query->updatedSince);
+        }
+
+        return ['items' => $rows, 'perPage' => $size, 'nextCursor' => $cursor, 'syncUntil' => $settled->utc()->toISOString()];
     }
 }

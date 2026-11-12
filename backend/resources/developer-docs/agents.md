@@ -39,7 +39,7 @@ PAT 不印在對話／卡片／Commit／log，不傳給不受信任網址，不�
 
 ## 增量接續
 
-大量或增量讀取用OpenAPI的listPublicIssueChanges（Project issue-changes），避免深頁碼／COUNT。保留所有filters與perPage，上一批成功保存後送回nextCursor；nextCursor為null才以syncUntil開新輪updatedSince，邊界包含且按id／revision去重。同一秒多張卡片不只用時間戳當cursor；不要把live列表當多請求snapshot或刪除feed。Python下載範例含完整接續迴圈；其他注意事項見contract的增量章節。
+大量或增量讀取用OpenAPI的listPublicIssueChanges（項目附externalRefs，syncUntil留有數秒緩衝、下一輪會重讀，請依id／revision去重；目前沒有刪除事件，鏡像同步請不帶篩選並定期全量對帳）（Project issue-changes），避免深頁碼／COUNT。保留所有filters與perPage，上一批成功保存後送回nextCursor；nextCursor為null才以syncUntil開新輪updatedSince，邊界包含且按id／revision去重。同一秒多張卡片不只用時間戳當cursor；不要把live列表當多請求snapshot或刪除feed。Python下載範例含完整接續迴圈；其他注意事項見contract的增量章節。
 
 ## 外部識別對應
 

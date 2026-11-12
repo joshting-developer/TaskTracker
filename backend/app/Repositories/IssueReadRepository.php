@@ -196,7 +196,7 @@ class IssueReadRepository
             });
         }
 
-        return $q->orderBy('updated_at')->orderBy('id')->limit($filters->pagination->perPage + 1)->get();
+        return $q->with(['externalRefs' => fn ($refs) => $refs->select(['id', 'issue_id', 'source', 'external_id'])->orderBy('source')])->orderBy('updated_at')->orderBy('id')->limit($filters->pagination->perPage + 1)->get();
     }
 
     /**

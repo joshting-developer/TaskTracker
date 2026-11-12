@@ -150,3 +150,16 @@ curl --fail-with-body -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
 保存上一批nextCursor後重送，須沿用原完整filters／updatedSince／perPage；syncUntil在同一輪固定。Cursor為不透明認證加密字串，不自行解析，URL請encode；變造、換本人／Workspace／Project／條件會400，無Project資格仍404／失效PAT401。Cursor不保存權限，每頁重新驗證；換Token但仍同本人及範圍可接續。APP_KEY變更使舊cursor無效，重新掃描即可。
 
 只有nextCursor為null才完成本輪，保存syncUntil作**下一輪包含邊界的updatedSince**；依卡片id／revision去重，避免同秒只用大於時間造成遺漏。處理／保存本批成功後才前進cursor；timeout重送原cursor不會修改資料。途中live更新可能使卡片移動／重複，這不是跨多個HTTP交易的固定DB snapshot，也不承諾長交易延遲提交／倒填時間／刪除的無損changefeed；關閉仍是state，刪除／封存事件另按後續同步契約開放。
+
+## 同步語意：全量、增量、刪除與來源識別
+
+- **全量**：不帶updatedSince呼叫issue-changes並讀到nextCursor為null，即取得目前可見的全部卡片。這包含沒有更新時間的歷史卡。
+- **增量**：每輪讀完後，把syncUntil存成下一輪的updatedSince（包含邊界）。
+  - syncUntil會比本輪讀取時間早一個緩衝（預設10秒），用來補讀「時間戳已寫入但較晚提交」的寫入。
+  - 下一輪會重複出現緩衝期內的卡，請依id與revision去重：revision沒有變大就略過。
+- **來源識別**：每個項目附`externalRefs`（TT-171的source／externalId）。外部系統用它對應自己的紀錄，不需要解析標題或描述。沒有綁定時是空陣列。
+- **刪除與封存**：目前公開API和Web都沒有刪除或封存卡片的操作。closed只是狀態，會照常出現在增量裡，所以本版沒有tombstone或刪除事件。日後若新增刪除，會先提供刪除事件或tombstone，並在OpenAPI公告，不會讓卡片無聲消失。
+- **離開範圍**：撤銷Project權限時，整個Project回404，請停止同步並視情況封存本地資料。
+  - 帶type／state等篩選時，卡片改成不符合條件後就不會再出現。要做鏡像同步，請不要帶篩選，或定期跑一次全量。
+  - 全量對帳：讀完全部，把本輪沒出現的本地紀錄視為已離開範圍。
+- **回音辨識**：外部系統自己寫回的變更也會出現在增量裡。目前可用revision或externalRefs自行辨識，通用的來源與回音識別屬TT-176。
