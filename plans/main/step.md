@@ -26,6 +26,7 @@
 - TT-260：全部API路由具名（測試阻擋未命名／漏掛）、terminable middleware回應後記錄非GET寫入（含失敗，排除POST讀取）、失敗只log；PAT身分經請求Context；`GET /api/v1/operation-logs`需workspace.operationLogs.read、keyset分頁；Prunable 90天＋每日model:prune（待TT-162 scheduler）。移除未用/up。
 - TT-250：永久刪除（無封存），issue.delete（管理者以上），工時／子卡409，連帶清除＋關聯端／看板revision＋墓碑；Session RPC＋公開DELETE＋issue-deletions，OpenAPI 0.10.0；詳細頁刪除按鈕。後端／前端回歸通過；07-detail三尺寸視覺差異待Josh核准，卡片維持進行中。
 - TT-179：評估交付docs/app-coordination-evaluation-2026-11-13.md；App內舊整包任務UI經路由分析不可達→建TT-284移除；canLeave逐一查ref→TT-285 leave registry＋導覽／Session composable。未改產品程式；不引入Router／Pinia／TS。
+- SEO（使用者追加：實際功能完成後處理SEO，採Claude建議）：TT-205路由表docs/public-entry-routes.md＋nginx `/about`→301 `/about/`、`$uri/index.html`；容器實測。原實際功能板另有4張Codex新增大卡未動。
 
 ## 2026-11-13 TT-264修復階段完成，基準核准待回覆
 
