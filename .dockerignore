@@ -1,4 +1,7 @@
 **
+!docker/
+!docker/production/
+!docker/production/**
 !frontend/
 !frontend/package.json
 !frontend/package-lock.json
