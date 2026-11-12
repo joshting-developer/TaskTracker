@@ -1,0 +1,236 @@
+{
+  "scope": "Eight fresh read-only sessions against final stack-aware registry; simulations are not UI implementation acceptance",
+  "passed": true,
+  "results": [
+    {
+      "case": "text",
+      "host": "codex",
+      "exitCode": 0,
+      "passed": true,
+      "expectedSkills": [
+        "design-taste-frontend",
+        "ponytail",
+        "side-project-development-standards",
+        "ui-ux-pro-max",
+        "vue-best-practices"
+      ],
+      "reportedSkills": [
+        "side-project-development-standards",
+        "ponytail",
+        "vue-best-practices",
+        "ui-ux-pro-max",
+        "design-taste-frontend"
+      ],
+      "toolReadSkills": [
+        "design-taste-frontend",
+        "ponytail",
+        "side-project-development-standards",
+        "ui-ux-pro-max",
+        "vue-best-practices"
+      ],
+      "ponytailLevel": "lite",
+      "traceSha256": "b8ddabe914dc6d35a9b99f0cf413e6b93fc3d06a2eabbea2e80f64c9bd34d047",
+      "registrySha256": "cefbe2c66bf14bd28cdf54d06dadfd5316f8e580713635fde20bd60255c58f1b",
+      "limitation": null
+    },
+    {
+      "case": "form",
+      "host": "codex",
+      "exitCode": 0,
+      "passed": true,
+      "expectedSkills": [
+        "design-taste-frontend",
+        "ponytail",
+        "side-project-development-standards",
+        "ui-ux-pro-max",
+        "vue-best-practices"
+      ],
+      "reportedSkills": [
+        "side-project-development-standards",
+        "ponytail",
+        "vue-best-practices",
+        "ui-ux-pro-max",
+        "design-taste-frontend"
+      ],
+      "toolReadSkills": [
+        "design-taste-frontend",
+        "ponytail",
+        "side-project-development-standards",
+        "ui-ux-pro-max",
+        "vue-best-practices"
+      ],
+      "ponytailLevel": "lite",
+      "traceSha256": "d70c0035741d06899d63ecd10be9b56e834033101c79042b2331e0770c1dbd50",
+      "registrySha256": "cefbe2c66bf14bd28cdf54d06dadfd5316f8e580713635fde20bd60255c58f1b",
+      "limitation": null
+    },
+    {
+      "case": "backend",
+      "host": "codex",
+      "exitCode": 0,
+      "passed": true,
+      "expectedSkills": [
+        "laravel-architecture",
+        "laravel-patterns",
+        "ponytail",
+        "side-project-development-standards"
+      ],
+      "reportedSkills": [
+        "side-project-development-standards",
+        "ponytail",
+        "laravel-patterns",
+        "laravel-architecture"
+      ],
+      "toolReadSkills": [
+        "laravel-architecture",
+        "laravel-patterns",
+        "ponytail",
+        "side-project-development-standards"
+      ],
+      "ponytailLevel": "lite",
+      "traceSha256": "8091e229d3cf082ca7bca9b58823347740e12204a026aa1e1ad57b9a00ba1c77",
+      "registrySha256": "cefbe2c66bf14bd28cdf54d06dadfd5316f8e580713635fde20bd60255c58f1b",
+      "limitation": null
+    },
+    {
+      "case": "dependency",
+      "host": "codex",
+      "exitCode": 0,
+      "passed": true,
+      "expectedSkills": [
+        "ponytail",
+        "side-project-development-standards",
+        "vue-best-practices"
+      ],
+      "reportedSkills": [
+        "side-project-development-standards",
+        "ponytail",
+        "vue-best-practices"
+      ],
+      "toolReadSkills": [
+        "ponytail",
+        "side-project-development-standards",
+        "vue-best-practices"
+      ],
+      "ponytailLevel": "lite",
+      "traceSha256": "a18de61be35ff4a03b3c56a303a39c029bab6d122d6bb8ee9c4af6142b3d05e9",
+      "registrySha256": "cefbe2c66bf14bd28cdf54d06dadfd5316f8e580713635fde20bd60255c58f1b",
+      "limitation": null
+    },
+    {
+      "case": "text",
+      "host": "claude",
+      "exitCode": 0,
+      "passed": true,
+      "expectedSkills": [
+        "design-taste-frontend",
+        "ponytail",
+        "side-project-development-standards",
+        "ui-ux-pro-max",
+        "vue-best-practices"
+      ],
+      "reportedSkills": [
+        "side-project-development-standards",
+        "ponytail",
+        "vue-best-practices",
+        "ui-ux-pro-max",
+        "design-taste-frontend"
+      ],
+      "toolReadSkills": [
+        "design-taste-frontend",
+        "ponytail",
+        "side-project-development-standards",
+        "ui-ux-pro-max",
+        "vue-best-practices"
+      ],
+      "ponytailLevel": "lite",
+      "traceSha256": "090ae2c1f805cec7ebe5e2661a89df985038874e82ffc338d363dc9316ce6b1e",
+      "registrySha256": "cefbe2c66bf14bd28cdf54d06dadfd5316f8e580713635fde20bd60255c58f1b",
+      "limitation": null
+    },
+    {
+      "case": "form",
+      "host": "claude",
+      "exitCode": 0,
+      "passed": true,
+      "expectedSkills": [
+        "design-taste-frontend",
+        "ponytail",
+        "side-project-development-standards",
+        "ui-ux-pro-max",
+        "vue-best-practices"
+      ],
+      "reportedSkills": [
+        "side-project-development-standards",
+        "ponytail",
+        "vue-best-practices",
+        "ui-ux-pro-max",
+        "design-taste-frontend"
+      ],
+      "toolReadSkills": [
+        "design-taste-frontend",
+        "ponytail",
+        "side-project-development-standards",
+        "ui-ux-pro-max",
+        "vue-best-practices"
+      ],
+      "ponytailLevel": "lite",
+      "traceSha256": "7b3fb8cf2c275900a0884a1e94927bcbd741b7c05384d0013072329ff46aed32",
+      "registrySha256": "cefbe2c66bf14bd28cdf54d06dadfd5316f8e580713635fde20bd60255c58f1b",
+      "limitation": null
+    },
+    {
+      "case": "backend",
+      "host": "claude",
+      "exitCode": 0,
+      "passed": true,
+      "expectedSkills": [
+        "laravel-architecture",
+        "laravel-patterns",
+        "ponytail",
+        "side-project-development-standards"
+      ],
+      "reportedSkills": [
+        "side-project-development-standards",
+        "ponytail",
+        "laravel-patterns",
+        "laravel-architecture"
+      ],
+      "toolReadSkills": [
+        "laravel-architecture",
+        "laravel-patterns",
+        "ponytail",
+        "side-project-development-standards"
+      ],
+      "ponytailLevel": "lite",
+      "traceSha256": "c8ec9ecba6e67f6729f569baad8e6837f3cfc75bd10a1b8436676f1a333853b6",
+      "registrySha256": "cefbe2c66bf14bd28cdf54d06dadfd5316f8e580713635fde20bd60255c58f1b",
+      "limitation": null
+    },
+    {
+      "case": "dependency",
+      "host": "claude",
+      "exitCode": 0,
+      "passed": true,
+      "expectedSkills": [
+        "ponytail",
+        "side-project-development-standards",
+        "vue-best-practices"
+      ],
+      "reportedSkills": [
+        "side-project-development-standards",
+        "ponytail",
+        "vue-best-practices"
+      ],
+      "toolReadSkills": [
+        "ponytail",
+        "side-project-development-standards",
+        "vue-best-practices"
+      ],
+      "ponytailLevel": "lite",
+      "traceSha256": "a71a1ae91c7ba9071ad508365517deeaf7d595f98f4d58f3e4aac1fe51a825a2",
+      "registrySha256": "cefbe2c66bf14bd28cdf54d06dadfd5316f8e580713635fde20bd60255c58f1b",
+      "limitation": null
+    }
+  ]
+}

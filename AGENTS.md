@@ -15,10 +15,8 @@
 
 - 唯一正文由共用庫維護；`.agents/skills`是發現入口，`skills/`舊路徑為相容連結／來源與歷史索引。缺庫或失效入口須回報，不靜默回退全域同名Skill。
 - 所有開發／review／重構／測試使用 `01-common/side-project-development-standards`；框架／UI／效能依registry選讀。通用規則回共用庫更新，只有實際專用Skill才留專案並說明理由。
-- Laravel：ECC laravel-patterns＋laravel-architecture；Vue：vue-best-practices。嚴格Controller → Service → Repository，Controller／Service穩定依賴用建構子注入，簡單CRUD也一致，例外依共用Architecture。
-- UI：ui-ux-pro-max＋design-taste-frontend的app-screen流程；沿用產品品牌與框架。僅要求審查先交報告，不自動改畫面；實作須真實瀏覽器證據。
-- 效能：performance-optimization主診斷＋benchmark補量測，讀docs/performance-skills.md；不得以memory SQLite或單次本地耗時替代實際引擎／拓樸或HTTP p95。
-- Ponytail採lite，不啟用全域plugin／hook；不凌駕嚴格分層、DI／PHPDoc、安全、可及性、必要測試。Hallmark／Unslop依明確任務及共用配置選用，不因此擅自重設計。
+- Skill選用／檢查以共用registry.json的selectionRules為唯一矩陣；執行 `python3 tools/check-task-skills.py --consumer . --base HEAD --tag implementation`，間接畫面／資料影響加ui／data-access標籤。標籤只能加門檻，不可略過；實際讀取與檢查證據依共用check_evidence.py驗證。
+- 框架、UI／UX與效能按矩陣搭配；Ponytail採lite、不啟用全域hook／plugin，安全、嚴格分層、DI／PHPDoc、可及性與驗證優先。品牌／技術棧及產品綁定留consumer文件；缺核准visual baseline不能PASS。
 - 使用者→consumer安全／產品契約→共用工程／框架→Ponytail→審美；除明確指定外不讀其他專案／全域Skill。來源／沿革連結不等於授權載入外部規則。
 
 ## API、資料與驗證門檻
