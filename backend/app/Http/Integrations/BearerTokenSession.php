@@ -95,9 +95,10 @@ class BearerTokenSession
      * @param  Closure(TokenContext):void  $authorize  資源條件重驗，必須在receipt前執行
      * @param  Closure(TokenContext):array  $use  共用業務用例，回傳有界結果
      * @param  string  $projectId  Project公開ID
+     * @param  string  $permission  目標Project須具備的有效permission；刪卡為issue.delete
      * @return array 首次結果或相同請求原結果
      */
-    public function writeOnce(Request $request, string $operation, array $input, Closure $authorize, Closure $use, string $projectId): array
+    public function writeOnce(Request $request, string $operation, array $input, Closure $authorize, Closure $use, string $projectId, string $permission = 'issue.write'): array
     {
         $reference = $this->clientReference($request);
 
@@ -114,7 +115,7 @@ class BearerTokenSession
 
                 return $result;
             });
-        }, $projectId, 'issue.write');
+        }, $projectId, $permission);
     }
 
     /**

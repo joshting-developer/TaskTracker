@@ -40,6 +40,7 @@ Route::prefix('/api/public/v1')->middleware('throttle:public-api-v1')->withoutMi
     Route::get('/projects/{project}/statuses', [$projects, 'statuses'])->name('public.v1.projects.statuses');
     Route::get('/projects/{project}/issues', [$queries, 'issues'])->name('public.v1.projects.issues');
     Route::get('/projects/{project}/issue-changes', [PublicIssueChangesController::class, 'changes'])->name('public.v1.projects.issue-changes');
+    Route::get('/projects/{project}/issue-deletions', [PublicIssueChangesController::class, 'deletions'])->name('public.v1.projects.issue-deletions');
     Route::get('/projects/{project}/issues/{issue}', [$queries, 'issue'])->name('public.v1.projects.issues.show');
     Route::get('/projects/{project}/issues/{issue}/comments', [$queries, 'comments'])->name('public.v1.projects.issues.comments');
     Route::get('/projects/{project}/issues/external/{source}/{externalId}', [PublicIssueExternalController::class, 'show'])->name('public.v1.projects.issues.external.show');
@@ -52,6 +53,7 @@ Route::prefix('/api/public/v1/projects/{project}/issues')->middleware('throttle:
     Route::post('/', [$writes, 'execute'])->name('public.issues.create');
     Route::patch('/{issue}', [$writes, 'execute'])->name('public.issues.update');
     Route::post('/{issue}/comments', [$writes, 'execute'])->name('public.issues.comment');
+    Route::delete('/{issue}', [$writes, 'execute'])->name('public.issues.delete');
     Route::put('/external/{source}/{externalId}', [PublicIssueExternalController::class, 'upsert'])->name('public.issues.upsert');
     Route::post('/external-batch', [PublicIssueExternalController::class, 'batch'])->name('public.issues.batch');
 });

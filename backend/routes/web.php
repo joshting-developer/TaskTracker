@@ -59,6 +59,7 @@ Route::post('/api/rpc/updateStatuses', [ProjectController::class, 'statuses'])->
 Route::post('/api/rpc/createIssue', [IssueController::class, 'store'])->name('rpc.createIssue');
 Route::post('/api/rpc/updateIssue', [IssueController::class, 'update'])->name('rpc.updateIssue');
 Route::post('/api/rpc/addComment', [IssueController::class, 'comment'])->name('rpc.addComment');
+Route::post('/api/rpc/deleteIssue', [IssueController::class, 'destroy'])->name('rpc.deleteIssue');
 
 Route::post('/api/rpc/getTimeReport', [TimeEntryController::class, 'report'])->name('rpc.getTimeReport');
 Route::post('/api/rpc/logTime', [TimeEntryController::class, 'store'])->name('rpc.logTime');

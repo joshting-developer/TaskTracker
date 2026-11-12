@@ -14,12 +14,13 @@ class ProjectAccess
 
     public const DEVELOP = [...self::READ, 'issue.write', 'timeEntry.readOwn', 'timeEntry.readTeam', 'timeEntry.writeOwn'];
 
-    public const MANAGE = [...self::DEVELOP, 'project.update', 'project.statuses.update', 'project.members.manage', 'board.manage', 'notification.readTeam'];
+    public const MANAGE = [...self::DEVELOP, 'project.update', 'project.statuses.update', 'project.members.manage', 'board.manage', 'notification.readTeam', 'issue.delete'];
 
     public const ANY = [
         'project.read' => 'project.readAny',
         'issue.read' => 'issue.readAny',
         'issue.write' => 'issue.writeAny',
+        'issue.delete' => 'issue.deleteAny',
         'project.update' => 'project.updateAny',
         'project.statuses.update' => 'project.statuses.updateAny',
         'project.members.manage' => 'project.members.manageAny',

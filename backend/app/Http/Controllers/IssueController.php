@@ -7,7 +7,7 @@ use App\Http\Resources\ApiResponse;
 use App\Http\WorkspaceRpc;
 
 /**
- * 提供任務建立、更新及留言HTTP入口。
+ * 提供任務建立、更新、留言及刪除HTTP入口。
  */
 class IssueController extends Controller
 {
@@ -55,5 +55,16 @@ class IssueController extends Controller
         $result = $this->rpc->execute($request, 'addComment', $request->toDto()->input());
 
         return new ApiResponse($result);
+    }
+
+    /**
+     * TT-250：依版本永久刪除卡片，回傳刪除前版本＋1的有界結果。
+     *
+     * @param  IssueWriteRequest  $request  已檢查型別的id、expectedRevision與requestId
+     * @return ApiResponse
+     */
+    public function destroy(IssueWriteRequest $request): ApiResponse
+    {
+        return new ApiResponse($this->rpc->execute($request, 'deleteIssue', $request->toDto()->input()));
     }
 }

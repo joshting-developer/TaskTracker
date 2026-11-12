@@ -145,6 +145,33 @@ class RecordStore
         return (bool) array_filter($this->all('timeEntries'), fn ($entry) => $entry['issueId'] === $issueId && empty($entry['voidedAt']));
     }
 
+    /** 刪除前檢查任何工時（含已作廢）。
+     * @param  string  $projectId  專案公開ID
+     * @param  string  $issueId  任務公開ID
+     * @return bool 是否有工時紀錄
+     */
+    public function issueHasAnyTime(string $projectId, string $issueId): bool
+    {
+        if ($this->usesRelational('timeEntries')) {
+            return $this->records->issueHasAnyTime($projectId, $issueId);
+        }
+
+        return (bool) array_filter($this->all('timeEntries'), fn ($entry) => $entry['issueId'] === $issueId);
+    }
+
+    /** TT-250：永久刪除卡片；只支援正常關聯式業務資料，舊JSON封存模式不提供刪除。
+     * @param  string  $issueId  已授權任務公開ID
+     * @param  array{actor:string,at:string,identifier:string,title:string,issueId:string}  $tombstone  刪除墓碑事件
+     * @return void
+     */
+    public function deleteIssue(string $issueId, array $tombstone): void
+    {
+        if (! $this->usesRelational('issues')) {
+            throw new \LogicException('舊JSON資料不可刪除任務');
+        }
+        $this->records->deleteIssue($issueId, $tombstone);
+    }
+
     /** 逐批提供實際需要同步的子項識別碼。
      * @param  string  $projectId  專案公開ID
      * @param  string  $issueId  父項公開ID

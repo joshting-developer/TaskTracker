@@ -228,6 +228,43 @@ class IssueService
     }
 
     /**
+     * TT-250：依版本永久刪除卡片。有工時、Epic所屬卡或子任務時拒絕；關聯另一端與收錄看板在同一交易增加revision。
+     *
+     * @param  array  $input  id、projectId、expectedRevision與requestId
+     * @return array{id:string,projectId:string,identifier:string,revision:int} 刪除前最後版本＋1，供重播回傳相同結果
+     *
+     * @throws DomainError 版本衝突或仍有不可刪除的關聯資料
+     */
+    public function deleteIssue(array $input): array
+    {
+        $issue = $this->store->require('issues', $input['id'] ?? '');
+        if ($issue['projectId'] !== ($input['projectId'] ?? '')) {
+            DomainError::fail('NOT_FOUND', '找不到這個專案內的任務');
+        }
+        RecordRevision::assertCurrent($issue, $input);
+        if ($this->store->issueHasAnyTime($issue['projectId'], $issue['id'])) {
+            DomainError::fail('CONFLICT', '這張卡片已有工時紀錄，不能刪除；請改為關閉');
+        }
+        if ($this->store->issueHasChildren($issue['projectId'], $issue['id'], true) || $this->store->issueHasChildren($issue['projectId'], $issue['id'])) {
+            DomainError::fail('CONFLICT', '請先移出所屬卡片或子任務，再刪除這張卡片');
+        }
+        foreach ($issue['relatedIssueIds'] ?? [] as $peerId) {
+            $peer = $this->store->require('issues', $peerId);
+            $this->writeIssue($peer, ['relatedIssueIds' => array_values(array_diff($peer['relatedIssueIds'] ?? [], [$issue['id']]))]);
+        }
+        foreach ($this->store->all('boards') as $board) {
+            if ($board['projectId'] === $issue['projectId'] && in_array($issue['id'], $board['selectedIssueIds'] ?? [], true)) {
+                $this->store->put('boards', $board['id'], [...$board, 'selectedIssueIds' => array_values(array_diff($board['selectedIssueIds'], [$issue['id']])),
+                    'revision' => $board['revision'] + 1, 'updatedAt' => $this->now()]);
+            }
+        }
+        $this->store->deleteIssue($issue['id'], ['actor' => $this->workspaceSession['user']['name'], 'at' => $this->now(),
+            'issueId' => $issue['id'], 'identifier' => $issue['identifier'], 'title' => $issue['title']]);
+
+        return ['id' => $issue['id'], 'projectId' => $issue['projectId'], 'identifier' => $issue['identifier'], 'revision' => $issue['revision'] + 1];
+    }
+
+    /**
      * 驗證版本及關聯後更新任務，必要時同步子項Epic與通知。
      *
      * @param  array  $input  此次操作的原始輸入欄位

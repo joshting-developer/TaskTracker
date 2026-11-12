@@ -5,6 +5,7 @@ namespace App\Services\Integrations;
 use App\Data\IssueChangesQueryData;
 use App\Data\WorkspaceContext;
 use App\Repositories\IntegrationAuditReadRepository;
+use App\Repositories\IssueDeletionReadRepository;
 use App\Repositories\IssueReadRepository;
 use App\Services\ProjectReadService;
 use Carbon\CarbonImmutable;
@@ -20,8 +21,9 @@ class IssueChangeService
      * @param  IssueReadRepository  $issues  共用篩選與最小投影
      * @param  IssueCursorCodec  $cursors  認證加密接續識別
      * @param  IntegrationAuditReadRepository  $audits  來源稽核查詢（回音辨識）
+     * @param  IssueDeletionReadRepository  $deletions  刪除墓碑事件讀取
      */
-    public function __construct(private ProjectReadService $projects, private IssueReadRepository $issues, private IssueCursorCodec $cursors, private IntegrationAuditReadRepository $audits) {}
+    public function __construct(private ProjectReadService $projects, private IssueReadRepository $issues, private IssueCursorCodec $cursors, private IntegrationAuditReadRepository $audits, private IssueDeletionReadRepository $deletions) {}
 
     /**
      * 組合當次Project授權、共用摘要查詢與cursor接續，不保存權限快照。
@@ -57,5 +59,28 @@ class IssueChangeService
             'clientReference' => $write['userId'] === $context->userId ? $write['clientReference'] : null], $writes);
 
         return ['items' => $rows, 'perPage' => $size, 'nextCursor' => $cursor, 'syncUntil' => $settled->utc()->toISOString(), 'lastWrites' => $lastWrites];
+    }
+
+    /**
+     * TT-250：Project的卡片刪除墓碑，供鏡像同步移除本地資料；需issue.read，依事件id遞增分頁。
+     *
+     * @param  WorkspaceContext  $context  Token重驗後的身分與有效權限
+     * @param  string  $projectId  Project公開ID
+     * @param  int|null  $after  上一頁回傳的nextAfter
+     * @param  int  $limit  每頁筆數（1–100）
+     * @return array{items:array<int,array{issueId:string,identifier:string,deletedAt:string}>,nextAfter:string|null} 墓碑摘要，不含標題外內容
+     */
+    public function deletions(WorkspaceContext $context, string $projectId, ?int $after, int $limit): array
+    {
+        $project = $this->projects->require($context, $projectId, 'issue.read');
+        $rows = $this->deletions->page($project, $after, $limit);
+        $more = $rows->count() > $limit;
+        $rows = $rows->take($limit);
+
+        return ['items' => $rows->map(function ($row) {
+            $event = json_decode($row->event_data, true, 8, JSON_THROW_ON_ERROR);
+
+            return ['issueId' => $event['issueId'], 'identifier' => $event['identifier'], 'deletedAt' => $event['at']];
+        })->values()->all(), 'nextAfter' => $more ? (string) $rows->last()->id : null];
     }
 }

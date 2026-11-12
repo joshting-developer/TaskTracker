@@ -47,6 +47,8 @@ class WorkspaceOperationAccess
         [$kind, $key, $permission] = match ($operation) {
             'createIssue' => ['projects', 'projectId', 'issue.write'],
             'updateIssue', 'addComment' => ['issues', 'id', 'issue.write'],
+            // 刪卡以Project層級授權，卡片刪除後同requestId重播仍能先授權再回原結果；卡片所屬由Service核對。
+            'deleteIssue' => ['projects', 'projectId', 'issue.delete'],
             'updateProject' => ['projects', 'id', 'project.update'],
             'updateStatuses' => ['projects', 'projectId', 'project.statuses.update'],
             'createBoard' => ['projects', 'projectId', 'board.manage'],

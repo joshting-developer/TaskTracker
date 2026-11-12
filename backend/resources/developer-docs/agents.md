@@ -18,7 +18,7 @@
 5. 用 `GET /projects/{project}/issues?identifier=EX-1` 精準找到 ID，再 GET 單卡詳細取得最新 revision。
 6. `PATCH .../{issue}` 只送要改的欄位，加 expectedRevision（JSON 整數）與新 requestId；省略的描述／關聯應保留，不拿列表摘要覆蓋整張卡片。
 7. `POST .../{issue}/comments` 用最新 expectedRevision、新 requestId 及 content 留言；作者由 PAT 決定，不自稱其他人。
-8. GET 詳細／留言確認實際結果；依授權改 closed／其他狀態。沒有刪除／封存接口，不能透過猜測 DELETE 硬刪。
+8. GET 詳細／留言確認實際結果；依授權改 closed／其他狀態。永久刪除用 OpenAPI 的 deletePublicIssue（需本人有 issue.delete，通常是專案管理者），不可恢復也沒有封存；一般結案請改 closed，不要用刪除代替。
 
 ## 分頁與失敗續接
 
@@ -39,7 +39,7 @@ PAT 不印在對話／卡片／Commit／log，不傳給不受信任網址，不�
 
 ## 增量接續
 
-大量或增量讀取用OpenAPI的listPublicIssueChanges（項目附externalRefs，syncUntil留有數秒緩衝、下一輪會重讀，請依id／revision去重；目前沒有刪除事件，鏡像同步請不帶篩選並定期全量對帳）（Project issue-changes），避免深頁碼／COUNT。保留所有filters與perPage，上一批成功保存後送回nextCursor；nextCursor為null才以syncUntil開新輪updatedSince，邊界包含且按id／revision去重。同一秒多張卡片不只用時間戳當cursor；不要把live列表當多請求snapshot或刪除feed。Python下載範例含完整接續迴圈；其他注意事項見contract的增量章節。
+大量或增量讀取用OpenAPI的listPublicIssueChanges（項目附externalRefs，syncUntil留有數秒緩衝、下一輪會重讀，請依id／revision去重；刪除的卡片請另讀listPublicIssueDeletions（issue-deletions）移除，並定期不帶篩選全量對帳）（Project issue-changes），避免深頁碼／COUNT。保留所有filters與perPage，上一批成功保存後送回nextCursor；nextCursor為null才以syncUntil開新輪updatedSince，邊界包含且按id／revision去重。同一秒多張卡片不只用時間戳當cursor；不要把live列表當多請求snapshot或刪除feed。Python下載範例含完整接續迴圈；其他注意事項見contract的增量章節。
 
 ## 外部識別對應
 

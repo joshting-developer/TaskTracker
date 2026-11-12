@@ -339,4 +339,26 @@ class ProjectAclTest extends TestCase
         $this->getJson($path)->assertStatus(404);
         $this->getJson('/api/v1/projects')->assertOk()->assertJsonCount(0, 'data.items');
     }
+
+    /**
+     * TT-250：刪卡需issue.delete；開發者可編輯但不可刪除，專案管理者可刪，公開API同樣以當下permission判斷。
+     *
+     * @return void
+     */
+    public function test_issue_delete_requires_delete_permission(): void
+    {
+        $issue = $this->rpc('createIssue', ['projectId' => $this->first['id'], 'title' => '待刪除'])->assertOk()->json('data');
+        $developer = $this->member('deleter-dev');
+        $this->grant($developer);
+        $this->login($developer);
+        $this->rpc('updateIssue', ['id' => $issue['id'], 'expectedRevision' => 1, 'title' => '開發者可改'])->assertOk();
+        $this->rpc('deleteIssue', ['projectId' => $this->first['id'], 'id' => $issue['id'], 'expectedRevision' => 2])->assertStatus(403);
+        $token = $this->postJson('/api/v1/personal-tokens', ['name' => 'dev', 'abilities' => ['write'], 'requestId' => (string) Str::uuid()])->assertOk()->json('data.plainTextToken');
+        $this->json('DELETE', '/api/public/v1/projects/'.$this->first['id'].'/issues/'.$issue['id'], ['expectedRevision' => 2, 'requestId' => (string) Str::uuid()], ['Authorization' => 'Bearer '.$token])->assertStatus(403);
+        $maintainer = $this->member('deleter-maintainer');
+        $this->grant($maintainer, 'maintainer');
+        $this->login($maintainer);
+        $this->rpc('deleteIssue', ['projectId' => $this->first['id'], 'id' => $issue['id'], 'expectedRevision' => 2])->assertOk()->assertJsonPath('data.identifier', $issue['identifier']);
+        $this->assertNotContains('issue.delete', ProjectAccess::DEVELOP);
+    }
 }

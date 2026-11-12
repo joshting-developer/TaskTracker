@@ -9,7 +9,7 @@ namespace App\Data\Writes;
 final class WriteResults
 {
     /** 套用有界結果的卡片寫入操作。 */
-    public const ISSUE_OPERATIONS = ['createIssue', 'updateIssue', 'addComment'];
+    public const ISSUE_OPERATIONS = ['createIssue', 'updateIssue', 'addComment', 'deleteIssue'];
 
     /** 套用有界結果的工時寫入操作。 */
     public const TIME_OPERATIONS = ['logTime', 'updateTime', 'voidTime'];

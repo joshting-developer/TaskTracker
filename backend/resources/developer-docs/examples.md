@@ -1,6 +1,6 @@
 # 完整操作範例
 
-以下範例會實際建立一張卡片、更新為 closed 並留言。只在你已獲授權可新增示範內容的 Project 執行；沒有刪除清理接口。假資料、環境變數不代表授權或真實帳號。
+以下範例會實際建立一張卡片、更新為 closed 並留言。只在你已獲授權可新增示範內容的 Project 執行；範例不呼叫刪除；需要清理時由有 issue.delete 的人另行決定。假資料、環境變數不代表授權或真實帳號。
 
 先提供 `BASE_URL`（部署 origin）、`TASKTRACKER_TOKEN`（私有環境 PAT）與 `PROJECT_ID`；可先 `GET /api/public/v1/projects` 找可見專案。Token 需 write 且本人有該 Project 寫入資格。原文不可放進 shell 歷史、對話或 Git。
 

@@ -31,6 +31,9 @@ class PublicIssueWriteRequest extends JsonOperationRequest
         if ($this->routeIs('public.issues.comment')) {
             return [...$base, 'expectedRevision' => ['required', 'integer:strict', 'min:1'], 'content' => ['required', 'string', 'max:2000']];
         }
+        if ($this->routeIs('public.issues.delete')) {
+            return [...$base, 'expectedRevision' => ['required', 'integer:strict', 'min:1']];
+        }
         $create = $this->routeIs('public.issues.create');
 
         return [...$base, ...($create ? [] : ['expectedRevision' => ['required', 'integer:strict', 'min:1']]), ...self::issueFields($create)];

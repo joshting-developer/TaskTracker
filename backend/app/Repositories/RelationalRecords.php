@@ -202,6 +202,45 @@ class RelationalRecords
             ->where('issues.public_id', $issueId)->whereNull('time_entries.voided_at')->exists();
     }
 
+    /** 刪除前檢查：任何工時（含已作廢）都保留稽核價值，存在時不可刪卡。
+     * @param  string  $projectId  專案公開ID
+     * @param  string  $issueId  任務公開ID
+     * @return bool 是否有任何工時紀錄
+     */
+    public function issueHasAnyTime(string $projectId, string $issueId): bool
+    {
+        return DB::table('time_entries')->join('issues', 'issues.id', '=', 'time_entries.issue_id')
+            ->join('projects', 'projects.id', '=', 'issues.project_id')
+            ->where('time_entries.workspace_id', $this->workspaceId())->where('projects.public_id', $projectId)
+            ->where('issues.public_id', $issueId)->exists();
+    }
+
+    /**
+     * TT-250：永久刪除單張卡片及其附屬列，並在Project留下刪除墓碑事件；交易、授權與關聯端revision由呼叫者負責。
+     * 留言、外部識別隨外鍵cascade；通知預覽、卡片歷史、殘留關聯與看板收錄列刪除；轉換來源待辦保留但解除卡片連結。
+     *
+     * @param  string  $issueId  已授權任務公開ID
+     * @param  array{actor:string,at:string,identifier:string,title:string,issueId:string}  $tombstone  刪除事實，不含描述或留言內容
+     * @return void
+     */
+    public function deleteIssue(string $issueId, array $tombstone): void
+    {
+        $workspaceId = $this->workspaceId();
+        $row = DB::table('issues')->where('workspace_id', $workspaceId)->where('public_id', $issueId)->first(['id', 'project_id'])
+            ?? throw new \RuntimeException('任務不存在');
+        DB::table('issue_notifications')->where('workspace_id', $workspaceId)->where('issue_id', $row->id)->delete();
+        DB::table('todos')->where('workspace_id', $workspaceId)->where('converted_issue_id', $row->id)->update(['converted_issue_id' => null]);
+        DB::table('audit_events')->where('workspace_id', $workspaceId)->where('entity_type', 'issues')->where('entity_id', $row->id)->delete();
+        DB::table('issue_relations')->where('workspace_id', $workspaceId)
+            ->where(fn ($q) => $q->where('issue_id', $row->id)->orWhere('related_issue_id', $row->id))->delete();
+        DB::table('board_issues')->where('workspace_id', $workspaceId)->where('issue_id', $row->id)->delete();
+        $stream = ['workspace_id' => $workspaceId, 'entity_type' => 'projects', 'entity_id' => $row->project_id, 'stream' => 'issueDeletions'];
+        DB::table('audit_events')->insert([...$stream, 'position' => (int) (DB::table('audit_events')->where($stream)->max('position') ?? -1) + 1,
+            'event_data' => json_encode($tombstone, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)]);
+        DB::table('issues')->where('workspace_id', $workspaceId)->where('id', $row->id)->delete();
+        unset($this->identities['issues'][$row->id]);
+    }
+
     /** 以固定100筆批次與穩定主鍵順序逐一提供必須同步Epic的子項ID。
      * @param  string  $projectId  專案公開ID
      * @param  string  $issueId  父項公開ID

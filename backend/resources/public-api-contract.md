@@ -4,7 +4,7 @@ HTTP契約v1；規格版號以OpenAPI的info.version為準；更新：2026-11-12
 
 ## 已開放能力與入口
 
-Base URL是你實際部署TaskTracker的origin。公開Bearer前綴為`/api/public/v1`，目前提供身分、可見專案／成員／狀態、任務摘要／單卡詳細及留言查詢。不要以PAT呼叫Session RPC。已提供Issue建立／PATCH／留言寫入與外部識別查詢／upsert／批次；不提供刪除、MCP或工具專屬介面。
+Base URL是你實際部署TaskTracker的origin。公開Bearer前綴為`/api/public/v1`，目前提供身分、可見專案／成員／狀態、任務摘要／單卡詳細及留言查詢。不要以PAT呼叫Session RPC。已提供Issue建立／PATCH／留言／永久刪除寫入、刪除墓碑查詢與外部識別查詢／upsert／批次；不提供封存、MCP或工具專屬介面。
 
 | Method／path | 認證／用途 | 限流 |
 | --- | --- | --- |
@@ -122,7 +122,7 @@ curl --fail-with-body -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
 
 父子關係一層、Epic可選與雙向關聯沿Web規則；子卡跟隨父卡Epic，無前置／DAG或結案阻擋。跨Project或非法層級整批rollback，不產生成功receipt／來源。相同使用者、Workspace、requestId及operation／有效輸入回原結果，不重複卡片／留言／通知／來源；不同有效內容409。Session與公開操作名分開，因此同key誤用另一接口會衝突；不提供跨接口自動重試。重播前仍重驗Token、Scope、Project與資源資格，撤權後不可讀既有結果。首次失敗完整rollback，可修正後再送；逾時則先沿同key重試核對，不任意換UUID。
 
-取得單卡最新revision後，再PATCH狀態；遇409 REVISION_CONFLICT先GET重讀並決定是否重試，不能自動強制覆蓋。相關卡片變動也可能遞增其他卡revision，後續應各自重讀。API不提供刪除／封存，closed仍是任務狀態。
+取得單卡最新revision後，再PATCH狀態；遇409 REVISION_CONFLICT先GET重讀並決定是否重試，不能自動強制覆蓋。相關卡片變動也可能遞增其他卡revision，後續應各自重讀。結案請用closed狀態；永久刪除（DELETE，需issue.delete）只用於誤建等情況，有工時或子卡時會409，沒有封存。
 
 ## 外部識別與upsert
 
@@ -158,7 +158,7 @@ curl --fail-with-body -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
   - syncUntil會比本輪讀取時間早一個緩衝（預設10秒），用來補讀「時間戳已寫入但較晚提交」的寫入。
   - 下一輪會重複出現緩衝期內的卡，請依id與revision去重：revision沒有變大就略過。
 - **來源識別**：每個項目附`externalRefs`（TT-171的source／externalId）。外部系統用它對應自己的紀錄，不需要解析標題或描述。沒有綁定時是空陣列。
-- **刪除與封存**：目前公開API和Web都沒有刪除或封存卡片的操作。closed只是狀態，會照常出現在增量裡，所以本版沒有tombstone或刪除事件。日後若新增刪除，會先提供刪除事件或tombstone，並在OpenAPI公告，不會讓卡片無聲消失。
+- **刪除與封存**：2026-11-13（OpenAPI 0.10.0）起Web與公開API可永久刪除卡片（`DELETE …/issues/{issue}`，需`issue.delete`），沒有封存。刪除的卡片不會出現在issue-changes；請另讀`GET /api/public/v1/projects/{project}/issue-deletions`（遞增游標，回issueId／identifier／deletedAt）移除本地資料，保存最後的after供下輪續讀。closed仍只是狀態，照常出現在增量裡。
 - **離開範圍**：撤銷Project權限時，整個Project回404，請停止同步並視情況封存本地資料。
   - 帶type／state等篩選時，卡片改成不符合條件後就不會再出現。要做鏡像同步，請不要帶篩選，或定期跑一次全量。
   - 全量對帳：讀完全部，把本輪沒出現的本地紀錄視為已離開範圍。

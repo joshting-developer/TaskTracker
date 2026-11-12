@@ -26,4 +26,4 @@ curl --fail-with-body -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
 
 每頁「Markdown 原文」提供工具可讀文字。API／文件公開可閱讀，不表示未授權可取得業務資料，也不讓外部 Agent 自動取得 HTTP 工具或操作授權。
 
-目前有讀取與 Issue 建立／PATCH／留言，沒有公開刪除／封存、MCP 或 Agent 編排。角色名稱不是 API 授權依據；能力與本人有效 permission／scope／資源條件取交集。
+目前有讀取與 Issue 建立／PATCH／留言／永久刪除（含刪除墓碑查詢），沒有封存、MCP 或 Agent 編排。角色名稱不是 API 授權依據；能力與本人有效 permission／scope／資源條件取交集。

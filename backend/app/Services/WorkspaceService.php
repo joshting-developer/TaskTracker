@@ -62,7 +62,7 @@ class WorkspaceService
      */
     public function executePublicIssue(array $identity, string $operation, array $input): array
     {
-        if (! in_array($operation, ['createIssue', 'updateIssue', 'addComment'], true)) {
+        if (! in_array($operation, ['createIssue', 'updateIssue', 'addComment', 'deleteIssue'], true)) {
             DomainError::fail('NOT_FOUND', '找不到這個操作');
         }
         $services = $this->services->forSession($identity);
@@ -91,6 +91,7 @@ class WorkspaceService
             'createIssue' => $services->issues()->createIssue($input),
             'updateIssue' => $services->issues()->updateIssue($input),
             'addComment' => $services->issues()->addComment($input),
+            'deleteIssue' => $services->issues()->deleteIssue($input),
             'logTime' => $services->time()->logTime($input),
             'updateTime' => $services->time()->updateTime($input),
             'voidTime' => $services->time()->voidTime($input),

@@ -87,6 +87,8 @@ export const api = {
   createIssue: (input) => callApi('createIssue', input),
   updateIssue: (input) => callApi('updateIssue', input),
   addComment: (input) => callApi('addComment', input),
+  /** @returns {Promise<IssueWriteResult>} 刪除前版本＋1；卡片已永久移除。 */
+  deleteIssue: (input) => callApi('deleteIssue', input),
   loadDemo: (input) => callApi('loadDemo', input),
   /** @returns {Promise<ResourceWriteResult>} 新結果；舊receipt可能帶既存欄位。 */
   updateStatuses: (input) => callApi('updateStatuses', input),

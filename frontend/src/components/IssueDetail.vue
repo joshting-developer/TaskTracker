@@ -10,8 +10,8 @@ import TimeEntryDrawer from './TimeEntryDrawer.vue';
 import { api } from '../api/index.js';
 import { FIELD_LABELS, hours, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
-const props = defineProps({ activityLoader: Function, issue: Object, project: Object, issues: Array, members: Array, entries: Array, returnLabel: String, busy: Boolean, canWrite: { type: Boolean, default: true }, canReadTime: { type: Boolean, default: true }, canLogTime: { type: Boolean, default: false }, userId: String });
-const emit = defineEmits(['close', 'open', 'edit', 'saved', 'reload', 'state', 'time-updated']);
+const props = defineProps({ activityLoader: Function, issue: Object, project: Object, issues: Array, members: Array, entries: Array, returnLabel: String, busy: Boolean, canWrite: { type: Boolean, default: true }, canReadTime: { type: Boolean, default: true }, canLogTime: { type: Boolean, default: false }, canDelete: { type: Boolean, default: false }, deleting: Boolean, userId: String });
+const emit = defineEmits(['close', 'open', 'edit', 'saved', 'reload', 'state', 'time-updated', 'delete']);
 const tab = ref('comments'), comment = ref(''), saving = ref(false), error = ref(''), conflict = ref(false);
 
 const activity = useIssueActivity({ issue: toRef(props, 'issue'), tab, load: toRef(props, 'activityLoader') });
@@ -90,7 +90,10 @@ function timeSaved() {
     <header class="issue-detail-toolbar">
       <button class="button secondary" :disabled="saving || busy" @click="emit('close')"><Icon name="chevron" :size="16" class="back-icon" />{{ returnLabel }}</button>
       <span class="identifier">{{ issue.identifier }}</span>
-      <button v-if="canWrite" class="button primary" :disabled="saving || busy" @click="emit('edit')">編輯任務</button>
+      <span class="issue-detail-actions">
+        <button v-if="canDelete" class="button secondary danger-text" :disabled="saving || busy || deleting" :aria-busy="deleting" @click="emit('delete')"><Icon name="close" :size="15" />{{ deleting ? '刪除中…' : '刪除卡片' }}</button>
+        <button v-if="canWrite" class="button primary" :disabled="saving || busy || deleting" @click="emit('edit')">編輯任務</button>
+      </span>
     </header>
     <div class="issue-state-control" role="group" aria-label="任務狀態" :aria-busy="busy">
       <span class="state-label">目前狀態</span>
@@ -188,7 +191,8 @@ function timeSaved() {
 .issue-work-actions button { min-height: 44px; }
 .issue-detail-page { background: #fff; color: #242936; min-height: calc(100dvh - 60px); }
 .issue-detail-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding: 18px 24px; border-bottom: 1px solid #daddE5; }
-.issue-detail-toolbar .primary { margin-left: auto; }
+.issue-detail-actions { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+.issue-detail-actions .danger-text { color: #a4455a; border-color: #e6c9d0; }
 .back-icon { transform: rotate(180deg); }
 .issue-state-control { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 10px 24px; border-bottom: 1px solid #daddE5; font-size: 14px; }
 .state-label { color: #5f6673; }

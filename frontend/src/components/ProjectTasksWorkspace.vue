@@ -23,9 +23,11 @@ const boardEditor = shallowRef(null), editor = shallowRef(null), detail = shallo
 const boardTool = ref(null), issueTool = ref(null), detailTool = ref(null);
 const canWrite = computed(() => props.project.permissions.includes('issue.write'));
 const canManage = computed(() => props.project.permissions.includes('board.manage'));
+const canDelete = computed(() => props.project.permissions.includes('issue.delete'));
 const scopeKey = computed(() => `${props.workspaceId}:${props.project.id}:${props.mode}:${props.boardId}:${props.scope}:${props.detailPage ? props.issueId : 'browse'}`);
 const archiving = ref(false), archiveRequests = new Map();
-const busy = computed(() => Boolean(archiving.value || issueTool.value?.saving || detailTool.value?.saving || boardTool.value?.saving));
+const deleting = ref(false), deleteRequests = new Map();
+const busy = computed(() => Boolean(archiving.value || deleting.value || issueTool.value?.saving || detailTool.value?.saving || boardTool.value?.saving));
 const dirty = computed(() => Boolean(issueTool.value?.dirty || detailTool.value?.dirty || boardTool.value?.dirty));
 let detailRequest, optionRequest, detailGeneration = 0, optionGeneration = 0, alive = true;
 const rows = shallowRef([]);
@@ -151,6 +153,24 @@ async function archive() {
   finally { archiving.value = false; }
 }
 
+// 永久刪除：確認後以目前revision送出，同一版本重試沿用requestId；成功回上一層，409（工時／子卡／版本）顯示原因。
+async function removeIssue() {
+  const issue = detail.value;
+  if (!issue || deleting.value || !window.confirm(`永久刪除「${issue.identifier} ${issue.title}」？留言與歷史會一併刪除，無法復原。`)) return;
+  const key = `${issue.id}:${issue.revision}`;
+  if (!deleteRequests.has(key)) deleteRequests.set(key, crypto.randomUUID());
+  deleting.value = true;
+  try {
+    await api.deleteIssue({ projectId: props.project.id, id: issue.id, expectedRevision: issue.revision, requestId: deleteRequests.get(key) });
+    // 先解除忙碌再切回上一層，背景載入不會被blocked擋下。
+    deleteRequests.delete(key); deleting.value = false; error.value = ''; detail.value = null;
+    emit('close-issue'); await nextTick(); await reload(); emit('notify', '任務已刪除');
+  } catch (failure) {
+    if (failure.code === 'CONFLICT' || failure.code === 'REVISION_CONFLICT') error.value = failure.message;
+    else handleFailure(failure);
+  } finally { deleting.value = false; }
+}
+
 function beforeUnload(event) { if (dirty.value || busy.value) { event.preventDefault(); event.returnValue = ''; } }
 window.addEventListener('beforeunload', beforeUnload);
 onBeforeUnmount(() => { alive = false; optionGeneration++; optionRequest?.abort(); detailGeneration++; detailRequest?.abort(); window.removeEventListener('beforeunload', beforeUnload); });
@@ -160,7 +180,7 @@ onBeforeUnmount(() => { alive = false; optionGeneration++; optionRequest?.abort(
   <div class="board-workspace-page">
     <div v-if="error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="reload">重新載入</button></div>
     <p v-if="loading" role="status">載入中…</p>
-    <IssueDetail v-if="detail && detailPage" ref="detailTool" :key="detail.id" :issue="detail" :busy="Boolean(transition.moving.value)" :project="project" :issues="detailRows" :members="memberNames" :entries="[]" :return-label="mode === 'list' ? '返回任務列表' : '返回看板'" :can-write="canWrite" :can-read-time="project.permissions.includes('timeEntry.readOwn') || project.permissions.includes('timeEntry.readTeam')" :can-log-time="project.permissions.includes('timeEntry.writeOwn')" :user-id="userId" :activity-loader="loadActivity" @edit="prepareEditor(detail)" @state="value => transition.moveIssue(detail, { state: value })" @open="(issue, full = true) => emit('issue', issue, full)" @close="emit('close-issue')" @saved="savedIssue" @reload="loadDetail" @time-updated="savedIssue" />
+    <IssueDetail v-if="detail && detailPage" ref="detailTool" :key="detail.id" :issue="detail" :busy="Boolean(transition.moving.value)" :project="project" :issues="detailRows" :members="memberNames" :entries="[]" :return-label="mode === 'list' ? '返回任務列表' : '返回看板'" :can-write="canWrite" :can-read-time="project.permissions.includes('timeEntry.readOwn') || project.permissions.includes('timeEntry.readTeam')" :can-log-time="project.permissions.includes('timeEntry.writeOwn')" :user-id="userId" :can-delete="canDelete" :deleting="deleting" :activity-loader="loadActivity" @delete="removeIssue" @edit="prepareEditor(detail)" @state="value => transition.moveIssue(detail, { state: value })" @open="(issue, full = true) => emit('issue', issue, full)" @close="emit('close-issue')" @saved="savedIssue" @reload="loadDetail" @time-updated="savedIssue" />
     <template v-else>
       <section v-if="mode === 'list'" class="task-workspace">
         <IssueFilters v-model:expanded="filtersExpanded" :lookup="lookup" :lookup-context="project.id" @option="rememberOption" v-model="filterInput" :states="filters.projectStates.value" :members="memberNames" :issues="detailRows" :active-filter-chips="filters.activeFilterChips.value" :filter-warnings="[]" @remove="filters.removeFilter" @clear="filters.clearFilters" />

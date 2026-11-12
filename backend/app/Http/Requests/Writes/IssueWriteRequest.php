@@ -37,6 +37,7 @@ class IssueWriteRequest extends JsonOperationRequest
         return match ($this->operation()) {
             'addComment' => [...$base, ...$revision, 'id' => ['sometimes', 'nullable', 'string'], 'content' => ['sometimes', 'nullable', 'string']],
             'updateIssue' => [...$base, ...$revision, 'id' => ['sometimes', 'nullable', 'string'], ...$this->fieldRules()],
+            'deleteIssue' => [...$base, ...$revision, 'id' => ['sometimes', 'nullable', 'string'], 'projectId' => ['sometimes', 'nullable', 'string']],
             default => [...$base, 'projectId' => ['sometimes', 'nullable', 'string'], 'boardId' => ['sometimes', 'nullable', 'string'], ...$this->fieldRules()],
         };
     }

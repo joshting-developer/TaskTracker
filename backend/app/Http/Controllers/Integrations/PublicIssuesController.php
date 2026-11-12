@@ -24,7 +24,7 @@ class PublicIssuesController extends Controller
     public function __construct(private BearerTokenSession $tokens, private WorkspaceService $workspaces, private IssueReadService $issues) {}
 
     /**
-     * 建卡／更新／留言依伺服器命名路由決定用例，不能由payload任意選操作。
+     * 建卡／更新／留言／刪除依伺服器命名路由決定用例，不能由payload任意選操作。
      *
      * @param  PublicIssueWriteRequest  $request  已驗證有限JSON
      * @param  string  $project  路徑Project公開ID
@@ -37,14 +37,28 @@ class PublicIssuesController extends Controller
             'public.issues.create' => 'createIssue',
             'public.issues.update' => 'updateIssue',
             'public.issues.comment' => 'addComment',
+            'public.issues.delete' => 'deleteIssue',
         };
         $input = [...$request->validated(), 'projectId' => $project, ...($issue ? ['id' => $issue] : [])];
 
         return new ApiResponse($this->tokens->writeOnce($request, 'public.v1.'.$operation, $input,
-            function (TokenContext $token) use ($project, $issue) {
-                if ($issue && $this->issues->locate($token->workspace, $issue)['projectId'] !== $project) {
+            function (TokenContext $token) use ($project, $issue, $operation) {
+                if (! $issue) {
+                    return;
+                }
+                try {
+                    $location = $this->issues->locate($token->workspace, $issue);
+                } catch (DomainError $missing) {
+                    // 刪除後同requestId重播時卡片已不存在：Project層級issue.delete已在交易內重驗，交由receipt回原結果；首次請求仍由Service回404。
+                    if ($operation === 'deleteIssue') {
+                        return;
+                    }
+                    throw $missing;
+                }
+                if ($location['projectId'] !== $project) {
                     DomainError::fail('NOT_FOUND', '找不到這個專案內的任務');
                 }
-            }, fn (TokenContext $token) => $this->workspaces->executePublicIssue($token->workspace->legacyIdentity(), $operation, $input), $project));
+            }, fn (TokenContext $token) => $this->workspaces->executePublicIssue($token->workspace->legacyIdentity(), $operation, $input), $project,
+            $operation === 'deleteIssue' ? 'issue.delete' : 'issue.write'));
     }
 }
