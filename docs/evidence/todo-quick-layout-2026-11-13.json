@@ -961,5 +961,32 @@
     ],
     "parametersChanged": false
   },
-  "scope": "Synthetic isolated MySQL/Laravel; expected UI differences require approval, not a final visual pass."
+  "scope": "Completed synthetic isolated Laravel/MySQL acceptance; updated six explicitly approved images, preserved42 original PNG bytes; no production deployment or remote CI claim.",
+  "approval": {
+    "reviewer": "josh",
+    "reply": "核准這6張修復畫面",
+    "changedImageCount": 6,
+    "unchangedOriginalBytes": 42,
+    "previousManifest": "fcf9ee11af9987abe9a5dc70ba1e4827b78872cf7763091c8194f169275ca491",
+    "newManifest": "92dd552cde4a791b38184f3510e18b4a9e68d58cede5421cbd22d3491051eeab",
+    "oldBundleRetained": "artifacts/visual/approved-history/darwin-arm64-before-TT-264"
+  },
+  "finalVisualComparison": {
+    "status": "passed",
+    "approved": true,
+    "comparisonExitCode": 0,
+    "environmentMatches": true,
+    "sourceFingerprint": "84e7a20a93101ec0ebc608b820679f0a5b5d5ba08684f0a062c90f742095676e",
+    "sourceRoots": [
+      "frontend/src",
+      "backend/app",
+      "backend/routes",
+      "backend/config",
+      "frontend/tools/visual"
+    ],
+    "harnessSha256": "0210a213011d3f680ec3e8d0b5962aa37f41f03df162084a620930a0a2e46267",
+    "approvalFile": "docs/visual-baselines/darwin-arm64.json",
+    "manifestSha256": "92dd552cde4a791b38184f3510e18b4a9e68d58cede5421cbd22d3491051eeab",
+    "sourceFileCount": 319
+  }
 }

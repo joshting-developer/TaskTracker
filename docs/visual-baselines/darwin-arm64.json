@@ -1,8 +1,10 @@
 {
   "approved": true,
+  "harnessSha256": "0210a213011d3f680ec3e8d0b5962aa37f41f03df162084a620930a0a2e46267",
+  "profile": "darwin-arm64",
   "reviewer": "josh",
-  "note": "2026-11-13使用者在本輪明確回覆「核准這批基準」：48張合成候選與微小抗鋸齒設定threshold0.02／maxDiffPixels0；不代表跨OS／瀏覽器版本通用。",
-  "manifestSha256": "fcf9ee11af9987abe9a5dc70ba1e4827b78872cf7763091c8194f169275ca491",
+  "note": "2026-11-13使用者明確回覆「核准這6張修復畫面」：TT-264首頁及拒絕存取後回首頁各三尺寸；其餘42張保留原核准PNG原始bytes，threshold0.02/maxDiffPixels0及harness不變。",
+  "manifestSha256": "92dd552cde4a791b38184f3510e18b4a9e68d58cede5421cbd22d3491051eeab",
   "environment": {
     "platform": "darwin",
     "arch": "arm64",
@@ -23,7 +25,15 @@
     }
   },
   "artifactRunId": null,
-  "harnessSha256": "0210a213011d3f680ec3e8d0b5962aa37f41f03df162084a620930a0a2e46267",
-  "profile": "darwin-arm64",
-  "harnessBindingNote": "TT-271技術防護補強：綁定比較器、情境及CLI程式；原使用者核准的48張PNG digest與threshold0.02/maxDiffPixels0完全未變，不產生新的UI核准。"
+  "card": "TT-264",
+  "reviewedChanges": [
+    "snapshots/desktop/03-home-todos.png",
+    "snapshots/desktop/16-denied.png",
+    "snapshots/mobile/03-home-todos.png",
+    "snapshots/mobile/16-denied.png",
+    "snapshots/tablet/03-home-todos.png",
+    "snapshots/tablet/16-denied.png"
+  ],
+  "previousApprovedManifestSha256": "fcf9ee11af9987abe9a5dc70ba1e4827b78872cf7763091c8194f169275ca491",
+  "reviewedCandidateManifestSha256": "f95f27eca6bc0a4e5c6c876c4d138ccd048a8c5d9d3387c16e0e95a45e40f118"
 }

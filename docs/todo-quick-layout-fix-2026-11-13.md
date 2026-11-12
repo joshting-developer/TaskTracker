@@ -40,6 +40,8 @@ node tools/todo-quick-layout-check.js
 
 原始截圖／量測／完整日誌在忽略artifacts/tt264；候選與核准bundle在artifacts/visual，圖片及合成帳號不進Git。本輪有其他人正在修改後端Project時間戳，保留差異且不加入本卡提交，不將其成果歸本卡。
 
-## 狀態
+## 核准及收尾
 
-修復與上述行為／比較已完成；更新核准基準及最終compare結果在獲得明確核准後追加。未核准不假closed，不把build成功當完整視覺驗收。
+使用者已明確回覆「核准這6張修復畫面」。只替換03-home-todos／16-denied各三尺寸，42張其他圖保留原核准PNG bytes；原完整bundle封存在忽略的artifacts/visual/approved-history/darwin-arm64-before-TT-264，沒有提高比較容忍或修改harness。
+
+新核准manifest為`92dd552cde4a791b38184f3510e18b4a9e68d58cede5421cbd22d3491051eeab`，記錄原manifest及被核准的候選digest／6張清單。正式三尺寸compare結果及結案於實測後回填，不把預期差異報告當作正式通過。
