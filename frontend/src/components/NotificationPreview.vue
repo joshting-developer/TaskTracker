@@ -1,13 +1,14 @@
 <script setup>
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
+import { usePolling } from '../composables/usePolling.js';
 const props = defineProps({ project: Object, permissions: Array });
 const emit = defineEmits(['open', 'access']);
 const result = shallowRef(null), page = ref(1), loading = ref(false);
 const status = shallowRef(null), message = ref(''), error = ref(''), busy = ref(false);
 const expanded = shallowRef(null), bodyLoading = ref(false);
 const entries = computed(() => result.value?.items || []);
-let generation = 0, controller, bodyController, timer, failures = 0, disposed = false;
+let generation = 0, controller, bodyController, failures = 0, disposed = false;
 
 function accessFailure(failure) {
   if (['NOT_FOUND', 'FORBIDDEN', 'WORKSPACE_CHANGED', 'UNAUTHENTICATED'].includes(failure.code)) {
@@ -15,11 +16,6 @@ function accessFailure(failure) {
     expanded.value = null;
     emit('access');
   }
-}
-function schedule() {
-  clearTimeout(timer);
-  if (disposed || document.hidden) return;
-  timer = setTimeout(refresh, Math.min(120000, 30000 * 2 ** Math.min(failures, 2)) * (0.9 + Math.random() * 0.2));
 }
 async function refresh() {
   const current = ++generation;
@@ -43,10 +39,7 @@ async function refresh() {
     error.value = failure.message;
     accessFailure(failure);
   } finally {
-    if (current === generation) {
-      loading.value = false;
-      schedule();
-    }
+    if (current === generation) loading.value = false;
   }
 }
 async function openBody(entry) {
@@ -78,18 +71,19 @@ async function verify() {
   catch (failure) { error.value = failure.message; }
   finally { busy.value = false; }
 }
-function visibility() {
-  clearTimeout(timer);
-  if (document.hidden) { generation++; controller?.abort(); bodyController?.abort(); }
-  else refresh();
-}
 function timestamp(value) {
   return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 }
 watch(() => props.project.id, () => { result.value = null; page.value = 1; status.value = null; refresh(); loadSmtp(); }, { immediate: true });
 watch(page, refresh);
-document.addEventListener('visibilitychange', visibility);
-onScopeDispose(() => { disposed = true; generation++; controller?.abort(); bodyController?.abort(); clearTimeout(timer); document.removeEventListener('visibilitychange', visibility); });
+// 背景更新交由共用輪詢生命週期；隱藏／離線時只中止請求，讓finally收回loading。
+const poller = usePolling({
+  task: refresh,
+  delay: () => Math.min(120000, 30000 * 2 ** Math.min(failures, 2)) * (0.9 + Math.random() * 0.2),
+  onPause: () => { controller?.abort(); bodyController?.abort(); },
+});
+poller.schedule();
+onScopeDispose(() => { disposed = true; generation++; controller?.abort(); bodyController?.abort(); });
 defineExpose({ refresh });
 </script>
 <template>

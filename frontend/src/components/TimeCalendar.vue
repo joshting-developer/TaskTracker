@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
+import { usePolling } from '../composables/usePolling.js';
 import { dateInTaipei, hours } from '../domain/model.js';
 import Icon from './Icon.vue';
 import PagedSelect from './PagedSelect.vue';
@@ -15,7 +16,7 @@ const error = ref(''), busy = ref(false), editing = ref(null);
 const panel = ref(null), panelOpen = ref(false), formKey = ref(0);
 const summary = shallowRef(null), summaryLoading = ref(false);
 const dayResult = shallowRef(null), dayPage = ref(1), dayLoading = ref(false);
-let summaryGeneration = 0, dayGeneration = 0, summaryRequest, dayRequest, timer, failures = 0, disposed = false;
+let summaryGeneration = 0, dayGeneration = 0, summaryRequest, dayRequest, failures = 0;
 
 const total = computed(() => summary.value?.total || 0);
 const selectedEntries = computed(() => dayResult.value?.items || []);
@@ -73,17 +74,12 @@ async function loadDay() {
   } finally { if (current === dayGeneration) dayLoading.value = false; }
 }
 async function refresh() { await Promise.all([loadSummary(), loadDay()]); }
-// 背景更新：隱藏分頁停止、失敗退避；填報面板開啟時不打擾。
-function schedule() {
-  clearTimeout(timer);
-  if (disposed || document.hidden) return;
-  timer = setTimeout(async () => { if (!panelOpen.value) await refresh(); schedule(); }, Math.min(120000, 30000 * 2 ** Math.min(failures, 2)) * (0.9 + Math.random() * 0.2));
-}
-function visibility() {
-  clearTimeout(timer);
-  if (document.hidden) { summaryGeneration++; dayGeneration++; summaryRequest?.abort(); dayRequest?.abort(); }
-  else { refresh(); schedule(); }
-}
+// 背景更新：隱藏／離線停止、失敗退避；填報面板開啟時不打擾。暫停只中止請求，讓finally收回loading。
+const poller = usePolling({
+  task: () => { if (!panelOpen.value) return refresh(); },
+  delay: () => Math.min(120000, 30000 * 2 ** Math.min(failures, 2)) * (0.9 + Math.random() * 0.2),
+  onPause: () => { summaryRequest?.abort(); dayRequest?.abort(); },
+});
 
 watch(() => props.canWrite, allowed => { if (!allowed) { panelOpen.value = false; editing.value = null; } });
 watch(() => props.canReadTeam, allowed => { if (!allowed) member.value = props.userId; });
@@ -96,9 +92,8 @@ watch([() => props.project.id, month, member], () => { summary.value = null; loa
 watch([() => props.project.id, selectedDate, member], () => { dayResult.value = null; if (dayPage.value !== 1) dayPage.value = 1; else loadDay(); }, { immediate: true });
 watch(dayPage, loadDay);
 watch([month, member, selectedDate], () => writeContext(props.contextKey, { time: { month: month.value, member: member.value, date: selectedDate.value } }), { flush: 'post' });
-document.addEventListener('visibilitychange', visibility);
-schedule();
-onScopeDispose(() => { disposed = true; summaryGeneration++; dayGeneration++; summaryRequest?.abort(); dayRequest?.abort(); clearTimeout(timer); document.removeEventListener('visibilitychange', visibility); });
+poller.schedule();
+onScopeDispose(() => { summaryGeneration++; dayGeneration++; summaryRequest?.abort(); dayRequest?.abort(); });
 defineExpose({ dirty, saving, refresh });
 
 function moveMonth(direction) {

@@ -1,12 +1,12 @@
-import { onScopeDispose, readonly, ref, shallowRef, watch } from 'vue';
+import { onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
+import { usePolling } from './usePolling.js';
 
 /** 專案任務查詢與備援生命週期；不管理編輯表單或DOM操作。 */
 export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId, mode, context, blocked, onProject, onError, onSuccess, listQuery, rows = shallowRef([]) }) {
   const board = shallowRef(null), boardPage = shallowRef(null), issuePage = shallowRef(null);
   const listPage = ref(1), listSearch = ref(''), loading = ref(false), loadingCards = ref(false);
-  const pageVisible = ref(!document.hidden);
-  let generation = 0, request, timer, debounce, failures = 0, mounted = true;
+  let generation = 0, request, debounce, failures = 0;
   async function reload(showLoading = true) {
     const contentAllowed = !blocked.value;
     const current = ++generation;
@@ -50,20 +50,15 @@ export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId
     } catch (failure) { if (current === generation) { failures++; if (['UNAUTHENTICATED','FORBIDDEN','NOT_FOUND','WORKSPACE_CHANGED'].includes(failure.code)) { rows.value = []; boardPage.value = null; board.value = null; } onError(failure); } }
     finally { if (current === generation) { loading.value = false; loadingCards.value = false; } }
   }
-  function schedule() {
-    clearTimeout(timer);
-    if (!mounted || document.hidden) return;
-    const delay = Math.min(120000, 30000 * 2 ** Math.min(failures, 2));
-    timer = setTimeout(async () => { await reload(false); schedule(); }, delay);
-  }
-  function visible() { pageVisible.value = !document.hidden; if (document.hidden) { clearTimeout(timer); request?.abort(); } else { reload(false); schedule(); } }
-  watch(context, () => { rows.value = []; boardPage.value = null; board.value = null; listPage.value = 1; reload(); schedule(); }, { immediate: true });
+  const poller = usePolling({
+    task: () => reload(false),
+    delay: () => Math.min(120000, 30000 * 2 ** Math.min(failures, 2)),
+    // 只中止請求，讓同一世代的finally仍可收回loading狀態。
+    onPause: () => request?.abort(),
+  });
+  watch(context, () => { rows.value = []; boardPage.value = null; board.value = null; listPage.value = 1; reload(); poller.schedule(); }, { immediate: true });
   watch([listPage, listSearch], () => { clearTimeout(debounce); debounce = setTimeout(() => reload(), 250); });
   watch(() => mode.value === 'list' ? JSON.stringify(listQuery.value) : '', () => { if (mode.value !== 'list') return; clearTimeout(debounce); debounce = setTimeout(() => reload(), 250); });
-  document.addEventListener('visibilitychange', visible);
-  onScopeDispose(() => {
-    mounted = false; generation++; request?.abort(); clearTimeout(timer); clearTimeout(debounce);
-    document.removeEventListener('visibilitychange', visible);
-  });
-  return { rows, board, boardPage, issuePage, listPage, listSearch, loading, loadingCards, pageVisible: readonly(pageVisible), reload };
+  onScopeDispose(() => { generation++; request?.abort(); clearTimeout(debounce); });
+  return { rows, board, boardPage, issuePage, listPage, listSearch, loading, loadingCards, pageVisible: poller.visible, reload };
 }

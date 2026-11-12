@@ -1,16 +1,16 @@
-import { onScopeDispose, readonly, shallowRef, watch } from 'vue';
+import { readonly, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
+import { usePolling } from './usePolling.js';
 /** 個人同步只輪詢無內容版本；變更時才通知頁面及重讀未讀數。 */
 export function usePersonalSync({ active, context, onError }) {
   const versions = shallowRef(null), unread = shallowRef(0), resumed = shallowRef(0);
-  let generation = 0, controller, timer, failures = 0, mounted = true;
-  function schedule() {
-    clearTimeout(timer);
-    if (!mounted || !active.value || document.hidden)
-      return;
-    const base = Math.min(120000, 30000 * 2 ** Math.min(failures, 2));
-    timer = setTimeout(async () => { await check(); schedule(); }, base * (0.9 + Math.random() * 0.2));
-  }
+  let generation = 0, controller, failures = 0;
+  const poller = usePolling({
+    task: check,
+    enabled: () => active.value,
+    delay: () => Math.min(120000, 30000 * 2 ** Math.min(failures, 2)) * (0.9 + Math.random() * 0.2),
+    onPause: () => { generation++; controller?.abort(); },
+  });
   async function check() {
     if (!active.value || document.hidden)
       return;
@@ -43,34 +43,12 @@ export function usePersonalSync({ active, context, onError }) {
   watch([active, context], () => {
     generation++;
     controller?.abort();
-    clearTimeout(timer);
     versions.value = null;
     unread.value = 0;
     failures = 0;
-    if (active.value) {
-      check();
-      schedule();
-    }
+    poller.restart();
   }, { immediate: true });
-
-  function visibility() {
-    if (document.hidden) {
-      generation++;
-      controller?.abort();
-      clearTimeout(timer);
-    } else if (active.value) {
-      resumed.value++;
-      check();
-      schedule();
-    }
-  }
-  document.addEventListener('visibilitychange', visibility);
-  onScopeDispose(() => {
-    mounted = false;
-    generation++;
-    controller?.abort();
-    clearTimeout(timer);
-    document.removeEventListener('visibilitychange', visibility);
-  });
+  // 回到前景時通知頁面重讀；補查本身由輪詢生命週期處理最短間隔與去重。
+  watch(poller.visible, value => { if (value && active.value) resumed.value++; });
   return { versions: readonly(versions), unread: readonly(unread), resumed: readonly(resumed), refresh: check };
 }
