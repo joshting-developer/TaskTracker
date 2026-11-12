@@ -85,7 +85,7 @@ try {
   await region.getByRole('button', { name: /^成員投入/ }).click(); await region.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();
   await region.getByLabel('分析專案').selectOption(first.id);
   await region.getByText('篩選已調整，請按「套用範圍」更新報表。', { exact: true }).waitFor();
-  await Promise.all([owner.waitForResponse(response => response.url().endsWith('/api/rpc/getWorkspace')), owner.getByRole('button', { name: '重新整理工作空間', exact: true }).click()]);
+  await Promise.all([owner.waitForResponse(response => response.url().endsWith('/api/rpc/getTimeReport')) /* 手動重新整理重查報表，仍用已套用範圍 */, owner.getByRole('button', { name: '重新整理工作空間', exact: true }).click()]);
   await region.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();
   await region.getByRole('button', { name: '套用範圍', exact: true }).click(); await region.locator('.analysis-totals').getByText('2 h', { exact: true }).waitFor();
   await region.getByLabel('分析成員').selectOption(memberIdentity.user.id); await region.getByRole('button', { name: '套用範圍', exact: true }).click(); await region.locator('.analysis-totals').getByText('0.5 h', { exact: true }).waitFor();

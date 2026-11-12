@@ -7,7 +7,7 @@ import TimeDistributionChart from './TimeDistributionChart.vue';
 import TimeTrendChart from './TimeTrendChart.vue';
 import TimeMemberDetails from './TimeMemberDetails.vue';
 import ReportPagination from './ReportPagination.vue';
-const props = defineProps({ mode: { type: String, default: 'index' }, workspaceVersion: Object });
+const props = defineProps({ mode: { type: String, default: 'index' }, workspaceVersion: { type: String, default: '' } });
 const emit = defineEmits(['navigate']);
 const analyses = [
   { id: 'members', title: '成員投入' },

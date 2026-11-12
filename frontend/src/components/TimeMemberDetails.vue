@@ -4,7 +4,7 @@ import { api } from '../api/index.js';
 import { hours } from '../domain/model.js';
 import ReportPagination from './ReportPagination.vue';
 
-const props = defineProps({ member: { type: Object, required: true }, workspaceVersion: Object });
+const props = defineProps({ member: { type: Object, required: true }, workspaceVersion: { type: String, default: '' } });
 const emit = defineEmits(['back']);
 const group = shallowRef('dates'), page = shallowRef(1), expandedKey = shallowRef(''), entryPage = shallowRef(1);
 const report = shallowRef(null), loading = shallowRef(false), error = shallowRef('');
