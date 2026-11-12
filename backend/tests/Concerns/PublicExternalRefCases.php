@@ -112,4 +112,100 @@ trait PublicExternalRefCases
         $this->json('PUT', '/api/public/v1/projects/'.$project['id'].'/issues/external/jira/ABC-1', ['title' => 'x', 'expectedRevision' => 1, 'requestId' => (string) Str::uuid()], ['Authorization' => 'Bearer '.$foreign])->assertStatus($status);
         $this->assertSame('upper', Issue::where('public_id', $upper['id'])->value('title'));
     }
+
+    /**
+     * 只計本測試Project的卡片；隔離MySQL可能有其他測試資料。
+     *
+     * @param  string  $project  Project公開ID
+     * @return int 卡片數
+     */
+    private function issuesIn(string $project): int
+    {
+        return Issue::whereHas('project', fn ($q) => $q->where('public_id', $project))->count();
+    }
+
+    /**
+     * TT-172：批次呼叫並對照正式Schema。
+     *
+     * @param  string  $plain  隔離PAT
+     * @param  string  $project  Project公開ID
+     * @param  array  $input  批次JSON
+     * @param  int  $status  預期HTTP
+     * @return array 解碼回應
+     */
+    private function batchUpsert(string $plain, string $project, array $input, int $status = 200): array
+    {
+        Auth::forgetGuards();
+        $response = $this->postJson('/api/public/v1/projects/'.$project.'/issues/external-batch', $input, ['Authorization' => 'Bearer '.$plain])->assertStatus($status);
+        $spec = json_decode(file_get_contents(resource_path('openapi.json')), true);
+        $schema = $spec['paths']['/api/public/v1/projects/{project}/issues/external-batch']['post']['responses'][(string) $status]['content']['application/json']['schema'];
+        $root = json_decode(json_encode(['$schema' => 'https://json-schema.org/draft/2020-12/schema', ...$schema, 'components' => $spec['components']]));
+        $this->assertTrue((new CompliantValidator)->validate(json_decode($response->getContent()), $root)->isValid(), '批次回應不符合正式Schema');
+
+        return $response->json();
+    }
+
+    /**
+     * 逐項結果與失敗隔離；Epic→子卡可同批或分階段引用；逾時同requestId取回原結果；createOnly重跑不重複建卡。
+     *
+     * @return void
+     */
+    public function test_batch_reports_each_item_and_can_be_rerun_without_duplicates(): void
+    {
+        [$project, $plain] = $this->externalFixture('BAT');
+        $first = ['requestId' => (string) Str::uuid(), 'createOnly' => true, 'items' => [
+            ['source' => 'jira', 'externalId' => 'EPIC-1', 'title' => 'epic', 'type' => 'epic'],
+            ['source' => 'jira', 'externalId' => 'T-1', 'title' => 'child', 'epicRef' => ['source' => 'jira', 'externalId' => 'EPIC-1']],
+            ['source' => 'jira', 'externalId' => 'T-2'], // 缺title，只有這項失敗
+            ['source' => 'jira', 'externalId' => 'T-3', 'title' => 'orphan', 'parentRef' => ['source' => 'jira', 'externalId' => 'NOPE']],
+        ]];
+        $result = $this->batchUpsert($plain, $project['id'], $first)['data'];
+        $this->assertSame(['created' => 2, 'updated' => 0, 'exists' => 0, 'failed' => 2], $result['summary']);
+        $this->assertSame(['created', 'created', 'failed', 'failed'], array_column($result['items'], 'status'));
+        $this->assertSame('NOT_FOUND', $result['items'][3]['error']['code']);
+        $this->assertSame(2, $this->issuesIn($project['id']), '失敗項目整項回滾，不留半張卡');
+        $epic = $result['items'][0]['id'];
+        $this->assertSame($epic, $this->external($plain, 'GET', $project['id'], 'jira/T-1')['data']['epicId']);
+        $this->assertEquals($result, $this->batchUpsert($plain, $project['id'], $first)['data'], '逾時同requestId取回原逐項結果');
+        $this->batchUpsert($plain, $project['id'], [...$first, 'createOnly' => false], 409);
+
+        // 換新requestId補跑：已建立者exists不更新，修正後的項目建立，子卡可引用前一批的Epic。
+        $rerun = ['requestId' => (string) Str::uuid(), 'createOnly' => true, 'items' => [
+            ['source' => 'jira', 'externalId' => 'EPIC-1', 'title' => 'epic renamed', 'type' => 'epic'],
+            ['source' => 'jira', 'externalId' => 'T-2', 'title' => 'fixed', 'epicRef' => ['source' => 'jira', 'externalId' => 'EPIC-1']],
+        ]];
+        $again = $this->batchUpsert($plain, $project['id'], $rerun)['data'];
+        $this->assertSame(['exists', 'created'], array_column($again['items'], 'status'));
+        $this->assertSame($epic, $again['items'][0]['id']);
+        $this->assertSame('epic', Issue::where('public_id', $epic)->value('title'), 'createOnly不更新既有卡');
+        $this->assertSame(3, $this->issuesIn($project['id']));
+
+        // 非createOnly：缺revision的項目失敗，帶revision的項目更新。
+        $child = $this->external($plain, 'GET', $project['id'], 'jira/T-1')['data'];
+        $update = $this->batchUpsert($plain, $project['id'], ['requestId' => (string) Str::uuid(), 'items' => [
+            ['source' => 'jira', 'externalId' => 'T-1', 'title' => 'child updated', 'expectedRevision' => $child['revision']],
+            ['source' => 'jira', 'externalId' => 'T-2', 'title' => 'no revision'],
+        ]])['data'];
+        $this->assertSame(['updated', 'failed'], array_column($update['items'], 'status'));
+        $this->assertSame('REVISION_CONFLICT', $update['items'][1]['error']['code']);
+        $this->assertSame('child updated', Issue::where('public_id', $child['id'])->value('title'));
+    }
+
+    /**
+     * 結構錯誤整批400、read Token 403，不寫入任何卡片。
+     *
+     * @return void
+     */
+    public function test_batch_rejects_bad_structure_and_read_tokens(): void
+    {
+        [$project, $plain] = $this->externalFixture('BAX');
+        $item = ['source' => 'jira', 'externalId' => 'A-1', 'title' => 'a'];
+        $this->batchUpsert($plain, $project['id'], ['requestId' => (string) Str::uuid(), 'items' => [$item, $item]], 400);
+        $this->batchUpsert($plain, $project['id'], ['requestId' => (string) Str::uuid(), 'items' => array_map(fn ($n) => [...$item, 'externalId' => 'A-'.$n], range(1, 51))], 400);
+        $this->batchUpsert($plain, $project['id'], ['requestId' => (string) Str::uuid(), 'items' => [[...$item, 'epicRef' => ['source' => 'jira', 'externalId' => 'E'], 'epicId' => 'x']]], 400);
+        $this->batchUpsert($plain, $project['id'], ['requestId' => (string) Str::uuid(), 'items' => []], 400);
+        $read = $this->tokenIssue()['plainTextToken'];
+        $this->batchUpsert($read, $project['id'], ['requestId' => (string) Str::uuid(), 'items' => [$item]], 403);
+        $this->assertSame(0, $this->issuesIn($project['id']));
+    }
 }

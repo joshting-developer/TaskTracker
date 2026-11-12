@@ -50,6 +50,7 @@ Route::prefix('/api/public/v1/projects/{project}/issues')->middleware('throttle:
     Route::patch('/{issue}', [$writes, 'execute'])->name('public.issues.update');
     Route::post('/{issue}/comments', [$writes, 'execute'])->name('public.issues.comment');
     Route::put('/external/{source}/{externalId}', [PublicIssueExternalController::class, 'upsert'])->name('public.issues.upsert');
+    Route::post('/external-batch', [PublicIssueExternalController::class, 'batch'])->name('public.issues.batch');
 });
 
 Route::prefix('/api/public/docs')->withoutMiddleware([

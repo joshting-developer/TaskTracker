@@ -33,7 +33,19 @@ class PublicIssueWriteRequest extends JsonOperationRequest
         }
         $create = $this->routeIs('public.issues.create');
 
-        return [...$base, ...($create ? [] : ['expectedRevision' => ['required', 'integer:strict', 'min:1']]),
+        return [...$base, ...($create ? [] : ['expectedRevision' => ['required', 'integer:strict', 'min:1']]), ...self::issueFields($create)];
+    }
+
+    /**
+     * 公開卡片欄位allowlist，單筆與批次共用避免規則分歧。
+     *
+     * @param  bool  $create  建立時title必填
+     * @param  string  $prefix  批次項目前綴，例如`items.*.`
+     * @return array<string,array<int,mixed>> 欄位規則
+     */
+    public static function issueFields(bool $create, string $prefix = ''): array
+    {
+        $rules = [
             'title' => [$create ? 'required' : 'sometimes', 'string', 'min:1', 'max:180'],
             'description' => ['sometimes', 'string', 'max:6000'],
             'state' => ['sometimes', 'string', 'max:100'],
@@ -47,6 +59,8 @@ class PublicIssueWriteRequest extends JsonOperationRequest
             'relatedIssueIds.*' => ['string', 'max:100', 'distinct'],
             'estimateMinutes' => ['sometimes', 'integer:strict', 'min:0', 'max:525600'],
         ];
+
+        return collect($rules)->mapWithKeys(fn ($rule, $field) => [$prefix.$field => $rule])->all();
     }
 
     /**

@@ -102,7 +102,7 @@ class BearerTokenSession
 
             return $this->replay->execute($this->stores->forContext($token->workspace), 'requests', $token->workspace->userId, $operation, $input, function () use ($token, $operation, $use) {
                 $result = $use($token);
-                $this->audits->append($token->workspace, $operation, $result['id'], $token);
+                $this->audits->append($token->workspace, $operation, $result['id'] ?? null, $token);
 
                 return $result;
             });

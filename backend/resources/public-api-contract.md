@@ -4,7 +4,7 @@ HTTP契約v1；規格版號以OpenAPI的info.version為準；更新：2026-11-12
 
 ## 已開放能力與入口
 
-Base URL是你實際部署TaskTracker的origin。公開Bearer前綴為`/api/public/v1`，目前提供身分、可見專案／成員／狀態、任務摘要／單卡詳細及留言查詢。不要以PAT呼叫Session RPC。已提供Issue建立／PATCH／留言寫入與外部識別查詢／upsert；不提供刪除、MCP或工具專屬介面。
+Base URL是你實際部署TaskTracker的origin。公開Bearer前綴為`/api/public/v1`，目前提供身分、可見專案／成員／狀態、任務摘要／單卡詳細及留言查詢。不要以PAT呼叫Session RPC。已提供Issue建立／PATCH／留言寫入與外部識別查詢／upsert／批次；不提供刪除、MCP或工具專屬介面。
 
 | Method／path | 認證／用途 | 限流 |
 | --- | --- | --- |
@@ -22,6 +22,7 @@ Base URL是你實際部署TaskTracker的origin。公開Bearer前綴為`/api/publ
 | PATCH /api/public/v1/projects/{project}/issues/{issue} | Bearer write；expectedRevision保護的部分更新 | 同上 |
 | POST /api/public/v1/projects/{project}/issues/{issue}/comments | Bearer write；新增留言並遞增revision | 同上 |
 | PUT /api/public/v1/projects/{project}/issues/external/{source}/{externalId} | Bearer write；外部識別upsert，已存在時需expectedRevision | 同上 |
+| POST /api/public/v1/projects/{project}/issues/external-batch | Bearer write；最多50項批次upsert，逐項回報 | 同上 |
 | GET /api/v1/personal-tokens | Session；本人目前Workspace憑證metadata | 本版未設路由限流 |
 | POST /api/v1/personal-tokens | Session／CSRF；建立憑證、一次顯示原文 | 每使用者20次／60秒，未登入以IP計 |
 | POST /api/v1/personal-tokens/{token}/revoke | Session／CSRF；撤銷自己的憑證 | 每使用者60次／60秒，未登入以IP計 |
@@ -130,6 +131,17 @@ curl --fail-with-body -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
 `PUT .../issues/external/{source}/{externalId}`：未綁定時建立新卡並綁定（title必填，其餘欄位同建立）；已綁定時更新同一張卡，欄位語意同PATCH，**必須帶expectedRevision**，省略或過期回409 REVISION_CONFLICT，先`GET`同路徑取得最新revision再決定。建立時提供的expectedRevision忽略。成功data回id、projectId、identifier、revision、externalSource、externalId與created（true表示本次新建）。requestId仍只負責單次冪等：同內容重送回原結果，異內容409 REQUEST_CONFLICT；它不是長期識別，每次新的變更要用新UUID。
 
 `GET`同路徑回完整單卡（同單卡GET）。格式不符、未綁定或無權一律404。寫入在User→Workspace鎖內序列化，唯一索引保證同識別不會建出兩張卡。綁定目前不可解除或改綁，也沒有依外部識別刪除的操作。
+
+## 批次匯入與逐項結果
+
+`POST .../issues/external-batch`一次最多50項（整個JSON仍受50000 bytes限制），依items順序處理。每項語意同單筆upsert：未綁定建立（title必填）、已綁定需expectedRevision。每項各自回滾：某項失敗只撤銷該項，HTTP仍200，data.items逐項列出index、externalSource、externalId、status（created／updated／exists／failed）及成功時的id／projectId／identifier／revision，失敗時的error.code／message；data.summary為各狀態數量。
+
+- **Epic與子卡**：用`epicRef`或`parentRef`（`{source, externalId}`）引用外部識別，可指向同批前面的項目或既有綁定，不能和epicId／parentIssueId同時使用。建議先送Epic批次，再送子卡批次；引用不到的項目回NOT_FOUND，其他項照常。
+- **逾時判定**：整批綁同一requestId。回應遺失時用同requestId與完全相同內容重送，會拿回原本的逐項結果，不重複執行；內容不同409 REQUEST_CONFLICT。
+- **重跑不重複**：`createOnly: true`時已綁定項目回exists、不更新，所以修正失敗項後可換新requestId整批重送，已建立的卡不會重複。
+- **結構錯誤**：超過50項、空items、同批重複外部識別、Ref與ID同時指定或型別不符，整批400且不寫入。
+
+整批只追加一筆來源稽核（operation `public.v1.batchUpsertIssues`）。
 
 ## 增量摘要與cursor
 

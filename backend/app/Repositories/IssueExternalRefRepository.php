@@ -42,4 +42,18 @@ class IssueExternalRefRepository
             'source' => $source, 'external_id' => $externalId, 'created_at' => now(),
         ]);
     }
+
+    /**
+     * 已綁定卡片的有界摘要，供批次createOnly回報既有卡片。
+     *
+     * @param  Project  $project  已授權Project
+     * @param  string  $issueId  同Project卡片公開ID
+     * @return array{id:string,projectId:string,identifier:string,revision:int} 有界結果
+     */
+    public function summary(Project $project, string $issueId): array
+    {
+        $issue = Issue::where('workspace_id', $project->workspace_id)->where('project_id', $project->id)->where('public_id', $issueId)->sole(['identifier', 'revision']);
+
+        return ['id' => $issueId, 'projectId' => $project->public_id, 'identifier' => $issue->identifier, 'revision' => (int) $issue->revision];
+    }
 }

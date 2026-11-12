@@ -1553,3 +1553,10 @@ AGENTS.md 加入持續同步規則與入口。相對連結、換行與 git diff 
 - [x] 實作issue_external_refs、Repository／Service／Controller／Request，OpenAPI0.6.0與契約／Agent指南。
 - [x] 隔離MySQL完整203通過、官方OpenAPI結構檢查通過。
 - [x] 契約CI完整通過（Chrome路徑）；主庫備份（私有.local）→migrate只新增空表、35表筆數一致；重建backend／queue／websocket，主站OpenAPI0.6.0。
+
+## 2026-11-12 TT-172 批次匯入（Claude）
+
+- [x] 決策採建議：逐項savepoint、整批receipt、epicRef／parentRef、createOnly、上限50。
+- [x] Request／Service／Repository／路由、OpenAPI0.7.0、契約／Agent指南／docs/public-external-batch.md。
+- [x] 隔離MySQL完整207通過、OpenAPI結構檢查、Pint。
+- [x] 契約CI完整通過；重建backend／queue／websocket，主站OpenAPI0.7.0，主容器memory146通過；無migration。

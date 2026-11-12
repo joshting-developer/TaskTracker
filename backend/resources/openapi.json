@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker API",
-    "version": "0.6.0",
-    "description": "公開Bearer v1讀取及Issue建立／PATCH／留言及外部識別查詢／upsert；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。"
+    "version": "0.7.0",
+    "description": "公開Bearer v1讀取及Issue建立／PATCH／留言及外部識別查詢／upsert／批次；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。"
   },
   "servers": [
     {
@@ -5637,6 +5637,323 @@
         },
         "x-required-token-ability": "write"
       }
+    },
+    "/api/public/v1/projects/{project}/issues/external-batch": {
+      "post": {
+        "operationId": "batchUpsertPublicIssuesByExternalId",
+        "summary": "以外部識別批次建立或更新Issue（逐項結果）",
+        "tags": [
+          "Issues write"
+        ],
+        "security": [
+          {
+            "bearerPat": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/BatchUpsertResult"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "items": [
+                      {
+                        "index": 0,
+                        "externalSource": "github",
+                        "externalId": "epic-1",
+                        "status": "created",
+                        "id": "33333333-3333-4333-8333-333333333333",
+                        "projectId": "11111111-1111-4111-8111-111111111111",
+                        "identifier": "EX-1",
+                        "revision": 1
+                      },
+                      {
+                        "index": 1,
+                        "externalSource": "github",
+                        "externalId": "repo-12",
+                        "status": "failed",
+                        "error": {
+                          "code": "INVALID_INPUT",
+                          "message": "標題必填或超過字數限制"
+                        }
+                      }
+                    ],
+                    "summary": {
+                      "created": 1,
+                      "updated": 0,
+                      "exists": 0,
+                      "failed": 1
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              }
+            }
+          },
+          "401": {
+            "description": "認證／成員資格失效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "UNAUTHENTICATED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "認證／成員資格失效"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "來源、Scope或操作權限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "FORBIDDEN"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "來源、Scope或操作權限不足"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "請求超過限額",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "RATE_LIMIT"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "RATE_LIMIT",
+                    "message": "請求超過限額"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateReset"
+              }
+            }
+          },
+          "500": {
+            "description": "服務暫時無法處理請求",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "INTERNAL_ERROR"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "服務暫時無法處理請求"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "批次結構不合法：超過50項、同批重複外部識別、型別不符",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "請確認批次項目、外部識別與requestId（最多50項、同批不可重複）"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "同requestId不同內容（REQUEST_CONFLICT）；單項的版本衝突在items內回報，不影響HTTP狀態",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "REQUEST_CONFLICT",
+                    "message": "requestId已用於不同內容"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "一次最多50項，依序處理；每項同單筆upsert語意（未綁定建立、已綁定需expectedRevision），各自savepoint，失敗只回滾該項並在items回報error，其他項照常。epicRef／parentRef可引用同批前面或既有的外部識別，供Epic→子卡分階段匯入。createOnly=true時已綁定項目回exists且不更新，換新requestId重跑也不會重複建卡。整批與同一requestId綁定：逾時以同requestId與同內容重送回原逐項結果；異內容409 REQUEST_CONFLICT。結構錯誤（超過50項、同批重複識別、型別不符）整批400。純Bearer write與本人issue.write交集；User→Workspace鎖後重驗。",
+        "deprecated": false,
+        "x-tasktracker-context": "token-workspace",
+        "x-rate-limit": {
+          "requests": 120,
+          "windowSeconds": 60,
+          "key": "client IP; shared across public v1 routes",
+          "sharedWithOtherOperations": true
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "公開資源ID；不是內部SQL ID"
+          }
+        ],
+        "x-required-permission": "issue.write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchUpsertIssues"
+              },
+              "example": {
+                "requestId": "66666666-6666-4666-8666-666666666666",
+                "createOnly": true,
+                "items": [
+                  {
+                    "source": "github",
+                    "externalId": "epic-1",
+                    "title": "Imported epic",
+                    "type": "epic"
+                  },
+                  {
+                    "source": "github",
+                    "externalId": "repo-12",
+                    "title": "Imported task",
+                    "epicRef": {
+                      "source": "github",
+                      "externalId": "epic-1"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "x-required-token-ability": "write"
+      }
     }
   },
   "components": {
@@ -6654,6 +6971,252 @@
           "created"
         ],
         "additionalProperties": false
+      },
+      "BatchUpsertItem": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 180,
+            "pattern": "\\S"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 6000
+          },
+          "state": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "priority": {
+            "enum": [
+              "urgent",
+              "high",
+              "normal",
+              "low"
+            ]
+          },
+          "type": {
+            "enum": [
+              "epic",
+              "task",
+              "bug"
+            ]
+          },
+          "assignee": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "dueDate": {
+            "type": "string",
+            "description": "YYYY-MM-DD或空字串清除"
+          },
+          "epicId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "parentIssueId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "relatedIssueIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "maxItems": 200,
+            "uniqueItems": true
+          },
+          "estimateMinutes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 525600
+          },
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "更新既有綁定卡片時必填（從單卡GET取得），嚴格JSON整數；建立時忽略"
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,39}$"
+          },
+          "externalId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._~:@-]{1,200}$"
+          },
+          "epicRef": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9._-]{0,39}$"
+              },
+              "externalId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9._~:@-]{1,200}$"
+              }
+            },
+            "required": [
+              "source",
+              "externalId"
+            ],
+            "additionalProperties": false,
+            "description": "以外部識別指定Epic；不可與epicId同時使用"
+          },
+          "parentRef": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9._-]{0,39}$"
+              },
+              "externalId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9._~:@-]{1,200}$"
+              }
+            },
+            "required": [
+              "source",
+              "externalId"
+            ],
+            "additionalProperties": false,
+            "description": "以外部識別指定父任務；不可與parentIssueId同時使用"
+          }
+        },
+        "required": [
+          "source",
+          "externalId"
+        ],
+        "description": "單項欄位同upsert；建立時title必填，已綁定且未設createOnly時需expectedRevision。"
+      },
+      "BatchUpsertIssues": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createOnly": {
+            "type": "boolean",
+            "description": "true時已綁定項目回exists、不更新"
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/BatchUpsertItem"
+            }
+          }
+        },
+        "required": [
+          "requestId",
+          "items"
+        ],
+        "description": "JSON物件最多50000 bytes；同批外部識別不可重複。"
+      },
+      "BatchUpsertResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "summary"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "index",
+                "externalSource",
+                "externalId",
+                "status"
+              ],
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "externalSource": {
+                  "type": "string"
+                },
+                "externalId": {
+                  "type": "string"
+                },
+                "status": {
+                  "enum": [
+                    "created",
+                    "updated",
+                    "exists",
+                    "failed"
+                  ]
+                },
+                "id": {
+                  "type": "string"
+                },
+                "projectId": {
+                  "type": "string"
+                },
+                "identifier": {
+                  "type": "string"
+                },
+                "revision": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "error": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "created",
+              "updated",
+              "exists",
+              "failed"
+            ],
+            "properties": {
+              "created": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "updated": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "exists": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "failed": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
       }
     },
     "headers": {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Integrations;
 use App\Data\TokenContext;
 use App\Http\Controllers\Controller;
 use App\Http\Integrations\BearerTokenSession;
+use App\Http\Requests\Integrations\PublicIssueBatchRequest;
 use App\Http\Requests\Integrations\PublicIssueUpsertRequest;
 use App\Http\Resources\ApiResponse;
 use App\Http\Resources\Queries\IssueDetailResource;
@@ -51,5 +52,20 @@ class PublicIssueExternalController extends Controller
 
         return new ApiResponse($this->tokens->writeOnce($request, 'public.v1.upsertIssue', $input, fn () => null,
             fn (TokenContext $token) => $this->references->upsert($token->workspace, $project, $source, $externalId, $request->fields()), $project));
+    }
+
+    /**
+     * TT-172：批次upsert；逐項回報，整批同一receipt，逾時以同requestId重送取回原結果。
+     *
+     * @param  PublicIssueBatchRequest  $request  已驗證批次
+     * @param  string  $project  Project公開ID
+     * @return ApiResponse 逐項有界結果與統計
+     */
+    public function batch(PublicIssueBatchRequest $request, string $project): ApiResponse
+    {
+        $input = [...$request->validated(), 'projectId' => $project];
+
+        return new ApiResponse($this->tokens->writeOnce($request, 'public.v1.batchUpsertIssues', $input, fn () => null,
+            fn (TokenContext $token) => $this->references->batch($token->workspace, $project, $request->items(), $request->createOnly()), $project));
     }
 }

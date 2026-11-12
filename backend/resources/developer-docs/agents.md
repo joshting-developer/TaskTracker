@@ -44,3 +44,5 @@ PAT 不印在對話／卡片／Commit／log，不傳給不受信任網址，不�
 ## 外部識別對應
 
 從其他系統匯入或同步卡片時，用OpenAPI的upsertPublicIssueByExternalId（`PUT .../issues/external/{source}/{externalId}`）代替「先搜尋描述再決定建立或更新」。第一次送出建立並回created=true；之後要更新同一張卡，先用getPublicIssueByExternalId讀revision，再帶expectedRevision送出，409時重讀後再決定。每次新的變更用新的requestId；逾時才以同requestId與同內容重送核對。外部識別區分大小寫、不能含斜線。
+
+大量匯入改用batchUpsertPublicIssuesByExternalId（`POST .../issues/external-batch`，最多50項）。先匯入Epic，再匯入以epicRef／parentRef引用的子卡。只建立不更新時設`createOnly: true`，失敗項修正後可換新requestId整批重送。逾時則以原requestId與原內容重送取回逐項結果；逐項status=failed不會讓整批失敗，要逐一檢查error。

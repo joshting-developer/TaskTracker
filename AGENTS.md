@@ -261,3 +261,7 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 ### 2026-11-12 TT-171 外部識別upsert
 
 公開v1新增Project範圍外部識別GET／PUT `issues/external/{source}/{externalId}`，OpenAPI0.6.0。獨立issue_external_refs表（同Project唯一、區分大小寫），已綁定卡片upsert必須帶expectedRevision（使用者確認）；requestId仍只做冪等。共用writeOnce／executePublicIssue，新Controller→Service→Repository建構子注入。批次與同步語意續TT-172／173，見docs/public-external-ids.md。
+
+### 2026-11-12 TT-172 批次匯入
+
+公開v1新增`POST issues/external-batch`（最多50項，OpenAPI0.7.0）：逐項savepoint，失敗只回滾該項並回報；整批同一requestId receipt可在逾時後取回原逐項結果；epicRef／parentRef分階段匯入，createOnly補跑不重複。見docs/public-external-batch.md。

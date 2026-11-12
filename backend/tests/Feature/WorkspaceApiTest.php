@@ -15,7 +15,7 @@ use Tests\TestCase;
 
 class WorkspaceApiTest extends TestCase
 {
-    use StoredWriteResults, RefreshDatabase;
+    use RefreshDatabase, StoredWriteResults;
 
     private function register(string $email = 'josh@example.test'): array
     {
