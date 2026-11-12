@@ -1404,3 +1404,11 @@ AGENTS.md 加入持續同步規則與入口。相對連結、換行與 git diff 
 - [x] 新增 `Multi-Agent-To-Tracker.md`，區分可用能力、正式整合缺口與尚未定案的方案。
 - [x] 同步產品討論紀錄；未修改 TaskTracker 功能、依賴或授權。
 - [x] 檢查文件及秘密排除；純文件交接不重跑應用 Build／測試。
+
+
+## 2026-11-12：TT-258 狀態篩選崩潰
+
+- [x] 查重無既有卡，建立TT-258（bug／urgent）與Bug看板，並收錄實際功能看板。
+- [x] claude帳號領卡；隔離API（13029）＋真實Chrome重現Target crashed，最小HTML確認為focusout同步關閉details所致。
+- [x] 修正IssueFilters.vue關閉邏輯；新增回歸檢查，修正前失敗／修正後headless、headed通過；npm run build通過。
+- [ ] 限制：完整browser-check因共用隔離庫已有固定josh@example.test帳號，在註冊步驟即停止，未重置他人使用中的隔離庫；已人工核對其狀態篩選步驟與新關閉行為相容。

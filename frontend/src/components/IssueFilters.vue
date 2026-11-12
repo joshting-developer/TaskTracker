@@ -1,5 +1,5 @@
 <script setup>
-import { computed, shallowRef } from 'vue';
+import { computed, onBeforeUnmount, shallowRef, useTemplateRef } from 'vue';
 import { PRIORITIES, TYPES } from '../domain/model.js';
 import { CONDITIONS } from '../domain/filters.js';
 import Icon from './Icon.vue';
@@ -27,6 +27,20 @@ function field(key) {
 const search = field('search'), stateFilter = field('state'), priorityFilter = field('priority');
 const assigneeFilter = field('assignee'), epicFilter = field('epicId'), typeFilter = field('type');
 const conditionFilter = field('condition'), sort = field('sort');
+
+// 狀態多選：focusout只處理鍵盤移出（relatedTarget在外）；點選項文字時relatedTarget為null，
+// 若同步關閉details，Chrome 157會在label啟動checkbox時使渲染程序崩潰（TT-258）。點外部改由pointerdown關閉。
+const statusPicker = useTemplateRef('statusPicker');
+function closeStatusPicker() { if (statusPicker.value) statusPicker.value.open = false; }
+function closeOnOutsidePointer(event) { if (!statusPicker.value?.contains(event.target)) closeStatusPicker(); }
+function onStatusToggle() {
+  const method = statusPicker.value?.open ? 'addEventListener' : 'removeEventListener';
+  document[method]('pointerdown', closeOnOutsidePointer, true);
+}
+function onStatusFocusout(event) {
+  if (event.relatedTarget && !statusPicker.value?.contains(event.relatedTarget)) closeStatusPicker();
+}
+onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutsidePointer, true));
 </script>
 
 <template>
@@ -51,7 +65,7 @@ const conditionFilter = field('condition'), sort = field('sort');
   <div id="task-filters" v-show="filtersOpen" class="advanced-filters" role="group" aria-label="任務篩選條件">
     <div class="status-filter">
       <span>狀態</span>
-      <details @keydown.esc.prevent="$event.currentTarget.open = false" @focusout="!$event.currentTarget.contains($event.relatedTarget) && ($event.currentTarget.open = false)">
+      <details ref="statusPicker" @toggle="onStatusToggle" @keydown.esc.prevent="closeStatusPicker" @focusout="onStatusFocusout">
         <summary aria-label="篩選狀態">{{ stateFilter.length ? `已選 ${stateFilter.length} 個狀態` : '所有狀態' }}</summary>
         <div class="status-filter-options">
           <label v-for="state in states" :key="state.id">

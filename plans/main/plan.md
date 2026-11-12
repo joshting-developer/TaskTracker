@@ -1140,3 +1140,12 @@ docs/架構.md 是開工前使用者的未追蹤空白檔, 保留原樣；README
 ## 2026-11-11：Multi-Agent 使用回饋交接
 
 使用者要求以真實 Side Project 驗證專案管理，後續需對外 API／Webhook。此階段只整理已觀察能力、限制與待補需求，不開發 TaskTracker API 或改授權。交付根目錄 `Multi-Agent-To-Tracker.md`，同步產品討論；檢查來源、連結、未包含秘密及文件差異後獨立本機提交。應用資料操作與 Multi-Agent 的 AGENTS／本機工具由來源專案管理。
+
+
+## 2026-11-12：TT-258 狀態篩選勾選導致頁面崩潰
+
+使用者回報所有頁面的狀態篩選點選項後Chrome分頁崩潰（錯誤代碼5），要求查重、建卡、建立Bug看板並修復。
+
+- 根因：IssueFilters.vue的`<details>`在focusout中於relatedTarget為null時同步設`open=false`；點選項文字時label尚在啟動checkbox，Chrome 157.0.8103.52渲染程序崩潰。最小HTML重現：有該handler即崩潰，無handler正常；直接點checkbox本身因焦點留在內部而不觸發。
+- 修正：focusout只在焦點移到外部元素時關閉；點外部改由展開期間註冊的document pointerdown關閉；Esc維持。不改篩選資料流、API或查詢。
+- 驗證：新增`frontend/tools/state-filter-crash-check.js`（任務列表／我的任務／看板，真實滑鼠點選項、多選保持展開、清除、外部點擊／Esc／Tab關閉），修正前崩潰、修正後headless與headed皆通過；build通過。
