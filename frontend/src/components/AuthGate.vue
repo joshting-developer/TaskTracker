@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue';
 import { api } from '../api/index.js';
+import GuestTopBar from './GuestTopBar.vue';
 
 const emit = defineEmits(['authenticated']);
 const inviteToken = new URLSearchParams(location.hash.startsWith('#/invite?') ? location.hash.slice(9) : '').get('token') || '';
@@ -27,6 +28,7 @@ async function submit() {
 </script>
 
 <template>
+  <GuestTopBar current="login" />
   <main class="auth-page">
     <div class="auth-story"><h1>TaskTracker</h1></div>
     <v-card class="auth-card" elevation="0" rounded="0">

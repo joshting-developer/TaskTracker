@@ -19,3 +19,10 @@
 - 登出：App清除scope並把hash換成`#/`，回到登入頁。重整、瀏覽器返回、舊分享的`/#/projects/...`與`/#/issue/<id>`維持既有行為（未改readHash）。
 - 不新增第二套前端、不做SSR／常駐Node、不改API。`/about/`以Vite多頁建置成同一映像的靜態HTML（TT-207）。
 - 驗證：以nginx 1.27容器載入正式設定（PORT替換、API改固定狀態）實測：`/`→SPA、`/about`→301 `Location: /about/`、`/about/`→介紹頁、`/projects/x`→SPA、`/api/*`→後端，`nginx -t`通過。
+
+## 訪客TopBar（TT-206）
+
+- `GuestTopBar.vue`＋`src/guest-topbar.css`：品牌（回`/`）、「產品介紹」(`/about/`)、「登入」(`/`)，目前頁以`aria-current="page"`與底線標示；連結觸控高度44px、鍵盤焦點框可見。
+- 只在未登入的AuthGate與`/about/`出現；App在驗證完成前不渲染AuthGate，所以登入狀態載入時不會先閃出訪客導覽。登入後App無訪客TopBar；登出回到登入頁再出現。
+- `/about/`使用相同HTML結構與CSS檔（TT-207），已登入時隱藏並把CTA改成「回到工作空間」。
+- 驗證：`tools/guest-pages-check.js`（隔離API）驗目前頁、Tab順序、≥44px、三尺寸無橫向溢出、登入後TopBar消失且保留`#/projects`深層連結。登入頁在核准視覺基準（01-login／02-validation）內，新TopBar造成預期差異，需人工核准後才更新基準。

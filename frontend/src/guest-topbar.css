@@ -1,0 +1,13 @@
+/* TT-206：訪客TopBar；登入頁（Vue）與靜態/about/共用，不依賴App樣式。 */
+.guest-topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 64px; padding: 0 max(24px, 4vw); background: #202127; color: #f6f5fa; border-bottom: 1px solid #34303d; }
+.guest-brand { display: inline-flex; align-items: center; gap: 10px; color: #f6f5fa; font-size: 19px; font-weight: 750; letter-spacing: -.5px; text-decoration: none; }
+.guest-brand-mark { display: inline-flex; gap: 3px; align-items: flex-end; height: 20px; transform: rotate(-8deg); }
+.guest-brand-mark i { display: block; width: 4px; height: 15px; border-radius: 2px; background: #ab9cf3; }
+.guest-brand-mark i:nth-child(2) { height: 20px; }
+.guest-brand-mark i:nth-child(3) { height: 10px; }
+.guest-nav { display: flex; align-items: center; gap: 6px; }
+.guest-nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 8px; color: #d4cee0; font-size: 15px; font-weight: 550; text-decoration: none; }
+.guest-nav a:hover { color: #fff; background: #2f2b38; }
+.guest-nav a[aria-current="page"] { color: #fff; background: #3a3348; box-shadow: inset 0 -2px 0 #ab9cf3; }
+.guest-nav a:focus-visible, .guest-brand:focus-visible { outline: 2px solid #c9bcff; outline-offset: 2px; }
+@media (max-width: 480px) { .guest-topbar { padding: 0 16px; } .guest-brand { font-size: 17px; } .guest-nav a { padding: 0 10px; font-size: 14px; } }
