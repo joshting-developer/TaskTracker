@@ -105,6 +105,11 @@ export function usePersonalQueries({ versions, resumed, draftId, onError }) {
           await loadItem(row.id, { history: Boolean(details.value.get(row.id).history) });
       if (draftId.value && !visible.some(row => row.id === draftId.value))
         await loadItem(draftId.value);
+      // 通知定位的項目不在列表時（例如已退回或轉移），重讀明細讓指派／狀態正確；無法讀取則取消定位。
+      if (pinnedId.value && pinnedId.value !== draftId.value && !visible.some(row => row.id === pinnedId.value)) {
+        try { await loadItem(pinnedId.value); }
+        catch (failure) { if (failure.code === 'ABORTED') throw failure; pinnedId.value = ''; }
+      }
     }
     catch (failure) {
       if (current === generation && !['ABORTED', 'STALE_RESPONSE'].includes(failure.code)) {
