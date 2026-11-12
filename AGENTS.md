@@ -92,6 +92,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - `plans/<分支>/plan.md`、`step.md` 隨相關階段提交，保留規劃與續接歷史，不預設排除；不套用其他專案的 planning 排除／封存流程（2026-11-05 使用者更正）。
 - Git 操作直接在本專案原有 repository 進行，操作前確認根目錄、分支與既有差異；不在 `/private`、`/tmp` 或其他暫存目錄另建 clone／worktree 規避限制。
 - commit 訊息：處理TT卡片時採`<卡號> <卡片標題>`（見下方「TaskTracker自我追蹤」，2026-11-12起）；無對應卡片的工作才採 Conventional Commits, 用繁體中文說明成果, 例如 `feat: 調整專案入口與任務導覽`
+- commit 不帶任何 AI 相關資訊（2026-11-12 使用者要求）：不加 `Co-Authored-By`、`Generated with` 等 AI 協作者／產生工具標註，作者沿用本機 git 設定，不改 author／committer 為 AI；此規則優先於工具預設的署名提示
 - 不提交憑證、資料庫、依賴、截圖、暫存檔或編譯產物
 - 保留每階段的歷史, 不自行 amend、squash 或重寫已提交內容
 - 使用者授權的是本機 commit, 遠端 push 依另行指示執行
