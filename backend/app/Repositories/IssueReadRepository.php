@@ -197,6 +197,20 @@ class IssueReadRepository
     }
 
     /**
+     * 舊版無Project深連結只解析所屬Project公開ID，不讀卡片內容。
+     *
+     * @param  string  $workspaceId  可信Workspace公開ID
+     * @param  string  $id  Issue公開ID
+     * @return ?string 同Workspace內的Project公開ID
+     */
+    public function locate(string $workspaceId, string $id): ?string
+    {
+        return Issue::query()->join('projects as p', fn ($join) => $join->on('p.id', '=', 'issues.project_id')->on('p.workspace_id', '=', 'issues.workspace_id'))
+            ->join('workspaces as w', 'w.id', '=', 'issues.workspace_id')
+            ->where('w.public_id', $workspaceId)->where('issues.public_id', $id)->value('p.public_id');
+    }
+
+    /**
      * 活動入口只讀指定父任務識別，不附描述與關聯。
      *
      * @param  Project  $project  已授權Project

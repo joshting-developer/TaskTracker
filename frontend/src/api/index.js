@@ -11,6 +11,7 @@ export const api = {
   statusUsage: (project, options) => queryApi(`projects/${encodeURIComponent(project)}/status-usage`, {}, options),
   projectNotifications: (project, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/notifications`, filters, options),
   projectNotification: (project, id, options) => queryApi(`projects/${encodeURIComponent(project)}/notifications/${encodeURIComponent(id)}`, {}, options),
+  issueLocation: (id, options) => queryApi(`issue-locations/${encodeURIComponent(id)}`, {}, options),
   projectOptions: (filters, options) => queryApi('project-options', filters, options),
   projects: (filters, options) => queryApi('projects', filters, options),
   project: (id, options) => queryApi(`projects/${encodeURIComponent(id)}`, {}, options),

@@ -162,6 +162,13 @@ async function refreshWorkspace() {
         catch(failure){if(['NOT_FOUND','FORBIDDEN'].includes(failure.code)){editingProject.value=null;notify('專案編輯資格已變更');}else throw failure;}
       }
       ensureSectionAccess();
+      if (selectedId.value && !projectId.value) {
+        try {
+          const found = await api.issueLocation(selectedId.value);
+          if (generation !== refreshGeneration) return;
+          history.replaceState(null, '', projectHash(found.projectId, found.id)); readHash(true);
+        } catch (failure) { if (failure.code !== 'NOT_FOUND') throw failure; notify('找不到這個任務'); goHome(true); }
+      }
       await nextTick();
       return;
     }

@@ -67,6 +67,25 @@ class IssueReadService
     }
 
     /**
+     * 解析舊版深連結所屬Project；無權與不存在同樣回應找不到。
+     *
+     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  string  $id  Issue公開ID
+     * @return array{id:string,projectId:string} 卡片位置
+     */
+    public function locate(array $actor, string $id): array
+    {
+        $projectId = $this->issues->locate($actor['workspace']['id'], $id) ?? DomainError::fail('NOT_FOUND', '找不到這個任務');
+        try {
+            $this->projects->authorized($actor, $projectId, 'issue.read');
+        } catch (DomainError $failure) {
+            DomainError::fail('NOT_FOUND', '找不到這個任務');
+        }
+
+        return ['id' => $id, 'projectId' => $projectId];
+    }
+
+    /**
      * 只查這個任務的留言分頁，不載入全部活動。
      *
      * @param  array<string,mixed>  $actor  當次可信操作者

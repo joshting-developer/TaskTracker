@@ -102,6 +102,7 @@ Route::prefix('/api/v1')->group(function () {
     Route::get('/projects/{project}/notifications', [ProjectNotificationsController::class, 'index']);
     Route::get('/projects/{project}/notifications/{notification}', [ProjectNotificationsController::class, 'show']);
     Route::get('/projects/{project}/member-options', [ProjectsController::class, 'members']);
+    Route::get('/issue-locations/{issue}', [IssuesController::class, 'locate']);
     Route::get('/projects/{project}/issue-options', [IssuesController::class, 'options']);
     Route::get('/projects/{project}/issues', [IssuesController::class, 'index']);
     Route::get('/projects/{project}/issues/{issue}', [IssuesController::class, 'show']);

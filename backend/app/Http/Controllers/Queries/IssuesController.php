@@ -72,6 +72,20 @@ class IssuesController extends Controller
     }
 
     /**
+     * 舊版深連結只回傳卡片所屬Project，不附任務內容。
+     *
+     * @param  Request  $request  HTTP請求
+     * @param  string  $issue  Issue公開ID
+     * @param  ApiExecution  $execution  資格與交易邊界
+     * @param  IssueReadService  $issues  任務查詢用例
+     * @return ApiResponse 卡片位置
+     */
+    public function locate(Request $request, string $issue, ApiExecution $execution, IssueReadService $issues): ApiResponse
+    {
+        return new ApiResponse($execution->query($request, fn ($actor) => $issues->locate($actor, $issue)));
+    }
+
+    /**
      * 只查這個任務的留言分頁，不載入全部活動。
      *
      * @param  PageQueryRequest  $request  已驗證HTTP查詢
