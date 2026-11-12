@@ -1,3 +1,11 @@
+## 2026-11-12 TT-243／TT-245 狀態用量與通知預覽分責（接續Codex未完成工作）
+
+- 依AGENTS新規以卡片為單位處理：TT-243、TT-245為Codex中斷前已進行中的工作，接手完成並分別以`<卡號> <卡片標題>`提交；效能板其餘未實際處理的TT-180／226／240移回open並留言記錄已完成／未完成。
+- TT-243：status-usage以SQL聚合目前Project各狀態卡數，project.statuses.update重驗；修正join欄位歧義並限制狀態同Project。前端讀取失敗時全部視為使用中避免誤刪，寫入仍交易重驗。
+- TT-245：通知預覽改Project分頁20筆摘要，正文按需讀取單筆；沿用notification.readTeam或本人收件規則（另排除停用成員），SQL限定Project／收件人，撤權後列表與正文皆404；前端取消／過期回應、hidden停止與失敗退避。
+- 驗證：memory77／3540、獨立MySQL（tasktracker-perf-test）88／3795、Vite build；新增tools/project-utility-check.js真實Chrome：25則通知20＋5、正文按需、其他Project不出現、狀態用量決定可否移除、receiver無設定入口、三尺寸無溢位、bulkReads=0（列表回應5968 bytes，非p95）。
+- 長版browser-check在11-12分責查詢後未重跑，SQL debounce等時序斷言已改為等待伺服器結果；並發現兩項既有回歸：TT-214衝突後「重新載入最新版本」卡在儲存中（bf2a114）、TT-180舊版`#/issue/<id>`深連結無法解析（9413b7e），分別依卡片另行處理，不併入本兩卡。
+
 ## 2026-11-12 個人待辦／通知／專案目錄分責
 
 - TT-216／217／218：SQL參與者＋scope／狀態分頁，20筆摘要；原稿及歷史按需；收件匣分頁、未讀數獨立；轉卡連結按有效Project資格批次投影，撤權後版本改變及清連結。

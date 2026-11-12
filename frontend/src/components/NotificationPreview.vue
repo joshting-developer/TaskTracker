@@ -1,11 +1,76 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
-const props = defineProps({ project: Object, notifications: Array, issues: Array, permissions: Array });
-defineEmits(['open']);
-const status = ref(null), message = ref(''), error = ref(''), busy = ref(false);
-const entries = computed(() => props.notifications.filter((entry) => entry.projectId === props.project.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
-onMounted(async () => { if (props.permissions.includes('smtp.verify')) { try { status.value = await api.smtpStatus(); } catch (failure) { error.value = failure.message; } } });
+const props = defineProps({ project: Object, permissions: Array });
+const emit = defineEmits(['open', 'access']);
+const result = shallowRef(null), page = ref(1), loading = ref(false);
+const status = shallowRef(null), message = ref(''), error = ref(''), busy = ref(false);
+const expanded = shallowRef(null), bodyLoading = ref(false);
+const entries = computed(() => result.value?.items || []);
+let generation = 0, controller, bodyController, timer, failures = 0, disposed = false;
+
+function accessFailure(failure) {
+  if (['NOT_FOUND', 'FORBIDDEN', 'WORKSPACE_CHANGED', 'UNAUTHENTICATED'].includes(failure.code)) {
+    result.value = null;
+    expanded.value = null;
+    emit('access');
+  }
+}
+function schedule() {
+  clearTimeout(timer);
+  if (disposed || document.hidden) return;
+  timer = setTimeout(refresh, Math.min(120000, 30000 * 2 ** Math.min(failures, 2)) * (0.9 + Math.random() * 0.2));
+}
+async function refresh() {
+  const current = ++generation;
+  controller?.abort();
+  bodyController?.abort();
+  if (bodyLoading.value) expanded.value = null;
+  bodyLoading.value = false;
+  controller = new AbortController();
+  loading.value = true;
+  error.value = '';
+  try {
+    const data = await api.projectNotifications(props.project.id, { page: page.value, perPage: 20 }, { signal: controller.signal });
+    if (current !== generation) return;
+    result.value = data;
+    if (expanded.value && !data.items.some(item => item.id === expanded.value.id)) expanded.value = null;
+    failures = 0;
+    if (page.value > data.lastPage) page.value = data.lastPage;
+  } catch (failure) {
+    if (current !== generation || ['ABORTED', 'STALE_RESPONSE'].includes(failure.code)) return;
+    failures++;
+    error.value = failure.message;
+    accessFailure(failure);
+  } finally {
+    if (current === generation) {
+      loading.value = false;
+      schedule();
+    }
+  }
+}
+async function openBody(entry) {
+  bodyController?.abort();
+  if (expanded.value?.id === entry.id) { expanded.value = null; bodyLoading.value = false; return; }
+  const request = new AbortController();
+  bodyController = request;
+  expanded.value = { id: entry.id };
+  bodyLoading.value = true;
+  error.value = '';
+  try {
+    const data = await api.projectNotification(props.project.id, entry.id, { signal: request.signal });
+    if (!request.signal.aborted && !disposed) expanded.value = data;
+  } catch (failure) {
+    if (!request.signal.aborted && !disposed) { error.value = failure.message; accessFailure(failure); }
+  } finally {
+    if (bodyController === request) bodyLoading.value = false;
+  }
+}
+async function loadSmtp() {
+  if (!props.permissions.includes('smtp.verify')) return;
+  try { status.value = await api.smtpStatus(); }
+  catch (failure) { if (!disposed) error.value = failure.message; }
+}
 async function verify() {
   if (busy.value) return;
   busy.value = true; error.value = ''; message.value = '';
@@ -13,8 +78,35 @@ async function verify() {
   catch (failure) { error.value = failure.message; }
   finally { busy.value = false; }
 }
-function timestamp(value) { return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value)); }
+function visibility() {
+  clearTimeout(timer);
+  if (document.hidden) { generation++; controller?.abort(); bodyController?.abort(); }
+  else refresh();
+}
+function timestamp(value) {
+  return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+}
+watch(() => props.project.id, () => { result.value = null; page.value = 1; status.value = null; refresh(); loadSmtp(); }, { immediate: true });
+watch(page, refresh);
+document.addEventListener('visibilitychange', visibility);
+onScopeDispose(() => { disposed = true; generation++; controller?.abort(); bodyController?.abort(); clearTimeout(timer); document.removeEventListener('visibilitychange', visibility); });
+defineExpose({ refresh });
 </script>
 <template>
-  <section class="notification-workspace" aria-label="通知預覽"><header class="section-title"><div><h2>通知預覽</h2><p class="subtle">尚未寄送</p></div></header><div v-if="permissions.includes('smtp.verify')" class="smtp-card"><div><h3>SMTP 連線</h3><p>{{ status?.configured ? '已設定 SMTP' : '尚未設定 SMTP' }}</p></div><button class="button secondary" :disabled="busy || !status?.configured" @click="verify">{{ busy ? '檢查中…' : '檢查 SMTP 連線' }}</button></div><div v-if="message" class="success-box" role="status">{{ message }}</div><div v-if="error" class="error-box" role="alert">{{ error }}</div><div v-if="!entries.length" class="empty-state"><h2>目前還沒有通知</h2></div><article v-for="entry in entries" :key="entry.id" class="notification-card"><header><strong>{{ entry.subject }}</strong><span class="type-tag">待寄預覽</span></header><div class="notification-meta"><span>收件人 {{ entry.email }}</span><time>{{ timestamp(entry.createdAt) }}</time></div><p>{{ entry.body }}</p><button class="text-button" @click="$emit('open', issues.find(issue => issue.id === entry.issueId))">查看任務 →</button></article></section>
+  <section class="notification-workspace" aria-label="通知預覽">
+    <header class="section-title"><h2>通知預覽</h2><button class="button secondary" :disabled="loading" @click="refresh">重新整理</button></header>
+    <div v-if="permissions.includes('smtp.verify')" class="smtp-card"><div><h3>SMTP 連線</h3><p>{{ status?.configured ? '已設定 SMTP' : '尚未設定 SMTP' }}</p></div><button class="button secondary" :disabled="busy || !status?.configured" @click="verify">{{ busy ? '檢查中…' : '檢查 SMTP 連線' }}</button></div>
+    <div v-if="message" class="success-box" role="status">{{ message }}</div>
+    <div v-if="error" class="error-box" role="alert">{{ error }}</div>
+    <p v-if="loading" role="status">載入通知中…</p>
+    <div v-if="result && !entries.length" class="empty-state"><h2>目前還沒有通知</h2></div>
+    <article v-for="entry in entries" :key="entry.id" class="notification-card">
+      <header><strong>{{ entry.subject }}</strong><span class="type-tag">待寄預覽</span></header>
+      <div class="notification-meta"><span>收件人 {{ entry.email }}</span><time>{{ timestamp(entry.createdAt) }}</time></div>
+      <button class="text-button" :aria-expanded="expanded?.id === entry.id" @click="openBody(entry)">{{ expanded?.id === entry.id ? '收起內容' : '查看內容' }}</button>
+      <div v-if="expanded?.id === entry.id"><p v-if="bodyLoading" role="status">載入內容中…</p><p v-else>{{ expanded.body }}</p></div>
+      <button class="text-button" @click="emit('open', { id: entry.issueId, projectId: project.id }, true)">{{ entry.identifier }} →</button>
+    </article>
+    <div v-if="result?.lastPage > 1" class="pagination" aria-label="通知預覽分頁"><button class="text-button" :disabled="loading || page <= 1" @click="page--">上一頁</button><span>{{ page }} / {{ result.lastPage }}</span><button class="text-button" :disabled="loading || page >= result.lastPage" @click="page++">下一頁</button></div>
+  </section>
 </template>
