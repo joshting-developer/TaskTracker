@@ -1,0 +1,279 @@
+{
+  "phase": "before-shared-migration",
+  "skills": [
+    {
+      "name": "tasktracker-development-standards",
+      "source": "skills/tasktracker-development-standards/SKILL.md",
+      "realpath": "/Users/josh/Projects/workspace/SideProjects/TaskTracker/skills/tasktracker-development-standards/SKILL.md",
+      "sha256": "7d5d6a731e8093de21f9ba3883a6d101f08cd8b629a4187b85ea99726ba47fa2",
+      "bytes": 3902,
+      "fileCount": 7,
+      "entries": [
+        {
+          "path": ".agents/skills/tasktracker-development-standards",
+          "target": "../../skills/tasktracker-development-standards",
+          "gitMode": "120000",
+          "valid": true
+        }
+      ],
+      "active": true,
+      "sameNameGlobalExists": {
+        ".codex": false,
+        ".claude": false
+      }
+    },
+    {
+      "name": "laravel-architecture",
+      "source": "skills/laravel-architecture/SKILL.md",
+      "realpath": "/Users/josh/Projects/workspace/SideProjects/TaskTracker/skills/laravel-architecture/SKILL.md",
+      "sha256": "6a8bca9b4baea0e64dd799479bd82f64ec6fce273e55aa5e135946ee2f745f1e",
+      "bytes": 4973,
+      "fileCount": 5,
+      "entries": [
+        {
+          "path": ".agents/skills/laravel-architecture",
+          "target": "../../skills/laravel-architecture",
+          "gitMode": "120000",
+          "valid": true
+        }
+      ],
+      "active": true,
+      "sameNameGlobalExists": {
+        ".codex": false,
+        ".claude": false
+      }
+    },
+    {
+      "name": "ui-ux-pro-max",
+      "source": "skills/vendor/ui-ux-pro-max/SKILL.md",
+      "realpath": "/Users/josh/Projects/workspace/SideProjects/TaskTracker/skills/vendor/ui-ux-pro-max/SKILL.md",
+      "sha256": "1bdfb422c97d5e813768af422750882b71ff1554978da0b8a43c95de242765f7",
+      "bytes": 16646,
+      "fileCount": 75,
+      "entries": [
+        {
+          "path": ".agents/skills/ui-ux-pro-max",
+          "target": "../../skills/vendor/ui-ux-pro-max",
+          "gitMode": "120000",
+          "valid": true
+        }
+      ],
+      "active": true,
+      "sameNameGlobalExists": {
+        ".codex": false,
+        ".claude": false
+      }
+    },
+    {
+      "name": "laravel-patterns",
+      "source": "skills/vendor/laravel-patterns/SKILL.md",
+      "realpath": "/Users/josh/Projects/workspace/SideProjects/TaskTracker/skills/vendor/laravel-patterns/SKILL.md",
+      "sha256": "6fa9d96a7b944ef9775e2ecb93a56bc29d6219e34eb5af491792638fc5cb46b4",
+      "bytes": 10664,
+      "fileCount": 2,
+      "entries": [
+        {
+          "path": ".agents/skills/laravel-patterns",
+          "target": "../../skills/vendor/laravel-patterns",
+          "gitMode": "120000",
+          "valid": true
+        }
+      ],
+      "active": true,
+      "sameNameGlobalExists": {
+        ".codex": false,
+        ".claude": false
+      }
+    },
+    {
+      "name": "benchmark",
+      "source": "skills/vendor/ecc-benchmark/SKILL.md",
+      "realpath": "/Users/josh/Projects/workspace/SideProjects/TaskTracker/skills/vendor/ecc-benchmark/SKILL.md",
+      "sha256": "58e34c3ccf60ee5155e3db74357b73770015a7aad3594649b6758ba8375ab6ff",
+      "bytes": 2630,
+      "fileCount": 2,
+      "entries": [
+        {
+          "path": ".agents/skills/benchmark",
+          "target": "../../skills/vendor/ecc-benchmark",
+          "gitMode": "120000",
+          "valid": true
+        }
+      ],
+      "active": true,
+      "sameNameGlobalExists": {
+        ".codex": false,
+        ".claude": false
+      }
+    },
+    {
+      "name": "hallmark",
+      "source": "skills/vendor/hallmark/SKILL.md",
+      "realpath": "/Users/josh/Projects/workspace/SideProjects/TaskTracker/skills/vendor/hallmark/SKILL.md",
+      "sha256": "25a1ff92d925b2389e8409f42fb8ad7e033fceca8b5d1f07ed4ca4c28da53dc3",
+      "bytes": 18239,
+      "fileCount": 188,
+      "entries": [
+        {
+          "path": ".agents/skills/hallmark",
+          "target": "../../skills/vendor/hallmark",
+          "gitMode": "120000",
+          "valid": true
+        }
+      ],
+      "active": true,
+      "sameNameGlobalExists": {
+        ".codex": false,
+        ".claude": false
+      }
+    },
+    {
+      "name": "vue-best-practices",
+      "source": "skills/vendor/vue-best-practices/SKILL.md",
+      "realpath": "/Users/josh/Projects/workspace/SideProjects/TaskTracker/skills/vendor/vue-best-practices/SKILL.md",
+      "sha256": "3a601da4b2cc46b1712fcedb1ce434f0c263e29c2a8193ccf84dcbd0b7c03378",
+      "bytes": 10475,
+      "fileCount": 24,
+      "entries": [
+        {
+          "path": ".agents/skills/vue-best-practices",
+          "target": "../../skills/vendor/vue-best-practices",
+          "gitMode": "120000",
+          "valid": true
+        }
+      ],
+      "active": true,
+      "sameNameGlobalExists": {
+        ".codex": false,
+        ".claude": false
+      }
+    },
+    {
+      "name": "usability-testing",
+      "source": "skills/vendor/usability-testing/SKILL.md",
+      "realpath": "/Users/josh/Projects/workspace/SideProjects/TaskTracker/skills/vendor/usability-testing/SKILL.md",
+      "sha256": "98350aa232686167b8ada86f5d40432fb149613f45dde5477536bcd00ded38bd",
+      "bytes": 9553,
+      "fileCount": 4,
+      "entries": [],
+      "active": false,
+      "sameNameGlobalExists": {
+        ".codex": false,
+        ".claude": false
+      }
+    },
+    {
+      "name": "design-taste-frontend",
+      "source": "skills/vendor/taste-skill/SKILL.md",
+      "realpath": "/Users/josh/Projects/workspace/SideProjects/TaskTracker/skills/vendor/taste-skill/SKILL.md",
+      "sha256": "3435ed963b15a1b6447746ec8844ab2cd38d8d2e8ead3451937f42df01e408c4",
+      "bytes": 39537,
+      "fileCount": 40,
+      "entries": [
+        {
+          "path": ".agents/skills/design-taste-frontend",
+          "target": "../../skills/vendor/taste-skill",
+          "gitMode": "120000",
+          "valid": true
+        }
+      ],
+      "active": true,
+      "sameNameGlobalExists": {
+        ".codex": false,
+        ".claude": false
+      }
+    },
+    {
+      "name": "unslop",
+      "source": "skills/vendor/unslop/SKILL.md",
+      "realpath": "/Users/josh/Projects/workspace/SideProjects/TaskTracker/skills/vendor/unslop/SKILL.md",
+      "sha256": "19afd7f1841316ddff3f854ea8ead675c738e08b30c41e51a8f1822fa0111947",
+      "bytes": 31658,
+      "fileCount": 16,
+      "entries": [
+        {
+          "path": ".agents/skills/unslop",
+          "target": "../../skills/vendor/unslop",
+          "gitMode": "120000",
+          "valid": true
+        }
+      ],
+      "active": true,
+      "sameNameGlobalExists": {
+        ".codex": false,
+        ".claude": false
+      }
+    },
+    {
+      "name": "cognitive-walkthrough",
+      "source": "skills/vendor/cognitive-walkthrough/SKILL.md",
+      "realpath": "/Users/josh/Projects/workspace/SideProjects/TaskTracker/skills/vendor/cognitive-walkthrough/SKILL.md",
+      "sha256": "f4dd1799007d604bf6e00a790e35d783cf3c265d54cb16b98ad79d2a1a4a9e79",
+      "bytes": 1402,
+      "fileCount": 3,
+      "entries": [],
+      "active": false,
+      "sameNameGlobalExists": {
+        ".codex": false,
+        ".claude": false
+      }
+    },
+    {
+      "name": "performance-optimization",
+      "source": "skills/vendor/addyosmani-agent-skills/skills/performance-optimization/SKILL.md",
+      "realpath": "/Users/josh/Projects/workspace/SideProjects/TaskTracker/skills/vendor/addyosmani-agent-skills/skills/performance-optimization/SKILL.md",
+      "sha256": "82af71540457cf853893685211f64509cd1e781c0de09d0186f16960f2d6eeba",
+      "bytes": 16783,
+      "fileCount": 2,
+      "entries": [
+        {
+          "path": ".agents/skills/performance-optimization",
+          "target": "../../skills/vendor/addyosmani-agent-skills/skills/performance-optimization",
+          "gitMode": "120000",
+          "valid": true
+        }
+      ],
+      "active": true,
+      "sameNameGlobalExists": {
+        ".codex": false,
+        ".claude": false
+      }
+    }
+  ],
+  "brokenEntries": [],
+  "manifest": {
+    "checkedFiles": 358,
+    "missing": [],
+    "mismatch": []
+  },
+  "identicalFiles": [
+    {
+      "sha256": "326146379f01bb137c0a5d3c54770c1aa31076705c8b88a7f6b26a460f6221b2",
+      "paths": [
+        "skills/vendor/laravel-patterns/LICENSE",
+        "skills/vendor/ecc-benchmark/LICENSE"
+      ],
+      "licenseOnly": true
+    },
+    {
+      "sha256": "06088a8b94598626f27612dea42300154bf7be967c85d9d3eee4490cb056af7d",
+      "paths": [
+        "skills/vendor/hallmark/LICENSE",
+        "skills/vendor/hallmark/UPSTREAM-LICENSE"
+      ],
+      "licenseOnly": true
+    }
+  ],
+  "hostEvidence": {
+    "codexCliAvailable": true,
+    "claudeCliAvailable": false,
+    "freshSessionVerified": false
+  },
+  "visual": {
+    "existingRunner": "frontend/tools/browser-check.js",
+    "screenshots": true,
+    "approvedGoldenComparison": false,
+    "dependency": "playwright (no @playwright/test)",
+    "ci": ".github/workflows/api-contract.yml"
+  }
+}

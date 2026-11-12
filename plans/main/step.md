@@ -1,3 +1,15 @@
+## 2026-11-12 TT-267盤點完成
+
+- 12正文／10啟用入口／2手動研究，358manifest檔案hash通過、0失效link；兩組相同檔均授權而非重複Skill正文，完整保留。
+- 機器inventory與報告已交付，工具只讀、不碰私有資料；Codex存在／Claude PATH缺失，尚未新session驗證。視覺僅有截圖，無approved golden comparator。
+- 提交／回填後領268，按使用者更新遷到分類共用庫並泛化自有規範；保留所有產品安全及上游授權。
+
+## 2026-11-12 結構優化TT-267～271／共用Skill庫
+
+- 使用者要求所有side projects以/Users/josh/workspace/side-project/skills為canonical，TaskTracker現有skills全部搬移／分類；只有經證明專用者才留專案。新需求優先於舊project-only與本地存放位置，六張卡已追加範圍。
+- 先TT-267只讀盤點／機器inventory與視覺缺口，驗證提交後領268搬移泛化／Ponytail，再269觸發矩陣／載入，270視覺門檻，271第二輪驗收。專用產品資料留AGENTS／docs；私有憑證不移入Git、不動全域host設定。
+- 兩個repo保護現有差異、獨立本機commit不push；固定vendor／LICENSE／references／metadata，alias不複製正文。宿主新session或人工核准baseline缺證據時明列未完成，不假結案。
+
 ## 2026-11-12 TT-261完成
 
 - 補齊33檔116項用途／param／return，reference100檔241方法及required258檔846方法均0；擴大Unit門檻並排除生成cache。
