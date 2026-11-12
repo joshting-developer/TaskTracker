@@ -1,3 +1,5 @@
+> 2026-11-12更新：Skill正文已集中Side Project共用庫，舊專案路徑為相容連結；本文原存放位置視為歷史。載入與優先順序依根AGENTS「Skill來源與適用範圍」，產品設定見project-engineering-bindings.md。Ponytail預設lite，不裝全域hook／plugin。
+
 # TaskTracker 效能分析skills配置
 
 日期：2026-11-06（Asia/Taipei）。使用者已選定「Addy主診斷＋ECC補量測」。這輪完成專案內安裝及規範配置，沒有啟動業務重構或壓測。

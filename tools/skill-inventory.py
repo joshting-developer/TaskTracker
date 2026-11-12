@@ -22,7 +22,9 @@ def inventory():
         head, path = line.split('\t', 1)
         modes[path] = head.split()[0]
     skills = []
-    roots = list((ROOT / 'skills').rglob('SKILL.md'))
+    shared = Path(os.environ.get('SIDE_PROJECT_SKILLS_ROOT', '/Users/josh/workspace/side-project/skills'))
+    registry = json.loads((shared / 'registry.json').read_text())
+    roots = [shared / item['path'] / 'SKILL.md' for item in registry['skills']]
     # rglob intentionally does not follow symlink directories: aliases are inspected separately.
     for path in roots:
         body = path.read_text()
@@ -33,7 +35,7 @@ def inventory():
             if entry.is_symlink() and (entry / 'SKILL.md').resolve() == real:
                 aliases.append({'path': str(entry.relative_to(ROOT)), 'target': os.readlink(entry), 'gitMode': modes.get(str(entry.relative_to(ROOT))), 'valid': entry.exists()})
         files = [p for p in path.parent.rglob('*') if p.is_file() and '__pycache__' not in p.parts]
-        skills.append({'name': name[1].strip('"\'') if name else path.parent.name, 'source': str(path.relative_to(ROOT)), 'realpath': str(real), 'sha256': sha(path), 'bytes': path.stat().st_size, 'fileCount': len(files), 'entries': aliases, 'active': bool(aliases), 'sameNameGlobalExists': {host: (Path.home()/host/'skills'/path.parent.name).exists() for host in ['.codex', '.claude']}})
+        skills.append({'name': name[1].strip('"\'') if name else path.parent.name, 'source': os.path.relpath(path, ROOT), 'realpath': str(real), 'sha256': sha(path), 'bytes': path.stat().st_size, 'fileCount': len(files), 'entries': aliases, 'active': bool(aliases), 'sameNameGlobalExists': {host: (Path.home()/host/'skills'/path.parent.name).exists() for host in ['.codex', '.claude']}})
     broken = []
     for entry in (ROOT / '.agents/skills').iterdir():
         if entry.is_symlink() and not entry.exists():
@@ -46,7 +48,7 @@ def inventory():
             if 'sha256' in node and 'path' in node:
                 relative = node['path']
                 path = ROOT / relative if relative.startswith('skills/') else ROOT / (base or '') / relative
-                row = str(path.relative_to(ROOT))
+                row = os.path.relpath(path, ROOT)
                 if not path.is_file(): missing.append(row)
                 elif sha(path) != node['sha256']: mismatch.append(row)
                 checks.append(row)
@@ -58,9 +60,9 @@ def inventory():
     duplicates = collections.defaultdict(list)
     for path in (ROOT / 'skills').rglob('*'):
         if path.is_file() and not path.is_symlink() and '__pycache__' not in path.parts:
-            duplicates[sha(path)].append(str(path.relative_to(ROOT)))
+            duplicates[sha(path)].append(os.path.relpath(path, ROOT))
     repeated = [{'sha256': digest, 'paths': paths, 'licenseOnly': all('LICENSE' in Path(p).name for p in paths)} for digest, paths in duplicates.items() if len(paths) > 1]
-    return {'phase': 'before-shared-migration', 'skills': skills, 'brokenEntries': broken, 'manifest': {'checkedFiles': len(checks), 'missing': missing, 'mismatch': mismatch}, 'identicalFiles': repeated, 'hostEvidence': {'codexCliAvailable': bool(__import__('shutil').which('codex')), 'claudeCliAvailable': bool(__import__('shutil').which('claude')), 'freshSessionVerified': False}, 'visual': {'existingRunner': 'frontend/tools/browser-check.js', 'screenshots': True, 'approvedGoldenComparison': False, 'dependency': 'playwright (no @playwright/test)', 'ci': '.github/workflows/api-contract.yml'}}
+    return {'phase': 'shared-canonical-library', 'skills': skills, 'brokenEntries': broken, 'manifest': {'checkedFiles': len(checks), 'missing': missing, 'mismatch': mismatch}, 'identicalFiles': repeated, 'hostEvidence': {'codexCliAvailable': bool(__import__('shutil').which('codex')), 'claudeCliAvailable': bool(__import__('shutil').which('claude')), 'freshSessionVerified': False}, 'visual': {'existingRunner': 'frontend/tools/browser-check.js', 'screenshots': True, 'approvedGoldenComparison': False, 'dependency': 'playwright (no @playwright/test)', 'ci': '.github/workflows/api-contract.yml'}}
 
 
 def main():

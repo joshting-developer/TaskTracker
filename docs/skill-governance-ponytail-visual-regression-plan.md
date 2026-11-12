@@ -1,3 +1,5 @@
+> 2026-11-12更新：Skill正文已集中Side Project共用庫，舊專案路徑為相容連結；本文原存放位置視為歷史。載入與優先順序依根AGENTS「Skill來源與適用範圍」，產品設定見project-engineering-bindings.md。Ponytail預設lite，不裝全域hook／plugin。
+
 # TaskTracker Skill 治理、Ponytail 導入與前端視覺回歸門檻
 
 > 建立日期：2026-11-12（Asia/Taipei）

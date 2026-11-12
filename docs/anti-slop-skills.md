@@ -1,3 +1,5 @@
+> 2026-11-12更新：Skill正文已集中Side Project共用庫，舊專案路徑為相容連結；本文原存放位置視為歷史。載入與優先順序依根AGENTS「Skill來源與適用範圍」，產品設定見project-engineering-bindings.md。Ponytail預設lite，不裝全域hook／plugin。
+
 # Hallmark與Unslop配置
 
 日期：2026-11-11。依使用者要求安裝於本專案，沒有全域安裝、installer／hook或新增產品依賴。

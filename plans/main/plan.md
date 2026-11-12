@@ -1,3 +1,9 @@
+## 2026-11-12 TT-268共用搬移／Memory階段
+
+- 全12份原Skill搬共用分類庫，泛化工程／Laravel；加既有TaskTracker使用及固定Ponytail共14份，原路徑改symlink。358原vendor hash一致，379完整公開檔案hash／引用／12啟用入口通過，2項隔離工具負向測試通過。
+- 使用者追加AGENTS專注Skill／規範；根收斂47行、backend12行，沿革移Memory.md有現行索引／過期提示。共用baseline與工程Skill同步規則，產品綁定留consumer。
+- 兩repo分別本機提交；不改全域plugin／hook、業務程式／主庫或其他consumer。不push。TT-268新Codex／Claude session證據仍缺，保持進行中；後續269觸發矩陣、270核准視覺baseline、271獨立驗收另交付，不假完成。
+
 ## 2026-11-12 TT-267盤點完成
 
 - 12正文／10啟用入口／2手動研究，358manifest檔案hash通過、0失效link；兩組相同檔均授權而非重複Skill正文，完整保留。
