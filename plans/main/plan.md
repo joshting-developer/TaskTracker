@@ -1,3 +1,10 @@
+## 2026-11-12 TT-265 公開API實際操作確認
+
+- 使用者要求確認Claude交付AI/API能力能否用於操作；讀即時看板與部署OpenAPI0.9.0／19operations，核心closed，TT-3仍open及Webhook／選配聯調deferred。
+- Codex臨時PAT由公開API建TT-265、掛TT-3，驗查詢／指派／狀態／留言／兩種重播／409／read403／無Cookie／增量，臨時PAT全部撤銷並讀回401。只改本卡，無primary seed／壓測。
+- 專用MySQL13059／tasktracker_test補驗外部識別、批次、同步及回音等23項808assertions通過，環境已清理。現有CLI仍Session，未自行改成PAT或存長期Token；報告docs/public-api-operational-readiness-2026-11-12.md。
+- 本輪只實際驗證與交付文件，不恢復後續產品開發；報告提交／卡片回填後closed。
+
 ## 2026-11-12 TT-262 建卡／盤點與規範收斂
 
 - 使用者要求查Controller方法注入，討論後確認嚴格Controller → Service → Repository，包含簡單CRUD；穩定服務／Repository皆建構子注入。
