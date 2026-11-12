@@ -61,6 +61,8 @@ class ProjectService
             DomainError::fail('DUPLICATE_CODE', '這個專案代碼已使用');
         }
         $leadId = $this->projectLead($input['leadId'] ?? $this->workspaceSession['user']['id']);
+        // 新專案的最近更新即建立時間，列表才不會因NULL改依UUID排序（TT-274）。
+        $now = $this->now();
         $project = [
             'id' => $this->id(),
             'name' => $name,
@@ -72,7 +74,8 @@ class ProjectService
             'revision' => 1,
             'statuses' => Fields::STATES,
             'settingsHistory' => [],
-            'createdAt' => $this->now(),
+            'createdAt' => $now,
+            'updatedAt' => $now,
         ];
         $this->store->put('projects', $project['id'], $project);
         if ($leadId && ! $this->access->forUser($leadId)->can($project['id'], 'project.read')) {
@@ -202,15 +205,17 @@ class ProjectService
                 DomainError::fail('INVALID_INPUT', '使用中的狀態不能移除, 請先移轉任務');
             }
         }
+        $now = $this->now();
         $next = [
             ...$project,
             'statuses' => $states,
             'revision' => $project['revision'] + 1,
+            'updatedAt' => $now,
             'settingsHistory' => [
                 ...$project['settingsHistory'] ?? [],
                 [
                     'actor' => $this->workspaceSession['user']['name'],
-                    'at' => $this->now(),
+                    'at' => $now,
                     'before' => $project['statuses'] ?? Fields::STATES,
                     'after' => $states,
                 ],

@@ -91,7 +91,7 @@ class ProjectReadRepository
             ->when($filters->search !== '', fn ($q) => $q->where(function ($q) use ($filters) {
                 $term = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($filters->search)).'%';
                 $q->whereRaw("LOWER(name) LIKE ? ESCAPE '!'", [$term])->orWhereRaw("LOWER(code) LIKE ? ESCAPE '!'", [$term]);
-            }))->orderByDesc('updated_at')->orderBy('public_id')
+            }))->orderByDesc('updated_at')->orderByDesc('created_at')->orderBy('public_id')
             ->paginate($filters->perPage, ['id', 'workspace_id', 'public_id', 'name', 'code', 'description', 'color', 'lead_id', 'revision', 'created_at', 'updated_at'], 'page', $filters->page);
     }
 

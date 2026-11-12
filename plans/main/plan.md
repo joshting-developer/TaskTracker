@@ -1,3 +1,9 @@
+## 2026-11-13 實際功能看板（Claude）
+
+- 使用者要求完成「實際功能」看板全部未完成卡，有狀況採Claude建議，並在TT-263留白話報告。有界讀回看板：TT-274、TT-248、TT-260、TT-250、TT-179為open；依序逐卡claim→驗證→提交→回填。Codex同時在main做TT-264（TodoHome／前端工具），只stage本卡檔案與本段，不動其差異。
+- Skill：共用side-project-development-standards（engineering／verification／data-access／DI／PHPDoc）、laravel-architecture、Ponytail lite、task-tracker-usage；前端卡另加vue／ui。
+- TT-274：createProject補updatedAt＝createdAt、updateStatuses刷新updatedAt；列表updated_at DESC→created_at DESC→public_id。migration只以created_at與已保存settings／details歷史at補空值，皆無則保持NULL不捏造。SQLite＋獨立MySQL案例驗順序、重播不推進、revision保存；本機開發庫經既有migrate補2筆並讀回0空值。
+
 ## 2026-11-13 TT-264修復階段完成，基準核准待回覆
 
 - 實際重現為flex換行／搜尋狀態讓送出向下位移，原截圖高方塊此次未重現。純TodoHome scoped CSS改grid，select／search／submit固定44px，desktop/tablet同列對齊，mobile分行；PagedSelect／Markdown／API未改。
