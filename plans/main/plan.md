@@ -1,3 +1,10 @@
+## 2026-11-12 長版E2E恢復與分責查詢回歸修正
+
+- 長版browser-check自11-12分責查詢後未重跑；本輪恢復全程通過（連續3次）並修正其揭露的真實回歸，每項依卡片重開→修正→提交：TT-237寫入NOT_FOUND未觸發撤權重驗；TT-238 BoardDialog缺watch匯入致新增／編輯收錄無法開啟、移除看板深連結未回列表；TT-214衝突後重新載入卡在儲存中；TT-215完整頁狀態送出中未停用、衝突後未重讀詳細、不存在卡片深連結未回Project；TT-217通知定位待辦退回後殘留；TT-180舊版#/issue/<id>深連結（新增issue-locations最小查詢）。
+- E2E調整只針對既定行為改變：SQL debounce列表／搜尋／篩選等待伺服器結果、遠端PagedSelect關係與Epic候選、遠端收錄只顯示已選數、子任務分頁不顯示完成比例、草稿中背景刷新只重讀Project；看板拖曳於分頁卡片載入後才開始並在漏接drop時重試一次；撤權可能先被背景重驗卸載。未放寬權限、資料與revision斷言。
+- 驗證：memory77／3540、獨立MySQL88／3795、api-client／composables、build；browser-check×3、board-ux、board-query、personal-query、home、project-utility、account-settings、workspace-switch、markdown、issue-time均通過（隔離tasktracker-perf-test）。
+- TT-180其餘（月曆、工作區設定、專案成員仍用getWorkspace）未完成，移回open；下一張建議TT-223工時月曆。
+
 ## 2026-11-12 TT-243／TT-245 狀態用量與通知預覽分責（接續Codex未完成工作）
 
 - 依AGENTS新規以卡片為單位處理：TT-243、TT-245為Codex中斷前已進行中的工作，接手完成並分別以`<卡號> <卡片標題>`提交；效能板其餘未實際處理的TT-180／226／240移回open並留言記錄已完成／未完成。

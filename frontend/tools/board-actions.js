@@ -3,12 +3,16 @@ export async function moveBoardCard(page, identifier, state) {
   const card = page.locator(`.issue-card[data-issue="${identifier}"]`);
   const lane = page.locator('.board-lane').filter({ has: card });
   const target = lane.locator(`[data-column="${state}"]`);
-  await card.scrollIntoViewIfNeeded();
-  const sourceBox = await card.boundingBox(), targetBox = await target.boundingBox();
-  // 長欄位在卡片旁邊落下，不要求拖回欄位最上方。
-  const y = Math.max(5, Math.min(targetBox.height - 5, sourceBox.y + 10 - targetBox.y));
-  await card.dragTo(target, { sourcePosition: { x: 10, y: 10 }, targetPosition: { x: 10, y } });
-  await target.locator(`[data-issue="${identifier}"]`).waitFor();
+  // 模擬HTML5拖放偶爾在版面位移時漏掉drop事件（未送出任何寫入）；重新量測後最多再試一次。
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await card.scrollIntoViewIfNeeded();
+    const sourceBox = await card.boundingBox(), targetBox = await target.boundingBox();
+    // 長欄位在卡片旁邊落下，不要求拖回欄位最上方。
+    const y = Math.max(5, Math.min(targetBox.height - 5, sourceBox.y + 10 - targetBox.y));
+    await card.dragTo(target, { sourcePosition: { x: 10, y: 10 }, targetPosition: { x: 10, y } });
+    try { await target.locator(`[data-issue="${identifier}"]`).waitFor({ timeout: attempt ? 15000 : 4000 }); return; }
+    catch (failure) { if (attempt) throw failure; }
+  }
 }
 
 // 手機／鍵盤替代途徑：進入詳細頁，用既有狀態操作後返回來源看板。

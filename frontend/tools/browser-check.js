@@ -22,6 +22,21 @@ async function openQuickIssue(page, name) {
   else await title.click(); // Epic／工時明細等既有來源入口
 }
 
+async function pickRemoteIssue(page, editor, label, search, option) {
+  // 關係選擇改為遠端有界候選（TT-240）：展開搜尋、等候選查詢回來後選取。
+  await editor.getByRole('button', { name: `搜尋${label}選項`, exact: true }).click();
+  const loaded = page.waitForResponse(response => /\/issue-options$/.test(new URL(response.url()).pathname) && new URL(response.url()).searchParams.get('search') === search);
+  await editor.getByRole('textbox', { name: `搜尋${label}`, exact: true }).fill(search);
+  await loaded;
+  await editor.getByRole('combobox', { name: label, exact: true }).selectOption({ label: option });
+}
+
+async function expectRows(page, count, selector = 'tbody tr') {
+  // 列表由SQL查詢與debounce載入；等待伺服器結果後再比對最終列數。
+  await page.waitForFunction(({ selector, count }) => document.querySelectorAll(selector).length === count, { selector, count }, { timeout: 5000 }).catch(() => {});
+  assert.equal(await page.locator(selector).count(), count);
+}
+
 async function openTaskFilters(page) {
   const toggle = page.getByRole('button', { name: '任務篩選', exact: true });
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
@@ -149,7 +164,7 @@ async function checkIssueDetailPage(page) {
   await page.screenshot({ path: 'artifacts/issue-full-page.png', fullPage: true });
   await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
   assert.equal(await page.getByLabel('搜尋任務', { exact: true }).inputValue(), '整理任務完整頁', '返回保留原搜尋');
-  assert.equal(await page.locator('tbody tr').count(), 1);
+  await expectRows(page, 1);
   await page.getByLabel('搜尋任務', { exact: true }).fill('');
   await page.getByRole('button', { name: '下一頁', exact: true }).click();
   const pagination = await page.locator('.pagination').innerText();
@@ -333,7 +348,8 @@ async function checkProjectAcl(page, browser, failures) {
   // 失權寫入回應觸發 refresh, 不等背景輪詢
   // 獨立待辦 API 故障也不能擋住 Project 撤權清除
   await teammate.route('**/api/rpc/getTodos', route => route.abort(), { times: 1 });
-  await editor.getByRole('button', { name: '儲存修改', exact: true }).click();
+  // 撤權也可能先被背景重驗偵測而卸載編輯器；兩種路徑最後都必須回首頁且不留草稿。
+  await editor.getByRole('button', { name: '儲存修改', exact: true }).click({ timeout: 3000 }).catch(() => {});
   await teammate.getByRole('heading', { name: '首頁', exact: true }).waitFor();
   assert.equal(await teammate.evaluate(() => location.hash), '#/');
   await openProjectList(teammate);
@@ -520,11 +536,12 @@ async function checkCustomBoards(page) {
   await dialog.getByLabel('看板名稱', { exact: true }).fill('交付看板');
   await dialog.getByLabel(`收錄 ${fixture.epic.identifier}`, { exact: true }).check();
   await dialog.getByLabel(`收錄 ${fixture.task.identifier}`, { exact: true }).check();
-  await dialog.getByRole('status').filter({ hasText: '目前包含 3 張卡片' }).waitFor();
+  // 遠端收錄只顯示已選數；Epic展開後的實際卡片數在看板上驗證，不為預覽載入全部卡片。
+  await dialog.getByRole('status').filter({ hasText: '已選 2 個項目' }).waitFor();
   await dialog.getByRole('button', { name: '儲存看板', exact: true }).click();
   await page.locator('.selected-board-heading h3').getByText('交付看板', { exact: true }).waitFor();
   const customUrl = page.url();
-  assert.equal(await page.locator('.issue-card').count(), 3, 'Epic 本身、所屬卡片與明確單卡去重');
+  await expectRows(page, 3, '.issue-card'); // Epic 本身、所屬卡片與明確單卡去重
   await page.reload(); await page.locator('.issue-card').nth(1).waitFor();
   await openQuickIssue(page, '父工作'); await page.reload();
   await page.getByRole('dialog', { name: '任務詳細內容', exact: true }).waitFor();
@@ -533,7 +550,7 @@ async function checkCustomBoards(page) {
   await page.evaluate(async ({ project, epic }) => (await import('/src/api/index.js')).api.createIssue({ projectId: project.id, title: '後來加入 Epic', epicId: epic.id, requestId: crypto.randomUUID() }), fixture);
   await page.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
   await page.getByRole('button', { name: '後來加入 Epic', exact: true }).waitFor();
-  assert.equal(await page.locator('.issue-card').count(), 4);
+  await expectRows(page, 4, '.issue-card');
   await page.evaluate(async ({ task, otherEpic }) => {
     const { api } = await import('/src/api/index.js');
     const current = (await api.getWorkspace()).issues.find(item => item.id === task.id);
@@ -620,9 +637,11 @@ async function checkTaskFilters(page, projectUrl) {
   await openTaskFilters(page);
   await setStatusPickerOpen(page, true);
   await page.getByLabel('篩選狀態 已關閉', { exact: true }).check();
+  await page.waitForFunction(() => { const badges = [...document.querySelectorAll('tbody tr .status-badge')]; return badges.length > 0 && badges.every(badge => badge.innerText.trim() === '已關閉'); }, null, { timeout: 5000 });
   assert.ok(await page.locator('tbody tr').count() > 0, '列表可直接篩出 closed');
   for (const row of await page.locator('tbody tr').all()) assert.equal(await row.locator('.status-badge').innerText(), '已關閉');
   await page.getByLabel('篩選狀態 待規劃', { exact: true }).check();
+  await page.waitForFunction(() => [...document.querySelectorAll('tbody tr .status-badge')].some(badge => badge.innerText.trim() === '待規劃'), null, { timeout: 5000 });
   assert.ok(await page.locator('tbody tr').count() > 1, '可同時選取 open 與 closed');
   await page.getByRole('button', { name: '清除狀態', exact: true }).click();
   await setStatusPickerOpen(page, false);
@@ -631,20 +650,22 @@ async function checkTaskFilters(page, projectUrl) {
   assert.equal(await page.getByRole('button', { name: /儲存常用篩選|存為視圖/ }).count(), 0);
   assert.deepEqual(await page.getByLabel('篩選類型').locator('option').allTextContents(), ['所有類型', 'Epic', 'Task', 'Bug']);
   await page.getByLabel('篩選類型').selectOption('bug');
-  await page.getByLabel('篩選 Epic', { exact: true }).selectOption({ label: '會員系統上線' });
+  // Epic篩選改為遠端有界候選（TT-240），聚焦時載入，選項以編號＋標題顯示。
+  await page.getByRole('combobox', { name: '篩選 Epic', exact: true }).focus();
+  await page.getByRole('combobox', { name: '篩選 Epic', exact: true }).selectOption({ label: 'TEST-2 · 會員系統上線' });
   await setStatusPickerOpen(page, true);
   await page.getByLabel('篩選狀態 待規劃', { exact: true }).check();
   await setStatusPickerOpen(page, false);
-  assert.equal(await page.locator('tbody tr').count(), 1, '篩選仍採條件交集');
+  await expectRows(page, 1);
   await page.getByRole('button', { name: '任務篩選', exact: true }).click();
   assert.equal(await page.getByLabel('已套用篩選').getByRole('button').count(), 4);
   await page.getByRole('button', { name: '清除全部篩選', exact: true }).click();
-  assert.equal(await page.locator('tbody tr').count(), total);
+  await expectRows(page, total);
   const issue = await page.evaluate(async () => (await (await import('/src/api/index.js')).api.getWorkspace()).issues.find(item => item.title === '付款流程'));
   await page.goto(`${projectUrl}?view=retired-list`);
   await page.getByRole('status').filter({ hasText: '視圖功能已移除' }).waitFor();
   assert.equal(page.url(), projectUrl);
-  assert.equal(await page.locator('tbody tr').count(), total, '舊視圖不套用任何保存條件');
+  await expectRows(page, total); // 舊視圖不套用任何保存條件
   await page.goto(`${projectUrl}/issues/${issue.id}?view=retired-issue`);
   await page.getByRole('dialog', { name: '任務詳細內容' }).waitFor();
   assert.ok(page.url().endsWith(`/issues/${issue.id}`));
@@ -676,8 +697,8 @@ async function checkIssueRelations(page, projectUrl) {
   await editor.getByLabel('所屬 Epic', { exact: true }).selectOption({ label: 'TEST-2 · 會員系統上線' });
   await editor.getByLabel('預估小時', { exact: true }).fill('2');
   await editor.getByRole('button', { name: '新增關聯', exact: true }).click();
-  await editor.getByLabel('搜尋關聯任務', { exact: true }).fill('付款 API');
-  await editor.getByRole('button', { name: '關聯 TEST-3', exact: true }).click();
+  await pickRemoteIssue(page, editor, '關聯任務', '付款 API', 'TEST-3 · 付款 API');
+  await editor.getByRole('button', { name: '開啟關聯任務 TEST-3', exact: true }).waitFor();
   await editor.getByRole('button', { name: '建立任務', exact: true }).click();
   await openQuickIssue(page, '付款流程');
   editor = page.getByRole('dialog');
@@ -685,7 +706,8 @@ async function checkIssueRelations(page, projectUrl) {
   await editor.getByLabel('子任務標題', { exact: true }).fill('付款畫面');
   await editor.getByRole('button', { name: '建立子任務', exact: true }).click();
   await editor.getByRole('button', { name: '開啟子任務 TEST-5', exact: true }).waitFor();
-  await editor.getByText('0 / 1 完成', { exact: true }).waitFor();
+  // 子任務改分頁按需載入（TT-215），不以部分頁面計算完成比例。
+  assert.equal(await editor.getByText(/\d+ \/ \d+ 完成/).count(), 0);
   await editor.getByLabel('狀態', { exact: true }).selectOption('closed');
   await editor.getByRole('button', { name: '儲存修改', exact: true }).click();
   await editor.getByText(/版本 2 · 已儲存/).waitFor();
@@ -713,8 +735,7 @@ async function checkIssueRelations(page, projectUrl) {
   await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
   await openQuickIssue(page, '付款 API');
   await editor.getByRole('button', { name: '設定父任務', exact: true }).click();
-  await editor.getByLabel('搜尋父任務', { exact: true }).fill('付款流程');
-  await editor.getByRole('button', { name: '選為父任務 TEST-4', exact: true }).click();
+  await pickRemoteIssue(page, editor, '父任務', '付款流程', 'TEST-4 · 付款流程');
   await editor.getByRole('button', { name: '儲存修改', exact: true }).click();
   await editor.getByText(/版本 4 · 已儲存/).waitFor();
   await page.reload();
@@ -745,7 +766,8 @@ async function checkIssueRelations(page, projectUrl) {
   await page.setViewportSize({ width: 390, height: 844 });
   await openQuickIssue(page, '付款流程');
   await editor.getByRole('button', { name: '新增關聯', exact: true }).click();
-  await editor.getByLabel('搜尋關聯任務', { exact: true }).fill('付款');
+  await editor.getByRole('button', { name: '搜尋關聯任務選項', exact: true }).click();
+  await editor.getByRole('textbox', { name: '搜尋關聯任務', exact: true }).fill('付款');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
   await page.screenshot({ path: 'artifacts/mobile-issue-relations.png', fullPage: true });
   await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
@@ -864,7 +886,8 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await teammateEditor.getByRole('button', { name: '儲存修改' }).click();
   await teammateEditor.getByText(/版本 5 · 已儲存/).waitFor();
   await teammateEditor.getByRole('button', { name: '關閉任務', exact: true }).click();
-  const poll = concurrent.waitForResponse(response => response.url().endsWith('/api/rpc/getWorkspace'));
+  // 有未儲存草稿時背景刷新只重讀Project，不輪詢整包Workspace，也不換掉表單基準revision。
+  const poll = concurrent.waitForResponse(response => /^\/api\/v1\/projects\/[^/]+$/.test(new URL(response.url()).pathname));
   await concurrent.clock.fastForward(31000);
   await poll;
   assert.equal(await staleEditor.getByLabel(/任務標題/).inputValue(), '本機尚未儲存的修改');
@@ -1033,7 +1056,7 @@ try {
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：產品第一版 · 示範', exact: true }).click();
   await page.locator('tbody tr').nth(8).waitFor();
-  assert.equal(await page.locator('tbody tr').count(), 9);
+  await expectRows(page, 9);
   await checkReadableWorkspace(page);
   const filterToggle = page.getByRole('button', { name: '任務篩選', exact: true });
   assert.equal(await filterToggle.getAttribute('aria-expanded'), 'false');
@@ -1056,25 +1079,28 @@ try {
   assert.equal(await page.getByLabel('篩選優先級').inputValue(), 'high');
   await page.getByRole('button', { name: '清除全部篩選', exact: true }).click();
   assert.equal(await filterToggle.getAttribute('aria-expanded'), 'false');
-  assert.equal(await page.locator('tbody tr').count(), 9);
+  await expectRows(page, 9);
 
   mkdirSync('artifacts', { recursive: true });
   await page.screenshot({ path: 'artifacts/desktop-list.png', fullPage: true });
 
   await page.getByRole('textbox', { name: '搜尋任務' }).fill('手機');
-  assert.equal(await page.locator('tbody tr').count(), 1);
+  await expectRows(page, 1);
   await page.getByRole('button', { name: '清除搜尋' }).click();
   await openTaskFilters(page);
   await setStatusPickerOpen(page, true);
   await page.getByLabel('篩選狀態 進行中', { exact: true }).check();
   await setStatusPickerOpen(page, false);
-  assert.equal(await page.locator('tbody tr').count(), 2);
+  await expectRows(page, 2);
   await openTaskFilters(page);
   await setStatusPickerOpen(page, true);
   await page.getByRole('button', { name: '清除狀態', exact: true }).click();
   await setStatusPickerOpen(page, false);
   await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  const boardCards = page.waitForResponse(response => /\/boards\/default\/issues$/.test(new URL(response.url()).pathname));
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
+  await boardCards; // 分頁卡片重讀完成後才拖曳，避免拖到即將被替換的舊畫面
+  await page.locator('.issue-card[data-issue="DEMO-3"][draggable="true"]').waitFor();
   await moveBoardCard(page, 'DEMO-3', 'closed');
   await page.locator('.board-cell[data-column="closed"] [data-issue="DEMO-3"]').waitFor();
   await page.locator('[data-issue="DEMO-4"][draggable="true"]').dragTo(page.locator('.board-cell[data-column="open"]'), { sourcePosition: { x: 10, y: 10 }, targetPosition: { x: 5, y: 5 } });
@@ -1153,7 +1179,7 @@ try {
   await page.getByRole('heading', { name: /我的測試專案/ }).waitFor();
   await page.getByLabel('目前專案', { exact: true }).getByText('我的測試專案', { exact: true }).waitFor();
   assert.equal(await page.locator('.sidebar').getByRole('button', { name: /產品第一版/ }).count(), 0);
-  assert.equal(await page.locator('.issue-card, tbody tr').count(), 0);
+  await expectRows(page, 0, '.issue-card, tbody tr');
   assert.equal(await page.getByRole('button', { name: '搜尋流程已完成', exact: true }).count(), 0);
   await page.getByRole('button', { name: '新增任務', exact: false }).first().click();
   const createDialog = page.getByRole('dialog', { name: '新增一個任務' });
@@ -1166,17 +1192,17 @@ try {
   await page.reload();
   await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).waitFor();
   await page.getByRole('button', { name: '我的任務', exact: false }).click();
-  assert.equal(await page.locator('.issue-card, tbody tr').count(), 1);
+  await expectRows(page, 1, '.issue-card, tbody tr');
   const testProjectUrl = page.url();
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await openProjectList(page);
   await page.getByRole('heading', { name: '專案列表', exact: true }).waitFor();
   assert.equal(await page.getByRole('button', { name: '任務看板', exact: true }).count(), 0);
-  assert.equal(await page.locator('.issue-card, tbody tr').count(), 0);
+  await expectRows(page, 0, '.issue-card, tbody tr');
   await page.screenshot({ path: 'artifacts/desktop-projects.png', fullPage: true });
   await openProjectList(page);
   await page.getByLabel('搜尋專案').fill('TEST');
-  assert.equal(await page.locator('.project-card:not(.new-project-card)').count(), 1);
+  await expectRows(page, 1, '.project-card:not(.new-project-card)');
   await page.getByRole('button', { name: '清除專案搜尋' }).click();
   await page.reload();
   await openProjectList(page);
@@ -1190,7 +1216,7 @@ try {
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：產品第一版 · 示範', exact: true }).click();
-  assert.equal(await page.locator('.issue-card, tbody tr').count(), 9);
+  await expectRows(page, 9, '.issue-card, tbody tr');
   assert.equal(await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).count(), 0);
   await openQuickIssue(page, '搜尋流程已完成');
   const issueUrl = page.url();
