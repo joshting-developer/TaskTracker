@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Queries;
 
 use App\Database\DatabaseTimes;
-use App\Http\ApiExecution;
+use App\Data\WorkspaceContext;
+use App\Http\WorkspaceTransaction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\IssueOptionQueryRequest;
 use App\Http\Requests\IssueQueryRequest;
@@ -26,13 +27,13 @@ class IssuesController extends Controller
      *
      * @param  IssueQueryRequest  $request  已驗證HTTP查詢
      * @param  string  $project  Project公開ID
-     * @param  ApiExecution  $execution  資格與交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  IssueReadService  $issues  任務查詢用例
      * @return ApiResponse 此資源的公開投影
      */
-    public function index(IssueQueryRequest $request, string $project, ApiExecution $execution, IssueReadService $issues): ApiResponse
+    public function index(IssueQueryRequest $request, string $project, WorkspaceTransaction $workspace, IssueReadService $issues): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => ['page' => $issues->index($actor, $project, $request->toDto())]);
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => ['page' => $issues->index($context, $project, $request->toDto())]);
 
         return new ApiResponse(PageResource::wrap($data['page'], IssueListResource::collection($data['page']->items())->resolve()));
     }
@@ -42,13 +43,13 @@ class IssuesController extends Controller
      *
      * @param  IssueOptionQueryRequest  $request  已驗證候選條件
      * @param  string  $project  Project公開ID
-     * @param  ApiExecution  $execution  資格與交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  IssueReadService  $issues  任務查詢用例
      * @return ApiResponse 候選分頁
      */
-    public function options(IssueOptionQueryRequest $request, string $project, ApiExecution $execution, IssueReadService $issues): ApiResponse
+    public function options(IssueOptionQueryRequest $request, string $project, WorkspaceTransaction $workspace, IssueReadService $issues): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => ['page' => $issues->options($actor, $project, $request->toDto())]);
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => ['page' => $issues->options($context, $project, $request->toDto())]);
         $rows = array_map(fn ($issue) => (new IssueOptionResource($issue, $project))->resolve(), $data['page']->items());
 
         return new ApiResponse(PageResource::wrap($data['page'], $rows));
@@ -60,13 +61,13 @@ class IssuesController extends Controller
      * @param  Request  $request  已驗證HTTP查詢
      * @param  string  $project  Project公開ID
      * @param  string  $issue  Issue公開ID
-     * @param  ApiExecution  $execution  資格與交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  IssueReadService  $issues  任務查詢用例
      * @return ApiResponse 此資源的公開投影
      */
-    public function show(Request $request, string $project, string $issue, ApiExecution $execution, IssueReadService $issues): ApiResponse
+    public function show(Request $request, string $project, string $issue, WorkspaceTransaction $workspace, IssueReadService $issues): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => ['issue' => $issues->show($actor, $project, $issue)]);
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => ['issue' => $issues->show($context, $project, $issue)]);
 
         return new ApiResponse((new IssueDetailResource($data['issue']))->resolve());
     }
@@ -76,13 +77,13 @@ class IssuesController extends Controller
      *
      * @param  Request  $request  HTTP請求
      * @param  string  $issue  Issue公開ID
-     * @param  ApiExecution  $execution  資格與交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  IssueReadService  $issues  任務查詢用例
      * @return ApiResponse 卡片位置
      */
-    public function locate(Request $request, string $issue, ApiExecution $execution, IssueReadService $issues): ApiResponse
+    public function locate(Request $request, string $issue, WorkspaceTransaction $workspace, IssueReadService $issues): ApiResponse
     {
-        return new ApiResponse($execution->query($request, fn ($actor) => $issues->locate($actor, $issue)));
+        return new ApiResponse($workspace->read($request, fn (WorkspaceContext $context) => $issues->locate($context, $issue)));
     }
 
     /**
@@ -91,13 +92,13 @@ class IssuesController extends Controller
      * @param  PageQueryRequest  $request  已驗證HTTP查詢
      * @param  string  $project  Project公開ID
      * @param  string  $issue  Issue公開ID
-     * @param  ApiExecution  $execution  資格與交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  IssueReadService  $issues  任務查詢用例
      * @return ApiResponse 此資源的公開投影
      */
-    public function comments(PageQueryRequest $request, string $project, string $issue, ApiExecution $execution, IssueReadService $issues): ApiResponse
+    public function comments(PageQueryRequest $request, string $project, string $issue, WorkspaceTransaction $workspace, IssueReadService $issues): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => ['page' => $issues->comments($actor, $project, $issue, $request->pagination())]);
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => ['page' => $issues->comments($context, $project, $issue, $request->pagination())]);
         $rows = array_map(fn ($row) => ['id' => $row->id, 'content' => $row->content, 'author' => $row->author, 'createdAt' => DatabaseTimes::public($row->created_at)], $data['page']->items());
 
         return new ApiResponse(PageResource::wrap($data['page'], $rows));
@@ -109,13 +110,13 @@ class IssuesController extends Controller
      * @param  PageQueryRequest  $request  已驗證HTTP查詢
      * @param  string  $project  Project公開ID
      * @param  string  $issue  Issue公開ID
-     * @param  ApiExecution  $execution  資格與交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  IssueReadService  $issues  任務查詢用例
      * @return ApiResponse 此資源的公開投影
      */
-    public function history(PageQueryRequest $request, string $project, string $issue, ApiExecution $execution, IssueReadService $issues): ApiResponse
+    public function history(PageQueryRequest $request, string $project, string $issue, WorkspaceTransaction $workspace, IssueReadService $issues): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => ['page' => $issues->history($actor, $project, $issue, $request->pagination())]);
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => ['page' => $issues->history($context, $project, $issue, $request->pagination())]);
 
         return new ApiResponse(PageResource::wrap($data['page'], array_map(fn ($row) => json_decode($row->event_data, true, flags: JSON_THROW_ON_ERROR), $data['page']->items())));
     }
@@ -126,13 +127,13 @@ class IssuesController extends Controller
      * @param  PageQueryRequest  $request  分頁條件
      * @param  string  $project  Project公開ID
      * @param  string  $issue  Issue公開ID
-     * @param  ApiExecution  $execution  資格與交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  IssueReadService  $issues  任務查詢用例
      * @return ApiResponse 子卡摘要分頁
      */
-    public function children(PageQueryRequest $request, string $project, string $issue, ApiExecution $execution, IssueReadService $issues): ApiResponse
+    public function children(PageQueryRequest $request, string $project, string $issue, WorkspaceTransaction $workspace, IssueReadService $issues): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => ['page' => $issues->children($actor, $project, $issue, $request->pagination())]);
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => ['page' => $issues->children($context, $project, $issue, $request->pagination())]);
 
         return new ApiResponse(PageResource::wrap($data['page'], IssueSummaryResource::collection($data['page']->items())->resolve()));
     }
@@ -143,13 +144,13 @@ class IssuesController extends Controller
      * @param  PageQueryRequest  $request  分頁條件
      * @param  string  $project  Project公開ID
      * @param  string  $issue  Issue公開ID
-     * @param  ApiExecution  $execution  HTTP資格與交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  IssueReadService  $issues  任務查詢用例
      * @return ApiResponse 有效工時分頁
      */
-    public function time(PageQueryRequest $request, string $project, string $issue, ApiExecution $execution, IssueReadService $issues): ApiResponse
+    public function time(PageQueryRequest $request, string $project, string $issue, WorkspaceTransaction $workspace, IssueReadService $issues): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => ['page' => $issues->time($actor, $project, $issue, $request->pagination())]);
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => ['page' => $issues->time($context, $project, $issue, $request->pagination())]);
 
         return new ApiResponse(PageResource::wrap($data['page'], TimeEntryResource::collection($data['page']->items())->resolve()));
     }

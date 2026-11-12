@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Data\WorkspaceContext;
 use App\Authorization\ProjectAccess;
 use App\Authorization\WorkspacePermissions;
 use App\Data\PageQueryData;
@@ -25,13 +26,13 @@ class ProjectAclReadService
     /**
      * 只提供可授予角色交集及當次ACL版本。
      *
-     * @param  array<string,mixed>  $actor  可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  專案公開ID
      * @return array<string,mixed> 管理metadata，不含成員或歷史
      */
-    public function metadata(array $actor, string $projectId): array
+    public function metadata(WorkspaceContext $context, string $projectId): array
     {
-        $access = $this->projects->authorized($actor, $projectId, 'project.members.manage');
+        $access = $this->projects->authorized($context, $projectId, 'project.members.manage');
 
         return ['projectId' => $projectId, 'revision' => $this->acl->revision($access->project),
             'roles' => array_values(array_filter(ProjectAccess::roles(), fn ($role) => ! array_diff($role['permissions'], $access->permissions)))];
@@ -40,14 +41,14 @@ class ProjectAclReadService
     /**
      * 當頁指派已批次預載，逐筆能力計算不產生SQL。
      *
-     * @param  array<string,mixed>  $actor  可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  專案公開ID
      * @param  PageQueryData  $filters  有界分頁／搜尋
      * @return LengthAwarePaginator<ProjectMemberSummaryData> 有效成員分頁
      */
-    public function index(array $actor, string $projectId, PageQueryData $filters): LengthAwarePaginator
+    public function index(WorkspaceContext $context, string $projectId, PageQueryData $filters): LengthAwarePaginator
     {
-        $access = $this->projects->authorized($actor, $projectId, 'project.members.manage');
+        $access = $this->projects->authorized($context, $projectId, 'project.members.manage');
         $activeRoles = array_values(array_filter(['owner', 'manager', 'admin', 'user', 'member', 'maintainer', 'developer'], fn ($role) => in_array('workspace.read', WorkspacePermissions::resolve($role), true)));
         $workspaceRoles = array_values(array_filter(['owner', 'manager', 'admin', 'user', 'member', 'maintainer', 'developer'], fn ($role) => in_array('project.readAny', WorkspacePermissions::resolve($role), true)));
         $projectRoles = array_column(array_filter(ProjectAccess::roles(), fn ($role) => in_array('project.read', $role['permissions'], true)), 'id');
@@ -65,14 +66,14 @@ class ProjectAclReadService
     /**
      * 候選只在管理用途授權後提供信箱供同名辨識。
      *
-     * @param  array<string,mixed>  $actor  可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  專案公開ID
      * @param  PageQueryData  $filters  有界搜尋／分頁
      * @return LengthAwarePaginator<WorkspaceMember> 有效候選
      */
-    public function candidates(array $actor, string $projectId, PageQueryData $filters): LengthAwarePaginator
+    public function candidates(WorkspaceContext $context, string $projectId, PageQueryData $filters): LengthAwarePaginator
     {
-        $project = $this->projects->require($actor, $projectId, 'project.members.manage');
+        $project = $this->projects->require($context, $projectId, 'project.members.manage');
 
         return $this->acl->candidates($project, $filters);
     }
@@ -80,14 +81,14 @@ class ProjectAclReadService
     /**
      * 每次展開歷史均重驗Project管理資格。
      *
-     * @param  array<string,mixed>  $actor  可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  專案公開ID
      * @param  PageQueryData  $filters  有界歷史分頁
      * @return LengthAwarePaginator<ProjectAclHistoryData> 授權歷史
      */
-    public function history(array $actor, string $projectId, PageQueryData $filters): LengthAwarePaginator
+    public function history(WorkspaceContext $context, string $projectId, PageQueryData $filters): LengthAwarePaginator
     {
-        $project = $this->projects->require($actor, $projectId, 'project.members.manage');
+        $project = $this->projects->require($context, $projectId, 'project.members.manage');
 
         $page = $this->acl->history($project, $filters);
         $userIds = array_values(array_unique(array_filter(array_map(fn ($event) => $event->event_data['userId'] ?? null, $page->items()))));

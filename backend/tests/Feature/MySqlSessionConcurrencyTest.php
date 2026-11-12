@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Domain\DomainError;
 use App\Factories\SessionLockFactory;
-use App\Http\ApiExecution;
+use App\Http\WorkspaceTransaction;
 use App\Http\Session\SessionLease;
 use App\Models\User;
 use GuzzleHttp\Client;
@@ -175,7 +175,7 @@ class MySqlSessionConcurrencyTest extends MySqlTestCase
             $request->attributes->set(SessionLease::class, $lease);
             $marker = (string) Str::uuid();
             try {
-                app(ApiExecution::class)->query($request, function () use ($lease, $marker) {
+                app(WorkspaceTransaction::class)->read($request, function () use ($lease, $marker) {
                     DB::table('workspaces')->insert(['public_id' => $marker, 'name' => 'rollback']);
                     $lease->release();
 

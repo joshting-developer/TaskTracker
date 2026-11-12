@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Data\WorkspaceContext;
 use App\Data\IssueQueryData;
 use App\Data\PageQueryData;
 use App\Domain\DomainError;
@@ -26,14 +27,14 @@ class BoardReadService
     /**
      * 回傳自訂看板分頁及獨立Default摘要，不傳任何卡片內容。
      *
-     * @param  array<string,mixed>  $actor  交易內驗證的操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  Project公開ID
      * @param  PageQueryData  $filters  有界條件
      * @return array{page:LengthAwarePaginator,defaultBoard:array<string,mixed>} 看板摘要
      */
-    public function index(array $actor, string $projectId, PageQueryData $filters): array
+    public function index(WorkspaceContext $context, string $projectId, PageQueryData $filters): array
     {
-        $project = $this->projects->require($actor, $projectId, 'issue.read');
+        $project = $this->projects->require($context, $projectId, 'issue.read');
 
         return ['page' => $this->boards->page($project, $filters), 'defaultBoard' => $this->summary($project, null)];
     }
@@ -41,14 +42,14 @@ class BoardReadService
     /**
      * 讀取單看板屬性，編輯收錄另以明確上限提供ID。
      *
-     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  Project公開ID
      * @param  string  $id  看板公開ID或default
      * @return array<string,mixed> 看板屬性與明確收錄
      */
-    public function show(array $actor, string $projectId, string $id): array
+    public function show(WorkspaceContext $context, string $projectId, string $id): array
     {
-        $project = $this->projects->require($actor, $projectId, 'issue.read');
+        $project = $this->projects->require($context, $projectId, 'issue.read');
         $board = $this->find($project, $id);
 
         return [...$this->summary($project, $board), 'selectedIssueIds' => $board ? $this->boards->selectedIds($board) : []];
@@ -57,41 +58,41 @@ class BoardReadService
     /**
      * 將篩選與看板收錄在SQL交集後分頁。
      *
-     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  Project公開ID
      * @param  string  $id  看板公開ID或default
      * @param  IssueQueryData  $filters  有界任務條件
      * @return LengthAwarePaginator 卡片摘要分頁
      */
-    public function issues(array $actor, string $projectId, string $id, IssueQueryData $filters): LengthAwarePaginator
+    public function issues(WorkspaceContext $context, string $projectId, string $id, IssueQueryData $filters): LengthAwarePaginator
     {
-        $access = $this->projects->authorized($actor, $projectId, 'issue.read');
+        $access = $this->projects->authorized($context, $projectId, 'issue.read');
         $project = $access->project;
         $board = $this->find($project, $id);
         $team = in_array('timeEntry.readTeam', $access->permissions, true);
         $own = in_array('timeEntry.readOwn', $access->permissions, true);
 
-        return $this->issues->page($project, $actor['user']['id'], $filters, $board?->id, $own ? $actor['user']['id'] : null, $team);
+        return $this->issues->page($project, $context->userId, $filters, $board?->id, $own ? $context->userId : null, $team);
     }
 
     /**
      * 輕量變更檢查：回傳看板畫面相依資料的不透明版本，不含卡片、成員或工時內容。
      * 每次都重新驗證issue.read；撤權／封存仍回FORBIDDEN或NOT_FOUND，不讓未授權者探測資源是否更新。
      *
-     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  Project公開ID
      * @param  string  $id  看板公開ID或default
      * @return array{projectId:string,boardId:string,version:string} 版本摘要
      */
-    public function version(array $actor, string $projectId, string $id): array
+    public function version(WorkspaceContext $context, string $projectId, string $id): array
     {
-        $access = $this->projects->authorized($actor, $projectId, 'issue.read');
+        $access = $this->projects->authorized($context, $projectId, 'issue.read');
         $board = $this->find($access->project, $id);
         $team = in_array('timeEntry.readTeam', $access->permissions, true);
         $own = in_array('timeEntry.readOwn', $access->permissions, true);
         $permissions = $access->permissions;
         sort($permissions);
-        $parts = $this->boards->versionParts($access->project, $own && ! $team ? $actor['user']['id'] : null, $team);
+        $parts = $this->boards->versionParts($access->project, $own && ! $team ? $context->userId : null, $team);
 
         return ['projectId' => $access->project->public_id, 'boardId' => $board?->public_id ?? 'default',
             'version' => hash('sha256', json_encode([$parts, $board?->revision ?? 0, $permissions], JSON_THROW_ON_ERROR))];

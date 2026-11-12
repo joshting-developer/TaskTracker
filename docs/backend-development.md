@@ -10,8 +10,10 @@
 flowchart TD
   Route["routes/web.php：updateIssue"] --> Controller["IssueController::update"]
   Controller --> Request["JsonOperationRequest：JSON傳輸邊界"]
-  Request --> Execution["ApiExecution：交易＋Session重驗"]
-  Execution --> Operation["WorkspaceOperationAccess：permission與scope"]
+  Request --> Rpc["WorkspaceRpc：舊RPC分派，宣告存取模式"]
+  Rpc --> Execution["WorkspaceTransaction：交易＋鎖＋Session重驗＋X-Workspace-ID"]
+  Execution --> Service["WorkspaceService：依操作取得單次服務組"]
+  Service --> Operation["WorkspaceOperationAccess：permission與scope"]
   Operation --> Replay["RequestReplay：比對原簽章／讀取重試"]
   Replay --> Issue["IssueService::updateIssue：版本、關聯與歷史"]
   Issue --> Store["RecordStore → RelationalRecords／Children → Eloquent業務表"]
@@ -25,8 +27,12 @@ flowchart TD
 | `Http/Controllers/*Controller.php` | 各功能HTTP入口、讀取JSON與回傳Resource；沒有SQL或業務規則 |
 | `Http/Requests/JsonOperationRequest.php` | Content-Type、大小、JSON語法及物件形狀；保留原始輸入供簽章使用 |
 | `Http/Resources/ApiResponse.php` | 固定成功格式`{ok:true,data:...}`，帳號操作附CSRF；沒有第二層data |
-| `Http/ApiExecution.php` | HTTP應用協調：交易內重驗Session，再執行業務；帳號／Session操作也是交易內完成 |
-| `Services/WorkspaceService.php` | 舊操作相容入口，明確映射操作到領域服務；供API、Seed及待辦轉卡共用 |
+| `Http/WorkspaceTransaction.php` | 依呼叫端宣告的`WorkspaceAccessMode`（Write／Read／Unlocked）開交易；寫入先鎖User再鎖Workspace；交易內重驗Session並比對`X-Workspace-ID`，把`WorkspaceContext`交給用例。v1查詢用`read()` |
+| `Http/WorkspaceRpc.php` | 舊RPC分派與工時報表；在`MODES`宣告哪些舊操作不取寫入鎖，其餘一律Write |
+| `Http/AccountSessionBoundary.php` | 註冊、登入、登出、目前身分、工作區切換與邀請；交易內取鎖後才改Session |
+| `Http/Session/SessionLeaseGuard.php` | 操作前後確認仍持有Session鎖租期 |
+| `Services/WorkspaceService.php` | 舊操作相容入口：授權、RequestReplay、依操作取得需要的領域服務；無租戶狀態，操作者為`execute`參數 |
+| `Factories/WorkspaceOperationServices.php` | 單次操作的服務組：共用一個Store與ProjectAccess，領域服務按需建立（TT-233） |
 | `Services/WorkspaceQuery.php` | 可見專案、任務、工時、通知與成員資料的彙整 |
 | `Services/ProjectService.php` | 專案資訊、責任資訊、自訂狀態與修改歷史 |
 | `Services/IssueService.php` | 任務、父子／雙向關聯、留言、版本及通知預覽 |
@@ -45,7 +51,7 @@ flowchart TD
 
 - 前端RPC網址、操作名稱與DTO不變，沒有要求前端同步改REST API。
 - JSON傳輸與業務欄位驗證分開：FormRequest處理傳輸；`Fields`及領域服務繼續負責allowlist、型別、狀態與關聯規則，保留錯誤碼、中文訊息與HTTP status。不是宣稱所有驗證都已移到各別FormRequest。
-- AccountService／ApiExecution是與Laravel Auth／Session相接的應用邊界；Project／Issue／Time等領域服務接收重新驗證的工作空間身分，不自行讀全域HTTP Session。
+- AccountService／AccountSessionBoundary／WorkspaceTransaction是與Laravel Auth／Session相接的應用邊界；Project／Issue／Time等領域服務接收重新驗證的工作空間身分，不自行讀全域HTTP Session。
 - 每次操作先重新授權，再讀requestId快取；舊簽章排序及`requests`／`todoRequests` namespace保留。轉卡、關聯兩端、通知與編號仍在同一交易。
 - 關聯式表保留原公開ID、順序、DTO與版本；原records不雙寫。`StoredRecord`僅代表歷史封存，Project／Issue等另有Eloquent模型。主鍵／外鍵及快照JSON邊界見[關聯式資料設計](database-design.md)。
 - 原匯入、歷史資料升級器與Seed操作契約保留，沒有順便全面改寫工具。SMTP仍只驗證、通知仍preview，Reverb仍未發布業務事件。
@@ -78,3 +84,16 @@ flowchart TD
 ## 2026-11-12 可信Context與組裝入口
 
 WorkspaceSession.verified → WorkspaceContextFactory → AccountService重新驗證後回readonly WorkspaceContext；舊context()以legacyIdentity()保持array契約。RealtimeSession／ProjectChannelAccess已用Context方法參數，經ProjectAccessFactory／RecordStoreFactory組裝本次scope，其他用例逐卡遷移，不把Context存為singleton。全自有PHP盤點、依賴圖、例外及驗證見[TT-232報告](backend-context-boundaries-2026-11-12.md)。
+
+## 2026-11-12 拆分ApiExecution（TT-249）
+
+原`ApiExecution`同時負責帳號／Session操作、舊RPC分派、工時報表與v1查詢，且在內部寫死唯讀操作清單。現在拆成`AccountSessionBoundary`、`WorkspaceTransaction`、`WorkspaceRpc`與`SessionLeaseGuard`：
+
+- Controller一眼可讀：查詢寫成`$workspace->read($request, fn (WorkspaceContext $context) => ...)`；舊RPC寫成`$rpc->execute(...)`；帳號寫成`$accounts->handle(...)`。
+- 讀取服務改收型別化的`WorkspaceContext`（`userId`、`workspaceId`、`permissions`、`role`），不再以`$actor`指稱整包array；仍需array的舊協作者明確呼叫`legacyIdentity()`。
+- 三種模式與原本行為逐一對應：
+  - 原「不取鎖＋SQLite唯讀交易」的query／getWorkspace／getTimeReport為`Read`。
+  - 原「不取鎖、一般交易」的getTodos／getProfile／getProjectMembers／smtpStatus／verifySmtp為`Unlocked`。
+  - 其餘為`Write`。
+  - `getWorkspace`仍不比對`X-Workspace-ID`。
+- API路由、ok/data envelope、DomainError與DTO不變。

@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers\Queries;
 
-use App\Http\ApiExecution;
+use App\Data\WorkspaceContext;
+use App\Http\WorkspaceTransaction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PageQueryRequest;
 use App\Http\Requests\ProjectLeadQueryRequest;
@@ -19,13 +20,13 @@ class ProjectsController extends Controller
      * 取得當次已授權且有界的列表，不附帶其他頁面的資料。
      *
      * @param  PageQueryRequest  $request  搜尋與分頁條件
-     * @param  ApiExecution  $execution  可信資格及交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  ProjectReadService  $projects  專案讀取用例
      * @return ApiResponse 當頁專案摘要及有效能力
      */
-    public function index(PageQueryRequest $request, ApiExecution $execution, ProjectReadService $projects): ApiResponse
+    public function index(PageQueryRequest $request, WorkspaceTransaction $workspace, ProjectReadService $projects): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => ['result' => $projects->index($actor, $request->pagination())]);
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => ['result' => $projects->index($context, $request->pagination())]);
         $result = $data['result'];
         $items = array_map(fn ($p) => [...(new ProjectResource($p))->resolve(), 'permissions' => $result->permissions[$p->public_id]], $result->page->items());
 
@@ -36,13 +37,13 @@ class ProjectsController extends Controller
      * 取得已授權建立／編輯Project用途的負責人候選。
      *
      * @param  ProjectLeadQueryRequest  $request  用途與分頁條件
-     * @param  ApiExecution  $execution  可信資格與交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  ProjectReadService  $projects  Project用例
      * @return ApiResponse 最小成員選項分頁
      */
-    public function leads(ProjectLeadQueryRequest $request, ApiExecution $execution, ProjectReadService $projects): ApiResponse
+    public function leads(ProjectLeadQueryRequest $request, WorkspaceTransaction $workspace, ProjectReadService $projects): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => ['page' => $projects->leadOptions($actor, $request->pagination(), $request->projectId())]);
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => ['page' => $projects->leadOptions($context, $request->pagination(), $request->projectId())]);
 
         return new ApiResponse(PageResource::wrap($data['page'], array_map(fn ($member) => ['id' => $member->id, 'name' => $member->name], $data['page']->items())));
     }
@@ -51,13 +52,13 @@ class ProjectsController extends Controller
      * 提供可轉卡Project最小候選與總數，不讀其他頁面資料。
      *
      * @param  PageQueryRequest  $request  有界分頁／搜尋
-     * @param  ApiExecution  $execution  可信資格與交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  ProjectReadService  $projects  Project用例
      * @return ApiResponse 最小候選分頁
      */
-    public function options(PageQueryRequest $request, ApiExecution $execution, ProjectReadService $projects): ApiResponse
+    public function options(PageQueryRequest $request, WorkspaceTransaction $workspace, ProjectReadService $projects): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => ['page' => $projects->options($actor, $request->pagination())]);
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => ['page' => $projects->options($context, $request->pagination())]);
 
         return new ApiResponse(PageResource::wrap($data['page'], array_map(fn ($project) => ['id' => $project->public_id, 'name' => $project->name, 'code' => $project->code], $data['page']->items())));
     }
@@ -67,13 +68,13 @@ class ProjectsController extends Controller
      *
      * @param  Request  $request  當次HTTP請求
      * @param  string  $project  專案公開識別碼
-     * @param  ApiExecution  $execution  可信資格及交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  ProjectReadService  $projects  專案讀取用例
      * @return ApiResponse 專案屬性與有效能力
      */
-    public function show(Request $request, string $project, ApiExecution $execution, ProjectReadService $projects): ApiResponse
+    public function show(Request $request, string $project, WorkspaceTransaction $workspace, ProjectReadService $projects): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => $projects->show($actor, $project));
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => $projects->show($context, $project));
 
         return new ApiResponse([...(new ProjectResource($data['project']))->resolve(), ...$data['capabilities']]);
     }
@@ -83,13 +84,13 @@ class ProjectsController extends Controller
      *
      * @param  PageQueryRequest  $request  分頁條件
      * @param  string  $project  Project公開ID
-     * @param  ApiExecution  $execution  HTTP資格邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  ProjectReadService  $projects  Project用例
      * @return ApiResponse 最小成員選項
      */
-    public function members(PageQueryRequest $request, string $project, ApiExecution $execution, ProjectReadService $projects): ApiResponse
+    public function members(PageQueryRequest $request, string $project, WorkspaceTransaction $workspace, ProjectReadService $projects): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => ['page' => $projects->memberOptions($actor, $project, $request->pagination())]);
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => ['page' => $projects->memberOptions($context, $project, $request->pagination())]);
         $items = array_map(fn ($m) => ['id' => $m->user_id, 'name' => $m->getRelation('user')->name], $data['page']->items());
 
         return new ApiResponse(PageResource::wrap($data['page'], $items));
@@ -100,12 +101,12 @@ class ProjectsController extends Controller
      *
      * @param  Request  $request  HTTP請求
      * @param  string  $project  專案公開ID
-     * @param  ApiExecution  $execution  可信資格與交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  ProjectReadService  $projects  專案查詢用例
      * @return ApiResponse 狀態使用摘要
      */
-    public function statusUsage(Request $request, string $project, ApiExecution $execution, ProjectReadService $projects): ApiResponse
+    public function statusUsage(Request $request, string $project, WorkspaceTransaction $workspace, ProjectReadService $projects): ApiResponse
     {
-        return new ApiResponse($execution->query($request, fn ($actor) => $projects->statusUsage($actor, $project)));
+        return new ApiResponse($workspace->read($request, fn (WorkspaceContext $context) => $projects->statusUsage($context, $project)));
     }
 }

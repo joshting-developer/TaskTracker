@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers\Queries;
 
-use App\Http\ApiExecution;
+use App\Data\WorkspaceContext;
+use App\Http\WorkspaceTransaction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProjectTimeQueryRequest;
 use App\Http\Resources\ApiResponse;
@@ -18,13 +19,13 @@ class ProjectTimeController extends Controller
      *
      * @param  ProjectTimeQueryRequest  $request  已驗證月份與成員
      * @param  string  $project  專案公開ID
-     * @param  ApiExecution  $execution  可信資格與交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  ProjectTimeReadService  $time  工時查詢用例
      * @return ApiResponse 月曆摘要
      */
-    public function calendar(ProjectTimeQueryRequest $request, string $project, ApiExecution $execution, ProjectTimeReadService $time): ApiResponse
+    public function calendar(ProjectTimeQueryRequest $request, string $project, WorkspaceTransaction $workspace, ProjectTimeReadService $time): ApiResponse
     {
-        return new ApiResponse($execution->query($request, fn ($actor) => $time->calendar($actor, $project, $request->calendar())));
+        return new ApiResponse($workspace->read($request, fn (WorkspaceContext $context) => $time->calendar($context, $project, $request->calendar())));
     }
 
     /**
@@ -32,13 +33,13 @@ class ProjectTimeController extends Controller
      *
      * @param  ProjectTimeQueryRequest  $request  已驗證日期、成員與分頁
      * @param  string  $project  專案公開ID
-     * @param  ApiExecution  $execution  可信資格與交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  ProjectTimeReadService  $time  工時查詢用例
      * @return ApiResponse 當日明細分頁
      */
-    public function day(ProjectTimeQueryRequest $request, string $project, ApiExecution $execution, ProjectTimeReadService $time): ApiResponse
+    public function day(ProjectTimeQueryRequest $request, string $project, WorkspaceTransaction $workspace, ProjectTimeReadService $time): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => ['page' => $time->day($actor, $project, $request->day())]);
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => ['page' => $time->day($context, $project, $request->day())]);
 
         return new ApiResponse(PageResource::wrap($data['page'], TimeEntryResource::collection($data['page']->items())->resolve()));
     }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Data\WorkspaceContext;
 use App\Data\IssueOptionQueryData;
 use App\Data\IssueQueryData;
 use App\Data\PageQueryData;
@@ -19,46 +20,46 @@ class IssueReadService
     /**
      * 取得當次已授權且有界的列表，不附帶其他頁面的資料。
      *
-     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  Project公開ID
      * @param  IssueQueryData  $filters  有界列表條件
      * @return LengthAwarePaginator<Issue> 有界任務摘要
      */
-    public function index(array $actor, string $projectId, IssueQueryData $filters): LengthAwarePaginator
+    public function index(WorkspaceContext $context, string $projectId, IssueQueryData $filters): LengthAwarePaginator
     {
-        $project = $this->projects->require($actor, $projectId, 'issue.read');
+        $project = $this->projects->require($context, $projectId, 'issue.read');
 
-        return $this->issues->page($project, $actor['user']['id'], $filters, listOnly: true);
+        return $this->issues->page($project, $context->userId, $filters, listOnly: true);
     }
 
     /**
      * 只提供同Project可讀候選；選項不代表寫入授權。
      *
-     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  Project公開ID
      * @param  IssueOptionQueryData  $filters  已驗證選項條件
      * @return LengthAwarePaginator<Issue> 最小候選分頁
      */
-    public function options(array $actor, string $projectId, IssueOptionQueryData $filters): LengthAwarePaginator
+    public function options(WorkspaceContext $context, string $projectId, IssueOptionQueryData $filters): LengthAwarePaginator
     {
-        return $this->issues->options($this->projects->require($actor, $projectId, 'issue.read'), $filters);
+        return $this->issues->options($this->projects->require($context, $projectId, 'issue.read'), $filters);
     }
 
     /**
      * 只取得指定資源的資料，保留找不到／無權限語意。
      *
-     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  Project公開ID
      * @param  string  $id  Issue公開ID
      * @return Issue 已授權任務與最小關聯
      */
-    public function show(array $actor, string $projectId, string $id): Issue
+    public function show(WorkspaceContext $context, string $projectId, string $id): Issue
     {
-        $access = $this->projects->authorized($actor, $projectId, 'issue.read');
+        $access = $this->projects->authorized($context, $projectId, 'issue.read');
         $own = in_array('timeEntry.readOwn', $access->permissions, true);
         $team = in_array('timeEntry.readTeam', $access->permissions, true);
 
-        $issue = $this->issues->find($access->project, $id, $own ? $actor['user']['id'] : null, $team) ?? DomainError::fail('NOT_FOUND', '找不到這個專案內的任務');
+        $issue = $this->issues->find($access->project, $id, $own ? $context->userId : null, $team) ?? DomainError::fail('NOT_FOUND', '找不到這個專案內的任務');
         if ($issue->getRelation('relatedIssues')->count() > 200) {
             DomainError::fail('CONFLICT', '既有關聯超過支援上限，請先整理關聯資料');
         }
@@ -69,15 +70,15 @@ class IssueReadService
     /**
      * 解析舊版深連結所屬Project；無權與不存在同樣回應找不到。
      *
-     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $id  Issue公開ID
      * @return array{id:string,projectId:string} 卡片位置
      */
-    public function locate(array $actor, string $id): array
+    public function locate(WorkspaceContext $context, string $id): array
     {
-        $projectId = $this->issues->locate($actor['workspace']['id'], $id) ?? DomainError::fail('NOT_FOUND', '找不到這個任務');
+        $projectId = $this->issues->locate($context->workspaceId, $id) ?? DomainError::fail('NOT_FOUND', '找不到這個任務');
         try {
-            $this->projects->authorized($actor, $projectId, 'issue.read');
+            $this->projects->authorized($context, $projectId, 'issue.read');
         } catch (DomainError $failure) {
             DomainError::fail('NOT_FOUND', '找不到這個任務');
         }
@@ -88,49 +89,49 @@ class IssueReadService
     /**
      * 只查這個任務的留言分頁，不載入全部活動。
      *
-     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  Project公開ID
      * @param  string  $id  Issue公開ID
      * @param  PageQueryData  $filters  有界分頁
      * @return LengthAwarePaginator 留言分頁
      */
-    public function comments(array $actor, string $projectId, string $id, PageQueryData $filters): LengthAwarePaginator
+    public function comments(WorkspaceContext $context, string $projectId, string $id, PageQueryData $filters): LengthAwarePaginator
     {
-        return $this->issues->comments($this->activityIssue($actor, $projectId, $id), $filters);
+        return $this->issues->comments($this->activityIssue($context, $projectId, $id), $filters);
     }
 
     /**
      * 只查這個任務的異動分頁，維持穩定排序。
      *
-     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  Project公開ID
      * @param  string  $id  Issue公開ID
      * @param  PageQueryData  $filters  有界分頁
      * @return LengthAwarePaginator 異動分頁
      */
-    public function history(array $actor, string $projectId, string $id, PageQueryData $filters): LengthAwarePaginator
+    public function history(WorkspaceContext $context, string $projectId, string $id, PageQueryData $filters): LengthAwarePaginator
     {
-        return $this->issues->history($this->activityIssue($actor, $projectId, $id), $filters);
+        return $this->issues->history($this->activityIssue($context, $projectId, $id), $filters);
     }
 
     /**
      * 在關聯tab依單卡種類分頁取得Epic所屬卡或直接子任務。
      *
-     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  Project公開ID
      * @param  string  $id  Issue公開ID
      * @param  PageQueryData  $filters  有界分頁
      * @return LengthAwarePaginator<Issue> 所屬卡摘要分頁
      */
-    public function children(array $actor, string $projectId, string $id, PageQueryData $filters): LengthAwarePaginator
+    public function children(WorkspaceContext $context, string $projectId, string $id, PageQueryData $filters): LengthAwarePaginator
     {
-        return $this->issues->children($this->activityIssue($actor, $projectId, $id), $filters);
+        return $this->issues->children($this->activityIssue($context, $projectId, $id), $filters);
     }
 
     /**
      * 依目前Project工時資格取得單卡或Epic有效明細分頁。
      *
-     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  Project公開ID
      * @param  string  $id  Issue公開ID
      * @param  PageQueryData  $filters  有界分頁
@@ -138,29 +139,29 @@ class IssueReadService
      *
      * @throws DomainError 缺少工時讀取權或任務不存在
      */
-    public function time(array $actor, string $projectId, string $id, PageQueryData $filters): LengthAwarePaginator
+    public function time(WorkspaceContext $context, string $projectId, string $id, PageQueryData $filters): LengthAwarePaginator
     {
-        $access = $this->projects->authorized($actor, $projectId, 'issue.read');
+        $access = $this->projects->authorized($context, $projectId, 'issue.read');
         $team = in_array('timeEntry.readTeam', $access->permissions, true);
         if (! $team && ! in_array('timeEntry.readOwn', $access->permissions, true)) {
             DomainError::fail('FORBIDDEN', '沒有工時讀取權限');
         }
         $issue = $this->issues->reference($access->project, $id) ?? DomainError::fail('NOT_FOUND', '找不到任務');
 
-        return $this->issues->time($issue, $actor['user']['id'], $team, $filters);
+        return $this->issues->time($issue, $context->userId, $team, $filters);
     }
 
     /**
      * 取得當次已授權活動父列，不為活動查詢讀取Issue描述。
      *
-     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  Project公開ID
      * @param  string  $id  Issue公開ID
      * @return Issue 已授權活動父列
      */
-    private function activityIssue(array $actor, string $projectId, string $id): Issue
+    private function activityIssue(WorkspaceContext $context, string $projectId, string $id): Issue
     {
-        $project = $this->projects->require($actor, $projectId, 'issue.read');
+        $project = $this->projects->require($context, $projectId, 'issue.read');
 
         return $this->issues->reference($project, $id) ?? DomainError::fail('NOT_FOUND', '找不到這個專案內的任務');
     }

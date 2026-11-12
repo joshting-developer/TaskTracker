@@ -1,7 +1,7 @@
 <?php
 
 use App\Domain\DomainError;
-use App\Http\ApiExecution;
+use App\Http\WorkspaceRpc;
 use App\Models\User;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Http\Request;
@@ -32,7 +32,7 @@ while (! is_file($fixture['start'])) {
     usleep(10000);
 }
 try {
-    $result = ['ok' => true, 'data' => $app->make(ApiExecution::class)->execute($request, $fixture['operation'], $fixture['input'])];
+    $result = ['ok' => true, 'data' => $app->make(WorkspaceRpc::class)->execute($request, $fixture['operation'], $fixture['input'])];
 } catch (DomainError $error) {
     $result = ['ok' => false, 'code' => $error->errorCode];
 }

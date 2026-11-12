@@ -6,7 +6,7 @@ use App\Factories\RecordStoreFactory;
 use App\Factories\TodosFactory;
 use App\Factories\WorkspaceOperationServices;
 use App\Factories\WorkspaceServicesFactory;
-use App\Http\ApiExecution;
+use App\Http\AccountSessionBoundary;
 use App\Repositories\RecordStore;
 use App\Repositories\TimeReportRepository;
 use App\Services\RequestReplay;
@@ -114,7 +114,7 @@ class WorkspaceServiceContainerTest extends TestCase
      */
     public function test_core_entry_points_resolve_without_cycles(): void
     {
-        foreach ([ApiExecution::class, WorkspaceService::class, TodosFactory::class, DemoSeeder::class] as $class) {
+        foreach ([AccountSessionBoundary::class, \App\Http\WorkspaceTransaction::class, \App\Http\WorkspaceRpc::class, WorkspaceService::class, TodosFactory::class, DemoSeeder::class] as $class) {
             $this->assertInstanceOf($class, $this->app->make($class));
         }
         $this->assertNotSame($this->app->make(WorkspaceService::class), $this->app->make(WorkspaceService::class), '不註冊為共享實例');

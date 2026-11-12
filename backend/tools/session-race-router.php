@@ -1,6 +1,8 @@
 <?php
 
-use App\Http\ApiExecution;
+use App\Data\WorkspaceContext;
+use App\Http\WorkspaceRpc;
+use App\Http\WorkspaceTransaction;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -17,10 +19,9 @@ Route::post('/api/test/session-slow', function (Request $request) use ($app) {
     $input = $request->json()->all();
     touch(getenv('TASKTRACKER_SESSION_RACE_PREFIX').'.ready');
     usleep(12000000);
-    $execution = $app->make(ApiExecution::class);
     $data = ($input['mode'] ?? '') === 'save'
-        ? $execution->execute($request, 'updateIssue', $input['input'])
-        : $execution->query($request, fn ($context) => ['workspaceId' => $context['workspace']['id']]);
+        ? $app->make(WorkspaceRpc::class)->execute($request, 'updateIssue', $input['input'])
+        : $app->make(WorkspaceTransaction::class)->read($request, fn (WorkspaceContext $context) => ['workspaceId' => $context->workspaceId]);
 
     return response()->json(['ok' => true, 'data' => $data]);
 })->middleware('web')->block(10, 10);

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Data\WorkspaceContext;
 use App\Data\PageQueryData;
 use App\Domain\DomainError;
 use App\Models\IssueNotification;
@@ -22,31 +23,31 @@ class ProjectNotificationReadService
     /**
      * 取得已授權專案通知摘要，無團隊資格只讀本人收件。
      *
-     * @param  array<string,mixed>  $actor  可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  專案公開ID
      * @param  PageQueryData  $filters  有界分頁
      * @return LengthAwarePaginator<IssueNotification> 通知摘要分頁
      */
-    public function index(array $actor, string $projectId, PageQueryData $filters): LengthAwarePaginator
+    public function index(WorkspaceContext $context, string $projectId, PageQueryData $filters): LengthAwarePaginator
     {
-        $access = $this->projects->authorized($actor, $projectId, 'issue.read');
+        $access = $this->projects->authorized($context, $projectId, 'issue.read');
 
-        return $this->notifications->page($access->project, $actor['user']['id'], in_array('notification.readTeam', $access->permissions, true), $filters);
+        return $this->notifications->page($access->project, $context->userId, in_array('notification.readTeam', $access->permissions, true), $filters);
     }
 
     /**
      * 單筆正文重驗資格，不沿用列表授權快照。
      *
-     * @param  array<string,mixed>  $actor  可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  專案公開ID
      * @param  string  $id  通知公開ID
      * @return IssueNotification 可讀正文
      */
-    public function show(array $actor, string $projectId, string $id): IssueNotification
+    public function show(WorkspaceContext $context, string $projectId, string $id): IssueNotification
     {
-        $access = $this->projects->authorized($actor, $projectId, 'issue.read');
+        $access = $this->projects->authorized($context, $projectId, 'issue.read');
 
-        return $this->notifications->find($access->project, $actor['user']['id'], in_array('notification.readTeam', $access->permissions, true), $id)
+        return $this->notifications->find($access->project, $context->userId, in_array('notification.readTeam', $access->permissions, true), $id)
             ?? DomainError::fail('NOT_FOUND', '找不到這筆通知預覽');
     }
 }

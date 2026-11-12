@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers\Queries;
 
-use App\Http\ApiExecution;
+use App\Data\WorkspaceContext;
+use App\Http\WorkspaceTransaction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PageQueryRequest;
 use App\Http\Resources\ApiResponse;
@@ -18,26 +19,26 @@ class WorkspaceSettingsController extends Controller
      * 一般設定不讀成員目錄。
      *
      * @param  Request  $request  HTTP請求
-     * @param  ApiExecution  $execution  可信交易／租戶邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  WorkspaceSettingsReadService  $settings  設定查詢用例
      * @return ApiResponse 一般設定
      */
-    public function show(Request $request, ApiExecution $execution, WorkspaceSettingsReadService $settings): ApiResponse
+    public function show(Request $request, WorkspaceTransaction $workspace, WorkspaceSettingsReadService $settings): ApiResponse
     {
-        return new ApiResponse($execution->query($request, fn ($actor) => $settings->show($actor)));
+        return new ApiResponse($workspace->read($request, fn (WorkspaceContext $context) => $settings->show($context)));
     }
 
     /**
      * 按需回傳有界有效成員目錄。
      *
      * @param  PageQueryRequest  $request  分頁及搜尋條件
-     * @param  ApiExecution  $execution  可信交易／租戶邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  WorkspaceSettingsReadService  $settings  設定查詢用例
      * @return ApiResponse 當頁成員
      */
-    public function members(PageQueryRequest $request, ApiExecution $execution, WorkspaceSettingsReadService $settings): ApiResponse
+    public function members(PageQueryRequest $request, WorkspaceTransaction $workspace, WorkspaceSettingsReadService $settings): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => ['page' => $settings->members($actor, $request->pagination())]);
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => ['page' => $settings->members($context, $request->pagination())]);
 
         return new ApiResponse(PageResource::wrap($data['page'], WorkspaceMemberResource::collection($data['page']->items())->resolve()));
     }
@@ -46,12 +47,12 @@ class WorkspaceSettingsController extends Controller
      * 只輸出目前能授予的固定角色選項。
      *
      * @param  Request  $request  HTTP請求
-     * @param  ApiExecution  $execution  可信交易／租戶邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  WorkspaceSettingsReadService  $settings  設定查詢用例
      * @return ApiResponse 固定角色選項
      */
-    public function roles(Request $request, ApiExecution $execution, WorkspaceSettingsReadService $settings): ApiResponse
+    public function roles(Request $request, WorkspaceTransaction $workspace, WorkspaceSettingsReadService $settings): ApiResponse
     {
-        return new ApiResponse($execution->query($request, fn ($actor) => $settings->roles($actor)));
+        return new ApiResponse($workspace->read($request, fn (WorkspaceContext $context) => $settings->roles($context)));
     }
 }

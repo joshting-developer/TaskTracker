@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers\Queries;
 
-use App\Http\ApiExecution;
+use App\Data\WorkspaceContext;
+use App\Http\WorkspaceTransaction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\IssueQueryRequest;
 use App\Http\Requests\PageQueryRequest;
@@ -21,13 +22,13 @@ class BoardsController extends Controller
      *
      * @param  PageQueryRequest  $request  已驗證分頁
      * @param  string  $project  Project公開ID
-     * @param  ApiExecution  $execution  HTTP資格與交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  BoardReadService  $boards  看板用例
      * @return ApiResponse 摘要分頁
      */
-    public function index(PageQueryRequest $request, string $project, ApiExecution $execution, BoardReadService $boards): ApiResponse
+    public function index(PageQueryRequest $request, string $project, WorkspaceTransaction $workspace, BoardReadService $boards): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => $boards->index($actor, $project, $request->pagination()));
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => $boards->index($context, $project, $request->pagination()));
         $items = array_map(fn ($b) => (new BoardSummaryResource($b, $project))->resolve(), $data['page']->items());
 
         return new ApiResponse([...PageResource::wrap($data['page'], $items), 'defaultBoard' => $data['defaultBoard']]);
@@ -39,13 +40,13 @@ class BoardsController extends Controller
      * @param  Request  $request  HTTP租戶標頭
      * @param  string  $project  Project公開ID
      * @param  string  $board  看板公開ID
-     * @param  ApiExecution  $execution  HTTP資格邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  BoardReadService  $boards  看板用例
      * @return ApiResponse 看板屬性
      */
-    public function show(Request $request, string $project, string $board, ApiExecution $execution, BoardReadService $boards): ApiResponse
+    public function show(Request $request, string $project, string $board, WorkspaceTransaction $workspace, BoardReadService $boards): ApiResponse
     {
-        return new ApiResponse($execution->query($request, fn ($actor) => $boards->show($actor, $project, $board)));
+        return new ApiResponse($workspace->read($request, fn (WorkspaceContext $context) => $boards->show($context, $project, $board)));
     }
 
     /**
@@ -54,13 +55,13 @@ class BoardsController extends Controller
      * @param  Request  $request  HTTP租戶標頭
      * @param  string  $project  Project公開ID
      * @param  string  $board  看板公開ID或default
-     * @param  ApiExecution  $execution  HTTP資格邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  BoardReadService  $boards  看板用例
      * @return ApiResponse 不透明版本
      */
-    public function version(Request $request, string $project, string $board, ApiExecution $execution, BoardReadService $boards): ApiResponse
+    public function version(Request $request, string $project, string $board, WorkspaceTransaction $workspace, BoardReadService $boards): ApiResponse
     {
-        return new ApiResponse($execution->query($request, fn ($actor) => $boards->version($actor, $project, $board)));
+        return new ApiResponse($workspace->read($request, fn (WorkspaceContext $context) => $boards->version($context, $project, $board)));
     }
 
     /**
@@ -69,13 +70,13 @@ class BoardsController extends Controller
      * @param  IssueQueryRequest  $request  已驗證篩選
      * @param  string  $project  Project公開ID
      * @param  string  $board  看板公開ID
-     * @param  ApiExecution  $execution  HTTP資格邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  BoardReadService  $boards  看板用例
      * @return ApiResponse 卡片分頁
      */
-    public function issues(IssueQueryRequest $request, string $project, string $board, ApiExecution $execution, BoardReadService $boards): ApiResponse
+    public function issues(IssueQueryRequest $request, string $project, string $board, WorkspaceTransaction $workspace, BoardReadService $boards): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => ['page' => $boards->issues($actor, $project, $board, $request->toDto())]);
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => ['page' => $boards->issues($context, $project, $board, $request->toDto())]);
 
         return new ApiResponse(PageResource::wrap($data['page'], IssueSummaryResource::collection($data['page']->items())->resolve()));
     }

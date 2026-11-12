@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\JsonOperationRequest;
 use App\Http\Resources\ApiResponse;
-use App\Http\ApiExecution;
+use App\Http\WorkspaceRpc;
 
 /**
  * 處理未知或已停用操作，保留舊API錯誤及登入契約。
@@ -16,13 +16,13 @@ class ApiController extends Controller
      *
      * @param  JsonOperationRequest  $request  目前HTTP請求與Session
      * @param  string  $operation  已允許的操作名稱
-     * @param  ApiExecution  $execution  負責交易與Session重驗的API協調服務
+     * @param  WorkspaceRpc  $rpc  舊RPC分派與交易邊界
      * @return ApiResponse
      */
-    public function unknown(JsonOperationRequest $request, string $operation, ApiExecution $execution): ApiResponse
+    public function unknown(JsonOperationRequest $request, string $operation, WorkspaceRpc $rpc): ApiResponse
     {
         $input = $request->payload();
 
-        return new ApiResponse($execution->execute($request, $operation, $input));
+        return new ApiResponse($rpc->execute($request, $operation, $input));
     }
 }

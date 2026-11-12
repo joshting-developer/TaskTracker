@@ -9,6 +9,12 @@ final readonly class WorkspaceContext
 
     public string $workspaceId;
 
+    /** @var list<string> 依工作區角色對照出的有效permission ID */
+    public array $permissions;
+
+    /** 工作區角色ID；只用來查權限對照，放行判斷一律看permissions。 */
+    public string $role;
+
     /**
      * 只能由WorkspaceContextFactory傳入AccountService重驗結果，不接受HTTP payload。
      *
@@ -20,6 +26,8 @@ final readonly class WorkspaceContext
     {
         $this->userId = $identity['user']['id'];
         $this->workspaceId = $identity['workspace']['id'];
+        $this->permissions = array_values($identity['permissions'] ?? []);
+        $this->role = (string) ($identity['role'] ?? '');
     }
 
     /**

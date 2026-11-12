@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers\Queries;
 
-use App\Http\ApiExecution;
+use App\Data\WorkspaceContext;
+use App\Http\WorkspaceTransaction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PageQueryRequest;
 use App\Http\Resources\ApiResponse;
@@ -19,13 +20,13 @@ class ProjectNotificationsController extends Controller
      *
      * @param  PageQueryRequest  $request  有界分頁請求
      * @param  string  $project  專案公開ID
-     * @param  ApiExecution  $execution  可信資格與交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  ProjectNotificationReadService  $notifications  通知查詢用例
      * @return ApiResponse 通知摘要分頁
      */
-    public function index(PageQueryRequest $request, string $project, ApiExecution $execution, ProjectNotificationReadService $notifications): ApiResponse
+    public function index(PageQueryRequest $request, string $project, WorkspaceTransaction $workspace, ProjectNotificationReadService $notifications): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => ['page' => $notifications->index($actor, $project, $request->pagination())]);
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => ['page' => $notifications->index($context, $project, $request->pagination())]);
 
         return new ApiResponse(PageResource::wrap($data['page'], ProjectNotificationResource::collection($data['page']->items())->resolve()));
     }
@@ -36,13 +37,13 @@ class ProjectNotificationsController extends Controller
      * @param  Request  $request  HTTP請求
      * @param  string  $project  專案公開ID
      * @param  string  $notification  通知公開ID
-     * @param  ApiExecution  $execution  可信資格與交易邊界
+     * @param  WorkspaceTransaction  $workspace  交易內重驗身分與租戶的唯讀邊界
      * @param  ProjectNotificationReadService  $notifications  通知查詢用例
      * @return ApiResponse 單筆預覽
      */
-    public function show(Request $request, string $project, string $notification, ApiExecution $execution, ProjectNotificationReadService $notifications): ApiResponse
+    public function show(Request $request, string $project, string $notification, WorkspaceTransaction $workspace, ProjectNotificationReadService $notifications): ApiResponse
     {
-        $data = $execution->query($request, fn ($actor) => ['notification' => $notifications->show($actor, $project, $notification)]);
+        $data = $workspace->read($request, fn (WorkspaceContext $context) => ['notification' => $notifications->show($context, $project, $notification)]);
 
         return new ApiResponse((new ProjectNotificationResource($data['notification']))->resolve());
     }

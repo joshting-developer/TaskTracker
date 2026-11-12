@@ -9,7 +9,7 @@ use App\Factories\RecordStoreFactory;
 use App\Models\WorkspaceMember;
 use App\Repositories\SettingsRepository;
 
-/** 管理本人資料、工作空間名稱及固定角色指派；由ApiExecution提供交易。 */
+/** 管理本人資料、工作空間名稱及固定角色指派；由WorkspaceRpc經WorkspaceTransaction提供交易。 */
 class AccountSettings
 {
     public const OPERATIONS = ['getProfile', 'updateProfile', 'updateWorkspace', 'setWorkspaceMemberRole'];

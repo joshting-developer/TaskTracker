@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Data\WorkspaceContext;
 use App\Data\ProjectTimeQueryData;
 use App\Domain\DomainError;
 use App\Models\Project;
@@ -22,33 +23,33 @@ class ProjectTimeReadService
     /**
      * 解析當次可讀作者：無團隊資格只能看本人，有團隊資格才可指定成員。
      *
-     * @param  array<string,mixed>  $actor  可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  專案公開ID
      * @param  ProjectTimeQueryData  $range  查詢條件
      * @return array{0:Project,1:string,2:bool} 專案、限定作者及是否團隊範圍
      */
-    private function scope(array $actor, string $projectId, ProjectTimeQueryData $range): array
+    private function scope(WorkspaceContext $context, string $projectId, ProjectTimeQueryData $range): array
     {
-        $access = $this->projects->authorized($actor, $projectId, 'issue.read');
+        $access = $this->projects->authorized($context, $projectId, 'issue.read');
         $team = in_array('timeEntry.readTeam', $access->permissions, true);
         if (! $team && ! in_array('timeEntry.readOwn', $access->permissions, true)) {
             DomainError::fail('FORBIDDEN', '沒有工時讀取權限');
         }
 
-        return [$access->project, $team ? $range->member : $actor['user']['id'], $team];
+        return [$access->project, $team ? $range->member : $context->userId, $team];
     }
 
     /**
      * 整月SQL摘要，回傳本次實際套用的範圍供前端顯示。
      *
-     * @param  array<string,mixed>  $actor  可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  專案公開ID
      * @param  ProjectTimeQueryData  $range  整月條件
      * @return array<string,mixed> 月曆摘要
      */
-    public function calendar(array $actor, string $projectId, ProjectTimeQueryData $range): array
+    public function calendar(WorkspaceContext $context, string $projectId, ProjectTimeQueryData $range): array
     {
-        [$project, $author, $team] = $this->scope($actor, $projectId, $range);
+        [$project, $author, $team] = $this->scope($context, $projectId, $range);
 
         return ['month' => substr($range->from, 0, 7), 'member' => $author, 'team' => $team, 'limit' => ProjectTimeReadRepository::SUMMARY_LIMIT,
             ...$this->entries->calendar($project, $range, $author)];
@@ -57,14 +58,14 @@ class ProjectTimeReadService
     /**
      * 點選日期後才讀取的當日明細分頁。
      *
-     * @param  array<string,mixed>  $actor  可信操作者
+     * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  專案公開ID
      * @param  ProjectTimeQueryData  $range  單日條件
      * @return LengthAwarePaginator 當日有效工時
      */
-    public function day(array $actor, string $projectId, ProjectTimeQueryData $range): LengthAwarePaginator
+    public function day(WorkspaceContext $context, string $projectId, ProjectTimeQueryData $range): LengthAwarePaginator
     {
-        [$project, $author] = $this->scope($actor, $projectId, $range);
+        [$project, $author] = $this->scope($context, $projectId, $range);
 
         return $this->entries->day($project, $range, $author);
     }
