@@ -131,7 +131,8 @@ foreach (['workspaces', 'switchWorkspace', 'acceptWorkspaceInvite', 'invitation'
     Route::post('/api/auth/'.$operation, [AuthController::class, 'workspace'])->defaults('operation', $operation)->middleware('throttle:60,1');
 }
 
-// 同一Session的切換與業務請求依序處理，避免舊Session覆寫新工作區。
+// 同一Session切換與業務請求依序處理；MySQL由GuardedStartSession持有連線鎖至保存完成。
+// waitsFor仍為10秒；locksFor只供SQLite隔離快測的框架TTL鎖，不作MySQL最長請求時間。
 foreach (Route::getRoutes() as $route) {
     if ($route->uri() === 'api/csrf-cookie' || str_starts_with($route->uri(), 'api/v1/') || str_starts_with($route->uri(), 'api/rpc/') || str_starts_with($route->uri(), 'api/auth/') || str_starts_with($route->uri(), 'api/realtime/')) {
         $route->block(10, 10);

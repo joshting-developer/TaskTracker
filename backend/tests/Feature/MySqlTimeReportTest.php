@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\MySqlTestCase;
+use Tests\Support\LegacyMemberTimeDetails;
 
 /** 原生MySQL大量工時驗證SQL聚合與雙層分頁，不接觸業務資料。 */
 class MySqlTimeReportTest extends MySqlTestCase
@@ -82,7 +83,7 @@ class MySqlTimeReportTest extends MySqlTestCase
         foreach (['dates', 'issues'] as $group) {
             $input = [...$detailsQuery, 'detailGroup' => $group, 'detailPage' => 2];
             $actual = $this->postJson('/api/rpc/getTimeReport', $input)->assertOk()->json('data.details');
-            $expected = (new \Tests\Support\LegacyMemberTimeDetails)->get($input, $oracleEntries, $oracleIssues, [$project['id'] => $project]);
+            $expected = (new LegacyMemberTimeDetails)->get($input, $oracleEntries, $oracleIssues, [$project['id'] => $project]);
             $this->assertDtoSame($expected, $actual);
         }
         DB::flushQueryLog();

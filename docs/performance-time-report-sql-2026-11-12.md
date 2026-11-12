@@ -40,3 +40,7 @@ EXPLAIN顯示使用既有`workspace_id/member_id/work_date`索引。窄日期EXP
 - 真實Chrome＋隔離HTTP：member-time與time-analysis通過，涵蓋兩層分頁、Epic直接工時、三種分析加總、XSS、錯誤重試及三尺寸。
 - 初次瀏覽器測試因常駐HTTP仍引用已移除舊class失敗；重啟隔離backend載入新程式後兩套通過，未刪測試斷言。
 - Pint與diff check。主業務庫未seed／壓測，沒有新增migration或改資料。
+
+### 格式驗證補充
+
+TT-224交付期間確認原服務掛載唯讀，先前直接exec Pint未能完成格式寫入。已改一次性無網路可寫lint容器，補修Repository及兩個測試檔的PHPDoc／import格式，無業務變更；最後原生大資料與完整memory回歸通過。驗證以本次實際lint結果為準。

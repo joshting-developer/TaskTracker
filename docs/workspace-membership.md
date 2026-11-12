@@ -41,3 +41,7 @@ Owner設定入口以`workspace.ownership` permission呈現，不以role字串判
 ## 階段驗證
 
 後端階段已完成：隔離SQLite完整53 tests／1073 assertions通過，含既有帳號登入接受、Email錯誤、過期、單次重試、身份不降級、停用拒絕、成員目錄範圍、原私有專案不可見與舊scope拒寫。前端階段也已完成：編譯版多工作區測試、帳號設定與完整browser-check通過。包含切換網路失敗／重試、草稿取消／確認、其他分頁409拒寫／重讀、Email不符換帳號保留邀請、新帳號註冊與未登入既有帳號登入接受；切換器及邀請面板1440／768／390尺寸已量測並檢視。後端新映像已套用，現有volume及資料保留。
+
+## 2026-11-12 慢請求Session序列保護
+
+TT-224已重現原10秒TTL到期後舊Session覆寫新空間。現用MySQL由GuardedStartSession持有連線級鎖至保存，等待上限10秒、失鎖拒絕提交；SQLite僅快測保留原框架鎖。成本、原生四worker證據與需整批更新HTTP worker的發布限制見[鎖生命週期](session-lock-lifecycle-2026-11-12.md)。

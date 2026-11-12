@@ -16,9 +16,9 @@ class TimeReportRepository
     /**
      * 依成員／專案配對與工作日分別聚合，不將原始工時載入PHP。
      *
-     * @param string $workspaceId 可信工作空間公開ID
-     * @param list<string> $projectIds 已授權專案公開ID
-     * @param TimeReportData $filters 已驗證日期及篩選
+     * @param  string  $workspaceId  可信工作空間公開ID
+     * @param  list<string>  $projectIds  已授權專案公開ID
+     * @param  TimeReportData  $filters  已驗證日期及篩選
      * @return array{allocations:array,days:array} 僅含識別碼、日期及整數統計
      */
     public function summary(string $workspaceId, array $projectIds, TimeReportData $filters): array
@@ -40,11 +40,11 @@ class TimeReportRepository
     /**
      * 單人成員群組與指定群組的原始紀錄，各在SQL排序及分頁20筆。
      *
-     * @param string $workspaceId 可信工作空間公開ID
-     * @param list<string> $projectIds 已授權且可讀任務的專案公開ID
-     * @param TimeReportData $filters 已驗證的單人成員明細條件
-     * @param array<string,array> $projects 已授權專案名稱索引
-     * @param array<string,array> $days 已聚合的每日總分鐘索引
+     * @param  string  $workspaceId  可信工作空間公開ID
+     * @param  list<string>  $projectIds  已授權且可讀任務的專案公開ID
+     * @param  TimeReportData  $filters  已驗證的單人成員明細條件
+     * @param  array<string,array>  $projects  已授權專案名稱索引
+     * @param  array<string,array>  $days  已聚合的每日總分鐘索引
      * @return array 與既有明細API相同的rows／分頁／expanded結構
      */
     public function details(string $workspaceId, array $projectIds, TimeReportData $filters, array $projects, array $days): array
@@ -103,9 +103,9 @@ class TimeReportRepository
     /**
      * 以相同WHERE作所有聚合／明細查詢，不載入Model／關聯歷史。
      *
-     * @param string $workspaceId 可信租戶公開ID
-     * @param list<string> $projectIds 已授權專案公開ID
-     * @param TimeReportData $filters 日期／專案／作者交集
+     * @param  string  $workspaceId  可信租戶公開ID
+     * @param  list<string>  $projectIds  已授權專案公開ID
+     * @param  TimeReportData  $filters  日期／專案／作者交集
      * @return Builder 尚未執行的限定查詢
      */
     private function query(string $workspaceId, array $projectIds, TimeReportData $filters): Builder
@@ -130,8 +130,8 @@ class TimeReportRepository
     /**
      * 計算群組總數並收斂頁碼，在SQL執行LIMIT／OFFSET。
      *
-     * @param Builder $query 已投影及穩定排序的資料／群組查詢
-     * @param int $page 已驗證的要求頁碼
+     * @param  Builder  $query  已投影及穩定排序的資料／群組查詢
+     * @param  int  $page  已驗證的要求頁碼
      * @return array{rows:array,page:int,perPage:int,total:int,lastPage:int} 最多20筆
      */
     private function page(Builder $query, int $page): array

@@ -1,3 +1,16 @@
+## 2026-11-12 TT-224 完成
+
+- 四worker／真實HTTP12秒請求已重現舊10秒TTL造成Session覆寫；改現用MySQL連線級命名鎖涵蓋Session讀取到保存，保留10秒等待上限。交易前後與保存前重驗持有權，finally釋放／失敗關PDO。
+- 等待失敗409不執行路由、舊X-Workspace-ID409、撤權後保存拒絕、程序中止自動釋放與失鎖rollback均通過。原生Session2／34、原生API＋並行20／542，最後Session＋大工時3／107；完整memory87／3848（25原生專用略過），真實workspace-switch三尺寸通過。
+- 文件docs/session-lock-lifecycle-2026-11-12.md與.ecc基準；明列約5次額外輕量SQL、同Session等待、單主庫連線親和及不可混版rolling update。TT-184容量／正式runtime等仍open，不宣稱全部效能完成。
+- 服務唯讀掛載導致先前Pint無法寫入，已改一次性無網路可寫lint容器並補TT-182純格式，最後測試通過；保留另一對話TT-146提交及其前端變更。本輪無push／主庫seed。
+
+## 2026-11-12 TT-224 開始
+
+- TT-182已提交081c53c並結案，才以codex領取TT-224。建立僅隔離tasktracker_test可啟動的四worker HTTP router，真實Cookie／CSRF與12秒延遲，量原10秒鎖是否讓切空間與舊Session保存重疊。
+- 先保留重現證據，再考慮使用現用MySQL的連線級命名鎖跨完整Session載入／保存生命週期，避免任意加長有限TTL。需具明確等待上限、finally釋放／斷線失效檢查及SQLite測試相容，原有X-Workspace-ID／permission／revision不變。
+- 工作期間出現其他對話的frontend polling修改，保留不提交本卡；本卡僅後端Session與原生並行測試／文件。
+
 ## 2026-11-12 TT-182 完成
 
 - 工時摘要改SQL配對／日期聚合，明細與展開皆SQL分頁20筆；不讀整段原始note／history。API不變，舊PHP分組器移tests作獨立對照。

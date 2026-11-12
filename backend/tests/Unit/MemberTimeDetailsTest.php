@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use Tests\Support\LegacyMemberTimeDetails as MemberTimeDetails;
 use PHPUnit\Framework\TestCase;
+use Tests\Support\LegacyMemberTimeDetails as MemberTimeDetails;
 
 /** 驗證同卡跨日與同日多卡的聚合口徑，不依賴資料庫。 */
 class MemberTimeDetailsTest extends TestCase

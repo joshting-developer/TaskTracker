@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-12",
+  "environment": "isolated tasktracker-perf-test MySQL8.4.13, four PHP HTTP workers, database Session, real Cookie/CSRF; not production capacity",
+  "slowRequestSeconds": 12,
+  "switchStartsAtSeconds": 10.5,
+  "before": {
+    "baseline": true,
+    "slowSeconds": 12,
+    "switchWaitSeconds": 0.12314987182617188,
+    "staleOverwrite": true
+  },
+  "after": {
+    "baseline": false,
+    "slowSeconds": 12,
+    "switchWaitSeconds": 1.5233638286590576,
+    "staleOverwrite": false
+  },
+  "verified": [
+    "409 with no handler side effects on wait failure",
+    "stale workspace X-Workspace-ID rejected",
+    "revoked slow save rejected without revision changes",
+    "process exit releases DB connection lock",
+    "lost lock rolls transaction back",
+    "same Session usable after finally"
+  ]
+}

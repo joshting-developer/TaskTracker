@@ -9,6 +9,7 @@ use App\Database\WorkspaceSqliteConnection;
 use App\Database\WriteLocks;
 use App\Domain\DomainError;
 use App\Factories\AccountSettingsFactory;
+use App\Http\Session\SessionLease;
 use App\Repositories\RecordStore;
 use App\Repositories\TimeReportRepository;
 use App\Services\AccountService;
@@ -51,7 +52,7 @@ class ApiExecution
     {
         $userId = $request->user()?->getAuthIdentifier();
 
-        return DB::transaction(function () use ($request, $operation, $input, $userId) {
+        $authenticate = function () use ($request, $operation, $input, $userId) {
             (new WriteLocks)->authentication($operation, $input, $userId);
             if ($operation === 'logout') {
                 Auth::logout();
@@ -84,7 +85,9 @@ class ApiExecution
                 'login' => $this->establishSession($request, $this->accounts->login($input)),
                 default => DomainError::fail('NOT_FOUND', '找不到這個操作'),
             };
-        });
+        };
+
+        return DB::transaction(fn () => $this->guardSession($request, $authenticate));
     }
 
     /** 將已驗證帳號寫入HTTP Session，領域服務不接觸Request或Auth facade。
@@ -181,9 +184,26 @@ class ApiExecution
         };
         $connection = DB::connection();
         if ($connection instanceof WorkspaceSqliteConnection && in_array($operation, ['query', 'getWorkspace', 'getTimeReport'], true)) {
-            return $connection->readTransaction($execute);
+            return $connection->readTransaction(fn () => $this->guardSession($request, $execute));
         }
 
-        return $connection->transaction($execute);
+        return $connection->transaction(fn () => $this->guardSession($request, $execute));
+    }
+
+    /**
+     * 在同一交易執行前後重驗Session鎖，斷線失鎖時rollback而非繼續提交。
+     *
+     * @param  Request  $request  持有當次鎖handle的HTTP
+     * @param  \Closure  $operation  原有授權／版本／業務操作
+     * @return mixed 原業務結果
+     */
+    private function guardSession(Request $request, \Closure $operation): mixed
+    {
+        $lease = $request->attributes->get(SessionLease::class);
+        $lease?->assertHeld();
+        $result = $operation();
+        $lease?->assertHeld();
+
+        return $result;
     }
 }
