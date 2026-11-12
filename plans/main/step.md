@@ -25,6 +25,7 @@
 - TT-248：/boards摘要與show加closedCount（type＝closed，同收錄／Epic展開去重條件，列表同SQL子查詢）；BoardList顯示總數／已完成＋重用progress-track，編輯收錄改外框按鈕（36／44px），名稱含可見文字。SQLite／MySQL計數測試、新board-list-summary-check前後三尺寸、完整browser-check／test:board／build／api／composables及48圖compare通過；看板列表頁無核准baseline，需另行核准才納入。
 - TT-260：全部API路由具名（測試阻擋未命名／漏掛）、terminable middleware回應後記錄非GET寫入（含失敗，排除POST讀取）、失敗只log；PAT身分經請求Context；`GET /api/v1/operation-logs`需workspace.operationLogs.read、keyset分頁；Prunable 90天＋每日model:prune（待TT-162 scheduler）。移除未用/up。
 - TT-250：永久刪除（無封存），issue.delete（管理者以上），工時／子卡409，連帶清除＋關聯端／看板revision＋墓碑；Session RPC＋公開DELETE＋issue-deletions，OpenAPI 0.10.0；詳細頁刪除按鈕。後端／前端回歸通過；07-detail三尺寸視覺差異待Josh核准，卡片維持進行中。
+- TT-179：評估交付docs/app-coordination-evaluation-2026-11-13.md；App內舊整包任務UI經路由分析不可達→建TT-284移除；canLeave逐一查ref→TT-285 leave registry＋導覽／Session composable。未改產品程式；不引入Router／Pinia／TS。
 
 ## 2026-11-13 TT-264修復階段完成，基準核准待回覆
 
