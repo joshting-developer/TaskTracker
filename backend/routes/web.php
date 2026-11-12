@@ -14,6 +14,7 @@ use App\Http\Controllers\Queries\ProjectNotificationsController;
 use App\Http\Controllers\Queries\ProjectsController;
 use App\Http\Controllers\Queries\ProjectTimeController;
 use App\Http\Controllers\Queries\TodosController;
+use App\Http\Controllers\Queries\WorkspaceSettingsController;
 use App\Http\Controllers\RealtimeController;
 use App\Http\Controllers\SmtpController;
 use App\Http\Controllers\SystemController;
@@ -85,6 +86,9 @@ Route::post('/api/rpc/verifySmtp', [SmtpController::class, 'verify']);
 
 // v1先共用Session／CSRF可信邊界，Application Service可供後續PAT適配器沿用。
 Route::prefix('/api/v1')->group(function () {
+    Route::get('/workspace/settings', [WorkspaceSettingsController::class, 'show']);
+    Route::get('/workspace/members', [WorkspaceSettingsController::class, 'members']);
+    Route::get('/workspace/member-roles', [WorkspaceSettingsController::class, 'roles']);
     Route::get('/personal-version', [TodosController::class, 'versions']);
     Route::get('/todos/counts', [TodosController::class, 'counts']);
     Route::get('/todos', [TodosController::class, 'index']);

@@ -8,6 +8,7 @@ use App\Data\TimeReportData;
 use App\Database\WorkspaceSqliteConnection;
 use App\Database\WriteLocks;
 use App\Domain\DomainError;
+use App\Factories\AccountSettingsFactory;
 use App\Repositories\RecordStore;
 use App\Repositories\TimeReportRepository;
 use App\Services\AccountService;
@@ -33,9 +34,10 @@ class ApiExecution
      * @param  SmtpService  $smtp  SMTP驗證服務
      * @param  WorkspaceSession  $session  HTTP身分邊界
      * @param  TimeReportRepository  $timeReports  有租戶範圍的工時查詢
+     * @param  AccountSettingsFactory  $settings  當次設定用例組裝邊界
      * @return void
      */
-    public function __construct(private AccountService $accounts, private SmtpService $smtp, private WorkspaceSession $session, private TimeReportRepository $timeReports) {}
+    public function __construct(private AccountService $accounts, private SmtpService $smtp, private WorkspaceSession $session, private TimeReportRepository $timeReports, private AccountSettingsFactory $settings) {}
 
     /**
      * 在同一交易處理帳號與Session異動。
@@ -111,7 +113,7 @@ class ApiExecution
     {
         return $this->inWorkspace($request, $operation, function ($workspaceSession) use ($operation, $input) {
             if (in_array($operation, AccountSettings::OPERATIONS, true)) {
-                return (new AccountSettings($workspaceSession))->execute($operation, $input);
+                return $this->settings->forActor($workspaceSession)->execute($operation, $input);
             }
             if (in_array($operation, Todos::OPERATIONS, true)) {
                 return (new Todos($workspaceSession))->execute($operation, $input);
@@ -164,7 +166,7 @@ class ApiExecution
         $userId = $request->user()?->getAuthIdentifier();
         $workspaceId = $request->session()->get('workspace_id');
         $execute = function () use ($request, $operation, $callback, $userId, $workspaceId) {
-            if (! in_array($operation, ['query', 'getWorkspace', 'getTimeReport', 'getTodos', 'getProfile', 'getWorkspaceSettings', 'getProjectMembers', 'smtpStatus', 'verifySmtp'], true)) {
+            if (! in_array($operation, ['query', 'getWorkspace', 'getTimeReport', 'getTodos', 'getProfile', 'getProjectMembers', 'smtpStatus', 'verifySmtp'], true)) {
                 $locks = new WriteLocks;
                 $locks->account($userId);
                 $locks->workspace($workspaceId);

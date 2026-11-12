@@ -84,7 +84,7 @@ try {
   await owner.waitForURL('**/#/workspace/settings');
   assert.equal(await settings.getByLabel('工作空間名稱', { exact: true }).inputValue(), '工作區草稿');
   owner.once('dialog', dialog => dialog.dismiss()); await settings.getByRole('tab', { name: '成員與權限', exact: true }).click(); assert.equal(await settings.getByLabel('工作空間名稱', { exact: true }).isVisible(), true);
-  const workspaceBase = await call(owner, 'getWorkspaceSettings');
+  const workspaceBase = await owner.evaluate(async () => (await (await fetch('/api/v1/workspace/settings')).json()).data);
   await call(owner, 'updateWorkspace', { name: '另一個視窗空間', expectedRevision: workspaceBase.workspace.revision, requestId: crypto.randomUUID() });
   await settings.getByRole('button', { name: '儲存工作空間名稱', exact: true }).click(); await settings.getByRole('alert').waitFor(); assert.equal(await settings.getByLabel('工作空間名稱', { exact: true }).inputValue(), '工作區草稿');
   owner.once('dialog', dialog => dialog.accept()); await settings.getByRole('button', { name: '載入最新設定', exact: true }).click();

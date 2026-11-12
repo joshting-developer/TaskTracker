@@ -85,3 +85,9 @@ ProjectTasksWorkspace與useProjectTaskQueries已取代原BoardWorkspace／useBoa
 ## 2026-11-12 Project ACL管理查詢（TT-242）
 
 `GET /api/v1/projects/{project}/acl`只回revision及可授予角色；`/acl/members`有效成員管理分頁、`/acl/candidates`候選搜尋分頁、`/acl/history`按需歷史分頁。四者均要求project.members.manage，與只回姓名的member-options不同；UI每頁20、最大100，source／canChange由當次permission判斷。細節與證據見[ACL讀取拆分](performance-project-acl-2026-11-12.md)。
+
+## 2026-11-12 工作區設定（TT-241）
+
+`GET /api/v1/workspace/settings`只回Workspace的id／name／revision，要求workspace.read；`/workspace/members`要求workspace.members.read，姓名／email SQL搜尋及管理摘要分頁；`/workspace/member-roles`要求workspace.members.manage，只回可授予非ownership角色id／label。成員20筆預設／最大100，canChange與寫入共用規則，前端Owner設定入口不變。
+
+舊`POST /api/rpc/getWorkspaceSettings`整包讀取已退役，已登入且有效JSON請求返回404；前後端及測試已改分責GET，不保留全員名單相容支線。詳見[設定資料分責](performance-workspace-settings-2026-11-12.md)。

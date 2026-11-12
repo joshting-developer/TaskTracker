@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Events\ProjectChanged;
-use App\Repositories\RecordStore;
+use App\Models\Project;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -44,9 +44,10 @@ class ProjectSignals
         if (config('broadcasting.default') !== 'reverb') {
             return;
         }
-        $store = (new RecordStore)->forWorkspace($this->context['workspace']['id']);
-        foreach ($store->all('projects') as $project) {
-            $this->changed($project['id']);
+        $projects = Project::whereHas('workspace', fn ($query) => $query->where('public_id', $this->context['workspace']['id']))
+            ->orderBy('id')->select('public_id')->cursor();
+        foreach ($projects as $project) {
+            $this->changed($project->public_id);
         }
     }
 }

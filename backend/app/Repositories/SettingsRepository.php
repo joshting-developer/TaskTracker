@@ -2,10 +2,11 @@
 
 namespace App\Repositories;
 
+use App\Data\PageQueryData;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Models\WorkspaceMember;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /** 以明確SQL欄位讀寫個人及空間設定；不變更一般業務DTO。 */
 class SettingsRepository
@@ -26,15 +27,6 @@ class SettingsRepository
     public function workspace(string $workspaceId): Workspace
     {
         return Workspace::where('public_id', $workspaceId)->firstOrFail();
-    }
-
-    /** 取得指定空間有效成員並預載帳號。
-     * @param  Workspace  $workspace  已驗證空間
-     * @return Collection
-     */
-    public function members(Workspace $workspace): Collection
-    {
-        return $workspace->members()->whereNull('disabled_at')->with('user')->orderBy('id')->get();
     }
 
     /** 取得同空間的指定成員，不以全域帳號查詢取代scope。
@@ -84,5 +76,36 @@ class SettingsRepository
             'role' => $roleId,
             'role_revision' => $member->role_revision + 1,
         ]) === 1;
+    }
+
+    /**
+     * 一般設定只讀三個公開屬性及內部scope，不預載成員。
+     *
+     * @param  string  $workspaceId  可信Workspace公開ID
+     * @return Workspace 工作區設定投影
+     */
+    public function summary(string $workspaceId): Workspace
+    {
+        return Workspace::where('public_id', $workspaceId)->firstOrFail(['id', 'public_id', 'name', 'settings_revision']);
+    }
+
+    /**
+     * 有效成員在SQL搜尋及分頁，不預載Project或歷史。
+     *
+     * @param  Workspace  $workspace  已授權Workspace
+     * @param  PageQueryData  $filters  有界搜尋／分頁
+     * @return LengthAwarePaginator<WorkspaceMember> 當頁成員投影
+     */
+    public function memberPage(Workspace $workspace, PageQueryData $filters): LengthAwarePaginator
+    {
+        $query = WorkspaceMember::query()->join('users as u', 'u.id', '=', 'workspace_members.user_id')
+            ->where('workspace_members.workspace_id', $workspace->id)->whereNull('workspace_members.disabled_at');
+        if ($filters->search !== '') {
+            $term = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($filters->search)).'%';
+            $query->where(fn ($q) => $q->whereRaw("LOWER(u.name) LIKE ? ESCAPE '!'", [$term])->orWhereRaw("LOWER(u.email) LIKE ? ESCAPE '!'", [$term]));
+        }
+
+        return $query->orderBy('u.name')->orderBy('u.id')->paginate($filters->perPage,
+            ['workspace_members.id', 'workspace_members.user_id', 'workspace_members.role', 'workspace_members.role_revision', 'u.name as member_name', 'u.email as member_email'], 'page', $filters->page);
     }
 }

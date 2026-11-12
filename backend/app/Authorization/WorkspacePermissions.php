@@ -41,4 +41,30 @@ class WorkspacePermissions
             DomainError::fail('FORBIDDEN', '沒有執行此操作的權限');
         }
     }
+
+    /**
+     * 固定角色的顯示與permission映射，供設定讀寫共用。
+     *
+     * @return array<int,array{id:string,label:string,permissions:array<int,string>}> 固定角色定義
+     */
+    public static function roles(): array
+    {
+        return array_map(fn ($id, $label) => ['id' => $id, 'label' => $label, 'permissions' => self::resolve($id)],
+            ['owner', 'manager', 'user'], ['擁有者', '管理者', '一般成員']);
+    }
+
+    /**
+     * 以有效權限交集及ownership保留條件判斷可否管理目前角色。
+     *
+     * @param  array<int,string>  $permissions  操作者當次有效權限
+     * @param  string  $roleId  只用於解析目標permission的角色ID
+     * @return bool 是否可調整目標現有資格
+     */
+    public static function canManageRole(array $permissions, string $roleId): bool
+    {
+        $current = self::resolve($roleId);
+
+        return in_array('workspace.members.manage', $permissions, true)
+            && ! in_array('workspace.ownership', $current, true) && ! array_diff($current, $permissions);
+    }
 }

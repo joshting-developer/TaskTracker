@@ -77,8 +77,8 @@ class WorkspaceMembershipTest extends TestCase
         $this->withHeader('X-Workspace-ID', $first['workspace']['id'])->postJson('/api/rpc/getWorkspace', ['requestId' => 'membership-read'])->assertOk()->assertJsonCount(0, 'data.projects');
         $this->flushHeaders();
         $this->signIn($second);
-        $settings = $this->postJson('/api/rpc/getWorkspaceSettings', ['requestId' => 'membership-read'])->assertOk()->json('data');
-        $member = collect($settings['members'])->firstWhere('id', $first['user']['id']);
+        $settings = $this->getJson('/api/v1/workspace/members')->assertOk()->json('data');
+        $member = collect($settings['items'])->firstWhere('id', $first['user']['id']);
         $this->postJson('/api/rpc/setWorkspaceMemberRole', [
             'requestId' => 'membership-role',
             'userId' => $first['user']['id'],

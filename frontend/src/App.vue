@@ -134,6 +134,7 @@ async function refreshCurrent() {
   await projectDirectoryTool.value?.refresh();
   await todoTool.value?.refresh();
   await workspaceTool.value?.refresh?.();
+  await teamTool.value?.refresh?.();
   await personalSync.refresh();
 }
 function openTodoInbox() { todoNotificationsOpen.value = true; }
@@ -562,7 +563,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
         <button v-if="selectedProject && section !== 'tasks'" class="navigation-back back-to-projects" @click="goProjects()"><Icon name="chevron" :size="14" />返回專案列表</button>
         <div v-if="showIssuePage && error" class="error-box workspace-error" role="alert">{{ error }}<button class="text-button" @click="refresh({ join: true })">重新載入</button></div>
         <IssueDetail v-if="showIssuePage" ref="detailTool" :key="selectedIssue.id" :issue="selectedIssue" :project="selectedProject" :issues="projectAllIssues" :members="projectMembers" :entries="workspace.timeEntries" :return-label="issueReturnLabel()" :busy="Boolean(moving)" :can-write="canWrite" :can-read-time="can('timeEntry.readOwn')" :can-log-time="can('timeEntry.writeOwn')" :user-id="currentUserId" @time-updated="toolUpdated" @state="state => moveIssue(selectedIssue, { state })" @close="closeIssue" @edit="canWrite && (editingDetail = true)" @open="issue => openIssue(issue, true)" @saved="savedIssue" @reload="refresh" />
-        <WorkspaceSettings v-if="!selectedProject && landing === 'settings' && canManageWorkspace" :key="workspace.meta.workspace?.id" ref="teamTool" :active-tab="teamTab" :members="workspace.members" :meta="workspace.meta" @navigate="openWorkspaceSettings" @saved="refresh" />
+        <WorkspaceSettings v-if="!selectedProject && landing === 'settings' && canManageWorkspace" :key="workspace.meta.workspace?.id" ref="teamTool" :active-tab="teamTab" :meta="workspace.meta" @navigate="openWorkspaceSettings" @saved="refresh" @access="refresh" />
         <TimeAnalysis :key="workspace.meta.workspace?.id" v-if="!selectedProject && landing === 'analysis' && canAnalyze" :mode="analysisMode" :workspace-version="workspace" @navigate="goAnalysis" />
         <div v-if="!showIssuePage && !(isTaskRoute && selectedId) && (selectedProject || landing === 'projects')" class="page-heading"><div><h1>{{ title }}</h1><p v-if="selectedProject && section !== 'tasks' && selectedProject.description">{{ selectedProject.description }}</p></div><div class="heading-actions"><button v-if="showNewIssueAction" class="button primary" :disabled="loading" @click="newIssue"><Icon name="plus" :size="18" />新增任務</button><button v-else-if="!selectedProject && workspace.meta.permissions?.includes('project.create')" class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div></div>
         <div v-if="!selectedProject && ['home', 'projects'].includes(landing)" :key="workspace.meta.workspace?.id" :class="landing === 'home' ? 'home-layout' : 'project-list-page'">

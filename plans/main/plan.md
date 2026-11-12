@@ -1,3 +1,17 @@
+## 2026-11-12 TT-241驗收完成
+
+- 一般設定、成員目錄、可指派角色分三個GET；成員SQL搜尋／20筆分頁／最大100，未開tab不讀名單或角色。舊getWorkspaceSettings整包RPC及無上限目錄方法退役，相關呼叫端／測試同步。
+- 讀寫共用固定角色／canManageRole，保留ownership、permission交集與role_revision；AccountSettings經Factory注入資料入口／Replay／當次Signals。工作區訊號改cursor只讀Project IDs，afterCommit時序不變。
+- 完整memory80／3725（14 native skips）、隔離MySQL94／4163；Chrome22人20＋2、一般設定／改名不查名單、角色409／局部刷新、邀請、搜尋、跨WS清除、三尺寸bulkReads=0；既有設定三尺寸回歸亦通過。Pint16檔／build／composables通過，最後設定／新查詢／Realtime9／205通過。
+- 詳見docs/performance-workspace-settings-2026-11-12.md；TT-183大chunk與其他效能卡未混入結案。依指定順序完成TT-242後再完成本卡，兩卡各自提交及更新真實狀態，不push。
+
+## 2026-11-12 TT-241開始
+
+- TT-242已提交bfa47c6並結案後，TT-241才移inprogress。一般設定／管理成員／可指派角色分成三個GET，成員20筆分頁與SQL搜尋；未開成員tab不載名單或角色。
+- 讀寫共用WorkspacePermissions的固定角色與canManageRole規則，保留ownership／permission交集及角色revision。既有getWorkspaceSettings整包RPC退役，測試與呼叫端改v1。
+- 觸及AccountSettings時移除手動資料入口／replay／signals組裝，以Factory及Container提供穩定協作者與每次actor；不變更交易owner及afterCommit時序。
+- 驗收需含105成員成長、Owner／Manager／一般成員、分頁／搜尋、rename／角色／邀請局部刷新、409草稿、跨Workspace與真實Chrome／MySQL。未完成前不結案。
+
 ## 2026-11-12 TT-242驗收完成
 
 - 新增ACL metadata／有效成員／候選／歷史四個分責GET；SQL先限定Workspace／Project與有效資格、每頁20／最大100，批次當頁指派，不逐人成員get或讀歷史。

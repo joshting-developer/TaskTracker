@@ -125,7 +125,7 @@ class AccountSettingsTest extends TestCase
             'name' => str_repeat('字', 61),
             'expectedRevision' => 1,
         ])->assertStatus(400);
-        $this->rpc('getWorkspaceSettings')->assertJsonPath('data.workspace.name', '重新命名空間')->assertJsonPath('data.workspace.revision', 1);
+        $this->getJson('/api/v1/workspace/settings')->assertJsonPath('data.workspace.name', '重新命名空間')->assertJsonPath('data.workspace.revision', 1);
         $this->assertDatabaseHas('workspaces', [
             'public_id' => $other['workspace']['id'],
             'name' => '測試空間',
@@ -133,7 +133,7 @@ class AccountSettingsTest extends TestCase
         $store = new RecordStore;
         $record = $store->require('workspaces', $owner['workspace']['id']);
         $store->put('workspaces', $record['id'], $record);
-        $this->rpc('getWorkspaceSettings')->assertJsonPath('data.workspace.revision', 1);
+        $this->getJson('/api/v1/workspace/settings')->assertJsonPath('data.workspace.revision', 1);
     }
 
     /** 驗證一般成員不能改空間／角色，升降權後Project ACL立即生效。
@@ -147,7 +147,8 @@ class AccountSettingsTest extends TestCase
             'code' => 'PRIVATE',
         ])->assertOk()->json('data');
         $member = $this->join('roles-member@example.test');
-        $this->rpc('getWorkspaceSettings')->assertJsonCount(0, 'data.members');
+        $this->getJson('/api/v1/workspace/settings')->assertOk()->assertJsonMissingPath('data.members');
+        $this->getJson('/api/v1/workspace/members')->assertStatus(403);
         $this->rpc('updateWorkspace', [
             'name' => '越權',
             'expectedRevision' => 0,

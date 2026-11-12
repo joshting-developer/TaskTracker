@@ -14,7 +14,9 @@
 | --- | --- | --- |
 | getProfile | 無 | Session本人；只回姓名、Email與版本 |
 | updateProfile | name、expectedRevision、requestId | 固定本人，不接受前端指定帳號；更新SQL姓名與profile_revision |
-| getWorkspaceSettings | 無 | Session空間；一般成員不回全員目錄 |
+| GET /api/v1/workspace/settings | 無 | Session空間的一般設定，無成員名單 |
+| GET /api/v1/workspace/members | page／perPage／search | 具workspace.members.read，SQL搜尋／分頁管理摘要 |
+| GET /api/v1/workspace/member-roles | 無 | 具workspace.members.manage，只回可授予非ownership角色 |
 | updateWorkspace | name、expectedRevision、requestId | workspace.update；更新SQL名稱及settings_revision |
 | setWorkspaceMemberRole | userId、roleId、expectedRevision、requestId | workspace.members.manage；同Workspace有效成員，保留ownership資格，不處理超過自己有效權限的授權；更新role及role_revision |
 
@@ -27,3 +29,5 @@
 本機先停寫，備份`/data/backups/before-account-settings-20261105.sqlite`並在副本預演再migrate。業務DTO、舊帳號欄位（排除新增版本欄）、records歷史雜湊不變，3筆待辦保留，外鍵／integrity正常；後端／queue／WebSocket已重建。前端來源掛載即時套用，build通過；未Seed reset、未寄信。
 
 專用驗證：在frontend執行`E2E_API_URL=http://127.0.0.1:13024 npm run test:settings`；以`E2E_PREVIEW=1`跑production build。API須為獨立隔離服務，腳本會建假帳號及資料，不可指向使用者DB。日誌`/tmp/tasktracker-settings-*.log`、忽略的`frontend/artifacts/account-settings/`；不提交產物與備份。
+
+2026-11-12（TT-241）：舊getWorkspaceSettings整包RPC已退役（有效JSON及已登入時404），前端一般設定不讀名單，成員tab才讀成員及角色；角色讀寫共用permission交集／ownership限制。詳見[設定分責與驗證](performance-workspace-settings-2026-11-12.md)。

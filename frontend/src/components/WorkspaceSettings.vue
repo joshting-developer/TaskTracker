@@ -1,34 +1,71 @@
 <script setup>
-import { computed, onMounted, ref, useId, watch } from 'vue';
+import { computed, onScopeDispose, ref, shallowRef, useId, watch } from 'vue';
 import { api } from '../api/index.js';
+import { usePagedLookup } from '../composables/usePagedLookup.js';
 import { onTabKeydown } from '../ui/tabs.js';
-const props = defineProps({ members: Array, meta: Object, activeTab: { type: String, default: 'general' } });
-const emit = defineEmits(['navigate', 'saved']);
+const props = defineProps({ meta: Object, activeTab: { type: String, default: 'general' } });
+const emit = defineEmits(['navigate', 'saved', 'access']);
 const roleLabels = { owner: 'Owner', manager: 'Manager', admin: 'Manager', user: '成員', member: '成員', maintainer: '成員', developer: '成員' };
-const tab = ref(props.activeTab), data = ref(null), name = ref(''), loading = ref(true), busy = ref(false), error = ref(''), conflict = ref(false), success = ref('');
+const tab = ref(props.activeTab), data = shallowRef(null), roleChoices = shallowRef([]);
+const name = ref(''), loading = ref(true), busy = ref(false), error = ref(''), conflict = ref(false), success = ref('');
 const email = ref(''), link = ref(''), copied = ref(false);
 const id = useId();
+const context = computed(() => props.meta.workspace?.id || '');
 const permissions = computed(() => props.meta.permissions || []);
 const canUpdate = computed(() => permissions.value.includes('workspace.update'));
 const canManage = computed(() => permissions.value.includes('workspace.members.manage'));
+const canReadMembers = computed(() => permissions.value.includes('workspace.members.read'));
 const dirty = computed(() => Boolean(data.value && name.value !== data.value.workspace.name || email.value.trim()));
-const visibleMembers = computed(() => permissions.value.includes('workspace.members.read') ? data.value?.members || [] : props.members.map(member => ({ ...member, roleId: member.role, canChange: false })));
-const roles = computed(() => (data.value?.roles || []).filter(role => !role.permissions.includes('workspace.ownership') && role.permissions.every(permission => permissions.value.includes(permission))));
-defineExpose({ dirty, saving: busy });
-let pending;
+const roles = computed(() => roleChoices.value);
+const members = usePagedLookup({ context, load: async (filters, options) => {
+  try { return await api.workspaceMembers({ ...filters, perPage: 20 }, options); }
+  catch (failure) { handleFailure(failure); throw failure; }
+} });
+const visibleMembers = computed(() => data.value ? members.result.value?.items || [] : []);
+let pending, generation = 0, controller;
+function handleFailure(failure) {
+  if (['FORBIDDEN', 'NOT_FOUND', 'WORKSPACE_CHANGED', 'UNAUTHENTICATED'].includes(failure.code)) {
+    data.value = null;
+    roleChoices.value = [];
+    link.value = '';
+    emit('access');
+  }
+}
 function switchTab(next) {
-  if (next === tab.value) return;
+  if (next === tab.value || busy.value) return;
   if (dirty.value && !window.confirm('切換設定分區會捨棄尚未儲存的內容，要繼續嗎？')) return;
   if (data.value) name.value = data.value.workspace.name;
   email.value = ''; pending = null;
   emit('navigate', next);
 }
+async function loadMembers() {
+  if (tab.value !== 'members' || !canReadMembers.value) return;
+  const current = generation;
+  const options = { signal: controller?.signal };
+  try {
+    const [choices] = await Promise.all([canManage.value ? api.workspaceMemberRoles(options) : Promise.resolve({ roles: [] }), members.reload()]);
+    if (current === generation) roleChoices.value = choices.roles;
+  } catch (failure) {
+    if (current === generation && !['ABORTED', 'STALE_RESPONSE'].includes(failure.code)) { error.value = failure.message; handleFailure(failure); }
+  }
+}
 async function load(confirm = false) {
+  if (busy.value && confirm) return;
   if (confirm && dirty.value && !window.confirm('重新載入會捨棄目前修改，要繼續嗎？')) return;
+  const current = ++generation;
+  controller?.abort(); controller = new AbortController();
   loading.value = true; error.value = ''; conflict.value = false;
-  try { data.value = await api.getWorkspaceSettings(); name.value = data.value.workspace.name; pending = null; if (confirm) email.value = ''; }
-  catch (failure) { error.value = failure.message; }
-  finally { loading.value = false; }
+  try {
+    const result = await api.workspaceSettings({ signal: controller.signal });
+    if (current !== generation) return;
+    data.value = result;
+    name.value = result.workspace.name;
+    pending = null;
+    if (confirm) email.value = '';
+    await loadMembers();
+  } catch (failure) {
+    if (current === generation && !['ABORTED', 'STALE_RESPONSE'].includes(failure.code)) { error.value = failure.message; handleFailure(failure); }
+  } finally { if (current === generation) loading.value = false; }
 }
 async function save(operation, payload) {
   if (busy.value || loading.value) return;
@@ -36,8 +73,14 @@ async function save(operation, payload) {
   busy.value = true; error.value = ''; success.value = ''; conflict.value = false;
   const signature = JSON.stringify([operation, payload]);
   if (pending?.signature !== signature) pending = { signature, requestId: crypto.randomUUID() };
-  try { await api[operation]({ ...payload, requestId: pending.requestId }); pending = null; await load(); success.value = operation === 'updateWorkspace' ? '工作空間名稱已儲存' : '工作空間角色已儲存'; emit('saved'); }
-  catch (failure) { error.value = failure.message; conflict.value = failure.code === 'REVISION_CONFLICT'; }
+  try {
+    await api[operation]({ ...payload, requestId: pending.requestId });
+    pending = null;
+    if (operation === 'updateWorkspace') await load();
+    else await members.reload();
+    success.value = operation === 'updateWorkspace' ? '工作空間名稱已儲存' : '工作空間角色已儲存';
+    emit('saved');
+  } catch (failure) { error.value = failure.message; conflict.value = failure.code === 'REVISION_CONFLICT'; handleFailure(failure); }
   finally { busy.value = false; }
 }
 function changeRole(member, event) {
@@ -47,19 +90,30 @@ function changeRole(member, event) {
   save('setWorkspaceMemberRole', { userId: member.id, roleId, expectedRevision: member.revision });
 }
 async function invite() {
-  if (busy.value) return;
+  if (busy.value || loading.value) return;
   busy.value = true; error.value = ''; copied.value = false;
-  try { const invitation = await api.inviteMember({ email: email.value }); link.value = `${location.origin}${location.pathname}#/invite?token=${encodeURIComponent(invitation.token)}`; email.value = ''; }
-  catch (failure) { error.value = failure.message; }
+  try {
+    const invitation = await api.inviteMember({ email: email.value });
+    link.value = `${location.origin}${location.pathname}#/invite?token=${encodeURIComponent(invitation.token)}`;
+    email.value = '';
+    await members.reload();
+  } catch (failure) { error.value = failure.message; handleFailure(failure); }
   finally { busy.value = false; }
 }
-async function copy() { try { await navigator.clipboard.writeText(link.value); copied.value = true; } catch { error.value = '請選取下方連結並複製'; } }
+async function copy() {
+  try { await navigator.clipboard.writeText(link.value); copied.value = true; }
+  catch { error.value = '請選取下方連結並複製'; }
+}
 watch(() => props.activeTab, next => {
   tab.value = next;
   if (data.value) name.value = data.value.workspace.name;
   email.value = ''; pending = null; success.value = '';
+  if (next === 'members' && data.value) loadMembers();
 });
-onMounted(load);
+watch(context, () => { data.value = null; roleChoices.value = []; link.value = ''; email.value = ''; load(); }, { immediate: true });
+watch(() => members.result.value, result => { if (result && members.page.value > result.lastPage) members.page.value = result.lastPage; });
+onScopeDispose(() => { generation++; controller?.abort(); });
+defineExpose({ dirty, saving: busy, refresh: () => load(true) });
 </script>
 <template>
   <section class="workspace-settings-page" aria-labelledby="workspace-settings-heading">
@@ -73,7 +127,11 @@ onMounted(load);
     </section>
     <section v-show="tab === 'members'" :id="`${id}-members-panel`" role="tabpanel" :aria-labelledby="`${id}-members`" tabindex="0">
 
-      <ul class="member-list"><li v-for="member in visibleMembers" :key="member.id"><span class="avatar small">{{ member.name.slice(0, 1) }}</span><div><strong>{{ member.name }}</strong><small>{{ member.email }}</small></div><select v-if="canManage && member.canChange" class="member-role" :aria-label="`工作空間身份 ${member.name}`" :value="member.roleId" :disabled="busy || loading" @change="changeRole(member, $event)"><option v-if="!roles.some(role => role.id === member.roleId)" :value="member.roleId" disabled>{{ roleLabels[member.roleId] || member.roleId }}</option><option v-for="role in roles" :key="role.id" :value="role.id">{{ role.label }}</option></select><span v-else class="type-tag">{{ roleLabels[member.roleId] || member.roleId }}</span></li></ul>
+      <label v-if="canReadMembers" class="field">搜尋工作空間成員<input v-model="members.search.value" aria-label="搜尋工作空間成員" placeholder="姓名或信箱" /></label>
+      <p v-if="members.loading.value" role="status">載入成員中…</p>
+      <p v-if="members.error.value" class="error-box" role="alert">{{ members.error.value }}<button class="text-button" @click="members.reload">重試</button></p>
+      <ul class="member-list"><li v-for="member in visibleMembers" :key="member.id"><span class="avatar small">{{ member.name.slice(0, 1) }}</span><div><strong>{{ member.name }}</strong><small>{{ member.email }}</small></div><select v-if="canManage && member.canChange" class="member-role" :aria-label="`工作空間身份 ${member.name}`" :value="member.roleId" :disabled="busy || loading || members.loading.value" @change="changeRole(member, $event)"><option v-if="!roles.some(role => role.id === member.roleId)" :value="member.roleId" disabled>{{ roleLabels[member.roleId] || member.roleId }}</option><option v-for="role in roles" :key="role.id" :value="role.id">{{ role.label }}</option></select><span v-else class="type-tag">{{ roleLabels[member.roleId] || member.roleId }}</span></li></ul>
+      <div v-if="members.result.value?.lastPage > 1" class="pagination" aria-label="工作空間成員分頁"><button class="text-button" :disabled="members.loading.value || busy || members.page.value <= 1" @click="members.page.value--">上一頁</button><span>{{ members.page.value }} / {{ members.result.value.lastPage }}</span><button class="text-button" :disabled="members.loading.value || busy || members.page.value >= members.result.value.lastPage" @click="members.page.value++">下一頁</button></div>
 
       <template v-if="permissions.includes('workspace.invite')"><h3>邀請成員</h3><form @submit.prevent="invite" class="invite-form"><label class="field">受邀者 Email<input v-model="email" type="email" required :disabled="busy || loading" /></label><button class="button primary" :disabled="busy || loading">{{ busy ? '建立中…' : '建立邀請連結' }}</button></form><div v-if="link" class="invite-result"><label class="field">邀請連結<input :value="link" readonly @focus="$event.target.select()" /></label><button class="button secondary" @click="copy">{{ copied ? '已複製' : '複製連結' }}</button></div></template>
     </section>
