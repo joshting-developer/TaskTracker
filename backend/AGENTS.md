@@ -11,7 +11,7 @@
 後端程式開發、review及測試設計先讀 [ECC laravel-patterns](../skills/vendor/laravel-patterns/SKILL.md)，再讀 [Laravel Architecture](../skills/laravel-architecture/SKILL.md) 與按需references。均由專案`.agents/skills`提供入口；來源及配置見[開發skills配置](../docs/development-skills.md)。舊backend-development-standards已移除。
 
 - 架構／慣例以ECC為準，本地Architecture補足其未規定處；使用者需求、產品契約與下方資料／授權安全限制優先。
-- Controller只處理HTTP協調，輸入由FormRequest驗證；Service協調流程、Action是有實際用途的單一用例；Repository只做資料存取。簡單CRUD可由Service直接用Eloquent，不讓Controller查DB，不為每個Model建立空Repository／Action。
+- Controller只處理HTTP協調，輸入由FormRequest驗證；Service協調流程、Action是有實際用途的單一用例；Repository只做資料存取。2026-11-12使用者確認嚴格Controller → Service → Repository，Service建構子注入Repository，簡單CRUD也不得直接用Eloquent；依[嚴格分層skill](../skills/laravel-architecture/references/strict-layering.md)執行，不為每個Model建立空Repository／Action。
 - 命名、Repository回傳、Resource使用、交易owner及Unit／Feature必要條件依Architecture兩份references，不再沿用舊測試命名硬性格式或CLM專用例子。
 - 保留既有Session／CSRF、ok-data／DomainError、revision／requestId與permission＋scope；不抄ECC範例更換資料庫或登入方式。2026-11-12使用者已授權依根AGENTS的資料存取審查調整API契約，包含退役整包RPC，須同步呼叫端／測試／接口文件。
 - 2026-11-06安裝階段曾暫緩；後續使用者已恢復重構，依本輪計畫分階段執行。skills安裝不代表全庫已合規，不授權無關的批次格式化或改依賴。

@@ -20,7 +20,7 @@ description: Apply TaskTracker Laravel layer responsibilities, dependency direct
 ## 開工與交付
 
 1. 閱讀受影響入口、相近用例與測試，列出可信身分、permission／scope、輸入／回傳、交易與失敗時不得發生的副作用。
-2. 用下表決定最少必要層，實作前確認依賴及交易owner。不得今天Controller查DB、明天才走Service。
+2. 必讀[嚴格分層與資料存取](references/strict-layering.md)：Controller → Service → Repository為本專案固定業務路徑，包含簡單CRUD；用下表決定可選內部分工，實作前確認依賴及交易owner。不得今天Controller查DB、明天才走Service。
 3. 依 [層次與命名](references/layers-and-naming.md) 與 [契約、交易及測試](references/contracts-and-testing.md) 實作；讀取時不得套用角色名稱放行或跨租戶全表查詢。
 4. 先取得受影響測試baseline，修改後跑完整受影響測試檔；跨層契約／共用邏輯依風險擴大。純skill／文件只檢查來源、連結、一致性與差異，不跑業務資料測試。
 5. 依根AGENTS記錄計畫、決策、驗證與每階段本機commit，不自動push或部署。
@@ -29,11 +29,13 @@ description: Apply TaskTracker Laravel layer responsibilities, dependency direct
 
 | 情境 | 必要路徑 | 不要新增 |
 | --- | --- | --- |
-| 單Model、固定租戶範圍的簡單CRUD | Controller → 有輸入時FormRequest → Service → Eloquent Model → Resource | 無實際用途的Action／Repository／interface |
+| 單Model、固定租戶範圍的簡單CRUD | Controller → FormRequest（有輸入時）→ Service → Repository → Model；Resource負責回應 | 無實際用途的Action／interface，不跳過Repository |
 | 查詢有重複、複雜關聯／聚合，或需隔離可替換資料來源 | Controller → FormRequest → Service → Repository／Query → Model → Resource | 每個Model自動配一個Repository |
-| 有獨立名稱、獨立失敗／交易邊界的單一用例 | Controller／Job → Action.handle → 必要Service／Repository／Model；HTTP輸入與輸出仍經Request／Resource | Service與Action互相原樣轉呼叫 |
-| 多步驟跨用例流程 | Controller／Job → Service協調 → 必要的Action／Repository／Model | Controller承擔流程或讓Repository決定業務順序 |
+| 有獨立名稱的單一用例 | Controller → Service；必要時Service以Action分工，資料存取仍經Repository | Controller以Action跳過Service，Service與Action互相原樣轉呼叫 |
+| 多步驟跨用例流程 | Controller／Job → Service協調 → 必要Action分工 → Repository → Model | Controller承擔流程或讓Repository決定業務順序 |
 
-FormRequest在Controller執行前做HTTP輸入驗證，不是Controller呼叫後才執行的下層。Resource是輸出邊界，也不是Model之後的資料查詢層。箭頭是責任與資料流，不強迫每條路徑產生相同數量的檔案。
+FormRequest在Controller執行前做HTTP輸入驗證，不是Controller呼叫後才執行的下層。Resource是輸出邊界，也不是Model之後的資料查詢層。箭頭是責任與資料流；Service／Repository是業務路徑必要邊界，FormRequest／Resource依輸入與回應協定選擇，Action仍為可選分工，不為湊層數新增檔案。
 
-Controller不得直接操作Eloquent／DB／Repository。Service或Action可依上表直接用Eloquent，已有符合用途的Repository則沿用；不得為跳層另建第二套資料入口。Repository只做資料存取，詳細回傳型別及例外見reference。
+Controller穩定協作者一律constructor injection；action只留Request／FormRequest、路由及當次執行輸入，具體界線與框架handle例外依[DI reference](../tasktracker-development-standards/references/dependency-injection.md)，不以方法注入繞過Controller分責。
+
+Controller不得直接操作Eloquent／DB／Repository；Service必須constructor-inject Repository，所有業務查詢／保存（含簡單CRUD）由Repository完成，不能直接用Eloquent或DB查表。Repository按領域／查詢需求設計，不強制每個Model一份；詳細責任、交易及框架例外依strict-layering reference。此規則取代2026-11-06的簡單CRUD可直用Eloquent例外。

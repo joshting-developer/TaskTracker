@@ -6,20 +6,20 @@
 | --- | --- | --- |
 | Controller | 選擇用例、傳入可信actor與驗證結果、HTTP status／Resource | 查DB、拼query、商業規則、交易流程、手動大量序列化 |
 | FormRequest | 輸入格式／型別／範圍與allowlist；結構化輸入轉typed Data DTO | 信任前端身分／角色、用全域exists洩露其他租戶資源、以驗證取代交易內重查 |
-| Service | 領域流程協調、跨步驟規則、授權檢查時機、交易／重試與副作用順序 | 讀HTTP request／session、組HTTP response、包含無關領域操作的萬用入口 |
-| Action | 明確的單一用例，公開handle；只接業務參數／DTO，可被Controller、Job或Service共用 | 為每個Service方法複製一個原樣轉呼叫類別、反向呼叫協調自己的Service |
+| Service | 領域流程協調、跨步驟規則、授權檢查時機、交易／重試與副作用順序 | 讀HTTP request／session、直接Eloquent／DB查存業務表、組HTTP response、包含無關領域操作的萬用入口 |
+| Action | 明確的單一用例，公開handle；只接業務參數／DTO，作Service的可選內部分工，不作Controller跳層入口 | 為每個Service方法複製一個原樣轉呼叫類別、反向呼叫協調自己的Service |
 | Repository | 有範圍的查詢、保存、刪除、鎖定、批次載入、聚合；明確回傳型別 | 判斷可否結案／轉卡／授權、取得Session、決定跨Repository交易、組Response、寄信 |
 | Query（選用） | 組合可重用查詢條件與排序；最後由受範圍限制的資料入口執行 | 當成另一個Service、掩藏資料寫入或授權決策 |
 | Model | Eloquent關聯、casts、scopes及實體自身局部不變條件 | HTTP依賴、跨租戶流程、跨實體大型協調或在accessor中偷發外部請求 |
 | Resource／Collection | 對已授權資料明確列欄位、格式與已載入關聯 | 查DB／lazy loading、重新判權、交易、載入未授權關聯 |
 
-依賴往資料與領域內部走，不反向依賴HTTP。Service／Action互用須形成單向無環圖；不要先規定所有流程必經Service與Action。相依預設constructor injection；只有實際存在多實作、外部系統邊界或明確替換需求才建立interface並在Provider綁定，不為可mock單一class而建interface。
+依賴往資料與領域內部走，不反向依賴HTTP。Service／Action互用須形成單向無環圖；不要先規定所有流程必經Service與Action。相依預設constructor injection；Controller穩定協作者依使用者2026-11-12確認必須由建構子注入，HTTP action不採service method injection；只有實際存在多實作、外部系統邊界或明確替換需求才建立interface並在Provider綁定，不為可mock單一class而建interface。
 
 DI細節遵循[依賴注入與生命週期](../../tasktracker-development-standards/references/dependency-injection.md)，包含Context方法參數、Factory邊界、singleton／scoped限制及合理new例外；不在此重複維護。
 
-## 簡單CRUD與Repository邊界
+## 嚴格資料存取與Repository邊界
 
-只有同時滿足「單一Model、固定workspace scope、簡單條件、沒有重複的複雜查詢／聚合、沒有既有適用Repository」時，Service／Action可直接使用Eloquent。權限、版本、防重複提交與交易仍須經既有共同入口，不因CRUD略過。條件不成立就使用或新增有實際用途的Repository／Query，不允許在Controller直接操作Model作例外。
+2026-11-12使用者已確認嚴格Controller → Service → Repository；Service必須由建構子注入Repository，業務查詢與保存一律經Repository，包含單Model簡單CRUD。原Service可直接用Eloquent例外已取消。Repository依領域／查詢用途設計，不強制每個Model建一個；完整界線與框架例外見[strict-layering.md](strict-layering.md)。
 
 Repository的workspace／project where、複合key與鎖定是資料隔離約束，不代表已通過permission。Service／Policy依可信actor與有效permission決定資格，Repository不得比較roleId／名稱放行。選出「未逾期」或「某狀態」是查詢；決定「這個人能不能關閉Epic」是業務規則。
 

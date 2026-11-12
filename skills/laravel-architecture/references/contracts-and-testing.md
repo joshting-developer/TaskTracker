@@ -11,7 +11,7 @@
 ## 交易與副作用owner
 
 - 協調整個寫入的Service或頂層Action擁有transaction。Repository不自行commit／rollback或包跨用例transaction；Model不偷偷開交易。多個Repository／Model更新、revision與receipt寫入要在同一邊界。
-- 現有ApiExecution／RequestReplay的交易與重試機制維持為相容邊界；未來重構前先確認owner，不在每一層再套transaction。巢狀交易不能當成跨服務一致性方案。
+- 現有WorkspaceTransaction／BearerTokenSession／RequestReplay的交易與重試機制維持為明確邊界（ApiExecution為歷史名稱）；未來重構前先確認owner，不在每一層再套transaction。巢狀交易不能當成跨服務一致性方案。
 - 檢查後寫入以鎖或expectedRevision條件更新防競爭；MySQL先依固定順序鎖User／Workspace穩定資料列，再查授權與版本；沒有資料時不能只鎖不存在的工時列。SQLite不能假定SELECT FOR UPDATE等同MySQL行鎖；保留各引擎交易與去重機制。
 - 整批原子或逐筆部分成功必須事先定義。預設維持現有原子契約；部分成功需逐筆結果、授權與rollback邊界，不擅自把批次失敗改成跳過。
 - Queue／事件在commit後送出；外部IO不在長交易中同步執行。Job有timeout、重試／backoff與冪等性；SMTP仍只verify／preview，不因ECC郵件範例發真信。

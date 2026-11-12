@@ -16,3 +16,7 @@
 | [Laravel Architecture](../../laravel-architecture/SKILL.md)及references | 原有分層／命名／Repository回傳／Resource／交易與測試層次維持單一來源，只將DI／PHPDoc細節連到本skill |
 
 新增工程規則集中修改本skill；Laravel架構專責修改laravel-architecture，上游vendor保留原文。變更規則時同步入口與受影響文件，保留來源／決策沿革，避免複製出兩份不同正文。
+
+2026-11-12後續使用者檢視IssuesController，確認Controller穩定服務依賴應由建構子注入。已在dependency-injection.md收斂原「HTTP入口適合時可method injection」的寬泛例外，保留Request／路由／當次scope與Queue／Artisan框架生命週期區分；同步Architecture入口與原DI計畫，vendor原文不修改。盤點與待實作TT-262見docs/controller-constructor-injection-review-2026-11-12.md，規範更新不是程式重構完成。
+
+同輪討論後使用者明確選擇嚴格Controller → Service → Repository，包含簡單CRUD；Controller穩定Service與Service的Repository依賴必須建構子注入。責任／跳層禁令／框架與工具例外集中於Laravel Architecture references/strict-layering.md；本skill維持組裝與生命週期。同步移除Architecture與backend/AGENTS的簡單CRUD直通例外，不修改ECC vendor。TT-262擴充追蹤全後端，維持open未指派。

@@ -9,7 +9,7 @@
 
 ### 必須達成
 
-1. 自有後端的 Service、Repository、Action、Query、Authorization、Controller、Job、Listener 及相關協作物件，依賴關係原則上採 Laravel Container 管理的 **Constructor Injection**；適合框架方法注入的 HTTP 入口可使用 Method Injection。
+1. 自有後端的 Service、Repository、Action、Query、Authorization、Controller、Job、Listener 及相關協作物件，依賴關係原則上採 Laravel Container 管理的 **Constructor Injection**；Controller穩定服務依賴必須使用Constructor Injection；HTTP方法僅保留Request／路由及當次輸入。框架handle與執行期scope例外依本地DI skill（2026-11-12使用者收斂，取代原HTTP可寬泛方法注入的規則）。
 2. 將散落在業務流程中的直接 new Service／Repository、app()／resolve() Service Locator，以及無必要的手動依賴組裝，改為清楚且容易替換／測試的依賴關係。
 3. 將可信任的操作者、Workspace／Project scope、Permission 等「執行期資料」與「物件的穩定依賴」區分；不可因 DI 造成租戶狀態跨請求洩漏。
 4. **全面盤點並統一專案自有後端 PHPDoc**：描述以繁體中文為主，依實際參數與型別提供標準 @param、@return，必要時補 @throws、泛型及 array shape。可接受大量文件與格式 Diff。
@@ -43,8 +43,8 @@
 
 ### 3.1 由 Laravel Container 管理穩定依賴
 
-- Controller 只處理 Request／Resource／HTTP 邊界；可用建構子或 Method Injection。
-- Service／Action／Query 預設 constructor-inject 所需協作服務或 Repository；不要在業務方法內到處 new 同類型物件。
+- Controller 只處理 Request／Resource／HTTP 邊界；穩定服務依賴放建構子，action不以Method Injection提供Service。Request、路由及當次用例輸入仍是方法參數。
+- Service必須constructor-inject Repository，所有業務資料查詢／保存都經Repository（含簡單CRUD），不得在Service直接Eloquent／DB查表；Action／Query分工與框架例外依[嚴格分層skill](../skills/laravel-architecture/references/strict-layering.md)，不在業務方法new同類型協作者。
 - Repository 專注查詢與保存，不替 Service 決定授權／流程，也不承擔 HTTP Session。
 - 對沒有狀態、可自動解析的具體類別，直接 type-hint 即可；不強制 Provider bind。
 - Date／Clock、外部郵件、通知、遠端 API 等有替換需求的邊界，視需要引入介面或 Adapter。

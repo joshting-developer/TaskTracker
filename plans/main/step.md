@@ -1,3 +1,10 @@
+## 2026-11-12 TT-262 建卡／盤點與規範收斂
+
+- 使用者要求查Controller方法注入，討論後確認嚴格Controller → Service → Repository，包含簡單CRUD；穩定服務／Repository皆建構子注入。
+- 盤點28個Controller／21個候選／84個action，34個Service有5個直接資料存取候選；另區分Artisan handle與RequestReplay scope參數。
+- 本輪只開TT-262、補既有Architecture／Development Standards skills與原DI計畫，不改產品程式，保留他人未提交的Controller／DTO／Service／測試變更。TT-262維持open未指派；AI/API暫停不變。
+- 已驗證文件／skill相對引用、兩入口symlink與frontmatter、規則一致性、卡片分類／open未指派及diff；只提交本輪文件與skills。後續程式遷移須正式領卡及隔離測試。
+
 ## 2026-11-12 使用者要求完成TT-170後暫停
 
 - TT-170已完成並提交337a898，驗證及主服務載入完成，卡片已回填並closed。

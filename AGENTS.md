@@ -253,3 +253,7 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 ### 2026-11-12 TT-170 增量任務摘要
 
 公開Project issue-changes提供有界cursor／updatedSince，OpenAPI0.5.0；共用Issue查詢／摘要Resource，cursor綁本人／租戶／Project／filters，每批重驗權限，SQL最多101且無COUNT／OFFSET。syncUntil固定本輪、下一輪inclusive水位按id/revision去重；不是跨HTTP snapshot或無損刪除changefeed，TT-173另驗。舊頁碼及前端保留，見docs/public-issue-changes.md。CI文件瀏覽器使用5185／隔離API13049。
+
+### 2026-11-12 嚴格分層與建構子DI（TT-262）
+
+使用者確認後端採嚴格Controller → Service → Repository，含簡單CRUD；Controller穩定協作者與Service的Repository皆由建構子注入。正式責任／例外維護於[Laravel Architecture嚴格分層](skills/laravel-architecture/references/strict-layering.md)及[DI reference](skills/tasktracker-development-standards/references/dependency-injection.md)，取代舊HTTP寬泛方法注入及簡單CRUD直用Eloquent例外。既有程式尚待TT-262遷移，本輪只盤點建卡與skill更新，不視為程式重構完成；TT-262保持open未指派，AI/API仍暫停。

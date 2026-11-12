@@ -11,7 +11,7 @@ description: Apply TaskTracker project-owned engineering rules when implementing
 
 1. 先讀根[AGENTS](../../AGENTS.md)、受影響子目錄指引與當次需求，確認授權、既有差異及對應追蹤卡。專案決策／環境現況仍由AGENTS與相關設計文件記錄，不複製到skill當永遠有效的現況。
 2. 所有實作／review讀[共通規則](references/engineering.md)與[驗證交付](references/verification.md)。修改API、Repository、查詢、前端載入或輪詢，**必須**另讀[資料存取審查](references/data-access.md)。
-3. 後端新增／重構依賴或註解，另讀[DI與生命週期](references/dependency-injection.md)及[PHPDoc](references/phpdoc.md)。依當次範圍執行，不把單一功能修改擴張成全庫整頓。
+3. 後端新增／重構依賴或註解，另讀[DI與生命週期](references/dependency-injection.md)及[PHPDoc](references/phpdoc.md)。Controller穩定服務依賴與Service的Repository依賴必須採建構子注入；業務資料一律經Repository，包含簡單CRUD，完整嚴格分層由Laravel Architecture維護。Request／路由／當次Context與框架handle例外依DI reference區分，不再套用寬泛HTTP方法注入例外。依當次範圍執行，不把單一功能修改擴張成全庫整頓。
 4. 依下表讀專責skill，不為符合本skill重寫vendor或引入新框架。文件／skill整理只驗證規則與引用，不跑業務測試或修改服務。
 
 ## 與既有skills的分工
