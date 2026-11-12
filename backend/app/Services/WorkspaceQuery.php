@@ -11,8 +11,6 @@ use App\Repositories\RecordStore;
  */
 class WorkspaceQuery
 {
-    private ProjectAccess $access;
-
     private array $members = [];
 
     /**
@@ -20,12 +18,10 @@ class WorkspaceQuery
      *
      * @param  RecordStore  $store  限定工作空間的資料存取入口
      * @param  array  $workspaceSession  從後端Session重新驗證的工作空間身分與權限
-     * @return void
+     * @param  ProjectAccess  $access  本次操作共用的Project權限檢查
+     * @param  \Closure(): ProjectBoards  $boards  整包讀取看板清單時才取得的看板用例
      */
-    public function __construct(private RecordStore $store, private array $workspaceSession)
-    {
-        $this->access = new ProjectAccess($store, $workspaceSession);
-    }
+    public function __construct(private RecordStore $store, private array $workspaceSession, private ProjectAccess $access, private \Closure $boards) {}
 
     /**
      * 只回傳目前操作者可存取的專案及其衍生資料。
@@ -57,7 +53,7 @@ class WorkspaceQuery
         $issues = $this->visibleIssues($issueProjects);
         $issueIds = array_column($issues, 'id');
         $canReadAllMembers = in_array('workspace.members.read', $this->workspaceSession['permissions'], true);
-        $boards = (new ProjectBoards($this->store, $this->workspaceSession))->listing($allProjects);
+        $boards = ($this->boards)()->listing($allProjects);
 
         return [
             'projects' => $projects,

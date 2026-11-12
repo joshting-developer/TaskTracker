@@ -1,10 +1,10 @@
 <?php
 
 use App\Authorization\WorkspacePermissions;
+use App\Factories\WorkspaceServicesFactory;
 use App\Models\User;
 use App\Repositories\RecordStore;
 use App\Repositories\TimeReportRepository;
-use App\Services\WorkspaceQuery;
 use App\Services\WorkspaceTimeReport;
 use Database\Seeders\DemoSeeder;
 use Illuminate\Contracts\Console\Kernel;
@@ -63,7 +63,7 @@ $context = [
     'permissions' => WorkspacePermissions::resolve('owner'),
 ];
 $store = fn () => (new RecordStore)->forWorkspace(DemoSeeder::WORKSPACE_ID);
-$workspace = fn () => (new WorkspaceQuery($store(), $context))->getWorkspace();
+$workspace = fn () => $app->make(WorkspaceServicesFactory::class)->forSession($context)->query()->getWorkspace();
 $report = fn () => (new WorkspaceTimeReport($store(), $context, new TimeReportRepository))->get(['startDate' => '2025-01-01', 'endDate' => '2025-12-31']);
 echo json_encode(['baselineEntries' => DB::table('time_entries')->count(), 'baselineIssues' => DB::table('issues')->count()], JSON_THROW_ON_ERROR).PHP_EOL;
 sample('seed.workspace', $workspace);

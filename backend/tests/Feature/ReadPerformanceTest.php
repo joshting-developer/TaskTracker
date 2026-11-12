@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Authorization\ProjectAccess;
 use App\Authorization\WorkspacePermissions;
+use App\Factories\WorkspaceServicesFactory;
 use App\Repositories\RecordStore;
 use App\Services\WorkspaceQuery;
 use Database\Seeders\DemoSeeder;
@@ -47,7 +48,7 @@ class ReadPerformanceTest extends TestCase
         }
         $id = DemoSeeder::ACCOUNTS['developer']['id'];
         $context = ['user' => ['id' => $id, 'name' => 'test member'], 'workspace' => ['id' => DemoSeeder::WORKSPACE_ID, 'name' => 'f-ws'], 'role' => 'user', 'permissions' => WorkspacePermissions::resolve('user')];
-        $query = new WorkspaceQuery($store, $context);
+        $query = app(WorkspaceServicesFactory::class)->forSession($context)->query();
         $before = $query->getWorkspace();
         $this->assertCount(1, $before['projects']);
         $projectId = $before['projects'][0]['id'];
@@ -72,7 +73,7 @@ class ReadPerformanceTest extends TestCase
         foreach (['owner', 'developer'] as $role) {
             $id = DemoSeeder::ACCOUNTS[$role]['id'];
             $context = ['user' => ['id' => $id, 'name' => 'test member'], 'workspace' => ['id' => DemoSeeder::WORKSPACE_ID, 'name' => 'f-ws'], 'role' => $role, 'permissions' => WorkspacePermissions::resolve($role)];
-            $query = new WorkspaceQuery($store, $context);
+            $query = app(WorkspaceServicesFactory::class)->forSession($context)->query();
             [$before, $beforeCount] = $this->counted($query);
             $source = (array) DB::table('time_entries')->where('member_id', DB::table('workspace_members')->where('user_id', $id)->value('id'))->first();
             unset($source['id']);

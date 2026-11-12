@@ -18,9 +18,9 @@ class ProjectBoards
      *
      * @param  RecordStore  $store  限定工作空間的資料存取入口
      * @param  array  $workspaceSession  從後端Session重新驗證的工作空間身分與權限
-     * @return void
+     * @param  ProjectAccess  $access  本次操作共用的Project權限檢查
      */
-    public function __construct(private RecordStore $store, private array $workspaceSession) {}
+    public function __construct(private RecordStore $store, private array $workspaceSession, private ProjectAccess $access) {}
 
     /**
      * 回傳Default看板與尚未移除的自訂看板。
@@ -171,7 +171,7 @@ class ProjectBoards
      */
     public function includeCreatedIssue(string $boardId, array $issue): void
     {
-        (new ProjectAccess($this->store, $this->workspaceSession))->require($issue['projectId'], 'board.manage');
+        $this->access->require($issue['projectId'], 'board.manage');
         $board = $this->store->require('boards', $boardId);
         if (! empty($board['archivedAt']) || $board['projectId'] !== $issue['projectId']) {
             DomainError::fail('NOT_FOUND', '找不到這個專案的看板');

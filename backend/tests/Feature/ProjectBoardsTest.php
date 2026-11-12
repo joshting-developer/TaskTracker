@@ -84,6 +84,6 @@ class ProjectBoardsTest extends TestCase
         $context = ['workspace' => $owner['workspace'], 'user' => $owner['user'], 'role' => 'owner', 'permissions' => ['project.read']];
         $this->expectException(DomainError::class);
         $this->expectExceptionMessage('沒有執行此操作的權限');
-        DB::transaction(fn () => (new WorkspaceService($context))->execute('createBoard', ['projectId' => $project['id'], 'name' => '不應建立', 'requestId' => 'denied']));
+        DB::transaction(fn () => app(WorkspaceService::class)->execute($context, 'createBoard', ['projectId' => $project['id'], 'name' => '不應建立', 'requestId' => 'denied']));
     }
 }

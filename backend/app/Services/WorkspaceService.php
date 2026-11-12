@@ -2,10 +2,9 @@
 
 namespace App\Services;
 
-use App\Authorization\WorkspaceOperationAccess;
 use App\Domain\DomainError;
-use App\Repositories\RecordStore;
-use App\Repositories\TimeReportRepository;
+use App\Factories\WorkspaceOperationServices;
+use App\Factories\WorkspaceServicesFactory;
 use Database\Seeders\DemoSeeder;
 
 /**
@@ -13,87 +12,81 @@ use Database\Seeders\DemoSeeder;
  */
 class WorkspaceService
 {
-    private RecordStore $store;
-
-    private WorkspaceOperationAccess $authorization;
-
     /**
-     * 設定此服務使用的資料入口與可信任相依。
+     * 注入無租戶狀態的穩定協作者；可由Container自動解析，操作者與工作區改為每次執行的參數。
      *
-     * @param  array  $workspaceSession  從後端Session重新驗證的工作空間身分與權限
-     * @return void
+     * @param  WorkspaceServicesFactory  $services  依可信Session建立單次操作的服務組
+     * @param  RequestReplay  $replay  防重複提交與原結果重播
+     * @param  DemoSeeder  $demo  示範專案載入（只限local／testing）
      */
-    public function __construct(private array $workspaceSession)
-    {
-        $this->store = (new RecordStore)->forWorkspace($workspaceSession['workspace']['id']);
-        $this->authorization = new WorkspaceOperationAccess($this->store, $workspaceSession);
-    }
+    public function __construct(private WorkspaceServicesFactory $services, private RequestReplay $replay, private DemoSeeder $demo) {}
 
     /**
-     * 驗證操作邊界並執行查詢或受保護的寫入。
+     * 授權後執行RPC操作：讀取直接回傳，寫入經RequestReplay保存原結果，並在commit後送出Project變更訊號。
      *
+     * @param  array<string,mixed>  $workspaceSession  交易內由Session重驗的身分、工作區與權限
      * @param  string  $operation  已允許的操作名稱
-     * @param  array  $input  此次操作的原始輸入欄位
-     * @return array
+     * @param  array<string,mixed>  $input  此次操作的原始輸入欄位
+     * @return array<string,mixed> 操作結果
+     *
+     * @throws DomainError 權限不足、資料不存在、版本衝突或識別碼衝突
      */
-    public function execute(string $operation, array $input): array
+    public function execute(array $workspaceSession, string $operation, array $input): array
     {
         if ($operation === 'loadDemo') {
-            app(DemoSeeder::class)->assertEnvironment();
+            $this->demo->assertEnvironment();
         }
-        $this->authorization->authorize($operation, $input);
+        $services = $this->services->forSession($workspaceSession);
+        $services->operationAccess()->authorize($operation, $input);
         if ($operation === 'getTimeReport') {
-            return (new WorkspaceTimeReport($this->store, $this->workspaceSession, app(TimeReportRepository::class)))->get($input);
+            return $services->timeReport()->get($input);
         }
         if ($operation === 'getWorkspace') {
-            return (new WorkspaceQuery($this->store, $this->workspaceSession))->getWorkspace();
+            return $services->query()->getWorkspace();
         }
         if ($operation === 'getProjectMembers') {
-            return (new ProjectMembers($this->store, $this->workspaceSession))->listing($input['projectId']);
+            return $services->members()->listing($input['projectId']);
         }
 
-        return (new RequestReplay)->execute($this->store, 'requests', $this->workspaceSession['user']['id'], $operation, $input, fn () => $this->write($operation, $input));
+        return $this->replay->execute($services->store, 'requests', $workspaceSession['user']['id'], $operation, $input, fn () => $this->write($services, $operation, $input));
     }
 
     /**
-     * 以明確操作映射呼叫對應領域服務。
+     * 依操作只取得需要的領域服務並寫入，完成後依結果決定要通知的Project。
      *
-     * @param  string  $operation  已允許的操作名稱
-     * @param  array  $input  此次操作的原始輸入欄位
-     * @return array
+     * @param  WorkspaceOperationServices  $services  本次操作的服務組
+     * @param  string  $operation  已授權的寫入操作
+     * @param  array<string,mixed>  $input  此次操作的原始輸入欄位
+     * @return array<string,mixed> 寫入結果
+     *
+     * @throws DomainError 業務規則或資料驗證失敗
      */
-    private function write(string $operation, array $input): array
+    private function write(WorkspaceOperationServices $services, string $operation, array $input): array
     {
-        $projects = new ProjectService($this->store, $this->workspaceSession);
-        $issues = new IssueService($this->store, $this->workspaceSession);
-        $time = new TimeEntryService($this->store, $this->workspaceSession);
-        $boards = new ProjectBoards($this->store, $this->workspaceSession);
-        $members = new ProjectMembers($this->store, $this->workspaceSession);
-
         $result = match ($operation) {
-            'createProject' => $projects->createProject($input),
-            'updateProject' => $projects->updateProject($input),
-            'updateStatuses' => $projects->updateStatuses($input),
-            'createIssue' => $issues->createIssue($input),
-            'updateIssue' => $issues->updateIssue($input),
-            'addComment' => $issues->addComment($input),
-            'logTime' => $time->logTime($input),
-            'updateTime' => $time->updateTime($input),
-            'voidTime' => $time->voidTime($input),
-            'createBoard' => $boards->create($input),
-            'updateBoard' => $boards->update($input),
-            'archiveBoard' => $boards->archive($input),
-            'setProjectMember' => $members->change($input, false),
-            'removeProjectMember' => $members->change($input, true),
-            'loadDemo' => app(DemoSeeder::class)->loadProject($this->workspaceSession),
+            'createProject' => $services->projects()->createProject($input),
+            'updateProject' => $services->projects()->updateProject($input),
+            'updateStatuses' => $services->projects()->updateStatuses($input),
+            'createIssue' => $services->issues()->createIssue($input),
+            'updateIssue' => $services->issues()->updateIssue($input),
+            'addComment' => $services->issues()->addComment($input),
+            'logTime' => $services->time()->logTime($input),
+            'updateTime' => $services->time()->updateTime($input),
+            'voidTime' => $services->time()->voidTime($input),
+            'createBoard' => $services->boards()->create($input),
+            'updateBoard' => $services->boards()->update($input),
+            'archiveBoard' => $services->boards()->archive($input),
+            'setProjectMember' => $services->members()->change($input, false),
+            'removeProjectMember' => $services->members()->change($input, true),
+            'loadDemo' => $this->demo->loadProject($services->workspaceSession),
             default => DomainError::fail('NOT_FOUND', '找不到這個操作'),
         };
         $projectId = match ($operation) {
             'createProject', 'updateProject', 'updateStatuses' => $result['id'],
-            'archiveBoard' => $this->store->require('boards', $result['id'])['projectId'],
+            'archiveBoard' => $services->store->require('boards', $result['id'])['projectId'],
             default => $result['projectId'] ?? '',
         };
-        (new ProjectSignals($this->workspaceSession))->changed($projectId);
+        $services->signals()->changed($projectId);
 
         return $result;
     }

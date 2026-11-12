@@ -14,19 +14,15 @@ use Illuminate\Support\Str;
  */
 class IssueService
 {
-    private ProjectAccess $access;
-
     /**
      * 設定此服務使用的資料入口與可信任相依。
      *
      * @param  RecordStore  $store  限定工作空間的資料存取入口
      * @param  array  $workspaceSession  從後端Session重新驗證的工作空間身分與權限
-     * @return void
+     * @param  ProjectAccess  $access  本次操作共用的Project權限檢查
+     * @param  \Closure(): ProjectBoards  $boards  建立卡片帶boardId時才取得的看板用例
      */
-    public function __construct(private RecordStore $store, private array $workspaceSession)
-    {
-        $this->access = new ProjectAccess($store, $workspaceSession);
-    }
+    public function __construct(private RecordStore $store, private array $workspaceSession, private ProjectAccess $access, private \Closure $boards) {}
 
     /**
      * 取得目前UTC ISO時間供紀錄與歷史使用。
@@ -83,7 +79,7 @@ class IssueService
         $this->store->put('issues', $issue['id'], $issue);
         $this->syncRelations($issue, []);
         if (! empty($input['boardId']) && $input['boardId'] !== 'default') {
-            (new ProjectBoards($this->store, $this->workspaceSession))->includeCreatedIssue(Fields::text($input['boardId'], '看板', 100, true), $issue);
+            ($this->boards)()->includeCreatedIssue(Fields::text($input['boardId'], '看板', 100, true), $issue);
         }
         $this->notify($issue, '指派任務', $this->workspaceSession['user']['name'].' 將任務指派給你', $issue['assignee']);
 

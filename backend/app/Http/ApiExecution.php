@@ -9,16 +9,15 @@ use App\Database\WorkspaceSqliteConnection;
 use App\Database\WriteLocks;
 use App\Domain\DomainError;
 use App\Factories\AccountSettingsFactory;
+use App\Factories\TodosFactory;
+use App\Factories\WorkspaceServicesFactory;
 use App\Http\Session\SessionLease;
-use App\Repositories\RecordStore;
-use App\Repositories\TimeReportRepository;
 use App\Services\AccountService;
 use App\Services\AccountSettings;
 use App\Services\SmtpService;
 use App\Services\Todos;
 use App\Services\WorkspaceMemberships;
 use App\Services\WorkspaceService;
-use App\Services\WorkspaceTimeReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -34,11 +33,15 @@ class ApiExecution
      * @param  AccountService  $accounts  帳號與工作空間資格服務
      * @param  SmtpService  $smtp  SMTP驗證服務
      * @param  WorkspaceSession  $session  HTTP身分邊界
-     * @param  TimeReportRepository  $timeReports  有租戶範圍的工時查詢
      * @param  AccountSettingsFactory  $settings  當次設定用例組裝邊界
+     * @param  WriteLocks  $locks  User→Workspace寫入鎖
+     * @param  WorkspaceMemberships  $memberships  工作區資格與邀請
+     * @param  WorkspaceService  $workspaces  Workspace RPC用例（操作者為執行參數）
+     * @param  WorkspaceServicesFactory  $services  依可信Session建立單次操作服務
+     * @param  TodosFactory  $todos  依可信Session建立待辦用例
      * @return void
      */
-    public function __construct(private AccountService $accounts, private SmtpService $smtp, private WorkspaceSession $session, private TimeReportRepository $timeReports, private AccountSettingsFactory $settings) {}
+    public function __construct(private AccountService $accounts, private SmtpService $smtp, private WorkspaceSession $session, private AccountSettingsFactory $settings, private WriteLocks $locks, private WorkspaceMemberships $memberships, private WorkspaceService $workspaces, private WorkspaceServicesFactory $services, private TodosFactory $todos) {}
 
     /**
      * 在同一交易處理帳號與Session異動。
@@ -53,7 +56,7 @@ class ApiExecution
         $userId = $request->user()?->getAuthIdentifier();
 
         $authenticate = function () use ($request, $operation, $input, $userId) {
-            (new WriteLocks)->authentication($operation, $input, $userId);
+            $this->locks->authentication($operation, $input, $userId);
             if ($operation === 'logout') {
                 Auth::logout();
                 $request->session()->invalidate();
@@ -62,14 +65,14 @@ class ApiExecution
                 return null;
             }
             if ($operation === 'invitation') {
-                return (new WorkspaceMemberships)->preview($input);
+                return $this->memberships->preview($input);
             }
             if (in_array($operation, ['workspaces', 'switchWorkspace', 'acceptWorkspaceInvite'], true)) {
                 $user = $request->user()?->fresh();
                 if (! $user) {
                     DomainError::fail('UNAUTHENTICATED', '請先登入');
                 }
-                $memberships = new WorkspaceMemberships;
+                $memberships = $this->memberships;
                 if ($operation === 'workspaces') {
                     return ['workspaces' => $memberships->listing($user)];
                 }
@@ -119,7 +122,7 @@ class ApiExecution
                 return $this->settings->forActor($workspaceSession)->execute($operation, $input);
             }
             if (in_array($operation, Todos::OPERATIONS, true)) {
-                return (new Todos($workspaceSession))->execute($operation, $input);
+                return $this->todos->forSession($workspaceSession)->execute($operation, $input);
             }
             if ($operation === 'inviteMember') {
                 return $this->accounts->invite($workspaceSession, $input);
@@ -130,7 +133,7 @@ class ApiExecution
                 return $operation === 'smtpStatus' ? $this->smtp->status() : $this->smtp->verify();
             }
 
-            return (new WorkspaceService($workspaceSession))->execute($operation, $input);
+            return $this->workspaces->execute($workspaceSession, $operation, $input);
         });
     }
 
@@ -144,9 +147,7 @@ class ApiExecution
     public function timeReport(Request $request, TimeReportData $filters): array
     {
         return $this->inWorkspace($request, 'getTimeReport', function ($context) use ($filters) {
-            $store = (new RecordStore)->forWorkspace($context['workspace']['id']);
-
-            return (new WorkspaceTimeReport($store, $context, $this->timeReports))->get($filters);
+            return $this->services->forSession($context)->timeReport()->get($filters);
         });
     }
 
@@ -170,9 +171,8 @@ class ApiExecution
         $workspaceId = $request->session()->get('workspace_id');
         $execute = function () use ($request, $operation, $callback, $userId, $workspaceId) {
             if (! in_array($operation, ['query', 'getWorkspace', 'getTimeReport', 'getTodos', 'getProfile', 'getProjectMembers', 'smtpStatus', 'verifySmtp'], true)) {
-                $locks = new WriteLocks;
-                $locks->account($userId);
-                $locks->workspace($workspaceId);
+                $this->locks->account($userId);
+                $this->locks->workspace($workspaceId);
             }
             $context = $this->session->context($request);
             $expectedWorkspace = $request->header('X-Workspace-ID');

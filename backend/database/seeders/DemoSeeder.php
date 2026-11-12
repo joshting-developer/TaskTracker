@@ -5,11 +5,10 @@ namespace Database\Seeders;
 use App\Authorization\ProjectAccess;
 use App\Authorization\WorkspacePermissions;
 use App\Domain\DomainError;
+use App\Factories\WorkspaceServicesFactory;
 use App\Models\User;
 use App\Repositories\RecordStore;
-use App\Services\IssueService;
 use App\Services\ProjectAclUpgrade;
-use App\Services\ProjectService;
 use App\Services\WorkspaceService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
@@ -30,6 +29,32 @@ class DemoSeeder extends Seeder
         'maintainer' => ['id' => '00000000-0000-4000-8000-000000000203', 'email' => 'maintainer@example.test'],
         'developer' => ['id' => '00000000-0000-4000-8000-000000000204', 'email' => 'developer@example.test'],
     ];
+
+    private ?WorkspaceService $workspaces = null;
+
+    /**
+     * 注入示範專案載入用的服務組工廠。
+     *
+     * @param  WorkspaceServicesFactory  $services  依可信Session建立單次操作服務
+     */
+    public function __construct(private WorkspaceServicesFactory $services) {}
+
+    /**
+     * 以指定示範帳號執行RPC操作，走與正式寫入相同的授權、重播與領域規則。
+     * 例外：只在local／testing seed路徑延遲由Container取得WorkspaceService；WorkspaceService建構時注入本Seeder（loadDemo），
+     * 若改為建構子注入會形成WorkspaceService⇄DemoSeeder循環。
+     *
+     * @param  array<string,mixed>  $session  示範帳號的工作區身分與權限
+     * @return \Closure(string, array<string,mixed>): array<string,mixed> 執行操作的函式
+     */
+    private function actAs(array $session): \Closure
+    {
+        return function (string $operation, array $input) use ($session) {
+            $this->workspaces ??= app(WorkspaceService::class);
+
+            return $this->workspaces->execute($session, $operation, $input);
+        };
+    }
 
     /** Laravel db:seed入口，在任何讀寫前驗證環境。
      * @return void
@@ -87,7 +112,7 @@ class DemoSeeder extends Seeder
             foreach (self::ACCOUNTS as $role => $account) {
                 $user = User::updateOrCreate(['id' => $account['id']], ['name' => $role, 'email' => $account['email'], 'password' => Hash::make($password)]);
                 $tenant->put('members', $user->id, ['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $role, 'joinedAt' => now()->utc()->toISOString()]);
-                $services[$role] = new WorkspaceService(['user' => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email], 'workspace' => $workspace, 'role' => $role, 'permissions' => WorkspacePermissions::resolve($role)]);
+                $services[$role] = $this->actAs(['user' => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email], 'workspace' => $workspace, 'role' => $role, 'permissions' => WorkspacePermissions::resolve($role)]);
             }
             if ($marker && !$reset) {
                 $this->seedAssignments($tenant);
@@ -96,7 +121,7 @@ class DemoSeeder extends Seeder
                 return ['created' => false, 'upgraded' => true, 'workspaceId' => self::WORKSPACE_ID];
             }
             $service = $services['owner'];
-            $run = fn ($op, $input) => $service->execute($op, [...$input, 'requestId' => (string) Str::uuid()]);
+            $run = fn ($op, $input) => $service($op, [...$input, 'requestId' => (string) Str::uuid()]);
             foreach (['first', 'second'] as $index => $name) {
                 $project = $run('createProject', ['name' => $name, 'code' => strtoupper($name), 'description' => $name.' 的示範工作, 可自由修改；重設 seed 可還原']);
                 $run('updateStatuses', ['projectId' => $project['id'], 'expectedRevision' => 1, 'statuses' => [...$project['statuses'], ['id' => 'review', 'label' => '待驗收', 'color' => '#8757b3']]]);
@@ -113,8 +138,8 @@ class DemoSeeder extends Seeder
                 foreach ([[$parent, 30, 2, 'maintainer'], [$api, 90, 1, $index ? 'maintainer' : 'developer'], [$ui, 45, 0, $index ? 'maintainer' : 'developer']] as [$issue, $minutes, $daysAgo, $role]) {
                     $account = self::ACCOUNTS[$role];
                     $member = $tenant->require('members', $account['id']);
-                    $worker = new WorkspaceService(['user' => ['id' => $account['id'], 'name' => $role], 'workspace' => $workspace, 'role' => $member['role'], 'permissions' => WorkspacePermissions::resolve($member['role'])]);
-                    $worker->execute('logTime', ['requestId' => (string) Str::uuid(), 'issueId' => $issue['id'], 'workDate' => now('Asia/Taipei')->subDays($daysAgo)->toDateString(), 'minutes' => $minutes, 'note' => 'Seed 示範工時']);
+                    $worker = $this->actAs(['user' => ['id' => $account['id'], 'name' => $role], 'workspace' => $workspace, 'role' => $member['role'], 'permissions' => WorkspacePermissions::resolve($member['role'])]);
+                    $worker('logTime', ['requestId' => (string) Str::uuid(), 'issueId' => $issue['id'], 'workDate' => now('Asia/Taipei')->subDays($daysAgo)->toDateString(), 'minutes' => $minutes, 'note' => 'Seed 示範工時']);
                 }
                 $latest = $tenant->require('issues', $bug['id']);
                 $run('addComment', ['id' => $bug['id'], 'expectedRevision' => $latest['revision'], 'content' => '已補上重現步驟, 請協助確認']);
@@ -173,7 +198,7 @@ class DemoSeeder extends Seeder
                 'permissions' => WorkspacePermissions::resolve($member['role']),
             ];
             $access = new ProjectAccess($tenant, $session);
-            $service = new WorkspaceService($session);
+            $service = $this->actAs($session);
             for ($daysAgo = 27; $daysAgo >= 0; $daysAgo--) {
                 $date = $today->subDays($daysAgo);
                 // 週日不預置資料；空白日期與起伏刻意保留作分析示範。
@@ -202,7 +227,7 @@ class DemoSeeder extends Seeder
                     }
                     // 部分紀錄直接填Epic，其餘落在Task／Bug；報表各筆只算一次。
                     $issue = $pool[($daysAgo + strlen($role)) % count($pool)];
-                    $service->execute('logTime', [
+                    $service('logTime', [
                         'requestId' => (string) Str::uuid(),
                         'issueId' => $issue['id'],
                         'workDate' => $date->toDateString(),
@@ -269,9 +294,10 @@ class DemoSeeder extends Seeder
     {
         $this->assertEnvironment();
         WorkspacePermissions::authorize($workspaceSession, 'project.create');
-        $store = (new RecordStore)->forWorkspace($workspaceSession['workspace']['id']);
-        $projects = new ProjectService($store, $workspaceSession);
-        $issues = new IssueService($store, $workspaceSession);
+        $services = $this->services->forSession($workspaceSession);
+        $store = $services->store;
+        $projects = $services->projects();
+        $issues = $services->issues();
         if (in_array('DEMO', array_column($store->all('projects'), 'code'), true)) {
             DomainError::fail('DEMO_EXISTS', '示範專案已存在, 不會重複載入');
         }

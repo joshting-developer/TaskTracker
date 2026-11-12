@@ -26,9 +26,9 @@ class Todos
      * 設定此服務使用的資料入口與可信任相依。
      *
      * @param  array  $workspaceSession  從後端Session重新驗證的工作空間身分與權限
-     * @return void
+     * @param  WorkspaceService  $workspaces  轉成正式卡片時沿用的RPC寫入入口
      */
-    public function __construct(private array $workspaceSession)
+    public function __construct(private array $workspaceSession, private WorkspaceService $workspaces)
     {
         $this->store = (new RecordStore)->forWorkspace($workspaceSession['workspace']['id']);
         $this->userId = $workspaceSession['user']['id'];
@@ -293,7 +293,7 @@ class Todos
                 DomainError::fail('INVALID_INPUT', '請填寫正式卡片資料');
             }
             // 與待辦狀態同交易, 失敗不留半張卡；衍生 requestId 不與業務操作共用
-            $issue = (new WorkspaceService($this->workspaceSession))->execute('createIssue', [
+            $issue = $this->workspaces->execute($this->workspaceSession, 'createIssue', [
                 'title' => $todo['title'],
                 'description' => $todo['content'] ?? $todo['note'],
                 ...$fields,

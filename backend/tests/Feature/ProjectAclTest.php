@@ -135,7 +135,7 @@ class ProjectAclTest extends TestCase
         $this->assertFalse($access->can($this->first['id'], 'issue.write'));
         $this->assertFalse($access->can($this->first['id'], 'typo.permission'));
         $this->expectException(DomainError::class);
-        DB::transaction(fn () => (new WorkspaceService($context))->execute('createIssue', ['projectId' => $this->first['id'], 'title' => '角色名稱不能放行', 'requestId' => 'denied-owner']));
+        DB::transaction(fn () => app(WorkspaceService::class)->execute($context, 'createIssue', ['projectId' => $this->first['id'], 'title' => '角色名稱不能放行', 'requestId' => 'denied-owner']));
     }
 
     public function test_membership_revisions_audit_and_revocation_precede_retries(): void
@@ -202,13 +202,13 @@ class ProjectAclTest extends TestCase
     {
         $target = $this->member('limited-target');
         $context = [...$this->owner, 'permissions' => ['workspace.read', 'project.readAny', 'issue.readAny', 'project.members.manageAny']];
-        $listing = DB::transaction(fn () => (new WorkspaceService($context))->execute('getProjectMembers', ['projectId' => $this->first['id']]));
+        $listing = DB::transaction(fn () => app(WorkspaceService::class)->execute($context, 'getProjectMembers', ['projectId' => $this->first['id']]));
         $this->assertSame(['reader'], array_column($listing['roles'], 'id'));
-        DB::transaction(fn () => (new WorkspaceService($context))->execute('setProjectMember', ['projectId' => $this->first['id'], 'userId' => $target['id'], 'roleId' => 'reader', 'expectedRevision' => 0, 'requestId' => 'limited-reader']));
+        DB::transaction(fn () => app(WorkspaceService::class)->execute($context, 'setProjectMember', ['projectId' => $this->first['id'], 'userId' => $target['id'], 'roleId' => 'reader', 'expectedRevision' => 0, 'requestId' => 'limited-reader']));
         $this->assertSame('reader', $this->tenant->require('projectMembers', ProjectAccess::memberId($this->first['id'], $target['id']))['roleId']);
         $this->expectException(DomainError::class);
         $this->expectExceptionMessage('不能指派或調整超出自己有效權限');
-        DB::transaction(fn () => (new WorkspaceService($context))->execute('setProjectMember', ['projectId' => $this->first['id'], 'userId' => $target['id'], 'roleId' => 'developer', 'expectedRevision' => 1, 'requestId' => 'limited-escalate']));
+        DB::transaction(fn () => app(WorkspaceService::class)->execute($context, 'setProjectMember', ['projectId' => $this->first['id'], 'userId' => $target['id'], 'roleId' => 'developer', 'expectedRevision' => 1, 'requestId' => 'limited-escalate']));
     }
 
     public function test_upgrade_preserves_business_data_and_does_not_grant_all_legacy_users(): void

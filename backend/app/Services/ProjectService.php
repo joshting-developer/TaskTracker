@@ -14,19 +14,14 @@ use Illuminate\Support\Str;
  */
 class ProjectService
 {
-    private ProjectAccess $access;
-
     /**
      * 設定此服務使用的資料入口與可信任相依。
      *
      * @param  RecordStore  $store  限定工作空間的資料存取入口
      * @param  array  $workspaceSession  從後端Session重新驗證的工作空間身分與權限
-     * @return void
+     * @param  ProjectAccess  $access  本次操作共用的Project權限檢查
      */
-    public function __construct(private RecordStore $store, private array $workspaceSession)
-    {
-        $this->access = new ProjectAccess($store, $workspaceSession);
-    }
+    public function __construct(private RecordStore $store, private array $workspaceSession, private ProjectAccess $access) {}
 
     /**
      * 取得目前UTC ISO時間供紀錄與歷史使用。
