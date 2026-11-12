@@ -100,6 +100,7 @@ Route::prefix('/api/v1')->group(function () {
     Route::get('/projects/{project}/boards', [BoardsController::class, 'index']);
     Route::get('/projects/{project}/boards/{board}', [BoardsController::class, 'show']);
     Route::get('/projects/{project}/boards/{board}/issues', [BoardsController::class, 'issues']);
+    Route::get('/projects/{project}/boards/{board}/version', [BoardsController::class, 'version']);
     Route::get('/project-lead-options', [ProjectsController::class, 'leads']);
     Route::get('/project-options', [ProjectsController::class, 'options']);
     Route::get('/projects', [ProjectsController::class, 'index']);

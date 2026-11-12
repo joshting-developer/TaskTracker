@@ -11,6 +11,7 @@ use App\Repositories\IssueReadRepository;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Tests\Concerns\BoardVersionCases;
 use Tests\Concerns\IssueLinkQueryCases;
 use Tests\Concerns\ProjectAclReadCases;
 use Tests\Concerns\RecordContextCases;
@@ -20,6 +21,7 @@ use Tests\MySqlTestCase;
 /** 真實InnoDB驗證資料型別、DTO、關聯、receipt及作者／租戶邊界。 */
 class MySqlApiTest extends MySqlTestCase
 {
+    use BoardVersionCases;
     use DatabaseTransactions, \Tests\Concerns\ProjectTimeReadCases, \Tests\Concerns\ProjectUtilityReadCases;
     use IssueLinkQueryCases;
     use ProjectAclReadCases;

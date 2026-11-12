@@ -18,6 +18,7 @@
 | `/api/v1/projects/{project}/boards` | 看板摘要搜尋分頁及獨立defaultBoard，不附卡片內容 |
 | `/api/v1/projects/{project}/boards/{board}` | 單看板屬性及明確收錄ID，上限1000；default為虛擬看板 |
 | `/api/v1/projects/{project}/boards/{board}/issues` | SQL套看板範圍＋Epic動態展開去重後的卡片摘要分頁 |
+| `/api/v1/projects/{project}/boards/{board}/version` | 看板輕量變更檢查：只回`{projectId, boardId, version}`不透明版本，見下節 |
 | `/api/v1/projects/{project}/member-options` | 同Project有效成員id/name選項，分頁／搜尋，不含email或歷史 |
 
 登入身分沿用`POST /api/auth/current`，不是另做一個大型bootstrap。專案與任務查詢在相同交易內重新驗證帳號、Workspace與permission＋scope；不可見資源404，已知資源缺少操作權403，工作區變更409。Resource僅序列化已預載欄位，不發lazy query。
@@ -91,3 +92,18 @@ ProjectTasksWorkspace與useProjectTaskQueries已取代原BoardWorkspace／useBoa
 `GET /api/v1/workspace/settings`只回Workspace的id／name／revision，要求workspace.read；`/workspace/members`要求workspace.members.read，姓名／email SQL搜尋及管理摘要分頁；`/workspace/member-roles`要求workspace.members.manage，只回可授予非ownership角色id／label。成員20筆預設／最大100，canChange與寫入共用規則，前端Owner設定入口不變。
 
 舊`POST /api/rpc/getWorkspaceSettings`整包讀取已退役，已登入且有效JSON請求返回404；前後端及測試已改分責GET，不保留全員名單相容支線。詳見[設定資料分責](performance-workspace-settings-2026-11-12.md)。
+
+## 看板輕量變更檢查（TT-148，2026-11-12）
+
+`GET /api/v1/projects/{project}/boards/{board}/version`（`board`可為`default`）
+
+- 權限：每次重新驗證`issue.read`；封存看板、撤權、跨Workspace沿用`NOT_FOUND`／`FORBIDDEN`，不讓未授權者探測資源是否更新。`/api/*`一律`Cache-Control: no-store`（框架另加`private`），不進CDN／共用快取。
+- 回應：`{ projectId, boardId, version }`，`version`為64字元sha256，只供比較，不含卡片、成員或工時內容。
+- 版本來源（固定次數聚合查詢，不隨卡片數成長，不讀描述／說明／歷史）：
+  - Project `revision`（名稱、狀態設定等）與自訂看板`revision`（屬性、收錄）。
+  - 整個Project卡片的`COUNT`＋`SUM(revision)`：卡片只在整個Workspace重設時刪除，每次寫入revision+1，故只增不減；不依同秒時間字串。自訂看板採Project範圍，可能多觸發一次重讀，但不漏。
+  - 卡片承辦者與Project負責人的`users.profile_revision`（改名不動Issue revision）。
+  - 依本人可見範圍的工時`COUNT`＋`SUM(revision)`：`timeEntry.readTeam`看全Project、只有`readOwn`看本人、都沒有則不納入，避免以版本洩漏他人投入。
+  - 本人在此Project的有效permission清單（權限變更即重讀）。
+- 前端用法：先取版本再讀Project／看板／卡片，背景輪次版本相同就略過；期間有變更時下次版本必不同，最多多讀一次。寫入仍沿用`expectedRevision`／`requestId`與409衝突處理，這是最終一致性檢查，不取代寫入版本保護。
+- 量測（隔離MySQL、3張卡）：版本回應168 bytes；同輪完整重讀為Project＋看板屬性＋卡片頁1404 bytes，卡片越多差距越大。前景載入多一個版本請求（board-query-check 45→47次）。

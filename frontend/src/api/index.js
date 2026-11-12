@@ -29,6 +29,7 @@ export const api = {
   members: (project, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/member-options`, filters, options),
   activity: (project, issue, kind, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/issues/${encodeURIComponent(issue)}/${kind}`, filters, options),
   boardIssues: (project, id, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/boards/${encodeURIComponent(id)}/issues`, filters, options),
+  boardVersion: (project, id, options) => queryApi(`projects/${encodeURIComponent(project)}/boards/${encodeURIComponent(id)}/version`, {}, options),
   listWorkspaces: () => callApi('workspaces', {}, 'auth'),
   switchWorkspace: input => callApi('switchWorkspace', input, 'auth'),
   acceptWorkspaceInvite: input => callApi('acceptWorkspaceInvite', input, 'auth'),

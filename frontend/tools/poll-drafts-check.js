@@ -14,6 +14,8 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } }), errors = [], requests = [];
   page.setDefaultTimeout(10000);
   page.on('pageerror', error => errors.push(error.message));
+  const sizes = { version: 0, issues: 0 };
+  page.on('response', async response => { const path = new URL(response.url()).pathname; const key = /\/version$/.test(path) ? 'version' : /\/boards\/[^/]+\/issues$/.test(path) ? 'issues' : ''; if (key) try { sizes[key] = (await response.body()).length; } catch { /* 導覽後不可取 */ } });
   page.on('request', request => { const url = new URL(request.url()); if (url.pathname.startsWith('/api/')) requests.push(url.pathname); });
   await page.goto('http://127.0.0.1:5175');
   async function call(op, input = {}, group = 'rpc') {
@@ -37,7 +39,8 @@ try {
   const card = identifier => page.locator(`.issue-card[data-issue="${identifier}"]`);
   const inColumn = (identifier, state) => page.locator(`[data-column="${state}"] [data-issue="${identifier}"]`);
   await card(slow.identifier).waitFor();
-  const background = () => requests.filter(path => new RegExp(`/api/v1/projects/${project.id}(/boards/[^/]+(/issues)?)?$`).test(path)).length;
+  const background = () => requests.filter(path => new RegExp(`/api/v1/projects/${project.id}(/boards/[^/]+(/issues|/version)?)?$`).test(path)).length;
+  const count = pattern => requests.filter(path => pattern.test(path)).length;
 
   // 1. 慢速寫入：放下即移到目標欄，送出中背景輪詢不換列，完成後由寫入後重讀交回伺服器資料。
   let release;
@@ -84,8 +87,22 @@ try {
   await page.clock.fastForward(12000);
   await page.waitForTimeout(300);
   assert.ok(background() > resumed, '移動結束後恢復背景輪詢');
+
+  // 5. 輕量變更檢查（TT-148）：版本不變只送version，不重讀Project／看板／卡片；他人改動後才重讀。
+  const issuesPath = /\/boards\/[^/]+\/issues$/, versionPath = /\/boards\/[^/]+\/version$/;
+  const idle = { issues: count(issuesPath), version: count(versionPath), project: count(new RegExp(`/api/v1/projects/${project.id}$`)) };
+  await page.clock.fastForward(12000);
+  await page.waitForTimeout(300);
+  assert.ok(count(versionPath) > idle.version, '背景輪次有版本檢查');
+  assert.equal(count(issuesPath), idle.issues, '版本不變不重讀卡片');
+  assert.equal(count(new RegExp(`/api/v1/projects/${project.id}$`)), idle.project, '版本不變不重讀Project');
+  const latest = await page.evaluate(async id => (await (await fetch(`/api/v1/projects/${location.hash.split('/')[2]}/issues/${id}`)).json()).data, failing.id);
+  await call('updateIssue', { id: failing.id, title: '他人更新的標題', expectedRevision: latest.revision });
+  await page.clock.fastForward(12000);
+  await card(failing.identifier).filter({ hasText: '他人更新的標題' }).waitFor();
+  assert.ok(count(issuesPath) > idle.issues, '版本變更後重讀卡片');
   assert.deepEqual(errors, []);
-  console.log('poll drafts PASS', JSON.stringify({ heldDuringMove: true }));
+  console.log('poll drafts PASS', JSON.stringify({ heldDuringMove: true, versionSkip: true, versionBytes: sizes.version, boardIssuesBytes: sizes.issues }));
 } finally {
   await browser?.close();
   await server?.close();

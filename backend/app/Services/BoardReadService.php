@@ -75,6 +75,29 @@ class BoardReadService
     }
 
     /**
+     * 輕量變更檢查：回傳看板畫面相依資料的不透明版本，不含卡片、成員或工時內容。
+     * 每次都重新驗證issue.read；撤權／封存仍回FORBIDDEN或NOT_FOUND，不讓未授權者探測資源是否更新。
+     *
+     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  string  $projectId  Project公開ID
+     * @param  string  $id  看板公開ID或default
+     * @return array{projectId:string,boardId:string,version:string} 版本摘要
+     */
+    public function version(array $actor, string $projectId, string $id): array
+    {
+        $access = $this->projects->authorized($actor, $projectId, 'issue.read');
+        $board = $this->find($access->project, $id);
+        $team = in_array('timeEntry.readTeam', $access->permissions, true);
+        $own = in_array('timeEntry.readOwn', $access->permissions, true);
+        $permissions = $access->permissions;
+        sort($permissions);
+        $parts = $this->boards->versionParts($access->project, $own && ! $team ? $actor['user']['id'] : null, $team);
+
+        return ['projectId' => $access->project->public_id, 'boardId' => $board?->public_id ?? 'default',
+            'version' => hash('sha256', json_encode([$parts, $board?->revision ?? 0, $permissions], JSON_THROW_ON_ERROR))];
+    }
+
+    /**
      * 保留Default虛擬看板，其他ID必須同Project且未封存。
      *
      * @param  Project  $project  已授權Project

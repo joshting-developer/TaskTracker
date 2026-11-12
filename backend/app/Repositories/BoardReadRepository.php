@@ -8,6 +8,7 @@ use App\Models\Issue;
 use App\Models\Project;
 use App\Queries\BoardIssueScope;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 /** 以Project為範圍的看板投影及SQL去重數量。 */
 class BoardReadRepository
@@ -77,5 +78,37 @@ class BoardReadRepository
     public function selectedIds(Board $board): array
     {
         return $board->issues()->limit(1000)->pluck('issues.public_id')->all();
+    }
+
+    /**
+     * 看板畫面相依資料的單調版本來源：只取計數與revision加總，不讀卡片內容。
+     * Project內卡片只在整個Workspace重設時刪除，且每次寫入revision+1，故計數＋加總只增不減，不依時間字串。
+     * 卡片採整個Project範圍（自訂看板可能多觸發重讀，但不漏）；工時依可見範圍限定，不以總數洩漏他人投入。
+     *
+     * @param  Project  $project  已授權Project
+     * @param  string|null  $timeUser  僅能看本人工時時的User ID
+     * @param  bool  $teamTime  是否可看團隊工時
+     * @return array<string,int> 版本來源計數
+     */
+    public function versionParts(Project $project, ?string $timeUser, bool $teamTime): array
+    {
+        $scope = fn ($q) => $q->where('workspace_id', $project->workspace_id)->where('project_id', $project->id);
+        $projectRow = DB::table('projects')->where('workspace_id', $project->workspace_id)->where('id', $project->id)->first(['revision', 'lead_id']);
+        $issues = $scope(DB::table('issues'))->selectRaw('COUNT(*) AS total, COALESCE(SUM(revision),0) AS revisions')->first();
+        // 卡片承辦者與Project負責人的顯示名稱：改名只增加profile_revision，不動Issue revision。
+        $people = DB::table('workspace_members as m')->join('users as u', 'u.id', '=', 'm.user_id')->where('m.workspace_id', $project->workspace_id)
+            ->where(fn ($q) => $q->whereIn('m.id', $scope(DB::table('issues'))->whereNotNull('assignee_id')->select('assignee_id'))->orWhere('m.id', $projectRow->lead_id))
+            ->selectRaw('COUNT(*) AS total, COALESCE(SUM(u.profile_revision),0) AS revisions')->first();
+        $time = ['total' => 0, 'revisions' => 0];
+        if ($timeUser !== null || $teamTime) {
+            $entries = DB::table('time_entries as t')->where('t.workspace_id', $project->workspace_id)->where('t.project_id', $project->id);
+            if (! $teamTime) {
+                $entries->whereIn('t.member_id', DB::table('workspace_members')->select('id')->where('workspace_id', $project->workspace_id)->where('user_id', $timeUser));
+            }
+            $time = (array) $entries->selectRaw('COUNT(*) AS total, COALESCE(SUM(t.revision),0) AS revisions')->first();
+        }
+
+        return ['project' => (int) $projectRow->revision, 'issues' => (int) $issues->total, 'issueRevisions' => (int) $issues->revisions,
+            'people' => (int) $people->total, 'peopleRevisions' => (int) $people->revisions, 'time' => (int) $time['total'], 'timeRevisions' => (int) $time['revisions']];
     }
 }

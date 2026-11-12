@@ -7,7 +7,7 @@ import { pollIntervals } from '../ui/pollingConfig.js';
 export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId, mode, context, blocked, onProject, onError, onSuccess, listQuery, rows = shallowRef([]), hold = shallowRef(false) }) {
   const board = shallowRef(null), boardPage = shallowRef(null), issuePage = shallowRef(null);
   const listPage = ref(1), listSearch = ref(''), loading = ref(false), loadingCards = ref(false);
-  let generation = 0, request, debounce, silent = false, deferred = false;
+  let generation = 0, request, debounce, silent = false, deferred = false, knownVersion = '';
   async function reload(showLoading = true) {
     // 拖曳或移動送出中不換掉列資料：背景重讀（輪詢／即時通知）延後到解除後補一次。
     if (!showLoading && hold.value) { deferred = true; return; }
@@ -19,6 +19,12 @@ export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId
     const options = { signal: request.signal };
     if (showLoading && contentAllowed) loading.value = true;
     try {
+      // 看板先取不透明版本；背景輪次版本未變就不重讀Project、看板屬性與卡片分頁。
+      // 版本在讀資料之前取得：期間若有變更，下次版本必不同，最多多讀一次而不會漏。
+      const boardMode = !detailMode.value && mode.value !== 'list' && mode.value !== 'boards';
+      const version = boardMode ? (await api.boardVersion(projectId.value, boardId.value, options)).version : '';
+      if (current !== generation) return;
+      if (!showLoading && boardMode && version === knownVersion) { poller.report(null); onSuccess?.(); return; }
       if (!showLoading || !contentAllowed) {
         const fresh = await api.project(projectId.value, options);
         if (current !== generation) return;
@@ -50,9 +56,10 @@ export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId
         } while (page <= last);
         if (collected.size !== meta.issueCount) throw Object.assign(new Error('看板資料已變更，請重新整理'), { code: 'DATA_CHANGED' });
         rows.value = [...collected.values()];
+        knownVersion = version;
       }
       poller.report(null); onSuccess?.();
-    } catch (failure) { if (current === generation) { poller.report(failure); if (['UNAUTHENTICATED','FORBIDDEN','NOT_FOUND','WORKSPACE_CHANGED'].includes(failure.code)) { rows.value = []; boardPage.value = null; board.value = null; } onError(failure); } }
+    } catch (failure) { if (current === generation) { poller.report(failure); if (['UNAUTHENTICATED','FORBIDDEN','NOT_FOUND','WORKSPACE_CHANGED'].includes(failure.code)) { knownVersion = ''; rows.value = []; boardPage.value = null; board.value = null; } onError(failure); } }
     finally { if (current === generation) { silent = false; loading.value = false; loadingCards.value = false; } }
   }
   const poller = usePolling({
@@ -65,7 +72,7 @@ export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId
     if (value && silent) { generation++; request?.abort(); silent = false; loadingCards.value = false; deferred = true; }
     else if (!value && deferred) { deferred = false; reload(false); }
   });
-  watch(context, () => { deferred = false; rows.value = []; boardPage.value = null; board.value = null; listPage.value = 1; reload(); poller.start(); }, { immediate: true });
+  watch(context, () => { deferred = false; knownVersion = ''; rows.value = []; boardPage.value = null; board.value = null; listPage.value = 1; reload(); poller.start(); }, { immediate: true });
   watch([listPage, listSearch], () => { clearTimeout(debounce); debounce = setTimeout(() => reload(), 250); });
   watch(() => mode.value === 'list' ? JSON.stringify(listQuery.value) : '', () => { if (mode.value !== 'list') return; clearTimeout(debounce); debounce = setTimeout(() => reload(), 250); });
   onScopeDispose(() => { generation++; request?.abort(); clearTimeout(debounce); });

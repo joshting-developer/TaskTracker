@@ -49,6 +49,21 @@ class BoardsController extends Controller
     }
 
     /**
+     * 輕量變更檢查，版本不變時前端不必重讀Project、看板與卡片分頁。
+     *
+     * @param  Request  $request  HTTP租戶標頭
+     * @param  string  $project  Project公開ID
+     * @param  string  $board  看板公開ID或default
+     * @param  ApiExecution  $execution  HTTP資格邊界
+     * @param  BoardReadService  $boards  看板用例
+     * @return ApiResponse 不透明版本
+     */
+    public function version(Request $request, string $project, string $board, ApiExecution $execution, BoardReadService $boards): ApiResponse
+    {
+        return new ApiResponse($execution->query($request, fn ($actor) => $boards->version($actor, $project, $board)));
+    }
+
+    /**
      * 只讀此看板的卡片摘要分頁。
      *
      * @param  IssueQueryRequest  $request  已驗證篩選
