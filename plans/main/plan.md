@@ -1,3 +1,15 @@
+## 2026-11-12 TT-240 完成
+
+- 完成卡片／篩選／Project負責人／Todo承辦與轉卡／月曆／單卡固定工時／看板用途盤點；看板候選改issue-options最小30筆，取消／分頁／重試共用lookup。修第二頁搜尋繞過debounce，及當頁外父項reference缺epicId導致編輯子卡清空Epic。
+- 真實Chrome145卡（當頁外父卡與Epic）保存、跨搜尋／分頁收錄與三尺寸通過；月曆972B／bulk0、personal25筆轉卡／候選／通知通過。API11／921（原生與memory分別）、build／api-client／composables慢回應與debounce通過。
+- 文件 docs/performance-options-completion-2026-11-12.md；舊props相容分支與Workspace退役仍TT-180追蹤。本卡完成後才開始TT-181，不push。
+
+## 2026-11-12 TT-240 → TT-181
+
+- 先處理P1選項查詢的剩餘接線／驗收，TT-240已改inprogress。確認既有卡片、專案、Todo及工時候選是否全數分責；補看板收錄最小候選、取消／分頁／已選保留及遠端父項編輯問題。
+- 測試／提交／結案後才開始TT-181，使用隔離500卡資料與真實Chrome量測DOM／長任務／layout／捲動／拖曳與鍵盤，不先導入虛擬化套件或隱藏卡片。
+- 遵守本地Laravel／Vue、資料存取、UI／UX與Addy／ECC流程；每卡一提交、不push，不對業務庫建立壓測fixture。
+
 ## 2026-11-12 TT-227 容量與契約分析完成
 
 - 真實隔離MySQL：1張卡64輪改標題／留言，129筆重播結果合計JSON_STORAGE_SIZE4,287,524 B，最後卡片JSON61,858 B；32→64輪累積約3.76倍。Todo已精簡id／revision，33筆僅2,178 B，不假設全服務同樣膨脹。

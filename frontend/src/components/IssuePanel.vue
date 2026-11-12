@@ -72,7 +72,8 @@ watch(() => form.projectId, (value, before) => {
   form.epicId = ''; form.parentIssueId = ''; form.relatedIssueIds = [];
   form.assignee = props.lookup ? props.todo.assigneeId : availableMembers.value.some(member => member.id === props.todo.assigneeId) ? props.todo.assigneeId : '';
 });
-watch(() => form.parentIssueId, () => { if (parentIssue.value) form.epicId = parentIssue.value.epicId; });
+// 詳細頁的既有父項參照只有顯示欄位；保留表單原Epic，僅由完整候選的明確歸屬更新。
+watch(() => form.parentIssueId, () => { if (parentIssue.value && Object.hasOwn(parentIssue.value, 'epicId')) form.epicId = parentIssue.value.epicId; });
 const estimateHours = computed({ get: () => (form.estimateMinutes || 0) / 60, set: (value) => { form.estimateMinutes = Math.round(Number(value) * 60); } });
 watch(() => form.type, (type) => { if (type === 'epic') { form.epicId = ''; form.estimateMinutes = 0; form.parentIssueId = ''; } });
 const spent = computed(() => props.issue?.spentMinutes ?? props.entries.filter((entry) => !entry.voidedAt && entry.issueId === props.issue?.id).reduce((sum, entry) => sum + entry.minutes, 0));

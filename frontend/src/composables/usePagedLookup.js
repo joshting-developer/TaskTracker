@@ -5,6 +5,7 @@ export function usePagedLookup({ context, load }) {
   const search = ref(''), page = ref(1), result = shallowRef(null), loading = ref(false), error = ref('');
   let generation = 0, controller, debounce, active = false;
   async function fetchPage() {
+    clearTimeout(debounce); debounce = undefined;
     const current = ++generation;
     controller?.abort(); controller = new AbortController(); loading.value = true; error.value = '';
     try {
@@ -15,8 +16,8 @@ export function usePagedLookup({ context, load }) {
   }
   function open() { active = true; if (!result.value && !loading.value) fetchPage(); }
   watch(search, () => { page.value = 1; clearTimeout(debounce); controller?.abort(); generation++; if (active) debounce = setTimeout(fetchPage, 250); });
-  watch(page, () => { if (active) { clearTimeout(debounce); debounce = setTimeout(fetchPage, 0); } });
-  watch(context, () => { generation++; controller?.abort(); result.value = null; search.value = ''; page.value = 1; loading.value = false; error.value = ''; if (active) fetchPage(); });
+  watch(page, () => { if (active) { if (page.value === 1 && debounce !== undefined) return; clearTimeout(debounce); debounce = setTimeout(fetchPage, 0); } });
+  watch(context, () => { clearTimeout(debounce); debounce = undefined; generation++; controller?.abort(); result.value = null; search.value = ''; page.value = 1; loading.value = false; error.value = ''; if (active) fetchPage(); });
   onScopeDispose(() => { generation++; controller?.abort(); clearTimeout(debounce); });
   return {search, page, result, loading, error, open, reload: () => { active = true; return fetchPage(); }};
 }
