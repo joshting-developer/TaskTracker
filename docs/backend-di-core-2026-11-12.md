@@ -65,3 +65,20 @@ WorkspaceOperationServices ──按需建立──> ProjectAccess（共用一�
   - 不同使用者／工作區連續操作各得新服務組，Store工作區與身分正確，ProjectAccess不共用。
 - 完整memory suite 100 passed（30個MySQL專用略過）；隔離MySQL完整suite 130 passed／5781 assertions。
 - 隔離環境`tasktracker:seed-demo`成功；`browser-check`（11段）與`personal-query-check`（含待辦轉卡）通過。
+
+## TT-234 其餘協作者（2026-11-12）
+
+- `AccountService`、`WorkspaceMemberships`：改由建構子注入`RecordStoreFactory`（新增`global()`／`legacy()`）、`WorkspaceMemberships`與`MembershipRepository`。
+- `Todos`：由`TodosFactory`以單次操作服務組注入Store、ProjectAccess與RequestReplay，不再自行new。
+- `SmtpService`：外部IO改由`SmtpTransportFactory`建立，可替換、不寄信。
+- `ImportLegacy`：以method injection取得Store工廠。
+- `DemoSeeder`：Store與ProjectAccess改從工廠取得。
+- Realtime／Queue（RealtimeSession、ProjectChannelAccess、ProjectChanged）已在TT-232完成DI；沒有跨任務的靜態狀態。
+- 保留例外：
+  - 5個歷史upgrade／migration靜態程序（ProjectAclUpgrade、IssueTypesUpgrade、IssueRelationsUpgrade、ProjectStatusTypesUpgrade、RelationalDataMigration）只由migration／ImportLegacy／Seeder呼叫，必須在特定歷史schema點以固定legacy模式重跑，改成實例DI只會讓migration改用app()。
+  - RecordStore內部組成、DemoSeeder延遲取得WorkspaceService（同TT-233）。
+- 驗證：
+  - `PeripheryContainerTest`（4 tests）：Container解析、SMTP可替換且不連網、連續不同工作區訊號頻道不混、TodosFactory每次新範圍。
+  - 隔離MySQL 139 passed、memory 107 passed；唯一失敗是當時進行中TT-165的`TokenSpecificationTest`，因隔離容器未掛載`resources/openapi.json`。
+  - `seed-demo`與`browser-check`（11段）通過。
+  - workspace-switch／personal-query／project-utility／account-settings瀏覽器流程因流量中斷沒有跑完。

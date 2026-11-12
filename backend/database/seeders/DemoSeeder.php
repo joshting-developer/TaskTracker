@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Authorization\ProjectAccess;
 use App\Authorization\WorkspacePermissions;
 use App\Domain\DomainError;
+use App\Factories\RecordStoreFactory;
 use App\Factories\WorkspaceServicesFactory;
 use App\Models\User;
 use App\Repositories\RecordStore;
@@ -36,8 +37,9 @@ class DemoSeeder extends Seeder
      * 注入示範專案載入用的服務組工廠。
      *
      * @param  WorkspaceServicesFactory  $services  依可信Session建立單次操作服務
+     * @param  RecordStoreFactory  $stores  建立seed用的全域資料入口
      */
-    public function __construct(private WorkspaceServicesFactory $services) {}
+    public function __construct(private WorkspaceServicesFactory $services, private RecordStoreFactory $stores) {}
 
     /**
      * 以指定示範帳號執行RPC操作，走與正式寫入相同的授權、重播與領域規則。
@@ -84,7 +86,7 @@ class DemoSeeder extends Seeder
     {
         $this->assertEnvironment();
         return DB::transaction(function () use ($reset, $password) {
-            $store = new RecordStore;
+            $store = $this->stores->global();
             $marker = $store->get('demoSeeds', self::WORKSPACE_ID);
             if (($marker['version'] ?? 0) >= 2 && ! $reset) {
                 ProjectAclUpgrade::run();
@@ -197,7 +199,7 @@ class DemoSeeder extends Seeder
                 'workspace' => $workspace,
                 'permissions' => WorkspacePermissions::resolve($member['role']),
             ];
-            $access = new ProjectAccess($tenant, $session);
+            $access = $this->services->forSession($session)->access();
             $service = $this->actAs($session);
             for ($daysAgo = 27; $daysAgo >= 0; $daysAgo--) {
                 $date = $today->subDays($daysAgo);

@@ -9,7 +9,7 @@ use App\Domain\Fields;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Models\WorkspaceMember;
-use App\Repositories\RecordStore;
+use App\Factories\RecordStoreFactory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -18,6 +18,14 @@ use Illuminate\Support\Str;
  */
 class AccountService
 {
+    /**
+     * 注入資料入口工廠與工作區資格服務。
+     *
+     * @param  RecordStoreFactory  $stores  依範圍建立資料入口
+     * @param  WorkspaceMemberships  $memberships  工作區清單、切換與邀請
+     */
+    public function __construct(private RecordStoreFactory $stores, private WorkspaceMemberships $memberships) {}
+
     /**
      * 回傳不含密碼及驗證秘密的帳號資訊。
      *
@@ -81,7 +89,7 @@ class AccountService
         if (User::where('email', $email)->exists()) {
             DomainError::fail('CONFLICT', '此 Email 已註冊, 請登入');
         }
-        $store = new RecordStore;
+        $store = $this->stores->global();
         $role = 'owner';
         if (! empty($input['inviteToken'])) {
             $token = Fields::text($input['inviteToken'], '邀請碼', 100, true);
@@ -159,7 +167,7 @@ class AccountService
         if (! $valid) {
             DomainError::fail('UNAUTHENTICATED', 'Email 或密碼不正確');
         }
-        $memberships = new WorkspaceMemberships;
+        $memberships = $this->memberships;
         if (! empty($input['inviteToken'])) {
             $workspaceId = $memberships->accept($user, $input);
         } else {
@@ -184,7 +192,7 @@ class AccountService
         WorkspacePermissions::authorize($context, 'workspace.invite');
         $email = $this->email($input['email'] ?? null);
         $existing = User::where('email', $email)->first();
-        if ($existing && (new RecordStore)->forWorkspace($context['workspace']['id'])->get('members', $existing->id)) {
+        if ($existing && $this->stores->forWorkspace($context['workspace']['id'])->get('members', $existing->id)) {
             DomainError::fail('CONFLICT', '此帳號已是工作空間成員');
         }
         $token = bin2hex(random_bytes(32));
@@ -197,7 +205,7 @@ class AccountService
             'consumedAt' => null,
             'createdAt' => now()->utc()->toISOString(),
         ];
-        (new RecordStore)->put('invites', $id, $invite);
+        $this->stores->global()->put('invites', $id, $invite);
 
         return [
             'token' => $token,

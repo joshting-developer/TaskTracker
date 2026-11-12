@@ -107,7 +107,7 @@ class MySqlConcurrencyTest extends MySqlTestCase
             $results = $this->race($developer, 'updateIssue', [['requestId' => (string) Str::uuid(), 'id' => $issue['id'], 'expectedRevision' => $issue['revision'], 'title' => '不得保存']], function ($prefix) use ($owner, $developer, $project, $acl) {
                 usleep(150000);
                 $this->assertFileDoesNotExist($prefix.'.0.result', 'writer必須等workspace鎖');
-                $context = (new AccountService)->context(User::findOrFail($owner['user']['id']), $owner['workspace']['id']);
+                $context = app(AccountService::class)->context(User::findOrFail($owner['user']['id']), $owner['workspace']['id']);
                 app(WorkspaceService::class)->execute($context, 'removeProjectMember', ['requestId' => (string) Str::uuid(), 'projectId' => $project['id'], 'userId' => $developer['user']['id'], 'expectedRevision' => $acl['revision']]);
                 DB::commit();
             });

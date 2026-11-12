@@ -18,19 +18,19 @@ class Todos
 {
     public const OPERATIONS = ['getTodos', 'createTodo', 'updateTodo', 'completeTodo', 'reopenTodo', 'returnTodo', 'cancelTodo', 'convertTodo', 'readTodoNotification'];
 
-    private RecordStore $store;
-
     private string $userId;
 
     /**
-     * 設定此服務使用的資料入口與可信任相依。
+     * 綁定本次操作的可信範圍與協作者；由TodosFactory在交易內以重驗的Session建立。
      *
      * @param  array  $workspaceSession  從後端Session重新驗證的工作空間身分與權限
+     * @param  RecordStore  $store  已限定目前Workspace的資料入口
+     * @param  ProjectAccess  $access  轉卡與轉卡連結的Project權限檢查
+     * @param  RequestReplay  $replay  防重複提交與原結果重播
      * @param  WorkspaceService  $workspaces  轉成正式卡片時沿用的RPC寫入入口
      */
-    public function __construct(private array $workspaceSession, private WorkspaceService $workspaces)
+    public function __construct(private array $workspaceSession, private RecordStore $store, private ProjectAccess $access, private RequestReplay $replay, private WorkspaceService $workspaces)
     {
-        $this->store = (new RecordStore)->forWorkspace($workspaceSession['workspace']['id']);
         $this->userId = $workspaceSession['user']['id'];
     }
 
@@ -77,13 +77,13 @@ class Todos
                     DomainError::fail('FORBIDDEN', '自己的待辦不需要退回');
                 }
                 if ($operation === 'convertTodo') {
-                    (new ProjectAccess($this->store, $this->workspaceSession))->require(Fields::text($input['issue']['projectId'] ?? null, '專案', 100, true), 'issue.write');
+                    $this->access->require(Fields::text($input['issue']['projectId'] ?? null, '專案', 100, true), 'issue.write');
                 }
             }
         }
 
         // 失去資格／退回後, 舊 requestId 也先重新檢查, 不回傳內容快照
-        return (new RequestReplay)->execute($this->store, 'todoRequests', $this->userId, $operation, $input, function () use ($operation, $input, $todo, $notification) {
+        return $this->replay->execute($this->store, 'todoRequests', $this->userId, $operation, $input, function () use ($operation, $input, $todo, $notification) {
             if ($operation === 'createTodo') {
                 $result = $this->create($input);
             } elseif ($operation === 'readTodoNotification') {
@@ -192,7 +192,7 @@ class Todos
             'email' => $member['email'],
         ], $eligibleMembers));
         $write = in_array('todo.writeOwn', $this->workspaceSession['permissions'], true);
-        $access = new ProjectAccess($this->store, $this->workspaceSession);
+        $access = $this->access;
         $todos = array_map(function ($t) use ($write, $access) {
             $link = null;
             if (! empty($t['convertedIssueId']) && $access->can($t['convertedProjectId'], 'issue.read')) {

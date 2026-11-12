@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
-use App\Repositories\RecordStore;
+use App\Factories\RecordStoreFactory;
 use App\Services\IssueRelationsUpgrade;
 use App\Services\IssueTypesUpgrade;
 use App\Services\ProjectAclUpgrade;
@@ -22,9 +22,10 @@ class ImportLegacy extends Command
 
     /**
      * 在同交易完成帳號、歷史紀錄與關聯表匯入；失敗不保留部分結果。
+     * @param  RecordStoreFactory  $stores  建立歷史匯入模式的資料入口
      * @return int 命令成功或失敗狀態
      */
-    public function handle(): int
+    public function handle(RecordStoreFactory $stores): int
     {
         $path = realpath($this->argument('file'));
         if (!$path || !is_file($path) || $path === realpath(config('database.connections.sqlite.database'))) {
@@ -35,9 +36,9 @@ class ImportLegacy extends Command
         $source->exec('PRAGMA query_only=ON');
         $rows = $source->query('SELECT kind,id,payload FROM records ORDER BY rowid')->fetchAll(PDO::FETCH_ASSOC);
         try {
-            DB::transaction(function () use ($rows) {
+            DB::transaction(function () use ($rows, $stores) {
                 if (DB::table('records')->exists() || DB::table('workspaces')->exists() || User::exists()) throw new \RuntimeException('目標已有帳號或業務資料, 拒絕覆蓋；請另用空白資料庫／volume');
-                $store = new RecordStore(legacy: true);
+                $store = $stores->legacy();
                 foreach ($rows as $row) {
                     $value = json_decode($row['payload'], true, flags: JSON_THROW_ON_ERROR);
                     if ($row['kind'] === 'accounts') {

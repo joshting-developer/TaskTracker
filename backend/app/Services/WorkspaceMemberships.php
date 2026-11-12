@@ -6,11 +6,19 @@ use App\Domain\DomainError;
 use App\Domain\Fields;
 use App\Models\User;
 use App\Repositories\MembershipRepository;
-use App\Repositories\RecordStore;
+use App\Factories\RecordStoreFactory;
 
 /** 管理本人跨工作空間資格與單次邀請接受，不改動既有身份或專案ACL。 */
 class WorkspaceMemberships
 {
+    /**
+     * 注入工作區資格查詢與資料入口工廠。
+     *
+     * @param  MembershipRepository  $memberships  有效工作區資格查詢
+     * @param  RecordStoreFactory  $stores  依範圍建立資料入口
+     */
+    public function __construct(private MembershipRepository $memberships, private RecordStoreFactory $stores) {}
+
     /**
      * 回傳本人的有效工作空間，不包含未加入或停用空間。
      *
@@ -19,7 +27,7 @@ class WorkspaceMemberships
      */
     public function listing(User $user): array
     {
-        return (new MembershipRepository)->activeForUser($user->id)->map(fn ($member) => [
+        return $this->memberships->activeForUser($user->id)->map(fn ($member) => [
             'id' => $member->workspace->public_id,
             'name' => $member->workspace->name,
         ])->all();
@@ -34,7 +42,7 @@ class WorkspaceMemberships
     public function invitation(array $input): array
     {
         $token = Fields::text($input['inviteToken'] ?? null, '邀請碼', 100, true);
-        $invite = (new RecordStore)->get('invites', hash('sha256', $token));
+        $invite = $this->stores->global()->get('invites', hash('sha256', $token));
         if (! $invite || $invite['expiresAt'] <= now()->utc()->toISOString()) {
             DomainError::fail('INVALID_INPUT', '邀請已失效，請向邀請者索取新連結');
         }
@@ -51,7 +59,7 @@ class WorkspaceMemberships
     public function preview(array $input): array
     {
         $invite = $this->invitation($input);
-        $workspace = (new RecordStore)->require('workspaces', $invite['workspaceId']);
+        $workspace = $this->stores->global()->require('workspaces', $invite['workspaceId']);
 
         return [
             'workspaceName' => $workspace['name'],
@@ -74,7 +82,7 @@ class WorkspaceMemberships
         if (strtolower($user->email) !== $invite['email']) {
             DomainError::fail('FORBIDDEN', '請使用受邀的Email登入後再接受邀請');
         }
-        $store = new RecordStore;
+        $store = $this->stores->global();
         $store->require('workspaces', $invite['workspaceId']);
         $tenant = $store->forWorkspace($invite['workspaceId']);
         $member = $tenant->get('members', $user->id);

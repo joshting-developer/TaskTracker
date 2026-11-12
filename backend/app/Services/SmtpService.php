@@ -2,14 +2,21 @@
 
 namespace App\Services;
 
+use App\Factories\SmtpTransportFactory;
 use App\Domain\DomainError;
-use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
 
 /**
  * 檢查SMTP設定與TLS認證，僅驗證連線而不寄信。
  */
 class SmtpService
 {
+    /**
+     * 注入SMTP連線的外部IO邊界。
+     *
+     * @param  SmtpTransportFactory  $transports  建立transport
+     */
+    public function __construct(private SmtpTransportFactory $transports) {}
+
     /**
      * 回傳SMTP是否已設定，不揭露認證秘密。
      *
@@ -45,7 +52,7 @@ class SmtpService
         if (! $port) {
             DomainError::fail('INVALID_INPUT', 'SMTP_PORT 設定不正確');
         }
-        $transport = new EsmtpTransport($config['host'], $port, $config['secure']);
+        $transport = $this->transports->make((string) $config['host'], $port, (bool) $config['secure']);
         $transport->setRequireTls(true);
         $transport->getStream()->setTimeout(10);
         if ($config['user']) {

@@ -9,6 +9,27 @@ use App\Repositories\RecordStore;
 class RecordStoreFactory
 {
     /**
+     * 跨工作區的全域資料入口（使用者邀請、工作區清單等）；不可用於一般Project寫入。
+     *
+     * @return RecordStore 未限定工作區的資料入口
+     */
+    public function global(): RecordStore
+    {
+        return new RecordStore;
+    }
+
+    /**
+     * 歷史匯入／升級用的Store；legacy為true時讀寫records封存格式。
+     *
+     * @param  bool  $legacy  是否為歷史遷移／匯入階段
+     * @return RecordStore 未限定工作區的歷史模式資料入口
+     */
+    public function legacy(bool $legacy = true): RecordStore
+    {
+        return new RecordStore(legacy: $legacy);
+    }
+
+    /**
      * 建立只屬於本次可信Workspace的資料入口。
      *
      * @param  string  $workspaceId  伺服器驗證的Workspace公開ID

@@ -2,6 +2,7 @@
 
 namespace App\Factories;
 
+use App\Services\RequestReplay;
 use App\Services\Todos;
 use App\Services\WorkspaceService;
 
@@ -11,11 +12,13 @@ use App\Services\WorkspaceService;
 class TodosFactory
 {
     /**
-     * 注入待辦轉卡沿用的RPC寫入入口。
+     * 注入待辦用例的穩定協作者。
      *
      * @param  WorkspaceService  $workspaces  卡片寫入入口
+     * @param  WorkspaceServicesFactory  $services  依可信Session建立限定Store與ProjectAccess
+     * @param  RequestReplay  $replay  防重複提交與原結果重播
      */
-    public function __construct(private WorkspaceService $workspaces) {}
+    public function __construct(private WorkspaceService $workspaces, private WorkspaceServicesFactory $services, private RequestReplay $replay) {}
 
     /**
      * 建立本次操作專用的待辦用例。
@@ -25,6 +28,8 @@ class TodosFactory
      */
     public function forSession(array $workspaceSession): Todos
     {
-        return new Todos($workspaceSession, $this->workspaces);
+        $services = $this->services->forSession($workspaceSession);
+
+        return new Todos($workspaceSession, $services->store, $services->access(), $this->replay, $this->workspaces);
     }
 }
