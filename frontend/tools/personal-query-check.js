@@ -1,0 +1,63 @@
+import assert from 'node:assert/strict';
+import { createServer } from 'vite';
+import { chromium } from 'playwright';
+if(!process.env.E2E_API_URL)throw new Error('必須指定隔離E2E_API_URL');
+let server,browser;
+try {
+  server=await createServer({root:new URL('..',import.meta.url).pathname,server:{host:'127.0.0.1',port:5175,strictPort:true,proxy:{'/api':process.env.E2E_API_URL}}});await server.listen();
+  browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH});
+  const page=await browser.newPage(),errors=[],requests=[];
+  page.on('pageerror',e=>{errors.push(e.message);console.log('PAGEERROR',e.stack);});
+  page.on('response',r=>{const url=new URL(r.url());if(url.pathname.startsWith('/api/')){requests.push(url.pathname);if(r.status()>=400)console.log('HTTP',r.status(),url.pathname);}});
+  await page.goto('http://127.0.0.1:5175');
+  async function call(target,op,input={},group='rpc') {
+    return target.evaluate(async({op,input,group})=>{
+      const {csrfToken}=await(await fetch('/api/csrf-cookie')).json();
+      const result=await(await fetch(`/api/${group}/${op}`,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrfToken},body:JSON.stringify({requestId:crypto.randomUUID(),...input})})).json();
+      if(!result.ok)throw new Error(result.error.message);return result.data;
+    },{op,input,group});
+  }
+  await call(page,'register',{name:'Personal Owner',email:`personal-${crypto.randomUUID()}@example.test`,password:'isolated-test-password',workspaceName:'Personal Test'},'auth');
+  const project=await call(page,'createProject',{name:'Conversion target',code:'TARGET'});
+  let latest;
+  for(let i=0;i<25;i++)latest=await call(page,'createTodo',{content:`Note ${i}\n\nHidden source ${i}`});
+  const invite=await call(page,'inviteMember',{email:`receiver-${crypto.randomUUID()}@example.test`});
+  const receiver=await(await browser.newContext()).newPage();await receiver.goto('http://127.0.0.1:5175');
+  const identity=await call(receiver,'register',{name:'Receiver',email:invite.email,password:'isolated-test-password',inviteToken:invite.token},'auth');
+  const assigned=await call(page,'createTodo',{content:'Assigned note\n\nReceiver private detail',assigneeId:identity.user.id});
+  requests.length=0;await page.reload();
+  await page.locator(`[data-todo-id="${latest.id}"]`).waitFor();
+  assert.equal(await page.locator('.todo-row').count(),3);
+  await page.getByRole('button',{name:'展開待辦清單（25）',exact:true}).click();
+  assert.equal(await page.locator('.todo-row').count(),20);
+  assert.equal(requests.filter(path=>/\/todos\/(?!counts$)[^/]+$/.test(path)).length,0,'未開啟不讀原稿');
+  const row=page.locator(`[data-todo-id="${latest.id}"]`);
+  await row.locator('.todo-content > summary').click();
+  await row.locator('.todo-note').getByText('Hidden source 24',{exact:true}).waitFor();
+  assert.ok(requests.some(path=>path.endsWith(`/todos/${latest.id}/history`)));
+  const pager=page.locator('[aria-label="待辦分頁"]');
+  await pager.getByRole('button',{name:'下一頁',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelectorAll('.todo-row').length===5);
+  await pager.getByRole('button',{name:'上一頁',exact:true}).click();
+  await page.locator(`[data-todo-id="${latest.id}"]`).waitFor();
+  await row.getByLabel('待辦操作',{exact:true}).click();
+  await row.getByRole('button',{name:'轉成正式卡片',exact:true}).click();
+  const editor=page.getByRole('dialog',{name:'轉成正式卡片',exact:true});await editor.waitFor();
+  assert.equal(await editor.getByRole('textbox',{name:'描述',exact:true}).inputValue(),'Note 24\n\nHidden source 24');
+  await editor.getByRole('combobox',{name:'專案',exact:true}).selectOption(project.id);
+  await editor.getByRole('button',{name:'建立卡片並完成轉換',exact:true}).click();
+  await page.getByRole('region',{name:'任務完整頁',exact:true}).waitFor();
+  assert.equal(requests.filter(path=>/\/(getWorkspace|getTodos)$/.test(path)).length,0);
+  const inboxRequests=[];receiver.on('response',r=>{if(new URL(r.url()).pathname.startsWith('/api/'))inboxRequests.push(new URL(r.url()).pathname);});
+  await receiver.reload();
+  await receiver.getByRole('button',{name:/待辦通知（1 則未讀）/}).click();
+  await receiver.locator('.todo-notification-list button').first().click();
+  await receiver.locator(`[data-todo-id="${assigned.id}"].todo-focused`).waitFor();
+  assert.equal(inboxRequests.filter(path=>/\/(getWorkspace|getTodos)$/.test(path)).length,0);
+  await receiver.bringToFront();await receiver.waitForTimeout(200);inboxRequests.length=0;
+  await receiver.clock.install();const checked=receiver.waitForResponse(r=>new URL(r.url()).pathname.endsWith('/personal-version')&&r.status()===200);
+  await receiver.clock.fastForward(35000);await checked;await receiver.waitForTimeout(100);
+  assert.equal(inboxRequests.filter(path=>/\/(todos|counts|todo-notifications)$/.test(path)).length,0,'版本未變時不重讀列表');
+  assert.deepEqual(errors,[]);
+  console.log('personal query PASS: 25 todos / 20+5, on-demand body/history, conversion, recipient notification/focus, idle version only; bulkReads=0');
+} finally {await browser?.close();await server?.close();}

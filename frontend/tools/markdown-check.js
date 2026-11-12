@@ -48,6 +48,7 @@ try {
   await home.getByRole('button', { name: '加入待辦', exact: true }).click();
   let row = home.locator('.todo-row').filter({ has: page.locator('summary', { hasText: '會議速記' }) });
   await row.waitFor(); await row.locator('.todo-content > summary').click();
+  await row.locator('.todo-note input[type="checkbox"]:disabled').first().waitFor({state:'attached'});
   assert.equal(await row.locator('.todo-note input[type="checkbox"]:disabled').count(), 2);
   const stored = await page.evaluate(async () => (await (await import('/src/api/index.js')).api.getTodos()).todos[0]);
   assert.equal(stored.content, source);

@@ -37,6 +37,16 @@ class Todo extends Model
     }
 
     /**
+     * 只預載初始承辦者的User ID供交辦清單條件呈現。
+     *
+     * @return BelongsTo 初始承辦者資格
+     */
+    public function initialAssignee(): BelongsTo
+    {
+        return $this->belongsTo(WorkspaceMember::class, 'initial_assignee_id');
+    }
+
+    /**
      * 取得convertedIssue關聯，使用資料庫內部外鍵避免不同租戶公開ID衝突。
      *
      * @return BelongsTo

@@ -10,6 +10,7 @@ use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\Queries\BoardsController;
 use App\Http\Controllers\Queries\IssuesController;
 use App\Http\Controllers\Queries\ProjectsController;
+use App\Http\Controllers\Queries\TodosController;
 use App\Http\Controllers\RealtimeController;
 use App\Http\Controllers\SmtpController;
 use App\Http\Controllers\SystemController;
@@ -81,9 +82,19 @@ Route::post('/api/rpc/verifySmtp', [SmtpController::class, 'verify']);
 
 // v1先共用Session／CSRF可信邊界，Application Service可供後續PAT適配器沿用。
 Route::prefix('/api/v1')->group(function () {
+    Route::get('/personal-version', [TodosController::class, 'versions']);
+    Route::get('/todos/counts', [TodosController::class, 'counts']);
+    Route::get('/todos', [TodosController::class, 'index']);
+    Route::get('/todos/{todo}', [TodosController::class, 'show']);
+    Route::get('/todos/{todo}/history', [TodosController::class, 'history']);
+    Route::get('/todo-assignees', [TodosController::class, 'assignees']);
+    Route::get('/todo-notifications/unread', [TodosController::class, 'unread']);
+    Route::get('/todo-notifications', [TodosController::class, 'notifications']);
     Route::get('/projects/{project}/boards', [BoardsController::class, 'index']);
     Route::get('/projects/{project}/boards/{board}', [BoardsController::class, 'show']);
     Route::get('/projects/{project}/boards/{board}/issues', [BoardsController::class, 'issues']);
+    Route::get('/project-lead-options', [ProjectsController::class, 'leads']);
+    Route::get('/project-options', [ProjectsController::class, 'options']);
     Route::get('/projects', [ProjectsController::class, 'index']);
     Route::get('/projects/{project}', [ProjectsController::class, 'show']);
     Route::get('/projects/{project}/member-options', [ProjectsController::class, 'members']);

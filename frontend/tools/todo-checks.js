@@ -71,7 +71,7 @@ export async function checkTodoWorkflow(browser, failures) {
 
   // 普通成員交給 owner, 直接加入而非等待接受
   await personal.getByLabel('快速新增待辦', { exact: true }).fill('幫忙確認 614 範圍');
-  await personal.getByLabel('待辦交給誰').selectOption({ label: `Todo Owner · todo-owner-${token}@example.test` });
+  await personal.getByLabel('待辦交給誰', { exact: true }).selectOption({ label: `Todo Owner · todo-owner-${token}@example.test` });
   await personal.getByRole('button', { name: '交辦', exact: true }).click();
   await personal.getByRole('tab', { name: /我交辦的/ }).click();
   const outgoing = personal.locator('.todo-row').filter({ hasText: '幫忙確認 614 範圍' });

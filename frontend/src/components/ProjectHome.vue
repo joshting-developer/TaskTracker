@@ -1,12 +1,14 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import Icon from './Icon.vue';
 
-const props = defineProps({ projects: Array, members: Array, canCreate: { type: Boolean, default: true }, loading: Boolean, error: String, demoLoading: Boolean });
-defineEmits(['create', 'edit', 'open', 'demo', 'retry']);
+const props = defineProps({ remote: Boolean, total: Number, projects: Array, members: Array, canCreate: { type: Boolean, default: true }, loading: Boolean, error: String, demoLoading: Boolean });
+const emit=defineEmits(['create', 'edit', 'open', 'demo', 'retry', 'search']);
 const search = ref('');
-const cards = computed(() => props.projects.filter(project => [project.name, project.code, project.description].some(value => (value || '').toLocaleLowerCase().includes(search.value.trim().toLocaleLowerCase()))));
+watch(search, value=>{if(props.remote)emit('search',value);});
+const cards = computed(() => props.remote ? props.projects : props.projects.filter(project => [project.name, project.code, project.description].some(value => (value || '').toLocaleLowerCase().includes(search.value.trim().toLocaleLowerCase()))));
 function leadName(project) {
+  if (project.leadName) return project.leadName;
   if (!project.leadId) return '未設定';
   return props.members.find(member => member.id === project.leadId && !member.disabledAt)?.name || '成員已無法使用';
 }
@@ -15,8 +17,8 @@ function leadName(project) {
 <template>
   <section class="project-home" aria-label="專案列表">
     <div v-if="error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="$emit('retry')">重新載入</button></div>
-    <div v-if="loading" class="empty-state"><span class="loader"></span><h2>正在載入專案…</h2></div>
-    <div v-else-if="!projects.length" class="empty-state welcome-state project-welcome">
+    <div v-if="loading && !projects.length && !search" class="empty-state"><span class="loader"></span><h2>正在載入專案…</h2></div>
+    <div v-else-if="!projects.length && !search" class="empty-state welcome-state project-welcome">
 
       <h2>{{ canCreate ? '尚無專案' : '尚未加入任何專案' }}</h2>
 
@@ -24,7 +26,7 @@ function leadName(project) {
 
     </div>
     <template v-else>
-      <div class="project-home-toolbar"><label class="search-field"><Icon name="search" :size="18" /><input v-model="search" placeholder="搜尋專案名稱或代碼…" aria-label="搜尋專案" /><button v-if="search" class="icon-button" aria-label="清除專案搜尋" @click="search = ''"><Icon name="close" :size="15" /></button></label><span class="project-list-count">{{ cards.length }} 個專案</span></div>
+      <div class="project-home-toolbar"><label class="search-field"><Icon name="search" :size="18" /><input v-model="search" placeholder="搜尋專案名稱或代碼…" aria-label="搜尋專案" /><button v-if="search" class="icon-button" aria-label="清除專案搜尋" @click="search = ''"><Icon name="close" :size="15" /></button></label><span class="project-list-count">{{ total ?? cards.length }} 個專案</span></div>
       <div class="project-grid">
         <article v-for="project in cards" :key="project.id" class="project-card-shell"><button class="project-card" :aria-label="`進入專案：${project.name}`" @click="$emit('open', project.id)">
           <div class="project-card-top"><span class="project-card-icon" :style="{ color: project.color }"><Icon name="folder" :size="20" /></span><span class="project-code">{{ project.code }}</span></div>

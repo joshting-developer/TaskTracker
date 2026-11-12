@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Authorization\ProjectAccess;
+use App\Authorization\WorkspacePermissions;
 use App\Data\AuthorizedProjectData;
 use App\Data\PageQueryData;
 use App\Data\ProjectPageData;
@@ -69,6 +70,60 @@ class ProjectReadService
         }
 
         return new ProjectPageData($page, $permissions);
+    }
+
+    /**
+     * 先驗建立或單Project編輯資格，再查有效負責人候選。
+     *
+     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  PageQueryData  $filters  有界搜尋與分頁
+     * @param  string|null  $projectId  null代表建立Project用途
+     * @return LengthAwarePaginator 有效Workspace成員最小選項
+     */
+    public function leadOptions(array $actor, PageQueryData $filters, ?string $projectId): LengthAwarePaginator
+    {
+        if ($projectId !== null) {
+            $project = $this->require($actor, $projectId, 'project.update');
+
+            return $this->members->page($project, $filters)->through(fn ($member) => (object) ['id' => $member->user_id, 'name' => $member->getRelation('user')->name]);
+        }
+        WorkspacePermissions::authorize($actor, 'project.create');
+        $roles = array_values(array_filter(['owner', 'manager', 'admin', 'user', 'member', 'maintainer', 'developer'], fn ($role) => in_array('project.readAny', WorkspacePermissions::resolve($role), true)));
+
+        return $this->members->leads($actor['workspace']['id'], $roles, $filters);
+    }
+
+    /**
+     * 用有效issue.write映射限定轉卡Project候選，不把讀者當可寫者。
+     *
+     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  PageQueryData  $filters  有界搜尋與分頁
+     * @return LengthAwarePaginator<Project> 可寫卡片的Project候選
+     */
+    public function options(array $actor, PageQueryData $filters): LengthAwarePaginator
+    {
+        $roles = array_column(array_filter(ProjectAccess::roles(), fn ($role) => in_array('issue.write', $role['permissions'], true)), 'id');
+
+        return $this->projects->options($actor['workspace']['id'], $actor['user']['id'], in_array('issue.writeAny', $actor['permissions'], true), $roles, $filters);
+    }
+
+    /**
+     * 依本次最多100個Project參照批次重建權限，不查逐卡完整Project。
+     *
+     * @param  array<string,mixed>  $actor  可信操作者
+     * @param  array<int,string>  $projectIds  當頁Project公開ID
+     * @return array<string,array<int,string>> Project有效permission對照
+     */
+    public function permissionsFor(array $actor, array $projectIds): array
+    {
+        $ids = array_values(array_unique($projectIds));
+        [$access] = $this->visibility($actor, $ids);
+        $result = [];
+        foreach ($ids as $id) {
+            $result[$id] = $access->permissions($id);
+        }
+
+        return $result;
     }
 
     /**

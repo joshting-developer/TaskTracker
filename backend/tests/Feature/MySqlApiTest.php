@@ -128,4 +128,32 @@ class MySqlApiTest extends MySqlTestCase
         $people = $this->getJson($base.'/member-options')->assertOk()->assertJsonPath('data.items.0.id', $actor['user']['id'])->json('data.items.0');
         $this->assertArrayNotHasKey('email', $people);
     }
+
+    /**
+     * 原生MySQL驗證個人查詢的聚合、欄位、時間與能力型別。
+     *
+     * @return void
+     */
+    public function test_native_mysql_personal_reads_and_version_fingerprints(): void
+    {
+        $this->postJson('/api/auth/register', ['name' => 'Personal SQL', 'email' => 'personal-'.Str::uuid().'@example.test', 'password' => 'mysql-test-password', 'workspaceName' => 'Personal'])->assertOk();
+        $version = $this->getJson('/api/v1/personal-version')->assertOk()->json('data');
+        $todo = $this->rpc('createTodo', ['content' => 'Native source'."\n\n".'**Preserve**'])->assertOk()->json('data');
+        $next = $this->getJson('/api/v1/personal-version')->assertOk()->json('data');
+        $this->assertNotSame($version['todos'], $next['todos']);
+        $this->assertSame($next, $this->getJson('/api/v1/personal-version')->assertOk()->json('data'));
+        $this->getJson('/api/v1/todos/counts')->assertOk()->assertJsonPath('data.mineOpen', 1)->assertJsonPath('data.mineClosed', 0);
+        $row = $this->getJson('/api/v1/todos')->assertOk()->assertJsonCount(1, 'data.items')->json('data.items.0');
+        $this->assertTrue($row['capabilities']['edit']);
+        $this->assertArrayNotHasKey('content', $row);
+        $this->assertArrayNotHasKey('history', $row);
+        $this->getJson('/api/v1/todos/'.$todo['id'])->assertOk()->assertJsonPath('data.content', 'Native source'."\n\n".'**Preserve**');
+        $this->getJson('/api/v1/todos/'.$todo['id'].'/history')->assertOk()->assertJsonPath('data.total', 1);
+        $this->rpc('completeTodo', ['id' => $todo['id'], 'expectedRevision' => 1])->assertOk();
+        $this->getJson('/api/v1/todos')->assertOk()->assertJsonPath('data.total', 0);
+        $this->getJson('/api/v1/todos?state=closed')->assertOk()->assertJsonCount(1, 'data.items');
+        $this->getJson('/api/v1/todo-notifications/unread')->assertOk()->assertJsonPath('data.unread', 0);
+        $this->getJson('/api/v1/project-lead-options')->assertOk()->assertJsonPath('data.total', 1)->assertJsonMissingPath('data.items.0.email');
+        $this->getJson('/api/v1/project-options')->assertOk()->assertJsonPath('data.total', 0);
+    }
 }

@@ -59,3 +59,15 @@ Project授權僅讀指定ID或當頁ID（最多100筆），可見範圍在SQL分
 列表回應改為IssueListResource的純表格欄位，不附Epic／父卡參照、估時／工時SUM或活動；選項、看板摘要、詳細屬性各有不同明確投影。列表的filters／scope／page都送SQL，total／lastPage由後端決定，沒有把當頁再切片。詳細關聯最多200，查201作超限拒絕檢查；不靜默截斷後允許儲存。子卡／活動分頁最大100，預設20。選項UI每頁30，搜尋可達第一頁以外，已選值保留。
 
 ProjectTasksWorkspace與useProjectTaskQueries已取代原BoardWorkspace／useBoardQueries；詳細頁不在背景載入列表或看板全卡，按需讀單卡及活動，未儲存／送出中只重驗資格。單卡工時按timeEntry.readOwn／readTeam限制SQL，明細附最小Issue參照讓Epic下編輯子卡紀錄時仍鎖原卡。完整審查與證據見[任務頁面資料分責](performance-task-pages-2026-11-12.md)。
+
+
+## 2026-11-12 個人查詢與候選
+
+- `GET /api/v1/todos`：本人scope=mine|sent、state=open|closed、搜尋／分頁摘要，不帶content／note／history。
+- `GET /api/v1/todos/counts`：四項scope與狀態數量。
+- `GET /api/v1/todos/{todo}`與`/{todo}/history`：本人參與的原稿及獨立歷史分頁。
+- `GET /api/v1/todo-notifications/unread`與`/todo-notifications`：本人有效未讀數與收件匣分頁。
+- `GET /api/v1/personal-version`：本人Todo及通知兩個無內容指紋；包含資格版本，不是完整bootstrap。
+- `GET /api/v1/todo-assignees`：有效承辦候選；`/project-options`：可寫卡片Project候選；`/project-lead-options?project=<optional>`：建立／編輯用途的有效負責人候選。
+
+上述沿用相同Session／可信Workspace／交易驗權與PageQuery上限，純Resource投影。實際接線、八項審查與限制見[個人頁面資料分責](performance-personal-pages-2026-11-12.md)。

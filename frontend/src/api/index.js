@@ -7,6 +7,8 @@ export function callApi(operation, input = {}, group = 'rpc') {
 
 export const api = {
   current: () => callApi('current', {}, 'auth'),
+  projectLeads: (filters, options) => queryApi('project-lead-options', filters, options),
+  projectOptions: (filters, options) => queryApi('project-options', filters, options),
   projects: (filters, options) => queryApi('projects', filters, options),
   project: (id, options) => queryApi(`projects/${encodeURIComponent(id)}`, {}, options),
   issues: (id, filters, options) => queryApi(`projects/${encodeURIComponent(id)}/issues`, filters, options),
@@ -33,6 +35,14 @@ export const api = {
   getWorkspaceSettings: () => callApi('getWorkspaceSettings'),
   updateWorkspace: input => callApi('updateWorkspace', input),
   setWorkspaceMemberRole: input => callApi('setWorkspaceMemberRole', input),
+  personalVersion: options => queryApi('personal-version', {}, options),
+  todos: (filters, options) => queryApi('todos', filters, options),
+  todo: (id, options) => queryApi(`todos/${encodeURIComponent(id)}`, {}, options),
+  todoCounts: options => queryApi('todos/counts', {}, options),
+  todoHistory: (id, filters, options) => queryApi(`todos/${encodeURIComponent(id)}/history`, filters, options),
+  todoAssignees: (filters, options) => queryApi('todo-assignees', filters, options),
+  todoUnread: options => queryApi('todo-notifications/unread', {}, options),
+  todoNotificationPage: (filters, options) => queryApi('todo-notifications', filters, options),
   getTodos: () => callApi('getTodos'),
   createTodo: input => callApi('createTodo', input),
   updateTodo: input => callApi('updateTodo', input),

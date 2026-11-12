@@ -9,7 +9,12 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /** 專案摘要與按需預載的狀態，不回傳ACL／設定歷史。 */
 class ProjectResource extends JsonResource
 {
-    /** 序列化已授權且預載的投影，不做任何查詢。 */
+    /**
+     * 序列化已授權且預載的專案投影，不觸發關聯查詢。
+     *
+     * @param  Request  $request  當次HTTP請求
+     * @return array<string,mixed> 專案摘要及已預載狀態
+     */
     public function toArray(Request $request): array
     {
         $p = $this->resource;

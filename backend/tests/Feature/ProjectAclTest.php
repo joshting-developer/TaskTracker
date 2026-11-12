@@ -243,6 +243,9 @@ class ProjectAclTest extends TestCase
         $issue = $this->rpc('createIssue', ['projectId' => $this->first['id'], 'title' => 'Reader visible'])->assertOk()->json('data');
         $this->login($reader);
         $this->getJson('/api/v1/projects')->assertOk()->assertJsonCount(1, 'data.items')->assertJsonPath('data.items.0.id', $this->first['id']);
+        $this->getJson('/api/v1/project-options')->assertOk()->assertJsonPath('data.total', 0);
+        $this->getJson('/api/v1/project-lead-options')->assertStatus(403);
+        $this->getJson('/api/v1/project-lead-options?project='.$this->first['id'])->assertStatus(403);
         $path = '/api/v1/projects/'.$this->first['id'].'/issues/'.$issue['id'];
         $this->getJson($path)->assertOk()->assertJsonPath('data.title', 'Reader visible');
         $this->getJson($path.'/children')->assertOk();

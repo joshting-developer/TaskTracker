@@ -1,3 +1,11 @@
+## 2026-11-12 個人待辦／通知／專案目錄分責
+
+- TT-216／217／218：SQL參與者＋scope／狀態分頁，20筆摘要；原稿及歷史按需；收件匣分頁、未讀數獨立；轉卡連結按有效Project資格批次投影，撤權後版本改變及清連結。
+- App首頁／專案目錄／工作區設定／分析使用auth/current最小殼，不再預載getWorkspace/getTodos；專案目錄20筆SQL分頁與搜尋。Todo選人、Project負責人及轉卡Project採遠端有界候選。TT-240月曆等用途仍未完成。
+- 個人同步只查無內容版本；不變不重讀列表，hidden停止、resume重驗、失敗退避及jitter。版本是限定本人SQL聚合，並非O(1)計數器；其餘全域同步卡保持未完成。
+- 驗證：memory74／3410、獨立MySQL83／3562；Chrome待辦25筆20＋5、原稿／歷史／轉卡／通知定位及35秒idle無整包讀取；設定／工作區／分析／Markdown三尺寸通過。純API／composables及build通過；bundle仍有大chunk警告。
+- 下一階段：月曆／Project管理／通知預覽仍有getWorkspace，WorkspaceSettings仍需拆分成員及歷史；TT-180不結案，其他P1不宣稱整體通過。詳見docs/performance-personal-pages-2026-11-12.md。
+
 ## 2026-11-12 任務列表／詳細／單卡工時接線
 
 - TT-214／215／244：ProjectTasksWorkspace共用頁面owner，列表SQL filters／scope／20筆分頁與純列表DTO，深連結hydrate最新revision與關聯，活動／子卡按需分頁；單卡工時SQL SUM／作者資格／void與20＋7分頁。

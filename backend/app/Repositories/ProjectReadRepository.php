@@ -51,6 +51,30 @@ class ProjectReadRepository
             ->paginate($filters->perPage, ['id', 'workspace_id', 'public_id', 'name', 'code', 'description', 'color', 'lead_id', 'revision', 'created_at', 'updated_at'], 'page', $filters->page);
     }
 
+    /**
+     * 只查可寫卡片的Project選項，不載描述、成員或狀態。
+     *
+     * @param  string  $workspaceId  可信Workspace公開ID
+     * @param  string  $userId  可信操作者ID
+     * @param  bool  $writeAny  是否具有issue.writeAny
+     * @param  array<int,string>  $writeRoles  由permission映射取得的角色ID
+     * @param  PageQueryData  $filters  有界搜尋與分頁
+     * @return LengthAwarePaginator<Project> 最小Project選項
+     */
+    public function options(string $workspaceId, string $userId, bool $writeAny, array $writeRoles, PageQueryData $filters): LengthAwarePaginator
+    {
+        $q = Project::whereHas('workspace', fn ($q) => $q->where('public_id', $workspaceId));
+        if (! $writeAny) {
+            $q->whereHas('members', fn ($q) => $q->whereNull('removed_at')->whereIn('role_id', $writeRoles)->whereHas('member', fn ($q) => $q->where('user_id', $userId)->whereNull('disabled_at')));
+        }
+        if ($filters->search !== '') {
+            $term = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($filters->search)).'%';
+            $q->where(fn ($q) => $q->whereRaw("LOWER(name) LIKE ? ESCAPE '!'", [$term])->orWhereRaw("LOWER(code) LIKE ? ESCAPE '!'", [$term]));
+        }
+
+        return $q->orderBy('name')->orderBy('public_id')->paginate($filters->perPage, ['id', 'public_id', 'name', 'code'], 'page', $filters->page);
+    }
+
     /** 讀取同工作區指定專案及此頁需要的關聯。 */
     public function find(string $workspaceId, string $id): ?Project
     {

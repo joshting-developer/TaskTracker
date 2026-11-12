@@ -631,7 +631,7 @@ async function checkTaskFilters(page, projectUrl) {
   assert.equal(await page.getByRole('button', { name: /儲存常用篩選|存為視圖/ }).count(), 0);
   assert.deepEqual(await page.getByLabel('篩選類型').locator('option').allTextContents(), ['所有類型', 'Epic', 'Task', 'Bug']);
   await page.getByLabel('篩選類型').selectOption('bug');
-  await page.getByLabel('篩選 Epic').selectOption({ label: '會員系統上線' });
+  await page.getByLabel('篩選 Epic', { exact: true }).selectOption({ label: '會員系統上線' });
   await setStatusPickerOpen(page, true);
   await page.getByLabel('篩選狀態 待規劃', { exact: true }).check();
   await setStatusPickerOpen(page, false);
