@@ -50,7 +50,18 @@ flowchart TD
 
 PAT管理屬於個人帳號能力；Scope不超出本人可授予能力。第一版可用使用者ID＋Token ID／名稱記錄操作來源，不能因需要稽核就先引入Agent run編排或複雜整合身分平台。Token原文僅建立時顯示、保存雜湊，寫入仍使用既有版本與防重送機制。
 
-Laravel Sanctum是優先評估的既有認證機制；套件版本、Token儲存擴充、與現有HTTP／Session邊界的接法於實作前盤點。本次沒有安裝或產生Token。個別Token期限預設、續期／輪替及Scope枚舉仍待實作設計，不把上游預設直接當產品需求。先前官方查證見[Sanctum文件](https://laravel.com/framework/docs/13.x/sanctum)。
+Laravel Sanctum是優先評估的既有認證機制；套件版本、Token儲存擴充、與現有HTTP／Session邊界的接法於實作前盤點。本次沒有安裝或產生Token。
+
+### 2026-11-12 使用者確認的PAT第一版規則
+
+| 項目 | 使用者已確認 | 助理建議／待確認 |
+| --- | --- | --- |
+| Scope | 第一版只分`read`／`write`；更細的能力之後再擴充 | 建議`write`隱含`read`；Scope以清單儲存，日後加細項不必改資料結構 |
+| 期限 | 預設1個月，最長2年；不提供無期限 | — |
+| 過期處理 | 只在Token管理頁顯示已過期；不主動通知，第三方呼叫失敗由使用者自行回來處理 | 建議第一版不提供延長，過期後由使用者新建；過期API回401 |
+| 綁定範圍 | 綁定整個Workspace；Token代表該使用者 | 一人多個Workspace時需各自建立Token；實際可見Project仍是本人當下有效Project資格，不因Workspace綁定提權 |
+
+輪替機制、Token數量上限仍待實作設計，不把上游預設直接當產品需求。先前官方查證見[Sanctum文件](https://laravel.com/framework/docs/13.x/sanctum)。
 
 ## 漸進式交付
 
