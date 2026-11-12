@@ -91,7 +91,7 @@ TaskTracker 是專案管理平台 Side Project, 目前是本機協作試作, 提
 - 完成階段後先執行適合該變更的驗證, 明確指定該階段的檔案, 檢查 staged diff 與空白後立即提交
 - `plans/<分支>/plan.md`、`step.md` 隨相關階段提交，保留規劃與續接歷史，不預設排除；不套用其他專案的 planning 排除／封存流程（2026-11-05 使用者更正）。
 - Git 操作直接在本專案原有 repository 進行，操作前確認根目錄、分支與既有差異；不在 `/private`、`/tmp` 或其他暫存目錄另建 clone／worktree 規避限制。
-- commit 訊息採 Conventional Commits, 用繁體中文說明成果, 例如 `feat: 調整專案入口與任務導覽`
+- commit 訊息：處理TT卡片時採`<卡號> <卡片標題>`（見下方「TaskTracker自我追蹤」，2026-11-12起）；無對應卡片的工作才採 Conventional Commits, 用繁體中文說明成果, 例如 `feat: 調整專案入口與任務導覽`
 - 不提交憑證、資料庫、依賴、截圖、暫存檔或編譯產物
 - 保留每階段的歷史, 不自行 amend、squash 或重寫已提交內容
 - 使用者授權的是本機 commit, 遠端 push 依另行指示執行
@@ -154,6 +154,13 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 ## TaskTracker自我追蹤與AI登入（2026-11-11）
 
 本專案已在本機TaskTracker的SideProject工作區建立TaskTracker／TT專案，Project ID `5a451d5c-2fff-4110-aa49-4998ec9dbff2`。使用者已要求既有及未來工作均建卡並指派AI，狀態須對應實際進度；開工前查閱／建立相應卡片，進行中、受阻、驗收與完成如實更新，不以commit自動假定整項功能完成。
+
+2026-11-12使用者要求**處理任務以卡片為單位**：
+
+- 尚未動工的卡片放待辦（`open`），不提前移到進行中。
+- 開始處理某張卡片前，先將該卡拉到進行中（`python3 tools/tasktracker.py status TT-243 --state inprogress`），再開始調整。
+- 該卡的commit訊息格式為`<卡號> <卡片標題>`，例如`TT-243 狀態設定以Project狀態使用摘要取代完整卡片掃描`；一張卡分多次提交時沿用同一格式。
+- 調整與測試完成後，依實際結果更新卡片狀態（完成改`closed`；未通過或受阻則維持／標示並留言說明），不在測試前結案。
 
 專用身分為taskTrackerAI（Workspace一般成員＋此Project Maintainer；2026-11-11使用者後續明確授權由Developer調整）；登入資訊在忽略的`.local/tasktracker-ai.json`，目錄0700／檔案0600，不將密碼、Cookie或邀請token寫入Git／卡片／日誌。後續以此帳號操作，不因權限失敗回退到使用者Owner。來源、清單、網址及工具見[自我追蹤交接](docs/tasktracker-self-tracking.md)。`python3 tools/tasktracker.py list`讀取目前卡片；初始manifest只供首次盤點與核對，不能覆蓋後來的人工進度。換機需安全移轉私有登入檔或重設帳號。
 
