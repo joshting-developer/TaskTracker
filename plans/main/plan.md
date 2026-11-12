@@ -1,3 +1,17 @@
+## 2026-11-13 TT-264修復階段完成，基準核准待回覆
+
+- 實際重現為flex換行／搜尋狀態讓送出向下位移，原截圖高方塊此次未重現。純TodoHome scoped CSS改grid，select／search／submit固定44px，desktop/tablet同列對齊，mobile分行；PagedSelect／Markdown／API未改。
+- 21組三尺寸狀態／兩真實帳號自用與交辦、鍵盤／忙碌／防重送及私人隔離通過；完整browser（含258狀態篩選）、build、composables、API、Skill hash、語法／diff通過。48圖逐圖42原基準PASS，6預期差異為home及denied回首頁各3尺寸，原比較參數／baseline未改。
+- 已提供localhost5194/review-tt264.html六張前後對照並詢問明確基準核准；未收到同意前不更新approved、不假closed。先階段提交可驗證修復／測試／文件，收到核准再做正式compare／回填。
+- 工作中出現其他人的後端Project時間戳差異／migration／tests，保留不stage；不將其他人工作或主庫操作歸本卡。不push。卡片保持codex/inprogress，修前後圖／raw log不入Git。
+
+## 2026-11-13 Bug看板TT-264
+
+- 看板2張：TT-264 open未指派已claim codex；TT-258 closed他人承辦不重開，保留既有狀態篩選回歸。工作區main乾淨。
+- 選用共用工程／Ponytail lite／Vue及UIUX＋Taste app-screen；實際路徑由.agents symlink解析。先真實隔離Laravel重現送出按鈕stretch及選單錯位，記三尺寸與搜尋／載入／錯誤狀態尺寸；修改盡量限定TodoHome scoped CSS，不改PagedSelect共用行為、Markdown／API／權限。
+- 補可重跑行為及量測，驗自己／他人交辦、防重送／忙碌、搜尋分頁／錯誤／鍵盤與三尺寸；既有完整browser/build及核准視覺前後比較。UI已授權修復，baseline變更僅在具體前後證據／明確核准後更新，不洗其他頁。
+- 階段提交後回填TT-264，最後有界讀回Bug看板全部狀態；不push或操作主庫／共用Redis。
+
 ## 2026-11-13 TT-271最終收尾
 
 - 初審及獨立Codex複核發現的P1／P2已修正：harness含實際helpers、完整sourceRoots集合、舊PASS失效／source與approval綁定、平台分檔／CI範圍、atomic lock。四種harness變更及新增來源實測拒絕，還原gate PASS；最後校準與正式compare重跑通過。

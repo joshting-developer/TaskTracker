@@ -125,13 +125,25 @@ async function action(item, operation) {
 .todo-home { min-width: 0; color: #242936; }
 .todo-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
 .todo-heading h2 { font-size: 22px; margin: 0; }
-.todo-quick { display: flex; gap: 8px; }.todo-quick select { max-width: 260px; }.todo-quick select { border: 1px solid #bfc6d2; padding: 10px 12px; border-radius: 7px; font-size: 14px; background: #fff; }
+.todo-quick { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 12px; }
+.todo-quick > .paged-select { min-width: 0; margin: 0; }
+.todo-quick :deep(.paged-select > label) { display: block; line-height: 20px; }
+.todo-quick :deep(.paged-select-control) { margin-top: 8px; align-items: start; }
+.todo-quick :deep(.paged-select-control select), .todo-quick > select { min-width: 0; width: 100%; height: 44px; margin: 0; border: 1px solid #bfc6d2; padding: 10px 12px; border-radius: 7px; font-size: 14px; background: #fff; }
+.todo-quick :deep(.paged-select-control .icon-button) { width: 44px; height: 44px; flex: none; }
+.todo-quick > .button { height: 44px; align-self: start; }
+.todo-quick > .paged-select ~ .button { margin-top: 28px; }
 .todo-success { color: #286b55; font-size: 13px; margin-top: 12px; }
 .todo-draft-notice { padding: 12px; margin-top: 12px; background: #f5f3fc; border: 1px solid #ddd6ef; border-radius: 6px; font-size: 14px; color: #424b5c; }
 .todo-draft-notice > div { display: flex; flex-wrap: wrap; gap: 16px; }
 .todo-draft-notice button { min-height: 44px; }
 .todo-note-toggle { margin: 10px 0; font-size: 13px; }.todo-tabs { display: flex; gap: 24px; margin-top: 10px; border-bottom: 1px solid #daddE5; }.todo-tabs button { padding: 12px 0; color: #5f6673; border-bottom: 2px solid transparent; }.todo-tabs .active { color: #5844a0; border-color: #6653bd; font-weight: 600; }.todo-tabs span { font-size: 12px; margin-left: 5px; }
 .todo-row { display: flex; gap: 12px; align-items: flex-start; padding: 16px 0; border-bottom: 1px solid #edf0f5; }.todo-row:focus, .todo-focused { outline: 2px solid #8d83ed; outline-offset: 3px; }.todo-body { flex: 1; min-width: 0; }.todo-content > summary { cursor: pointer; overflow-wrap: anywhere; font-size: 15px; font-weight: 550; }.todo-done-title { text-decoration: line-through; color: #5f6673; }.todo-note { overflow-wrap: anywhere; line-height: 1.8; font-size: 14px; margin-top: 12px; }.todo-meta { font-size: 12px; color: #5f6673; margin-top: 7px; line-height: 1.8; }.todo-meta button { margin-left: 8px; }.todo-history { padding-left: 18px; margin-top: 12px; font-size: 12px; color: #5f6673; line-height: 1.8; }.todo-history time { margin-left: 10px; }
-.todo-expand, .todo-show-closed { display: block; min-height: 44px; }.todo-quick { flex-wrap: wrap; }.todo-quick select { min-width: 0; flex: 1; max-width: none; }.todo-edit .field { margin: 0 0 12px; }.todo-edit .text-button { margin-left: 16px; }.todo-empty { color: #5f6673; font-size: 14px; padding: 22px 0; }.todo-show-closed { margin-top: 14px; font-size: 13px; }
-@media(max-width:700px) { .todo-heading { align-items: flex-start; flex-direction: column; }.todo-quick { flex-wrap: wrap; }.todo-quick select { min-width: 0; flex: 1; max-width: none; }.todo-row { gap: 8px; } }
+.todo-expand, .todo-show-closed { display: block; min-height: 44px; }.todo-edit .field { margin: 0 0 12px; }.todo-edit .text-button { margin-left: 16px; }.todo-empty { color: #5f6673; font-size: 14px; padding: 22px 0; }.todo-show-closed { margin-top: 14px; font-size: 13px; }
+@media(max-width:700px) { .todo-heading { align-items: flex-start; flex-direction: column; }.todo-row { gap: 8px; } }
+@media(max-width:479px) {
+  .todo-quick { grid-template-columns: minmax(0, 1fr); }
+  .todo-quick > .button { width: 100%; }
+  .todo-quick > .paged-select ~ .button { margin-top: 0; }
+}
 </style>
