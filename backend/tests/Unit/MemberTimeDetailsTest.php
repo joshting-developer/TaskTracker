@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Services\MemberTimeDetails;
+use Tests\Support\LegacyMemberTimeDetails as MemberTimeDetails;
 use PHPUnit\Framework\TestCase;
 
 /** 驗證同卡跨日與同日多卡的聚合口徑，不依賴資料庫。 */

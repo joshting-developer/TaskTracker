@@ -80,3 +80,7 @@
 重構路徑：TimeEntryController → TimeReportRequest::toDto → Http/ApiExecution::timeReport（共用交易及Session驗證）→ WorkspaceTimeReport → TimeReportRepository → TimeEntry模型；結果仍經ApiResponse。TimeReportData不可變且不含操作者／工作區；Repository回Collection<TimeReportEntryData>，不承擔permission或回應envelope。新增相同公開ID跨租戶碰撞及單查詢／無歷史投影測試。
 
 視覺整理的入口示意、分析方式切換、直條／堆疊／響應式折線及驗證邊界見[工時分析畫面整理](time-analysis-ui-2026-11-06.md)。
+
+## 2026-11-12 SQL聚合與群組分頁
+
+TT-182已將期間原始工時全量載入改為SQL摘要聚合，群組與展開紀錄各SQL分頁20筆。權限與HTTP／Vue契約保持，日期索引及10,000筆原生MySQL量測見[驗收紀錄](performance-time-report-sql-2026-11-12.md)。

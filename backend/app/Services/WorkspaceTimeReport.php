@@ -55,7 +55,6 @@ class WorkspaceTimeReport
         if ($userId !== '' && ! isset($members[$userId])) {
             DomainError::fail('NOT_FOUND', '找不到可分析的成員');
         }
-        $detailEntries = [];
         $memberRows = [];
         $projectRows = [];
         $allocations = [];
@@ -70,49 +69,35 @@ class WorkspaceTimeReport
         }
         $totalMinutes = 0;
         $entryCount = 0;
-        $entries = $this->reports->entries($this->workspaceSession['workspace']['id'], array_keys($projects), $filters);
-        foreach ($entries as $row) {
-            $entry = $row->entry();
-            if ($detailGroup !== null) {
-                $detailEntries[] = $entry;
-            }
+        $aggregate = $this->reports->summary($this->workspaceSession['workspace']['id'], array_keys($projects), $filters);
+        foreach ($aggregate['allocations'] as $entry) {
             $member = $entry['userId'];
             $project = $entry['projectId'];
             $memberRows[$member] ??= [
-                'id' => $member,
-                'name' => $members[$member]['name'] ?? '歷史成員',
-                'minutes' => 0,
-                'entryCount' => 0,
-                'projectIds' => [],
+                'id' => $member, 'name' => $members[$member]['name'] ?? '歷史成員',
+                'minutes' => 0, 'entryCount' => 0, 'projectIds' => [],
             ];
             $projectRows[$project] ??= [
-                'id' => $project,
-                'name' => $projects[$project]['name'],
-                'code' => $projects[$project]['code'],
-                'minutes' => 0,
-                'entryCount' => 0,
-                'memberIds' => [],
+                'id' => $project, 'name' => $projects[$project]['name'], 'code' => $projects[$project]['code'],
+                'minutes' => 0, 'entryCount' => 0, 'memberIds' => [],
             ];
             $minutes = $entry['minutes'];
-            $allocationKey = $member.':'.$project;
-            $allocations[$allocationKey] ??= [
-                'userId' => $member,
-                'memberName' => $members[$member]['name'] ?? '歷史成員',
-                'projectId' => $project,
-                'projectName' => $projects[$project]['name'],
-                'minutes' => 0,
+            $count = $entry['entryCount'];
+            $allocations[] = [
+                'userId' => $member, 'memberName' => $members[$member]['name'] ?? '歷史成員',
+                'projectId' => $project, 'projectName' => $projects[$project]['name'], 'minutes' => $minutes,
             ];
-            $allocations[$allocationKey]['minutes'] += $minutes;
             $memberRows[$member]['minutes'] += $minutes;
-            $memberRows[$member]['entryCount']++;
+            $memberRows[$member]['entryCount'] += $count;
             $memberRows[$member]['projectIds'][$project] = true;
             $projectRows[$project]['minutes'] += $minutes;
-            $projectRows[$project]['entryCount']++;
+            $projectRows[$project]['entryCount'] += $count;
             $projectRows[$project]['memberIds'][$member] = true;
-            $days[$entry['workDate']]['minutes'] += $minutes;
-            $days[$entry['workDate']]['entryCount']++;
             $totalMinutes += $minutes;
-            $entryCount++;
+            $entryCount += $count;
+        }
+        foreach ($aggregate['days'] as $day) {
+            $days[$day['date']] = $day;
         }
         $memberRows = array_values(array_map(function ($row) {
             $row['projectCount'] = count($row['projectIds']);
@@ -158,14 +143,8 @@ class WorkspaceTimeReport
             ],
         ];
         if ($detailGroup !== null) {
-            $result['details'] = (new MemberTimeDetails)->get(
-                $filters->detailInput(),
-                $detailEntries,
-                $entries->mapWithKeys(fn ($row) => [$row->issueId => [
-                    'id' => $row->issueId, 'projectId' => $row->projectId,
-                    'identifier' => $row->identifier, 'title' => $row->title,
-                ]])->all(),
-                $projects,
+            $result['details'] = $this->reports->details(
+                $this->workspaceSession['workspace']['id'], array_keys($projects), $filters, $projects, $days,
             );
         }
 

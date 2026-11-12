@@ -1,0 +1,260 @@
+{
+  "date": "2026-11-12",
+  "environment": "isolated Compose tasktracker-perf-test / MySQL 8.4.13; PHP feature HTTP kernel; not network p95",
+  "fixture": "10000 valid entries / 30 cards including direct Epic / 100 work dates / 1 member-project pair; transaction rollback",
+  "summaryTransferredRows": {
+    "before": 10000,
+    "after": 101
+  },
+  "notes": "Five sequential samples; first sample process-cold, subsequent warm. No remote MySQL or production capacity claim.",
+  "before": {
+    "rows": 10000,
+    "engine": "8.4.13",
+    "samplesMs": [
+      499.422167,
+      276.255209,
+      144.193917,
+      163.88425,
+      166.080291
+    ],
+    "timeQueryCount": 1,
+    "plans": [
+      [
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "workspaces",
+          "partitions": null,
+          "type": "const",
+          "possible_keys": "PRIMARY,workspaces_public_id_unique",
+          "key": "workspaces_public_id_unique",
+          "key_len": "802",
+          "ref": "const",
+          "rows": 1,
+          "filtered": 100,
+          "Extra": "Using index; Using temporary; Using filesort"
+        },
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "projects",
+          "partitions": null,
+          "type": "const",
+          "possible_keys": "PRIMARY,projects_public_unique,projects_scope_unique,projects_workspace_id_code_unique,projects_lead_id_fk",
+          "key": "projects_public_unique",
+          "key_len": "810",
+          "ref": "const,const",
+          "rows": 1,
+          "filtered": 100,
+          "Extra": "Using index"
+        },
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "workspace_members",
+          "partitions": null,
+          "type": "ref",
+          "possible_keys": "PRIMARY,workspace_members_public_unique,workspace_members_scope_unique",
+          "key": "workspace_members_public_unique",
+          "key_len": "8",
+          "ref": "const",
+          "rows": 1,
+          "filtered": 100,
+          "Extra": "Using where; Using index"
+        },
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "time_entries",
+          "partitions": null,
+          "type": "ref",
+          "possible_keys": "time_entries_public_unique,time_entries_scope_unique,time_entries_project_unique,time_entries_workspace_id_member_id_work_date_index,time_entries_issue_id_fk",
+          "key": "time_entries_workspace_id_member_id_work_date_index",
+          "key_len": "16",
+          "ref": "const,tasktracker_test.workspace_members.id",
+          "rows": 1,
+          "filtered": 5,
+          "Extra": "Using index condition; Using where"
+        },
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "issues",
+          "partitions": null,
+          "type": "eq_ref",
+          "possible_keys": "PRIMARY,issues_public_unique,issues_scope_unique,issues_project_unique,issues_workspace_id_project_id_identifier_unique,issues_workspace_id_storage_position_index,issues_workspace_id_assignee_id_state_id_index,issues_state_id_fk,issues_epic_id_fk,issues_parent_issue_id_fk",
+          "key": "PRIMARY",
+          "key_len": "8",
+          "ref": "tasktracker_test.time_entries.issue_id",
+          "rows": 1,
+          "filtered": 5,
+          "Extra": "Using where"
+        }
+      ]
+    ],
+    "medianMs": 166.080291
+  },
+  "after": {
+    "rows": 10000,
+    "engine": "8.4.13",
+    "samplesMs": [
+      43.708041,
+      34.13525,
+      29.205084,
+      28.685875,
+      29.410625
+    ],
+    "timeQueryCount": 2,
+    "narrowDateIndexScans": [
+      "-> Index lookup on time_entries using time_entries_workspace_id_member_id_work_date_index (workspace_id='<fixture>', member_id=workspace_members.id), with index condition: ((time_entries.workspace_id = '<fixture>') and (time_entries.work_date between '2026-01-01' and '2026-01-01'))  (cost=0.255 rows=1) (actual time=0.0127..0.959 rows=100 loops=1)",
+      "-> Index lookup on time_entries using time_entries_workspace_id_member_id_work_date_index (workspace_id='<fixture>', member_id=workspace_members.id), with index condition: ((time_entries.workspace_id = '<fixture>') and (time_entries.work_date between '2026-01-01' and '2026-01-01'))  (cost=0.255 rows=1) (actual time=0.0108..0.919 rows=100 loops=1)"
+    ],
+    "plans": [
+      [
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "workspaces",
+          "partitions": null,
+          "type": "const",
+          "possible_keys": "PRIMARY,workspaces_public_id_unique",
+          "key": "workspaces_public_id_unique",
+          "key_len": "802",
+          "ref": "const",
+          "rows": 1,
+          "filtered": 100,
+          "Extra": "Using index; Using temporary; Using filesort"
+        },
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "projects",
+          "partitions": null,
+          "type": "const",
+          "possible_keys": "PRIMARY,projects_public_unique,projects_scope_unique,projects_workspace_id_code_unique,projects_lead_id_fk",
+          "key": "projects_public_unique",
+          "key_len": "810",
+          "ref": "const,const",
+          "rows": 1,
+          "filtered": 100,
+          "Extra": "Using index"
+        },
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "workspace_members",
+          "partitions": null,
+          "type": "ref",
+          "possible_keys": "PRIMARY,workspace_members_public_unique,workspace_members_scope_unique",
+          "key": "workspace_members_public_unique",
+          "key_len": "8",
+          "ref": "const",
+          "rows": 1,
+          "filtered": 100,
+          "Extra": "Using where; Using index"
+        },
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "time_entries",
+          "partitions": null,
+          "type": "ref",
+          "possible_keys": "time_entries_public_unique,time_entries_scope_unique,time_entries_project_unique,time_entries_workspace_id_member_id_work_date_index,time_entries_issue_id_fk",
+          "key": "time_entries_workspace_id_member_id_work_date_index",
+          "key_len": "16",
+          "ref": "const,tasktracker_test.workspace_members.id",
+          "rows": 1,
+          "filtered": 5,
+          "Extra": "Using index condition; Using where"
+        },
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "issues",
+          "partitions": null,
+          "type": "eq_ref",
+          "possible_keys": "PRIMARY,issues_public_unique,issues_scope_unique,issues_project_unique,issues_workspace_id_project_id_identifier_unique,issues_workspace_id_storage_position_index,issues_workspace_id_assignee_id_state_id_index,issues_state_id_fk,issues_epic_id_fk,issues_parent_issue_id_fk",
+          "key": "PRIMARY",
+          "key_len": "8",
+          "ref": "tasktracker_test.time_entries.issue_id",
+          "rows": 1,
+          "filtered": 5,
+          "Extra": "Using where"
+        }
+      ],
+      [
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "workspaces",
+          "partitions": null,
+          "type": "const",
+          "possible_keys": "PRIMARY,workspaces_public_id_unique",
+          "key": "workspaces_public_id_unique",
+          "key_len": "802",
+          "ref": "const",
+          "rows": 1,
+          "filtered": 100,
+          "Extra": "Using index; Using temporary; Using filesort"
+        },
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "projects",
+          "partitions": null,
+          "type": "const",
+          "possible_keys": "PRIMARY,projects_public_unique,projects_scope_unique,projects_workspace_id_code_unique,projects_lead_id_fk",
+          "key": "projects_public_unique",
+          "key_len": "810",
+          "ref": "const,const",
+          "rows": 1,
+          "filtered": 100,
+          "Extra": "Using index"
+        },
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "workspace_members",
+          "partitions": null,
+          "type": "ref",
+          "possible_keys": "PRIMARY,workspace_members_public_unique,workspace_members_scope_unique",
+          "key": "workspace_members_public_unique",
+          "key_len": "8",
+          "ref": "const",
+          "rows": 1,
+          "filtered": 100,
+          "Extra": "Using where; Using index"
+        },
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "time_entries",
+          "partitions": null,
+          "type": "ref",
+          "possible_keys": "time_entries_public_unique,time_entries_scope_unique,time_entries_project_unique,time_entries_workspace_id_member_id_work_date_index,time_entries_issue_id_fk",
+          "key": "time_entries_workspace_id_member_id_work_date_index",
+          "key_len": "16",
+          "ref": "const,tasktracker_test.workspace_members.id",
+          "rows": 1,
+          "filtered": 5,
+          "Extra": "Using index condition; Using where"
+        },
+        {
+          "id": 1,
+          "select_type": "SIMPLE",
+          "table": "issues",
+          "partitions": null,
+          "type": "eq_ref",
+          "possible_keys": "PRIMARY,issues_public_unique,issues_scope_unique,issues_project_unique,issues_workspace_id_project_id_identifier_unique,issues_workspace_id_storage_position_index,issues_workspace_id_assignee_id_state_id_index,issues_state_id_fk,issues_epic_id_fk,issues_parent_issue_id_fk",
+          "key": "PRIMARY",
+          "key_len": "8",
+          "ref": "tasktracker_test.time_entries.issue_id",
+          "rows": 1,
+          "filtered": 5,
+          "Extra": "Using where"
+        }
+      ]
+    ],
+    "medianMs": 29.410625
+  }
+}

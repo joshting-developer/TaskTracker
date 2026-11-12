@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Services;
+namespace Tests\Support;
 
 use App\Domain\DomainError;
 use App\Domain\Fields;
 
-/** 將已授權的單人成員工時分組，限制明細與展開紀錄的回傳量。 */
-class MemberTimeDetails
+/** 舊版PHP聚合參考器，僅供SQL結果差異驗證，不進產品讀取路徑。 */
+class LegacyMemberTimeDetails
 {
     private const PER_PAGE = 20;
 

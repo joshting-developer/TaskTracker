@@ -366,13 +366,14 @@ class TimeReportTest extends TestCase
         DB::flushQueryLog();
         DB::enableQueryLog();
         try {
-            $rows = $repository->entries($first['identity']['workspace']['id'], [$first['project']['id']], $filters);
+            $summary = $repository->summary($first['identity']['workspace']['id'], [$first['project']['id']], $filters);
+            $rows = $summary['allocations'];
             $this->assertCount(1, $rows);
-            $this->assertSame(45, $rows[0]->minutes);
-            $this->assertSame($first['identity']['user']['id'], $rows[0]->userId);
-            $this->assertSame('', $rows[0]->note);
-            $this->assertNull($rows[0]->title);
-            $this->assertCount(1, DB::getQueryLog(), '不逐列查詢關聯或歷史');
+            $this->assertSame(45, $rows[0]['minutes']);
+            $this->assertSame($first['identity']['user']['id'], $rows[0]['userId']);
+            $this->assertArrayNotHasKey('note', $rows[0]);
+            $this->assertArrayNotHasKey('title', $rows[0]);
+            $this->assertCount(2, DB::getQueryLog(), 'SQL依配對與日期聚合，不逐列查詢關聯或歷史');
         } finally {
             DB::disableQueryLog();
         }
@@ -380,9 +381,10 @@ class TimeReportTest extends TestCase
             'startDate' => $today, 'endDate' => $today, 'userId' => $first['identity']['user']['id'],
             'detailGroup' => 'issues', 'entryGroupKey' => $first['issue']['id'],
         ]);
-        $expanded = $repository->entries($first['identity']['workspace']['id'], [$first['project']['id']], $details);
-        $this->assertSame('first私有說明', $expanded[0]->note);
-        $this->assertSame('first', $expanded[0]->title);
-        $this->assertCount(0, $repository->entries($first['identity']['workspace']['id'], [], $details));
+        $projects = [$first['project']['id'] => $first['project']];
+        $expanded = $repository->details($first['identity']['workspace']['id'], [$first['project']['id']], $details, $projects, []);
+        $this->assertSame('first私有說明', $expanded['expanded']['rows'][0]['note']);
+        $this->assertSame('first', $expanded['rows'][0]['title']);
+        $this->assertSame([], $repository->summary($first['identity']['workspace']['id'], [], $details)['allocations']);
     }
 }

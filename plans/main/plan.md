@@ -1,3 +1,15 @@
+## 2026-11-12 TT-182 完成
+
+- 工時摘要改SQL配對／日期聚合，明細與展開皆SQL分頁20筆；不讀整段原始note／history。API不變，舊PHP分組器移tests作獨立對照。
+- 隔離MySQL10,000筆：PHP載入10,000→101聚合列，5次中位數166.08→29.41ms（Feature Kernel、非網路p95）；既有日期索引單日100列，未新增索引。群組／COUNT仍有SQL成本，組織選項／配對隨規模成長限制如實記錄。
+- memory4／187、原生大資料1／73與API17／510、真實member-time／time-analysis三尺寸、Pint通過。文件docs/performance-time-report-sql-2026-11-12.md與.ecc基準。本卡提交結案後才領TT-224。
+
+## 2026-11-12 TT-182 → TT-224
+
+- 已重讀AGENTS；TT-182以codex先領卡再inprogress。先將工時報表的原始列載入改為SQL聚合、群組及展開各20筆分頁，保持原HTTP與前端契約。
+- 原生隔離MySQL建立大量工時，保存變更前／後統計、EXPLAIN與資料範圍；驗證Epic各筆只計一次、作廢、授權、排序、空值與翻頁。只依證據決定日期索引。
+- 完成測試／提交／結案後才領TT-224，於隔離多worker重現超10秒Session鎖競態並驗證跨空間／撤權／保存；不先刪blocking或假定提高租期能解決任意慢請求。
+
 ## 2026-11-12 TT-257 Agent分立與領卡
 
 - 使用者確認改用codex／claude獨立帳號；兩者Workspace user、TT Project maintainer。隨機密碼存忽略的.local各自私有檔，Owner本輪授權完成即登出。
