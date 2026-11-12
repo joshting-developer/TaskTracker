@@ -33,6 +33,7 @@ HTTP API、Repository、查詢、前端資料載入或輪詢異動，必讀共�
 
 - Codex用自己的帳號先指派再進行中：`python3 tools/tasktracker.py --agent codex claim TT-243`；Claude改`--agent claude`。衝突或他人承辦即停止，不搶領；第二步失敗先讀回。
 - list／claim／status／comment維持同一Agent；有實質進度即留言已完成、實測、限制與下一步，不只留對話。
+- 看板分類、領卡前預估及逐階段本人實際工時，依共用task-tracker-usage的references/classification-and-time.md；不以留言代替正式工時。
 - 測試／提交後如實更新：驗收完成才closed，未通過／受阻維持並說明。不因commit自動假定整卡完成；完成一張回填後再領下一張，明確轉換工作或受阻例外亦須記錄。
 - AI整合/API只放PAT／Scope／對外REST／契約文件與整合驗收；內部架構／DI／資料載入歸效能或結構優化；一般UI歸實際功能。不把跨主題Epic整包收錄。
 

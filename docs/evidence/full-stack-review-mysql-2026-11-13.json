@@ -1,0 +1,835 @@
+{
+  "scope": "isolated synthetic local MySQL laboratory; not production latency, no performance change implemented",
+  "sourceScripts": {
+    "tt275-audit.php": "1d0a8dae27b876e8c150bd4789efaa0f3bbaf55d19a59864a49c241a9e9a203d",
+    "tt275-relations.php": "642a452f8fbd3307e928ee83d2e0529b783ebc83c4667aee45a4cd13040485ce",
+    "tt275-write-scope.php": "b02563b62c21a45454b99fdc8cf20e39bd971be9454aeb47e2e4d1fbbc203bbf"
+  },
+  "mysql": {
+    "engine": "8.4.13",
+    "fixture": {
+      "issues": 10000,
+      "projects": 1,
+      "workspace": 1
+    },
+    "indexes": [
+      {
+        "Table": "issues",
+        "Non_unique": 0,
+        "Key_name": "PRIMARY",
+        "Seq_in_index": 1,
+        "Column_name": "id",
+        "Collation": "A",
+        "Cardinality": 9720,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 0,
+        "Key_name": "issues_public_unique",
+        "Seq_in_index": 1,
+        "Column_name": "workspace_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 0,
+        "Key_name": "issues_public_unique",
+        "Seq_in_index": 2,
+        "Column_name": "public_id",
+        "Collation": "A",
+        "Cardinality": 9720,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 0,
+        "Key_name": "issues_scope_unique",
+        "Seq_in_index": 1,
+        "Column_name": "workspace_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 0,
+        "Key_name": "issues_scope_unique",
+        "Seq_in_index": 2,
+        "Column_name": "id",
+        "Collation": "A",
+        "Cardinality": 9720,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 0,
+        "Key_name": "issues_project_unique",
+        "Seq_in_index": 1,
+        "Column_name": "workspace_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 0,
+        "Key_name": "issues_project_unique",
+        "Seq_in_index": 2,
+        "Column_name": "project_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 0,
+        "Key_name": "issues_project_unique",
+        "Seq_in_index": 3,
+        "Column_name": "id",
+        "Collation": "A",
+        "Cardinality": 9720,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 0,
+        "Key_name": "issues_workspace_id_project_id_identifier_unique",
+        "Seq_in_index": 1,
+        "Column_name": "workspace_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 0,
+        "Key_name": "issues_workspace_id_project_id_identifier_unique",
+        "Seq_in_index": 2,
+        "Column_name": "project_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 0,
+        "Key_name": "issues_workspace_id_project_id_identifier_unique",
+        "Seq_in_index": 3,
+        "Column_name": "identifier",
+        "Collation": "A",
+        "Cardinality": 9720,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_workspace_id_storage_position_index",
+        "Seq_in_index": 1,
+        "Column_name": "workspace_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_workspace_id_storage_position_index",
+        "Seq_in_index": 2,
+        "Column_name": "storage_position",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_workspace_id_assignee_id_state_id_index",
+        "Seq_in_index": 1,
+        "Column_name": "workspace_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_workspace_id_assignee_id_state_id_index",
+        "Seq_in_index": 2,
+        "Column_name": "assignee_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "YES",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_workspace_id_assignee_id_state_id_index",
+        "Seq_in_index": 3,
+        "Column_name": "state_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_state_id_fk",
+        "Seq_in_index": 1,
+        "Column_name": "workspace_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_state_id_fk",
+        "Seq_in_index": 2,
+        "Column_name": "project_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_state_id_fk",
+        "Seq_in_index": 3,
+        "Column_name": "state_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_epic_id_fk",
+        "Seq_in_index": 1,
+        "Column_name": "workspace_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_epic_id_fk",
+        "Seq_in_index": 2,
+        "Column_name": "project_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_epic_id_fk",
+        "Seq_in_index": 3,
+        "Column_name": "epic_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "YES",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_parent_issue_id_fk",
+        "Seq_in_index": 1,
+        "Column_name": "workspace_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_parent_issue_id_fk",
+        "Seq_in_index": 2,
+        "Column_name": "project_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_parent_issue_id_fk",
+        "Seq_in_index": 3,
+        "Column_name": "parent_issue_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "YES",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_change_cursor",
+        "Seq_in_index": 1,
+        "Column_name": "workspace_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_change_cursor",
+        "Seq_in_index": 2,
+        "Column_name": "project_id",
+        "Collation": "A",
+        "Cardinality": 1,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_change_cursor",
+        "Seq_in_index": 3,
+        "Column_name": "updated_at",
+        "Collation": "A",
+        "Cardinality": 12,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "YES",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      },
+      {
+        "Table": "issues",
+        "Non_unique": 1,
+        "Key_name": "issues_change_cursor",
+        "Seq_in_index": 4,
+        "Column_name": "id",
+        "Collation": "A",
+        "Cardinality": 9720,
+        "Sub_part": null,
+        "Packed": null,
+        "Null": "",
+        "Index_type": "BTREE",
+        "Comment": "",
+        "Index_comment": "",
+        "Visible": "YES",
+        "Expression": null
+      }
+    ],
+    "cases": {
+      "list20": {
+        "queryCount": 4,
+        "rows": 20,
+        "elapsedMs": 16.55975,
+        "plans": [
+          {
+            "sql": "select count(*) as `aggregate` from `issues` where `workspace_id` = ? and `project_id` = ?",
+            "plan": [
+              {
+                "EXPLAIN": "-> Aggregate: count(0)  (cost=977 rows=1) (actual time=1.44..1.44 rows=1 loops=1)\n    -> Covering index lookup on issues using issues_project_unique (workspace_id=1, project_id=1)  (cost=491 rows=4860) (actual time=0.0791..1.14 rows=10000 loops=1)\n"
+              }
+            ]
+          },
+          {
+            "sql": "select `id`, `workspace_id`, `public_id`, `project_id`, `identifier`, `title`, `type`, `state_id`, `priority`, `assignee_id`, `due_date`, `revision`, `created_at`, `updated_at` from `issues` where `workspace_id` = ? and `project_id` = ? order by `updated_at` desc, `identifier` asc, `public_id` asc limit 20 offset 0",
+            "plan": [
+              {
+                "EXPLAIN": "-> Limit: 20 row(s)  (cost=292 rows=20) (actual time=12.7..12.7 rows=20 loops=1)\n    -> Sort: issues.updated_at DESC, issues.identifier, issues.public_id, limit input to 20 row(s) per chunk  (cost=292 rows=4860) (actual time=12.6..12.6 rows=20 loops=1)\n        -> Filter: (issues.project_id = 1)  (cost=292 rows=4860) (actual time=0.023..7.71 rows=10000 loops=1)\n            -> Index lookup on issues using issues_public_unique (workspace_id=1)  (cost=292 rows=4860) (actual time=0.0227..7.22 rows=10000 loops=1)\n"
+              }
+            ]
+          }
+        ]
+      },
+      "list100": {
+        "queryCount": 4,
+        "rows": 100,
+        "elapsedMs": 27.284375,
+        "plans": [
+          {
+            "sql": "select count(*) as `aggregate` from `issues` where `workspace_id` = ? and `project_id` = ?",
+            "plan": [
+              {
+                "EXPLAIN": "-> Aggregate: count(0)  (cost=977 rows=1) (actual time=1.14..1.14 rows=1 loops=1)\n    -> Covering index lookup on issues using issues_project_unique (workspace_id=1, project_id=1)  (cost=491 rows=4860) (actual time=0.0158..0.885 rows=10000 loops=1)\n"
+              }
+            ]
+          },
+          {
+            "sql": "select `id`, `workspace_id`, `public_id`, `project_id`, `identifier`, `title`, `type`, `state_id`, `priority`, `assignee_id`, `due_date`, `revision`, `created_at`, `updated_at` from `issues` where `workspace_id` = ? and `project_id` = ? order by `updated_at` desc, `identifier` asc, `public_id` asc limit 100 offset 0",
+            "plan": [
+              {
+                "EXPLAIN": "-> Limit: 100 row(s)  (cost=292 rows=100) (actual time=23.2..23.2 rows=100 loops=1)\n    -> Sort: issues.updated_at DESC, issues.identifier, issues.public_id, limit input to 100 row(s) per chunk  (cost=292 rows=4860) (actual time=23.2..23.2 rows=100 loops=1)\n        -> Filter: (issues.project_id = 1)  (cost=292 rows=4860) (actual time=0.0235..8.04 rows=10000 loops=1)\n            -> Index lookup on issues using issues_public_unique (workspace_id=1)  (cost=292 rows=4860) (actual time=0.0233..7.48 rows=10000 loops=1)\n"
+              }
+            ]
+          }
+        ]
+      },
+      "search": {
+        "queryCount": 4,
+        "rows": 20,
+        "elapsedMs": 28.074542,
+        "plans": [
+          {
+            "sql": "select count(*) as `aggregate` from `issues` where `workspace_id` = ? and `project_id` = ? and (LOWER(title) LIKE ? ESCAPE '!' or LOWER(identifier) LIKE ? ESCAPE '!' or LOWER(description) LIKE ? ESCAPE '!' or exists (select * from `workspace_members` where `issues`.`assignee_id` = `workspace_members`.`id` and exists (select * from `users` where `workspace_members`.`user_id` = `users`.`id` and LOWER(name) LIKE ? ESCAPE '!')))",
+            "plan": [
+              {
+                "EXPLAIN": "-> Aggregate: count(0)  (cost=340 rows=1) (actual time=6.23..6.23 rows=1 loops=1)\n    -> Filter: ((issues.project_id = 1) and ((lower(issues.title) like '%synthetic%' escape '!') or (lower(issues.identifier) like '%synthetic%' escape '!') or (lower(issues.`description`) like '%synthetic%' escape '!') or exists(select #2)))  (cost=292 rows=486) (actual time=0.00442..5.96 rows=10000 loops=1)\n        -> Index lookup on issues using issues_public_unique (workspace_id=1)  (cost=292 rows=4860) (actual time=0.00371..4.73 rows=10000 loops=1)\n        -> Select #2 (subquery in condition; dependent)\n            -> Limit: 1 row(s)  (cost=0.7 rows=1) (never executed)\n                -> Nested loop inner join  (cost=0.7 rows=1) (never executed)\n                    -> Single-row index lookup on workspace_members using PRIMARY (id=issues.assignee_id)  (cost=0.35 rows=1) (never executed)\n                    -> Filter: (lower(users.`name`) like '%synthetic%' escape '!')  (cost=0.35 rows=1) (never executed)\n                        -> Single-row index lookup on users using PRIMARY (id=workspace_members.user_id)  (cost=0.35 rows=1) (never executed)\n"
+              }
+            ]
+          },
+          {
+            "sql": "select `id`, `workspace_id`, `public_id`, `project_id`, `identifier`, `title`, `type`, `state_id`, `priority`, `assignee_id`, `due_date`, `revision`, `created_at`, `updated_at` from `issues` where `workspace_id` = ? and `project_id` = ? and (LOWER(title) LIKE ? ESCAPE '!' or LOWER(identifier) LIKE ? ESCAPE '!' or LOWER(description) LIKE ? ESCAPE '!' or exists (select * from `workspace_members` where `issues`.`assignee_id` = `workspace_members`.`id` and exists (select * from `users` where `workspace_members`.`user_id` = `users`.`id` and LOWER(name) LIKE ? ESCAPE '!'))) order by `updated_at` desc, `identifier` asc, `public_id` asc limit 20 offset 0",
+            "plan": [
+              {
+                "EXPLAIN": "-> Limit: 20 row(s)  (cost=292 rows=20) (actual time=15.8..15.8 rows=20 loops=1)\n    -> Sort: issues.updated_at DESC, issues.identifier, issues.public_id, limit input to 20 row(s) per chunk  (cost=292 rows=4860) (actual time=15.8..15.8 rows=20 loops=1)\n        -> Filter: ((issues.project_id = 1) and ((lower(issues.title) like '%synthetic%' escape '!') or (lower(issues.identifier) like '%synthetic%' escape '!') or (lower(issues.`description`) like '%synthetic%' escape '!') or exists(select #2)))  (cost=292 rows=4860) (actual time=0.00337..8.2 rows=10000 loops=1)\n            -> Index lookup on issues using issues_public_unique (workspace_id=1)  (cost=292 rows=4860) (actual time=0.00292..6.93 rows=10000 loops=1)\n            -> Select #2 (subquery in condition; dependent)\n                -> Limit: 1 row(s)  (cost=0.7 rows=1) (never executed)\n                    -> Nested loop inner join  (cost=0.7 rows=1) (never executed)\n                        -> Single-row index lookup on workspace_members using PRIMARY (id=issues.assignee_id)  (cost=0.35 rows=1) (never executed)\n                        -> Filter: (lower(users.`name`) like '%synthetic%' escape '!')  (cost=0.35 rows=1) (never executed)\n                            -> Single-row index lookup on users using PRIMARY (id=workspace_members.user_id)  (cost=0.35 rows=1) (never executed)\n"
+              }
+            ]
+          }
+        ]
+      },
+      "exactIdentifier": {
+        "queryCount": 4,
+        "rows": 1,
+        "elapsedMs": 1.128291,
+        "plans": [
+          {
+            "sql": "select count(*) as `aggregate` from `issues` where `workspace_id` = ? and `project_id` = ? and `identifier` = ?",
+            "plan": [
+              {
+                "EXPLAIN": "-> Aggregate: count(0)  (cost=0.1..0.1 rows=1) (actual time=458e-6..499e-6 rows=1 loops=1)\n    -> Rows fetched before execution  (cost=0..0 rows=1) (actual time=125e-6..166e-6 rows=1 loops=1)\n"
+              }
+            ]
+          },
+          {
+            "sql": "select `id`, `workspace_id`, `public_id`, `project_id`, `identifier`, `title`, `type`, `state_id`, `priority`, `assignee_id`, `due_date`, `revision`, `created_at`, `updated_at` from `issues` where `workspace_id` = ? and `project_id` = ? and `identifier` = ? order by `updated_at` desc, `identifier` asc, `public_id` asc limit 20 offset 0",
+            "plan": [
+              {
+                "EXPLAIN": "-> Limit: 20 row(s)  (cost=0..0 rows=1) (actual time=250e-6..333e-6 rows=1 loops=1)\n    -> Rows fetched before execution  (cost=0..0 rows=1) (actual time=83e-6..83e-6 rows=1 loops=1)\n"
+              }
+            ]
+          }
+        ]
+      },
+      "deepPage": {
+        "queryCount": 4,
+        "rows": 20,
+        "elapsedMs": 62.180417,
+        "plans": [
+          {
+            "sql": "select count(*) as `aggregate` from `issues` where `workspace_id` = ? and `project_id` = ?",
+            "plan": [
+              {
+                "EXPLAIN": "-> Aggregate: count(0)  (cost=977 rows=1) (actual time=1.23..1.23 rows=1 loops=1)\n    -> Covering index lookup on issues using issues_project_unique (workspace_id=1, project_id=1)  (cost=491 rows=4860) (actual time=0.0237..0.965 rows=10000 loops=1)\n"
+              }
+            ]
+          },
+          {
+            "sql": "select `id`, `workspace_id`, `public_id`, `project_id`, `identifier`, `title`, `type`, `state_id`, `priority`, `assignee_id`, `due_date`, `revision`, `created_at`, `updated_at` from `issues` where `workspace_id` = ? and `project_id` = ? order by `updated_at` desc, `identifier` asc, `public_id` asc limit 20 offset 7980",
+            "plan": [
+              {
+                "EXPLAIN": "-> Limit/Offset: 20/7980 row(s)  (cost=292 rows=0) (actual time=56.9..56.9 rows=20 loops=1)\n    -> Sort: issues.updated_at DESC, issues.identifier, issues.public_id, limit input to 8000 row(s) per chunk  (cost=292 rows=4860) (actual time=55.6..56.2 rows=8000 loops=1)\n        -> Filter: (issues.project_id = 1)  (cost=292 rows=4860) (actual time=0.0315..9.07 rows=10000 loops=1)\n            -> Index lookup on issues using issues_public_unique (workspace_id=1)  (cost=292 rows=4860) (actual time=0.0312..8.44 rows=10000 loops=1)\n"
+              }
+            ]
+          }
+        ]
+      },
+      "board20": {
+        "queryCount": 4,
+        "rows": 20,
+        "elapsedMs": 42.654541,
+        "plans": [
+          {
+            "sql": "select count(*) as `aggregate` from `issues` where `workspace_id` = ? and `project_id` = ?",
+            "plan": [
+              {
+                "EXPLAIN": "-> Aggregate: count(0)  (cost=977 rows=1) (actual time=1.15..1.15 rows=1 loops=1)\n    -> Covering index lookup on issues using issues_project_unique (workspace_id=1, project_id=1)  (cost=491 rows=4860) (actual time=0.0194..0.907 rows=10000 loops=1)\n"
+              }
+            ]
+          },
+          {
+            "sql": "select `id`, `workspace_id`, `public_id`, `project_id`, `identifier`, `title`, `type`, `state_id`, `priority`, `assignee_id`, `epic_id`, `parent_issue_id`, `due_date`, `estimate_minutes`, `revision`, `created_at`, `updated_at`, (select COALESCE(SUM(estimate_minutes),0) from `issues` as `epic_child` where `epic_child`.`workspace_id` = `issues`.`workspace_id` and `epic_child`.`project_id` = `issues`.`project_id` and `epic_child`.`epic_id` = `issues`.`id`) as `epic_estimate_minutes` from `issues` where `workspace_id` = ? and `project_id` = ? order by `updated_at` desc, `identifier` asc, `public_id` asc limit 20 offset 0",
+            "plan": [
+              {
+                "EXPLAIN": "-> Limit: 20 row(s)  (cost=292 rows=20) (actual time=12.9..12.9 rows=20 loops=1)\n    -> Sort: issues.updated_at DESC, issues.identifier, issues.public_id, limit input to 20 row(s) per chunk  (cost=292 rows=4860) (actual time=12.9..12.9 rows=20 loops=1)\n        -> Filter: (issues.project_id = 1)  (cost=292 rows=4860) (actual time=0.0207..8.02 rows=10000 loops=1)\n            -> Index lookup on issues using issues_public_unique (workspace_id=1)  (cost=292 rows=4860) (actual time=0.0205..7.53 rows=10000 loops=1)\n-> Select #2 (subquery in projection; dependent)\n    -> Aggregate: sum(epic_child.estimate_minutes)  (cost=90.2 rows=1) (actual time=1.82..1.82 rows=1 loops=20)\n        -> Filter: ((epic_child.workspace_id = issues.workspace_id) and (epic_child.project_id = issues.project_id) and (epic_child.epic_id = issues.id))  (cost=89.2 rows=9.72) (actual time=1.82..1.82 rows=0 loops=20)\n            -> Table scan on epic_child  (cost=89.2 rows=9720) (actual time=0.00321..1.36 rows=10000 loops=20)\n"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "provenance": {
+      "rows": 20000,
+      "indexes": [
+        {
+          "Table": "integration_audits",
+          "Non_unique": 0,
+          "Key_name": "PRIMARY",
+          "Seq_in_index": 1,
+          "Column_name": "id",
+          "Collation": "A",
+          "Cardinality": 19975,
+          "Sub_part": null,
+          "Packed": null,
+          "Null": "",
+          "Index_type": "BTREE",
+          "Comment": "",
+          "Index_comment": "",
+          "Visible": "YES",
+          "Expression": null
+        },
+        {
+          "Table": "integration_audits",
+          "Non_unique": 1,
+          "Key_name": "integration_audit_owner_page",
+          "Seq_in_index": 1,
+          "Column_name": "actor_user_id",
+          "Collation": "A",
+          "Cardinality": 1,
+          "Sub_part": null,
+          "Packed": null,
+          "Null": "",
+          "Index_type": "BTREE",
+          "Comment": "",
+          "Index_comment": "",
+          "Visible": "YES",
+          "Expression": null
+        },
+        {
+          "Table": "integration_audits",
+          "Non_unique": 1,
+          "Key_name": "integration_audit_owner_page",
+          "Seq_in_index": 2,
+          "Column_name": "workspace_id",
+          "Collation": "A",
+          "Cardinality": 1,
+          "Sub_part": null,
+          "Packed": null,
+          "Null": "",
+          "Index_type": "BTREE",
+          "Comment": "",
+          "Index_comment": "",
+          "Visible": "YES",
+          "Expression": null
+        },
+        {
+          "Table": "integration_audits",
+          "Non_unique": 1,
+          "Key_name": "integration_audit_owner_page",
+          "Seq_in_index": 3,
+          "Column_name": "id",
+          "Collation": "A",
+          "Cardinality": 19640,
+          "Sub_part": null,
+          "Packed": null,
+          "Null": "",
+          "Index_type": "BTREE",
+          "Comment": "",
+          "Index_comment": "",
+          "Visible": "YES",
+          "Expression": null
+        },
+        {
+          "Table": "integration_audits",
+          "Non_unique": 1,
+          "Key_name": "integration_audit_resource",
+          "Seq_in_index": 1,
+          "Column_name": "workspace_id",
+          "Collation": "A",
+          "Cardinality": 1,
+          "Sub_part": null,
+          "Packed": null,
+          "Null": "",
+          "Index_type": "BTREE",
+          "Comment": "",
+          "Index_comment": "",
+          "Visible": "YES",
+          "Expression": null
+        },
+        {
+          "Table": "integration_audits",
+          "Non_unique": 1,
+          "Key_name": "integration_audit_resource",
+          "Seq_in_index": 2,
+          "Column_name": "resource_id",
+          "Collation": "A",
+          "Cardinality": 19975,
+          "Sub_part": null,
+          "Packed": null,
+          "Null": "YES",
+          "Index_type": "BTREE",
+          "Comment": "",
+          "Index_comment": "",
+          "Visible": "YES",
+          "Expression": null
+        },
+        {
+          "Table": "integration_audits",
+          "Non_unique": 1,
+          "Key_name": "integration_audit_resource",
+          "Seq_in_index": 3,
+          "Column_name": "resource_revision",
+          "Collation": "A",
+          "Cardinality": 19975,
+          "Sub_part": null,
+          "Packed": null,
+          "Null": "YES",
+          "Index_type": "BTREE",
+          "Comment": "",
+          "Index_comment": "",
+          "Visible": "YES",
+          "Expression": null
+        }
+      ],
+      "plan": [
+        {
+          "EXPLAIN": "-> Filter: (integration_audits.`source` = 'token')  (cost=0.26 rows=0.1) (actual time=0.00554..0.00604 rows=1 loops=1)\n    -> Index lookup on integration_audits using integration_audit_resource (workspace_id=1, resource_id='audit-5', resource_revision=1)  (cost=0.26 rows=1) (actual time=0.00517..0.00558 rows=1 loops=1)\n"
+        }
+      ]
+    }
+  },
+  "relationEagerLoad": {
+    "list20": {
+      "queryCount": 6,
+      "rows": 20
+    },
+    "list100": {
+      "queryCount": 6,
+      "rows": 100
+    }
+  },
+  "legacyReadScope": {
+    "allProjectMetadata": {
+      "projects": 1,
+      "historyRows": 1000
+    },
+    "childRead2": {
+      "queries": 14,
+      "note": "Read-only reproduction of the require-per-child portion; writes excluded"
+    },
+    "childRead20": {
+      "queries": 122,
+      "note": "Read-only reproduction of the require-per-child portion; writes excluded"
+    }
+  },
+  "tests": [
+    {
+      "filter": "(IssueReadApiTest|PublicQueryApiTest|TokenAuthorizationTest)",
+      "matchedClasses": [
+        "MySqlTokenAuthorizationTest",
+        "TokenAuthorizationTest"
+      ],
+      "passed": 10,
+      "assertions": 256,
+      "note": "first two filter names did not match; do not claim those suites ran"
+    },
+    {
+      "filter": "(PublicQueriesTest|ProjectAclReadTest|PublicWritesTest)",
+      "matchedClasses": [
+        "MySqlPublicQueriesTest",
+        "MySqlPublicWritesTest",
+        "ProjectAclReadTest",
+        "PublicQueriesTest",
+        "PublicWritesTest"
+      ],
+      "passed": 23,
+      "assertions": 930
+    }
+  ],
+  "limitations": [
+    "single observation per query shape, not p95",
+    "mostly null Epic/assignee fixture for first scan, separate 100 distinct assignees added for eager load test",
+    "read-only reproduction of per-child requires, not entire update transaction",
+    "security regression subset, not penetration test or dependency CVE audit",
+    "existing approved screenshots plus current source review, no fresh browser/full visual verification in this documentation-only phase"
+  ]
+}

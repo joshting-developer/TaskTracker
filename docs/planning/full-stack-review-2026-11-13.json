@@ -1,0 +1,92 @@
+{
+  "trackingIssue": "TT-275",
+  "scope": "review and backlog only; no product implementation",
+  "created": [
+    {
+      "identifier": "TT-276",
+      "title": "避免看板一般卡片逐列執行Epic估時全表子查詢",
+      "primaryBoard": "效能改進",
+      "estimateMinutes": 240,
+      "verifiedState": "open",
+      "verifiedAssignee": ""
+    },
+    {
+      "identifier": "TT-277",
+      "title": "工時分析移除全工作區專案成員與歷史載入",
+      "primaryBoard": "效能改進",
+      "estimateMinutes": 360,
+      "verifiedState": "open",
+      "verifiedAssignee": ""
+    },
+    {
+      "identifier": "TT-278",
+      "title": "優化任務搜尋的卡號精準路徑與全文檢索策略",
+      "primaryBoard": "效能改進",
+      "estimateMinutes": 300,
+      "verifiedState": "open",
+      "verifiedAssignee": ""
+    },
+    {
+      "identifier": "TT-279",
+      "title": "以MySQL實測補齊列表排序索引與深分頁成本治理",
+      "primaryBoard": "效能改進",
+      "estimateMinutes": 300,
+      "verifiedState": "open",
+      "verifiedAssignee": ""
+    },
+    {
+      "identifier": "TT-280",
+      "title": "收斂父任務換Epic時子卡逐筆完整讀寫與歷史成長",
+      "primaryBoard": "效能改進",
+      "estimateMinutes": 300,
+      "verifiedState": "open",
+      "verifiedAssignee": ""
+    },
+    {
+      "identifier": "TT-281",
+      "title": "重新設計任務列表快速編輯操作與跨裝置入口",
+      "primaryBoard": "實際功能",
+      "estimateMinutes": 180,
+      "verifiedState": "open",
+      "verifiedAssignee": ""
+    },
+    {
+      "identifier": "TT-282",
+      "title": "共用Markdown編輯器支援剪貼簿圖片上傳與內文預覽",
+      "primaryBoard": "實際功能",
+      "estimateMinutes": 360,
+      "verifiedState": "open",
+      "verifiedAssignee": ""
+    },
+    {
+      "identifier": "TT-283",
+      "title": "補齊自訂看板封存清單、查閱與還原流程",
+      "primaryBoard": "實際功能",
+      "estimateMinutes": 300,
+      "verifiedState": "open",
+      "verifiedAssignee": ""
+    }
+  ],
+  "existingUpdated": [
+    {
+      "identifier": "TT-191",
+      "primaryBoard": "實際功能",
+      "estimateMinutes": 360,
+      "state": "open",
+      "assignee": ""
+    }
+  ],
+  "reclassified": [
+    {
+      "identifier": "TT-179",
+      "from": "實際功能",
+      "to": "結構優化"
+    },
+    {
+      "identifier": "TT-260",
+      "from": "實際功能",
+      "to": "結構優化"
+    }
+  ],
+  "sharedSkillCommit": "2c70629"
+}
