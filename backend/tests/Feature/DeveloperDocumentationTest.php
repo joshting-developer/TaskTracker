@@ -11,7 +11,11 @@ class DeveloperDocumentationTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @return void */
+    /**
+     * 驗證匿名HTML、Markdown與範例下載同源，不建立Session或查詢業務資料庫。
+     *
+     * @return void
+     */
     public function test_documentation_html_markdown_and_downloads_are_anonymous_and_database_free(): void
     {
         DB::flushQueryLog();

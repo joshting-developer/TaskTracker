@@ -12,6 +12,11 @@ class MySqlImportTest extends MySqlTestCase
 {
     protected string $testDatabase = 'tasktracker_test_import';
 
+    /**
+     * 驗證MySQL匯入保留業務資料，失敗整批回滾且來源SQLite內容不變。
+     *
+     * @return void
+     */
     public function test_import_preserves_data_and_rolls_back_failures_without_touching_source(): void
     {
         $this->artisan('migrate:fresh', ['--force' => true])->assertExitCode(0);

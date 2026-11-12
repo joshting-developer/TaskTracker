@@ -44,8 +44,8 @@ class PhpDocCoverageTest extends TestCase
     }
 
     /**
-     * app、seeders與測試支援類別沒有PHPDoc缺漏。
-     * 只掃各Compose都會掛載的目錄；tools與factories由tools/audit-phpdoc.php完整掃描，避免讀到映像內的舊版檔案。
+     * app、seeders、全部測試、migration及框架設定目錄沒有PHPDoc缺漏。
+     * 排除bootstrap/cache產物；tools與database/factories另由CLI在完整來源掛載下掃描。
      *
      * @return void
      */
@@ -54,9 +54,9 @@ class PhpDocCoverageTest extends TestCase
         $root = dirname(__DIR__, 2);
         $scanner = new PhpDocInventory;
         $issues = [];
-        foreach (['app', 'database/seeders', 'tests/Support', 'tests/Concerns'] as $directory) {
+        foreach (['app', 'database/seeders', 'tests', 'database/migrations', 'routes', 'config', 'bootstrap'] as $directory) {
             foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root.'/'.$directory, \FilesystemIterator::SKIP_DOTS)) as $file) {
-                if ($file->getExtension() === 'php') {
+                if ($file->getExtension() === 'php' && ! str_starts_with($file->getPathname(), $root.'/bootstrap/cache/')) {
                     $path = substr($file->getPathname(), strlen($root) + 1);
                     foreach ($scanner->file($path, file_get_contents($file->getPathname()))['issues'] as $issue) {
                         $issues[] = "{$path}:{$issue['line']} {$issue['kind']} {$issue['symbol']}";

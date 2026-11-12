@@ -3,22 +3,29 @@
 namespace Tests\Feature;
 
 use App\Authorization\WorkspacePermissions;
+use App\Domain\DomainError;
 use App\Models\User;
 use App\Repositories\RecordStore;
-use Database\Seeders\DemoSeeder;
 use Carbon\CarbonImmutable;
+use Database\Seeders\DemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Tests\Concerns\StoredWriteResults;
 use Tests\TestCase;
 
+/** 驗證示範seed的冪等、升級保護、關聯資料及四帳號授權。 */
 class DemoSeedTest extends TestCase
 {
-    use StoredWriteResults, RefreshDatabase;
+    use RefreshDatabase, StoredWriteResults;
 
+    /**
+     * 驗證示範seed重跑不重複建資料，並正確建立所屬關聯與工時。
+     *
+     * @return void
+     */
     public function test_seed_is_repeatable_scoped_and_creates_real_relations_and_time(): void
     {
         $this->travelTo(CarbonImmutable::parse('2026-11-06 10:00:00', 'Asia/Taipei'));
@@ -55,6 +62,11 @@ class DemoSeedTest extends TestCase
         $this->postJson('/api/auth/login', ['email' => DemoSeeder::EMAIL, 'password' => 'seed-test-password'])->assertOk()->assertJsonPath('data.workspace.name', 'f-ws');
     }
 
+    /**
+     * 驗證seed升級補入角色帳號、保留既存資料，遇到帳號識別衝突時拒絕覆蓋。
+     *
+     * @return void
+     */
     public function test_seed_upgrade_adds_accounts_without_changing_legacy_data_and_rejects_collisions(): void
     {
         $store = new RecordStore;
@@ -69,8 +81,12 @@ class DemoSeedTest extends TestCase
         $snapshot = [$tenant->all('projects'), $tenant->all('issues'), $tenant->all('timeEntries')];
         // 最後一組帳號衝突時, 不可留下前三組或更新 marker
         $collision = User::create(['id' => (string) Str::uuid(), 'name' => '已存在', 'email' => 'developer@example.test', 'password' => Hash::make('other-test-password')]);
-        try { app(DemoSeeder::class)->seed(password: 'seed-test-password'); $this->fail('衝突必須拒絕'); }
-        catch (\RuntimeException $failure) { $this->assertStringContainsString('不覆蓋', $failure->getMessage()); }
+        try {
+            app(DemoSeeder::class)->seed(password: 'seed-test-password');
+            $this->fail('衝突必須拒絕');
+        } catch (\RuntimeException $failure) {
+            $this->assertStringContainsString('不覆蓋', $failure->getMessage());
+        }
         $this->assertSame(2, User::count());
         $this->assertSame(1, $store->require('demoSeeds', DemoSeeder::WORKSPACE_ID)['version']);
         $collision->delete();
@@ -83,6 +99,11 @@ class DemoSeedTest extends TestCase
         $this->assertSame($hash, User::find(DemoSeeder::USER_ID)->password);
     }
 
+    /**
+     * 驗證四種seed帳號依有效權限讀寫，且管理者也不能改他人工時。
+     *
+     * @return void
+     */
     public function test_four_accounts_have_enforced_permissions_and_own_time_restrictions(): void
     {
         app(DemoSeeder::class)->seed(password: 'seed-test-password');
@@ -95,9 +116,16 @@ class DemoSeedTest extends TestCase
             $this->assertSame(WorkspacePermissions::resolve($login['role']), $login['permissions']);
             $data = $rpc('getWorkspace')->assertOk()->json('data');
             $this->assertContains('first', array_column($data['projects'], 'name'));
-            if ($role === 'developer') $this->assertNotContains('second', array_column($data['projects'], 'name'));
-            else $this->assertContains('second', array_column($data['projects'], 'name'));
-            foreach ($data['notifications'] as $notification) if (!in_array('notification.readTeamAny', $login['permissions'], true) && $role === 'developer') $this->assertSame($account['id'], $notification['recipientId']);
+            if ($role === 'developer') {
+                $this->assertNotContains('second', array_column($data['projects'], 'name'));
+            } else {
+                $this->assertContains('second', array_column($data['projects'], 'name'));
+            }
+            foreach ($data['notifications'] as $notification) {
+                if (! in_array('notification.readTeamAny', $login['permissions'], true) && $role === 'developer') {
+                    $this->assertSame($account['id'], $notification['recipientId']);
+                }
+            }
             $project = $data['projects'][0];
             $canManage = $role !== 'developer';
             $rpc('createProject', ['name' => '帳號測試', 'code' => strtoupper(substr($role, 0, 4))])->assertStatus(in_array($role, ['owner', 'manager']) ? 200 : 403);
@@ -134,7 +162,7 @@ class DemoSeedTest extends TestCase
             try {
                 app(DemoSeeder::class)->run();
                 $this->fail('非允許環境不能直接執行Seeder');
-            } catch (\App\Domain\DomainError $error) {
+            } catch (DomainError $error) {
                 $this->assertStringContainsString('local／testing', $error->getMessage());
             }
             $this->assertSame(0, User::count());
@@ -161,19 +189,27 @@ class DemoSeedTest extends TestCase
         $hash = User::find(DemoSeeder::USER_ID)->password;
         // 模擬既有v2 seed升級，只移除本測試namespace的分析標記與對應工時。
         $newEntries = array_filter($snapshot, fn ($entry) => str_starts_with($entry['note'], '工時分析示範：'));
-        foreach ($newEntries as $entry) DB::table('time_entries')->where('public_id', $entry['id'])->delete();
+        foreach ($newEntries as $entry) {
+            DB::table('time_entries')->where('public_id', $entry['id'])->delete();
+        }
         foreach ($tenant->all('upgrades') as $upgrade) {
-            if (str_starts_with($upgrade['id'], 'demo-time-analysis-')) DB::table('workspace_upgrades')->where('public_id', $upgrade['id'])->delete();
+            if (str_starts_with($upgrade['id'], 'demo-time-analysis-')) {
+                DB::table('workspace_upgrades')->where('public_id', $upgrade['id'])->delete();
+            }
         }
         $original = $tenant->all('timeEntries');
         $this->assertTrue($seed->seed()['upgraded']);
-        foreach ($original as $entry) $this->assertSame($entry, $tenant->require('timeEntries', $entry['id']));
+        foreach ($original as $entry) {
+            $this->assertSame($entry, $tenant->require('timeEntries', $entry['id']));
+        }
         $this->assertSame($hash, User::find(DemoSeeder::USER_ID)->password);
         $this->assertFalse($seed->seed()['upgraded']);
         $beforeMonth = $tenant->all('timeEntries');
         $this->travelTo(CarbonImmutable::parse('2026-12-01 10:00:00', 'Asia/Taipei'));
         $this->assertTrue($seed->seed()['upgraded']);
-        foreach ($beforeMonth as $entry) $this->assertSame($entry, $tenant->require('timeEntries', $entry['id']));
+        foreach ($beforeMonth as $entry) {
+            $this->assertSame($entry, $tenant->require('timeEntries', $entry['id']));
+        }
         $daily = [];
         $keys = [];
         foreach ($tenant->all('timeEntries') as $entry) {
@@ -191,5 +227,4 @@ class DemoSeedTest extends TestCase
         $this->assertLessThanOrEqual(1440, max($daily));
         $this->assertFalse($seed->seed()['upgraded']);
     }
-
 }

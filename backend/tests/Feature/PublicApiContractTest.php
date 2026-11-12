@@ -55,7 +55,11 @@ class PublicApiContractTest extends TestCase
         $this->matchesSchema(json_decode($response->getContent()), $operation['responses'][(string) $response->status()]['content']['application/json']['schema']);
     }
 
-    /** @return void */
+    /**
+     * 驗證匿名契約探索不使用業務DB或Session，且公開範例符合正式Schema。
+     *
+     * @return void
+     */
     public function test_discovery_is_anonymous_has_no_database_access_or_session_and_examples_match_schemas(): void
     {
         DB::flushQueryLog();
@@ -87,7 +91,11 @@ class PublicApiContractTest extends TestCase
         $this->assertSame(120, $spec['paths']['/api/public/v1/me']['get']['x-rate-limit']['requests']);
     }
 
-    /** @return void */
+    /**
+     * 驗證公開操作成功與錯誤回應均符合目前正式OpenAPI Schema。
+     *
+     * @return void
+     */
     public function test_current_operations_and_errors_match_the_formal_schemas(): void
     {
         $identity = $this->tokenRegister();
@@ -111,7 +119,11 @@ class PublicApiContractTest extends TestCase
         $this->postJson('/api/public/v1/me')->assertStatus(405)->assertJsonPath('error.code', 'METHOD_NOT_ALLOWED')->assertHeader('Allow', 'GET, HEAD');
     }
 
-    /** @return void */
+    /**
+     * 驗證公開入口各限流邊界與429的Retry-After／額度標頭。
+     *
+     * @return void
+     */
     public function test_limits_are_separate_and_429_preserves_retry_after_and_rate_headers(): void
     {
         $this->tokenRegister();
@@ -137,7 +149,11 @@ class PublicApiContractTest extends TestCase
         $this->matchesResponse($publicLimit, '/api/public/v1/me', 'get');
     }
 
-    /** @return void */
+    /**
+     * 驗證公開入口即使開debug，未預期例外也不洩漏內部訊息或堆疊。
+     *
+     * @return void
+     */
     public function test_unexpected_public_exception_is_a_safe_error_even_with_debug_enabled(): void
     {
         config(['app.debug' => true]);

@@ -4,8 +4,8 @@ namespace Tests\Feature;
 
 use App\Domain\DomainError;
 use App\Factories\SessionLockFactory;
-use App\Http\WorkspaceTransaction;
 use App\Http\Session\SessionLease;
+use App\Http\WorkspaceTransaction;
 use App\Models\User;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
@@ -22,7 +22,11 @@ class MySqlSessionConcurrencyTest extends MySqlTestCase
 {
     private string $url;
 
-    /** @return Client 獨立Cookie與CSRF的測試客戶端 */
+    /**
+     * 建立具獨立CookieJar、CSRF流程與逾時設定的真實HTTP測試客戶端。
+     *
+     * @return Client 獨立Cookie與CSRF的測試客戶端
+     */
     private function client(): Client
     {
         return new Client(['base_uri' => $this->url, 'cookies' => new CookieJar, 'timeout' => 35, 'http_errors' => false, 'headers' => ['Accept' => 'application/json', 'Origin' => 'http://127.0.0.1:5175']]);
@@ -47,7 +51,11 @@ class MySqlSessionConcurrencyTest extends MySqlTestCase
         return $data['data'] ?? $data;
     }
 
-    /** @return void */
+    /**
+     * 驗證真實多worker下，慢請求不覆蓋切換後的Session，撤權後也不能寫入。
+     *
+     * @return void
+     */
     public function test_slow_request_switch_and_revoke_never_overwrite_session_or_write_after_revoke(): void
     {
         $prefix = tempnam(sys_get_temp_dir(), 'tt-session-');

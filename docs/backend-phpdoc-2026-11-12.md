@@ -47,3 +47,8 @@
 - `PhpDocCoverageTest`：2 passed。
 - 主容器memory完整suite：133 passed；1筆`TokenSpecificationTest`失敗，來自進行中且未提交的openapi.json少了`x-required-token-ability`，在本卡修改前就失敗。
 - 隔離MySQL：非公開API測試全部通過；21筆公開API／文件測試因隔離容器未掛載`backend/resources`而失敗，與本卡無關。
+
+
+## 2026-11-12 TT-261 後續完成
+
+上方參考範圍未補與格式問題是TT-235當時紀錄。TT-261重新盤點目前100檔／241方法，已補齊33檔116項，reference與required均0問題；Feature／Unit／migration與框架設定來源已納入門檻。原生MySQL65項與memory155項通過，沒有修改斷言或migration邏輯。完整範圍、AST比對與限制見[TT-261交付](backend-phpdoc-reference-2026-11-12.md)。

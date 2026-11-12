@@ -16,7 +16,11 @@ class MySqlTimeReportTest extends MySqlTestCase
 {
     use DatabaseTransactions;
 
-    /** @return void */
+    /**
+     * 驗證一萬筆MySQL工時的總計、明細分頁與SQL投影，並檢查窄日期查詢索引計畫。
+     *
+     * @return void
+     */
     public function test_large_report_keeps_totals_bounded_details_and_query_plan(): void
     {
         $identity = $this->postJson('/api/auth/register', ['name' => 'report', 'email' => Str::uuid().'@example.test', 'password' => 'report-native-test', 'workspaceName' => 'report'])->assertOk()->json('data');

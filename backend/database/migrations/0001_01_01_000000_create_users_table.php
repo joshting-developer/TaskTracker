@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * 建立帳號、密碼重設Token與資料庫Session資料表。
+     *
+     * @return void
      */
     public function up(): void
     {
@@ -38,7 +40,9 @@ return new class extends Migration
     }
 
     /**
-     * Reverse the migrations.
+     * 移除帳號、密碼重設Token與Session資料表。
+     *
+     * @return void
      */
     public function down(): void
     {

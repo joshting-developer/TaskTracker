@@ -11,13 +11,21 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Tests\Concerns\StoredWriteResults;
 use Tests\TestCase;
 
+/** 驗證Session RPC的租戶、專案／卡片／工時契約及歷史升級相容。 */
 class WorkspaceApiTest extends TestCase
 {
     use RefreshDatabase, StoredWriteResults;
 
+    /**
+     * 透過正式註冊入口建立測試帳號與Workspace身分。
+     *
+     * @param  string  $email  此測試帳號Email
+     * @return array 帳號、Workspace與有效權限
+     */
     private function register(string $email = 'josh@example.test'): array
     {
         Auth::logout();
@@ -25,11 +33,24 @@ class WorkspaceApiTest extends TestCase
         return $this->postJson('/api/auth/register', ['name' => 'Josh', 'email' => $email, 'password' => 'test-local-password', 'workspaceName' => '產品團隊'])->assertOk()->json('data');
     }
 
+    /**
+     * 經正式Session RPC呼叫指定操作，為測試輸入補入可覆寫的requestId。
+     *
+     * @param  string  $operation  已註冊的RPC操作
+     * @param  array<string,mixed>  $input  測試輸入，可明確指定原requestId
+     * @return TestResponse 真實HTTP測試回應
+     */
     private function rpc(string $operation, array $input = [])
     {
         return $this->postJson('/api/rpc/'.$operation, ['requestId' => (string) Str::uuid(), ...$input]);
     }
 
+    /**
+     * 建立測試專案並讀回最新屬性與狀態，避免把寫入結果當完整資源。
+     *
+     * @param  string  $code  此測試專案的唯一代碼
+     * @return array 專案查詢投影
+     */
     private function project(string $code = 'TEST'): array
     {
         $result = $this->rpc('createProject', ['name' => '專案', 'code' => $code])->assertOk()->json('data');
@@ -37,6 +58,13 @@ class WorkspaceApiTest extends TestCase
         return $this->getJson('/api/v1/projects/'.$result['id'])->assertOk()->json('data');
     }
 
+    /**
+     * 建立測試卡片並由儲存層讀回完整欄位。
+     *
+     * @param  array  $project  至少含id的測試專案
+     * @param  array<string,mixed>  $fields  覆寫測試卡片欄位
+     * @return array 完整儲存卡片
+     */
     private function issue(array $project, array $fields = []): array
     {
         return $this->storedIssue($this->rpc('createIssue', ['projectId' => $project['id'], 'title' => '登入任務', ...$fields])->assertOk()->json('data'));
@@ -56,6 +84,11 @@ class WorkspaceApiTest extends TestCase
         $this->rpc('getWorkspace')->assertJsonPath('data.issues.0.description', $source);
     }
 
+    /**
+     * 驗證註冊／登入／登出的Session行為，以及不同Workspace之間的資料隔離。
+     *
+     * @return void
+     */
     public function test_authentication_session_logout_and_tenant_isolation(): void
     {
         $this->rpc('getWorkspace')->assertStatus(401);
@@ -71,6 +104,11 @@ class WorkspaceApiTest extends TestCase
         $this->rpc('getWorkspace')->assertJsonPath('data.meta.workspace.id', $first['workspace']['id'])->assertJsonCount(1, 'data.projects');
     }
 
+    /**
+     * 驗證相同requestId回原結果、不同內容衝突、過期revision與無效欄位被拒絕。
+     *
+     * @return void
+     */
     public function test_idempotent_retries_revision_conflicts_and_validation(): void
     {
         $this->register();
@@ -86,6 +124,11 @@ class WorkspaceApiTest extends TestCase
         $this->assertSame('<script>unsafe</script>', $this->storedIssue($this->rpc('addComment', ['id' => $issue['id'], 'expectedRevision' => 2, 'content' => '<script>unsafe</script>'])->assertOk()->json('data'))['comments'][0]['content']);
     }
 
+    /**
+     * 驗證類型限制Epic／Task／Bug，舊feature升級保留內容、歷史與revision保護。
+     *
+     * @return void
+     */
     public function test_three_issue_types_and_feature_upgrade_preserve_data_and_revisions(): void
     {
         $context = $this->register();
@@ -129,6 +172,11 @@ class WorkspaceApiTest extends TestCase
         $this->rpc('updateIssue', ['id' => $task['id'], 'expectedRevision' => $converted['revision'], 'title' => '轉換後可編輯'])->assertOk();
     }
 
+    /**
+     * 驗證專案資訊與負責人修改的權限、revision及跨租戶邊界。
+     *
+     * @return void
+     */
     public function test_project_details_lead_permissions_revisions_and_tenant_boundaries(): void
     {
         $owner = $this->register();
@@ -159,6 +207,11 @@ class WorkspaceApiTest extends TestCase
         $this->assertSame('TEST', $data['projects'][0]['code']);
     }
 
+    /**
+     * 驗證Epic結案需所屬卡已關閉、直接工時與每日上限，並檢查工時／狀態修改版本。
+     *
+     * @return void
+     */
     public function test_epic_status_categories_and_time_rules(): void
     {
         $this->register();
@@ -294,6 +347,11 @@ class WorkspaceApiTest extends TestCase
         ])->assertStatus(404);
     }
 
+    /**
+     * 驗證子任務、雙向關聯及版本／重試保護，關聯不再產生前置任務結案阻擋。
+     *
+     * @return void
+     */
     public function test_subtasks_related_links_revision_retries_and_no_completion_blocking(): void
     {
         $this->register();
@@ -334,6 +392,11 @@ class WorkspaceApiTest extends TestCase
         $this->rpc('createIssue', ['projectId' => $this->project('TENANT')['id'], 'title' => '跨空間', 'parentIssueId' => $parent['id']])->assertStatus(404);
     }
 
+    /**
+     * 驗證舊依賴升級為雙向關聯可重跑，保留歷史及已退役視圖資料。
+     *
+     * @return void
+     */
     public function test_dependency_upgrade_is_symmetric_idempotent_and_preserves_history_and_views(): void
     {
         $context = $this->register();
@@ -368,6 +431,11 @@ class WorkspaceApiTest extends TestCase
         $this->rpc('updateIssue', ['id' => $second['id'], 'expectedRevision' => 2, 'state' => 'closed'])->assertOk();
     }
 
+    /**
+     * 驗證邀請及任務／工時作者限制，撤權後已完成請求也不能重播。
+     *
+     * @return void
+     */
     public function test_invite_member_author_permissions_and_revocation(): void
     {
         $owner = $this->register();
@@ -391,6 +459,11 @@ class WorkspaceApiTest extends TestCase
         $this->rpc('createIssue', $retry)->assertStatus(401);
     }
 
+    /**
+     * 驗證視圖操作已停用且不在回應中出現，舊保存紀錄仍留在資料庫。
+     *
+     * @return void
+     */
     public function test_saved_views_are_unavailable_and_existing_records_are_preserved(): void
     {
         $context = $this->register();
@@ -410,6 +483,11 @@ class WorkspaceApiTest extends TestCase
         $this->assertSame($legacy, $store->require('savedViews', $legacy['id']));
     }
 
+    /**
+     * 驗證JSON輸入邊界、示範專案載入及未知角色拒絕，不接受前端自稱身分。
+     *
+     * @return void
+     */
     public function test_invalid_input_boundary_demo_and_unknown_role_deny(): void
     {
         $context = $this->register();

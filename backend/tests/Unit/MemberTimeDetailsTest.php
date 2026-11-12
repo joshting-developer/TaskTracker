@@ -8,7 +8,11 @@ use Tests\Support\LegacyMemberTimeDetails as MemberTimeDetails;
 /** 驗證同卡跨日與同日多卡的聚合口徑，不依賴資料庫。 */
 class MemberTimeDetailsTest extends TestCase
 {
-    /** 日期分組保留每日總量；卡片分組只加總該卡原始紀錄。 */
+    /**
+     * 日期分組保留每日總量；卡片分組只加總該卡原始紀錄。
+     *
+     * @return void
+     */
     public function test_dates_and_issue_groups_preserve_raw_entry_totals(): void
     {
         $issues = [

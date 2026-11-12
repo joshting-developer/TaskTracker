@@ -11,8 +11,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
+/** 驗證私人待辦、跨角色交辦、退回通知與單向轉卡的權限及版本。 */
 class TodoTest extends TestCase
 {
     use RefreshDatabase;
@@ -25,6 +27,11 @@ class TodoTest extends TestCase
 
     private RecordStore $tenant;
 
+    /**
+     * 建立獨立待辦Workspace、擁有者與Alice／Bob測試成員。
+     *
+     * @return void
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -35,6 +42,13 @@ class TodoTest extends TestCase
         $this->bob = $this->member('Bob');
     }
 
+    /**
+     * 在目前測試Workspace建立指定角色的帳號與有效成員紀錄。
+     *
+     * @param  string  $name  測試帳號名稱
+     * @param  string  $role  工作區角色映射，預設一般成員
+     * @return array{id:string,name:string,email:string,role:string} 測試成員
+     */
     private function member(string $name, string $role = 'user'): array
     {
         $user = User::create(['id' => (string) Str::uuid(), 'name' => $name, 'email' => strtolower($name).'@example.test', 'password' => Hash::make('test-local-password')]);
@@ -44,17 +58,37 @@ class TodoTest extends TestCase
         return $value;
     }
 
+    /**
+     * 透過正式登入入口切換至指定測試成員，不沿用上一位操作者的Auth。
+     *
+     * @param  array  $member  含email的測試帳號或成員資料
+     * @return void
+     */
     private function login(array $member): void
     {
         Auth::logout();
         $this->postJson('/api/auth/login', ['email' => $member['email'], 'password' => 'test-local-password'])->assertOk();
     }
 
+    /**
+     * 經正式Session RPC呼叫指定操作，為測試輸入補入可覆寫的requestId。
+     *
+     * @param  string  $op  已註冊的RPC操作
+     * @param  array<string,mixed>  $input  測試輸入，可明確指定原requestId
+     * @return TestResponse 真實HTTP測試回應
+     */
     private function rpc(string $op, array $input = [])
     {
         return $this->postJson('/api/rpc/'.$op, ['requestId' => (string) Str::uuid(), ...$input]);
     }
 
+    /**
+     * 為目前操作者建立待辦，可指定承辦者並回有界寫入結果。
+     *
+     * @param  string  $title  測試待辦標題
+     * @param  ?string  $to  承辦者ID；null時由自己承辦
+     * @return array{id:string,revision:int} 待辦寫入結果
+     */
     private function todo(string $title = '小事', ?string $to = null): array
     {
         return $this->rpc('createTodo', ['title' => $title, ...($to ? ['assigneeId' => $to] : [])])->assertOk()->json('data');
@@ -124,6 +158,11 @@ class TodoTest extends TestCase
         $this->assertSame([], json_decode(DB::table('todos')->where('public_id', $new['id'])->value('legacy_attributes'), true));
     }
 
+    /**
+     * 驗證自記待辦不必屬於專案，且身分、revision與狀態操作仍受保護。
+     *
+     * @return void
+     */
     public function test_self_notes_need_no_project_and_protect_versions_identity_and_state(): void
     {
         $this->login($this->alice);
@@ -151,6 +190,11 @@ class TodoTest extends TestCase
         }
     }
 
+    /**
+     * 驗證成員可直接交辦給管理者或擁有者、承辦人可退回，重試不重複通知。
+     *
+     * @return void
+     */
     public function test_any_member_can_assign_upwards_return_and_notify_once_without_acceptance(): void
     {
         $this->login($this->alice);
@@ -176,6 +220,11 @@ class TodoTest extends TestCase
         $this->rpc('completeTodo', ['id' => $created['id'], 'expectedRevision' => 2])->assertOk();
     }
 
+    /**
+     * 驗證非交辦／承辦者即使是Owner，也不能讀寫他人待辦或標記其通知；跨租戶同樣拒絕。
+     *
+     * @return void
+     */
     public function test_third_party_even_owner_and_other_tenants_cannot_read_write_or_mark_notifications(): void
     {
         $this->login($this->alice);
@@ -197,6 +246,11 @@ class TodoTest extends TestCase
         $this->rpc('readTodoNotification', ['id' => $notification['id']])->assertStatus(404);
     }
 
+    /**
+     * 驗證待辦完成、重開與取消的作者限制，以及通知與歷史保存。
+     *
+     * @return void
+     */
     public function test_completion_reopen_cancel_have_author_limits_and_notification_history(): void
     {
         $this->login($this->alice);
@@ -219,6 +273,11 @@ class TodoTest extends TestCase
         $this->rpc('createTodo', ['title' => '不同內容', 'requestId' => 'done-other'])->assertOk(); // requestId 按操作者隔離
     }
 
+    /**
+     * 驗證待辦轉卡單向、原子且可冪等重試，目標專案權限與卡片欄位同時生效。
+     *
+     * @return void
+     */
     public function test_conversion_is_atomic_one_way_idempotent_and_project_scoped(): void
     {
         $project = $this->rpc('createProject', ['name' => '隱藏 Project', 'code' => 'CONVERT'])->assertOk()->json('data');
@@ -246,6 +305,11 @@ class TodoTest extends TestCase
         $this->rpc('createTodoFromIssue', ['issueId' => $this->tenant->all('issues')[0]['id']])->assertStatus(404);
     }
 
+    /**
+     * 驗證停用成員或撤銷專案權限後，既有待辦請求也不能藉重播繞過授權。
+     *
+     * @return void
+     */
     public function test_disabled_members_and_revoked_project_permissions_cannot_replay_requests(): void
     {
         $project = $this->rpc('createProject', ['name' => '可撤權', 'code' => 'REVOKE'])->assertOk()->json('data');

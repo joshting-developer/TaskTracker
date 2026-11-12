@@ -283,3 +283,8 @@ Controller穩定依賴已改建構子注入，公開Project／Issue／Changes查
 ## 2026-11-12 TT-246 非Issue／Time寫入邊界
 
 Project／Board／Todo／ProjectMember／Workspace／Settings／Account已接專用Request與readonly Data；原始payload保留舊receipt簽章，不宣稱舊領域array相容入口全部消失。Project新寫入回id／revision，Board回id／projectId／revision；舊receipt原結果不變。畫面按需重讀，不把部分結果當read model或更新未儲存草稿基準。逐端點矩陣與驗收見[其他領域寫入契約](docs/other-write-contracts-2026-11-12.md)。
+
+
+## 2026-11-12 TT-261 PHPDoc範圍補齊
+
+測試／migration參考範圍已補齊，audit的required／reference均0缺漏；PhpDocCoverageTest涵蓋Feature／Unit、migration、routes／config／bootstrap自有來源，排除bootstrap/cache產物。CLI分組僅保留歷史比較，不代表reference可忽略。未改測試斷言或migration行為，見[交付與驗證](docs/backend-phpdoc-reference-2026-11-12.md)。

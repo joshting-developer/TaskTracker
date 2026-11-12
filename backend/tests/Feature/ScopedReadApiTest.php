@@ -7,19 +7,32 @@ use App\Repositories\RecordStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Tests\Concerns\StoredWriteResults;
 use Tests\TestCase;
 
 /** 有界讀取API的權限、投影、分頁及跨租戶契約。 */
 class ScopedReadApiTest extends TestCase
 {
-    use StoredWriteResults, RefreshDatabase;
+    use RefreshDatabase, StoredWriteResults;
 
+    /**
+     * 經正式Session RPC呼叫指定操作，為測試輸入補入可覆寫的requestId。
+     *
+     * @param  string  $operation  已註冊的RPC操作
+     * @param  array<string,mixed>  $input  測試輸入，可明確指定原requestId
+     * @return TestResponse 真實HTTP測試回應
+     */
     private function rpc(string $operation, array $input = [])
     {
         return $this->postJson('/api/rpc/'.$operation, ['requestId' => (string) Str::uuid(), ...$input]);
     }
 
+    /**
+     * 驗證專案授權只讀指定或目前分頁的Project參照，不掃全Workspace。
+     *
+     * @return void
+     */
     public function test_project_authorization_reads_only_the_requested_or_paginated_project_references(): void
     {
         $actor = $this->postJson('/api/auth/register', ['name' => 'Scope', 'email' => 'scope@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Scope'])->assertOk()->json('data');
@@ -56,6 +69,11 @@ class ScopedReadApiTest extends TestCase
         $this->assertSame($ids, array_column($again, 'id'));
     }
 
+    /**
+     * 驗證Project與Issue查詢的租戶、資料上限及投影，歷史／留言只在要求時讀取。
+     *
+     * @return void
+     */
     public function test_project_issue_reads_are_scoped_bounded_and_activity_is_opt_in(): void
     {
         $this->getJson('/api/v1/projects')->assertStatus(401);

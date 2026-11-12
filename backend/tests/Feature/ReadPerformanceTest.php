@@ -17,7 +17,12 @@ class ReadPerformanceTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** 量測一次完整唯讀用例，query log只存在測試程序。 */
+    /**
+     * 量測一次完整唯讀用例，query log只存在測試程序。
+     *
+     * @param  WorkspaceQuery  $query  當次範圍的唯讀用例
+     * @return array{0:array,1:int} 回應與查詢次數
+     */
     private function counted(WorkspaceQuery $query): array
     {
         DB::enableQueryLog();
@@ -31,7 +36,11 @@ class ReadPerformanceTest extends TestCase
         }
     }
 
-    /** 四帳號、缺失專案、停用及撤權，使用相同permission映射，不跨請求保存快照。 */
+    /**
+     * 四帳號、缺失專案、停用及撤權，使用相同permission映射，不跨請求保存快照。
+     *
+     * @return void
+     */
     public function test_read_permissions_match_live_checks_and_rebuild_after_revocation(): void
     {
         app(DemoSeeder::class)->seed(password: 'read-performance-test');
@@ -65,7 +74,11 @@ class ReadPerformanceTest extends TestCase
         $this->assertSame([], (new ProjectAccess($store, $context))->permissions($projectId), '寫入所用即時資格仍看得到停用');
     }
 
-    /** 增200筆工時仍回完整紀錄，但SQL數不隨entry成長。 */
+    /**
+     * 增200筆工時仍回完整紀錄，但SQL數不隨entry成長。
+     *
+     * @return void
+     */
     public function test_workspace_queries_do_not_grow_per_time_entry_for_owner_and_developer(): void
     {
         app(DemoSeeder::class)->seed(password: 'read-performance-test');

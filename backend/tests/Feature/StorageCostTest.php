@@ -6,6 +6,7 @@ use App\Repositories\RecordStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Tests\Concerns\StoredWriteResults;
 use Tests\TestCase;
 
@@ -14,11 +15,23 @@ class StorageCostTest extends TestCase
 {
     use RefreshDatabase, StoredWriteResults;
 
+    /**
+     * 經正式Session RPC呼叫指定操作，為測試輸入補入可覆寫的requestId。
+     *
+     * @param  string  $operation  已註冊的RPC操作
+     * @param  array<string,mixed>  $input  測試輸入，可明確指定原requestId
+     * @return TestResponse 真實HTTP測試回應
+     */
     private function rpc(string $operation, array $input = [])
     {
         return $this->postJson('/api/rpc/'.$operation, ['requestId' => (string) Str::uuid(), ...$input]);
     }
 
+    /**
+     * 驗證存活探針不建立Session Cookie，也不查詢資料庫。
+     *
+     * @return void
+     */
     public function test_health_has_no_session_cookie_or_database_queries(): void
     {
         config(['session.driver' => 'database']);
@@ -28,6 +41,11 @@ class StorageCostTest extends TestCase
         $this->assertSame([], DB::getQueryLog());
     }
 
+    /**
+     * 驗證看板收錄以批次查詢驗證、未變更關聯列不重寫，留言僅追加保存。
+     *
+     * @return void
+     */
     public function test_board_validation_is_batched_and_comments_are_append_only(): void
     {
         $identity = $this->postJson('/api/auth/register', ['name' => 'Cost', 'email' => 'cost@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Cost'])->assertOk()->json('data');

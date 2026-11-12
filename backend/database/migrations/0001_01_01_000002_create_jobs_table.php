@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * 建立排程工作、批次狀態與失敗工作資料表及查詢索引。
+     *
+     * @return void
      */
     public function up(): void
     {
@@ -48,7 +50,9 @@ return new class extends Migration
     }
 
     /**
-     * Reverse the migrations.
+     * 移除工作佇列、批次狀態與失敗工作資料表。
+     *
+     * @return void
      */
     public function down(): void
     {

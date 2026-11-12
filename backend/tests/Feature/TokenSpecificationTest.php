@@ -104,7 +104,11 @@ class TokenSpecificationTest extends TestCase
         $this->assertTrue((new CompliantValidator)->validate(json_decode(json_encode($media['example'])), $schema)->isValid(), '範例與正式Schema不一致');
     }
 
-    /** @return void */
+    /**
+     * 驗證正式規格對應目前路由、Scope與已交付操作，不公開未實作介面。
+     *
+     * @return void
+     */
     public function test_specification_matches_routes_and_has_no_unreleased_business_api(): void
     {
         $spec = $this->getJson('/api/public/openapi.json')->assertOk()->json();
@@ -112,7 +116,11 @@ class TokenSpecificationTest extends TestCase
         $this->assertStringNotContainsString('plainTextToken', json_encode($spec['components']['schemas']['Token']));
     }
 
-    /** @return void */
+    /**
+     * 驗證Scope、安全宣告、必填、operation、路由或範例漂移會被契約檢查拒絕。
+     *
+     * @return void
+     */
     public function test_drift_in_scope_security_required_operation_route_or_examples_is_rejected(): void
     {
         $original = json_decode(file_get_contents(resource_path('openapi.json')), true);
@@ -148,7 +156,7 @@ class TokenSpecificationTest extends TestCase
             } catch (AssertionFailedError|HttpExceptionInterface|\ErrorException $e) {
                 $rejected = true;
             }
-            $this->assertTrue($rejected,'破壞契約後應失敗');
+            $this->assertTrue($rejected, '破壞契約後應失敗');
         }
     }
 }

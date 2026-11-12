@@ -17,7 +17,11 @@ class ReadTransactionTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** API唯讀白名單會啟用query_only；寫入仍用原有交易。 */
+    /**
+     * API唯讀白名單會啟用query_only；寫入仍用原有交易。
+     *
+     * @return void
+     */
     public function test_api_reads_are_query_only_and_writes_restore_connection_state(): void
     {
         $connection = DB::connection();
@@ -42,7 +46,11 @@ class ReadTransactionTest extends TestCase
         $this->assertDatabaseHas('projects', ['code' => 'WRITE']);
     }
 
-    /** 禁止誤寫、異常及巢狀交易離開後還原query_only與Laravel交易層數。 */
+    /**
+     * 禁止誤寫、異常及巢狀交易離開後還原query_only與Laravel交易層數。
+     *
+     * @return void
+     */
     public function test_read_transaction_rejects_writes_and_restores_after_failure(): void
     {
         $connection = DB::connection();
@@ -71,7 +79,11 @@ class ReadTransactionTest extends TestCase
         $this->assertTrue($connection->getSchemaBuilder()->hasTable('allowed_after_read'));
     }
 
-    /** 獨立磁碟WAL兩連線：讀快照不擋writer；一般交易仍持有IMMEDIATE寫鎖。 */
+    /**
+     * 獨立磁碟WAL兩連線：讀快照不擋writer；一般交易仍持有IMMEDIATE寫鎖。
+     *
+     * @return void
+     */
     public function test_wal_read_snapshot_allows_other_writer_but_write_transaction_keeps_lock(): void
     {
         $path = tempnam(sys_get_temp_dir(), 'tt-read-lock-');

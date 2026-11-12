@@ -13,8 +13,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
+/** 驗證Project ACL的有效權限、租戶隔離、成員版本及撤權後重試。 */
 class ProjectAclTest extends TestCase
 {
     use RefreshDatabase;
@@ -33,6 +35,11 @@ class ProjectAclTest extends TestCase
 
     private array $privateTime;
 
+    /**
+     * 建立擁有者、兩個私有專案及卡片／看板／工時測試情境。
+     *
+     * @return void
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -48,11 +55,25 @@ class ProjectAclTest extends TestCase
         $this->privateBoard = $this->rpc('createBoard', ['projectId' => $this->second['id'], 'name' => '薪資板', 'selectedIssueIds' => [$this->privateIssue['id']]])->assertOk()->json('data');
     }
 
+    /**
+     * 經正式Session RPC呼叫指定操作，為測試輸入補入可覆寫的requestId。
+     *
+     * @param  string  $op  已註冊的RPC操作
+     * @param  array<string,mixed>  $input  測試輸入，可明確指定原requestId
+     * @return TestResponse 真實HTTP測試回應
+     */
     private function rpc(string $op, array $input = [])
     {
         return $this->postJson('/api/rpc/'.$op, ['requestId' => (string) Str::uuid(), ...$input]);
     }
 
+    /**
+     * 在目前測試Workspace建立指定角色的帳號與有效成員紀錄。
+     *
+     * @param  string  $name  測試帳號名稱
+     * @param  string  $role  工作區角色映射，預設一般成員
+     * @return array{id:string,name:string,email:string,role:string} 測試成員
+     */
     private function member(string $name, string $role = 'user'): array
     {
         $user = User::create(['id' => (string) Str::uuid(), 'name' => $name, 'email' => $name.'@example.test', 'password' => Hash::make('test-local-password')]);
@@ -62,17 +83,36 @@ class ProjectAclTest extends TestCase
         return $member;
     }
 
+    /**
+     * 透過正式登入入口切換至指定測試成員，不沿用上一位操作者的Auth。
+     *
+     * @param  array  $member  含email的測試帳號或成員資料
+     * @return void
+     */
     private function login(array $member): void
     {
         Auth::logout();
         $this->postJson('/api/auth/login', ['email' => $member['email'], 'password' => 'test-local-password'])->assertOk();
     }
 
+    /**
+     * 切回此測試Workspace的擁有者，以實際權限執行管理操作。
+     *
+     * @return void
+     */
     private function asOwner(): void
     {
         $this->login($this->owner['user']);
     }
 
+    /**
+     * 以擁有者讀取ACL基準版本，再授予指定成員專案角色。
+     *
+     * @param  array  $member  測試成員，需含id
+     * @param  string  $role  要授予的專案角色
+     * @param  ?string  $projectId  目標Project；null時使用第一個測試專案
+     * @return void
+     */
     private function grant(array $member, string $role = 'developer', ?string $projectId = null): void
     {
         $this->asOwner();
@@ -81,6 +121,11 @@ class ProjectAclTest extends TestCase
         $this->rpc('setProjectMember', ['projectId' => $projectId, 'userId' => $member['id'], 'roleId' => $role, 'expectedRevision' => $revision])->assertOk();
     }
 
+    /**
+     * 驗證未加入專案者看不到私有資源，讀者只能讀取被授權專案且不可寫入。
+     *
+     * @return void
+     */
     public function test_unjoined_and_readonly_members_cannot_see_private_resources_or_write(): void
     {
         $user = $this->member('reader');
@@ -104,6 +149,11 @@ class ProjectAclTest extends TestCase
         }
     }
 
+    /**
+     * 驗證固定角色映射的有效權限與scope控制操作，自稱owner或同名帳號不能越權。
+     *
+     * @return void
+     */
     public function test_fixed_project_roles_and_permission_scope_not_account_name_control_operations(): void
     {
         foreach (['lead', 'maintainer', 'developer', 'reader'] as $role) {
@@ -140,6 +190,11 @@ class ProjectAclTest extends TestCase
         DB::transaction(fn () => app(WorkspaceService::class)->execute($context, 'createIssue', ['projectId' => $this->first['id'], 'title' => '角色名稱不能放行', 'requestId' => 'denied-owner']));
     }
 
+    /**
+     * 驗證成員授權的revision與稽核歷史，撤權後同requestId重試仍先拒絕。
+     *
+     * @return void
+     */
     public function test_membership_revisions_audit_and_revocation_precede_retries(): void
     {
         $member = $this->member('cached');
@@ -170,6 +225,11 @@ class ProjectAclTest extends TestCase
         $this->rpc('getWorkspace')->assertStatus(401);
     }
 
+    /**
+     * 驗證卡片關聯、指派、通知與工時均限制於具權限的同一專案。
+     *
+     * @return void
+     */
     public function test_relations_assignments_notifications_and_time_are_limited_to_the_project(): void
     {
         $developer = $this->member('dev');
@@ -200,6 +260,11 @@ class ProjectAclTest extends TestCase
         $this->assertCount(2, $this->tenant->all('timeEntries'));
     }
 
+    /**
+     * 驗證只能授予操作者實際擁有的權限，不能藉角色變更擴權。
+     *
+     * @return void
+     */
     public function test_role_grants_are_limited_to_the_actors_actual_effective_permissions(): void
     {
         $target = $this->member('limited-target');
@@ -213,6 +278,11 @@ class ProjectAclTest extends TestCase
         DB::transaction(fn () => app(WorkspaceService::class)->execute($context, 'setProjectMember', ['projectId' => $this->first['id'], 'userId' => $target['id'], 'roleId' => 'developer', 'expectedRevision' => 1, 'requestId' => 'limited-escalate']));
     }
 
+    /**
+     * 驗證ACL升級保留業務與歷史資料，不將全部舊使用者自動授權到所有專案。
+     *
+     * @return void
+     */
     public function test_upgrade_preserves_business_data_and_does_not_grant_all_legacy_users(): void
     {
         $user = $this->member('legacy');
@@ -236,7 +306,11 @@ class ProjectAclTest extends TestCase
         $this->rpc('getWorkspace')->assertJsonCount(0, 'data.projects');
     }
 
-    /** 新查詢介面逐請求重驗資格，不能因先前讀過資源而保留撤權後存取。 */
+    /**
+     * 新查詢介面逐請求重驗資格，不能因先前讀過資源而保留撤權後存取。
+     *
+     * @return void
+     */
     public function test_scoped_query_api_preserves_reader_isolation_and_revocation(): void
     {
         $reader = $this->member('query-reader');

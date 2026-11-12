@@ -14,7 +14,11 @@ class AccountDomainTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** 註冊與密碼驗證不偷偷寫Auth／Session，並服從呼叫者交易。 */
+    /**
+     * 註冊與密碼驗證不偷偷寫Auth／Session，並服從呼叫者交易。
+     *
+     * @return void
+     */
     public function test_account_operations_do_not_establish_http_authentication(): void
     {
         $accounts = app(AccountService::class);

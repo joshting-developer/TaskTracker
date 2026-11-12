@@ -7,6 +7,11 @@ use Illuminate\Support\Facades\Schema;
 /** Sanctum雜湊Token與固定Workspace；保留撤銷／到期資料，不保存原文。 */
 return new class extends Migration
 {
+    /**
+     * 建立Workspace綁定PAT雜湊、期限／撤銷欄位、發行唯一鍵與本人分頁索引。
+     *
+     * @return void
+     */
     public function up(): void
     {
         Schema::create('personal_access_tokens', function (Blueprint $table) {
@@ -28,6 +33,11 @@ return new class extends Migration
         });
     }
 
+    /**
+     * 移除PAT資料表，不保存或還原Token原文。
+     *
+     * @return void
+     */
     public function down(): void
     {
         Schema::dropIfExists('personal_access_tokens');

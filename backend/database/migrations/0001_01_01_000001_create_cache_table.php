@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * 建立Laravel資料庫快取值與快取鎖資料表。
+     *
+     * @return void
      */
     public function up(): void
     {
@@ -25,7 +27,9 @@ return new class extends Migration
     }
 
     /**
-     * Reverse the migrations.
+     * 移除資料庫快取值與快取鎖資料表。
+     *
+     * @return void
      */
     public function down(): void
     {

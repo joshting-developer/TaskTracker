@@ -14,6 +14,11 @@ use Tests\MySqlTestCase;
 /** 各worker真實獨立PDO，fixture先commit；不以單連線transaction假裝競態。 */
 class MySqlConcurrencyTest extends MySqlTestCase
 {
+    /**
+     * 透過正式HTTP建立並提交競態測試用的帳號、專案及卡片。
+     *
+     * @return array{0:array,1:array,2:array} 身分、專案及卡片寫入結果
+     */
     private function fixture(): array
     {
         $identity = $this->postJson('/api/auth/register', ['name' => 'race', 'email' => Str::uuid().'@example.test', 'password' => 'mysql-race-password', 'workspaceName' => 'race'])->assertOk()->json('data');
@@ -23,7 +28,15 @@ class MySqlConcurrencyTest extends MySqlTestCase
         return [$identity, $project, $issue];
     }
 
-    /** 啟動兩個程序，全部ready後才同時釋放；finally限本次檔案及程序清理。 */
+    /**
+     * 啟動獨立寫入程序，全部ready後才同時釋放；finally只清理本次檔案及程序。
+     *
+     * @param  array  $identity  已提交的帳號及Workspace身分
+     * @param  string  $operation  競爭執行的RPC名稱
+     * @param  array  $inputs  各worker的原始請求
+     * @param  ?\Closure  $whileRunning  釋放worker後的可選回呼，接收本次暫存檔前綴
+     * @return list<array<string,mixed>> 各worker回應
+     */
     private function race(array $identity, string $operation, array $inputs, ?\Closure $whileRunning = null): array
     {
         $prefix = tempnam(sys_get_temp_dir(), 'tt-mysql-race-');
@@ -69,6 +82,11 @@ class MySqlConcurrencyTest extends MySqlTestCase
         }
     }
 
+    /**
+     * 驗證兩個獨立MySQL寫入程序競爭時，每人每日工時仍不超過24小時。
+     *
+     * @return void
+     */
     public function test_parallel_time_entries_cannot_exceed_daily_limit(): void
     {
         [$identity, , $issue] = $this->fixture();
@@ -78,6 +96,11 @@ class MySqlConcurrencyTest extends MySqlTestCase
         $this->assertSame(['INVALID_INPUT'], array_values(array_column(array_filter($results, fn ($r) => ! $r['ok']), 'code')));
     }
 
+    /**
+     * 驗證並行改同版本只成功一次，同requestId建立請求只產生一張卡片。
+     *
+     * @return void
+     */
     public function test_parallel_revision_conflict_and_replay_create_once(): void
     {
         [$identity, $project, $issue] = $this->fixture();
@@ -91,6 +114,11 @@ class MySqlConcurrencyTest extends MySqlTestCase
         $this->assertSame(1, DB::table('issues')->where('public_id', $results[0]['data']['id'])->count());
     }
 
+    /**
+     * 驗證等待Workspace鎖的寫入者取得鎖後重查撤權結果，不提交失效寫入。
+     *
+     * @return void
+     */
     public function test_waiting_writer_rechecks_revoked_permissions_after_workspace_lock(): void
     {
         [$owner, $project, $issue] = $this->fixture();

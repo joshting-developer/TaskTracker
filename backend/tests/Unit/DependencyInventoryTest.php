@@ -8,7 +8,11 @@ use Tests\Support\DependencyInventory;
 /** 驗證純token盤點不計入註解／字串／同名方法，且解析alias與constructor循環。 */
 class DependencyInventoryTest extends TestCase
 {
-    /** @return void */
+    /**
+     * 驗證依賴盤點辨識import別名與建構子循環，不把註解、字串及同名方法算成依賴。
+     *
+     * @return void
+     */
     public function test_lexical_sites_aliases_and_cycle_detection(): void
     {
         $scanner = new DependencyInventory;

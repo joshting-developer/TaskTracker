@@ -11,12 +11,13 @@ use App\Repositories\IssueReadRepository;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Tests\Concerns\BoardVersionCases;
 use Tests\Concerns\IssueLinkQueryCases;
 use Tests\Concerns\ProjectAclReadCases;
 use Tests\Concerns\RecordContextCases;
-use Tests\Concerns\WorkspaceSettingsReadCases;
 use Tests\Concerns\StoredWriteResults;
+use Tests\Concerns\WorkspaceSettingsReadCases;
 use Tests\MySqlTestCase;
 
 /** 真實InnoDB驗證資料型別、DTO、關聯、receipt及作者／租戶邊界。 */
@@ -29,11 +30,23 @@ class MySqlApiTest extends MySqlTestCase
     use RecordContextCases;
     use WorkspaceSettingsReadCases;
 
+    /**
+     * 經正式Session RPC呼叫指定操作，為測試輸入補入可覆寫的requestId。
+     *
+     * @param  string  $operation  已註冊的RPC操作
+     * @param  array<string,mixed>  $input  測試輸入，可明確指定原requestId
+     * @return TestResponse 真實HTTP測試回應
+     */
     private function rpc(string $operation, array $input = [])
     {
         return $this->postJson('/api/rpc/'.$operation, ['requestId' => (string) Str::uuid(), ...$input]);
     }
 
+    /**
+     * 驗證原生MySQL保留卡片關聯、精確分鐘數、版本衝突與同請求重播結果。
+     *
+     * @return void
+     */
     public function test_mysql_api_preserves_relations_time_precision_revision_and_replay(): void
     {
         $this->postJson('/api/auth/register', ['name' => 'MySQL測試', 'email' => 'mysql-'.Str::uuid().'@example.test', 'password' => 'mysql-test-password', 'workspaceName' => '測試空間'])->assertOk();
@@ -54,7 +67,11 @@ class MySqlApiTest extends MySqlTestCase
         $this->assertSame(1, DB::table('time_entries')->where('public_id', $entry['id'])->count());
     }
 
-    /** 原生JSON鍵排序不能導致歷史重寫，新增留言應保留舊列主鍵。 */
+    /**
+     * 原生JSON鍵排序不能導致歷史重寫，新增留言應保留舊列主鍵。
+     *
+     * @return void
+     */
     public function test_native_json_history_and_comment_rows_are_not_rewritten(): void
     {
         $this->postJson('/api/auth/register', ['name' => 'Native', 'email' => 'native-'.Str::uuid().'@example.test', 'password' => 'mysql-test-password', 'workspaceName' => 'Native'])->assertOk();
@@ -70,7 +87,11 @@ class MySqlApiTest extends MySqlTestCase
         $this->assertSame($commentId, DB::table('issue_comments')->where('public_id', $commentPublicId)->value('id'));
     }
 
-    /** 原生MySQL確認literal LIKE與最小欄位投影，不以SQLite結果推論。 */
+    /**
+     * 原生MySQL確認literal LIKE與最小欄位投影，不以SQLite結果推論。
+     *
+     * @return void
+     */
     public function test_scoped_read_filters_and_projection_on_mysql(): void
     {
         $this->postJson('/api/auth/register', ['name' => 'Read', 'email' => 'read-'.Str::uuid().'@example.test', 'password' => 'mysql-test-password', 'workspaceName' => 'Read'])->assertOk();

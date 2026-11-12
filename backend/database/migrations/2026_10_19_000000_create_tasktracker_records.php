@@ -6,6 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * 建立舊版records存放表，並加入相容Node密碼雜湊的帳號欄位。
+     *
+     * @return void
+     */
     public function up(): void
     {
         Schema::create('records', function (Blueprint $table) {
@@ -21,6 +26,11 @@ return new class extends Migration
         });
     }
 
+    /**
+     * 移除舊records表及舊密碼雜湊欄位；不嘗試重建被移除內容。
+     *
+     * @return void
+     */
     public function down(): void
     {
         Schema::dropIfExists('records');

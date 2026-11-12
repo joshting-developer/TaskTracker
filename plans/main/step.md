@@ -1,3 +1,15 @@
+## 2026-11-12 TT-261完成
+
+- 補齊33檔116項用途／param／return，reference100檔241方法及required258檔846方法均0；擴大Unit門檻並排除生成cache。
+- 註解階段33檔執行token相同，Pint後解析import與trait順序的AST同起始版本；無斷言／migration邏輯變更。memory155／7855assertions、原生MySQL65／2128assertions及最終PHPDoc門檻2項通過。
+- 詳見docs/backend-phpdoc-reference-2026-11-12.md；提交後回填closed／讀回，清理codex獨立測試Compose，未push且主庫不seed／reset。
+
+## 2026-11-12 TT-261開始
+
+- 使用者指定補齊參考範圍PHPDoc，已claim codex／inprogress；開始工作區乾淨。以689369e已通過的memory／MySQL作既有baseline，不改斷言或migration邏輯。
+- 新盤點reference100檔／241方法，33檔116項；逐項補實際用途與簽章，Feature／Unit及migration提升為必須檢查，routes／config／bootstrap也檢視。
+- 比較PHP去註解／空白的執行token證明行為未改（檢查門檻本身除外），限定Pint、audit --all、memory完整suite與codex獨立MySQL後提交／回填。
+
 ## 2026-11-12 TT-246完成
 
 - 7領域專用Request／readonly Data及28路由矩陣；原始簽章與舊receipt原結果保留，Project／Board新結果只回定位／revision。前端不把部分結果當read model，表單與測試fixture依需要GET。

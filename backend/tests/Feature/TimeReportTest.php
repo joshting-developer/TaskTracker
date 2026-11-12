@@ -300,7 +300,11 @@ class TimeReportTest extends TestCase
         $this->rpc('getTimeReport', $range)->assertStatus(403);
     }
 
-    /** 跨日期與同卡大量紀錄均分頁，總計不因頁碼改變。 */
+    /**
+     * 跨日期與同卡大量紀錄均分頁，總計不因頁碼改變。
+     *
+     * @return void
+     */
     public function test_member_details_pagination_and_input_validation(): void
     {
         $owner = $this->register('report-detail-owner@example.test');
@@ -346,7 +350,11 @@ class TimeReportTest extends TestCase
         $this->assertSame(1, $empty['lastPage']);
     }
 
-    /** 相同公開ID跨租戶時仍只投影本工作區，不載入歷史與不需要的說明。 */
+    /**
+     * 相同公開ID跨租戶時仍只投影本工作區，不載入歷史與不需要的說明。
+     *
+     * @return void
+     */
     public function test_repository_scopes_colliding_public_ids_and_returns_only_requested_projection(): void
     {
         $today = CarbonImmutable::today('Asia/Taipei')->format('Y-m-d');
