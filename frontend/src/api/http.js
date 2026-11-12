@@ -12,8 +12,9 @@ function failure(code, message, status) {
   return Object.assign(new Error(message), { code, status });
 }
 
-function accessChanged(code) {
-  if (['WORKSPACE_CHANGED', 'UNAUTHENTICATED', 'FORBIDDEN'].includes(code)) {
+function accessChanged(code, method) {
+  // 撤權Project的寫入回NOT_FOUND以免洩漏存在性；只對寫入廣播，GET 404不觸發全域重驗。
+  if (['WORKSPACE_CHANGED', 'UNAUTHENTICATED', 'FORBIDDEN'].includes(code) || (code === 'NOT_FOUND' && method !== 'GET')) {
     globalThis.window?.dispatchEvent(new Event('tasktracker:access-changed'));
   }
 }
@@ -72,7 +73,7 @@ export async function requestJson(path, { method = 'GET', input, scoped = true, 
     if (!body || typeof body !== 'object' || Array.isArray(body)) throw failure('INVALID_RESPONSE', '伺服器回應格式不正確', response.status);
     if (!response.ok || body.ok === false) {
       const code = body.error?.code || ({ 401: 'UNAUTHENTICATED', 403: 'FORBIDDEN', 404: 'NOT_FOUND', 409: 'CONFLICT', 419: 'CSRF_EXPIRED', 429: 'RATE_LIMITED' }[response.status]) || 'HTTP_ERROR';
-      if (notifyAccess && scoped && workspaceId) accessChanged(code);
+      if (notifyAccess && scoped && workspaceId) accessChanged(code, method);
       throw failure(code, body.error?.message || '請求失敗', response.status);
     }
     return body.ok === true ? body.data : body;

@@ -39,4 +39,12 @@ assert.deepEqual(await requestJson('/write', { method: 'POST', input }), { saved
 assert.equal(mutation, 2);
 assert.deepEqual(calls.filter(c => c.url === '/write').map(c => JSON.parse(c.options.body)), [input, input]);
 assert.ok(calls.filter(c => c.url === '/write').every(c => c.options.headers['X-Workspace-ID'] === 'second'));
-console.log('API client: query, scope, domain/HTTP errors, malformed JSON, network, timeout, abort, stale generation, CSRF replay passed');
+let accessEvents = 0;
+globalThis.window = new EventTarget();
+window.addEventListener('tasktracker:access-changed', () => { accessEvents++; });
+globalThis.fetch = async url => url === '/api/csrf-cookie' ? reply({ csrfToken: 'token' }) : reply({ ok: false, error: { code: 'NOT_FOUND', message: '找不到或無權存取' } }, 404);
+await assert.rejects(requestJson('/read'), e => e.code === 'NOT_FOUND');
+assert.equal(accessEvents, 0, 'GET 404不觸發全域重驗');
+await assert.rejects(requestJson('/write', { method: 'POST', input }), e => e.code === 'NOT_FOUND');
+assert.equal(accessEvents, 1, '撤權寫入的NOT_FOUND觸發重驗');
+console.log('API client: query, scope, domain/HTTP errors, malformed JSON, network, timeout, abort, stale generation, CSRF replay, write NOT_FOUND access refresh passed');
