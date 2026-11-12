@@ -11,6 +11,7 @@ use App\Repositories\IssueReadRepository;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Tests\Concerns\IssueLinkQueryCases;
 use Tests\Concerns\ProjectAclReadCases;
 use Tests\Concerns\WorkspaceSettingsReadCases;
 use Tests\MySqlTestCase;
@@ -19,6 +20,7 @@ use Tests\MySqlTestCase;
 class MySqlApiTest extends MySqlTestCase
 {
     use DatabaseTransactions, \Tests\Concerns\ProjectTimeReadCases, \Tests\Concerns\ProjectUtilityReadCases;
+    use IssueLinkQueryCases;
     use ProjectAclReadCases;
     use WorkspaceSettingsReadCases;
 

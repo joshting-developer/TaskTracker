@@ -2,7 +2,9 @@
 
 namespace App\Repositories;
 
+use App\Data\IssueLinkData;
 use App\Domain\DomainError;
+use App\Domain\Fields;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -79,6 +81,84 @@ class RecordStore
         }
 
         return array_column(array_filter($this->all('issues'), fn ($issue) => in_array($issue['id'], $ids, true)), 'projectId', 'id');
+    }
+
+    /** 取得關聯驗證投影；舊格式只供歷史遷移，不用於正常API。
+     * @param  array<string>  $ids  明確指定的卡片ID
+     * @param  string  $currentId  目前卡片ID，建立時為空
+     * @return array<string, IssueLinkData>
+     */
+    public function issueLinks(array $ids, string $currentId = ''): array
+    {
+        $ids = array_values(array_unique(array_filter($ids)));
+        if ($this->usesRelational('issues')) {
+            return $this->records->issueLinks($ids, $currentId);
+        }
+        $result = [];
+        foreach ($ids as $id) {
+            $issue = $this->get('issues', $id);
+            if ($issue) {
+                $result[$id] = new IssueLinkData($id, $issue['projectId'], $issue['type'], $issue['parentIssueId'] ?? '',
+                    $issue['epicId'] ?? '', count($issue['relatedIssueIds'] ?? []), in_array($currentId, $issue['relatedIssueIds'] ?? [], true));
+            }
+        }
+
+        return $result;
+    }
+
+    /** 用SQL exists檢查目前專案的必要子集合。
+     * @param  string  $projectId  專案公開ID
+     * @param  string  $issueId  父項公開ID
+     * @param  bool  $epic  是否檢查Epic所屬卡片
+     * @param  bool  $unclosed  是否只查未結案卡片
+     * @return bool
+     */
+    public function issueHasChildren(string $projectId, string $issueId, bool $epic = false, bool $unclosed = false): bool
+    {
+        if ($this->usesRelational('issues')) {
+            return $this->records->issueHasChildren($projectId, $issueId, $epic, $unclosed);
+        }
+        foreach ($this->all('issues') as $issue) {
+            if ($issue['projectId'] === $projectId && ($issue[$epic ? 'epicId' : 'parentIssueId'] ?? '') === $issueId
+                && (! $unclosed || ! Fields::isClosed($issue))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** 只讀取指定卡片有效工時的存在性。
+     * @param  string  $projectId  專案公開ID
+     * @param  string  $issueId  任務公開ID
+     * @return bool
+     */
+    public function issueHasActiveTime(string $projectId, string $issueId): bool
+    {
+        if ($this->usesRelational('timeEntries')) {
+            return $this->records->issueHasActiveTime($projectId, $issueId);
+        }
+
+        return (bool) array_filter($this->all('timeEntries'), fn ($entry) => $entry['issueId'] === $issueId && empty($entry['voidedAt']));
+    }
+
+    /** 逐批提供實際需要同步的子項識別碼。
+     * @param  string  $projectId  專案公開ID
+     * @param  string  $issueId  父項公開ID
+     * @return \Generator<int, string>
+     */
+    public function issueChildIds(string $projectId, string $issueId): \Generator
+    {
+        if ($this->usesRelational('issues')) {
+            yield from $this->records->issueChildIds($projectId, $issueId);
+
+            return;
+        }
+        foreach ($this->all('issues') as $issue) {
+            if ($issue['projectId'] === $projectId && ($issue['parentIssueId'] ?? '') === $issueId) {
+                yield $issue['id'];
+            }
+        }
     }
 
     /** 交易鎖與資格已由上層確認；這裡只負責當人當日SQL聚合。 */

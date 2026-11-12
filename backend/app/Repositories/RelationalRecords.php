@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Data\IssueLinkData;
 use App\Database\DatabaseTimes;
 use App\Domain\DomainError;
 use App\Models\User;
@@ -122,6 +123,90 @@ class RelationalRecords
             ->whereIn('issues.public_id', $ids)
             ->get(['projects.public_id as project_public_id', 'issues.public_id as issue_public_id'])
             ->pluck('project_public_id', 'issue_public_id')->all();
+    }
+
+    /** 批次讀指定ID的關聯摘要，反向容量只用SQL聚合，不載入活動與其他卡片。
+     * @param  array<string>  $ids  最多父項、Epic與200個關聯ID
+     * @param  string  $currentId  目前卡片ID，建立時為空
+     * @return array<string, IssueLinkData>
+     */
+    public function issueLinks(array $ids, string $currentId): array
+    {
+        if (! $ids) {
+            return [];
+        }
+        $rows = DB::table('issues as target')
+            ->join('projects', 'projects.id', '=', 'target.project_id')
+            ->leftJoin('issues as parent', 'parent.id', '=', 'target.parent_issue_id')
+            ->leftJoin('issues as epic', 'epic.id', '=', 'target.epic_id')
+            ->where('target.workspace_id', $this->workspaceId())->whereIn('target.public_id', $ids)
+            ->select(['target.public_id', 'projects.public_id as project_public_id', 'target.type', 'parent.public_id as parent_public_id', 'epic.public_id as epic_public_id'])
+            ->selectSub(DB::table('issue_relations')->whereColumn('issue_relations.issue_id', 'target.id')->whereColumn('issue_relations.workspace_id', 'target.workspace_id')->selectRaw('COUNT(*)'), 'related_count')
+            ->selectSub(DB::table('issue_relations')->join('issues as related', 'related.id', '=', 'issue_relations.related_issue_id')
+                ->whereColumn('issue_relations.issue_id', 'target.id')->whereColumn('issue_relations.workspace_id', 'target.workspace_id')
+                ->where('related.public_id', $currentId)->selectRaw('COUNT(*)'), 'already_related')->get();
+        $result = [];
+        foreach ($rows as $row) {
+            $result[$row->public_id] = new IssueLinkData($row->public_id, $row->project_public_id, $row->type,
+                $row->parent_public_id ?? '', $row->epic_public_id ?? '', (int) $row->related_count, (bool) $row->already_related);
+        }
+
+        return $result;
+    }
+
+    /** 限定Workspace／Project與父項的子集合查詢；欄位只由內部呼叫者指定。
+     * @param  string  $projectId  專案公開ID
+     * @param  string  $issueId  父項公開ID
+     * @param  string  $column  內部指定的parent_issue_id或epic_id
+     * @return \Illuminate\Database\Query\Builder
+     */
+    private function issueChildrenQuery(string $projectId, string $issueId, string $column): \Illuminate\Database\Query\Builder
+    {
+        return DB::table('issues')->join('projects', 'projects.id', '=', 'issues.project_id')
+            ->where('issues.workspace_id', $this->workspaceId())->where('projects.public_id', $projectId)
+            ->where('issues.'.$column, $this->query('issues')->where('public_id', $issueId)->select('id'));
+    }
+
+    /** 僅判斷指定父項是否有子任務／Epic所屬卡片，不載入原始內容。
+     * @param  string  $projectId  專案公開ID
+     * @param  string  $issueId  父項公開ID
+     * @param  bool  $epic  是否檢查Epic所屬卡片
+     * @param  bool  $unclosed  是否只查未結案卡片
+     * @return bool
+     */
+    public function issueHasChildren(string $projectId, string $issueId, bool $epic = false, bool $unclosed = false): bool
+    {
+        $query = $this->issueChildrenQuery($projectId, $issueId, $epic ? 'epic_id' : 'parent_issue_id');
+        if ($unclosed) {
+            $query->join('project_statuses', 'project_statuses.id', '=', 'issues.state_id')->where('project_statuses.code', '!=', 'closed');
+        }
+
+        return $query->exists();
+    }
+
+    /** 型別變更只檢查該卡有效工時是否存在。
+     * @param  string  $projectId  專案公開ID
+     * @param  string  $issueId  任務公開ID
+     * @return bool
+     */
+    public function issueHasActiveTime(string $projectId, string $issueId): bool
+    {
+        return DB::table('time_entries')->join('issues', 'issues.id', '=', 'time_entries.issue_id')
+            ->join('projects', 'projects.id', '=', 'issues.project_id')
+            ->where('time_entries.workspace_id', $this->workspaceId())->where('projects.public_id', $projectId)
+            ->where('issues.public_id', $issueId)->whereNull('time_entries.voided_at')->exists();
+    }
+
+    /** 以固定100筆批次與穩定主鍵順序逐一提供必須同步Epic的子項ID。
+     * @param  string  $projectId  專案公開ID
+     * @param  string  $issueId  父項公開ID
+     * @return \Generator<int, string>
+     */
+    public function issueChildIds(string $projectId, string $issueId): \Generator
+    {
+        foreach ($this->issueChildrenQuery($projectId, $issueId, 'parent_issue_id')->select(['issues.id', 'issues.public_id'])->lazyById(100, 'issues.id', 'id') as $row) {
+            yield $row->public_id;
+        }
     }
 
     /** 讀取本人當日有效分鐘，不取得其他作者／日期的原始紀錄。

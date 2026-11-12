@@ -100,34 +100,37 @@ class IssueService
      */
     private function validateLinks(array $project, array &$fields, ?array $current = null): void
     {
-        $issues = $this->store->all('issues');
-        $children = array_filter($issues, fn ($i) => ($i['parentIssueId'] ?? '') === ($current['id'] ?? null));
+        $links = $this->store->issueLinks([$fields['parentIssueId'], $fields['epicId'], ...$fields['relatedIssueIds']], $current['id'] ?? '');
+        $children = $current && $this->store->issueHasChildren($project['id'], $current['id']);
         if ($fields['parentIssueId']) {
-            $parent = $this->store->require('issues', $fields['parentIssueId']);
-            $isSameProject = $parent['projectId'] === $project['id'];
-            $isExecutionPair = $parent['type'] !== 'epic' && $fields['type'] !== 'epic';
-            $isSelfParent = $parent['id'] === ($current['id'] ?? null);
-            $createsExtraLevel = ! empty($parent['parentIssueId']) || count($children) > 0;
+            $parent = $links[$fields['parentIssueId']] ?? DomainError::fail('NOT_FOUND', '找不到這筆資料, 請重新載入');
+            $isSameProject = $parent->projectId === $project['id'];
+            $isExecutionPair = $parent->type !== 'epic' && $fields['type'] !== 'epic';
+            $isSelfParent = $parent->id === ($current['id'] ?? null);
+            $createsExtraLevel = ! empty($parent->parentIssueId) || $children;
             if (! $isSameProject || ! $isExecutionPair || $isSelfParent || $createsExtraLevel) {
                 DomainError::fail('INVALID_INPUT', '子任務限同專案一層, 請選擇其他一般任務作為父任務');
             }
-            if (($current['parentIssueId'] ?? '') === $fields['parentIssueId'] && $fields['epicId'] !== $parent['epicId']) {
+            if (($current['parentIssueId'] ?? '') === $fields['parentIssueId'] && $fields['epicId'] !== $parent->epicId) {
                 DomainError::fail('INVALID_INPUT', '子任務所屬 Epic 隨父任務, 請從父任務調整');
             }
-            $fields['epicId'] = $parent['epicId'];
+            $fields['epicId'] = $parent->epicId;
         }
         foreach ($fields['relatedIssueIds'] as $id) {
-            $target = $this->store->require('issues', $id);
-            if ($target['projectId'] !== $project['id'] || $id === ($current['id'] ?? null)) {
+            $target = $links[$id] ?? DomainError::fail('NOT_FOUND', '找不到這筆資料, 請重新載入');
+            if ($target->projectId !== $project['id'] || $id === ($current['id'] ?? null)) {
                 DomainError::fail('INVALID_INPUT', '只能關聯同專案的其他任務');
             }
-            if (! in_array($current['id'] ?? '', $target['relatedIssueIds'] ?? [], true) && count($target['relatedIssueIds'] ?? []) >= 200) {
+            if (! $target->alreadyRelated && $target->relatedCount >= 200) {
                 DomainError::fail('INVALID_INPUT', '目標的關聯任務已達上限');
             }
         }
         if ($fields['epicId']) {
-            $epic = $this->store->require('issues', $fields['epicId']);
-            if ($epic['projectId'] !== $project['id'] || $epic['type'] !== 'epic' || $fields['type'] === 'epic' || $epic['id'] === ($current['id'] ?? null)) {
+            if (! isset($links[$fields['epicId']])) {
+                $links += $this->store->issueLinks([$fields['epicId']]);
+            }
+            $epic = $links[$fields['epicId']] ?? DomainError::fail('NOT_FOUND', '找不到這筆資料, 請重新載入');
+            if ($epic->projectId !== $project['id'] || $epic->type !== 'epic' || $fields['type'] === 'epic' || $epic->id === ($current['id'] ?? null)) {
                 DomainError::fail('INVALID_INPUT', 'Epic 必須是同專案的父項目, 不可巢狀或自我連結');
             }
         }
@@ -140,23 +143,19 @@ class IssueService
         if (! $current) {
             return;
         }
-        $epicChildren = array_filter($issues, fn ($i) => ($i['epicId'] ?? '') === $current['id']);
+        $epicChildren = $this->store->issueHasChildren($project['id'], $current['id'], epic: true);
         if ($fields['type'] === 'epic') {
             if ($children) {
                 DomainError::fail('INVALID_INPUT', '請先移轉子任務, 再改成 Epic');
             }
             if ($current['type'] !== 'epic') {
-                foreach ($this->store->all('timeEntries') as $entry) {
-                    if ($entry['issueId'] === $current['id'] && empty($entry['voidedAt'])) {
-                        DomainError::fail('INVALID_INPUT', '已有工時的任務不可改成 Epic');
-                    }
+                if ($this->store->issueHasActiveTime($project['id'], $current['id'])) {
+                    DomainError::fail('INVALID_INPUT', '已有工時的任務不可改成 Epic');
                 }
             }
             if ($fields['state'] !== $current['state'] && Fields::isClosed($fields)) {
-                foreach ($epicChildren as $child) {
-                    if (! Fields::isClosed($child)) {
-                        DomainError::fail('INVALID_INPUT', '還有未結案子任務, 請先關閉後再關閉 Epic');
-                    }
+                if ($this->store->issueHasChildren($project['id'], $current['id'], epic: true, unclosed: true)) {
+                    DomainError::fail('INVALID_INPUT', '還有未結案子任務, 請先關閉後再關閉 Epic');
                 }
             }
         } elseif ($epicChildren) {
@@ -251,10 +250,8 @@ class IssueService
         }
         $this->syncRelations($issue, $current['relatedIssueIds'] ?? []);
         if ($issue['epicId'] !== $current['epicId']) {
-            foreach ($this->store->all('issues') as $child) {
-                if (($child['parentIssueId'] ?? '') === $issue['id']) {
-                    $this->writeIssue($child, ['epicId' => $issue['epicId']]);
-                }
+            foreach ($this->store->issueChildIds($project['id'], $issue['id']) as $childId) {
+                $this->writeIssue($this->store->require('issues', $childId), ['epicId' => $issue['epicId']]);
             }
         }
         if ($issue['assignee'] !== $current['assignee']) {
