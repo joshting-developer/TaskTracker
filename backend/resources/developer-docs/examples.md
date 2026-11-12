@@ -25,3 +25,5 @@
 兩個範例都完成：身分／Project → 狀態候選 → 建卡 → identifier 精準列表 → 最新詳細 → PATCH → 留言 → GET 驗證。同一請求重送不重複卡片或留言；最終 revision 至少3。只輸出識別／驗證及非秘密結果，不輸出 PAT。分頁、409／429與timeout策略見 [HTTP 契約](/api/public/docs/contract) 與 [Agent 指南](/api/public/docs/agents)。
 
 實務中請保存每次 requestId 與有效 payload 供重試。範例沒有自動「衝突後覆蓋」：如果中途有人修改，會停止；先 GET 最新並確認意圖，再決定下一次操作。
+
+Python範例另外驗證增量摘要cursor接續與inclusive水位；處理成功才保存接續點，不將全集放在記憶體。

@@ -249,3 +249,7 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 ### 2026-11-12 TT-254 公開文件客戶端驗收
 
 已交付source-free標準HTTP客戶端，空目錄python -I只憑公開OpenAPI／指南／PAT驗建卡、更新、留言、冪等、409、Scope、跨Workspace、撤權、停用、到期與撤銷；獨立tasktracker_test實跑並接入契約CI。fixture不進產品HTTP，不得用主庫執行。這不是特定外部模型聯調或自動連接器，見docs/public-api-independent-client-acceptance.md。
+
+### 2026-11-12 TT-170 增量任務摘要
+
+公開Project issue-changes提供有界cursor／updatedSince，OpenAPI0.5.0；共用Issue查詢／摘要Resource，cursor綁本人／租戶／Project／filters，每批重驗權限，SQL最多101且無COUNT／OFFSET。syncUntil固定本輪、下一輪inclusive水位按id/revision去重；不是跨HTTP snapshot或無損刪除changefeed，TT-173另驗。舊頁碼及前端保留，見docs/public-issue-changes.md。CI文件瀏覽器使用5185／隔離API13049。

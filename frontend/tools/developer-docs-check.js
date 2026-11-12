@@ -2,9 +2,11 @@ import assert from 'node:assert/strict';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
 if (!['http://127.0.0.1:13029', 'http://127.0.0.1:13049'].includes(process.env.E2E_API_URL)) throw new Error('只允許隔離文件測試API');
+const docsPort = Number(process.env.E2E_DOCS_PORT || 5175);
+if (![5175, 5185].includes(docsPort)) throw new Error('只允許隔離文件測試埠');
 let server, browser;
 try {
-  server = await preview({ preview: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
+  server = await preview({ preview: { host: '127.0.0.1', port: docsPort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
   const context = await browser.newContext();
   const page = await context.newPage();
@@ -12,7 +14,7 @@ try {
   for (const width of [1440, 768, 390]) {
     await page.setViewportSize({ width, height: 1000 });
     for (const slug of ['index', 'authentication', 'examples', 'agents', 'contract']) {
-      await page.goto(`http://127.0.0.1:5175/api/public/docs/${slug}`);
+      await page.goto(`http://127.0.0.1:${docsPort}/api/public/docs/${slug}`);
       assert.equal(await page.getByRole('heading', { level: 1 }).count(), 1);
       assert.equal(await page.locator('nav [aria-current="page"]').count(), 1);
       assert.equal(await page.locator('input, form, script').count(), 0);
@@ -22,7 +24,7 @@ try {
       if ((width === 1440 && slug === 'index') || (width === 390 && slug === 'examples')) await page.screenshot({ path: `/tmp/tt252-docs-${width}.png` });
     }
   }
-  await page.goto('http://127.0.0.1:5175/api/public/docs');
+  await page.goto(`http://127.0.0.1:${docsPort}/api/public/docs`);
   await page.keyboard.press('Tab');
   assert.equal(await page.evaluate(() => document.activeElement.textContent), '跳到文件內容');
   await page.keyboard.press('Enter');

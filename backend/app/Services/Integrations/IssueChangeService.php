@@ -6,22 +6,27 @@ use App\Data\IssueChangesQueryData;
 use App\Data\WorkspaceContext;
 use App\Repositories\IssueReadRepository;
 use App\Services\ProjectReadService;
+use Illuminate\Database\Eloquent\Collection;
 
 /** 同Project的有界live增量摘要；每批先驗當前權限，不保存授權快照。 */
 class IssueChangeService
 {
     /**
-     * @param ProjectReadService $projects 既有Project授權用例
-     * @param IssueReadRepository $issues 共用篩選與最小投影
-     * @param IssueCursorCodec $cursors 認證加密接續識別
+     * 組合當次Project授權、共用摘要查詢與cursor接續，不保存權限快照。
+     *
+     * @param  ProjectReadService  $projects  既有Project授權用例
+     * @param  IssueReadRepository  $issues  共用篩選與最小投影
+     * @param  IssueCursorCodec  $cursors  認證加密接續識別
      */
     public function __construct(private ProjectReadService $projects, private IssueReadRepository $issues, private IssueCursorCodec $cursors) {}
 
     /**
-     * @param WorkspaceContext $context 當次資格
-     * @param string $projectId Project公開ID
-     * @param IssueChangesQueryData $query 已驗證的查詢
-     * @return array{items: \Illuminate\Database\Eloquent\Collection,perPage:int,nextCursor:?string,syncUntil:string} 有界摘要及水位，沒有COUNT
+     * 組合當次Project授權、共用摘要查詢與cursor接續，不保存權限快照。
+     *
+     * @param  WorkspaceContext  $context  當次資格
+     * @param  string  $projectId  Project公開ID
+     * @param  IssueChangesQueryData  $query  已驗證的查詢
+     * @return array{items: Collection,perPage:int,nextCursor:?string,syncUntil:string} 有界摘要及水位，沒有COUNT
      */
     public function read(WorkspaceContext $context, string $projectId, IssueChangesQueryData $query): array
     {

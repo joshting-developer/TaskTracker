@@ -35,6 +35,7 @@ Route::prefix('/api/public/v1')->middleware('throttle:public-api-v1')->withoutMi
     Route::get('/projects/{project}/members', [$queries, 'members']);
     Route::get('/projects/{project}/statuses', [$queries, 'statuses']);
     Route::get('/projects/{project}/issues', [$queries, 'issues']);
+    Route::get('/projects/{project}/issue-changes', [$queries, 'changes']);
     Route::get('/projects/{project}/issues/{issue}', [$queries, 'issue']);
     Route::get('/projects/{project}/issues/{issue}/comments', [$queries, 'comments']);
 });

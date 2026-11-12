@@ -1,3 +1,15 @@
+## 2026-11-12 TT-170 驗證完成
+
+- 新增Project issue-changes、OpenAPI0.5.0、公開cursor指南／Python迴圈；既有頁碼及前端不改。共用SQL篩選、認證加密cursor、固定syncUntil、包含邊界及唯一鍵，不宣稱跨交易無損changefeed。
+- 完整隔離CI memory138通過／55略過7187assertions、MySQL18通過654assertions；1000筆無關資料、同秒多頁、索引EXPLAIN無filesort、SQL界限／撤權及公開客戶端／Chrome／限流通過。PHPDoc219檔705方法零缺漏。
+- 6c15508已連帶收初版部分檔案，保留歷史，本卡提交其餘契約及驗收。載入主服務只新增索引，不seed／reset／刪volume。回填後接TT-171。
+
+## 2026-11-12 TT-170 開始
+
+- 新增公開issue-changes摘要，沿既有IssueReadRepository共用SQL篩選／IssueListResource及Project permission，不改前端與舊頁碼契約。keyset(updated_at,id)、perPage+1最多101、無COUNT／OFFSET，新增Project複合索引。
+- 認證加密cursor綁本人／Workspace／Project／所有filters及perPage，續頁重驗資格。固定syncUntil與inclusive updatedSince，下一輪依id/revision去重；非多HTTP snapshot或刪除feed。
+- 新增隔離memory／MySQL同秒多頁、null歷史、邊界、投影／SQL、非法cursor與撤權驗證，正式OpenAPI0.5.0、指南及外部HTTP範例同步；不提交其他人的PHPDoc變更。
+
 ## 2026-11-12 TT-254 驗收完成
 
 - 獨立空目錄／python -I／公開OpenAPI operationId及Markdown，建卡／重播／409草稿／Scope／隱藏及跨Workspace／Reader撤權receipt／移除／停用／到期／撤銷等10階段通過；作者實際Token帳號，無Session。

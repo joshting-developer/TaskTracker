@@ -49,6 +49,20 @@ def main():
     comments = call('GET', path + '/comments')
     assert final['state'] == 'closed' and final['revision'] == commented['revision']
     assert comments['total'] == 1
+    # 固定同一輪filters／perPage；先處理本批，再保存下一個cursor。
+    query = {'perPage': 1}
+    cursor = None
+    watermark = None
+    while True:
+        current = call('GET', '/api/public/v1/projects/' + project + '/issue-changes?' + urllib.parse.urlencode({**query, **({'cursor': cursor} if cursor else {})}))
+        assert watermark is None or watermark == current['syncUntil']
+        watermark = current['syncUntil']
+        # 實務上依id／revision upsert，處理成功後才存nextCursor；本範例不累積全集。
+        cursor = current['nextCursor']
+        if cursor is None:
+            break
+    # 本輪完成後才能以watermark作下一輪inclusive updatedSince。
+    call('GET', '/api/public/v1/projects/' + project + '/issue-changes?' + urllib.parse.urlencode({'updatedSince': watermark, 'perPage': 1}))
     print(json.dumps({'result': 'PASS', 'createdOnce': True, 'commentedOnce': True, 'finalRevision': final['revision'], 'closed': True}))
 
 

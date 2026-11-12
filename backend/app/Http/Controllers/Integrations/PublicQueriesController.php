@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Integrations;
 
 use App\Data\TokenContext;
-use App\Http\Requests\Integrations\IssueChangesRequest;
-use App\Services\Integrations\IssueChangeService;
 use App\Database\DatabaseTimes;
 use App\Http\Controllers\Controller;
 use App\Http\Integrations\BearerTokenSession;
+use App\Http\Requests\Integrations\IssueChangesRequest;
 use App\Http\Requests\IssueQueryRequest;
 use App\Http\Requests\PageQueryRequest;
 use App\Http\Resources\ApiResponse;
@@ -15,6 +14,7 @@ use App\Http\Resources\Queries\IssueDetailResource;
 use App\Http\Resources\Queries\IssueListResource;
 use App\Http\Resources\Queries\PageResource;
 use App\Http\Resources\Queries\ProjectResource;
+use App\Services\Integrations\IssueChangeService;
 use App\Services\IssueReadService;
 use App\Services\ProjectReadService;
 use Illuminate\Http\Request;
@@ -113,9 +113,11 @@ class PublicQueriesController extends Controller
     }
 
     /**
-     * @param IssueChangesRequest $request 有界增量／接續條件
-     * @param string $project Project公開ID
-     * @param IssueChangeService $changes 共用資格與最小摘要用例
+     * 以本輪固定水位回傳目前可讀Project的有界增量摘要。
+     *
+     * @param  IssueChangesRequest  $request  有界增量／接續條件
+     * @param  string  $project  Project公開ID
+     * @param  IssueChangeService  $changes  共用資格與最小摘要用例
      * @return ApiResponse 增量摘要、接續cursor及本輪固定水位
      */
     public function changes(IssueChangesRequest $request, string $project, IssueChangeService $changes): ApiResponse

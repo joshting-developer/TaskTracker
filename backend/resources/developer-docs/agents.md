@@ -36,3 +36,7 @@
 PAT 不印在對話／卡片／Commit／log，不傳給不受信任網址，不把 OpenAPI 的示例 Token 當實際憑證。Token 清單與來源管理是 Session 介面，不屬 Agent PAT 自助增權。
 
 需要長任務接手時，可在已授權卡片留言記「已做／驗證／剩餘／阻礙／下一步」，並如實調整狀態；不要貼秘密或把尚未完成內容標 closed。TaskTracker 提供 API，不決定外部 Agent 的分工／工具／執行授權，也不內建 MCP 或跨模型編排。
+
+## 增量接續
+
+大量或增量讀取用OpenAPI的listPublicIssueChanges（Project issue-changes），避免深頁碼／COUNT。保留所有filters與perPage，上一批成功保存後送回nextCursor；nextCursor為null才以syncUntil開新輪updatedSince，邊界包含且按id／revision去重。同一秒多張卡片不只用時間戳當cursor；不要把live列表當多請求snapshot或刪除feed。Python下載範例含完整接續迴圈；其他注意事項見contract的增量章節。

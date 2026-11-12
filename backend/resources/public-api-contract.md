@@ -13,6 +13,7 @@ Base URL是你實際部署TaskTracker的origin。公開Bearer前綴為`/api/publ
 | GET /api/public/v1/projects/{project} | Bearer；Project詳細、狀態及本人有效permissions | 同上 |
 | GET /api/public/v1/projects/{project}/members | Bearer；有效成員id／name候選分頁，不帶email | 同上 |
 | GET /api/public/v1/projects/{project}/statuses | Bearer；排序的狀態id／label／color，設定上限20 | 同上 |
+| GET /api/public/v1/projects/{project}/issue-changes | Bearer；updatedSince與有界cursor增量摘要，無COUNT／OFFSET | 同上 |
 | GET /api/public/v1/projects/{project}/issues | Bearer；SQL篩選的任務摘要分頁，identifier可精準查卡號 | 同上 |
 | GET /api/public/v1/projects/{project}/issues/{issue} | Bearer；單卡詳細／revision與有限關聯，無活動全集 | 同上 |
 | GET /api/public/v1/projects/{project}/issues/{issue}/comments | Bearer；該卡留言分頁 | 同上 |
@@ -119,3 +120,11 @@ curl --fail-with-body -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
 父子關係一層、Epic可選與雙向關聯沿Web規則；子卡跟隨父卡Epic，無前置／DAG或結案阻擋。跨Project或非法層級整批rollback，不產生成功receipt／來源。相同使用者、Workspace、requestId及operation／有效輸入回原結果，不重複卡片／留言／通知／來源；不同有效內容409。Session與公開操作名分開，因此同key誤用另一接口會衝突；不提供跨接口自動重試。重播前仍重驗Token、Scope、Project與資源資格，撤權後不可讀既有結果。首次失敗完整rollback，可修正後再送；逾時則先沿同key重試核對，不任意換UUID。
 
 取得單卡最新revision後，再PATCH狀態；遇409 REVISION_CONFLICT先GET重讀並決定是否重試，不能自動強制覆蓋。相關卡片變動也可能遞增其他卡revision，後續應各自重讀。API不提供刪除／封存，closed仍是任務狀態。
+
+## 增量摘要與cursor
+
+`GET /api/public/v1/projects/{project}/issue-changes`回items／perPage／nextCursor／syncUntil（不回total／page）。預設20，最多100；按updated_at升冪、唯一內部鍵打破同秒／同微秒平手，回應仍只用公開ID。updatedSince接受有時區ISO 8601，包含邊界；不傳則全量起點，含無日期歷史卡片。type／state[]／priority／assignee等篩選沿Issue列表。只支援時間升冪，不接受page或其他sort。
+
+保存上一批nextCursor後重送，須沿用原完整filters／updatedSince／perPage；syncUntil在同一輪固定。Cursor為不透明認證加密字串，不自行解析，URL請encode；變造、換本人／Workspace／Project／條件會400，無Project資格仍404／失效PAT401。Cursor不保存權限，每頁重新驗證；換Token但仍同本人及範圍可接續。APP_KEY變更使舊cursor無效，重新掃描即可。
+
+只有nextCursor為null才完成本輪，保存syncUntil作**下一輪包含邊界的updatedSince**；依卡片id／revision去重，避免同秒只用大於時間造成遺漏。處理／保存本批成功後才前進cursor；timeout重送原cursor不會修改資料。途中live更新可能使卡片移動／重複，這不是跨多個HTTP交易的固定DB snapshot，也不承諾長交易延遲提交／倒填時間／刪除的無損changefeed；關閉仍是state，刪除／封存事件另按後續同步契約開放。
