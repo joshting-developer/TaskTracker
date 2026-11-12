@@ -14,18 +14,18 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-Route::get('/api/v1/personal-token-audits', [PersonalTokensController::class, 'audits'])->block(10, 10);
-Route::get('/api/v1/personal-tokens', [PersonalTokensController::class, 'index'])->block(10, 10);
-Route::post('/api/v1/personal-tokens', [PersonalTokensController::class, 'store'])->middleware('throttle:personal-token-create')->block(10, 10);
-Route::post('/api/v1/personal-tokens/{token}/revoke', [PersonalTokensController::class, 'revoke'])->middleware('throttle:personal-token-revoke')->block(10, 10);
-Route::get('/api/public/v1/me', [TokenIdentityController::class, 'show'])->middleware('throttle:public-api-v1')->withoutMiddleware([
+Route::get('/api/v1/personal-token-audits', [PersonalTokensController::class, 'audits'])->name('v1.personal-token-audits')->block(10, 10);
+Route::get('/api/v1/personal-tokens', [PersonalTokensController::class, 'index'])->name('v1.personal-tokens')->block(10, 10);
+Route::post('/api/v1/personal-tokens', [PersonalTokensController::class, 'store'])->name('v1.personal-tokens.store')->middleware('throttle:personal-token-create')->block(10, 10);
+Route::post('/api/v1/personal-tokens/{token}/revoke', [PersonalTokensController::class, 'revoke'])->name('v1.personal-tokens.revoke')->middleware('throttle:personal-token-revoke')->block(10, 10);
+Route::get('/api/public/v1/me', [TokenIdentityController::class, 'show'])->name('public.v1.me')->middleware('throttle:public-api-v1')->withoutMiddleware([
     StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class,
 ]);
-Route::get('/api/public/openapi.json', [ApiSpecificationController::class, 'show'])->withoutMiddleware([
+Route::get('/api/public/openapi.json', [ApiSpecificationController::class, 'show'])->name('public.openapi')->withoutMiddleware([
     StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class,
 ]);
 
-Route::get('/api/public/contract.md', [ApiSpecificationController::class, 'contract'])->withoutMiddleware([
+Route::get('/api/public/contract.md', [ApiSpecificationController::class, 'contract'])->name('public.contract')->withoutMiddleware([
     StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class,
 ]);
 
@@ -34,15 +34,15 @@ Route::prefix('/api/public/v1')->middleware('throttle:public-api-v1')->withoutMi
 ])->group(function () {
     $queries = PublicQueriesController::class;
     $projects = PublicProjectsController::class;
-    Route::get('/projects', [$projects, 'projects']);
-    Route::get('/projects/{project}', [$projects, 'project']);
-    Route::get('/projects/{project}/members', [$projects, 'members']);
-    Route::get('/projects/{project}/statuses', [$projects, 'statuses']);
-    Route::get('/projects/{project}/issues', [$queries, 'issues']);
-    Route::get('/projects/{project}/issue-changes', [PublicIssueChangesController::class, 'changes']);
-    Route::get('/projects/{project}/issues/{issue}', [$queries, 'issue']);
-    Route::get('/projects/{project}/issues/{issue}/comments', [$queries, 'comments']);
-    Route::get('/projects/{project}/issues/external/{source}/{externalId}', [PublicIssueExternalController::class, 'show']);
+    Route::get('/projects', [$projects, 'projects'])->name('public.v1.projects');
+    Route::get('/projects/{project}', [$projects, 'project'])->name('public.v1.projects.show');
+    Route::get('/projects/{project}/members', [$projects, 'members'])->name('public.v1.projects.members');
+    Route::get('/projects/{project}/statuses', [$projects, 'statuses'])->name('public.v1.projects.statuses');
+    Route::get('/projects/{project}/issues', [$queries, 'issues'])->name('public.v1.projects.issues');
+    Route::get('/projects/{project}/issue-changes', [PublicIssueChangesController::class, 'changes'])->name('public.v1.projects.issue-changes');
+    Route::get('/projects/{project}/issues/{issue}', [$queries, 'issue'])->name('public.v1.projects.issues.show');
+    Route::get('/projects/{project}/issues/{issue}/comments', [$queries, 'comments'])->name('public.v1.projects.issues.comments');
+    Route::get('/projects/{project}/issues/external/{source}/{externalId}', [PublicIssueExternalController::class, 'show'])->name('public.v1.projects.issues.external.show');
 });
 
 Route::prefix('/api/public/v1/projects/{project}/issues')->middleware('throttle:public-api-v1')->withoutMiddleware([
@@ -60,7 +60,7 @@ Route::prefix('/api/public/docs')->withoutMiddleware([
     StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class,
 ])->group(function () {
     $docs = DeveloperDocumentationController::class;
-    Route::get('/assets/styles.css', [$docs, 'styles']);
-    Route::get('/examples.{language}', [$docs, 'example'])->where('language', 'py|sh');
-    Route::get('/{page?}', [$docs, 'show']);
+    Route::get('/assets/styles.css', [$docs, 'styles'])->name('public.docs.styles');
+    Route::get('/examples.{language}', [$docs, 'example'])->where('language', 'py|sh')->name('public.docs.example');
+    Route::get('/{page?}', [$docs, 'show'])->name('public.docs.page');
 });

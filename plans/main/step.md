@@ -10,6 +10,7 @@
 - Skill：共用side-project-development-standards（engineering／verification／data-access／DI／PHPDoc）、laravel-architecture、Ponytail lite、task-tracker-usage；前端卡另加vue／ui。
 - TT-274：createProject補updatedAt＝createdAt、updateStatuses刷新updatedAt；列表updated_at DESC→created_at DESC→public_id。migration只以created_at與已保存settings／details歷史at補空值，皆無則保持NULL不捏造。SQLite＋獨立MySQL案例驗順序、重播不推進、revision保存；本機開發庫經既有migrate補2筆並讀回0空值。
 - TT-248：/boards摘要與show加closedCount（type＝closed，同收錄／Epic展開去重條件，列表同SQL子查詢）；BoardList顯示總數／已完成＋重用progress-track，編輯收錄改外框按鈕（36／44px），名稱含可見文字。SQLite／MySQL計數測試、新board-list-summary-check前後三尺寸、完整browser-check／test:board／build／api／composables及48圖compare通過；看板列表頁無核准baseline，需另行核准才納入。
+- TT-260：全部API路由具名（測試阻擋未命名／漏掛）、terminable middleware回應後記錄非GET寫入（含失敗，排除POST讀取）、失敗只log；PAT身分經請求Context；`GET /api/v1/operation-logs`需workspace.operationLogs.read、keyset分頁；Prunable 90天＋每日model:prune（待TT-162 scheduler）。移除未用/up。
 
 ## 2026-11-13 TT-264修復階段完成，基準核准待回覆
 

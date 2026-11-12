@@ -33,7 +33,7 @@ Project permissions：`project.read`、`issue.read`、`issue.write`、`project.u
 
 對應的 Workspace Any IDs：`project.readAny`、`issue.readAny`、`issue.writeAny`、`project.updateAny`、`project.statuses.updateAny`、`project.members.manageAny`、`board.manageAny`、`timeEntry.readOwnAny`、`timeEntry.readTeamAny`、`timeEntry.writeOwnAny`、`notification.readTeamAny`
 
-Workspace 專屬 IDs（2026-11-02新增待辦、2026-11-05新增空間設定）：`todo.read`、`todo.writeOwn`、`todo.assign`、`workspace.read`、`workspace.members.read`、`workspace.members.manage`、`workspace.update`、`workspace.ownership`、`workspace.invite`、`project.create`、`smtp.verify`。Project 成員管理不授予 Workspace 邀請或升權能力；可授予的角色須是操作者在目標 Project 有效權限的子集合, 調整／撤回既有角色也檢查此條件。工作空間角色指派也檢查當次授權及可處理的目標權限，保留具ownership permission的成員資格；角色ID只查映射，見 [空間設定契約](account-workspace-settings.md)。
+Workspace 專屬 IDs（2026-11-02新增待辦、2026-11-05新增空間設定）：`todo.read`、`todo.writeOwn`、`todo.assign`、`workspace.read`、`workspace.members.read`、`workspace.members.manage`、`workspace.update`、`workspace.ownership`、`workspace.invite`、`workspace.operationLogs.read`（2026-11-13 TT-260，擁有者／管理者，見[HTTP操作紀錄](http-operation-logs.md)）、`project.create`、`smtp.verify`。Project 成員管理不授予 Workspace 邀請或升權能力；可授予的角色須是操作者在目標 Project 有效權限的子集合, 調整／撤回既有角色也檢查此條件。工作空間角色指派也檢查當次授權及可處理的目標權限，保留具ownership permission的成員資格；角色ID只查映射，見 [空間設定契約](account-workspace-settings.md)。
 
 ## API 與可見資料
 

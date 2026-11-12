@@ -10,11 +10,13 @@ use App\Factories\ProjectAccessFactory;
 use App\Factories\RecordStoreFactory;
 use App\Factories\WorkspaceContextFactory;
 use App\Models\User;
+use App\Services\HttpOperationLogs;
 use App\Services\Integrations\IntegrationAudits;
 use App\Services\Integrations\TokenIdentityService;
 use App\Services\RequestReplay;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 
 /** 純Bearer交易及來源邊界；每次重新驗證，不使用Auth guard已快取的操作者。 */
@@ -166,6 +168,8 @@ class BearerTokenSession
             }
             $currentWorkspaceId = $write ? $workspaceId : $this->identities->workspaceId($token->workspace_id);
             $workspace = $this->contexts->verify($this->identities->user($token->tokenable_id), $currentWorkspaceId);
+            // TT-260：Token與資格重驗成功後放入請求範圍Context；FormRequest是複本，attributes不會回到原請求。
+            Context::addHidden(HttpOperationLogs::TOKEN_ACTOR, ['workspaceId' => $workspace->workspaceId, 'userId' => $workspace->userId, 'tokenId' => (string) $token->id]);
             if (! $token->can($write ? 'write' : 'read')) {
                 DomainError::fail('FORBIDDEN', 'Token未授權此操作');
             }
