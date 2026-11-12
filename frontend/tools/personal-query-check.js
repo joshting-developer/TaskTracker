@@ -49,14 +49,16 @@ try {
   await page.getByRole('region',{name:'任務完整頁',exact:true}).waitFor();
   assert.equal(requests.filter(path=>/\/(getWorkspace|getTodos)$/.test(path)).length,0);
   const inboxRequests=[];receiver.on('response',r=>{if(new URL(r.url()).pathname.startsWith('/api/'))inboxRequests.push(new URL(r.url()).pathname);});
+  // 先裝假時鐘再載入，背景計時器才會受fastForward控制；時間仍自然流動。
+  await receiver.clock.install();
   await receiver.reload();
   await receiver.getByRole('button',{name:/待辦通知（1 則未讀）/}).click();
   await receiver.locator('.todo-notification-list button').first().click();
   await receiver.locator(`[data-todo-id="${assigned.id}"].todo-focused`).waitFor();
   assert.equal(inboxRequests.filter(path=>/\/(getWorkspace|getTodos)$/.test(path)).length,0);
   await receiver.bringToFront();await receiver.waitForTimeout(200);inboxRequests.length=0;
-  await receiver.clock.install();const checked=receiver.waitForResponse(r=>new URL(r.url()).pathname.endsWith('/personal-version')&&r.status()===200);
-  await receiver.clock.fastForward(35000);await checked;await receiver.waitForTimeout(100);
+  const checked=receiver.waitForResponse(r=>new URL(r.url()).pathname.endsWith('/personal-version')&&r.status()===200);
+  await receiver.clock.fastForward(70000);await checked;await receiver.waitForTimeout(100);
   assert.equal(inboxRequests.filter(path=>/\/(todos|counts|todo-notifications)$/.test(path)).length,0,'版本未變時不重讀列表');
   assert.deepEqual(errors,[]);
   console.log('personal query PASS: 25 todos / 20+5, on-demand body/history, conversion, recipient notification/focus, idle version only; bulkReads=0');

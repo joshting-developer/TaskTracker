@@ -1,4 +1,4 @@
-# 前端輪詢生命週期（TT-146，2026-11-12）
+# 前端輪詢生命週期（TT-146／TT-147，2026-11-12）
 
 來源：[低成本部署與同步重構計畫](planning/TaskTracker_低成本部署與同步重構計畫-2026-11-11.md) §3.1–3.2。
 
@@ -20,16 +20,39 @@
 - 回到前景、`online`或`focus`：距上次背景輪次開始超過`minGap`（預設5秒）才立即補查，否則只重新排程。
 - `restart()`用於範圍變更（帳號／Workspace切換）；`enabled`由false轉true只恢復排程，避免與呼叫端的範圍變更重複送出。
 - 暫停時多數呼叫端只中止請求，不增加世代，讓同一世代的`finally`收回loading；`usePersonalSync`沒有loading狀態，維持原本世代＋中止。
-- 間隔、退避與jitter仍由呼叫端`delay()`決定，數值維持原狀（30秒起、失敗倍增、上限120秒；`useProjectTaskQueries`原本無jitter）。請求世代、AbortController與401／403處理也留在呼叫端。
+- 請求世代、AbortController與畫面清理（撤權時清空資料、通知App重驗）留在呼叫端。
+
+## 間隔、jitter與退避（TT-147）
+
+間隔集中於`frontend/src/ui/pollingConfig.js`，建置時可用環境變數覆寫；低於5秒或非數字忽略：
+
+| 用途 | 預設 | 覆寫 |
+|---|---|---|
+| 任務列表／看板／詳細背景重讀 | 30秒 | `VITE_POLL_BOARD_MS` |
+| 個人版本與未讀通知、通知預覽 | 60秒 | `VITE_POLL_NOTIFICATIONS_MS` |
+| 工時月曆 | 30秒 | `VITE_POLL_TIME_MS` |
+
+- 每輪加±10% jitter（看板原本沒有）。
+- 呼叫端以`report(failure|null)`回報每次載入（背景或前景）：
+  - 成功：重設退避；若先前停止則恢復排程。
+  - 5xx、429、逾時、網路與其他錯誤：間隔依連續失敗次數加倍，上限5分鐘（原為120秒）；前景失敗也會把已排定的下一輪改為退避間隔。
+  - 401：停止輪詢，前景事件不會恢復；重新登入時由`restart`／`start`解除。
+  - 403／404／`WORKSPACE_CHANGED`：停止輪詢，呼叫端照舊清除不可見資料並通知App重驗；範圍變更或之後成功載入才恢復。
+  - `ABORTED`／`STALE_RESPONSE`：不計失敗。
+- 閒置：5分鐘內沒有`pointerdown`／`keydown`／`wheel`／`touchstart`時，間隔延長為`max(基準, 120秒)`；恢復操作立即補查（仍受最短間隔限制）並回到基準。
+- 行為變更：個人版本輪詢由30秒改為60秒，符合計畫「未讀通知約60秒」。
+
+後端429目前不帶`Retry-After`（例外轉換不保留標頭），前端只做指數退避；之後若對輪詢端點加throttle再一併處理。
 
 ## 尚未處理（另卡）
 
-- TT-147：可配置間隔（看板約30秒、通知約60秒）、統一jitter、5xx／429退避、401停止、403撤權清理及閒置延長。
 - TT-148：有權限保護的輕量變更檢查端點。
 - TT-149：拖曳、未儲存草稿與寫入衝突時的輪詢保護。
 - 看板Reverb（`ui/boardRealtime.js`）的重連計時另屬即時通道，本卡未改。
 
 ## 驗證
 
-- `node frontend/tools/polling-check.js`：週期執行、慢請求不重疊、隱藏停止、最短間隔去重、焦點去重、離線停止／恢復、停用／重新啟用、卸載移除監聽。
-- 隔離MySQL堆疊：`browser-check`、`board-query-check`、`project-utility-check`、`time-calendar-check`通過；`personal-query-check`在未改動的基準程式同樣逾時，屬既有問題，不由本卡宣稱修復。
+- `node frontend/tools/polling-check.js`：週期執行、慢請求不重疊、隱藏停止、最短間隔去重、焦點去重、離線停止／恢復、停用／重新啟用、卸載移除監聽；TT-147另含jitter／上限計算、5xx與429退避後回基準、401／403／404／換Workspace停止與恢復、取消不計失敗及閒置延長。
+- 隔離MySQL堆疊：`browser-check`、`board-query-check`、`project-utility-check`、`time-calendar-check`通過。
+- TT-147修正兩個測試：`personal-query-check`原本在頁面排好計時器後才裝假時鐘，fastForward觸發不到背景計時器而逾時，改為載入前安裝並快轉70秒；`browser-check`看板背景刷新快轉由31秒改34秒以涵蓋jitter。修正後兩者皆通過。
+- browser-check四次中一次在專案成員頁斷言失敗（`1 !== 0`），當時工作區含其他Agent未提交且持續變動的後端Session修改，未能重現，原因未確認。

@@ -892,7 +892,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await teammateEditor.getByRole('button', { name: '關閉任務', exact: true }).click();
   // 有未儲存草稿時背景刷新只重讀Project，不輪詢整包Workspace，也不換掉表單基準revision。
   const poll = concurrent.waitForResponse(response => /^\/api\/v1\/projects\/[^/]+$/.test(new URL(response.url()).pathname));
-  await concurrent.clock.fastForward(31000);
+  await concurrent.clock.fastForward(34000); // 30秒±10% jitter
   await poll;
   assert.equal(await staleEditor.getByLabel(/任務標題/).inputValue(), '本機尚未儲存的修改');
   await staleEditor.getByRole('button', { name: '儲存修改' }).click();

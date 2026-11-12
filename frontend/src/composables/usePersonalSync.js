@@ -1,14 +1,15 @@
 import { readonly, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { usePolling } from './usePolling.js';
+import { pollIntervals } from '../ui/pollingConfig.js';
 /** 個人同步只輪詢無內容版本；變更時才通知頁面及重讀未讀數。 */
 export function usePersonalSync({ active, context, onError }) {
   const versions = shallowRef(null), unread = shallowRef(0), resumed = shallowRef(0);
-  let generation = 0, controller, failures = 0;
+  let generation = 0, controller;
   const poller = usePolling({
     task: check,
     enabled: () => active.value,
-    delay: () => Math.min(120000, 30000 * 2 ** Math.min(failures, 2)) * (0.9 + Math.random() * 0.2),
+    interval: pollIntervals.notifications,
     onPause: () => { generation++; controller?.abort(); },
   });
   async function check() {
@@ -31,11 +32,11 @@ export function usePersonalSync({ active, context, onError }) {
         unread.value = count.unread;
       }
       versions.value = next;
-      failures = 0;
+      poller.report(null);
     }
     catch (failure) {
       if (current === generation && !['ABORTED', 'STALE_RESPONSE'].includes(failure.code)) {
-        failures++;
+        poller.report(failure);
         onError?.(failure);
       }
     }
@@ -45,7 +46,6 @@ export function usePersonalSync({ active, context, onError }) {
     controller?.abort();
     versions.value = null;
     unread.value = 0;
-    failures = 0;
     poller.restart();
   }, { immediate: true });
   // 回到前景時通知頁面重讀；補查本身由輪詢生命週期處理最短間隔與去重。

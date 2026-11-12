@@ -2,13 +2,14 @@
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { usePolling } from '../composables/usePolling.js';
+import { pollIntervals } from '../ui/pollingConfig.js';
 const props = defineProps({ project: Object, permissions: Array });
 const emit = defineEmits(['open', 'access']);
 const result = shallowRef(null), page = ref(1), loading = ref(false);
 const status = shallowRef(null), message = ref(''), error = ref(''), busy = ref(false);
 const expanded = shallowRef(null), bodyLoading = ref(false);
 const entries = computed(() => result.value?.items || []);
-let generation = 0, controller, bodyController, failures = 0, disposed = false;
+let generation = 0, controller, bodyController, disposed = false;
 
 function accessFailure(failure) {
   if (['NOT_FOUND', 'FORBIDDEN', 'WORKSPACE_CHANGED', 'UNAUTHENTICATED'].includes(failure.code)) {
@@ -31,11 +32,11 @@ async function refresh() {
     if (current !== generation) return;
     result.value = data;
     if (expanded.value && !data.items.some(item => item.id === expanded.value.id)) expanded.value = null;
-    failures = 0;
+    poller.report(null);
     if (page.value > data.lastPage) page.value = data.lastPage;
   } catch (failure) {
     if (current !== generation || ['ABORTED', 'STALE_RESPONSE'].includes(failure.code)) return;
-    failures++;
+    poller.report(failure);
     error.value = failure.message;
     accessFailure(failure);
   } finally {
@@ -74,15 +75,15 @@ async function verify() {
 function timestamp(value) {
   return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 }
-watch(() => props.project.id, () => { result.value = null; page.value = 1; status.value = null; refresh(); loadSmtp(); }, { immediate: true });
-watch(page, refresh);
 // 背景更新交由共用輪詢生命週期；隱藏／離線時只中止請求，讓finally收回loading。
 const poller = usePolling({
   task: refresh,
-  delay: () => Math.min(120000, 30000 * 2 ** Math.min(failures, 2)) * (0.9 + Math.random() * 0.2),
+  interval: pollIntervals.notifications,
   onPause: () => { controller?.abort(); bodyController?.abort(); },
 });
-poller.schedule();
+watch(() => props.project.id, () => { result.value = null; page.value = 1; status.value = null; refresh(); loadSmtp(); }, { immediate: true });
+watch(page, refresh);
+poller.start();
 onScopeDispose(() => { disposed = true; generation++; controller?.abort(); bodyController?.abort(); });
 defineExpose({ refresh });
 </script>
