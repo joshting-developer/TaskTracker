@@ -3,17 +3,17 @@ import { computed, ref, watch } from 'vue';
 import { api } from '../api/index.js';
 import { statusesFor } from '../domain/model.js';
 import Icon from './Icon.vue';
-const props = defineProps({ project: Object, issues: Array, permissions: Array });
+const props = defineProps({ project: Object, issues: Array, usage: { type: Object, default: undefined }, permissions: Array });
 const emit = defineEmits(['updated']);
 const statuses = ref([]), snapshot = ref(''), error = ref(''), busy = ref(false);
 const baseRevision = ref(1);
 let pending;
 function reset() { statuses.value = statusesFor(props.project).map((state) => ({ ...state, persisted: true, key: state.id })); snapshot.value = JSON.stringify(statuses.value); baseRevision.value = props.project.revision || 1; error.value = ''; pending = null; }
 const dirty = computed(() => JSON.stringify(statuses.value) !== snapshot.value);
-defineExpose({ dirty });
+defineExpose({ dirty, saving: busy });
 watch(() => props.project.id, reset, { immediate: true });
 watch(() => props.project.revision, () => { if (!dirty.value) reset(); });
-function used(id) { return props.issues.some((issue) => issue.state === id); }
+function used(id) { return props.usage === undefined ? props.issues.some((issue) => issue.state === id) : props.usage === null || Boolean(props.usage[id]); }
 function required(id) { return ['open', 'closed'].includes(id); }
 function existing(id) { return props.project.statuses.some(state => state.id === id); }
 function addStatus() { statuses.value.push({ id: '', label: '', color: '#9386d9', persisted: false, key: crypto.randomUUID() }); }

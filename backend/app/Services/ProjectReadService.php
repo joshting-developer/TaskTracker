@@ -206,4 +206,18 @@ class ProjectReadService
             DomainError::fail('FORBIDDEN', '沒有執行此操作的權限');
         }
     }
+
+    /**
+     * 狀態設定只需要SQL聚合用量，寫入時仍以交易重驗實際使用狀況。
+     *
+     * @param  array<string,mixed>  $actor  當次可信操作者
+     * @param  string  $id  專案公開ID
+     * @return array{usage:array<string,int>} 各狀態使用摘要
+     */
+    public function statusUsage(array $actor, string $id): array
+    {
+        $project = $this->require($actor, $id, 'project.statuses.update');
+
+        return ['usage' => $this->projects->statusUsage($project)];
+    }
 }

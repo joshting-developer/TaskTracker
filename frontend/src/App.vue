@@ -24,7 +24,7 @@ import TimeCalendar from './components/TimeCalendar.vue';
 import TimeAnalysis from './components/TimeAnalysis.vue';
 import { contextKey, taskScope, writeContext } from './ui/workContext.js';
 import { useBoardRealtime } from './ui/boardRealtime.js';
-import ProjectSettings from './components/ProjectSettings.vue';
+import ProjectStatusWorkspace from './components/ProjectStatusWorkspace.vue';
 import ProjectMembers from './components/ProjectMembers.vue';
 import PersonalWorkspace from './components/PersonalWorkspace.vue';
 import ProjectDirectory from './components/ProjectDirectory.vue';
@@ -76,7 +76,7 @@ const refresh = useRefreshQueue({
   scope: () => `${refreshScope}:${authenticated.value}:${switchingWorkspace.value}:${workspace.value.meta.workspace?.id || ''}:${projectId.value}:${view.value}:${section.value}`,
   load: refreshWorkspace,
 });
-const isScopedRoute=computed(()=>isTaskRoute.value || (!projectId.value && ['home','projects','settings','analysis'].includes(landing.value)));
+const isScopedRoute=computed(()=>isTaskRoute.value || (projectId.value && ['settings'].includes(section.value)) || (!projectId.value && ['home','projects','settings','analysis'].includes(landing.value)));
 const personalSync=usePersonalSync({active:computed(()=>authenticated.value&&!switchingWorkspace.value&&workspace.value.meta.permissions?.includes('todo.read')),context:computed(()=>`${workspace.value.meta.userId}:${workspace.value.meta.workspace?.id}`),onError:failure=>{if(['UNAUTHENTICATED','FORBIDDEN','WORKSPACE_CHANGED'].includes(failure.code))refresh({join:true});}});
 const today = useWorkspaceClock({ active: computed(() => authenticated.value && !switchingWorkspace.value && !isScopedRoute.value), refresh: () => refresh({ join: true }) });
 let refreshGeneration = 0, refreshScope = 0;
@@ -133,6 +133,7 @@ async function refreshCurrent() {
   await projectTasksTool.value?.refresh(false);
   await projectDirectoryTool.value?.refresh();
   await todoTool.value?.refresh();
+  await workspaceTool.value?.refresh?.();
   await personalSync.refresh();
 }
 function openTodoInbox() { todoNotificationsOpen.value = true; }
@@ -160,6 +161,7 @@ async function refreshWorkspace() {
         try{const current=await api.project(editingProject.value.id);if(!current.permissions.includes('project.update')){editingProject.value=null;notify('專案編輯資格已變更');}}
         catch(failure){if(['NOT_FOUND','FORBIDDEN'].includes(failure.code)){editingProject.value=null;notify('專案編輯資格已變更');}else throw failure;}
       }
+      ensureSectionAccess();
       await nextTick();
       return;
     }
@@ -582,7 +584,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
         </section>
         <div v-if="error && section !== 'tasks'" class="error-box" role="alert">{{ error }}</div>
         <TimeCalendar :can-write="can('timeEntry.writeOwn')" v-if="section === 'time' && can('timeEntry.readOwn')" ref="workspaceTool" :key="workContextKey" :context-key="workContextKey" :project="selectedProject" :issues="projectAllIssues" :entries="workspace.timeEntries" :members="projectMembers" :user-id="currentUserId" @updated="toolUpdated" @open="openIssue" />
-        <ProjectSettings v-if="section === 'settings' && can('project.statuses.update')" ref="workspaceTool" :project="selectedProject" :issues="projectAllIssues" :permissions="selectedProject.permissions || []" @updated="toolUpdated" />
+        <ProjectStatusWorkspace v-if="section === 'settings' && can('project.statuses.update')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" @access="refresh" />
         <ProjectMembers v-if="section === 'members' && can('project.members.manage')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" />
         <NotificationPreview v-if="section === 'notifications'" :project="selectedProject" :notifications="workspace.notifications" :issues="projectAllIssues" :permissions="workspace.meta.permissions || []" @open="openIssue" />
         </template>

@@ -8,6 +8,7 @@ export function callApi(operation, input = {}, group = 'rpc') {
 export const api = {
   current: () => callApi('current', {}, 'auth'),
   projectLeads: (filters, options) => queryApi('project-lead-options', filters, options),
+  statusUsage: (project, options) => queryApi(`projects/${encodeURIComponent(project)}/status-usage`, {}, options),
   projectOptions: (filters, options) => queryApi('project-options', filters, options),
   projects: (filters, options) => queryApi('projects', filters, options),
   project: (id, options) => queryApi(`projects/${encodeURIComponent(id)}`, {}, options),

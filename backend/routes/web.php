@@ -97,6 +97,7 @@ Route::prefix('/api/v1')->group(function () {
     Route::get('/project-options', [ProjectsController::class, 'options']);
     Route::get('/projects', [ProjectsController::class, 'index']);
     Route::get('/projects/{project}', [ProjectsController::class, 'show']);
+    Route::get('/projects/{project}/status-usage', [ProjectsController::class, 'statusUsage']);
     Route::get('/projects/{project}/member-options', [ProjectsController::class, 'members']);
     Route::get('/projects/{project}/issue-options', [IssuesController::class, 'options']);
     Route::get('/projects/{project}/issues', [IssuesController::class, 'index']);

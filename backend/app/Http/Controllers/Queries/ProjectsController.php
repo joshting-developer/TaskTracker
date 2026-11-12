@@ -94,4 +94,18 @@ class ProjectsController extends Controller
 
         return new ApiResponse(PageResource::wrap($data['page'], $items));
     }
+
+    /**
+     * 只提供狀態使用數，不帶卡片清單。
+     *
+     * @param  Request  $request  HTTP請求
+     * @param  string  $project  專案公開ID
+     * @param  ApiExecution  $execution  可信資格與交易邊界
+     * @param  ProjectReadService  $projects  專案查詢用例
+     * @return ApiResponse 狀態使用摘要
+     */
+    public function statusUsage(Request $request, string $project, ApiExecution $execution, ProjectReadService $projects): ApiResponse
+    {
+        return new ApiResponse($execution->query($request, fn ($actor) => $projects->statusUsage($actor, $project)));
+    }
 }

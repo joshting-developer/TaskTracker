@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Data\PageQueryData;
+use App\Models\Issue;
 use App\Models\Project;
 use App\Models\ProjectMember;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -81,5 +82,18 @@ class ProjectReadRepository
         return Project::whereHas('workspace', fn ($q) => $q->where('public_id', $workspaceId))
             ->where('public_id', $id)->with(['lead:id,user_id', 'lead.user:id,name', 'statuses:id,project_id,code,label,color,position'])
             ->first(['id', 'workspace_id', 'public_id', 'name', 'code', 'description', 'color', 'lead_id', 'revision', 'created_at', 'updated_at']);
+    }
+
+    /**
+     * SQL依狀態聚合用量，不載入Issue內容或活動。
+     *
+     * @param  Project  $project  已授權專案
+     * @return array<string,int> 狀態type對應卡片數量
+     */
+    public function statusUsage(Project $project): array
+    {
+        return Issue::where('issues.workspace_id', $project->workspace_id)->where('issues.project_id', $project->id)
+            ->join('project_statuses as s', fn ($join) => $join->on('s.id', '=', 'issues.state_id')->on('s.project_id', '=', 'issues.project_id'))
+            ->selectRaw('s.code, COUNT(*) as total')->groupBy('s.code')->pluck('total', 's.code')->map(fn ($count) => (int) $count)->all();
     }
 }
