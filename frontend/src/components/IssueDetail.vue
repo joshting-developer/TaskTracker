@@ -12,6 +12,7 @@ import { FIELD_LABELS, hours, PRIORITIES, statusesFor, TYPES } from '../domain/m
 
 const props = defineProps({ activityLoader: Function, issue: Object, project: Object, issues: Array, members: Array, entries: Array, returnLabel: String, busy: Boolean, canWrite: { type: Boolean, default: true }, canReadTime: { type: Boolean, default: true }, canLogTime: { type: Boolean, default: false }, canDelete: { type: Boolean, default: false }, deleting: Boolean, userId: String });
 const emit = defineEmits(['close', 'open', 'edit', 'saved', 'reload', 'state', 'time-updated', 'delete']);
+const commentEditor = ref(null), commentEditorKey = ref(0);
 const tab = ref('comments'), comment = ref(''), saving = ref(false), error = ref(''), conflict = ref(false);
 
 const activity = useIssueActivity({ issue: toRef(props, 'issue'), tab, load: toRef(props, 'activityLoader') });
@@ -19,14 +20,14 @@ const activityComments = activity.comments, activityHistory = activity.history, 
 const timeOpen = ref(false), timeDrawer = ref(null), editingTime = ref(null), timeFormKey = ref(0);
 const heading = ref(null), propertiesExpanded = ref(false), sidebarTab = ref('properties');
 let pending;
-watch(() => props.canWrite, allowed => { if (!allowed) { comment.value = ''; pending = null; error.value = ''; conflict.value = false; } });
+watch(() => props.canWrite, allowed => { if (!allowed) { comment.value = ''; commentEditorKey.value++; pending = null; error.value = ''; conflict.value = false; } });
 watch([() => props.canReadTime, () => props.canLogTime], ([read, write]) => {
   if (!read && !write && tab.value === 'time') tab.value = 'comments';
   if (!write) { timeOpen.value = false; editingTime.value = null; }
 });
 const commentDirty = computed(() => Boolean(comment.value.trim()));
-const dirty = computed(() => commentDirty.value || Boolean(timeDrawer.value?.dirty));
-const isSaving = computed(() => saving.value || Boolean(timeDrawer.value?.saving));
+const dirty = computed(() => commentDirty.value || Boolean(commentEditor.value?.attachmentDirty) || Boolean(timeDrawer.value?.dirty));
+const isSaving = computed(() => saving.value || Boolean(commentEditor.value?.uploadBusy) || Boolean(timeDrawer.value?.saving));
 defineExpose({ dirty, saving: isSaving, focus: () => heading.value?.focus() });
 const states = computed(() => statusesFor(props.project));
 const state = issue => states.value.find(item => item.id === issue.state);
@@ -62,14 +63,14 @@ function changeState(event) {
   emit('state', nextState);
 }
 async function sendComment() {
-  if (!props.canWrite || saving.value || props.busy || !commentDirty.value) return;
+  if (!props.canWrite || saving.value || props.busy || commentEditor.value?.attachmentBlocked || !commentDirty.value) return;
   saving.value = true; error.value = ''; conflict.value = false;
   const payload = { id: props.issue.id, content: comment.value, expectedRevision: props.issue.revision };
   const signature = JSON.stringify(payload);
   if (pending?.signature !== signature) pending = { signature, requestId: crypto.randomUUID() };
   try {
     const result = await api.addComment({ ...payload, requestId: pending.requestId });
-    comment.value = ''; pending = null; emit('saved', result, false);
+    comment.value = ''; commentEditorKey.value++; pending = null; emit('saved', result, false);
   } catch (failure) { error.value = failure.message; conflict.value = failure.code === 'REVISION_CONFLICT'; }
   finally { saving.value = false; }
 }
@@ -125,7 +126,7 @@ function timeSaved() {
             <div v-if="activity.error.value" class="error-box" role="alert">{{ activity.error.value }} <button class="text-button" :disabled="activity.loading.value" @click="activity.fetchPage()">重試載入紀錄</button></div>
             <template v-if="tab === 'comments'">
               <p v-if="!activityComments.length && !activity.loading.value && !activity.error.value" class="quiet-message">尚無留言</p>
-              <article v-for="entry in activityComments" :key="entry.id" class="comment"><div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><MarkdownContent :source="entry.content" /></div></article>
+              <article v-for="entry in activityComments" :key="entry.id" class="comment"><div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><MarkdownContent :source="entry.content" :project-id="issue.projectId" /></div></article>
             </template>
             <template v-else-if="tab === 'history'">
               <article v-for="entry in activityHistory" :key="entry.id" class="history-entry"><span class="history-dot"></span><div><p><strong>{{ entry.actor }}</strong> {{ entry.kind === 'created' ? '建立了任務' : '更新了任務' }} <time>{{ timestamp(entry.at) }}</time></p><p v-for="change in entry.changes" :key="change.field" class="history-change">{{ FIELD_LABELS[change.field] || change.field }}：{{ display(change.field, change.before) }} → {{ display(change.field, change.after) }}</p></div></article>
@@ -141,8 +142,8 @@ function timeSaved() {
           </div>
           <form v-if="canWrite" v-show="tab === 'comments'" class="comment-form" @submit.prevent="sendComment">
             <div v-if="error" class="error-box" role="alert">{{ error }}<button v-if="conflict" class="text-button" type="button" :disabled="saving || busy" @click="emit('reload')">更新任務資料（保留留言）</button></div>
-            <MarkdownEditor v-model="comment" label="新增留言" :rows="3" :maxlength="2000" placeholder="輸入留言…" :disabled="saving || busy" />
-            <button class="button secondary" :disabled="saving || busy || !commentDirty">{{ saving ? '送出中…' : '送出留言' }}</button>
+            <MarkdownEditor ref="commentEditor" :key="commentEditorKey" allow-attachments :project-id="issue.projectId" v-model="comment" label="新增留言" :rows="3" :maxlength="2000" placeholder="輸入留言…" :disabled="saving || busy" />
+            <button class="button secondary" :disabled="saving || busy || commentEditor?.attachmentBlocked || !commentDirty">{{ saving ? '送出中…' : '送出留言' }}</button>
           </form>
         </section>
       </div>

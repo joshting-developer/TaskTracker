@@ -24,16 +24,16 @@ class AttachmentService
      */
     public function __construct(private AttachmentRepository $attachments, private ProjectReadService $projects, private RecordStoreFactory $stores, private RequestReplay $replay, private AttachmentStorage $storage) {}
 
-    /** 同建卡／改卡交易接收描述引用, 不另增Issue版本或建立receipt
+    /** 同建卡／改卡／留言交易接收Markdown圖片引用, 不另增Issue版本或建立receipt
      * @param  WorkspaceContext  $context  交易內可信資格
      * @param  string  $projectId  任務專案公開ID
      * @param  string  $issueId  已於同交易寫入的任務
-     * @param  string  $description  經長度驗證的Markdown
+     * @param  string  $markdown  經長度驗證的Markdown
      * @return void
      */
-    public function bindDescription(WorkspaceContext $context, string $projectId, string $issueId, string $description): void
+    public function bindMarkdownReferences(WorkspaceContext $context, string $projectId, string $issueId, string $markdown): void
     {
-        preg_match_all('/!\[[^\]\r\n]*\]\(attachment:([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\)/i', $description, $matches);
+        preg_match_all('/!\[[^\]\r\n]*\]\(attachment:([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\)/i', $markdown, $matches);
         $ids = array_values(array_unique(array_map('strtolower', $matches[1])));
         if (! $ids) {
             return;

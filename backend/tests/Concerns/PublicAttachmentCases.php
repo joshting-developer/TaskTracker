@@ -96,6 +96,27 @@ trait PublicAttachmentCases
         $this->assertStringNotContainsString('storage_', json_encode($uploaded));
     }
 
+    /** PAT留言也經相同附件規則, 不增加第二套寫入流程
+     * @return void
+     */
+    public function test_public_comment_binds_images_with_scope_and_replay_checks(): void
+    {
+        [$identity, $project, $read, $write] = $this->attachmentTokenFixture();
+        $root = '/api/public/v1/projects/'.$project['id'];
+        $upload = $this->publicAttachmentUpload($project['id'], $write, (string) Str::uuid())->json('data');
+        $issue = $this->postJson($root.'/issues', ['title' => 'Comment image', 'requestId' => (string) Str::uuid()], ['Authorization' => 'Bearer '.$write])->assertOk()->json('data');
+        $path = $root.'/issues/'.$issue['id'].'/comments';
+        $input = ['content' => '![capture]('.$upload['reference'].')', 'expectedRevision' => 1, 'requestId' => (string) Str::uuid()];
+        $this->postJson($path, $input, ['Authorization' => 'Bearer '.$read])->assertForbidden();
+        $this->assertSame('pending', Attachment::where('public_id', $upload['id'])->value('status'));
+        $result = $this->postJson($path, $input, ['Authorization' => 'Bearer '.$write])->assertOk()->json('data');
+        $this->postJson($path, $input, ['Authorization' => 'Bearer '.$write])->assertOk()->assertExactJson(['ok' => true, 'data' => $result]);
+        $this->getJson($path, ['Authorization' => 'Bearer '.$read])->assertOk()->assertJsonCount(1, 'data.items')->assertJsonPath('data.items.0.content', $input['content']);
+        $this->assertSame('active', Attachment::where('public_id', $upload['id'])->value('status'));
+        WorkspaceMember::where('user_id', $identity['user']['id'])->update(['role' => 'user']);
+        $this->postJson($path, $input, ['Authorization' => 'Bearer '.$write])->assertNotFound();
+    }
+
     /** 雙版本綁定、原結果重播、read禁止寫入及資格撤銷
      * @return void
      */

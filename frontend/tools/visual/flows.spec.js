@@ -23,6 +23,8 @@ async function navigation(page) {
   if (await toggle.isVisible() && await toggle.getAttribute('aria-expanded') !== 'true') await toggle.click();
 }
 async function shot(page, name) {
+  // Detail/editor load attachment limits and relations independently; capture the settled screen.
+  if (['07-detail', '08-editor'].includes(name)) await page.waitForLoadState('networkidle');
   await page.evaluate(() => document.fonts.ready);
   await page.mouse.move(0, 0);
   let injected;

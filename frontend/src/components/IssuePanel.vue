@@ -27,6 +27,7 @@ const activity = useIssueActivity({ issue: toRef(props, 'issue'), tab: computed(
 const activityComments = activity.comments, activityHistory = activity.history, activityCounts = activity.counts;
 const tabId = useId();
 const comment = ref('');
+const commentEditor = ref(null), commentEditorKey = ref(0);
 const saving = ref(false);
 const error = ref('');
 const conflict = ref(false);
@@ -109,19 +110,19 @@ function invalidField(event) {
 watch(() => form.title, () => { titleError.value = ''; });
 const inputDisabled = computed(() => saving.value || projectLoading.value);
 const dirty = computed(() => JSON.stringify(values()) !== savedValues.value || Boolean(descriptionEditor.value?.attachmentDirty));
-defineExpose({ dirty: computed(() => dirty.value || Boolean(comment.value.trim()) || Boolean(relationsTool.value?.dirty)), saving: computed(() => inputDisabled.value || Boolean(descriptionEditor.value?.uploadBusy)) });
+defineExpose({ dirty: computed(() => dirty.value || Boolean(comment.value.trim()) || Boolean(commentEditor.value?.attachmentDirty) || Boolean(relationsTool.value?.dirty)), saving: computed(() => inputDisabled.value || Boolean(descriptionEditor.value?.uploadBusy) || Boolean(commentEditor.value?.uploadBusy)) });
 watch(() => props.issue, () => { if (!dirty.value) resetForm(); });
 function close() {
   if (inputDisabled.value) return;
-  if ((dirty.value || comment.value.trim() || relationsTool.value?.dirty) && !window.confirm('還有未儲存的內容, 確定要關閉嗎？')) return;
+  if ((dirty.value || comment.value.trim() || commentEditor.value?.attachmentDirty || relationsTool.value?.dirty) && !window.confirm('還有未儲存的內容, 確定要關閉嗎？')) return;
   emit('close');
 }
 function jump(issue) {
-  if (saving.value || ((dirty.value || comment.value.trim() || relationsTool.value?.dirty) && !window.confirm('還有未儲存的內容, 確定要切換任務嗎？'))) return;
+  if (saving.value || ((dirty.value || comment.value.trim() || commentEditor.value?.attachmentDirty || relationsTool.value?.dirty) && !window.confirm('還有未儲存的內容, 確定要切換任務嗎？'))) return;
   emit('open', issue);
 }
 function beforeUnload(event) {
-  if (dirty.value || comment.value.trim() || relationsTool.value?.dirty) { event.preventDefault(); event.returnValue = ''; }
+  if (dirty.value || comment.value.trim() || commentEditor.value?.attachmentDirty || relationsTool.value?.dirty) { event.preventDefault(); event.returnValue = ''; }
 }
 onMounted(async () => {
   resetForm();
@@ -171,7 +172,7 @@ async function createChild(title) {
   finally { saving.value = false; }
 }
 async function sendComment() {
-  if (saving.value || !comment.value.trim()) return;
+  if (saving.value || commentEditor.value?.attachmentBlocked || !comment.value.trim()) return;
   saving.value = true;
   error.value = '';
   const payload = { id: props.issue.id, content: comment.value, expectedRevision: props.issue.revision };
@@ -179,7 +180,7 @@ async function sendComment() {
   if (commentRequest?.signature !== signature) commentRequest = { signature, requestId: crypto.randomUUID() };
   try {
     const result = await api.addComment({ ...payload, requestId: commentRequest.requestId });
-    comment.value = '';
+    comment.value = ''; commentEditorKey.value++;
     commentRequest = null;
     emit('saved', result, false);
   } catch (failure) {
@@ -245,11 +246,11 @@ function timestamp(value) {
           <div v-if="tab === 'comments'" class="comments">
             <p v-if="!activityComments.length" class="quiet-message">尚無留言</p>
             <article v-for="entry in activityComments" :key="entry.id" class="comment">
-              <div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><MarkdownContent :source="entry.content" /></div>
+              <div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><MarkdownContent :source="entry.content" :project-id="issue.projectId" /></div>
             </article>
             <form @submit.prevent="sendComment" class="comment-form">
-              <MarkdownEditor v-model="comment" label="新增留言" placeholder="輸入留言…" :maxlength="2000" :rows="3" :disabled="inputDisabled" />
-              <button class="button secondary" :disabled="inputDisabled || !comment.trim()">送出留言 <Icon name="arrow" :size="16" /></button>
+              <MarkdownEditor ref="commentEditor" :key="commentEditorKey" allow-attachments :project-id="issue.projectId" v-model="comment" label="新增留言" placeholder="輸入留言…" :maxlength="2000" :rows="3" :disabled="inputDisabled" />
+              <button class="button secondary" :disabled="inputDisabled || commentEditor?.attachmentBlocked || !comment.trim()">送出留言 <Icon name="arrow" :size="16" /></button>
             </form>
           </div>
           <div v-else class="history-list">

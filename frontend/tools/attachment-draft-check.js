@@ -41,7 +41,7 @@ try {
   const uploads = editor.getByRole('list', { name: '圖片上傳狀態' }); await uploads.getByRole('button', { name: '重試' }).waitFor();
   assert.equal(await input.inputValue(), '前段\n後段'); assert.equal(await editor.getByRole('button', { name: '建立任務', exact: true }).isDisabled(), true);
   await uploads.getByRole('button', { name: '重試' }).click(); await input.evaluate(el => { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }); await input.type('保留新文字');
-  await uploads.getByText('已加入描述', { exact: true }).waitFor(); assert.equal(retryIds.length, 2); assert.equal(retryIds[0], retryIds[1]);
+  await uploads.getByText('已加入內容', { exact: true }).waitFor(); assert.equal(retryIds.length, 2); assert.equal(retryIds[0], retryIds[1]);
   assert.match(await input.inputValue(), /前段\n\n!\[login.webp\]\(attachment:[\da-f-]+\)\n後段保留新文字/);
   await page.unroute(`**/api/v1/projects/${project.id}/attachments`);
   // Actual browser clipboard API followed by the platform paste shortcut.
@@ -80,7 +80,7 @@ try {
   await input.fill('輸入法測試'); await input.dispatchEvent('compositionstart');
   await file.setInputFiles({ name: 'ime.png', mimeType: 'image/png', buffer: png });
   await uploads.getByText('100%', { exact: true }).waitFor(); assert.equal(await input.inputValue(), '輸入法測試');
-  await input.dispatchEvent('compositionend'); await uploads.getByText('已加入描述', { exact: true }).waitFor();
+  await input.dispatchEvent('compositionend'); await uploads.getByText('已加入內容', { exact: true }).waitFor();
   assert.match(await input.inputValue(), /attachment:/);
   await input.press('ControlOrMeta+z'); assert.equal(await input.inputValue(), '輸入法測試');
   assert.deepEqual(errors, []);

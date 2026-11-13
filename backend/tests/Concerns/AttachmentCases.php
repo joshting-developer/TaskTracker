@@ -95,6 +95,46 @@ trait AttachmentCases
         $this->postJson('/api/rpc/updateIssue', ['id' => $created['id'], 'expectedRevision' => 2, 'title' => 'Unrelated edit', 'requestId' => (string) Str::uuid()])->assertOk()->assertJsonPath('data.revision', 3);
     }
 
+    /** 留言圖片與2000字原稿共用交易, 衝突與無效引用不留留言
+     * @return void
+     */
+    public function test_comment_images_bind_atomically_and_preserve_raw_length_limit(): void
+    {
+        Storage::fake('attachments');
+        $this->postJson('/api/auth/register', ['name' => 'Commenter', 'email' => Str::uuid().'@example.test', 'password' => 'attachment-test-password', 'workspaceName' => 'Comments'])->assertOk();
+        $project = $this->postJson('/api/rpc/createProject', ['name' => 'Images', 'code' => 'IMG', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $issue = $this->postJson('/api/rpc/createIssue', ['projectId' => $project['id'], 'title' => 'Comment images', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aN1cAAAAASUVORK5CYII=');
+        $upload = fn () => $this->post('/api/v1/projects/'.$project['id'].'/attachments', ['requestId' => (string) Str::uuid(), 'file' => UploadedFile::fake()->createWithContent('comment.png', $png)], ['Accept' => 'application/json'])->assertOk()->json('data');
+        $image = $upload();
+        $ref = '![comment](attachment:'.$image['id'].')';
+        $input = ['id' => $issue['id'], 'expectedRevision' => 1, 'content' => str_repeat('x', 2000 - strlen($ref)).$ref, 'requestId' => (string) Str::uuid()];
+        $this->postJson('/api/rpc/addComment', [...$input, 'content' => $input['content'].'x'])->assertStatus(400);
+        $this->assertSame('pending', $this->attachmentRows()->where('public_id', $image['id'])->value('status'));
+        $this->postJson('/api/rpc/addComment', [...$input, 'expectedRevision' => 0])->assertStatus(409);
+        $this->postJson('/api/rpc/addComment', $input)->assertOk();
+        $this->postJson('/api/rpc/addComment', $input)->assertOk();
+        $model = Issue::where('public_id', $issue['id'])->firstOrFail();
+        $this->assertSame(1, $model->comments()->count());
+        $this->assertSame(2, $model->revision);
+        $this->assertSame($input['content'], $model->comments()->first()->content);
+        $this->assertSame('active', $this->attachmentRows()->where('public_id', $image['id'])->value('status'));
+        $this->get('/api/v1/projects/'.$project['id'].'/attachments/'.$image['id'].'/content')->assertOk()->assertStreamedContent($png);
+        $other = $this->postJson('/api/rpc/createIssue', ['projectId' => $project['id'], 'title' => 'Other', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $this->postJson('/api/rpc/addComment', ['id' => $other['id'], 'expectedRevision' => 1, 'content' => $ref, 'requestId' => (string) Str::uuid()])->assertStatus(404);
+        $this->assertSame(0, Issue::where('public_id', $other['id'])->firstOrFail()->comments()->count());
+        $this->assertSame(1, Issue::where('public_id', $other['id'])->value('revision'));
+        $pending = $upload();
+        $row = $this->attachmentRows()->where('public_id', $pending['id'])->firstOrFail();
+        $payload = ['id' => $issue['id'], 'expectedRevision' => 2, 'content' => '![pending](attachment:'.$pending['id'].')', 'requestId' => (string) Str::uuid()];
+        $row->update(['expires_at' => now()->subMinute()]);
+        $this->postJson('/api/rpc/addComment', $payload)->assertStatus(404);
+        $row->update(['expires_at' => now()->addHour(), 'uploaded_by' => User::factory()->create(['id' => (string) Str::uuid()])->id]);
+        $this->postJson('/api/rpc/addComment', $payload)->assertStatus(404);
+        $this->assertSame(1, $model->comments()->count());
+        $this->assertSame(2, $model->fresh()->revision);
+    }
+
     /** 上傳、綁定、下載、冪等與刪除保存
      * @return void
      */

@@ -104,8 +104,8 @@ function onKeydown(event) {
     <div v-show="mode === 'write'" @dragover="event => allowAttachments && event.dataTransfer?.types.includes('Files') && event.preventDefault()" @drop="dropImage" :id="`${id}-writing`" role="tabpanel" :aria-labelledby="`${id}-write`">
       <div class="editor-tools" role="group" :aria-label="`${label}格式`">
         <button v-for="item in formats" :key="item.id" type="button" :disabled="disabled || composing" :aria-label="`${label}：${item.id === 'checklist' ? '待辦清單' : item.label}`" :title="item.label" @mousedown.prevent @click="format(item)">{{ item.label }}</button>
-        <button v-if="allowAttachments" type="button" :disabled="disabled || !uploadLimits" aria-label="選擇描述圖片" @click="fileInput.click()">圖片</button>
-        <input v-if="allowAttachments" ref="fileInput" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden aria-label="上傳描述圖片" @change="event => { addImages(event.target.files); event.target.value = ''; }" />
+        <button v-if="allowAttachments" type="button" :disabled="disabled || !uploadLimits" :aria-label="`選擇${label}圖片`" @click="fileInput.click()">圖片</button>
+        <input v-if="allowAttachments" ref="fileInput" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden :aria-label="`上傳${label}圖片`" @change="event => { addImages(event.target.files); event.target.value = ''; }" />
       </div>
       <textarea :id="`${id}-input`" ref="input" v-model="model" :name="name" :aria-label="label" :aria-describedby="`${id}-help${allowAttachments && uploadError ? ` ${id}-upload-error` : ''}`" :placeholder="placeholder" :maxlength="maxlength" :rows="rows" :disabled="disabled" :required="required" @paste="pasteImage" @keydown="onKeydown" @compositionstart="composing = true" @compositionend="composing = false"></textarea>
     </div>
@@ -117,7 +117,7 @@ function onKeydown(event) {
       <li v-for="row in uploadRows.filter(item => item.state !== 'canceled')" :key="row.id">
         <span>{{ row.file.name || '圖片' }}</span>
         <progress v-if="row.state === 'uploading'" :value="row.progress" max="100" :aria-label="`${row.file.name}上傳進度`"></progress>
-        <span :role="row.state === 'failed' ? 'alert' : 'status'">{{ row.state === 'done' ? '已加入描述' : row.state === 'queued' ? '等待上傳' : row.state === 'failed' ? row.error : `${row.progress}%` }}</span>
+        <span :role="row.state === 'failed' ? 'alert' : 'status'">{{ row.state === 'done' ? '已加入內容' : row.state === 'queued' ? '等待上傳' : row.state === 'failed' ? row.error : `${row.progress}%` }}</span>
         <button v-if="row.state === 'failed'" type="button" @click="uploads.retry(row)">重試</button>
         <button v-if="row.state !== 'done'" type="button" @click="uploads.cancel(row)">取消</button>
       </li>

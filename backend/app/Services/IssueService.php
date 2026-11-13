@@ -83,7 +83,7 @@ class IssueService
             'nextNumber' => $project['nextNumber'] + 1,
         ]);
         $this->store->put('issues', $issue['id'], $issue);
-        $this->attachments->bindDescription(new WorkspaceContext($this->workspaceSession), $project['id'], $issue['id'], $issue['description']);
+        $this->attachments->bindMarkdownReferences(new WorkspaceContext($this->workspaceSession), $project['id'], $issue['id'], $issue['description']);
         $this->syncRelations($issue, []);
         if (! empty($input['boardId']) && $input['boardId'] !== 'default') {
             ($this->boards)()->includeCreatedIssue(Fields::text($input['boardId'], '看板', 100, true), $issue);
@@ -289,7 +289,7 @@ class IssueService
         $this->validateLinks($project, $fields, $current);
         $issue = $this->writeIssue($current, $fields);
         if ($fields['description'] !== $current['description']) {
-            $this->attachments->bindDescription(new WorkspaceContext($this->workspaceSession), $project['id'], $issue['id'], $issue['description']);
+            $this->attachments->bindMarkdownReferences(new WorkspaceContext($this->workspaceSession), $project['id'], $issue['id'], $issue['description']);
         }
         if ($issue['revision'] === $current['revision']) {
             return $issue;
@@ -416,6 +416,7 @@ class IssueService
             'comments' => [...$current['comments'], $comment],
         ];
         $this->store->put('issues', $issue['id'], $issue);
+        $this->attachments->bindMarkdownReferences(new WorkspaceContext($this->workspaceSession), $issue['projectId'], $issue['id'], $comment['content']);
         $this->notify($issue, '新留言', $comment['author'].'：'.$comment['content'], $issue['assignee'], 'comment');
 
         return $issue;

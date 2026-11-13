@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "5f95f26da09ce4cbbb1d6c9800ffd68c98aae9435f8a727da2ca6533713fbd05",
+  "harnessSha256": "e52705c45e3236bc1803415a76b700e5355013e93f62ef8feae5b553beebed40",
   "profile": "darwin-arm64",
   "reviewer": "Josh",
-  "note": "Standing UI authorization in AGENTS.md. TT-317: detail/drawer activity counts now show actual totals; desktop detail and mobile editor inspected, three-width real browser flows passed. Existing threshold unchanged.",
-  "manifestSha256": "fa303f0fd07affebe3586a21025cd068f7a3c0e880820d7c125b8039e4a6a849",
+  "note": "依持續授權核准TT-293留言圖片與Claude交辦TT-302建立／異動欄位, 已檢視三尺寸；等待非同步資料穩定, 比較容忍值不變",
+  "manifestSha256": "7d54b122f5570217a81111ab4c9536a613c918bf9879e4a401feb17a159ba1c6",
   "environment": {
     "platform": "darwin",
     "arch": "arm64",
@@ -26,15 +26,12 @@
   },
   "artifactRunId": null,
   "cards": [
-    "TT-305",
-    "TT-306",
-    "TT-313",
-    "TT-288",
-    "TT-289",
-    "TT-310",
-    "TT-278",
-    "TT-279",
-    "TT-317"
+    "TT-293",
+    "TT-302"
   ],
-  "previousApprovedManifestSha256": "4cf863e7de3ae64dffceacc6a28be56f6370a357416cefcb9c1dcac3fd1f0d3b"
+  "reviewedChanges": [
+    "TT-293：留言圖片入口與私有預覽, 完整頁／抽屜, 三尺寸",
+    "TT-302：建立與最後異動欄位, 新異動在上, 固定合成時間",
+    "完整頁與抽屜等待非同步資料穩定後擷取, 容忍值不變"
+  ]
 }
