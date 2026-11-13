@@ -90,6 +90,8 @@ Route::post('/api/rpc/verifySmtp', [SmtpController::class, 'verify'])->name('rpc
 
 // v1先共用Session／CSRF可信邊界，Application Service可供後續PAT適配器沿用。
 Route::prefix('/api/v1')->group(function () {
+    require __DIR__.'/attachments.php';
+
     Route::get('/time-report', [TimeReportsController::class, 'index'])->name('v1.time-report');
     Route::get('/time-report/details', [TimeReportsController::class, 'details'])->name('v1.time-report.details');
     Route::get('/time-report/options/{kind}', [TimeReportsController::class, 'options'])->whereIn('kind', ['projects', 'members'])->name('v1.time-report.options');

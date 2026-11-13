@@ -145,6 +145,16 @@ class RecordStore
         return (bool) array_filter($this->all('timeEntries'), fn ($entry) => $entry['issueId'] === $issueId && empty($entry['voidedAt']));
     }
 
+    /** 歷史附件仍保留時阻止永久刪除Issue, 避免外鍵錯誤或破壞歷史引用
+     * @param  string  $projectId  專案公開ID
+     * @param  string  $issueId  Issue公開ID
+     * @return bool 是否仍有附件metadata
+     */
+    public function issueHasAttachments(string $projectId, string $issueId): bool
+    {
+        return $this->records->issueHasAttachments($projectId, $issueId);
+    }
+
     /** 刪除前檢查任何工時（含已作廢）。
      * @param  string  $projectId  專案公開ID
      * @param  string  $issueId  任務公開ID

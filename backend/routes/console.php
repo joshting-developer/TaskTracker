@@ -11,3 +11,5 @@ Artisan::command('inspire', function () {
 
 // TT-260：操作紀錄保存90天；需有scheduler執行者（見TT-162）才會自動清除。
 Schedule::command('model:prune', ['--model' => [HttpOperationLog::class]])->daily();
+
+Schedule::command('attachments:cleanup')->hourly()->withoutOverlapping();

@@ -202,6 +202,24 @@ class RelationalRecords
             ->where('issues.public_id', $issueId)->whereNull('time_entries.voided_at')->exists();
     }
 
+    /** 同租戶／專案查Issue附件存在性, 不載內容
+     * @param  string  $projectId  專案公開ID
+     * @param  string  $issueId  Issue公開ID
+     * @return bool 是否有附件metadata
+     */
+    public function issueHasAttachments(string $projectId, string $issueId): bool
+    {
+        if (! Schema::hasTable('attachments')) {
+            return false;
+        }
+
+        return DB::table('attachments')->join('issues as attached_issue', 'attached_issue.id', '=', 'attachments.issue_id')
+            ->join('projects as attached_project', 'attached_project.id', '=', 'attachments.project_id')
+            ->where('attachments.workspace_id', $this->workspaceId())->whereColumn('attached_issue.workspace_id', 'attachments.workspace_id')
+            ->whereColumn('attached_issue.project_id', 'attachments.project_id')->where('attached_issue.public_id', $issueId)
+            ->where('attached_project.public_id', $projectId)->exists();
+    }
+
     /** 刪除前檢查：任何工時（含已作廢）都保留稽核價值，存在時不可刪卡。
      * @param  string  $projectId  專案公開ID
      * @param  string  $issueId  任務公開ID

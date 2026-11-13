@@ -1,0 +1,539 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TaskTracker private Issue attachments",
+    "version": "1.0.0",
+    "description": "Session v1 only. Not a PAT API. Objects stay private; pending reads require uploader and live project access."
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "security": [
+    {
+      "session": []
+    }
+  ],
+  "paths": {
+    "/projects/{project}/attachments": {
+      "post": {
+        "operationId": "uploadAttachment",
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "X-CSRF-TOKEN",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Workspace-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "When supplied, must match the current Session workspace."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Metadata"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid content, quota or input"
+          },
+          "401": {
+            "description": "No valid Session or workspace membership"
+          },
+          "403": {
+            "description": "Missing capability"
+          },
+          "404": {
+            "description": "Not visible, expired or removed"
+          },
+          "409": {
+            "description": "Revision/request/workspace conflict"
+          },
+          "502": {
+            "description": "Private storage unavailable; retry the same requestId"
+          },
+          "429": {
+            "description": "Upload rate limit, respect Retry-After"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "requestId",
+                  "file"
+                ],
+                "properties": {
+                  "requestId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{project}/issues/{issue}/attachments": {
+      "get": {
+        "operationId": "listIssueAttachments",
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "issue",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "X-Workspace-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "When supplied, must match the current Session workspace."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized result"
+          },
+          "400": {
+            "description": "Invalid content, quota or input"
+          },
+          "401": {
+            "description": "No valid Session or workspace membership"
+          },
+          "403": {
+            "description": "Missing capability"
+          },
+          "404": {
+            "description": "Not visible, expired or removed"
+          },
+          "409": {
+            "description": "Revision/request/workspace conflict"
+          },
+          "502": {
+            "description": "Private storage unavailable; retry the same requestId"
+          }
+        },
+        "description": "Stable internal ID order, fixed 20 items per page. Only active attachments for this Issue."
+      }
+    },
+    "/projects/{project}/attachments/{attachment}/content": {
+      "get": {
+        "operationId": "readAttachmentContent",
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "attachment",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "X-Workspace-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "When supplied, must match the current Session workspace."
+          },
+          {
+            "name": "download",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized result",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid content, quota or input"
+          },
+          "401": {
+            "description": "No valid Session or workspace membership"
+          },
+          "403": {
+            "description": "Missing capability"
+          },
+          "404": {
+            "description": "Not visible, expired or removed"
+          },
+          "409": {
+            "description": "Revision/request/workspace conflict"
+          },
+          "502": {
+            "description": "Private storage unavailable; retry the same requestId"
+          }
+        },
+        "description": "Private no-store, nosniff, same-origin. Authorization is rechecked for every request; no permanent public object URL."
+      }
+    },
+    "/projects/{project}/attachments/{attachment}/bind": {
+      "post": {
+        "operationId": "bindAttachment",
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "attachment",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "X-CSRF-TOKEN",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Workspace-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "When supplied, must match the current Session workspace."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized result"
+          },
+          "400": {
+            "description": "Invalid content, quota or input"
+          },
+          "401": {
+            "description": "No valid Session or workspace membership"
+          },
+          "403": {
+            "description": "Missing capability"
+          },
+          "404": {
+            "description": "Not visible, expired or removed"
+          },
+          "409": {
+            "description": "Revision/request/workspace conflict"
+          },
+          "502": {
+            "description": "Private storage unavailable; retry the same requestId"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Change"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{project}/attachments/{attachment}": {
+      "delete": {
+        "operationId": "deleteAttachment",
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "attachment",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "X-CSRF-TOKEN",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Workspace-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "When supplied, must match the current Session workspace."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized result"
+          },
+          "400": {
+            "description": "Invalid content, quota or input"
+          },
+          "401": {
+            "description": "No valid Session or workspace membership"
+          },
+          "403": {
+            "description": "Missing capability"
+          },
+          "404": {
+            "description": "Not visible, expired or removed"
+          },
+          "409": {
+            "description": "Revision/request/workspace conflict"
+          },
+          "502": {
+            "description": "Private storage unavailable; retry the same requestId"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Change"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{project}/attachments/limits": {
+      "get": {
+        "operationId": "getAttachmentLimits",
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorized editor limits: maxBytes, maxPixels, perIssue, pendingHours, mimeTypes"
+          },
+          "401": {
+            "description": "No valid Session"
+          },
+          "403": {
+            "description": "Missing issue.write"
+          },
+          "404": {
+            "description": "Project not visible"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "tasktracker_session"
+      }
+    },
+    "schemas": {
+      "Metadata": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "mime",
+          "bytes",
+          "status",
+          "revision",
+          "reference",
+          "expiresAt"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "mime": {
+            "enum": [
+              "image/png",
+              "image/jpeg",
+              "image/webp"
+            ]
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "active"
+            ]
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "reference": {
+            "type": "string",
+            "pattern": "^attachment:[a-f0-9-]{36}$"
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "Change": {
+        "type": "object",
+        "required": [
+          "requestId",
+          "expectedRevision"
+        ],
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "issueId": {
+            "type": "string"
+          },
+          "issueRevision": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  }
+}

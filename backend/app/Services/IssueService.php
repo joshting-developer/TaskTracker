@@ -244,6 +244,9 @@ class IssueService
             DomainError::fail('NOT_FOUND', '找不到這個專案內的任務');
         }
         RecordRevision::assertCurrent($issue, $input);
+        if ($this->store->issueHasAttachments($issue['projectId'], $issue['id'])) {
+            DomainError::fail('CONFLICT', '這張任務有附件歷史, 請改為關閉');
+        }
         if ($this->store->issueHasAnyTime($issue['projectId'], $issue['id'])) {
             DomainError::fail('CONFLICT', '這張卡片已有工時紀錄，不能刪除；請改為關閉');
         }
