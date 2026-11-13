@@ -1,4 +1,4 @@
-// TT-206～208、297：首頁產品介紹、/login、/app/入口、舊hash相容、訪客TopBar與SEO metadata；只接受隔離API。E2E_PREVIEW=1驗正式build。
+// TT-206～208、297、298：首頁產品介紹、/login、/app/入口、舊hash相容、訪客TopBar與SEO metadata；只接受隔離API。E2E_PREVIEW=1驗正式build。
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createServer, preview } from 'vite';
@@ -42,11 +42,12 @@ try {
   await page.waitForURL(url => url.pathname === '/login');
   assert.equal(pathOf(page), '/login#/projects', '舊hash連結轉到/login並保留深層連結');
   assert.equal(await nav.getByRole('link', { name: '登入' }).getAttribute('aria-current'), 'page');
-  assert.equal(await nav.getByRole('link', { name: '產品介紹' }).getAttribute('href'), '/');
+  assert.equal(await nav.getByRole('link', { name: '產品介紹' }).getAttribute('href'), '/', '登入頁有明確回介紹頁的連結');
+  assert.equal(await nav.getByRole('link', { name: /建立工作空間/ }).getAttribute('href'), '/login?mode=register');
   await page.keyboard.press('Tab');
   assert.equal(await page.evaluate(() => document.activeElement.getAttribute('aria-label')), 'TaskTracker 首頁');
   await measure(page, 'login');
-  assert.ok(measurements.filter(row => row.page === 'login').every(row => row.bar && row.links.every(height => height >= 44)), '登入頁TopBar可見且連結≥44px');
+  assert.ok(measurements.filter(row => row.page === 'login').every(row => row.bar && row.links.length === 3 && row.links.every(height => height >= 44)), '登入頁TopBar三個連結可見且≥44px');
 
   // 註冊後同一頁換到/app/並進入原深層連結，不顯示訪客TopBar。
   const email = `guest-${crypto.randomUUID()}@example.test`;
@@ -78,9 +79,19 @@ try {
   await page.getByRole('heading', { level: 1 }).waitFor();
   await page.waitForFunction(() => !document.documentElement.classList.contains('auth-pending'));
   assert.equal(new URL(page.url()).pathname, '/', '未登入首頁停留在產品介紹');
-  assert.equal(await nav.getByRole('link', { name: '產品介紹' }).getAttribute('aria-current'), 'page');
+  assert.equal(await nav.getByRole('link', { name: '登入' }).getAttribute('aria-current'), null, '首頁沒有目前頁標示');
+  assert.equal(await nav.getByRole('link', { name: '產品介紹' }).count(), 0, '首頁就是介紹, TopBar不放產品介紹');
   await page.getByRole('link', { name: '登入', exact: true }).first().click();
   await page.waitForURL(url => url.pathname === '/login');
+  await page.getByRole('heading', { name: '登入工作空間' }).waitFor();
+
+  // 首頁的「建立工作空間」直接打開建立表單（TopBar與正文CTA同目標）。
+  await page.goto(`${origin}/`);
+  await page.waitForFunction(() => !document.documentElement.classList.contains('auth-pending'));
+  await nav.getByRole('link', { name: /建立工作空間/ }).click();
+  await page.waitForURL(url => url.pathname === '/login' && url.search === '?mode=register');
+  await page.getByRole('heading', { name: '建立工作空間' }).waitFor();
+  await page.getByLabel('工作空間名稱').waitFor();
 
   // 舊邀請信連結/#/invite?token=…：落到/login的邀請表單。
   await page.goto(`${origin}/#/invite?token=not-a-real-token`);

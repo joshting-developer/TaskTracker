@@ -5,7 +5,8 @@ import GuestTopBar from './GuestTopBar.vue';
 
 const emit = defineEmits(['authenticated']);
 const inviteToken = new URLSearchParams(location.hash.startsWith('#/invite?') ? location.hash.slice(9) : '').get('token') || '';
-const mode = ref(inviteToken ? 'register' : 'login');
+// TT-298：首頁與TopBar的「建立工作空間」帶?mode=register, 直接打開建立表單
+const mode = ref(inviteToken || new URLSearchParams(location.search).get('mode') === 'register' ? 'register' : 'login');
 const form = reactive({ name: '', email: '', password: '', workspaceName: '', inviteToken });
 const busy = ref(false);
 const error = ref('');
