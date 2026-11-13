@@ -22,7 +22,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <!-- TT-297：舊的/#/…深層連結（任務分享、邀請信）在顯示首頁前轉到/app/；曾登入的瀏覽器直接進工作空間（只是提示，/app/仍會驗證，未登入會回/login）。
          有JS時先隱藏訪客TopBar待確認登入狀態；無JS時不加class，TopBar照常顯示。 -->
-    <script>(function () { var hint = false; try { hint = localStorage.getItem('tasktracker:signed-in') === '1'; } catch (e) {} if (location.hash.indexOf('#/') === 0 || hint) { location.replace('/app/' + location.hash); return; } document.documentElement.classList.add('auth-pending'); setTimeout(function () { document.documentElement.classList.remove('auth-pending'); }, 3000); })();</script>
+    <script>(function () { var hint = false; try { hint = localStorage.getItem('tasktracker:signed-in') === '1'; } catch (e) {} if (location.hash.indexOf('#/') === 0 || hint) { window.__tasktrackerRedirecting = true; location.replace('/app/' + location.hash); return; } document.documentElement.classList.add('auth-pending'); setTimeout(function () { document.documentElement.classList.remove('auth-pending'); }, 3000); })();</script>
     <link rel="stylesheet" href="./landing/landing.css" />
     <script type="module" src="./landing/landing.js"></script>
   </head>

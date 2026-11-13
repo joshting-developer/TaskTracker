@@ -115,7 +115,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   await page.locator('[data-column="inprogress"] [data-issue="VRT-2"]').waitFor();
   await page.locator('.board-scroll').evaluate(element => { element.scrollLeft = 0; });
   await shot(page, '10-board-dragged');
-  await page.goto(`/#/projects/${data.empty.id}/board`);
+  await page.goto(`/app/#/projects/${data.empty.id}/board`);
   await page.getByLabel('看板泳道').waitFor();
   await expect(page.locator('.issue-card')).toHaveCount(0);
   await shot(page, '11-board-empty');
@@ -123,7 +123,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   let release;
   const barrier = new Promise(resolve => { release = resolve; });
   await page.route('**/api/v1/projects?*', async route => { await barrier; await route.continue(); }, { times: 1 });
-  await page.goto('/#/projects');
+  await page.goto('/app/#/projects');
   await page.getByRole('heading', { name: '正在載入專案…', exact: true }).waitFor();
   await shot(page, '12-loading');
   release();
@@ -148,7 +148,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   await openProjectList(page);
   await page.getByRole('heading', { name: '尚未加入任何專案', exact: true }).waitFor();
   await shot(page, '15-member-empty');
-  await page.goto(`/#/projects/${data.privateProject.id}`);
+  await page.goto(`/app/#/projects/${data.privateProject.id}`);
   await page.getByRole('status').filter({ hasText: '專案存取權限已變更' }).waitFor();
   await expect(page.getByRole('button', { name: '新增任務', exact: true })).toHaveCount(0);
   await shot(page, '16-denied');

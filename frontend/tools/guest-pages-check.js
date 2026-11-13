@@ -65,6 +65,13 @@ try {
   await page.goto(`${origin}/`);
   await page.locator('.app-shell').waitFor();
   assert.equal(new URL(page.url()).pathname, '/app/', '已登入開首頁進工作空間');
+  // 已登入點舊分享連結：首頁兩段轉址不能互搶, #後的深層連結要保留（重複幾次抓競態）。
+  for (let round = 0; round < 3; round++) {
+    await page.goto(`${origin}/#/projects`);
+    await page.locator('.app-shell').waitFor();
+    await page.waitForTimeout(300);
+    assert.equal(pathOf(page), '/app/#/projects', '已登入開舊hash連結保留深層連結');
+  }
   await page.goto(`${origin}/login`);
   await page.locator('.app-shell').waitFor();
   assert.equal(new URL(page.url()).pathname, '/app/', '已登入開/login進工作空間');

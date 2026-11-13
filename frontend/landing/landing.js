@@ -9,10 +9,13 @@ async function signedIn() {
     return false;
   }
 }
-if (await signedIn()) {
+// head已經在轉址（舊hash連結或登入提示）就不再判斷, 避免兩個轉址互搶而弄丟#後的深層連結。
+if (window.__tasktrackerRedirecting) {
+  // 等head的轉址完成
+} else if (await signedIn()) {
   // 同步登入提示，下次開首頁時在head即轉址，不先閃出介紹頁。
   try { localStorage.setItem('tasktracker:signed-in', '1'); } catch { /* 無法儲存時每次以API判斷 */ }
-  location.replace('/app/');
+  location.replace('/app/' + location.hash);
 } else {
   root.classList.remove('auth-pending');
 }
