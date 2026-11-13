@@ -1,0 +1,109 @@
+{
+  "trackingIssue": "TT-286",
+  "source": "docs/issue-experience-and-attachments-roadmap-2026-11-13.md",
+  "scope": "analysis and backlog only",
+  "reused": [
+    "TT-191",
+    "TT-282",
+    "TT-281"
+  ],
+  "existingVerification": [
+    "TT-273",
+    "TT-270",
+    "TT-271"
+  ],
+  "created": [
+    {
+      "identifier": "TT-287",
+      "title": "私有附件Markdown安全顯示、授權圖片與放大檢視",
+      "board": "實際功能",
+      "priority": "urgent",
+      "estimateMinutes": 240,
+      "dependsOn": "P0；依賴TT-191，與TT-282平行開發後整合。§2.2／4.1／4.3，建議包4。"
+    },
+    {
+      "identifier": "TT-288",
+      "title": "精修Issue建立與編輯表單的資訊主次及儲存回饋",
+      "board": "實際功能",
+      "priority": "high",
+      "estimateMinutes": 240,
+      "dependsOn": "P1；接TT-282＋附件顯示卡後驗完整含圖流程。§5.1／6，建議包5。"
+    },
+    {
+      "identifier": "TT-289",
+      "title": "精修Issue詳細頁閱讀層次與附件、活動資訊整合",
+      "board": "實際功能",
+      "priority": "high",
+      "estimateMinutes": 240,
+      "dependsOn": "P1；依賴TT-191與安全顯示卡。§5.2／6，建議包6。"
+    },
+    {
+      "identifier": "TT-290",
+      "title": "精修任務列表與看板的資訊密度、長標題與操作狀態",
+      "board": "實際功能",
+      "priority": "high",
+      "estimateMinutes": 300,
+      "dependsOn": "P1；與TT-281分工：該卡只修快速編輯，本卡管其餘視覺與掃讀。§6，建議包7。"
+    },
+    {
+      "identifier": "TT-291",
+      "title": "接線Cloudflare R2私有附件儲存並驗收隔離Bucket",
+      "board": "部署",
+      "priority": "high",
+      "estimateMinutes": 180,
+      "dependsOn": "P1，外部資訊依賴；先TT-191本地完整驗收，不得阻塞本地MVP。§3.2／8包8／10。"
+    },
+    {
+      "identifier": "TT-292",
+      "title": "規劃並驗證既有本地附件遷往R2的無損切換與回退",
+      "board": "部署",
+      "priority": "low",
+      "estimateMinutes": 240,
+      "dependsOn": "P2／條件式後續：只有實際存在需遷移的local附件才執行；依賴TT-191與R2隔離驗收。§3.2／10。"
+    },
+    {
+      "identifier": "TT-293",
+      "title": "第二階段擴充Issue留言的圖片貼上與附件引用",
+      "board": "實際功能",
+      "priority": "low",
+      "estimateMinutes": 180,
+      "dependsOn": "P2非MVP；依賴TT-191、TT-282與安全顯示卡。§4.2／7／8包9。"
+    },
+    {
+      "identifier": "TT-294",
+      "title": "第二階段設計小待辦圖片附件的隱私與轉卡流程",
+      "board": "實際功能",
+      "priority": "low",
+      "estimateMinutes": 240,
+      "dependsOn": "P2非MVP；依賴TT-191及Issue描述圖片流程穩定，§4.2／7。"
+    },
+    {
+      "identifier": "TT-295",
+      "title": "第二階段支援PDF與ZIP等一般私有附件",
+      "board": "實際功能",
+      "priority": "low",
+      "estimateMinutes": 240,
+      "dependsOn": "P2非MVP，依賴TT-191圖片MVP穩定。§7／8包9。"
+    },
+    {
+      "identifier": "TT-296",
+      "title": "提供受PAT權限與Scope限制的公開附件API與文件",
+      "board": "AI整合/API",
+      "priority": "low",
+      "estimateMinutes": 300,
+      "dependsOn": "P2非MVP，依賴TT-191內部附件契約穩定。§7／8包9；此卡才收AI整合/API。"
+    }
+  ],
+  "mvp": [
+    "TT-191",
+    "TT-282",
+    "TT-287"
+  ],
+  "implementationState": "not started",
+  "futureUnscheduledResearch": [
+    "R2 direct/multipart upload",
+    "protected CDN",
+    "image thumbnail/transcoding after measurement",
+    "rich text editor replacement only if needed"
+  ]
+}
