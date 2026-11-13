@@ -3,8 +3,8 @@
   "harnessSha256": "0210a213011d3f680ec3e8d0b5962aa37f41f03df162084a620930a0a2e46267",
   "profile": "darwin-arm64",
   "reviewer": "josh",
-  "note": "2026-11-13使用者明確回覆「核准這6張修復畫面」：TT-264首頁及拒絕存取後回首頁各三尺寸；其餘42張保留原核准PNG原始bytes，threshold0.02/maxDiffPixels0及harness不變。",
-  "manifestSha256": "92dd552cde4a791b38184f3510e18b4a9e68d58cede5421cbd22d3491051eeab",
+  "note": "2026-11-13使用者明確回覆「250 ok」「206ok」：核准TT-250任務詳細頁（07-detail）與TT-206訪客TopBar（01-login、02-validation）各三尺寸共9張預期變更。reviewedChanges另含11張PNG位元組不同但以threshold0.02/maxDiffPixels0比對前版為0像素差異（候選比對時即通過）；其餘28張位元組相同，harness不變。",
+  "manifestSha256": "913321c8a904e084735b402f8e5f88d86ee16f0833d43e5cf620facd50863fe3",
   "environment": {
     "platform": "darwin",
     "arch": "arm64",
@@ -25,15 +25,32 @@
     }
   },
   "artifactRunId": null,
-  "card": "TT-264",
+  "cards": [
+    "TT-206",
+    "TT-250"
+  ],
   "reviewedChanges": [
+    "snapshots/desktop/01-login.png",
+    "snapshots/desktop/02-validation.png",
     "snapshots/desktop/03-home-todos.png",
-    "snapshots/desktop/16-denied.png",
+    "snapshots/desktop/04-projects.png",
+    "snapshots/desktop/07-detail.png",
+    "snapshots/desktop/15-member-empty.png",
+    "snapshots/mobile/01-login.png",
+    "snapshots/mobile/02-validation.png",
     "snapshots/mobile/03-home-todos.png",
-    "snapshots/mobile/16-denied.png",
+    "snapshots/mobile/07-detail.png",
+    "snapshots/mobile/14-workspace-picker.png",
+    "snapshots/mobile/15-member-empty.png",
+    "snapshots/tablet/01-login.png",
+    "snapshots/tablet/02-validation.png",
     "snapshots/tablet/03-home-todos.png",
+    "snapshots/tablet/04-projects.png",
+    "snapshots/tablet/07-detail.png",
+    "snapshots/tablet/14-workspace-picker.png",
+    "snapshots/tablet/15-member-empty.png",
     "snapshots/tablet/16-denied.png"
   ],
-  "previousApprovedManifestSha256": "fcf9ee11af9987abe9a5dc70ba1e4827b78872cf7763091c8194f169275ca491",
-  "reviewedCandidateManifestSha256": "f95f27eca6bc0a4e5c6c876c4d138ccd048a8c5d9d3387c16e0e95a45e40f118"
+  "previousApprovedManifestSha256": "92dd552cde4a791b38184f3510e18b4a9e68d58cede5421cbd22d3491051eeab",
+  "reviewedCandidateManifestSha256": "913321c8a904e084735b402f8e5f88d86ee16f0833d43e5cf620facd50863fe3"
 }
