@@ -1,0 +1,90 @@
+{
+  "card": "TT-287",
+  "images": [
+    {
+      "name": "description-1440.png",
+      "source": "artifacts/tt287/description-1440.png",
+      "sha256": "cd83a2bdf2a68754c680bb1f79a2a2170fd6c742597970bc0f92cbd93593c9da"
+    },
+    {
+      "name": "description-768.png",
+      "source": "artifacts/tt287/description-768.png",
+      "sha256": "def234e5a684d1fe23685900eaeefa17fd98c1d02c0242e026f47de142cc6e25"
+    },
+    {
+      "name": "description-390.png",
+      "source": "artifacts/tt287/description-390.png",
+      "sha256": "2626b728bdf59554fce5e680713621bd2c4469839e6edaa641070b03cb9588d3"
+    },
+    {
+      "name": "lightbox-1440.png",
+      "source": "artifacts/tt287/lightbox-1440.png",
+      "sha256": "9ffc5f2b5a30f5cd8fa566f77f2544f6dce038a9038b91ce99a5ecdd48af3e95"
+    },
+    {
+      "name": "lightbox-768.png",
+      "source": "artifacts/tt287/lightbox-768.png",
+      "sha256": "9888f7cf18958337b282d52fbc88a13fe9bc3f830142adf50df44a94385fb206"
+    },
+    {
+      "name": "lightbox-390.png",
+      "source": "artifacts/tt287/lightbox-390.png",
+      "sha256": "615d4171b58b50b0369e5a482e077e7dcdcd2fbb15fd25d1150acb01e47fadf1"
+    },
+    {
+      "name": "editor-preview-390.png",
+      "source": "artifacts/tt287/editor-preview-390.png",
+      "sha256": "a57cac718ebfc1b3da44869fa525d4a6d0376c9e47325bef2a1990dfae1753d6"
+    }
+  ],
+  "harness": [
+    {
+      "path": "frontend/src/api/http.js",
+      "sha256": "c3f989322abc35b93ec8bfb268bcf03aa599d066eae59888ea840a7217fcd9ee"
+    },
+    {
+      "path": "frontend/src/api/attachments.js",
+      "sha256": "a46249beb6afdba2977d166f0ead0fc3ac62798518cb07c518d1ce9d1063f6c6"
+    },
+    {
+      "path": "frontend/src/ui/markdown.js",
+      "sha256": "acc0938326c4567a3d467ff1cb12078a2cd20bbfaeae8b9ad0490617826c5fdc"
+    },
+    {
+      "path": "frontend/src/components/AttachmentImage.vue",
+      "sha256": "47fe7df8efc77384fbc0ac5e69f931c24ac42362190f4cd5ac58e5d3ab228260"
+    },
+    {
+      "path": "frontend/src/components/MarkdownContent.vue",
+      "sha256": "1871e33bb3c0309da63f152079717662910be42a761c9165fbcf00ba314fc198"
+    },
+    {
+      "path": "frontend/src/components/MarkdownEditor.vue",
+      "sha256": "60c63990a39ba79897f384a18c87481e46329ee8039536d38251f5c4f680e095"
+    },
+    {
+      "path": "frontend/src/components/IssueDetail.vue",
+      "sha256": "b36a36292f242400de2f5cee11f47e849c5c606090b50034f241938b4d7d80f5"
+    },
+    {
+      "path": "frontend/src/components/IssuePanel.vue",
+      "sha256": "42759771c3d43d35101dc0f908f3f7d40fe49c8831cddcc588b800ad78771e79"
+    },
+    {
+      "path": "frontend/tools/attachment-view-check.js",
+      "sha256": "308d6ff9378dc9686c12431a5ef2312244d292009db6c7b52fa2c982fbcddd0b"
+    },
+    {
+      "path": "frontend/tools/compare-reviewed-attachment-images.js",
+      "sha256": "a05545eaa666bb925cbd7919cb2352fae4a5f62a0a82e9f38793e81b9291401f"
+    }
+  ],
+  "policy": {
+    "animations": "disabled",
+    "caret": "hide",
+    "maxDiffPixels": 0,
+    "threshold": 0.02
+  },
+  "beforeRef": "4f8df80",
+  "scope": "Private attachment Markdown component harness with real isolated Laravel/MySQL"
+}

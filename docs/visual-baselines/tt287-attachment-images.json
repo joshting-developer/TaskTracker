@@ -1,0 +1,11 @@
+{
+  "approved": true,
+  "reviewer": "Josh",
+  "note": "核准這批畫面",
+  "reviewUrl": "http://127.0.0.1:5294",
+  "manifestFile": "docs/evidence/tt287-visual-manifest.json",
+  "manifestSha256": "4c025dc0bcdc93479c4fbe58a69d362e9e37991f4cfe9201a4bcd2eb3554f211",
+  "harnessSha256": "1830334053887ea1620b254e8b2cca8b9527d316a8ecbbefabf013ce3b07d27a",
+  "images": 7,
+  "scope": "TT-287 synthetic component images only"
+}
