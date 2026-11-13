@@ -20,8 +20,9 @@ class AttachmentService
      * @param  ProjectReadService  $projects  當次專案授權
      * @param  RecordStoreFactory  $stores  同租戶receipt入口
      * @param  RequestReplay  $replay  重播與簽章
+     * @param  AttachmentStorage  $storage  私有disk配置檢查, 此用例不執行IO
      */
-    public function __construct(private AttachmentRepository $attachments, private ProjectReadService $projects, private RecordStoreFactory $stores, private RequestReplay $replay) {}
+    public function __construct(private AttachmentRepository $attachments, private ProjectReadService $projects, private RecordStoreFactory $stores, private RequestReplay $replay, private AttachmentStorage $storage) {}
 
     /** 同建卡／改卡交易接收描述引用, 不另增Issue版本或建立receipt
      * @param  WorkspaceContext  $context  交易內可信資格
@@ -98,9 +99,7 @@ class AttachmentService
             DomainError::fail('INVALID_INPUT', '附件配額已滿, 請清理暫存圖片');
         }
         $disk = config('attachments.disk');
-        if (config('filesystems.disks.'.$disk.'.visibility') !== 'private' || config('filesystems.disks.'.$disk.'.serve', false)) {
-            DomainError::fail('STORAGE_ERROR', '附件必須使用私有儲存配置');
-        }
+        $this->storage->assertConfigured($disk);
         $id = (string) Str::uuid();
 
         return $this->attachments->create(['public_id' => $id, 'workspace_id' => $project->workspace_id, 'project_id' => $project->id,
