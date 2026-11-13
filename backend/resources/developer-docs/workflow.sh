@@ -1,6 +1,6 @@
 #!/bin/sh
 set -eu
-[ "${CONFIRM_WRITE:-}" = 1 ] || { echo '此範例會建卡／更新／留言，請明確設定CONFIRM_WRITE=1' >&2; exit 1; }
+[ "${CONFIRM_WRITE:-}" = 1 ] || { echo '此範例會建卡／更新／留言／建立小待辦，請明確設定CONFIRM_WRITE=1' >&2; exit 1; }
 : "${BASE_URL:?請提供部署origin}" "${TASKTRACKER_TOKEN:?請私下提供PAT}" "${PROJECT_ID:?請選可寫入Project}"
 work=$(mktemp -d)
 chmod 700 "$work"
@@ -46,4 +46,16 @@ req GET "$prefix/issues/$id" > "$work/final.json"
 req GET "$prefix/issues/$id/comments" > "$work/comments.json"
 [ "$(field data.state < "$work/final.json")" = closed ]
 [ "$(field data.total < "$work/comments.json")" = 1 ]
-echo 'PASS: cURL建卡一次、卡號定位、讀最新revision、PATCH closed、留言一次並驗證'
+# 小待辦：建一筆自己的待辦（重送不會多一筆）, 從交辦給我的未完成待辦找到它, 再完成。
+todo_payload=$(python3 -c 'import json,sys; print(json.dumps({"content":"cURL todo example\n\nverify then complete","requestId":sys.argv[1]}))' "$(uuid)")
+req POST "$base/api/public/v1/todos" "$todo_payload" > "$work/todo.json"
+req POST "$base/api/public/v1/todos" "$todo_payload" > "$work/todo-replay.json"
+python3 -c 'import json,sys; assert json.load(open(sys.argv[1]))==json.load(open(sys.argv[2]))' "$work/todo.json" "$work/todo-replay.json"
+todo_id=$(field data.id < "$work/todo.json")
+req GET "$base/api/public/v1/todos?scope=mine&state=open&perPage=100" > "$work/todos.json"
+python3 -c 'import json,sys; assert [t["id"] for t in json.load(open(sys.argv[1]))["data"]["items"]].count(sys.argv[2])==1' "$work/todos.json" "$todo_id"
+payload=$(python3 -c 'import json,sys; print(json.dumps({"expectedRevision":1,"requestId":sys.argv[1]}))' "$(uuid)")
+req POST "$base/api/public/v1/todos/$todo_id/complete" "$payload" > "$work/todo-done.json"
+req GET "$base/api/public/v1/todos/$todo_id" > "$work/todo-final.json"
+[ "$(field data.state < "$work/todo-final.json")" = done ]
+echo 'PASS: cURL建卡一次、卡號定位、讀最新revision、PATCH closed、留言一次並驗證；小待辦建立一次並完成'

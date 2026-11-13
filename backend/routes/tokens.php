@@ -8,6 +8,7 @@ use App\Http\Controllers\Integrations\PublicIssueExternalController;
 use App\Http\Controllers\Integrations\PublicIssuesController;
 use App\Http\Controllers\Integrations\PublicProjectsController;
 use App\Http\Controllers\Integrations\PublicQueriesController;
+use App\Http\Controllers\Integrations\PublicTodosController;
 use App\Http\Controllers\Integrations\TokenIdentityController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Session\Middleware\StartSession;
@@ -56,6 +57,21 @@ Route::prefix('/api/public/v1/projects/{project}/issues')->middleware('throttle:
     Route::delete('/{issue}', [$writes, 'execute'])->name('public.issues.delete');
     Route::put('/external/{source}/{externalId}', [PublicIssueExternalController::class, 'upsert'])->name('public.issues.upsert');
     Route::post('/external-batch', [PublicIssueExternalController::class, 'batch'])->name('public.issues.batch');
+});
+
+// TT-311：小待辦是工作空間層級, 不在Project底下。
+Route::prefix('/api/public/v1')->middleware('throttle:public-api-v1')->withoutMiddleware([
+    StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class,
+])->group(function () {
+    $todos = PublicTodosController::class;
+    Route::get('/todos', [$todos, 'index'])->name('public.v1.todos');
+    Route::get('/todos/{todo}', [$todos, 'show'])->name('public.v1.todos.show');
+    Route::get('/todo-assignees', [$todos, 'assignees'])->name('public.v1.todo-assignees');
+    Route::post('/todos', [$todos, 'execute'])->name('public.todos.create');
+    Route::patch('/todos/{todo}', [$todos, 'execute'])->name('public.todos.update');
+    Route::post('/todos/{todo}/complete', [$todos, 'execute'])->name('public.todos.complete');
+    Route::post('/todos/{todo}/reopen', [$todos, 'execute'])->name('public.todos.reopen');
+    Route::post('/todos/{todo}/return', [$todos, 'execute'])->name('public.todos.return');
 });
 
 Route::prefix('/api/public/docs')->withoutMiddleware([

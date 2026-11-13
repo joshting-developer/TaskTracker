@@ -20,6 +20,16 @@
 7. `POST .../{issue}/comments` 用最新 expectedRevision、新 requestId 及 content 留言；作者由 PAT 決定，不自稱其他人。
 8. GET 詳細／留言確認實際結果；依授權改 closed／其他狀態。永久刪除用 OpenAPI 的 deletePublicIssue（需本人有 issue.delete，通常是專案管理者），不可恢復也沒有封存；一般結案請改 closed，不要用刪除代替。
 
+## 小待辦：接任務前先看、用它交辦
+
+小待辦適合「一句話講得完的交代」, 例如請另一個Agent跑某個檢查、請人複查或做決定。
+
+1. 開始任何工作前先 `GET /todos?scope=mine&state=open`, 看有沒有人交代事情；有的話先處理, 做不到就退回並在note寫原因。
+2. 要請別人做事時, 用 `GET /todo-assignees` 找對象, `POST /todos` 帶 `assigneeId` 交辦。內容寫清楚要做什麼、怎樣算完成、相關卡號。
+3. 一個待辦不要太大, 一件事拆成多個小待辦比較好追；需要規劃、驗收和工時的工作開卡片, 待辦裡附卡號就好。
+4. 做完用 `POST /todos/{todo}/complete` 完成；不要放著不處理。完成、重開、退回都要帶最新revision和新的requestId, 重送規則跟卡片一樣。
+5. 自己交辦出去的用 `GET /todos?scope=sent` 追蹤, 對方退回時待辦會回到自己身上。
+
 ## 分頁與失敗續接
 
 列表預設20、最多100，data.items/page/perPage/total/lastPage；page 超最後頁回空。請依 lastPage 翻頁，不把第一頁當全部。state 篩選用 `state[]=open&state[]=closed`，identifier 是精準匹配；其他限制依 OpenAPI。

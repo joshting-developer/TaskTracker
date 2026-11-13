@@ -10,7 +10,7 @@ import uuid
 
 def main():
     if os.environ.get('CONFIRM_WRITE') != '1':
-        raise SystemExit('此範例會建立卡片、更新與留言，請明確設定CONFIRM_WRITE=1')
+        raise SystemExit('此範例會建立卡片、更新、留言與小待辦，請明確設定CONFIRM_WRITE=1')
     base = os.environ['BASE_URL'].rstrip('/')
     token = os.environ['TASKTRACKER_TOKEN']
     project = os.environ['PROJECT_ID']
@@ -63,7 +63,15 @@ def main():
             break
     # 本輪完成後才能以watermark作下一輪inclusive updatedSince。
     call('GET', '/api/public/v1/projects/' + project + '/issue-changes?' + urllib.parse.urlencode({'updatedSince': watermark, 'perPage': 1}))
-    print(json.dumps({'result': 'PASS', 'createdOnce': True, 'commentedOnce': True, 'finalRevision': final['revision'], 'closed': True}))
+    # 小待辦：建一筆自己的待辦（重送不會多一筆）, 從交辦給我的未完成待辦找到它, 再完成。
+    todo_request = {'content': 'Python todo example\n\nverify then complete', 'requestId': str(uuid.uuid4())}
+    todo = call('POST', '/api/public/v1/todos', todo_request)
+    assert todo == call('POST', '/api/public/v1/todos', todo_request), '相同key須回原結果'
+    mine = call('GET', '/api/public/v1/todos?' + urllib.parse.urlencode({'scope': 'mine', 'state': 'open', 'perPage': 100}))
+    assert [item['id'] for item in mine['items']].count(todo['id']) == 1
+    done = call('POST', '/api/public/v1/todos/' + todo['id'] + '/complete', {'expectedRevision': todo['revision'], 'requestId': str(uuid.uuid4())})
+    assert call('GET', '/api/public/v1/todos/' + todo['id'])['state'] == 'done' and done['revision'] == todo['revision'] + 1
+    print(json.dumps({'result': 'PASS', 'createdOnce': True, 'commentedOnce': True, 'finalRevision': final['revision'], 'closed': True, 'todoCompleted': True}))
 
 
 if __name__ == '__main__':

@@ -30,6 +30,21 @@ Base URL是你實際部署TaskTracker的origin。公開Bearer前綴為`/api/publ
 
 匿名發現入口`GET /api/public/openapi.json`回傳OpenAPI物件，`GET /api/public/contract.md`回傳本文Markdown；它們沒有業務envelope、不建立Session、不讀業務資料。其他操作預設回JSON。
 
+## 小待辦（TT-311）
+
+工作空間層級, 不在Project底下：
+
+| 方法與路徑 | Token | 用途 |
+| --- | --- | --- |
+| `GET /api/public/v1/todos` | read | `scope=mine`（交辦給我, 預設）或 `sent`（我交辦出去）, `state=open／closed`, 分頁最多100 |
+| `GET /api/public/v1/todos/{todo}` | read | 單筆含完整內容；不是交辦人或承辦人回404 |
+| `GET /api/public/v1/todo-assignees` | read | 可交辦對象, 只回 `id`、`name` |
+| `POST /api/public/v1/todos` | write | 建立；`title` 或 `content` 擇一, `assigneeId` 省略時是自己的待辦 |
+| `PATCH /api/public/v1/todos/{todo}` | write | 交辦人修改內容 |
+| `POST /api/public/v1/todos/{todo}/complete`、`/reopen`、`/return` | write | 承辦人完成、重開已完成的、退回給交辦人（可附 `note`） |
+
+寫入都要 `requestId`（UUID）, 除了建立都要 `expectedRevision`；成功只回 `{id, revision}`, 要最新內容另外GET。同requestId重送回第一次的結果。錯誤代碼：400 INVALID_INPUT、401 UNAUTHENTICATED、403 FORBIDDEN（Token只有read、或不是可以做這個動作的人）、404 NOT_FOUND、409 REVISION_CONFLICT／REQUEST_CONFLICT、429 RATE_LIMIT。
+
 ## 認證、Scope與工作區
 
 使用`Authorization: Bearer <PAT>`；不要放query、URL或log。PAT由使用者在帳號選單「個人 API Token」建立，原文只呈現一次，伺服器只保存雜湊；一個PAT綁定一個Workspace。預設一個月（月底no-overflow），最多兩年，無永久／延期；指定日期在Asia/Taipei當日00:00到期。撤銷、到期或資格失效回401。

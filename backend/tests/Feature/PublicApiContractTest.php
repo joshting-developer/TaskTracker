@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Opis\JsonSchema\CompliantValidator;
 use Tests\Concerns\PersonalTokenCases;
@@ -89,6 +90,38 @@ class PublicApiContractTest extends TestCase
         }
         $this->assertSame(20, $spec['paths']['/api/v1/personal-tokens']['post']['x-rate-limit']['requests']);
         $this->assertSame(120, $spec['paths']['/api/public/v1/me']['get']['x-rate-limit']['requests']);
+    }
+
+    /**
+     * TT-311：小待辦公開操作的成功與錯誤回應都符合正式OpenAPI Schema。
+     *
+     * @return void
+     */
+    public function test_todo_operations_and_errors_match_the_formal_schemas(): void
+    {
+        $this->tokenRegister();
+        $write = $this->postJson('/api/v1/personal-tokens', ['name' => 'todo-write', 'abilities' => ['write'], 'requestId' => (string) Str::uuid()])->assertOk()->json('data.plainTextToken');
+        $read = $this->postJson('/api/v1/personal-tokens', ['name' => 'todo-read', 'abilities' => ['read'], 'requestId' => (string) Str::uuid()])->assertOk()->json('data.plainTextToken');
+        $as = fn (string $token) => ['Authorization' => 'Bearer '.$token];
+        $spec = $this->specification()['paths'];
+        // TT-311：用OpenAPI自己的請求範例送出, 實際回應（成功與錯誤）都要符合正式Schema。
+        $create = $spec['/api/public/v1/todos']['post']['requestBody']['content']['application/json']['example'];
+        unset($create['assigneeId']);
+        $created = $this->json('POST', '/api/public/v1/todos', [...$create, 'requestId' => (string) Str::uuid()], $as($write))->assertOk();
+        $this->matchesResponse($created, '/api/public/v1/todos', 'post');
+        $id = $created->json('data.id');
+        $this->matchesResponse($this->json('POST', '/api/public/v1/todos', ['title' => 'x'], $as($write))->assertStatus(400), '/api/public/v1/todos', 'post');
+        $this->matchesResponse($this->json('POST', '/api/public/v1/todos', ['title' => 'x', 'requestId' => (string) Str::uuid()], $as($read))->assertStatus(403), '/api/public/v1/todos', 'post');
+        $this->matchesResponse($this->getJson('/api/public/v1/todos?scope=mine', $as($read))->assertOk(), '/api/public/v1/todos', 'get');
+        $this->matchesResponse($this->getJson('/api/public/v1/todos?perPage=101', $as($read))->assertStatus(400), '/api/public/v1/todos', 'get');
+        $this->matchesResponse($this->getJson('/api/public/v1/todos/'.$id, $as($read))->assertOk(), '/api/public/v1/todos/{todo}', 'get');
+        $this->matchesResponse($this->getJson('/api/public/v1/todos/missing', $as($read))->assertStatus(404), '/api/public/v1/todos/{todo}', 'get');
+        $this->matchesResponse($this->getJson('/api/public/v1/todo-assignees', $as($read))->assertOk(), '/api/public/v1/todo-assignees', 'get');
+        $this->matchesResponse($this->json('PATCH', '/api/public/v1/todos/'.$id, ['expectedRevision' => 9, 'title' => 'y', 'requestId' => (string) Str::uuid()], $as($write))->assertStatus(409), '/api/public/v1/todos/{todo}', 'patch');
+        $this->matchesResponse($this->json('PATCH', '/api/public/v1/todos/'.$id, ['expectedRevision' => 1, 'title' => 'y', 'requestId' => (string) Str::uuid()], $as($write))->assertOk(), '/api/public/v1/todos/{todo}', 'patch');
+        $this->matchesResponse($this->json('POST', '/api/public/v1/todos/'.$id.'/complete', ['expectedRevision' => 2, 'requestId' => (string) Str::uuid()], $as($write))->assertOk(), '/api/public/v1/todos/{todo}/complete', 'post');
+        $this->matchesResponse($this->json('POST', '/api/public/v1/todos/'.$id.'/reopen', ['expectedRevision' => 3, 'requestId' => (string) Str::uuid()], $as($write))->assertOk(), '/api/public/v1/todos/{todo}/reopen', 'post');
+        $this->matchesResponse($this->json('POST', '/api/public/v1/todos/'.$id.'/return', ['expectedRevision' => 4, 'requestId' => (string) Str::uuid()], $as($write))->assertStatus(403), '/api/public/v1/todos/{todo}/return', 'post');
     }
 
     /**
