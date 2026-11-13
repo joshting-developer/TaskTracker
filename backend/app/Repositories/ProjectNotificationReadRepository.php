@@ -5,8 +5,10 @@ namespace App\Repositories;
 use App\Data\PageQueryData;
 use App\Models\IssueNotification;
 use App\Models\Project;
+use App\Models\WorkspaceMember;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 /** 依已授權Project與收件人投影通知預覽，列表不讀正文。 */
 class ProjectNotificationReadRepository
@@ -54,5 +56,35 @@ class ProjectNotificationReadRepository
     {
         return $this->scope($project, $userId, $team)->where('public_id', $id)->with('issue:id,public_id,identifier')
             ->first(['id', 'public_id', 'issue_id', 'subject', 'email', 'body', 'status', 'kind', 'created_at']);
+    }
+
+    /**
+     * TT-315：找出使用者在這個工作空間目前有效的成員身分, 停用的不算。
+     *
+     * @param  string  $workspaceId  工作空間公開ID
+     * @param  string  $userId  可信使用者ID
+     * @return WorkspaceMember|null 有效成員
+     */
+    public function activeMember(string $workspaceId, string $userId): ?WorkspaceMember
+    {
+        return WorkspaceMember::query()->whereHas('workspace', fn ($q) => $q->where('public_id', $workspaceId))
+            ->where('user_id', $userId)->whereNull('disabled_at')->first(['id', 'workspace_id']);
+    }
+
+    /**
+     * TT-315：寄給這位成員的通知, 依內部id遞增, 從after之後讀；走(workspace_id, recipient_id)外鍵索引, 不讀正文。
+     *
+     * @param  WorkspaceMember  $member  有效收件成員
+     * @param  int|null  $after  上次讀到的位置
+     * @param  int  $take  最多取幾筆（呼叫端多取一筆判斷還有沒有）
+     * @return Collection<int, IssueNotification> 通知摘要
+     */
+    public function forRecipient(WorkspaceMember $member, ?int $after, int $take): Collection
+    {
+        return IssueNotification::query()->where('workspace_id', $member->workspace_id)->where('recipient_id', $member->id)
+            ->when($after !== null, fn ($q) => $q->where('id', '>', $after))
+            ->with(['issue:id,public_id,identifier', 'project:id,public_id'])
+            ->orderBy('id')->limit($take)
+            ->get(['id', 'public_id', 'project_id', 'issue_id', 'subject', 'kind', 'created_at']);
     }
 }

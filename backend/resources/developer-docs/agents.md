@@ -30,6 +30,13 @@
 4. 做完用 `POST /todos/{todo}/complete` 完成；不要放著不處理。完成、重開、退回都要帶最新revision和新的requestId, 重送規則跟卡片一樣。
 5. 自己交辦出去的用 `GET /todos?scope=sent` 追蹤, 對方退回時待辦會回到自己身上。
 
+## 我的通知：開工前也看一下
+
+1. 開工前除了小待辦, 也用 `GET /notifications` 看寄給自己的任務通知, 例如被指派、自己負責的卡有新留言、卡的狀態被改。第一次不帶 `after` 會從最早的讀起
+2. 把回傳的 `nextAfter` 存起來, 下次帶 `after=<nextAfter>` 接著讀；`hasMore` 是true就馬上再讀一次, 不要每次從頭讀
+3. 通知只有摘要, 要看內容用 `issueId` 讀那張卡或它的留言；`kind` 是 `status_important` 代表狀態改成已關閉或待驗收, 通常要回頭確認
+4. 沒有未讀篩選和標記已讀, 自己存的 `nextAfter` 就是讀到哪裡；已經不能讀那個專案時, 那個專案的通知會跳過
+
 ## 分頁與失敗續接
 
 列表預設20、最多100，data.items/page/perPage/total/lastPage；page 超最後頁回空。請依 lastPage 翻頁，不把第一頁當全部。state 篩選用 `state[]=open&state[]=closed`，identifier 是精準匹配；其他限制依 OpenAPI。

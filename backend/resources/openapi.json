@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker API",
-    "version": "0.16.0",
-    "description": "公開Bearer v1讀取及Issue建立／PATCH／留言及外部識別查詢／upsert／批次；小待辦讀取、交辦、完成與退回；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。 支援受PAT與即時專案權限限制的私有附件上傳／metadata／內容／綁定。"
+    "version": "0.17.0",
+    "description": "公開Bearer v1讀取及Issue建立／PATCH／留言及外部識別查詢／upsert／批次；小待辦讀取、交辦、完成與退回；讀取寄給自己的任務通知；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。 支援受PAT與即時專案權限限制的私有附件上傳／metadata／內容／綁定。"
   },
   "servers": [
     {
@@ -10737,6 +10737,273 @@
         },
         "x-required-token-ability": "write"
       }
+    },
+    "/api/public/v1/notifications": {
+      "get": {
+        "operationId": "listMyNotifications",
+        "summary": "讀取我的通知",
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "bearerPat": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/MyNotificationPage"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "items": [
+                      {
+                        "id": "33333333-3333-4333-8333-333333333333",
+                        "kind": "status_important",
+                        "subject": "[EX-1] 已關閉",
+                        "projectId": "11111111-1111-4111-8111-111111111111",
+                        "issueId": "22222222-2222-4222-8222-222222222222",
+                        "identifier": "EX-1",
+                        "createdAt": "2026-11-13T02:00:00.000000Z"
+                      }
+                    ],
+                    "nextAfter": "42",
+                    "hasMore": false
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              }
+            }
+          },
+          "401": {
+            "description": "認證／成員資格失效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "UNAUTHENTICATED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "認證／成員資格失效"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "來源、Scope或操作權限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "FORBIDDEN"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "來源、Scope或操作權限不足"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "請求超過限額",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "RATE_LIMIT"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "RATE_LIMIT",
+                    "message": "請求超過限額"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateReset"
+              }
+            }
+          },
+          "500": {
+            "description": "服務暫時無法處理請求",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "INTERNAL_ERROR"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "服務暫時無法處理請求"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "查詢條件不合法",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "請確認查詢範圍"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "需read。只回寄給Token本人的任務通知（被指派、自己負責的卡有新留言、狀態調整、Epic需要重新確認）, 不含其他人的通知。依產生順序遞增, limit 1–100（預設50）, after帶上次回傳的nextAfter；請保存nextAfter, 下次從那裡接著讀, 新通知會接在後面。hasMore為true代表還有, 請馬上用nextAfter再讀一次。本人現在已不能讀該專案（issue.read）的通知會跳過, 所以items可能少於limit, 但nextAfter照樣往前。kind：general、assigned、epic、comment、status、status_important（狀態改成已關閉或待驗收）。只回摘要, 要看內容請讀issueId那張卡或它的留言。網頁目前沒有任務通知的已讀狀態, 所以這裡不提供未讀篩選或標記已讀；交辦給自己的小待辦請讀/todos?scope=mine。",
+        "deprecated": false,
+        "x-tasktracker-context": "token-workspace",
+        "x-rate-limit": {
+          "requests": 120,
+          "windowSeconds": 60,
+          "key": "client IP; shared across public v1 routes",
+          "sharedWithOtherOperations": true
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "description": "每次最多讀幾筆"
+          },
+          {
+            "in": "query",
+            "name": "after",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "description": "上次回傳的nextAfter；不透明游標"
+          }
+        ],
+        "x-required-permission": "issue.read",
+        "x-required-token-ability": "read"
+      }
     }
   },
   "components": {
@@ -12812,6 +13079,77 @@
           "issueRevision"
         ],
         "additionalProperties": false
+      },
+      "MyNotification": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "general",
+              "assigned",
+              "epic",
+              "comment",
+              "status",
+              "status_important"
+            ]
+          },
+          "subject": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "issueId": {
+            "type": "string"
+          },
+          "identifier": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "subject",
+          "projectId",
+          "issueId",
+          "identifier",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "MyNotificationPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MyNotification"
+            }
+          },
+          "nextAfter": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items",
+          "nextAfter",
+          "hasMore"
+        ],
+        "additionalProperties": false
       }
     },
     "headers": {
@@ -12867,6 +13205,10 @@
     {
       "name": "Todos",
       "description": "小待辦：讀交辦給自己的事、交辦、完成或退回；工作空間層級, 不屬於Project"
+    },
+    {
+      "name": "Notifications",
+      "description": "我的通知：寄給Token本人的任務通知, 依位置遞增續讀；工作空間層級"
     }
   ],
   "x-documentation-url": "/api/public/contract.md",

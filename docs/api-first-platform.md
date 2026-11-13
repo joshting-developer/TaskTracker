@@ -127,3 +127,10 @@ OpenAPI與第三方文件已確認為整合階段必要交付。TT-167承接正�
 - 讀寫都沿用網頁同一套TodoReadService和Todos用例, 誰能看、誰能改、誰能完成或退回的規則完全一樣, 外層再加Token的read／write和requestId重送
 - 轉成任務、取消、通知這次沒開放：轉成任務牽涉專案權限和卡片欄位, 等真的有Agent需要再評估
 - Agent的使用規則（接任務前先看小待辦、一個待辦不要太大）放在共用task-tracker-usage Skill（TT-312）
+
+## 我的通知公開API（TT-315, 2026-11-13）
+
+- Josh覺得去「通知」Agent很奇怪, 應該讓Agent自己讀, 所以補上 `GET /api/public/v1/notifications`：只回寄給Token本人的任務通知, 依產生順序遞增, Agent存下 `nextAfter` 下次接著讀。OpenAPI升到0.17.0
+- 沿用網頁同一張通知表和專案權限, 每次都重驗本人現在還能不能讀那個專案（issue.read）, 不能讀的跳過, 位置照樣往前
+- 這次沒做未讀篩選和標記已讀：網頁的任務通知本來就沒有已讀狀態（任務通知收件匣是TT-190, 暫緩）, 為了API另外加一套已讀會跟網頁不一致。Agent自己存的 `nextAfter` 就等於讀到哪裡
+- 小待辦通知沒有另外開放：交辦給自己的事用 `/todos?scope=mine` 就讀得到, 再開一個待辦通知端點意思重複

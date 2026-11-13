@@ -7,6 +7,7 @@ use App\Http\Controllers\Integrations\PublicAttachmentsController;
 use App\Http\Controllers\Integrations\PublicIssueChangesController;
 use App\Http\Controllers\Integrations\PublicIssueExternalController;
 use App\Http\Controllers\Integrations\PublicIssuesController;
+use App\Http\Controllers\Integrations\PublicNotificationsController;
 use App\Http\Controllers\Integrations\PublicProjectsController;
 use App\Http\Controllers\Integrations\PublicQueriesController;
 use App\Http\Controllers\Integrations\PublicTodosController;
@@ -86,6 +87,8 @@ Route::prefix('/api/public/v1')->middleware('throttle:public-api-v1')->withoutMi
     Route::post('/todos/{todo}/complete', [$todos, 'execute'])->name('public.todos.complete');
     Route::post('/todos/{todo}/reopen', [$todos, 'execute'])->name('public.todos.reopen');
     Route::post('/todos/{todo}/return', [$todos, 'execute'])->name('public.todos.return');
+    // TT-315：我的通知（寄給Token本人的任務通知）, 也是工作空間層級。
+    Route::get('/notifications', [PublicNotificationsController::class, 'index'])->name('public.v1.notifications');
 });
 
 Route::prefix('/api/public/docs')->withoutMiddleware([

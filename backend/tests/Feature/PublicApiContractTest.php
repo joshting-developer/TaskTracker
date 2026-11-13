@@ -2,8 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
+use App\Repositories\RecordStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
@@ -129,6 +133,30 @@ class PublicApiContractTest extends TestCase
         $this->matchesResponse($this->json('POST', '/api/public/v1/todos/'.$id.'/complete', ['expectedRevision' => 2, 'requestId' => (string) Str::uuid()], $as($write))->assertOk(), '/api/public/v1/todos/{todo}/complete', 'post');
         $this->matchesResponse($this->json('POST', '/api/public/v1/todos/'.$id.'/reopen', ['expectedRevision' => 3, 'requestId' => (string) Str::uuid()], $as($write))->assertOk(), '/api/public/v1/todos/{todo}/reopen', 'post');
         $this->matchesResponse($this->json('POST', '/api/public/v1/todos/'.$id.'/return', ['expectedRevision' => 4, 'requestId' => (string) Str::uuid()], $as($write))->assertStatus(403), '/api/public/v1/todos/{todo}/return', 'post');
+    }
+
+    /**
+     * TT-315：我的通知的真實回應（有資料、讀到底、錯誤）都要符合正式Schema。
+     *
+     * @return void
+     */
+    public function test_my_notifications_match_the_formal_schema(): void
+    {
+        $owner = $this->tokenRegister();
+        $user = User::create(['id' => (string) Str::uuid(), 'name' => 'Agent', 'email' => 'agent-'.Str::uuid().'@example.test', 'password' => Hash::make('token-test-password')]);
+        (new RecordStore)->forWorkspace($owner['workspace']['id'])->put('members', $user->id, ['id' => $user->id, 'name' => 'Agent', 'email' => $user->email, 'role' => 'manager']);
+        $project = $this->postJson('/api/rpc/createProject', ['name' => 'Contract', 'code' => 'CNT', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $this->postJson('/api/rpc/createIssue', ['projectId' => $project['id'], 'title' => 'Notify', 'assignee' => $user->id, 'requestId' => (string) Str::uuid()])->assertOk();
+        Auth::logout();
+        $this->postJson('/api/auth/login', ['email' => $user->email, 'password' => 'token-test-password'])->assertOk();
+        $read = $this->postJson('/api/v1/personal-tokens', ['name' => 'notice-read', 'abilities' => ['read'], 'requestId' => (string) Str::uuid()])->assertOk()->json('data.plainTextToken');
+        $as = ['Authorization' => 'Bearer '.$read];
+        $page = $this->getJson('/api/public/v1/notifications', $as)->assertOk();
+        $this->assertCount(1, $page->json('data.items'));
+        $this->matchesResponse($page, '/api/public/v1/notifications', 'get');
+        $this->matchesResponse($this->getJson('/api/public/v1/notifications?after='.$page->json('data.nextAfter'), $as)->assertOk(), '/api/public/v1/notifications', 'get');
+        $this->matchesResponse($this->getJson('/api/public/v1/notifications?limit=101', $as)->assertStatus(400), '/api/public/v1/notifications', 'get');
+        $this->matchesResponse($this->getJson('/api/public/v1/notifications', ['Authorization' => 'Bearer invalid'])->assertStatus(401), '/api/public/v1/notifications', 'get');
     }
 
     /**

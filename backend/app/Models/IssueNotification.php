@@ -35,6 +35,16 @@ class IssueNotification extends Model
     }
 
     /**
+     * 取得通知所屬專案, 公開「我的通知」用來重驗收件人目前還能不能讀這個專案。
+     *
+     * @return BelongsTo 專案關聯
+     */
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class, 'project_id');
+    }
+
+    /**
      * 取得有效收件資格查詢所需的Workspace成員。
      *
      * @return BelongsTo 收件人關聯

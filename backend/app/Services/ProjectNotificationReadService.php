@@ -50,4 +50,26 @@ class ProjectNotificationReadService
         return $this->notifications->find($access->project, $context->userId, in_array('notification.readTeam', $access->permissions, true), $id)
             ?? DomainError::fail('NOT_FOUND', '找不到這筆通知預覽');
     }
+
+    /**
+     * TT-315：公開API「我的通知」；只回寄給本人的任務通知, 依位置遞增續讀。
+     * 收件人現在已經不能讀該專案的通知會跳過, 但位置照樣往前, 下次不會重讀。
+     *
+     * @param  WorkspaceContext  $context  Token重驗後的身分與有效權限
+     * @param  int|null  $after  上次回傳的nextAfter
+     * @param  int  $limit  每次最多掃幾筆（1–100）
+     * @return array{items: array<int, IssueNotification>, nextAfter: string|null, hasMore: bool} 通知摘要與下次位置
+     */
+    public function mine(WorkspaceContext $context, ?int $after, int $limit): array
+    {
+        $member = $this->notifications->activeMember($context->workspaceId, $context->userId);
+        $rows = $member === null ? collect() : $this->notifications->forRecipient($member, $after, $limit + 1);
+        $more = $rows->count() > $limit;
+        $rows = $rows->take($limit);
+        $permissions = $this->projects->permissionsFor($context, $rows->map(fn ($row) => $row->getRelation('project')->public_id)->unique()->values()->all());
+        $items = $rows->filter(fn ($row) => in_array('issue.read', $permissions[$row->getRelation('project')->public_id] ?? [], true))->values()->all();
+        $last = $rows->last()?->id ?? $after;
+
+        return ['items' => $items, 'nextAfter' => $last === null ? null : (string) $last, 'hasMore' => $more];
+    }
 }

@@ -45,6 +45,16 @@ Base URL是你實際部署TaskTracker的origin。公開Bearer前綴為`/api/publ
 
 寫入都要 `requestId`（UUID）, 除了建立都要 `expectedRevision`；成功只回 `{id, revision}`, 要最新內容另外GET。同requestId重送回第一次的結果。錯誤代碼：400 INVALID_INPUT、401 UNAUTHENTICATED、403 FORBIDDEN（Token只有read、或不是可以做這個動作的人）、404 NOT_FOUND、409 REVISION_CONFLICT／REQUEST_CONFLICT、429 RATE_LIMIT。
 
+## 我的通知（TT-315）
+
+工作空間層級, 只回寄給Token本人的任務通知：
+
+| 方法與路徑 | Token | 用途 |
+| --- | --- | --- |
+| `GET /api/public/v1/notifications` | read | 依產生順序遞增；`limit` 1–100（預設50）, `after` 帶上次的 `nextAfter`；回 `{items, nextAfter, hasMore}` |
+
+每筆是 `id`、`kind`、`subject`、`projectId`、`issueId`、`identifier`、`createdAt`, 不帶正文和收件Email。`kind` 有 general、assigned、epic、comment、status、status_important（改成已關閉或待驗收）。本人現在不能讀該專案（issue.read）的通知會跳過, 所以一次可能少於 `limit` 筆, 但 `nextAfter` 照樣往前。網頁目前沒有任務通知的已讀狀態, 所以這裡沒有未讀篩選或標記已讀；交辦給自己的小待辦請讀 `/todos?scope=mine`。錯誤代碼：400 INVALID_INPUT、401 UNAUTHENTICATED、403 FORBIDDEN、429 RATE_LIMIT
+
 ## 認證、Scope與工作區
 
 使用`Authorization: Bearer <PAT>`；不要放query、URL或log。PAT由使用者在帳號選單「個人 API Token」建立，原文只呈現一次，伺服器只保存雜湊；一個PAT綁定一個Workspace。預設一個月（月底no-overflow），最多兩年，無永久／延期；指定日期在Asia/Taipei當日00:00到期。撤銷、到期或資格失效回401。
