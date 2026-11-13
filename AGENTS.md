@@ -4,7 +4,7 @@
 
 1. 讀本文件、README及本次相關子目錄AGENTS；檢查原repository根目錄、分支與既有差異，保留使用者改動。
 2. 讀Side Project共用Skill庫的README、PROJECT-BASELINE、registry，再選本次需要的Skill／references；不要載入全部正文。
-3. 多步驟先更新 `plans/<目前分支>/plan.md`、step.md，按卡片完成、驗證、提交與回填。
+3. 多步驟先更新 `plans/<卡號>/plan.md`、step.md，按卡片完成、驗證、提交與回填；各Agent只寫自己正在承辦卡號的資料夾, 不共寫plans/main。
 4. 專案現況與交接按需查[Memory.md](Memory.md)索引；產品契約查[工程綁定](docs/project-engineering-bindings.md)及功能文件。不要每次開工載入整份歷史。
 
 **AGENTS只維護規範、Skill入口、授權與工作流程。** 產品決策／環境現況／跨任務交接放Memory.md；每卡進度放卡片與plans；細節放專責docs。不得再將已完成卡片摘要、版本沿革或大量專案記憶累加於本文件。產品討論持續更新docs/產品討論紀錄.md，區分已確認、建議與目前實作。
@@ -42,6 +42,6 @@ HTTP API、Repository、查詢、前端資料載入或輪詢異動，必讀共�
 
 - Git操作前依使用者指定讀 `/Users/josh/workspace/piextract/skills/01-common/git-delivery-workflow/SKILL.md` 的「Git工作位置（所有專案）」；commit／PR文字前讀 `/Users/josh/workspace/common-skills/commit-without-ai-attribution/SKILL.md`。這兩者為使用者明確指定例外。
 - 直接在原repository操作，不在暫存目錄另建clone／worktree避限制；保護既有差異。
-- 每完成可獨立驗證階段立即本機commit，已持續授權；明確stage相關檔案，含plans/<分支>/plan.md及step.md，檢查staged diff／空白。不套其他專案的plan排除流程。
+- 每完成可獨立驗證階段立即本機commit，已持續授權；明確stage相關檔案，含plans/<卡號>/plan.md及step.md，檢查staged diff／空白。不套其他專案的plan排除流程。
 - TT卡片commit格式 `<卡號> <卡片標題>`；同卡多次提交沿用。無卡才用繁中Conventional Commits。不加AI署名，沿用Git作者設定。
 - 不自行amend／squash／重寫歷史或push；遠端另行授權。完成回報commit短碼、實測與限制；未提交說明原因。
