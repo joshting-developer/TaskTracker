@@ -253,6 +253,10 @@
 .home-layout > * { min-width: 0; }
 .home-layout .todo-home { width: 100%; max-width: 520px; }
 .heading-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+/* TT-290：滑過或聚焦整列時加淡底色, 橫向掃讀比較容易對到同一列 */
+.issue-table tbody tr { transition: background-color .12s; }
+.issue-table tbody tr:hover, .issue-table tbody tr:focus-within { background: #faf9fd; }
+@media (prefers-reduced-motion: reduce) { .issue-table tbody tr { transition: none; } }
 /* TT-281：列尾動作統一成安靜的圖示按鈕；平常淡色, 滑過或聚焦這一列時才清楚, 不再每列一條紫色底線文字 */
 .issue-row-actions { white-space: nowrap; text-align: right; }
 .issue-row-actions .row-action { width: 36px; height: 36px; padding: 0; border-color: transparent; color: #8a8f9e; opacity: 1; }

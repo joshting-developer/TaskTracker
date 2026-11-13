@@ -124,7 +124,7 @@ function drop(event, state, lane) {
             <div v-for="state in states" :key="state.id" class="board-cell" :class="{ 'drag-over': dragOver === `${lane.id}:${state.id}` }" :data-column="state.id" @dragover.prevent="dragOver = `${lane.id}:${state.id}`" @dragleave.self="dragOver = ''" @drop.prevent="drop($event, state.id, lane)">
               <article v-for="issue in lane.columns.get(state.id)" :key="issue.id" class="issue-card" :class="{ moving: moving === issue.id }" :draggable="canWrite && !moving" :data-issue="issue.identifier" tabindex="0" :aria-label="`${issue.identifier} ${issue.title} · ${state.label}`" @dblclick="edit(issue, $event)" @keydown.f2="keyboardEdit(issue, $event)" @dragstart="startDrag($event, issue)" @dragend="dragOver = ''; emit('drag', false)">
                 <div class="card-top"><span class="identifier">{{ issue.identifier }}</span><span class="type-tag">{{ option(TYPES, issue.type)?.label }}</span><span v-if="density === 'comfortable'" class="priority-label" :style="{ '--priority-color': option(PRIORITIES, issue.priority)?.color }" :title="`優先級：${option(PRIORITIES, issue.priority)?.label}`"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span></span><button v-if="canWrite" type="button" class="icon-button card-edit" :aria-label="`編輯 ${issue.identifier}`" title="編輯任務（也可雙擊卡片或按 F2）" :disabled="Boolean(moving)" @click="clearReading(); emit('open', issue, false)"><Icon name="edit" :size="15" /></button></div>
-                <button class="card-title" @click="read(issue, $event)">{{ issue.title }}</button>
+                <button class="card-title" :title="issue.title" @click="read(issue, $event)">{{ issue.title }}</button>
                 <p v-if="density === 'comfortable' && issue.description" class="board-card-description">{{ issue.description }}</p>
                 <div class="card-bottom"><span v-if="density === 'comfortable' && issue.dueDate" :class="['due-date', { overdue: overdue(issue) }]"><Icon name="clock" :size="12" />{{ issue.dueDate.slice(5).replace('-', '/') }}</span><span v-if="density === 'comfortable' && (issue.commentCount ?? issue.comments?.length ?? 0)" class="comment-count"><Icon name="message" :size="13" />{{ (issue.commentCount ?? issue.comments?.length ?? 0) }}</span><span class="board-assignee" :title="memberName(issue.assignee)"><span v-if="issue.assignee" class="avatar small">{{ memberName(issue.assignee).slice(0, 1) }}</span>{{ memberName(issue.assignee) }}</span></div>
                 <IssueContext v-if="density === 'comfortable'" :issue="issue" :index="contextIndex" :can-read-time="project.permissions?.includes('timeEntry.readOwn')" @open="emit('open', $event)" />
@@ -166,8 +166,12 @@ function drop(event, state, lane) {
 .issue-card { background: white; border: 1px solid #e0e3eb; border-radius: 5px; box-shadow: 0 1px 3px #262b3910; padding: 12px; margin-bottom: 9px; }
 .card-edit { min-width: 44px; min-height: 44px; margin: -8px -8px -8px auto; }
 .issue-card:focus-visible { outline: 2px solid #6653bd; outline-offset: 2px; }
-.card-title { font-size: 14px; line-height: 1.6; margin: 6px 0; color: #242936; }
-.card-top { gap: 8px; }
+/* TT-290：詳細卡片原本間距層層疊加（上12＋標題6＋底16＋工時13）, 一欄只看得到5張；收緊間距, 長標題最多3行, 完整標題在tooltip */
+.card-title { font-size: 14px; line-height: 1.55; margin: 2px 0 4px; color: #242936; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.card-top { gap: 8px; margin-bottom: 4px; }
+.issue-card .card-bottom { margin-top: 8px; min-height: 24px; }
+.issue-card :deep(.issue-context) { margin: 8px 0 0; padding-top: 8px; border-top: 1px solid #f0eef5; }
+.issue-card :deep(.issue-context:empty) { display: none; }
 .card-top .priority-label { margin-left: auto; }
 .board-card-description { font-size: 13px; line-height: 1.6; color: #5f6673; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; margin-bottom: 10px; white-space: pre-wrap; }
 .board-assignee { display: flex; gap: 5px; align-items: center; margin-left: auto; font-size: 12px; color: #5f6673; }
