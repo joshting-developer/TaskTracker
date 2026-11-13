@@ -1,3 +1,10 @@
+## 2026-11-13 TT-300 產品介紹頁去AI感審查
+
+- 結論輕度SaaS套版感而非重裝飾AI感；標題3行、手機SVG小字約7px、CTA同目標，已留TT-301實際功能open未指派估180。inspect exit1如實保存，品牌／照片數／動畫等機械規則人工排除，沒有假PASS或改baseline。報告與合成DOM證據提交，保留其他承辦者TT-297已stage路由檔案；只commit --only本卡文件。
+
+- 使用共用工程、UIUX、Design Taste頁面模式、Unslop signs及TaskTracker流程；只審查/about/、三尺寸真瀏覽器與文案／產品證據，不改UI、不更新baseline。
+- 已查重：TT-207已交介紹頁；TT-297／298正規劃公開首頁／TopBar，TT-208由他人進行中，不搶領。審查卡估時30／本人正式實際5分鐘已填與讀回。起始main乾淨。
+
 ## 2026-11-13 TT-286 附件／Issue體驗路線圖查重建卡
 
 - 依新文件逐項比對source與現有open／closed／deferred卡；沿用TT-191、282、281，R2已由候選改為正式預定供應商，但先本地私有disk驗收，不索取金鑰。

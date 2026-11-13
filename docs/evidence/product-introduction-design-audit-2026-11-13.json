@@ -1,0 +1,277 @@
+{
+  "reviewCard": "TT-300",
+  "urlAtCapture": "http://127.0.0.1:5174/about/",
+  "sourceVersion": "pre TT-297 in-progress route move; same-session live capture",
+  "browserMetrics": [
+    {
+      "width": 1440,
+      "overflow": false,
+      "h1": {
+        "text": "小團隊的任務看板、個人待辦與工時，放在同一個工作空間",
+        "fontSize": "44px",
+        "fontWeight": "700",
+        "lineHeight": "59.4px",
+        "height": 178.171875,
+        "lines": 3
+      },
+      "diagram": {
+        "width": 519.03125,
+        "smallestEffectiveText": 10.195256696428572
+      },
+      "cta": [
+        {
+          "text": "登入",
+          "href": "/",
+          "height": 48
+        },
+        {
+          "text": "建立工作空間",
+          "href": "/",
+          "height": 48
+        },
+        {
+          "text": "前往登入或註冊",
+          "href": "/",
+          "height": 48
+        }
+      ],
+      "images": 0,
+      "svgCount": 1,
+      "firstKeyboardFocus": {
+        "text": "TaskTracker",
+        "outline": "solid"
+      }
+    },
+    {
+      "width": 768,
+      "overflow": false,
+      "h1": {
+        "text": "小團隊的任務看板、個人待辦與工時，放在同一個工作空間",
+        "fontSize": "30px",
+        "fontWeight": "700",
+        "lineHeight": "40.5px",
+        "height": 81,
+        "lines": 2
+      },
+      "diagram": {
+        "width": 720,
+        "smallestEffectiveText": 14.142857142857142
+      },
+      "cta": [
+        {
+          "text": "登入",
+          "href": "/",
+          "height": 48
+        },
+        {
+          "text": "建立工作空間",
+          "href": "/",
+          "height": 48
+        },
+        {
+          "text": "前往登入或註冊",
+          "href": "/",
+          "height": 48
+        }
+      ],
+      "images": 0,
+      "svgCount": 1,
+      "firstKeyboardFocus": {
+        "text": "TaskTracker",
+        "outline": "solid"
+      }
+    },
+    {
+      "width": 390,
+      "overflow": false,
+      "h1": {
+        "text": "小團隊的任務看板、個人待辦與工時，放在同一個工作空間",
+        "fontSize": "30px",
+        "fontWeight": "700",
+        "lineHeight": "40.5px",
+        "height": 121.5,
+        "lines": 3
+      },
+      "diagram": {
+        "width": 358,
+        "smallestEffectiveText": 7.0321428571428575
+      },
+      "cta": [
+        {
+          "text": "登入",
+          "href": "/",
+          "height": 48
+        },
+        {
+          "text": "建立工作空間",
+          "href": "/",
+          "height": 48
+        },
+        {
+          "text": "前往登入或註冊",
+          "href": "/",
+          "height": 48
+        }
+      ],
+      "images": 0,
+      "svgCount": 1,
+      "firstKeyboardFocus": {
+        "text": "TaskTracker",
+        "outline": "solid"
+      }
+    }
+  ],
+  "skillInspector": {
+    "command": "node .agents/skills/design-taste-frontend/scripts/inspect.mjs http://127.0.0.1:5174/about/ --out artifacts/tt300/inspect --widths 1440,768,390 --json",
+    "exitCode": 1,
+    "findings": [
+      {
+        "level": "FAIL",
+        "id": "headline-lines",
+        "width": 1440,
+        "message": "1 headline(s) wrap past two lines at 1440px: \"小團隊的任務看板、個人待辦與工時，放在同一個工作空間\" → 3 lines (1 words, 44px)",
+        "fix": "Cut words first (a headline is a title, not a sentence). Then give it a wider measure. Lower the size only as a last resort and never below the scale you chose. A real statement paragraph belongs in a <p> or <blockquote> at 36px or less."
+      },
+      {
+        "level": "FAIL",
+        "id": "shadow",
+        "width": 1440,
+        "message": "1 box-shadow(s) on elements at rest: svg → rgba(29, 24, 48, 0.03) 0px 2px 6px 0px",
+        "fix": "Remove. Separate surfaces with a tone step or space. Shadows are for things that really float (menus, dialogs, sticky bars).",
+        "alsoAt": [
+          768,
+          390
+        ]
+      },
+      {
+        "level": "FAIL",
+        "id": "button-fx",
+        "width": 1440,
+        "message": "Buttons with shadow/glow.",
+        "fix": "Flat fill, one colour.",
+        "alsoAt": [
+          768,
+          390
+        ]
+      },
+      {
+        "level": "FAIL",
+        "id": "hairline",
+        "width": 1440,
+        "message": "4 thin rule(s)/divider line(s): header.guest-topbar 1440px | section.features 1112px | section.steps 1112px | footer.site-footer 1160px",
+        "fix": "Delete. Separate with space, a tone change, or scale. Lines are only for real tables and form fields.",
+        "alsoAt": [
+          768,
+          390
+        ]
+      },
+      {
+        "level": "WARN",
+        "id": "outlined-box",
+        "width": 1440,
+        "message": "1 box(es) drawn with a 1px outline.",
+        "fix": "Prefer a filled surface or no box.",
+        "alsoAt": [
+          768,
+          390
+        ]
+      },
+      {
+        "level": "FAIL",
+        "id": "palette-purple",
+        "width": 1440,
+        "message": "Indigo / violet (button #6a5bd6, text #6a5bd6).",
+        "fix": "Use the accent from the drawn palette.",
+        "alsoAt": [
+          768,
+          390
+        ]
+      },
+      {
+        "level": "WARN",
+        "id": "grey-body",
+        "width": 1440,
+        "message": "The running text is a soft grey on its ground (6.1:1).",
+        "fix": "Set body copy in the full ink (7:1 or more). Keep the muted ink for secondary notes; pages read thin and unfinished when everything is grey.",
+        "alsoAt": [
+          768,
+          390
+        ]
+      },
+      {
+        "level": "FAIL",
+        "id": "few-pictures",
+        "width": 1440,
+        "message": "Only 0 picture(s) on the page (0 photographs, footage or raster images, 0 interface fragments). Drawings in SVG do not count.",
+        "fix": "Find real pictures of the subject's world with scripts/assets.mjs (photographs, archival images, maps, engravings, footage), download them to assets/ and give them room: a hero picture, one per section that has a subject, a full-width band. At least four, usually six to twelve."
+      },
+      {
+        "level": "WARN",
+        "id": "no-footage",
+        "width": 1440,
+        "message": "No video anywhere on the page.",
+        "fix": "Look for one honest clip with scripts/assets.mjs --video (the place, the material, the process) and use it as a muted loop with a poster frame. Defend its absence only if no clip fits the subject."
+      },
+      {
+        "level": "FAIL",
+        "id": "focal-point",
+        "width": 1440,
+        "message": "The first screen has no dominant element: the largest type is 44px (3.1vw) and no single picture holds a third of the viewport.",
+        "fix": "Make one thing lead: the headline at display size, or one large picture. A grid of many small pictures is not one thing; in blind tests jurors marked a first screen without a headline down every time. On the strongest studied sites the largest type has a median of 8.4vw."
+      },
+      {
+        "level": "WARN",
+        "id": "dev-server",
+        "width": 1440,
+        "message": "This page is served by a development server (Vite, webpack or Next in dev mode).",
+        "fix": "Run the last gate on the production build too (vite build && vite preview, next build && next start, or the built index.html): minifiers and bundlers change the CSS a visitor receives.",
+        "alsoAt": [
+          768,
+          390
+        ]
+      },
+      {
+        "level": "WARN",
+        "id": "off-centre",
+        "width": 1440,
+        "message": "The margins differ: 164px on the left, 136px on the right, at 1440px.",
+        "fix": "Put the navigation and the content on one pair of margins; check for padding on one side only, a scrollbar gutter, or a header on another inset than the page."
+      },
+      {
+        "level": "FAIL",
+        "id": "still-page",
+        "width": 1440,
+        "message": "Only 0 element(s) moved while the page loaded and scrolled.",
+        "fix": "Build the motion layer (SKILL.md step 9, references/motion.md): the signature move, an entrance for the parts of every section, feedback on every control, and one moving picture. Transform and opacity only, with a reduced-motion fallback."
+      },
+      {
+        "level": "WARN",
+        "id": "small-title",
+        "width": 768,
+        "message": "The h1 is 30px (\"小團隊的任務看板、個人待辦與工時，放在同一個工作空間\").",
+        "fix": "Set the title at display size, or make the large text of the first screen the h1."
+      },
+      {
+        "level": "FAIL",
+        "id": "headline-lines",
+        "width": 390,
+        "message": "1 headline(s) wrap past two lines at 390px: \"小團隊的任務看板、個人待辦與工時，放在同一個工作空間\" → 3 lines (1 words, 30px)",
+        "fix": "Cut words first (a headline is a title, not a sentence). Then give it a wider measure. Lower the size only as a last resort and never below the scale you chose. A real statement paragraph belongs in a <p> or <blockquote> at 24px or less."
+      },
+      {
+        "level": "WARN",
+        "id": "name-only-title",
+        "width": 390,
+        "message": "The h1 is a bare name (\"小團隊的任務看板、個人待辦與工時，放在同一個工作空間\") and nothing else on the first screen says what this is.",
+        "fix": "Keep the name if it leads, and give the line under it (18px or more) the plain words: what it is, for whom, where or when. In the study of 97 Sites of the Day, first screens that named nothing lost usability and content points."
+      }
+    ]
+  },
+  "humanAssessment": "light template feel, no heavy decorative slop; no blanket automated PASS",
+  "limitations": [
+    "no production-build inspection",
+    "no formal baseline comparison or new baseline approval",
+    "no real-user usability study or conversion experiment",
+    "same repo is concurrently moving landing route under TT-297; audit targets captured page, not final route behavior"
+  ]
+}
