@@ -18,6 +18,7 @@
 - Skill選用／檢查以共用registry.json的selectionRules為唯一矩陣；執行 `python3 tools/check-task-skills.py --consumer . --base HEAD --tag implementation`，間接畫面／資料影響加ui／data-access標籤。標籤只能加門檻，不可略過；實際讀取與檢查證據依共用check_evidence.py驗證。
 - 框架、UI／UX與效能按矩陣搭配；Ponytail採lite、不啟用全域hook／plugin，安全、嚴格分層、DI／PHPDoc、可及性與驗證優先。品牌／技術棧及產品綁定留consumer文件；缺核准visual baseline不能PASS。
 - 使用者→consumer安全／產品契約→共用工程／框架→Ponytail→審美；除明確指定外不讀其他專案／全域Skill。來源／沿革連結不等於授權載入外部規則。
+- 寫任何中文文字前（docs文件、卡片描述／留言、plans、給使用者的回覆與報告）先讀 `/Users/josh/workspace/common-skills/josh-writing-style/SKILL.md` 並照它寫, 為使用者2026-11-13明確指定例外；commit訊息仍依下方Git規則。
 
 ## API、資料與驗證門檻
 
