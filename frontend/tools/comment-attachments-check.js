@@ -24,6 +24,22 @@ try {
   await page.setViewportSize({ width: 1440, height: 1050 });
   await page.goto(`${base}/app/#/projects/${project.id}`); await page.getByRole('button', { name: '留言圖片驗收', exact: true }).click();
   let form = page.locator('.comment-form'), input = form.getByLabel('新增留言', { exact: true });
+  async function checkGrowth(editor, field, label, spacious = false) {
+    const initial = await field.evaluate(e => e.getBoundingClientRect().height);
+    if (spacious) assert.ok(initial >= 500, `${label} uses available viewport height`);
+    const original = await field.inputValue();
+    await field.fill(Array.from({ length: 45 }, (_, i) => `第${i + 1}行測試內容`).join('\n'));
+    await page.waitForFunction(({ label, initial }) => [...document.querySelectorAll('textarea')].some(e => e.labels?.[0]?.textContent.includes(label) && e.getBoundingClientRect().height > initial + 100), { label, initial });
+    const expanded = await field.evaluate(e => e.getBoundingClientRect().height);
+    assert.ok(await field.evaluate(e => e.scrollHeight <= e.clientHeight + 1), 'Long text remains visible');
+    await field.fill(original);
+    await page.waitForTimeout(50);
+    assert.ok((await field.evaluate(e => e.getBoundingClientRect().height)) >= expanded, 'Deleting text preserves expanded height');
+    await editor.getByRole('tab', { name: '預覽', exact: true }).click();
+    await editor.getByRole('tab', { name: '編輯', exact: true }).click();
+    assert.ok((await field.evaluate(e => e.getBoundingClientRect().height)) >= expanded, 'Preview does not reset expanded height');
+  }
+  await checkGrowth(form, input, '新增留言');
   const uploadUrl = `**/api/v1/projects/${project.id}/attachments`;
   await page.waitForFunction(() => document.querySelector('button[aria-label="選擇新增留言圖片"]:not(:disabled)'));
   await input.fill('保留文字');
@@ -48,7 +64,14 @@ try {
   await page.setViewportSize({ width: 1440, height: 1050 });
   await page.getByRole('button', { name: '返回任務列表', exact: true }).click();
   await page.getByRole('button', { name: '快速編輯 COMMENT-1', exact: true }).click();
-  const drawer = page.getByRole('dialog').first(); await drawer.locator('.comment .image-preview img').waitFor();
+  const drawer = page.getByRole('dialog').first(); await drawer.locator('.discussion').scrollIntoViewIfNeeded(); await drawer.locator('.comment .image-preview').first().scrollIntoViewIfNeeded(); await drawer.locator('.comment .image-preview img').waitFor();
+  const description = drawer.getByRole('group', { name: '描述編輯器', exact: true });
+  await checkGrowth(description, description.getByLabel('描述', { exact: true }), '描述', true);
+  for (const width of [768, 390, 1440]) {
+    await page.setViewportSize({ width, height: 1050 });
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Expanded editor does not overflow horizontally');
+  }
+  await page.screenshot({ path: new URL('expanded-description.png', artifacts).pathname });
   form = drawer.locator('.comment-form'); input = form.getByLabel('新增留言', { exact: true });
   await input.fill('抽屜留言'); await page.waitForFunction(() => document.querySelector('button[aria-label="選擇新增留言圖片"]:not(:disabled)'));
   const transfer = await page.evaluateHandle(data => { const t = new DataTransfer(); t.items.add(new File([Uint8Array.from(atob(data), c => c.charCodeAt(0))], 'drawer.png', { type: 'image/png' })); return t; }, png.toString('base64'));
@@ -58,4 +81,4 @@ try {
   assert.deepEqual(errors, []);
   writeFileSync(new URL('browser-result.json', artifacts), JSON.stringify({ passed: true, widths: [1440, 768, 390], checks: ['clipboard paste', 'failure/cancel preserve draft', 'unsettled blocks send', 'private preview', 'raw 2000 limit', 'send/reload', 'drawer drop/send', 'reset uploads'] }, null, 2));
   console.log('PASS: comment private images, detail/drawer, clipboard/drop, failure/cancel, raw limit, reset and three widths');
-} finally { await browser?.close(); await server?.close(); }
+} catch (error) { if (browser) { const p = browser.contexts()[0]?.pages()[0]; if (p) { await p.screenshot({ path: new URL('failure.png', artifacts).pathname }); writeFileSync(new URL('failure.txt', artifacts), await p.locator('body').innerText()); } } throw error; } finally { await browser?.close(); await server?.close(); }

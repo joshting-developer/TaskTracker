@@ -1,10 +1,10 @@
 <script setup>
-import { computed, nextTick, ref, useId, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import { useAttachmentUpload } from '../composables/useAttachmentUpload.js';
 import { onTabKeydown } from '../ui/tabs.js';
 import MarkdownContent from './MarkdownContent.vue';
 
-const props = defineProps({ modelValue: { type: String, default: '' }, label: { type: String, required: true }, placeholder: String, maxlength: { type: Number, default: 6000 }, rows: { type: Number, default: 4 }, disabled: Boolean, required: Boolean, name: String, allowAttachments: Boolean, projectId: { type: String, default: '' } });
+const props = defineProps({ modelValue: { type: String, default: '' }, label: { type: String, required: true }, placeholder: String, maxlength: { type: Number, default: 6000 }, rows: { type: Number, default: 4 }, disabled: Boolean, required: Boolean, name: String, spacious: Boolean, allowAttachments: Boolean, projectId: { type: String, default: '' } });
 const emit = defineEmits(['update:modelValue']);
 const fileInput = ref(null);
 const id = useId(), input = ref(null), mode = ref('write'), composing = ref(false), message = ref('');
@@ -18,6 +18,24 @@ const formats = [
   { id: 'code', label: '程式碼', before: '```\n', after: '\n```', sample: '程式碼' },
 ];
 let undoFormat = null, redoFormat = null;
+let largestHeight = 0, resizeObserver;
+function grow() {
+  const element = input.value;
+  if (!element || mode.value !== 'write' || !element.getClientRects().length) return;
+  largestHeight = Math.max(largestHeight, element.getBoundingClientRect().height, element.scrollHeight + element.offsetHeight - element.clientHeight);
+  element.style.height = `${Math.ceil(largestHeight)}px`;
+}
+watch([() => props.modelValue, mode], () => nextTick(grow), { flush: 'post' });
+onMounted(() => {
+  grow();
+  let width = 0;
+  resizeObserver = new ResizeObserver(entries => {
+    const next = entries[0].contentRect.width;
+    if (next !== width) { width = next; grow(); }
+  });
+  if (input.value) resizeObserver.observe(input.value);
+});
+onBeforeUnmount(() => resizeObserver?.disconnect());
 watch(() => props.modelValue, value => { if (!value) mode.value = 'write'; });
 
 async function focus() { mode.value = 'write'; await nextTick(); input.value?.scrollIntoView({ block: 'nearest' }); input.value?.focus({ preventScroll: true }); }
@@ -93,7 +111,7 @@ function onKeydown(event) {
 </script>
 
 <template>
-  <div class="markdown-editor" role="group" :aria-label="`${label}編輯器`">
+  <div class="markdown-editor" :class="{ spacious }" role="group" :aria-label="`${label}編輯器`">
     <div class="editor-heading">
       <label :for="`${id}-input`">{{ label }}<span v-if="required" aria-hidden="true"> *</span></label>
       <div class="editor-modes" role="tablist" :aria-label="`${label}模式`" @keydown="onTabKeydown">
@@ -145,6 +163,7 @@ function onKeydown(event) {
 .editor-tools button { min-height: 44px; min-width: 44px; padding: 7px; font-size: 13px; }
 .editor-tools button:hover:not(:disabled) { background: #eeecf7; color: #5844a0; border-radius: 4px; }
 .markdown-editor textarea { display: block; width: 100%; padding: 12px; border: 1px solid #bfc6d2; border-radius: 0 0 6px 6px; background: #fff; color: #242936; font-size: 14px; line-height: 1.8; resize: vertical; min-height: 88px; }
+.markdown-editor.spacious textarea { min-height: max(240px, calc(100dvh - 390px)); }
 .editor-preview { min-height: 110px; max-height: 480px; overflow: auto; border: 1px solid #bfc6d2; border-radius: 6px; padding: 12px; background: #fff; }
 .editor-footer { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; font-size: 12px; line-height: 1.6; color: #5f6673; }
 .editor-footer > :last-child { flex-shrink: 0; }

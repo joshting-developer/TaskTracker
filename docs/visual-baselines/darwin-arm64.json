@@ -3,8 +3,8 @@
   "harnessSha256": "e52705c45e3236bc1803415a76b700e5355013e93f62ef8feae5b553beebed40",
   "profile": "darwin-arm64",
   "reviewer": "Josh",
-  "note": "依持續授權核准TT-295任務附件分頁與手機任務資訊入口, 已檢視PDF／ZIP清單三尺寸, 比較參數不變",
-  "manifestSha256": "216f914db8d441eae522d44b5e26d849c196e4d0e7adc3dd6854d0aca9ed06f5",
+  "note": "依持續授權核准TT-293編輯區高度補修, 已檢視桌面與手機描述、留言及小待辦, 比較參數不變",
+  "manifestSha256": "c2d30101f226cca208a007115cb0ca9fc4f8c226ed30083964ae14cf173c274f",
   "environment": {
     "platform": "darwin",
     "arch": "arm64",
@@ -24,13 +24,5 @@
       "threshold": 0.02
     }
   },
-  "artifactRunId": null,
-  "cards": [
-    "TT-295"
-  ],
-  "reviewedChanges": [
-    "任務側欄新增按需附件分頁",
-    "手機入口改為任務資訊, PDF／ZIP只有下載",
-    "三尺寸私有檔案清單與既有48張流程比較, 容忍值不變"
-  ]
+  "artifactRunId": null
 }
