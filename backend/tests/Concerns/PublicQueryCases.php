@@ -92,10 +92,10 @@ trait PublicQueryCases
         $this->assertSame('comment-marker', $comments['items'][0]['content']);
         $this->assertSame(0, $this->publicRead($plain, $prefix.'/issues?state[]=closed', '/projects/{project}/issues')['data']['total']);
         $this->assertSame(1, $this->publicRead($plain, $prefix.'/issues?state[]=open&scope=all&type=task&sort=due', '/projects/{project}/issues')['data']['total']);
-        foreach (['perPage=101', 'page=0', 'sort=wrong', 'state=open'] as $invalid) {
+        foreach (['perPage=101', 'page=0', 'sort=wrong', 'state=open', 'page=999'] as $invalid) {
             $this->publicRead($plain, $prefix.'/issues?'.$invalid, '/projects/{project}/issues', 400);
         }
-        $this->assertSame([], $this->publicRead($plain, $prefix.'/issues?page=999', '/projects/{project}/issues')['data']['items']);
+        $this->assertSame([], $this->publicRead($plain, $prefix.'/issues?page=501', '/projects/{project}/issues')['data']['items']);
         $this->assertSame(0, $this->publicRead($plain, '/projects?search=%25', '/projects')['data']['total']);
         $this->assertSame(1, $this->publicRead($plain, $prefix.'/issues?identifier='.urlencode($issue['identifier']).'&workspaceId=forged&actor=forged', '/projects/{project}/issues')['data']['total']);
         $this->postJson('/api/public/v1/projects/'.$project['id'].'/issues', ['title' => 'no write', 'requestId' => (string) Str::uuid()], ['Authorization' => 'Bearer '.$plain])->assertStatus(403);

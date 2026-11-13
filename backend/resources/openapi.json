@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker API",
-    "version": "0.14.0",
+    "version": "0.15.0",
     "description": "公開Bearer v1讀取及Issue建立／PATCH／留言及外部識別查詢／upsert／批次；小待辦讀取、交辦、完成與退回；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。 支援受PAT與即時專案權限限制的私有附件上傳／metadata／內容／綁定。"
   },
   "servers": [
@@ -2648,7 +2648,9 @@
                         "page",
                         "perPage",
                         "total",
-                        "lastPage"
+                        "lastPage",
+                        "maxOffset",
+                        "accessibleLastPage"
                       ],
                       "additionalProperties": false,
                       "properties": {
@@ -2675,6 +2677,15 @@
                         "lastPage": {
                           "type": "integer",
                           "minimum": 1
+                        },
+                        "maxOffset": {
+                          "type": "integer",
+                          "const": 10000
+                        },
+                        "accessibleLastPage": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "description": "Maximum reachable page for the current perPage, min(lastPage, floor(10000/perPage)+1); total and lastPage remain exact"
                         }
                       }
                     }
@@ -2703,7 +2714,9 @@
                     "page": 1,
                     "perPage": 20,
                     "total": 1,
-                    "lastPage": 1
+                    "lastPage": 1,
+                    "maxOffset": 10000,
+                    "accessibleLastPage": 1
                   }
                 }
               }
@@ -2929,7 +2942,8 @@
               "minimum": 1,
               "maximum": 1000000,
               "default": 1
-            }
+            },
+            "description": "Page number; (page-1)*perPage must not exceed 10000. Narrow filters or use issue-changes cursor for complete synchronization."
           },
           {
             "in": "query",

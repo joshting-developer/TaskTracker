@@ -126,3 +126,9 @@ Project建立／修改／狀態更新新結果為`{id, revision}`，Board建立�
 ## TT-278 卡號搜尋路徑
 
 任務列表／增量與任務候選的search, 完整卡號自動轉大寫等值, 明確尾端*採卡號prefix。text:前綴強制既有字面contains, 其他文字維持中文／英文／標點與%_字面搜尋。看板本地篩選同步, 不以FULLTEXT丟棄短詞或改搜尋結果；Project／Workspace與其他filters仍交集
+
+## TT-279 列表深分頁
+
+任務列表的(page-1)×perPage最多10000, 超過回400 INVALID_INPUT且不執行Issue查詢。total與lastPage保留真實總數, maxOffset固定10000, accessibleLastPage是可翻閱上限；網頁按此上限停用下一頁並提示縮小篩選。一般PageQuery其他資源及看板分頁不套此任務列表專屬界限
+
+完整第三方同步使用既有issue-changes cursor, 不靠遞增page匯出全部。原有穩定identifier／public_id次排序與changes keyset索引保留, CASE優先級與NULL到期日語意不變。新增倒序索引不代表其他排序或COUNT已變成固定成本

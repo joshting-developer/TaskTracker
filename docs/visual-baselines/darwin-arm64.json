@@ -3,8 +3,8 @@
   "harnessSha256": "5f95f26da09ce4cbbb1d6c9800ffd68c98aae9435f8a727da2ca6533713fbd05",
   "profile": "darwin-arm64",
   "reviewer": "Josh",
-  "note": "Standing authorization recorded in AGENTS.md: future UI candidates may be approved directly. TT-278 changes the search placeholder; desktop and mobile inspected, full 48-image candidate retained.",
-  "manifestSha256": "4f17d1a9c64a632f4120f5c2d7ab50887a8f41af2a6dba225c4f84926138f90b",
+  "note": "Standing UI authorization in AGENTS.md; TT-279 bounded list pagination. All 48 representative images have no layout/content difference; 15 PNG hashes differ only by RGB channel deltas <=2, below the unchanged existing threshold. Desktop editor inspected; actual 10025-row pagination separately browser-tested.",
+  "manifestSha256": "4cf863e7de3ae64dffceacc6a28be56f6370a357416cefcb9c1dcac3fd1f0d3b",
   "environment": {
     "platform": "darwin",
     "arch": "arm64",
@@ -32,8 +32,9 @@
     "TT-288",
     "TT-289",
     "TT-310",
-    "TT-278"
+    "TT-278",
+    "TT-279"
   ],
-  "previousApprovedManifestSha256": "b104331b066252846e198c7b37abb12fed3d20fd3c625e2d152d27da08921325",
-  "reviewedCandidateManifestSha256": "4f17d1a9c64a632f4120f5c2d7ab50887a8f41af2a6dba225c4f84926138f90b"
+  "previousApprovedManifestSha256": "4f17d1a9c64a632f4120f5c2d7ab50887a8f41af2a6dba225c4f84926138f90b",
+  "reviewedCandidateManifestSha256": "4cf863e7de3ae64dffceacc6a28be56f6370a357416cefcb9c1dcac3fd1f0d3b"
 }

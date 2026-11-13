@@ -1,0 +1,136 @@
+{
+  "engine": "8.4.13",
+  "topology": "isolated MySQL Docker SQL, not production HTTP/RUM",
+  "warmups": 5,
+  "samples": 30,
+  "offsetLimit": 10000,
+  "indexesAdded": [
+    "issues_list_updated_desc",
+    "issues_list_created_desc"
+  ],
+  "sizes": [
+    {
+      "rows": 1000,
+      "write1000BeforeMs": 39.78,
+      "write1000AfterMs": 69.205,
+      "queries": {
+        "updatedDesc": {
+          "beforeP95Ms": 1.808,
+          "afterP95Ms": 0.839
+        },
+        "updatedAsc": {
+          "beforeP95Ms": 2.303,
+          "afterP95Ms": 0.823
+        },
+        "createdDesc": {
+          "beforeP95Ms": 1.486,
+          "afterP95Ms": 0.86
+        },
+        "createdAsc": {
+          "beforeP95Ms": 0.856,
+          "afterP95Ms": 3.952
+        },
+        "priority": {
+          "beforeP95Ms": 1.166,
+          "afterP95Ms": 3.662
+        },
+        "due": {
+          "beforeP95Ms": 1.039,
+          "afterP95Ms": 0.94
+        },
+        "deep": {
+          "beforeP95Ms": 3.12,
+          "afterP95Ms": 2.668
+        },
+        "count": {
+          "beforeP95Ms": 0.26,
+          "afterP95Ms": 0.33
+        }
+      }
+    },
+    {
+      "rows": 10000,
+      "write1000BeforeMs": 37.691,
+      "write1000AfterMs": 70.923,
+      "queries": {
+        "updatedDesc": {
+          "beforeP95Ms": 20.249,
+          "afterP95Ms": 1.071
+        },
+        "updatedAsc": {
+          "beforeP95Ms": 15.037,
+          "afterP95Ms": 10.055
+        },
+        "createdDesc": {
+          "beforeP95Ms": 12.363,
+          "afterP95Ms": 0.207
+        },
+        "createdAsc": {
+          "beforeP95Ms": 12.808,
+          "afterP95Ms": 10.936
+        },
+        "priority": {
+          "beforeP95Ms": 18.164,
+          "afterP95Ms": 13.369
+        },
+        "due": {
+          "beforeP95Ms": 37.325,
+          "afterP95Ms": 19.012
+        },
+        "deep": {
+          "beforeP95Ms": 70.306,
+          "afterP95Ms": 5.385
+        },
+        "count": {
+          "beforeP95Ms": 0.994,
+          "afterP95Ms": 0.903
+        }
+      }
+    },
+    {
+      "rows": 50000,
+      "write1000BeforeMs": 52.181,
+      "write1000AfterMs": 143.144,
+      "queries": {
+        "updatedDesc": {
+          "beforeP95Ms": 70.169,
+          "afterP95Ms": 0.184
+        },
+        "updatedAsc": {
+          "beforeP95Ms": 63.597,
+          "afterP95Ms": 58.075
+        },
+        "createdDesc": {
+          "beforeP95Ms": 69.35,
+          "afterP95Ms": 0.25
+        },
+        "createdAsc": {
+          "beforeP95Ms": 55.467,
+          "afterP95Ms": 54.806
+        },
+        "priority": {
+          "beforeP95Ms": 60.188,
+          "afterP95Ms": 54.83
+        },
+        "due": {
+          "beforeP95Ms": 99.779,
+          "afterP95Ms": 53.199
+        },
+        "deep": {
+          "beforeP95Ms": 219.402,
+          "afterP95Ms": 6.728
+        },
+        "count": {
+          "beforeP95Ms": 3.741,
+          "afterP95Ms": 3.863
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "SQL lab only, not remote deployment HTTP/RUM",
+    "Single 1000-row write observation, no p95 write claim",
+    "ascending, CASE priority/due and exact COUNT still scan scope",
+    "other resources inventoried and EXPLAIN inspected; empty synthetic scope is not performance evidence"
+  ]
+}

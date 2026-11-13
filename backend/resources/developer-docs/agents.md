@@ -80,3 +80,9 @@ getPublicAttachment／listPublicIssueAttachments只回安全metadata；getPublic
 search是完整卡號時（例如tt-12）, 會轉成大寫並只找同專案該卡, 不再掃描述內提到該卡號的所有卡片。明確尾端星號如TT-12*搜尋卡號前綴。需要找描述／標題提及卡號時用text:TT-12；其他搜尋仍是大小寫不敏感的字面contains, 中文單字、空格、標點及%_不當成SQL萬用字元。identifier參數仍是明確等值條件, 與其他filters交集
 
 沒有把一般文字改成近似的FULLTEXT。列表與增量共用搜尋語意, cursor的filters不可中途更換；卡號prefix可能匹配很多張, 仍須按分頁／cursor接續
+
+## TT-279 列表深分頁
+
+任務列表的(page-1)×perPage最多10000, 超過回400 INVALID_INPUT且不執行Issue查詢。total與lastPage保留真實總數, maxOffset固定10000, accessibleLastPage是可翻閱上限；網頁按此上限停用下一頁並提示縮小篩選。一般PageQuery其他資源及看板分頁不套此任務列表專屬界限
+
+完整第三方同步使用既有issue-changes cursor, 不靠遞增page匯出全部。原有穩定identifier／public_id次排序與changes keyset索引保留, CASE優先級與NULL到期日語意不變。新增倒序索引不代表其他排序或COUNT已變成固定成本

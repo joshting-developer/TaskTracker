@@ -10,6 +10,7 @@ use App\Http\Requests\IssueQueryRequest;
 use App\Http\Requests\PageQueryRequest;
 use App\Http\Resources\ApiResponse;
 use App\Http\Resources\Queries\IssueDetailResource;
+use App\Http\Resources\Queries\IssueListPageResource;
 use App\Http\Resources\Queries\IssueListResource;
 use App\Http\Resources\Queries\IssueOptionResource;
 use App\Http\Resources\Queries\IssueSummaryResource;
@@ -41,7 +42,7 @@ class IssuesController extends Controller
     {
         $data = $this->workspace->read($request, fn (WorkspaceContext $context) => ['page' => $this->issues->index($context, $project, $request->toDto())]);
 
-        return new ApiResponse(PageResource::wrap($data['page'], IssueListResource::collection($data['page']->items())->resolve()));
+        return new ApiResponse(IssueListPageResource::wrap($data['page'], IssueListResource::collection($data['page']->items())->resolve()));
     }
 
     /**

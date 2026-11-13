@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Data\WorkspaceContext;
 use App\Data\IssueOptionQueryData;
 use App\Data\IssueQueryData;
 use App\Data\PageQueryData;
+use App\Data\WorkspaceContext;
 use App\Domain\DomainError;
 use App\Models\Issue;
 use App\Repositories\IssueReadRepository;
@@ -33,6 +33,9 @@ class IssueReadService
     public function index(WorkspaceContext $context, string $projectId, IssueQueryData $filters): LengthAwarePaginator
     {
         $project = $this->projects->require($context, $projectId, 'issue.read');
+        if (($filters->pagination->page - 1) * $filters->pagination->perPage > IssueQueryData::MAX_LIST_OFFSET) {
+            DomainError::fail('INVALID_INPUT', '分頁超過查詢上限, 請縮小篩選範圍或使用異動清單cursor');
+        }
 
         return $this->issues->page($project, $context->userId, $filters, listOnly: true);
     }

@@ -5,6 +5,8 @@ namespace App\Data;
 /** 任務列表查詢；不包含操作者或可信工作區ID。 */
 readonly class IssueQueryData
 {
+    public const MAX_LIST_OFFSET = 10000;
+
     /**
      * 建立此用例的相依與唯讀資料，不從HTTP取得身分。
      *
