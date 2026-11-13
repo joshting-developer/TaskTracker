@@ -1,3 +1,4 @@
+import { fixtureResponse } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
@@ -14,13 +15,13 @@ try {
   page.on('pageerror', e => errors.push(e.message)); page.on('request', r => { const url = r.url(); requests.push(url); if (url.includes('reading-test.invalid')) external.push(url); });
   async function call(operation, input) {
     const csrf = await (await context.request.get(`${base}/api/csrf-cookie`)).json();
-    const res = await context.request.post(`${base}/api/${operation === 'register' ? 'auth' : 'rpc'}/${operation}`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, data: { requestId: crypto.randomUUID(), ...input } }); assert.equal(res.status(), 200, await res.text()); return (await res.json()).data;
+    const res = await context.request.post(`${base}/api/${operation === 'register' ? 'auth' : 'rpc'}/${operation}`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, data: { requestId: crypto.randomUUID(), ...input } }); assert.equal(res.status(), 200, await res.text()); return (await fixtureResponse(context.request, res)).data;
   }
   await call('register', { name: '閱讀測試', email: `reading-${crypto.randomUUID()}@example.test`, password: 'isolated-reading-password', workspaceName: '閱讀驗證' });
   const project = await call('createProject', { name: '會員系統', code: 'READ' });
   await page.setViewportSize({ width: 640, height: 280 }); await page.setContent('<body style="margin:0;padding:28px;font:18px system-ui;color:#242936;background:#f4f5f8"><h1 style="font-size:24px">登入畫面</h1><p>電子郵件與密碼欄位</p><p style="padding:12px;background:#6653bd;color:white">登入</p></body>'); const png = await page.screenshot();
   const csrf = await (await context.request.get(`${base}/api/csrf-cookie`)).json();
-  const upload = await context.request.post(`${base}/api/v1/projects/${project.id}/attachments`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, multipart: { requestId: crypto.randomUUID(), file: { name: 'login.png', mimeType: 'image/png', buffer: png } } }); assert.equal(upload.status(), 200, await upload.text()); const attachment = (await upload.json()).data;
+  const upload = await context.request.post(`${base}/api/v1/projects/${project.id}/attachments`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, multipart: { requestId: crypto.randomUUID(), file: { name: 'login.png', mimeType: 'image/png', buffer: png } } }); assert.equal(upload.status(), 200, await upload.text()); const attachment = (await fixtureResponse(context.request, upload)).data;
   const source = `調整會員登入流程, 保留電子郵件與密碼欄位\n\n![登入畫面](attachment:${attachment.id})\n\n- [x] 保留原本登入方式\n- [ ] 確認錯誤提示\n\n![外部圖片](https://reading-test.invalid/pixel.png)\n<script>window.unsafeReading=true</script>`;
   const issue = await call('createIssue', { projectId: project.id, title: '調整會員登入流程與錯誤提示', description: source, type: 'task', priority: 'high', estimateMinutes: 90 });
   const url = `${base}/app/#/projects/${project.id}/issues/${issue.id}?detail=1`;

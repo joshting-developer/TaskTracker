@@ -1,3 +1,4 @@
+import { fixtureResponse } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
@@ -10,7 +11,7 @@ try {
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } }), page = await context.newPage(), errors = []; page.setDefaultTimeout(15000); page.on('pageerror', e => errors.push(e.message));
   async function call(operation, input, group = 'rpc', client = context) {
-    const csrf = await (await client.request.get(`${base}/api/csrf-cookie`)).json(); const response = await client.request.post(`${base}/api/${group}/${operation}`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, data: { requestId: crypto.randomUUID(), ...input } }); assert.equal(response.status(), 200, await response.text()); return (await response.json()).data;
+    const csrf = await (await client.request.get(`${base}/api/csrf-cookie`)).json(); const response = await client.request.post(`${base}/api/${group}/${operation}`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, data: { requestId: crypto.randomUUID(), ...input } }); assert.equal(response.status(), 200, await response.text()); return (await fixtureResponse(client.request, response)).data;
   }
   const identity = await call('register', { name: '表單測試', email: `form-${crypto.randomUUID()}@example.test`, password: 'isolated-form-password', workspaceName: '表單驗證' }, 'auth');
   const project = await call('createProject', { name: '會員介面', code: 'FORM' }); const root = `${base}/app/#/projects/${project.id}`; await page.goto(root);

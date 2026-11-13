@@ -17,7 +17,7 @@ async function request(page, operation, input = {}, group = 'rpc') {
   }, { operation, input, group });
 }
 async function call(page, operation, input = {}, group = 'rpc') {
-  const result = await request(page, operation, input, group); assert.equal(result.ok, true, JSON.stringify(result)); return result.data;
+  const result = await request(page, operation, input, group); assert.equal(result.ok, true, JSON.stringify(result)); if (result.data?.verificationRequired) return call(page, 'verify-email', { code: 'local666' }, 'auth'); return result.data;
 }
 try {
   server = await preview({ preview: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });

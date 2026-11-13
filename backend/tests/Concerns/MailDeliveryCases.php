@@ -31,6 +31,8 @@ trait MailDeliveryCases
         Queue::fake();
         config(['mail.default' => 'array', 'delivery.connection' => 'redis']);
         $identity = $this->postJson('/api/auth/register', ['name' => 'Mail recipient', 'email' => Str::uuid().'@example.test', 'password' => 'isolated-mail-password', 'workspaceName' => 'Mail'])->assertOk()->json('data');
+        MailDelivery::where('status', 'pending')->update(['next_attempt_at' => now()->addDay()]); // Isolate old synthetic browser outbox rows within the test transaction.
+        Queue::fake(); // Count only delivery jobs from this fixture onward, after signup verification.
         $connection = new class(Mail::getFacadeRoot()) extends MailConnectionService
         {
             public bool $fail = false;
@@ -98,7 +100,7 @@ trait MailDeliveryCases
         } catch (RuntimeException) {
         }
         Queue::assertNothingPushed();
-        $this->assertSame(0, MailDelivery::where('user_id', $user['id'])->count());
+        $this->assertSame(0, MailDelivery::where('user_id', $user['id'])->where('kind', 'diagnostic')->count());
         Mail::assertNothingSent();
     }
 

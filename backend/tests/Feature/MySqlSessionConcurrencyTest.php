@@ -48,6 +48,10 @@ class MySqlSessionConcurrencyTest extends MySqlTestCase
         $data = json_decode($response->getBody(), true);
         $this->assertSame($status, $response->getStatusCode(), json_encode($data));
 
+        if ($path === '/api/auth/register' && ($data['data']['verificationRequired'] ?? false)) {
+            return $this->api($client, '/api/auth/verify-email', ['code' => 'local666']);
+        }
+
         return $data['data'] ?? $data;
     }
 

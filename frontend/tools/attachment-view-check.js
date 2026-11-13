@@ -1,3 +1,4 @@
+import { fixtureResponse } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
@@ -30,7 +31,7 @@ createApp({setup(){const source=ref(fixture.source);window.setSource=value=>sour
   async function call(path, data, method = 'POST', client = context) {
     const csrf = await (await client.request.get(`${base}/api/csrf-cookie`)).json();
     const response = await client.request.fetch(`${base}${path}`, { method, data: { requestId: crypto.randomUUID(), ...data }, headers: { 'X-CSRF-TOKEN': csrf.csrfToken } });
-    assert.equal(response.status(), 200, await response.text()); return (await response.json()).data;
+    assert.equal(response.status(), 200, await response.text()); return (await fixtureResponse(context.request, response)).data;
   }
   const identity = await call('/api/auth/register', { name: '附件檢視測試', email: `view-${crypto.randomUUID()}@example.test`, password: 'isolated-image-view', workspaceName: '附件測試' });
   const project = await call('/api/rpc/createProject', { name: '附件測試', code: 'VIEW' });
@@ -40,7 +41,7 @@ createApp({setup(){const source=ref(fixture.source);window.setSource=value=>sour
   await page.setViewportSize({ width: 760, height: 520 }); const png = await page.screenshot();
   const csrf = await (await context.request.get(`${base}/api/csrf-cookie`)).json();
   const response = await context.request.post(`${base}/api/v1/projects/${project.id}/attachments`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, multipart: { requestId: crypto.randomUUID(), file: { name: 'login-layout.png', mimeType: 'image/png', buffer: png } } });
-  assert.equal(response.status(), 200, await response.text()); const attachment = (await response.json()).data;
+  assert.equal(response.status(), 200, await response.text()); const attachment = (await fixtureResponse(context.request, response)).data;
   const bound = await call(`/api/v1/projects/${project.id}/attachments/${attachment.id}/bind`, { expectedRevision: 1, issueId: issue.id, issueRevision: 1 });
   const source = `請確認欄位間距與按鈕寬度\n\n![登入頁排版](attachment:${attachment.id})\n\n![外部圖片](https://tracker.example/pixel.png)\n\n![不安全圖片](data:image/svg+xml,<svg onload=alert(1)>)\n\n<img src="https://tracker.example/raw.png" onerror="alert(1)">\n\n- [x] 保留 Markdown 清單`;
   fixture = { workspace: identity.workspace.id, project: project.id, source };

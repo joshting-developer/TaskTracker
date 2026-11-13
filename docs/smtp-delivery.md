@@ -41,7 +41,7 @@ docker compose exec backend php artisan mail:status <outbox-id>
 
 本輪Josh明確授權一封測試信, SMTP於2026-11-13 20:54:42接受, attempts=1, 並已由Josh確認收件。沒有寄送第二封, 不將這次例外當成未來授權
 
-新增目的種類須另定收件人資格。verification目前只檢查帳號未驗證及事件未過期, TT-319需同步撤銷舊challenge的pending事件, 才能處理重新寄碼／改信箱。信件不能包含密碼、PAT或SMTP秘密；短期註冊驗證資訊屬TT-319的明確交付目的, 仍只經加密暫存傳輸, 不放日誌
+新增目的種類須另定收件人資格。TT-319已接上當次challenge資格, 重新寄碼／改信箱會撤銷舊challenge及尚未交付的事件。信件不能包含密碼、PAT或SMTP秘密；短期註冊驗證資訊屬TT-319的明確交付目的, 仍只經加密暫存傳輸, 不放日誌
 
 Laravel的Queue與commit行為參考[官方Mail文件](https://laravel.com/framework/docs/mail)及[官方Queue文件](https://laravel.com/framework/docs/queues)
 

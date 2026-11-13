@@ -46,10 +46,10 @@ try {
   const token = crypto.randomUUID();
   await register(page, `flow-owner-${token}@example.test`);
   const email = `flow-member-${token}@example.test`;
-  const invite = await page.evaluate(async email => (await import('/src/api/index.js')).api.inviteMember({ email }), email);
+  const invite = await page.evaluate(async email => (await import('/tools/fixtures/verified-api.js')).api.inviteMember({ email }), email);
   await register(member, email, invite.token);
   const fixture = await page.evaluate(async email => {
-    const { api } = await import('/src/api/index.js');
+    const { api } = await import('/tools/fixtures/verified-api.js');
     const ws = await api.getWorkspace(), person = ws.members.find(item => item.email === email);
     for (let i = 1; i <= 4; i++) await api.createTodo({ title: `個人摘要 ${i}`, requestId: crypto.randomUUID() });
     for (let i = 1; i <= 5; i++) await api.createTodo({ title: `交辦事項 ${i}`, assigneeId: person.id, requestId: crypto.randomUUID() });
@@ -94,7 +94,7 @@ try {
   assert.equal(await draft.inputValue(), '切換後保留的草稿');
   await todos.getByRole('button', { name: '儲存待辦修改', exact: true }).click();
   await draft.waitFor({ state: 'hidden' });
-  const saved = await page.evaluate(async id => (await (await import('/src/api/index.js')).api.getTodos()).todos.find(item => item.id === id), editedId);
+  const saved = await page.evaluate(async id => (await (await import('/tools/fixtures/verified-api.js')).api.getTodos()).todos.find(item => item.id === id), editedId);
   assert.equal(saved.title, '切換後保留的草稿');
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：流程 first', exact: true }).click();

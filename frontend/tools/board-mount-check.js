@@ -23,7 +23,7 @@ try {
       const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();
       const result = await (await fetch(`/api/${group}/${op}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken }, body: JSON.stringify({ requestId: crypto.randomUUID(), ...input }) })).json();
       if (!result.ok) throw new Error(`${op}: ${result.error.message}`);
-      return result.data;
+      if (result.data?.verificationRequired) { const csrf = await (await fetch('/api/csrf-cookie')).json(); const verified = await fetch('/api/auth/verify-email', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.csrfToken }, body: JSON.stringify({ code: 'local666' }) }); if (!verified.ok) throw new Error('Fixture email verification failed'); result.data = (await verified.json()).data; } return result.data;
     }, { op, input, group });
   }
   const identity = await call('register', { name: 'Mount Owner', email: `mount-${crypto.randomUUID()}@example.test`, password: 'isolated-test-password', workspaceName: 'Mount' }, 'auth');

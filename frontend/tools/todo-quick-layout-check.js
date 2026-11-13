@@ -12,7 +12,7 @@ async function call(page, operation, input = {}, group = 'rpc') {
     const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();
     const result = await (await fetch(`/api/${group}/${operation}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken }, body: JSON.stringify({ requestId: crypto.randomUUID(), ...input }) })).json();
     if (!result.ok) throw new Error(result.error?.message || operation);
-    return result.data;
+    if (result.data?.verificationRequired) { const csrf = await (await fetch('/api/csrf-cookie')).json(); const verified = await fetch('/api/auth/verify-email', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.csrfToken }, body: JSON.stringify({ code: 'local666' }) }); if (!verified.ok) throw new Error('Fixture email verification failed'); result.data = (await verified.json()).data; } return result.data;
   }, { operation, input, group });
 }
 async function measure(page, state) {
@@ -84,7 +84,7 @@ try {
   await input.fill('交辦給同事的速記'); await choice.selectOption(recipient.user.id); await submit.focus(); await submit.press('Enter');
   await todos.getByRole('status').filter({ hasText: '已加入待辦' }).waitFor();
   assert.equal(writes, 2);
-  const received = await member.evaluate(async () => (await import('/src/api/index.js')).api.getTodos());
+  const received = await member.evaluate(async () => (await import('/tools/fixtures/verified-api.js')).api.getTodos());
   assert.ok(received.todos.some(todo => todo.title === '交辦給同事的速記')); assert.equal(received.todos.some(todo => todo.title === '自己的Markdown速記'), false); assert.deepEqual(errors, []);
   console.log(`PASS: ${before ? 'before reproduction' : '44px responsive quick entry'}; loading/error/saving, keyboard, own/assigned, no duplicate writes`);
 } finally { writeFileSync(`${folder}/measurements.json`, JSON.stringify({ measurements, errors }, null, 2)); await browser?.close(); await server?.close(); }

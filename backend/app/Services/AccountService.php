@@ -23,8 +23,9 @@ class AccountService
      * @param  RecordStoreFactory  $stores  依範圍建立資料入口
      * @param  WorkspaceMemberships  $memberships  工作區清單、切換與邀請
      * @param  AccountRepository  $accounts  帳號與最小資格資料入口
+     * @param  EmailVerificationService  $verification  註冊驗證
      */
-    public function __construct(private RecordStoreFactory $stores, private WorkspaceMemberships $memberships, private AccountRepository $accounts) {}
+    public function __construct(private RecordStoreFactory $stores, private WorkspaceMemberships $memberships, private AccountRepository $accounts, private EmailVerificationService $verification) {}
 
     /**
      * 重新取得HTTP伺服器所指定的帳號，不接受前端actor。
@@ -61,7 +62,7 @@ class AccountService
      */
     public function context(?User $user, mixed $workspaceId): array
     {
-        if (! $user || ! is_string($workspaceId)) {
+        if (! $user || ($user->email_verification_required && ! $user->email_verified_at) || ! is_string($workspaceId)) {
             DomainError::fail('UNAUTHENTICATED', '請先登入');
         }
         // 此處只驗當次資格，不透過相容RecordStore附帶讀取歷史／全部欄位。
@@ -127,6 +128,7 @@ class AccountService
             'name' => $name,
             'email' => $email,
             'password' => Hash::make($password),
+            'email_verification_required' => true,
         ]);
         $tenant = $store->forWorkspace($workspace['id']);
         $tenant->put('members', $user->id, [
@@ -144,6 +146,8 @@ class AccountService
                 }
             }
         }
+
+        $this->verification->begin($user, $workspace['id']);
 
         return new AuthenticatedAccountData($user, $workspace['id']);
     }

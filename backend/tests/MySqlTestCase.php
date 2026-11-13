@@ -4,10 +4,13 @@ namespace Tests;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Tests\Concerns\RegistersVerifiedFixtures;
 
 /** 只接受獨立Compose測試帳號，預設測試仍由TestCase強制memory SQLite。 */
 abstract class MySqlTestCase extends BaseTestCase
 {
+    use RegistersVerifiedFixtures;
+
     protected string $testDatabase = 'tasktracker_test';
 
     /**

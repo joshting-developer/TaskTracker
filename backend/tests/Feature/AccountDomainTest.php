@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Services\AccountService;
+use App\Services\EmailVerificationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,7 @@ class AccountDomainTest extends TestCase
         $created = DB::transaction(fn () => $accounts->register($input));
         $this->assertFalse(Auth::check());
         $this->assertSame($input['email'], $created->user->email);
+        app(EmailVerificationService::class)->verify($created->user->id, 'local666', '');
         $login = DB::transaction(fn () => $accounts->login($input));
         $this->assertFalse(Auth::check());
         $this->assertSame($created->workspaceId, $login->workspaceId);

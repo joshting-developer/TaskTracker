@@ -16,7 +16,7 @@ try {
     return page.evaluate(async ({ operation, input, group }) => {
       const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();
       const data = await (await fetch(`/api/${group}/${operation}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken }, body: JSON.stringify({ requestId: crypto.randomUUID(), ...input }) })).json();
-      if (!data.ok) throw new Error(data.error.message); return data.data;
+      if (!data.ok) throw new Error(data.error.message); if (data.data?.verificationRequired) { const csrf = await (await fetch('/api/csrf-cookie')).json(); const verified = await fetch('/api/auth/verify-email', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.csrfToken }, body: JSON.stringify({ code: 'local666' }) }); if (!verified.ok) throw new Error('Fixture email verification failed'); data.data = (await verified.json()).data; } return data.data;
     }, { operation, input, group });
   }
   const identity = await call('register', { name: 'Board query', email: `query-${crypto.randomUUID()}@example.test`, password: 'isolation-test-password', workspaceName: 'Board query' }, 'auth');

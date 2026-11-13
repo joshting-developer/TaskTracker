@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Models\EmailVerification;
 use App\Models\MailDelivery;
 use App\Models\User;
 use App\Models\WorkspaceMember;
@@ -104,6 +105,16 @@ class MailDeliveryRepository
     public function updateStaleSending(array $ids, DateTimeInterface $cutoff, array $attributes): int
     {
         return $ids ? MailDelivery::whereIn('id', $ids)->where('status', 'sending')->where('started_at', '<=', $cutoff)->update($attributes) : 0;
+    }
+
+    /** 只檢查指定帳號及當次驗證的寄送資格
+     * @param  string  $userId  已鎖帳號
+     * @param  string  $id  當次驗證ID
+     * @return bool 是否仍有效
+     */
+    public function verificationValid(string $userId, string $id): bool
+    {
+        return EmailVerification::whereKey($id)->where('user_id', $userId)->whereNull('consumed_at')->where('expires_at', '>', now())->where('attempts', '<', 5)->exists();
     }
 
     /** 排程只取到期pending, 不解密內容或讀全表到PHP

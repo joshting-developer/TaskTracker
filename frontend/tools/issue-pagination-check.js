@@ -1,3 +1,4 @@
+import { fixtureResponse } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createServer } from 'vite';
@@ -13,7 +14,7 @@ try {
   async function call(operation, input) {
     const csrf = await (await context.request.get(`${base}/api/csrf-cookie`)).json();
     const response = await context.request.post(`${base}/api/${operation === 'register' ? 'auth' : 'rpc'}/${operation}`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, data: { requestId: crypto.randomUUID(), ...input } });
-    assert.equal(response.status(), 200); return (await response.json()).data;
+    assert.equal(response.status(), 200); return (await fixtureResponse(context.request, response)).data;
   }
   await call('register', { name: '分頁驗證', email: `pages-${crypto.randomUUID()}@example.test`, password: 'isolated-pagination-password', workspaceName: '分頁測試' });
   const project = await call('createProject', { name: '分頁專案', code: 'PAGE' });

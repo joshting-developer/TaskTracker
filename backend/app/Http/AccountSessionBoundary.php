@@ -7,6 +7,7 @@ use App\Database\WriteLocks;
 use App\Domain\DomainError;
 use App\Http\Session\SessionLeaseGuard;
 use App\Services\AccountService;
+use App\Services\EmailVerificationService;
 use App\Services\WorkspaceMemberships;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,8 +26,9 @@ class AccountSessionBoundary
      * @param  WorkspaceSession  $session  由Laravel Session重驗可信資格
      * @param  WriteLocks  $locks  驗證流程的帳號鎖
      * @param  SessionLeaseGuard  $lease  Session租期檢查
+     * @param  EmailVerificationService  $verification  信箱驗證
      */
-    public function __construct(private AccountService $accounts, private WorkspaceMemberships $memberships, private WorkspaceSession $session, private WriteLocks $locks, private SessionLeaseGuard $lease) {}
+    public function __construct(private AccountService $accounts, private WorkspaceMemberships $memberships, private WorkspaceSession $session, private WriteLocks $locks, private SessionLeaseGuard $lease, private EmailVerificationService $verification) {}
 
     /**
      * 執行帳號／Session操作，回傳目前身分；登出回傳null。
@@ -69,7 +71,7 @@ class AccountSessionBoundary
             }
 
             return match ($operation) {
-                'current' => [...$this->session->context($request), 'features' => $this->features()],
+                'current' => $request->session()->has('pending_user_id') ? $this->verification->status($request->session()->get('pending_user_id')) : [...$this->session->context($request), 'features' => $this->features()],
                 'register' => $this->establishSession($request, $this->accounts->register($input)),
                 'login' => $this->establishSession($request, $this->accounts->login($input)),
                 default => DomainError::fail('NOT_FOUND', '找不到這個操作'),
@@ -98,6 +100,15 @@ class AccountSessionBoundary
      */
     private function establishSession(Request $request, AuthenticatedAccountData $account): array
     {
+        if ($account->user->email_verification_required && ! $account->user->email_verified_at) {
+            Auth::logout();
+            $request->session()->regenerate();
+            $request->session()->forget('workspace_id');
+            $request->session()->put('pending_user_id', $account->user->id);
+
+            return $this->verification->status($account->user->id);
+        }
+        $request->session()->forget('pending_user_id');
         Auth::login($account->user);
         $request->session()->regenerate();
         $request->session()->put('workspace_id', $account->workspaceId);

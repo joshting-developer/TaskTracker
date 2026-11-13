@@ -44,7 +44,7 @@ class MailDeliveryService
                 return $existing;
             }
             $row = $this->deliveries->create(['id' => (string) Str::uuid(), 'user_id' => $user->id, 'event_key' => $key, 'kind' => $data->kind,
-                'recipient' => $user->email, 'payload' => ['subject' => $data->subject, 'body' => $data->body], 'status' => 'pending', 'next_attempt_at' => now(), 'expires_at' => $data->expiresAt]);
+                'verification_id' => $data->verificationId, 'recipient' => $user->email, 'payload' => ['subject' => $data->subject, 'body' => $data->body], 'status' => 'pending', 'next_attempt_at' => now(), 'expires_at' => $data->expiresAt]);
             DB::afterCommit(fn () => $this->dispatch($row->id));
 
             return $row;
@@ -124,6 +124,9 @@ class MailDeliveryService
             $this->connection->connect();
         } catch (\Throwable) {
             $this->locked($id, function ($current) {
+                if ($current->status !== 'sending') {
+                    return;
+                }
                 $last = $current->attempts >= config('delivery.tries');
                 $delay = config('delivery.backoff')[min($current->attempts - 1, 1)];
                 $this->deliveries->update($current, ['status' => $last ? 'failed' : 'pending', 'error_code' => 'SMTP_CONNECTION_FAILED', 'started_at' => null, 'next_attempt_at' => now()->addSeconds($delay), ...($last ? ['payload' => null] : [])]);
@@ -178,7 +181,7 @@ class MailDeliveryService
     private function eligible(MailDelivery $row, ?User $user): bool
     {
         return $user && $row->payload !== null && $row->expires_at->isFuture() && $user->email === $row->recipient && $this->deliveries->hasMembership($user->id)
-            && ($row->kind !== 'verification' || $user->email_verified_at === null);
+            && ($row->kind !== 'verification' || ($user->email_verified_at === null && (! $row->verification_id || $this->deliveries->verificationValid($user->id, $row->verification_id))));
     }
 
     /** 固定User→MailDelivery鎖序, 只處理一筆事件且不在交易內連外

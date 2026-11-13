@@ -1,3 +1,4 @@
+import { fixtureResponse } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { request } from 'playwright';
 if (!process.env.E2E_API_URL || process.env.E2E_ISOLATED !== '1') throw new Error('Explicit isolated E2E_API_URL and E2E_ISOLATED=1 required');
@@ -8,7 +9,7 @@ const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR
 async function call(client, path, data) {
   const csrf = await (await client.get('/api/csrf-cookie')).json();
   const response = await client.post(path, { data: { requestId: crypto.randomUUID(), ...data }, headers: { 'X-CSRF-TOKEN': csrf.csrfToken } });
-  const result = await response.json(); assert.equal(response.status(), 200, JSON.stringify(result)); return result.data;
+  const result = await fixtureResponse(client, response); assert.equal(response.status(), 200, JSON.stringify(result)); return result.data;
 }
 try {
   const identity = await call(owner, '/api/auth/register', { name: 'Attachment HTTP', email: `attachment-${crypto.randomUUID()}@example.test`, password: 'isolated-attachment-test', workspaceName: 'Private images' });
@@ -19,7 +20,7 @@ try {
   const id = crypto.randomUUID();
   const upload = () => owner.post(root, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken, 'X-Workspace-ID': identity.workspace.id }, multipart: { requestId: id, file: { name: 'screen.png', mimeType: 'text/html', buffer: png } } });
   const response = await upload(); assert.equal(response.status(), 200, await response.text());
-  const attachment = (await response.json()).data;
+  const attachment = (await fixtureResponse(client, response)).data;
   assert.equal(attachment.mime, 'image/png', 'Server sniffs bytes, never trusts browser MIME');
   assert.equal((await (await upload()).json()).data.id, attachment.id);
   for (const key of ['storage_disk', 'storage_key', 'checksum']) assert.equal(key in attachment, false);
@@ -32,7 +33,7 @@ try {
   const max = 10 * 1024 * 1024;
   const boundary = await owner.post(root, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, multipart: { requestId: crypto.randomUUID(), file: { name: 'boundary.png', mimeType: 'image/png', buffer: Buffer.concat([png, Buffer.alloc(max - png.length)]) } } });
   assert.equal(boundary.status(), 200, await boundary.text());
-  const boundaryData = (await boundary.json()).data; assert.equal(boundaryData.bytes, max);
+  const boundaryData = (await fixtureResponse(owner, boundary)).data; assert.equal(boundaryData.bytes, max);
   const tooLarge = await owner.post(root, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, multipart: { requestId: crypto.randomUUID(), file: { name: 'too-large.png', mimeType: 'image/png', buffer: Buffer.concat([png, Buffer.alloc(max + 1 - png.length)]) } } });
   assert.equal(tooLarge.status(), 400, await tooLarge.text());
   const bound = await call(owner, `${root}/${attachment.id}/bind`, { expectedRevision: 1, issueId: issue.id, issueRevision: 1 });

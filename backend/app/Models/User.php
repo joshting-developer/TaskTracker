@@ -14,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
 /**
  * 登入帳號；工作區資格與角色另由WorkspaceMember保存。
  */
-#[Fillable(['id', 'name', 'email', 'password'])]
+#[Fillable(['id', 'name', 'email', 'password', 'email_verification_required'])]
 #[Hidden(['password', 'remember_token', 'legacy_salt', 'legacy_hash'])]
 class User extends Authenticatable
 {
@@ -54,6 +54,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'email_verification_required' => 'boolean',
             'password' => 'hashed',
         ];
     }

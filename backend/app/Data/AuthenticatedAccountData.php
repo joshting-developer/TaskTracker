@@ -4,7 +4,7 @@ namespace App\Data;
 
 use App\Models\User;
 
-/** 帳號服務的內部結果，HTTP層負責Session，不直接序列化Model。 */
+/** 帳號服務的內部結果, 通過帳密或註冊欄位檢查不等於Email已驗證；HTTP層另驗資格才建立Session, 不直接序列化Model。 */
 final readonly class AuthenticatedAccountData
 {
     /**

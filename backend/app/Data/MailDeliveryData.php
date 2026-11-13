@@ -15,6 +15,7 @@ final readonly class MailDeliveryData
      * @param  string  $subject  固定範本標題
      * @param  string  $body  純文字範本內容, 入庫前加密
      * @param  DateTimeInterface  $expiresAt  寄送截止時間
+     * @param  ?string  $verificationId  當次驗證ID
      */
-    public function __construct(public string $userId, public string $eventKey, public string $kind, public string $subject, public string $body, public DateTimeInterface $expiresAt) {}
+    public function __construct(public string $userId, public string $eventKey, public string $kind, public string $subject, public string $body, public DateTimeInterface $expiresAt, public ?string $verificationId = null) {}
 }

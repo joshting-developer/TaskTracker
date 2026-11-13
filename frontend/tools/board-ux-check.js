@@ -14,7 +14,7 @@ async function call(page, operation, input = {}, group = 'rpc') {
   return page.evaluate(async ({ operation, input, group }) => {
     const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();
     const response = await fetch(`/api/${group}/${operation}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken }, body: JSON.stringify(input) });
-    const result = await response.json(); if (!result.ok) throw new Error(result.error?.message); return result.data;
+    const result = await response.json(); if (!result.ok) throw new Error(result.error?.message); if (result.data?.verificationRequired) { const csrf = await (await fetch('/api/csrf-cookie')).json(); const verified = await fetch('/api/auth/verify-email', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.csrfToken }, body: JSON.stringify({ code: 'local666' }) }); if (!verified.ok) throw new Error('Fixture email verification failed'); result.data = (await verified.json()).data; } return result.data;
   }, { operation, input, group });
 }
 try {

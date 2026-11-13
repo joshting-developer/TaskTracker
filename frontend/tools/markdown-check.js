@@ -18,7 +18,7 @@ try {
   page.on('pageerror', error => failures.push(error.message));
   page.on('request', request => { if (request.url().includes('markdown-test.invalid')) unwantedRequests.push(request.url()); });
   await page.goto(`${baseURL}/login`);
-  await page.evaluate(async () => (await import('/src/api/index.js')).api.register({ name: 'Markdown檢查', email: `markdown-${crypto.randomUUID()}@example.test`, password: 'markdown-test-password', workspaceName: '內容編輯驗證' }));
+  await page.evaluate(async () => (await import('/tools/fixtures/verified-api.js')).api.register({ name: 'Markdown檢查', email: `markdown-${crypto.randomUUID()}@example.test`, password: 'markdown-test-password', workspaceName: '內容編輯驗證' }));
   await page.reload();
   const home = page.getByRole('region', { name: '首頁小待辦', exact: true });
   const quick = home.getByRole('group', { name: '快速新增待辦編輯器', exact: true });
@@ -51,7 +51,7 @@ try {
   await row.waitFor(); await row.locator('.todo-content > summary').click();
   await row.locator('.todo-note input[type="checkbox"]:disabled').first().waitFor({state:'attached'});
   assert.equal(await row.locator('.todo-note input[type="checkbox"]:disabled').count(), 2);
-  const stored = await page.evaluate(async () => (await (await import('/src/api/index.js')).api.getTodos()).todos[0]);
+  const stored = await page.evaluate(async () => (await (await import('/tools/fixtures/verified-api.js')).api.getTodos()).todos[0]);
   assert.equal(stored.content, source);
   row = home.locator(`[data-todo-id="${stored.id}"]`);
   await row.getByLabel('待辦操作').click(); await row.getByRole('button', { name: '編輯', exact: true }).click();
@@ -75,7 +75,7 @@ try {
     await input.fill('');
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
-  const project = await page.evaluate(async () => (await import('/src/api/index.js')).api.createProject({ name: 'Markdown卡片', code: 'MARK', requestId: crypto.randomUUID() }));
+  const project = await page.evaluate(async () => (await import('/tools/fixtures/verified-api.js')).api.createProject({ name: 'Markdown卡片', code: 'MARK', requestId: crypto.randomUUID() }));
   await page.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
   await row.getByLabel('待辦操作').click(); await row.getByRole('button', { name: '轉成正式卡片', exact: true }).click();
   const panel = page.getByRole('dialog', { name: '轉成正式卡片', exact: true });
@@ -83,7 +83,7 @@ try {
   await panel.getByLabel('專案', { exact: true }).selectOption(project.id);
   await panel.getByRole('button', { name: '建立卡片並完成轉換', exact: true }).click();
   await panel.waitFor({ state: 'hidden' });
-  const issue = await page.evaluate(async () => (await (await import('/src/api/index.js')).api.getWorkspace()).issues[0]);
+  const issue = await page.evaluate(async () => (await (await import('/tools/fixtures/verified-api.js')).api.getWorkspace()).issues[0]);
   assert.equal(issue.description, source);
   await page.goto(`${baseURL}/app/#/projects/${project.id}/issues/${issue.id}?detail=1`);
   const detail = page.getByRole('region', { name: '任務完整頁', exact: true });

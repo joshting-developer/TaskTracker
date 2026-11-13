@@ -1,3 +1,4 @@
+import { fixtureResponse } from '../fixtures/verification.js';
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -11,10 +12,10 @@ const require = createRequire(import.meta.url);
 const playwrightVersion = require('playwright/package.json').version;
 const fixedTime = new Date('2026-11-13T12:00:00+08:00');
 const password = 'synthetic-visual-test-only';
-async function call(request, operation, input = {}, group = 'rpc') {
+async function call(request, operation, input = {}, group = 'rpc', verifiedFixture = true) {
   const csrf = await (await request.get('/api/csrf-cookie')).json();
   const response = await request.post(`/api/${group}/${operation}`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken, Origin: 'http://127.0.0.1:5175' }, data: { requestId: crypto.randomUUID(), ...input } });
-  const result = await response.json();
+  const result = verifiedFixture ? await fixtureResponse(request, response) : await response.json();
   expect(result.ok, `${operation}: ${JSON.stringify(result.error || '')}`).toBe(true);
   return result.data;
 }
@@ -78,6 +79,15 @@ test('representative workspace flows', async ({ page, browser }) => {
   await page.getByRole('button', { name: '登入', exact: true }).click();
   expect(await page.getByLabel('Email', { exact: true }).evaluate(element => element.validity.valid)).toBe(false);
   await shot(page, '02-validation');
+  await call(page.request, 'register', { name: '驗證畫面測試', email: `visual-pending-${test.info().project.name}@example.test`, password, workspaceName: '驗證畫面' }, 'auth', false);
+  await page.reload();
+  await page.getByRole('heading', { name: '驗證信箱', exact: true }).waitFor();
+  await shot(page, '17-verification');
+  await call(page.request, 'logout', {}, 'auth');
+  await page.goto('/login#/activate/' + 'a'.repeat(64));
+  await page.getByRole('button', { name: '啟用帳號', exact: true }).waitFor();
+  await shot(page, '18-activation');
+  await page.goto('/login');
   const data = await fixture(page, browser);
   await page.reload();
   await page.getByRole('heading', { name: '小待辦', exact: true }).waitFor();

@@ -23,7 +23,7 @@ try {
         if (!result.ok) throw new Error(result.error.message);
         return { data: result.data };
       }, { operation, input, group });
-      if (!result.throttled) return result.data;
+      if (!result.throttled) if (result.data?.verificationRequired) { const csrf = await (await fetch('/api/csrf-cookie')).json(); const verified = await fetch('/api/auth/verify-email', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.csrfToken }, body: JSON.stringify({ code: 'local666' }) }); if (!verified.ok) throw new Error('Fixture email verification failed'); result.data = (await verified.json()).data; } return result.data;
       console.log('Fixture auth throttle: wait', result.retry);
       await target.waitForTimeout(Math.min(59000, result.retry * 1000 + 100));
     }

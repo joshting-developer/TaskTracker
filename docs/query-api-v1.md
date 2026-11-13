@@ -142,3 +142,7 @@ Issue詳細新增activityCounts.comments／history／time, 為SQL總數, 不附�
 ## TT-302 單卡建卡者與最後異動
 
 Issue詳細新增createdBy／createdByName／lastChange（actor、at）, 最後異動在SQL只取一筆的actor和at, 不讀改了什麼。網頁詳細頁右側屬性直接顯示「建立」「最後異動」；異動紀錄詳細頁和快速編輯都改成新的在上, 下方「載入更多」接更舊的
+
+## 註冊驗證的Session邊界
+
+TT-319起新註冊先回pending驗證資料, 不建立工作區登入資格。既有帳號不用補驗證, Email仍不可重複註冊。Session機器契約見[auth-session-openapi.json](../backend/resources/auth-session-openapi.json), 行為見[信箱驗證](email-verification.md)；PAT業務API不使用這些端點

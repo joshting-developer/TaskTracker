@@ -4,6 +4,7 @@ use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BoardController;
+use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\IssueController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
@@ -39,6 +40,9 @@ Route::get('/api/health', [SystemController::class, 'health'])->name('system.hea
 Route::get('/api/csrf-cookie', [SystemController::class, 'csrf'])->name('system.csrf');
 Route::post('/api/realtime/config', [RealtimeController::class, 'config'])->name('realtime.config');
 Route::post('/api/realtime/authorize', [RealtimeController::class, 'authorizeChannel'])->name('realtime.authorize')->middleware('throttle:120,1');
+
+Route::post('/api/auth/verify-email', [EmailVerificationController::class, 'verify'])->name('auth.verify-email')->middleware('throttle:10,1');
+Route::post('/api/auth/resend-verification', [EmailVerificationController::class, 'resend'])->name('auth.resend-verification')->middleware('throttle:5,1');
 
 Route::post('/api/auth/register', [AuthController::class, 'register'])->name('auth.register')->middleware('throttle:20,1');
 Route::post('/api/auth/login', [AuthController::class, 'login'])->name('auth.login')->middleware('throttle:20,1');

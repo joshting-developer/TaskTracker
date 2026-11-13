@@ -16,8 +16,9 @@ async function session(credentials) {
     csrf = response.headers()['x-csrf-token'] || csrf;
     return { status: response.status(), body: await response.json() };
   }
-  const login = await post(credentials.register ? '/api/auth/register' : '/api/auth/login', credentials.register || credentials);
+  let login = await post(credentials.register ? '/api/auth/register' : '/api/auth/login', credentials.register || credentials);
   assert.equal(login.status, 200, `登入失敗：${JSON.stringify(login.body)}`);
+  if (login.body.data.verificationRequired) login = await post('/api/auth/verify-email', { code: 'local666' });
   const workspace = login.body.data.workspace.id;
   return { api, post, rpc: (op, input) => post(`/api/rpc/${op}`, input), get: path => api.get(path, { headers: { 'X-Workspace-ID': workspace } }), identity: login.body.data };
 }

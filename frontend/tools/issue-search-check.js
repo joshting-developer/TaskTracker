@@ -1,3 +1,4 @@
+import { fixtureResponse } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
@@ -7,7 +8,7 @@ try{
   vite=await createServer({root:new URL('../',import.meta.url).pathname,server:{host:'127.0.0.1',port,strictPort:true,proxy:{'/api':process.env.E2E_API_URL}}});await vite.listen();
   browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH}:{})});
   const context=await browser.newContext(),page=await context.newPage();page.setDefaultTimeout(15000);
-  async function call(operation,input){const csrf=await(await context.request.get(`${base}/api/csrf-cookie`)).json();const res=await context.request.post(`${base}/api/${operation==='register'?'auth':'rpc'}/${operation}`,{headers:{'X-CSRF-TOKEN':csrf.csrfToken},data:{requestId:crypto.randomUUID(),...input}});assert.equal(res.status(),200);return(await res.json()).data;}
+  async function call(operation,input){const csrf=await(await context.request.get(`${base}/api/csrf-cookie`)).json();const res=await context.request.post(`${base}/api/${operation==='register'?'auth':'rpc'}/${operation}`,{headers:{'X-CSRF-TOKEN':csrf.csrfToken},data:{requestId:crypto.randomUUID(),...input}});assert.equal(res.status(),200);return(await fixtureResponse(context.request, res)).data;}
   await call('register',{name:'搜尋測試',email:`search-${crypto.randomUUID()}@example.test`,password:'isolated-search-password',workspaceName:'搜尋驗證'});const project=await call('createProject',{name:'搜尋專案',code:'FIND'});
   await call('createIssue',{projectId:project.id,title:'會員 API 100%_!',description:'中文字中 MixedCase'});await call('createIssue',{projectId:project.id,title:'文件提到 FIND-1'});await call('createIssue',{projectId:project.id,title:'其他內容'});
   await page.goto(`${base}/app/#/projects/${project.id}`);const input=page.getByLabel('搜尋任務',{exact:true});

@@ -1,0 +1,472 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TaskTracker Session Authentication",
+    "version": "1.0.0",
+    "description": "Session and CSRF only; not the PAT API. Legacy accounts keep their existing eligibility. New registration requires verification. Activation GET only renders the page, with token in URL fragment."
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "Create a new account, always pending verification",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 128
+                  },
+                  "workspaceName": {
+                    "type": "string"
+                  },
+                  "inviteToken": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session result, no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/PendingVerification"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, expired, consumed credential, attempt limit or cooldown"
+          },
+          "401": {
+            "description": "Pending/authenticated session required"
+          },
+          "409": {
+            "description": "Email already registered"
+          },
+          "419": {
+            "description": "CSRF expired or missing"
+          },
+          "429": {
+            "description": "Rate limit, honor Retry-After"
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          }
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Authenticate credentials; new unverified accounts return pending state",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "inviteToken": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session result, no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "oneOf": [
+                        {
+                          "$ref": "#/components/schemas/SessionIdentity"
+                        },
+                        {
+                          "$ref": "#/components/schemas/PendingVerification"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, expired, consumed credential, attempt limit or cooldown"
+          },
+          "401": {
+            "description": "Pending/authenticated session required"
+          },
+          "409": {
+            "description": "Email already registered"
+          },
+          "419": {
+            "description": "CSRF expired or missing"
+          },
+          "429": {
+            "description": "Rate limit, honor Retry-After"
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          }
+        ]
+      }
+    },
+    "/api/auth/current": {
+      "post": {
+        "summary": "Read authenticated identity or resume pending verification",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session result, no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "oneOf": [
+                        {
+                          "$ref": "#/components/schemas/SessionIdentity"
+                        },
+                        {
+                          "$ref": "#/components/schemas/PendingVerification"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, expired, consumed credential, attempt limit or cooldown"
+          },
+          "401": {
+            "description": "Pending/authenticated session required"
+          },
+          "409": {
+            "description": "Email already registered"
+          },
+          "419": {
+            "description": "CSRF expired or missing"
+          },
+          "429": {
+            "description": "Rate limit, honor Retry-After"
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          }
+        ]
+      }
+    },
+    "/api/auth/verify-email": {
+      "post": {
+        "summary": "Consume a code or activation token by explicit POST",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string",
+                        "maxLength": 20
+                      }
+                    },
+                    "required": [
+                      "code"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "token": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "token"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session result, no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SessionIdentity"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, expired, consumed credential, attempt limit or cooldown"
+          },
+          "401": {
+            "description": "Pending/authenticated session required"
+          },
+          "409": {
+            "description": "Email already registered"
+          },
+          "419": {
+            "description": "CSRF expired or missing"
+          },
+          "429": {
+            "description": "Rate limit, honor Retry-After"
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          }
+        ]
+      }
+    },
+    "/api/auth/resend-verification": {
+      "post": {
+        "summary": "Replace current challenge; optionally change the pending email",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 254
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session result, no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/PendingVerification"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, expired, consumed credential, attempt limit or cooldown"
+          },
+          "401": {
+            "description": "Pending/authenticated session required"
+          },
+          "409": {
+            "description": "Email already registered"
+          },
+          "419": {
+            "description": "CSRF expired or missing"
+          },
+          "429": {
+            "description": "Rate limit, honor Retry-After"
+          }
+        },
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "tasktracker_session"
+      },
+      "csrf": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-TOKEN"
+      }
+    },
+    "schemas": {
+      "PendingVerification": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "verificationRequired",
+          "email",
+          "expiresAt",
+          "resendAt",
+          "resendAfterSeconds"
+        ],
+        "properties": {
+          "verificationRequired": {
+            "const": true
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resendAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resendAfterSeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 60
+          }
+        }
+      },
+      "SessionIdentity": {
+        "type": "object",
+        "required": [
+          "user",
+          "workspace",
+          "role",
+          "permissions"
+        ],
+        "properties": {
+          "user": {
+            "type": "object"
+          },
+          "workspace": {
+            "type": "object"
+          },
+          "role": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

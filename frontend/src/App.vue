@@ -34,7 +34,7 @@ const WorkspaceInvitation = lazyFeature(() => import('./components/WorkspaceInvi
 
 const leaveGuards = provideLeaveGuards();
 const workspace = shallowRef({ projects: [], members: [], meta: {} });
-const authenticated = shallowRef(false);
+const authenticated = shallowRef(false), pendingVerification = shallowRef(null), authPageKey = shallowRef('');
 const todoTool = useTemplateRef('todoTool'), convertingTodo = shallowRef(null), todoNotificationsOpen = shallowRef(false);
 const todoUnread = computed(() => personalSync.unread.value);
 const switchingWorkspace = shallowRef(false), workspaceInviteToken = shallowRef('');
@@ -117,7 +117,10 @@ async function refreshWorkspace() {
   error.value = '';
   try {
     // 所有頁面都只取身分＋目前Project；整包getWorkspace已退役，見docs/workspace-payload-retirement-2026-11-12.md。
+    if (/^#\/activate\/[a-f0-9]{64}$/.test(location.hash)) { authenticated.value = false; return; }
     const identity = await api.current();
+    if (identity.verificationRequired) { pendingVerification.value = identity; authenticated.value = false; return; }
+    pendingVerification.value = null;
     if (generation !== refreshGeneration) return;
     notificationPreviewEnabled.value = identity.features?.notificationPreview === true;
     const previousWorkspace=workspace.value.meta.workspace?.id;
@@ -306,6 +309,8 @@ function openIssue(issue, fullPage = detailPage.value, approved = false) {
   if (fullPage) nextTick(() => window.scrollTo(0, 0));
 }
 function readHash(skipGuard = false) {
+  authPageKey.value = /^#\/activate\/[a-f0-9]{64}$/.test(location.hash) ? location.hash : '';
+  if (authPageKey.value) { pendingVerification.value = null; authenticated.value = false; return; }
   const next = parseHash(location.hash);
   if (next.malformed) history.replaceState(null, '', '#/');
   const { project: nextProject, issue: nextIssue, board: nextBoard, mode: nextMode, section: nextSection, detail: nextDetail, landing: nextLanding, teamTab: nextTeamTab, analysis: nextAnalysis, invite: nextInvite, retiredEpics, retiredView } = next;
@@ -395,7 +400,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
 
 <template>
   <v-app>
-  <AuthGate v-if="!authenticated && !loading && !error" @authenticated="authenticatedSession" />
+  <AuthGate :key="authPageKey" v-if="!authenticated && !loading && !error" :pending="pendingVerification" @authenticated="authenticatedSession" />
   <div v-else-if="!authenticated" class="empty-state"><span class="loader"></span><h2>正在連線工作空間</h2><p v-if="error" role="alert">{{ error }}</p><button v-if="error" class="button secondary" @click="refresh({ join: true })">重試</button></div>
   <div v-else class="app-shell">
     <button v-if="sidebarOpen" class="sidebar-scrim" aria-label="收起導覽" @click="sidebarOpen = false"></button>

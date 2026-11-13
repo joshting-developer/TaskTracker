@@ -1,3 +1,4 @@
+import { fixtureResponse } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
@@ -15,7 +16,7 @@ try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } }), page = await context.newPage(), errors = [];
   page.setDefaultTimeout(15000);
   page.on('pageerror', e => errors.push(e.message));
-  async function call(operation, input, client = context) { const csrf = await (await client.request.get(`${base}/api/csrf-cookie`)).json(); const res = await client.request.post(`${base}/api/${operation === 'register' ? 'auth' : 'rpc'}/${operation}`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, data: { requestId: crypto.randomUUID(), ...input } }); assert.equal(res.status(), 200, await res.text()); return (await res.json()).data; }
+  async function call(operation, input, client = context) { const csrf = await (await client.request.get(`${base}/api/csrf-cookie`)).json(); const res = await client.request.post(`${base}/api/${operation === 'register' ? 'auth' : 'rpc'}/${operation}`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, data: { requestId: crypto.randomUUID(), ...input } }); assert.equal(res.status(), 200, await res.text()); return (await fixtureResponse(client.request, res)).data; }
   const identity = await call('register', { name: '編輯測試', email: `inline-${crypto.randomUUID()}@example.test`, password: 'isolated-inline-password', workspaceName: '完整頁編輯' });
   const project = await call('createProject', { name: '會員系統', code: 'EDIT' }), epic = await call('createIssue', { projectId: project.id, title: '會員功能', type: 'epic' }), created = await call('createIssue', { projectId: project.id, title: '原本的標題', description: '原本的描述' }), url = `${base}/app/#/projects/${project.id}/issues/${created.id}?detail=1`;
   await page.goto(url);
