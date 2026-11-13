@@ -114,7 +114,7 @@ class BackendArchitectureTest extends TestCase
         }
         $first = $global->forWorkspace('first-fixture');
         $second = $global->forWorkspace('second-fixture');
-        $payload = ['id' => 'same', 'projectId' => 'project', 'identifier' => 'FIXTURE-1', ...Fields::issue(['title' => '中文'], ['statuses' => Fields::STATES]), 'revision' => 1, 'comments' => [], 'history' => [], 'nullable' => null, 'list' => [], 'flag' => false, 'minutes' => 30, 'fraction' => 1.5];
+        $payload = ['id' => 'same', 'projectId' => 'project', 'identifier' => 'FIXTURE-1', ...Fields::issue(['title' => '中文'], ['statuses' => Fields::STATES]), 'revision' => 1, 'comments' => [], 'history' => [], 'createdBy' => '', 'nullable' => null, 'list' => [], 'flag' => false, 'minutes' => 30, 'fraction' => 1.5];
         $first->put('issues', 'same', $payload);
         $first->put('issues', 'next', [...$payload, 'id' => 'next', 'identifier' => 'FIXTURE-2']);
         $second->put('issues', 'same', [...$payload, 'title' => '另一空間']);

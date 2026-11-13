@@ -64,6 +64,8 @@ class IssueService
             'projectId' => $project['id'],
             'identifier' => $project['code'].'-'.$project['nextNumber'],
             ...$fields,
+            // TT-314：記下建卡的人, 之後狀態調整要通知他。
+            'createdBy' => $this->store->get('members', $this->workspaceSession['user']['id']) ? $this->workspaceSession['user']['id'] : '',
             'revision' => 1,
             'createdAt' => $this->now(),
             'updatedAt' => $this->now(),
@@ -86,7 +88,7 @@ class IssueService
         if (! empty($input['boardId']) && $input['boardId'] !== 'default') {
             ($this->boards)()->includeCreatedIssue(Fields::text($input['boardId'], '看板', 100, true), $issue);
         }
-        $this->notify($issue, '指派任務', $this->workspaceSession['user']['name'].' 將任務指派給你', $issue['assignee']);
+        $this->notify($issue, '指派任務', $this->workspaceSession['user']['name'].' 將任務指派給你', $issue['assignee'], 'assigned');
 
         return $issue;
     }
@@ -297,12 +299,15 @@ class IssueService
             $this->syncChildrenEpic($issue);
         }
         if ($issue['assignee'] !== $current['assignee']) {
-            $this->notify($issue, '指派任務', $this->workspaceSession['user']['name'].' 將任務指派給你', $issue['assignee']);
+            $this->notify($issue, '指派任務', $this->workspaceSession['user']['name'].' 將任務指派給你', $issue['assignee'], 'assigned');
+        }
+        if ($issue['state'] !== $current['state']) {
+            $this->notifyStateChange($project, $current['state'], $issue);
         }
         if ($issue['epicId']) {
             $parent = $this->store->require('issues', $issue['epicId']);
             if (Fields::isClosed($parent) && ! Fields::isClosed($issue)) {
-                $this->notify($parent, 'Epic 需要重新確認', $this->workspaceSession['user']['name'].' 更新了未結案子任務 '.$issue['identifier'], $parent['assignee']);
+                $this->notify($parent, 'Epic 需要重新確認', $this->workspaceSession['user']['name'].' 更新了未結案子任務 '.$issue['identifier'], $parent['assignee'], 'epic');
             }
         }
 
@@ -343,9 +348,10 @@ class IssueService
      * @param  string  $subject  通知主旨
      * @param  string  $body  通知說明內容
      * @param  string  $recipientId  通知收件者識別碼
+     * @param  string  $kind  通知類型（assigned／comment／status／status_important／epic）, 讓列表與API能分類標示
      * @return void
      */
-    private function notify(array $issue, string $subject, string $body, string $recipientId): void
+    private function notify(array $issue, string $subject, string $body, string $recipientId, string $kind = 'general'): void
     {
         $member = $recipientId ? $this->store->get('members', $recipientId) : null;
         if (! $member || $recipientId === $this->workspaceSession['user']['id'] || ! $this->access->forUser($recipientId)->can($issue['projectId'], 'issue.read')) {
@@ -360,9 +366,31 @@ class IssueService
             'subject' => '['.$issue['identifier'].'] '.$subject,
             'body' => $body."\n".$issue['title'],
             'status' => 'preview',
+            'kind' => $kind,
             'createdAt' => $this->now(),
         ];
         $this->store->put('notifications', $notification['id'], $notification);
+    }
+
+    /**
+     * TT-314：狀態改變時通知負責人與建卡的人（同一人只發一則, 改狀態的人自己不收）。
+     * 改成已關閉、待驗收時主旨直接寫出狀態並標成重要類型, 讓列表能特別標示。
+     *
+     * @param  array  $project  任務所屬專案（取狀態名稱）
+     * @param  string  $from  原本的狀態ID
+     * @param  array  $issue  更新後的任務
+     * @return void
+     */
+    private function notifyStateChange(array $project, string $from, array $issue): void
+    {
+        $labels = array_column($project['statuses'] ?? Fields::STATES, 'label', 'id');
+        $to = $issue['state'];
+        $important = in_array($to, ['closed', 'review'], true);
+        $subject = $important ? ($labels[$to] ?? $to) : '狀態調整';
+        $body = $this->workspaceSession['user']['name'].' 將狀態從 '.($labels[$from] ?? $from).' 改成 '.($labels[$to] ?? $to);
+        foreach (array_unique(array_filter([$issue['assignee'] ?? '', $issue['createdBy'] ?? ''])) as $recipient) {
+            $this->notify($issue, $subject, $body, $recipient, $important ? 'status_important' : 'status');
+        }
     }
 
     /**
@@ -388,7 +416,7 @@ class IssueService
             'comments' => [...$current['comments'], $comment],
         ];
         $this->store->put('issues', $issue['id'], $issue);
-        $this->notify($issue, '新留言', $comment['author'].'：'.$comment['content'], $issue['assignee']);
+        $this->notify($issue, '新留言', $comment['author'].'：'.$comment['content'], $issue['assignee'], 'comment');
 
         return $issue;
     }

@@ -123,6 +123,9 @@
 .preview-pill { font-size: 13px; }
 .settings-explanation p { font-size: 14px; }
 .notification-card .type-tag { font-size: 12px; }
+.notification-card.important { border-left: 4px solid var(--accent); }
+.notification-tags { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.important-tag { font-size: 12px; font-weight: 600; color: #fff; background: var(--accent); border-radius: 4px; padding: 2px 7px; }
 .report-card .report-row, .report-epic .text-button { font-size: 14px; }
 .calendar-weekdays, .calendar-grid button { color: var(--text-secondary); font-size: 13px; }
 .calendar-grid button.muted { color: #6e6878; }

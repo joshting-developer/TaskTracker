@@ -95,8 +95,9 @@ defineExpose({ refresh });
     <div v-if="error" class="error-box" role="alert">{{ error }}</div>
     <p v-if="loading" role="status">載入通知中…</p>
     <div v-if="result && !entries.length" class="empty-state"><h2>目前還沒有通知</h2></div>
-    <article v-for="entry in entries" :key="entry.id" class="notification-card">
-      <header><strong>{{ entry.subject }}</strong><span class="type-tag">待寄預覽</span></header>
+    <!-- TT-314：改成「已關閉」「待驗收」的狀態通知要一眼看出來 -->
+    <article v-for="entry in entries" :key="entry.id" class="notification-card" :class="{ important: entry.kind === 'status_important' }">
+      <header><strong>{{ entry.subject }}</strong><span class="notification-tags"><span v-if="entry.kind === 'status_important'" class="important-tag">重要狀態</span><span class="type-tag">待寄預覽</span></span></header>
       <div class="notification-meta"><span>收件人 {{ entry.email }}</span><time>{{ timestamp(entry.createdAt) }}</time></div>
       <button class="text-button" :aria-expanded="expanded?.id === entry.id" @click="openBody(entry)">{{ expanded?.id === entry.id ? '收起內容' : '查看內容' }}</button>
       <div v-if="expanded?.id === entry.id"><p v-if="bodyLoading" role="status">載入內容中…</p><p v-else>{{ expanded.body }}</p></div>

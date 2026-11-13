@@ -2,10 +2,13 @@
 
 namespace App\Database;
 
+use App\Repositories\RelationalRecords;
+
 use App\Repositories\EntityDefinitions;
 use App\Repositories\LegacyRecordStore;
 use App\Repositories\RecordStore;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /** 依依賴順序把歷史JSON回填到關聯表；來源保留，錯誤時整批回滾。 */
 class RelationalDataMigration
@@ -14,6 +17,19 @@ class RelationalDataMigration
      * @return void
      */
     public static function import(): void
+    {
+        RelationalRecords::$skipColumns = self::missingLaterColumns();
+        try {
+            self::importRecords();
+        } finally {
+            RelationalRecords::$skipColumns = [];
+        }
+    }
+
+    /** 實際匯入；欄位只用匯入當下已存在的（見RelationalRecords::LATER_COLUMNS）。
+     * @return void
+     */
+    private static function importRecords(): void
     {
         DB::transaction(function () {
             if (DB::table('workspaces')->exists()) {
@@ -81,27 +97,65 @@ class RelationalDataMigration
     }
 
     /** 先匯出目前最新狀態，再容許migration移除關聯表。
+     * 後來才加的欄位若已先被後續migration撤掉, 保留備份裡原本的值, 不用預設值蓋掉（TT-314）。
      * @return void
      */
     public static function export(): void
     {
         $legacy = new LegacyRecordStore;
         $store = new RecordStore;
-        foreach (EntityDefinitions::ENTITIES as $kind => $definition) {
-            if (in_array($definition['scope'], [null, 'global'], true)) {
-                DB::table('records')->where('kind', $kind)->delete();
-                foreach ($store->all($kind) as $value) {
-                    $legacy->put($kind, $value['id'], $value);
-                }
-            } else {
-                foreach ($store->all('workspaces') as $workspace) {
-                    DB::table('records')->where('kind', 'w:'.$workspace['id'].':'.$kind)->delete();
-                    foreach ($store->forWorkspace($workspace['id'])->all($kind) as $value) {
-                        $legacy->forWorkspace($workspace['id'])->put($kind, $value['id'], $value);
+        $missing = self::missingLaterColumns();
+        RelationalRecords::$skipColumns = $missing;
+        try {
+            foreach (EntityDefinitions::ENTITIES as $kind => $definition) {
+                $keep = array_map(fn ($field) => $field[0], array_filter($definition['fields'], fn ($field) => in_array($field[1], $missing[$kind] ?? [], true)));
+                if (in_array($definition['scope'], [null, 'global'], true)) {
+                    self::exportKind($legacy, $kind, $kind, $store->all($kind), $keep);
+                } else {
+                    foreach ($store->all('workspaces') as $workspace) {
+                        self::exportKind($legacy->forWorkspace($workspace['id']), 'w:'.$workspace['id'].':'.$kind, $kind, $store->forWorkspace($workspace['id'])->all($kind), $keep);
                     }
                 }
             }
+        } finally {
+            RelationalRecords::$skipColumns = [];
         }
+    }
+
+    /** 把一種資料整批寫回備份；$keep列的欄位沿用備份舊值。
+     * @param  LegacyRecordStore  $legacy  目標備份（已切到工作空間）
+     * @param  string  $recordKind  records表上的完整kind
+     * @param  string  $kind  實體種類
+     * @param  array<int, array>  $values  目前資料
+     * @param  array<int, string>  $keep  表上已不存在、要沿用舊值的欄位
+     * @return void
+     */
+    private static function exportKind(LegacyRecordStore $legacy, string $recordKind, string $kind, array $values, array $keep): void
+    {
+        $previous = [];
+        if ($keep !== []) {
+            foreach ($legacy->all($kind) as $old) {
+                $previous[$old['id']] = array_intersect_key($old, array_flip($keep));
+            }
+        }
+        DB::table('records')->where('kind', $recordKind)->delete();
+        foreach ($values as $value) {
+            $legacy->put($kind, $value['id'], [...$value, ...($previous[$value['id']] ?? [])]);
+        }
+    }
+
+    /** 每種資料表上還沒有（或已撤掉）的後加欄位。
+     * @return array<string, array<int, string>>
+     */
+    private static function missingLaterColumns(): array
+    {
+        $missing = [];
+        foreach (RelationalRecords::LATER_COLUMNS as $kind => $columns) {
+            $table = EntityDefinitions::ENTITIES[$kind]['table'];
+            $missing[$kind] = array_values(array_filter($columns, fn ($column) => ! Schema::hasColumn($table, $column)));
+        }
+
+        return array_filter($missing);
     }
 
     /** 先建立Epic及父任務，最後建立一層子任務。

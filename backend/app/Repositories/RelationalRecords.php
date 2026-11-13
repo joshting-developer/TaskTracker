@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Schema;
 /** 將既有API DTO映射到真正欄位與外鍵，業務資料不再寫入records payload。 */
 class RelationalRecords
 {
+    /** 晚於關聯表建立才新增的欄位；早期migration內的舊資料匯入發生時表上可能還沒有。 */
+    public const LATER_COLUMNS = ['issues' => ['created_by_id'], 'notifications' => ['kind'], 'boards' => ['description']];
+
+    /** 舊資料匯入期間, 資料表上還不存在而要跳過的欄位（RelationalDataMigration::import設定, 平常為空）。 */
+    public static array $skipColumns = [];
+
     private array $identities = [];
 
     private ?int $workspaceInternalId = null;
@@ -369,6 +375,10 @@ class RelationalRecords
     private function fields(string $kind): array
     {
         $fields = EntityDefinitions::ENTITIES[$kind]['fields'];
+        // TT-314：早期migration內的舊資料匯入可能早於這些欄位建立；只在匯入期間跳過表上還沒有的欄位, 正常讀寫不受影響, 也不多查schema。
+        if (isset(self::$skipColumns[$kind])) {
+            $fields = array_values(array_filter($fields, fn ($field) => ! in_array($field[1], self::$skipColumns[$kind], true)));
+        }
         if ($kind !== 'todos') {
             return $fields;
         }

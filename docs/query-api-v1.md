@@ -76,7 +76,7 @@ ProjectTasksWorkspace與useProjectTaskQueries已取代原BoardWorkspace／useBoa
 ## 2026-11-12 專案管理頁與月曆
 
 - `GET /api/v1/projects/{project}/status-usage`（TT-243）：需`project.statuses.update`，回傳各狀態type的SQL卡數。
-- `GET /api/v1/projects/{project}/notifications`與`/notifications/{id}`（TT-245）：團隊通知或本人收件，列表20筆摘要不含正文，單筆按需含正文。
+- `GET /api/v1/projects/{project}/notifications`與`/notifications/{id}`（TT-245）：團隊通知或本人收件，列表20筆摘要不含正文，單筆按需含正文。TT-314起每筆多`kind`：general、assigned、epic、comment、status、status_important（改成已關閉／待驗收）, 舊通知一律general。
 - `GET /api/v1/issue-locations/{issue}`（TT-180）：舊版無Project深連結只回`{id, projectId}`，無權與不存在同為404。
 - `GET /api/v1/projects/{project}/time-calendar?month=YYYY-MM&member=<optional>`（TT-223）：需`issue.read`及團隊／本人工時資格；回傳days／members／issues／epics SQL聚合與total，各清單上限100，不回原始工時列。Epic為本身＋所屬卡片各計一次，預估為所屬卡片加總。無團隊資格時伺服器固定為本人。
 - `GET /api/v1/projects/{project}/time-entries?date=YYYY-MM-DD&member=&page=&perPage=`（TT-223）：當日有效工時分頁，欄位同單卡工時。

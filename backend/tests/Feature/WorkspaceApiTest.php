@@ -147,9 +147,10 @@ class WorkspaceApiTest extends TestCase
         (new RecordStore)->put('workspaces', 'another-workspace', ['id' => 'another-workspace', 'name' => '另一空間']);
         $other = (new RecordStore)->forWorkspace('another-workspace');
         $other->put('projects', $project['id'], [...$project, 'leadId' => '']);
-        $other->put('issues', $epic['id'], $epic);
-        $other->put('issues', $bug['id'], [...$bug, 'parentIssueId' => '']);
-        $other->put('issues', $task['id'], [...$legacy, 'title' => '另一空間']);
+        // TT-314：複製到另一個工作空間時, 建卡者是原空間的成員, 跟負責人一樣要清空。
+        $other->put('issues', $epic['id'], [...$epic, 'createdBy' => '']);
+        $other->put('issues', $bug['id'], [...$bug, 'parentIssueId' => '', 'createdBy' => '']);
+        $other->put('issues', $task['id'], [...$legacy, 'title' => '另一空間', 'createdBy' => '']);
         $untouched = $store->require('issues', $bug['id']);
         $time = $store->all('timeEntries');
         $migration = require database_path('migrations/2026_10_20_000001_simplify_issue_types.php');
@@ -413,7 +414,7 @@ class WorkspaceApiTest extends TestCase
         (new RecordStore)->put('workspaces', 'other-workspace', ['id' => 'other-workspace', 'name' => 'Other']);
         $otherStore = (new RecordStore)->forWorkspace('other-workspace');
         $otherStore->put('projects', $project['id'], [...$project, 'leadId' => '']);
-        $otherStore->put('issues', $first['id'], [...$first, 'blockedBy' => [$second['id']]]);
+        $otherStore->put('issues', $first['id'], [...$first, 'blockedBy' => [$second['id']], 'createdBy' => '']);
         $migration = require database_path('migrations/2026_10_20_000000_replace_issue_dependencies.php');
         $migration->up();
         $converted = $store->require('issues', $second['id']);

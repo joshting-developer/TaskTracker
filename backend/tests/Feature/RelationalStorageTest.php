@@ -161,6 +161,7 @@ class RelationalStorageTest extends TestCase
         $before = $this->snapshot();
         $migration = require database_path('migrations/2026_11_04_000000_create_relational_business_tables.php');
         Schema::dropIfExists('issue_external_refs'); // 後續migration的FK表；正常rollback會先撤它
+        (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->down();
         $migration->down();
         $this->assertFalse(Schema::hasTable('issues'));
         // 舊重試payload沒有id，真正識別碼位於records.id。
@@ -170,6 +171,8 @@ class RelationalStorageTest extends TestCase
         DB::table('records')->where('sequence', $receipt->sequence)->update(['payload' => json_encode($payload, JSON_THROW_ON_ERROR)]);
         $archive = DB::table('records')->orderBy('kind')->orderBy('id')->get()->toJson();
         $migration->up();
+        // TT-314：只重跑基礎migration時, 後來才加的建卡者欄位要靠後續migration補回（照真實升級順序）。
+        (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->up();
         $this->assertEquals($before, $this->snapshot());
         $this->assertSame($archive, DB::table('records')->orderBy('kind')->orderBy('id')->get()->toJson());
         $tenant = (new RecordStore)->forWorkspace(DemoSeeder::WORKSPACE_ID);
@@ -182,8 +185,12 @@ class RelationalStorageTest extends TestCase
         $this->rpc('createTodo', ['title' => '升級後新資料']);
         $this->assertSame($archive, DB::table('records')->orderBy('kind')->orderBy('id')->get()->toJson());
         $latest = $this->snapshot();
+        // 照正確順序先撤後來的migration（它在issues加了外鍵）, 再撤基礎migration。
+        (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->down();
         $migration->down();
         $migration->up();
+        // TT-314：只重跑基礎migration時, 後來才加的建卡者欄位要靠後續migration補回（照真實升級順序）。
+        (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->up();
         $this->assertEquals($latest, $this->snapshot());
         $this->rpc('getWorkspace', []);
         $this->assertSame([], DB::select('PRAGMA foreign_key_check'));
@@ -197,6 +204,7 @@ class RelationalStorageTest extends TestCase
         $this->seedWorkspace();
         $migration = require database_path('migrations/2026_11_04_000000_create_relational_business_tables.php');
         Schema::dropIfExists('issue_external_refs'); // 後續migration的FK表；正常rollback會先撤它
+        (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->down();
         $migration->down();
         $archive = (new LegacyRecordStore)->forWorkspace(DemoSeeder::WORKSPACE_ID);
         $issue = $archive->all('issues')[1];

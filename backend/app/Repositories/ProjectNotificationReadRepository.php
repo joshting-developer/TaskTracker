@@ -38,7 +38,7 @@ class ProjectNotificationReadRepository
     {
         return $this->scope($project, $userId, $team)->with('issue:id,public_id,identifier')
             ->orderByDesc('created_at')->orderBy('public_id')
-            ->paginate($filters->perPage, ['id', 'public_id', 'issue_id', 'subject', 'email', 'status', 'created_at'], 'page', $filters->page);
+            ->paginate($filters->perPage, ['id', 'public_id', 'issue_id', 'subject', 'email', 'status', 'kind', 'created_at'], 'page', $filters->page);
     }
 
     /**
@@ -53,6 +53,6 @@ class ProjectNotificationReadRepository
     public function find(Project $project, string $userId, bool $team, string $id): ?IssueNotification
     {
         return $this->scope($project, $userId, $team)->where('public_id', $id)->with('issue:id,public_id,identifier')
-            ->first(['id', 'public_id', 'issue_id', 'subject', 'email', 'body', 'status', 'created_at']);
+            ->first(['id', 'public_id', 'issue_id', 'subject', 'email', 'body', 'status', 'kind', 'created_at']);
     }
 }

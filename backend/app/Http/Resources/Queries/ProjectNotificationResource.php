@@ -20,7 +20,7 @@ class ProjectNotificationResource extends JsonResource
         $notice = $this->resource;
         $issue = $notice->getRelation('issue');
         $data = ['id' => $notice->public_id, 'subject' => $notice->subject, 'email' => $notice->email,
-            'status' => $notice->status, 'createdAt' => DatabaseTimes::public($notice->created_at),
+            'status' => $notice->status, 'kind' => $notice->kind ?? 'general', 'createdAt' => DatabaseTimes::public($notice->created_at),
             'issueId' => $issue->public_id, 'identifier' => $issue->identifier];
         if (array_key_exists('body', $notice->getAttributes())) {
             $data['body'] = $notice->body;
