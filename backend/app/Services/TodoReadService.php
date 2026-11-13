@@ -2,12 +2,12 @@
 
 namespace App\Services;
 
-use App\Data\WorkspaceContext;
 use App\Authorization\WorkspacePermissions;
 use App\Data\PageQueryData;
 use App\Data\PersonalReadContext;
 use App\Data\TodoPageData;
 use App\Data\TodoQueryData;
+use App\Data\WorkspaceContext;
 use App\Domain\DomainError;
 use App\Models\Todo;
 use App\Repositories\TodoReadRepository;
@@ -53,7 +53,7 @@ class TodoReadService
         $page = $this->todos->page($personal, $filters);
         $caps = [];
         foreach ($page->items() as $todo) {
-            $caps[$todo->public_id] = $this->capabilities($todo, $personal, in_array('todo.writeOwn', $context->permissions, true));
+            $caps[$todo->public_id] = $this->capabilities($todo, $personal, in_array('todo.writeOwn', $context->permissions, true), in_array('todo.assign', $context->permissions, true));
         }
 
         return new TodoPageData($page, $this->links($context, $personal, $page->items()), $caps);
@@ -71,7 +71,7 @@ class TodoReadService
         $personal = $this->context($context);
         $todo = $this->todos->find($personal, $id) ?? DomainError::fail('NOT_FOUND', '找不到這筆待辦');
 
-        return ['todo' => $todo, 'links' => $this->links($context, $personal, [$todo]), 'capabilities' => $this->capabilities($todo, $personal, in_array('todo.writeOwn', $context->permissions, true))];
+        return ['todo' => $todo, 'links' => $this->links($context, $personal, [$todo]), 'capabilities' => $this->capabilities($todo, $personal, in_array('todo.writeOwn', $context->permissions, true), in_array('todo.assign', $context->permissions, true))];
     }
 
     /**
@@ -154,15 +154,16 @@ class TodoReadService
      * @param  Todo  $todo  已限定參與者的待辦
      * @param  PersonalReadContext  $personal  當次可信資格
      * @param  bool  $write  是否具todo.writeOwn
+     * @param  bool  $assign  是否具交辦權限
      * @return array<string,bool> 此筆操作能力
      */
-    private function capabilities(Todo $todo, PersonalReadContext $personal, bool $write): array
+    private function capabilities(Todo $todo, PersonalReadContext $personal, bool $write, bool $assign): array
     {
         $creator = $todo->created_by_id === $personal->memberId;
         $assignee = $todo->assignee_id === $personal->memberId;
         $open = $todo->state === 'open';
 
-        return ['edit' => $write && $creator && $open, 'cancel' => $write && $creator && $open, 'complete' => $write && $assignee && $open, 'reopen' => $write && $assignee && $todo->state === 'done', 'return' => $write && $assignee && ! $creator && $open, 'convert' => $write && $assignee && $open];
+        return ['edit' => $write && $creator && $open, 'cancel' => $write && $creator && $open, 'complete' => $write && $assignee && $open, 'reopen' => $write && $assignee && $todo->state === 'done', 'return' => $write && $assignee && (! $creator || $todo->has_return_path) && $open, 'convert' => $write && $assignee && $open, 'comment' => $write, 'forward' => $write && $assign && $assignee && $open];
     }
 
     /**

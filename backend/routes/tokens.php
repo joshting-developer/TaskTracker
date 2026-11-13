@@ -80,10 +80,14 @@ Route::prefix('/api/public/v1')->middleware('throttle:public-api-v1')->withoutMi
 ])->group(function () {
     $todos = PublicTodosController::class;
     Route::get('/todos', [$todos, 'index'])->name('public.v1.todos');
+    Route::get('/todos/{todo}/comments', [$todos, 'events'])->defaults('kind', 'comments')->name('public.v1.todos.comments');
+    Route::get('/todos/{todo}/handoffs', [$todos, 'events'])->defaults('kind', 'handoffs')->name('public.v1.todos.handoffs');
     Route::get('/todos/{todo}', [$todos, 'show'])->name('public.v1.todos.show');
     Route::get('/todo-assignees', [$todos, 'assignees'])->name('public.v1.todo-assignees');
     Route::post('/todos', [$todos, 'execute'])->name('public.todos.create');
     Route::patch('/todos/{todo}', [$todos, 'execute'])->name('public.todos.update');
+    Route::post('/todos/{todo}/comments', [$todos, 'execute'])->name('public.todos.comment');
+    Route::post('/todos/{todo}/forward', [$todos, 'execute'])->name('public.todos.forward');
     Route::post('/todos/{todo}/complete', [$todos, 'execute'])->name('public.todos.complete');
     Route::post('/todos/{todo}/reopen', [$todos, 'execute'])->name('public.todos.reopen');
     Route::post('/todos/{todo}/return', [$todos, 'execute'])->name('public.todos.return');

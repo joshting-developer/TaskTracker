@@ -212,7 +212,7 @@ class TodoTest extends TestCase
         $this->assertNotNull($this->tenant->require('todoNotifications', $notification['id'])['readAt']);
         $this->rpc('updateTodo', ['id' => $created['id'], 'expectedRevision' => 1, 'title' => '承辦者不可改需求'])->assertStatus(403);
         $this->rpc('returnTodo', ['id' => $created['id'], 'expectedRevision' => 1, 'requestId' => 'return-upward'])->assertOk();
-        $this->rpc('returnTodo', ['id' => $created['id'], 'expectedRevision' => 1, 'requestId' => 'return-upward'])->assertStatus(404);
+        $this->rpc('returnTodo', ['id' => $created['id'], 'expectedRevision' => 1, 'requestId' => 'return-upward'])->assertOk(); // TT-325: former handler retains access and can replay the same receipt.
         $this->rpc('getTodos')->assertJsonCount(0, 'data.todos')->assertJsonCount(0, 'data.notifications');
         $this->login($this->alice);
         $this->rpc('getTodos')->assertJsonPath('data.todos.0.assigneeId', $this->alice['id'])->assertJsonPath('data.notifications.0.event', 'returned');
@@ -376,9 +376,9 @@ class TodoTest extends TestCase
         $this->getJson('/api/v1/todo-notifications/unread')->assertOk()->assertJsonPath('data.unread', 1);
         $this->getJson('/api/v1/todo-notifications')->assertOk()->assertJsonCount(1, 'data.items')->assertJsonPath('data.items.0.todoId', $assigned['id']);
         $this->rpc('returnTodo', ['id' => $assigned['id'], 'expectedRevision' => 1])->assertOk();
-        $this->getJson('/api/v1/todo-notifications/unread')->assertOk()->assertJsonPath('data.unread', 0);
-        $this->getJson('/api/v1/todo-notifications')->assertOk()->assertJsonPath('data.total', 0);
-        $this->getJson('/api/v1/todos/'.$assigned['id'])->assertStatus(404);
+        $this->getJson('/api/v1/todo-notifications/unread')->assertOk()->assertJsonPath('data.unread', 1);
+        $this->getJson('/api/v1/todo-notifications')->assertOk()->assertJsonPath('data.total', 1);
+        $this->getJson('/api/v1/todos/'.$assigned['id'])->assertOk(); // TT-325 keeps former handlers readable.
         $this->login($this->owner);
         $this->getJson('/api/v1/todos?scope=sent')->assertOk()->assertJsonPath('data.total', 1)->assertJsonPath('data.items.0.returnedAt', $this->tenant->require('todos', $assigned['id'])['returnedAt']);
     }

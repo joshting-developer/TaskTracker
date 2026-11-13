@@ -58,7 +58,7 @@ try {
   page.once('dialog', dialog => dialog.accept()); await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
   const other = await call('createProject', { name: '其他專案', code: 'OTHER' });
   await call('createTodo', { content: '專案切換草稿', assigneeId: identity.user.id }); await page.goto(`${base}/app/`);
-  const row = page.locator('.todo-row').filter({ hasText: '專案切換草稿' }); await row.getByLabel('待辦操作').click(); await row.getByRole('button', { name: '轉成正式卡片', exact: true }).click();
+  const row = page.locator('.todo-row').filter({ hasText: '專案切換草稿' }); await row.getByRole('button', { name: '轉為卡片', exact: true }).click();
   const conversion = page.getByRole('dialog', { name: '轉成正式卡片', exact: true }); const projectSelect = conversion.getByLabel('專案', { exact: true }); await projectSelect.selectOption(project.id);
   await page.waitForFunction(() => document.querySelector('button[aria-label="選擇描述圖片"]:not(:disabled)'));
   const scratch = await context.newPage(); await scratch.setViewportSize({ width: 320, height: 180 }); await scratch.setContent('<p>隔離圖片草稿</p>'); const png = await scratch.screenshot(); await scratch.close();

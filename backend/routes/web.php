@@ -81,6 +81,8 @@ Route::post('/api/rpc/setProjectMember', [ProjectMemberController::class, 'save'
 Route::post('/api/rpc/removeProjectMember', [ProjectMemberController::class, 'remove'])->name('rpc.removeProjectMember');
 
 Route::post('/api/rpc/getTodos', [TodoController::class, 'index'])->name('rpc.getTodos');
+Route::post('/api/rpc/commentTodo', [TodoController::class, 'collaborate'])->name('rpc.commentTodo');
+Route::post('/api/rpc/forwardTodo', [TodoController::class, 'collaborate'])->name('rpc.forwardTodo');
 Route::post('/api/rpc/createTodo', [TodoController::class, 'store'])->name('rpc.createTodo');
 Route::post('/api/rpc/updateTodo', [TodoController::class, 'update'])->name('rpc.updateTodo');
 Route::post('/api/rpc/completeTodo', [TodoController::class, 'complete'])->name('rpc.completeTodo');
@@ -107,6 +109,8 @@ Route::prefix('/api/v1')->group(function () {
     Route::get('/personal-version', [TodosController::class, 'versions'])->name('v1.personal-version');
     Route::get('/todos/counts', [TodosController::class, 'counts'])->name('v1.todos.counts');
     Route::get('/todos', [TodosController::class, 'index'])->name('v1.todos');
+    Route::get('/todos/{todo}/comments', [TodosController::class, 'events'])->defaults('kind', 'comments')->name('v1.todos.comments');
+    Route::get('/todos/{todo}/handoffs', [TodosController::class, 'events'])->defaults('kind', 'handoffs')->name('v1.todos.handoffs');
     Route::get('/todos/{todo}', [TodosController::class, 'show'])->name('v1.todos.show');
     Route::get('/todos/{todo}/history', [TodosController::class, 'history'])->name('v1.todos.history');
     Route::get('/todo-assignees', [TodosController::class, 'assignees'])->name('v1.todo-assignees');

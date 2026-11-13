@@ -14,7 +14,7 @@ class TodoWriteRequest extends DomainWriteRequest
      */
     public function rules(): array
     {
-        return [...$this->commonRules(), 'title' => ['sometimes', 'nullable', 'string'], 'content' => ['sometimes', 'nullable', 'string'], 'note' => ['sometimes', 'nullable', 'string'], 'assigneeId' => ['sometimes', 'nullable', 'string'], 'issue' => ['sometimes', 'nullable', 'array'], 'issue.projectId' => ['sometimes', 'nullable', 'string']];
+        return [...$this->commonRules(), 'title' => ['sometimes', 'nullable', 'string'], 'content' => ['sometimes', 'nullable', 'string'], 'note' => ['sometimes', 'nullable', 'string'], 'reply' => ['sometimes', 'nullable', 'string'], 'assigneeId' => ['sometimes', 'nullable', 'string'], 'issue' => ['sometimes', 'nullable', 'array'], 'issue.projectId' => ['sometimes', 'nullable', 'string']];
     }
 
     /**

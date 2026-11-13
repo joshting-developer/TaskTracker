@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "561399581de9d1ec28fe35e599c4a1401afb7cdf2d1679841d6bf537a5f85e24",
+  "harnessSha256": "62f84323f22dbe776db7b0fc5f11f470ea6aa53af82d954e48635f26f084c79f",
   "profile": "darwin-arm64",
   "reviewer": "Josh",
-  "note": "依Josh持續授權核准TT-319驗證碼與顯式啟用畫面, 已檢視桌面／平板／手機, 舊48張保留並新增6張驗證流程, 比較參數不變",
-  "manifestSha256": "db7fd4f0a9007b520da6d95be0cb9301017b7602301feb1d7b20738205075aed",
+  "note": "依Josh持續授權保存TT-325留言與轉發畫面, 已檢視三尺寸候選及三人協作真Chrome流程, 保留舊54張並新增6張留言／轉發狀態, 比較參數不變",
+  "manifestSha256": "5f19ac30e3bc36c8e8e498373af494bcf133e26d450798ee760859964da78b3d",
   "environment": {
     "platform": "darwin",
     "arch": "arm64",

@@ -124,7 +124,7 @@ export function usePersonalQueries({ versions, resumed, draftId, onError }) {
   }
   async function focus(id, tool) {
     const item = await loadItem(id);
-    scope.value = item.assigneeId === tool.userId ? 'mine' : 'sent';
+    scope.value = item.assigneeId === tool.userId ? 'mine' : item.createdBy === tool.userId ? 'sent' : 'involved';
     showClosed.value = item.state !== 'open';
     await nextTick();
     pinnedId.value = id;

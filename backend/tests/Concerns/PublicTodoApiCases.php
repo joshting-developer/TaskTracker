@@ -94,6 +94,6 @@ trait PublicTodoApiCases
         $back = $this->getJson('/api/public/v1/todos/'.$task['id'], $as($ownerToken))->assertOk()->json('data');
         $this->assertSame($owner['user']['id'], $back['assigneeId'], '退回後回到交辦人');
         $this->json('PATCH', '/api/public/v1/todos/'.$task['id'], ['expectedRevision' => 2, 'title' => '幫忙跑測試（附環境）', 'requestId' => (string) Str::uuid()], $as($ownerToken))->assertOk()->assertJsonPath('data.revision', 3);
-        $this->json('PATCH', '/api/public/v1/todos/'.$task['id'], ['expectedRevision' => 3, 'title' => '別人改', 'requestId' => (string) Str::uuid()], $as($agentToken))->assertStatus(404);
+        $this->json('PATCH', '/api/public/v1/todos/'.$task['id'], ['expectedRevision' => 3, 'title' => '別人改', 'requestId' => (string) Str::uuid()], $as($agentToken))->assertStatus(403);
     }
 }

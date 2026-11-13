@@ -13,6 +13,7 @@ use App\Http\Resources\ApiResponse;
 use App\Http\Resources\Queries\PageResource;
 use App\Http\Resources\Queries\TodoDetailResource;
 use App\Http\Resources\Queries\TodoSummaryResource;
+use App\Services\TodoCollaborationService;
 use App\Services\TodoReadService;
 
 /**
@@ -27,8 +28,9 @@ class PublicTodosController extends Controller
      * @param  BearerTokenSession  $tokens  Token驗證、交易與稽核
      * @param  TodoReadService  $reads  有界待辦查詢
      * @param  TodosFactory  $todos  依當下身分組裝待辦寫入用例
+     * @param  TodoCollaborationService  $collaboration  有界留言及交接讀取
      */
-    public function __construct(private BearerTokenSession $tokens, private TodoReadService $reads, private TodosFactory $todos) {}
+    public function __construct(private BearerTokenSession $tokens, private TodoReadService $reads, private TodosFactory $todos, private TodoCollaborationService $collaboration) {}
 
     /**
      * 待辦列表：scope=mine（交辦給我、預設）或sent（我交辦出去）, state=open／closed, 分頁上限100。
@@ -38,8 +40,10 @@ class PublicTodosController extends Controller
      */
     public function index(TodoQueryRequest $request): ApiResponse
     {
-        $result = $this->tokens->read($request, fn (TokenContext $token) => $this->reads->index($token->workspace, $request->toDto()));
-        $items = array_map(fn ($todo) => (new TodoSummaryResource($todo, $result->capabilities[$todo->public_id], $result->links[$todo->converted_issue_id] ?? null))->resolve(), $result->page->items());
+        $result = $this->tokens->read($request, fn (TokenContext $token) => ['result' => $this->reads->index($token->workspace, $request->toDto()), 'write' => in_array('write', $token->abilities, true)]);
+        $tokenWrite = $result['write'];
+        $result = $result['result'];
+        $items = array_map(fn ($todo) => (new TodoSummaryResource($todo, $this->tokenCapabilities($result->capabilities[$todo->public_id], $tokenWrite), $result->links[$todo->converted_issue_id] ?? null))->resolve(), $result->page->items());
 
         return new ApiResponse(PageResource::wrap($result->page, $items));
     }
@@ -53,9 +57,9 @@ class PublicTodosController extends Controller
      */
     public function show(PageQueryRequest $request, string $todo): ApiResponse
     {
-        $data = $this->tokens->read($request, fn (TokenContext $token) => $this->reads->show($token->workspace, $todo));
+        $data = $this->tokens->read($request, fn (TokenContext $token) => [...$this->reads->show($token->workspace, $todo), 'tokenWrite' => in_array('write', $token->abilities, true)]);
 
-        return new ApiResponse((new TodoDetailResource($data['todo'], $data['capabilities'], $data['links'][$data['todo']->converted_issue_id] ?? null))->resolve());
+        return new ApiResponse((new TodoDetailResource($data['todo'], $this->tokenCapabilities($data['capabilities'], $data['tokenWrite']), $data['links'][$data['todo']->converted_issue_id] ?? null))->resolve());
     }
 
     /**
@@ -86,11 +90,34 @@ class PublicTodosController extends Controller
             'public.todos.complete' => 'completeTodo',
             'public.todos.reopen' => 'reopenTodo',
             'public.todos.return' => 'returnTodo',
+            'public.todos.comment' => 'commentTodo',
+            'public.todos.forward' => 'forwardTodo',
         };
         $input = [...$request->validated(), ...($todo ? ['id' => $todo] : [])];
-        $result = $this->tokens->writeOnce($request, 'public.v1.'.$operation, $input, fn () => null,
+        $result = $this->tokens->writeOnce($request, 'public.v1.'.$operation, $input, fn (TokenContext $token) => $this->collaboration->authorizeWrite($token->workspace, $operation, $todo),
             fn (TokenContext $token) => $this->todos->forSession($token->workspace->legacyIdentity())->execute($operation, $input), null);
 
         return new ApiResponse(['id' => $result['id'], 'revision' => $result['revision']]);
+    }
+
+    /** 按需讀取留言或經手紀錄, PAT仍受當次經手資格限制
+     * @param  PageQueryRequest  $request  有界分頁
+     * @param  string  $todo  待辦公開ID
+     * @param  string  $kind  路由固定事件種類
+     * @return ApiResponse 事件分頁
+     */
+    public function events(PageQueryRequest $request, string $todo, string $kind): ApiResponse
+    {
+        return new ApiResponse($this->tokens->read($request, fn (TokenContext $token) => $this->collaboration->events($token->workspace, $todo, $kind, $request->pagination())));
+    }
+
+    /** 公開操作能力仍取本人權限與Token write範圍交集
+     * @param  array<string,bool>  $capabilities  本人當次能力
+     * @param  bool  $write  Token是否允許寫入
+     * @return array<string,bool> 對這個Token有效的能力
+     */
+    private function tokenCapabilities(array $capabilities, bool $write): array
+    {
+        return $write ? $capabilities : array_fill_keys(array_keys($capabilities), false);
     }
 }

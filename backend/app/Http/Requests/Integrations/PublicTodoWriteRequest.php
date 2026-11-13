@@ -35,7 +35,14 @@ class PublicTodoWriteRequest extends JsonOperationRequest
         }
         $versioned = [...$base, 'expectedRevision' => ['required', 'integer:strict', 'min:1']];
 
-        return $this->routeIs('public.todos.update') ? [...$versioned, ...$content] : [...$versioned, 'note' => ['sometimes', 'string', 'max:2000']];
+        if ($this->routeIs('public.todos.comment')) {
+            return [...$versioned, 'content' => ['required', 'string', 'max:2000']];
+        }
+        if ($this->routeIs('public.todos.forward')) {
+            return [...$versioned, 'assigneeId' => ['required', 'string', 'max:100'], 'reply' => ['sometimes', 'string', 'max:2000']];
+        }
+
+        return $this->routeIs('public.todos.update') ? [...$versioned, ...$content] : [...$versioned, 'note' => ['sometimes', 'string', 'max:2000'], 'reply' => ['sometimes', 'string', 'max:2000']];
     }
 
     /**

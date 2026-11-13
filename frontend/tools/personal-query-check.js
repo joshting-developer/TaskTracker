@@ -3,13 +3,14 @@ import { createServer } from 'vite';
 import { chromium } from 'playwright';
 if(!process.env.E2E_API_URL)throw new Error('必須指定隔離E2E_API_URL');
 let server,browser;
+const port=Number(process.env.E2E_FRONTEND_PORT||5175),baseURL=`http://127.0.0.1:${port}`;
 try {
-  server=await createServer({root:new URL('..',import.meta.url).pathname,server:{host:'127.0.0.1',port:5175,strictPort:true,proxy:{'/api':process.env.E2E_API_URL}}});await server.listen();
+  server=await createServer({root:new URL('..',import.meta.url).pathname,server:{host:'127.0.0.1',port,strictPort:true,proxy:{'/api':process.env.E2E_API_URL}}});await server.listen();
   browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH});
   const page=await browser.newPage(),errors=[],requests=[];
   page.on('pageerror',e=>{errors.push(e.message);console.log('PAGEERROR',e.stack);});
   page.on('response',r=>{const url=new URL(r.url());if(url.pathname.startsWith('/api/')){requests.push(url.pathname);if(r.status()>=400)console.log('HTTP',r.status(),url.pathname);}});
-  await page.goto('http://127.0.0.1:5175/login');
+  await page.goto(`${baseURL}/login`);
   async function call(target,op,input={},group='rpc') {
     return target.evaluate(async({op,input,group})=>{
       const {csrfToken}=await(await fetch('/api/csrf-cookie')).json();
@@ -22,7 +23,7 @@ try {
   let latest;
   for(let i=0;i<25;i++)latest=await call(page,'createTodo',{content:`Note ${i}\n\nHidden source ${i}`});
   const invite=await call(page,'inviteMember',{email:`receiver-${crypto.randomUUID()}@example.test`});
-  const receiver=await(await browser.newContext()).newPage();await receiver.goto('http://127.0.0.1:5175/login');
+  const receiver=await(await browser.newContext()).newPage();await receiver.goto(`${baseURL}/login`);
   const identity=await call(receiver,'register',{name:'Receiver',email:invite.email,password:'isolated-test-password',inviteToken:invite.token},'auth');
   const assigned=await call(page,'createTodo',{content:'Assigned note\n\nReceiver private detail',assigneeId:identity.user.id});
   requests.length=0;await page.reload();
@@ -40,8 +41,7 @@ try {
   await page.waitForFunction(()=>document.querySelectorAll('.todo-row').length===5);
   await pager.getByRole('button',{name:'上一頁',exact:true}).click();
   await page.locator(`[data-todo-id="${latest.id}"]`).waitFor();
-  await row.getByLabel('待辦操作',{exact:true}).click();
-  await row.getByRole('button',{name:'轉成正式卡片',exact:true}).click();
+  await row.getByRole('button',{name:'轉為卡片',exact:true}).click();
   const editor=page.getByRole('dialog',{name:'轉成正式卡片',exact:true});await editor.waitFor();
   assert.equal(await editor.getByRole('textbox',{name:'描述',exact:true}).inputValue(),'Note 24\n\nHidden source 24');
   await editor.getByRole('combobox',{name:'專案',exact:true}).selectOption(project.id);

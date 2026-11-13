@@ -10,6 +10,7 @@ use App\Models\Todo;
 use App\Models\WorkspaceMember;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -36,7 +37,7 @@ class TodoReadRepository
      */
     private function query(PersonalReadContext $context): Builder
     {
-        return Todo::where('workspace_id', $context->workspaceId)->where(fn ($q) => $q->where('created_by_id', $context->memberId)->orWhere('assignee_id', $context->memberId));
+        return $this->participantScope(Todo::where('workspace_id', $context->workspaceId), $context, 'todos');
     }
 
     /**
@@ -51,7 +52,7 @@ class TodoReadRepository
         $q = $this->query($context);
         if ($filters->scope === 'mine') {
             $q->where('assignee_id', $context->memberId);
-        } else {
+        } elseif ($filters->scope === 'sent') {
             $q->where('created_by_id', $context->memberId)->where('initial_assignee_id', '!=', $context->memberId);
         }
         if ($filters->state === 'open') {
@@ -64,7 +65,7 @@ class TodoReadRepository
             $q->whereRaw("LOWER(title) LIKE ? ESCAPE '!'", [$term]);
         }
 
-        return $q->with(['creator:id,user_id', 'assignee:id,user_id', 'initialAssignee:id,user_id'])->orderByDesc('updated_at')->orderBy('public_id')->paginate($filters->pagination->perPage, $this->columns(), 'page', $filters->pagination->page);
+        return $q->select($this->columns())->selectRaw("((COALESCE(content, '') <> '' AND content <> title) OR COALESCE(note, '') <> '') as has_details")->withExists(['assignmentPaths as has_return_path' => fn ($q) => $q->where('position', '>', 0)])->with(['creator:id,user_id', 'assignee:id,user_id', 'initialAssignee:id,user_id', 'initialAssignee.user:id,name'])->orderByDesc('updated_at')->orderBy('public_id')->paginate($filters->pagination->perPage, $this->columns(), 'page', $filters->pagination->page);
     }
 
     /**
@@ -87,7 +88,7 @@ class TodoReadRepository
      */
     public function find(PersonalReadContext $context, string $id, bool $detail = true): ?Todo
     {
-        return $this->query($context)->where('public_id', $id)->with(['creator:id,user_id', 'assignee:id,user_id', 'initialAssignee:id,user_id'])
+        return $this->query($context)->where('public_id', $id)->select([...$this->columns(), ...($detail ? ['content', 'note'] : [])])->selectRaw("((COALESCE(content, '') <> '' AND content <> title) OR COALESCE(note, '') <> '') as has_details")->withExists(['assignmentPaths as has_return_path' => fn ($q) => $q->where('position', '>', 0)])->with(['creator:id,user_id', 'assignee:id,user_id', 'initialAssignee:id,user_id', 'initialAssignee.user:id,name'])
             ->first([...$this->columns(), ...($detail ? ['content', 'note'] : [])]);
     }
 
@@ -99,9 +100,9 @@ class TodoReadRepository
      */
     public function counts(PersonalReadContext $context): array
     {
-        $row = $this->query($context)->selectRaw('COALESCE(SUM(CASE WHEN assignee_id = ? AND state = ? THEN 1 ELSE 0 END),0) AS mine_open, COALESCE(SUM(CASE WHEN assignee_id = ? AND state != ? THEN 1 ELSE 0 END),0) AS mine_closed, COALESCE(SUM(CASE WHEN created_by_id = ? AND initial_assignee_id != ? AND state = ? THEN 1 ELSE 0 END),0) AS sent_open, COALESCE(SUM(CASE WHEN created_by_id = ? AND initial_assignee_id != ? AND state != ? THEN 1 ELSE 0 END),0) AS sent_closed', [$context->memberId, 'open', $context->memberId, 'open', $context->memberId, $context->memberId, 'open', $context->memberId, $context->memberId, 'open'])->first();
+        $row = $this->query($context)->selectRaw('COALESCE(SUM(CASE WHEN assignee_id = ? AND state = ? THEN 1 ELSE 0 END),0) AS mine_open, COALESCE(SUM(CASE WHEN assignee_id = ? AND state != ? THEN 1 ELSE 0 END),0) AS mine_closed, COALESCE(SUM(CASE WHEN created_by_id = ? AND initial_assignee_id != ? AND state = ? THEN 1 ELSE 0 END),0) AS sent_open, COALESCE(SUM(CASE WHEN created_by_id = ? AND initial_assignee_id != ? AND state != ? THEN 1 ELSE 0 END),0) AS sent_closed, COALESCE(SUM(CASE WHEN state = ? THEN 1 ELSE 0 END),0) AS involved_open, COALESCE(SUM(CASE WHEN state != ? THEN 1 ELSE 0 END),0) AS involved_closed', [$context->memberId, 'open', $context->memberId, 'open', $context->memberId, $context->memberId, 'open', $context->memberId, $context->memberId, 'open', 'open', 'open'])->first();
 
-        return ['mineOpen' => (int) $row->mine_open, 'mineClosed' => (int) $row->mine_closed, 'sentOpen' => (int) $row->sent_open, 'sentClosed' => (int) $row->sent_closed];
+        return ['mineOpen' => (int) $row->mine_open, 'mineClosed' => (int) $row->mine_closed, 'sentOpen' => (int) $row->sent_open, 'sentClosed' => (int) $row->sent_closed, 'involvedOpen' => (int) $row->involved_open, 'involvedClosed' => (int) $row->involved_closed];
     }
 
     /**
@@ -176,12 +177,12 @@ class TodoReadRepository
      * 以recipient及Todo參與者的交集限定通知，退回後原承辦者無法讀取。
      *
      * @param  PersonalReadContext  $context  當次可信資格
-     * @return \Illuminate\Database\Query\Builder 尚未執行的通知查詢
+     * @return QueryBuilder 尚未執行的通知查詢
      */
-    private function notifications(PersonalReadContext $context): \Illuminate\Database\Query\Builder
+    private function notifications(PersonalReadContext $context): QueryBuilder
     {
         return DB::table('todo_notifications as n')->join('todos as t', fn ($join) => $join->on('t.id', '=', 'n.todo_id')->on('t.workspace_id', '=', 'n.workspace_id'))
-            ->where('n.workspace_id', $context->workspaceId)->where('n.recipient_id', $context->memberId)->where(fn ($q) => $q->where('t.created_by_id', $context->memberId)->orWhere('t.assignee_id', $context->memberId));
+            ->where('n.workspace_id', $context->workspaceId)->where('n.recipient_id', $context->memberId)->where(fn ($q) => $this->participantScope($q, $context, 't'));
     }
 
     /**
@@ -207,7 +208,7 @@ class TodoReadRepository
         $notifications = $this->notifications($context)->selectRaw('COUNT(*) AS total, COALESCE(SUM(CASE WHEN n.read_at IS NULL THEN 1 ELSE 0 END),0) AS unread, MAX(n.created_at) AS latest')->first();
 
         $access = DB::table('project_members as pm')->where('pm.workspace_id', $context->workspaceId)->where('pm.member_id', $context->memberId)
-            ->whereExists(fn ($q) => $q->selectRaw('1')->from('todos as linked')->whereColumn('linked.workspace_id', 'pm.workspace_id')->whereColumn('linked.converted_project_id', 'pm.project_id')->where(fn ($q) => $q->where('linked.created_by_id', $context->memberId)->orWhere('linked.assignee_id', $context->memberId)))
+            ->whereExists(fn ($q) => $q->selectRaw('1')->from('todos as linked')->whereColumn('linked.workspace_id', 'pm.workspace_id')->whereColumn('linked.converted_project_id', 'pm.project_id')->where(fn ($q) => $this->participantScope($q, $context, 'linked')))
             ->selectRaw('COUNT(*) AS total, COALESCE(SUM(pm.revision),0) AS revisions, MAX(pm.updated_at) AS latest')->first();
 
         return ['todos' => hash('sha256', json_encode([(int) $todos->total, (int) $todos->revisions, $todos->latest, $context->roleRevision, (int) $access->total, (int) $access->revisions, $access->latest], JSON_THROW_ON_ERROR)),
@@ -224,5 +225,21 @@ class TodoReadRepository
     public function notificationPage(PersonalReadContext $context, PageQueryData $filters): LengthAwarePaginator
     {
         return $this->notifications($context)->orderByDesc('n.created_at')->orderByDesc('n.public_id')->paginate($filters->perPage, ['n.public_id as id', 't.public_id as todoId', 'n.actor', 'n.event', 'n.read_at', 'n.created_at', 't.title'], 'page', $filters->page);
+    }
+
+    /** 只加入既有或曾經手條件, correlated EXISTS使用覆蓋索引, 不讀取成員集合
+     * @param  Builder|QueryBuilder  $query  已有限定工作區的查詢
+     * @param  PersonalReadContext  $context  可信成員範圍
+     * @param  string  $alias  固定資料表別名
+     * @return Builder|QueryBuilder 同一查詢
+     */
+    private function participantScope(Builder|QueryBuilder $query, PersonalReadContext $context, string $alias): Builder|QueryBuilder
+    {
+        $ids = DB::table('todo_participants')->where('workspace_id', $context->workspaceId)->where('member_id', $context->memberId)->select('todo_id');
+        foreach (['created_by_id', 'assignee_id', 'initial_assignee_id'] as $column) {
+            $ids->union(DB::table('todos')->where('workspace_id', $context->workspaceId)->where($column, $context->memberId)->select('id'));
+        }
+
+        return $query->whereIn($alias.'.id', $ids);
     }
 }

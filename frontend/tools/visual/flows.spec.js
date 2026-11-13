@@ -93,6 +93,20 @@ test('representative workspace flows', async ({ page, browser }) => {
   await page.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
   await page.getByText('確認下一次測試範圍', { exact: true }).first().waitFor();
   await shot(page, '03-home-todos');
+  const todo = (await (await page.request.get('/api/v1/todos?scope=mine&state=open')).json()).data.items[0];
+  await call(page.request, 'commentTodo', { id: todo.id, expectedRevision: todo.revision, content: '已確認測試資料, 接著補上手機版驗證' });
+  execFileSync('docker', ['compose', '-p', 'tasktracker-codex-visual', '-f', resolve(import.meta.dirname, '../../../docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', 'tools/visual-fixture-clock.php'], { cwd: resolve(import.meta.dirname, '../../..'), input: JSON.stringify({ userId: data.identity.user.id, workspaceId: data.identity.workspace.id, projectId: data.project.id, emptyId: data.empty.id }), stdio: ['pipe', 'pipe', 'pipe'] });
+  await page.reload();
+  const conversation = page.locator(`[data-todo-id="${todo.id}"]`);
+  await conversation.locator('.conversation-history > summary').click();
+  await conversation.getByText('已確認測試資料, 接著補上手機版驗證', { exact: true }).waitFor();
+  await conversation.scrollIntoViewIfNeeded();
+  await shot(page, '19-todo-conversation');
+  await conversation.getByRole('button', { name: '轉發', exact: true }).click();
+  await conversation.getByLabel('轉發給誰', { exact: true }).waitFor();
+  await conversation.locator('.todo-forward').scrollIntoViewIfNeeded();
+  await shot(page, '20-todo-forward');
+
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：產品開發', exact: true }).waitFor();
   await shot(page, '04-projects');

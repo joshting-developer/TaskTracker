@@ -32,8 +32,8 @@ class TodoSummaryResource extends JsonResource
     {
         $todo = $this->resource;
 
-        return ['id' => $todo->public_id, 'title' => $todo->title, 'createdBy' => $todo->getRelation('creator')->user_id, 'creatorName' => $todo->creator_name,
-            'assigneeId' => $todo->getRelation('assignee')->user_id, 'initialAssigneeId' => $todo->getRelation('initialAssignee')->user_id, 'assigneeName' => $todo->assignee_name,
+        return ['id' => $todo->public_id, 'title' => $todo->title, 'hasDetails' => (bool) $todo->has_details, 'createdBy' => $todo->getRelation('creator')->user_id, 'creatorName' => $todo->creator_name,
+            'assigneeId' => $todo->getRelation('assignee')->user_id, 'initialAssigneeId' => $todo->getRelation('initialAssignee')->user_id, 'initialAssigneeName' => $todo->getRelation('initialAssignee')->getRelation('user')->name, 'assigneeName' => $todo->assignee_name,
             'state' => $todo->state, 'revision' => (int) $todo->revision, 'createdAt' => DatabaseTimes::public($todo->created_at), 'updatedAt' => DatabaseTimes::public($todo->updated_at),
             'completedAt' => DatabaseTimes::public($todo->completed_at), 'returnedAt' => DatabaseTimes::public($todo->returned_at), 'convertedIssue' => $this->link, 'capabilities' => $this->capabilities];
     }

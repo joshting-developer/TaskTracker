@@ -3,6 +3,7 @@
 import argparse
 import http.cookiejar
 import json
+import os
 from pathlib import Path
 import sys
 import time
@@ -172,22 +173,52 @@ def handle_todo(client, args):
     if not args.identifier:
         raise RuntimeError('需要待辦ID')
     todo = client.call(todo_path + urllib.parse.quote(args.identifier, safe=''))
-    operation, capability = {'todo-complete': ('completeTodo', 'complete'), 'todo-return': ('returnTodo', 'return')}[args.command]
+    if args.command == 'todo-get':
+        print(json.dumps(todo, ensure_ascii=False, indent=2))
+        return
+    if args.command in ('todo-comments', 'todo-handoffs'):
+        path = todo_path + urllib.parse.quote(todo['id'], safe='') + '/' + args.command.removeprefix('todo-')
+        print(json.dumps(client.call(path + '?' + urllib.parse.urlencode({'page': args.page, 'perPage': args.per_page})), ensure_ascii=False, indent=2))
+        return
+    operation, capability = {'todo-complete': ('completeTodo', 'complete'), 'todo-return': ('returnTodo', 'return'), 'todo-comment': ('commentTodo', 'comment'), 'todo-forward': ('forwardTodo', 'forward')}[args.command]
     if not todo['capabilities'].get(capability):
-        raise RuntimeError('目前不能對這筆待辦做這個動作（不是承辦人或狀態不符）')
-    extra = {'note': args.body_file.read_text()} if args.command == 'todo-return' and args.body_file else {}
-    client.rpc(operation, id=todo['id'], expectedRevision=todo['revision'], requestId=str(uuid.uuid4()), **extra)
+        raise RuntimeError('目前不能對這筆待辦做這個動作')
+    if args.command in ('todo-comment', 'todo-forward') and args.expected_revision is None:
+        raise RuntimeError('留言／轉發需--expected-revision, 先讀最新內容與留言')
+    extra = {'reply': args.body_file.read_text()} if args.body_file else {}
+    if args.command == 'todo-comment':
+        if not args.body_file:
+            raise RuntimeError('留言需--body-file')
+        extra = {'content': args.body_file.read_text()}
+    if args.command == 'todo-forward':
+        if not args.assignee_id:
+            raise RuntimeError('轉發需--assignee-id')
+        extra['assigneeId'] = args.assignee_id
+    payload = {'id': todo['id'], 'expectedRevision': args.expected_revision if args.expected_revision is not None else todo['revision'], 'requestId': str(uuid.uuid4()), **extra}
+    # 先保存同一payload, 逾時可核對, 不換requestId盲重送
+    outbox = ROOT / '.local' / 'tasktracker-outbox'
+    outbox.mkdir(mode=0o700, parents=True, exist_ok=True)
+    outbox.chmod(0o700)
+    receipt = outbox / (args.agent + '-' + payload['requestId'] + '.json')
+    with open(receipt, 'x', opener=lambda path, flags: os.open(path, flags, 0o600)) as handle:
+        json.dump({'agent': args.agent, 'operation': operation, 'payload': payload}, handle, ensure_ascii=False)
+    print('receipt:', receipt, file=sys.stderr)
+    client.rpc(operation, **payload)
     print('updated', todo['id'])
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--agent', choices=['codex', 'claude'], default='codex', help='執行者；Claude必須指定--agent claude')
-    parser.add_argument('command', choices=['list', 'import', 'verify', 'claim', 'status', 'comment', 'todos', 'todo-create', 'todo-complete', 'todo-return'])
+    parser.add_argument('command', choices=['list', 'import', 'verify', 'claim', 'status', 'comment', 'todos', 'todo-create', 'todo-complete', 'todo-return', 'todo-get', 'todo-comments', 'todo-handoffs', 'todo-comment', 'todo-forward'])
     parser.add_argument('identifier', nargs='?')
     parser.add_argument('--state')
     parser.add_argument('--body-file', type=Path)
-    parser.add_argument('--scope', choices=['mine', 'sent'], default='mine', help='todos：mine交辦給我、sent我交辦出去')
+    parser.add_argument('--scope', choices=['mine', 'sent', 'involved'], default='mine', help='todos：mine交辦給我、sent我交辦出去')
+    parser.add_argument('--expected-revision', type=int)
+    parser.add_argument('--assignee-id')
+    parser.add_argument('--page', type=int, default=1)
+    parser.add_argument('--per-page', type=int, default=20)
     parser.add_argument('--assignee', help='todo-create：交辦對象的顯示名稱, 例如codex、Josh')
     args = parser.parse_args()
     if args.command in ('claim', 'status', 'comment') and not args.identifier:

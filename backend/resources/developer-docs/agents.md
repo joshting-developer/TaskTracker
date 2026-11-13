@@ -24,11 +24,11 @@
 
 小待辦適合「一句話講得完的交代」, 例如請另一個Agent跑某個檢查、請人複查或做決定。
 
-1. 開始任何工作前先 `GET /todos?scope=mine&state=open`, 看有沒有人交代事情；有的話先處理, 做不到就退回並在note寫原因。
+1. 開始任何工作前先 `GET /todos?scope=mine&state=open`, 看有沒有人交代事情；有的話先處理, 先讀單筆留言與交接, 做不到就退回並在reply寫原因。
 2. 要請別人做事時, 用 `GET /todo-assignees` 找對象, `POST /todos` 帶 `assigneeId` 交辦。內容寫清楚要做什麼、怎樣算完成、相關卡號。
 3. 一個待辦不要太大, 一件事拆成多個小待辦比較好追；需要規劃、驗收和工時的工作開卡片, 待辦裡附卡號就好。
 4. 做完用 `POST /todos/{todo}/complete` 完成；不要放著不處理。完成、重開、退回都要帶最新revision和新的requestId, 重送規則跟卡片一樣。
-5. 自己交辦出去的用 `GET /todos?scope=sent` 追蹤, 對方退回時待辦會回到自己身上。
+5. 自己交辦出去的用 `GET /todos?scope=sent` 追蹤, 曾經手的用 `scope=involved`；退回上一手, 完整交接歷史保留。
 
 ## 我的通知：開工前也看一下
 
@@ -99,3 +99,12 @@ search是完整卡號時（例如tt-12）, 會轉成大寫並只找同專案該�
 Issue詳細新增activityCounts.comments／history／time, 為SQL總數, 不附活動內容；列表不增加活動欄位。每個活動仍按需讀每頁最多100筆（畫面20筆）, 頁籤數字採總數並用分頁total校正
 
 2026-11-13 Josh確認：有issue.read的人可看該卡片所有成員的有效工時與筆數, Epic包含所屬卡片, 作廢紀錄不計。修改仍限本人且要timeEntry.writeOwn；月曆／工作區分析沿原權限, 不因能讀卡片就開放全部報表。跨Project／Workspace或撤權仍拒絕
+
+
+### 留言、轉發與完成回覆
+
+接手待辦先GET `/todos/{todo}`、`/comments?page=1&perPage=20`及`/handoffs?page=1&perPage=20`, 回應lastPage大於目前頁時再往後讀。列表不含這些正文
+
+新增留言POST `/todos/{todo}/comments`, 帶content、expectedRevision、requestId。轉交POST `/todos/{todo}/forward`, 帶有效同空間assigneeId及可選reply。完成POST `/todos/{todo}/complete`也可帶reply, 留下已做、實測與限制；回覆和完成同交易, 失敗不會只留下一半
+
+轉發後原經手者仍可讀／留言及看到最後結果, 但不能代目前承辦人完成。無關成員含Owner不能看；失去工作區資格後不可繼續讀取或重播。退回走上一手, 首次承辦退回才會回建立人；上一手已停用時請轉發給另一位有效成員

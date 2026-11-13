@@ -15,7 +15,7 @@ class TodoQueryRequest extends PageQueryRequest
      */
     public function rules(): array
     {
-        return [...parent::rules(), 'scope' => ['sometimes', Rule::in(['mine', 'sent'])], 'state' => ['sometimes', Rule::in(['open', 'closed'])]];
+        return [...parent::rules(), 'scope' => ['sometimes', Rule::in(['mine', 'sent', 'involved'])], 'state' => ['sometimes', Rule::in(['open', 'closed'])]];
     }
 
     /**

@@ -77,7 +77,7 @@ try {
   await page.setViewportSize({ width: 1440, height: 1000 });
   const project = await page.evaluate(async () => (await import('/tools/fixtures/verified-api.js')).api.createProject({ name: 'Markdown卡片', code: 'MARK', requestId: crypto.randomUUID() }));
   await page.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
-  await row.getByLabel('待辦操作').click(); await row.getByRole('button', { name: '轉成正式卡片', exact: true }).click();
+  await row.getByRole('button', { name: '轉為卡片', exact: true }).click();
   const panel = page.getByRole('dialog', { name: '轉成正式卡片', exact: true });
   assert.equal(await panel.getByLabel('描述', { exact: true }).inputValue(), source);
   await panel.getByLabel('專案', { exact: true }).selectOption(project.id);

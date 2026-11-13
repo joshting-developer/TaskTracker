@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
  */
 class Todos
 {
-    public const OPERATIONS = ['getTodos', 'createTodo', 'updateTodo', 'completeTodo', 'reopenTodo', 'returnTodo', 'cancelTodo', 'convertTodo', 'readTodoNotification'];
+    public const OPERATIONS = ['getTodos', 'createTodo', 'updateTodo', 'completeTodo', 'reopenTodo', 'returnTodo', 'cancelTodo', 'convertTodo', 'readTodoNotification', 'commentTodo', 'forwardTodo'];
 
     private string $userId;
 
@@ -28,8 +28,9 @@ class Todos
      * @param  ProjectAccess  $access  轉卡與轉卡連結的Project權限檢查
      * @param  RequestReplay  $replay  防重複提交與原結果重播
      * @param  WorkspaceService  $workspaces  轉成正式卡片時沿用的RPC寫入入口
+     * @param  TodoCollaborationService  $collaboration  留言與交接用例
      */
-    public function __construct(private array $workspaceSession, private RecordStore $store, private ProjectAccess $access, private RequestReplay $replay, private WorkspaceService $workspaces)
+    public function __construct(private array $workspaceSession, private RecordStore $store, private ProjectAccess $access, private RequestReplay $replay, private WorkspaceService $workspaces, private TodoCollaborationService $collaboration)
     {
         $this->userId = $workspaceSession['user']['id'];
     }
@@ -54,6 +55,9 @@ class Todos
         }
         if ($operation === 'getTodos') {
             return $this->listing();
+        }
+        if (in_array($operation, TodoCollaborationService::OPERATIONS, true)) {
+            return $this->collaboration->execute($this->workspaceSession, $this->store, $operation, $input);
         }
         $todo = null;
         $notification = null;
@@ -130,7 +134,7 @@ class Todos
     private function readable(string $id): array
     {
         $todo = $this->store->get('todos', $id);
-        if (! $todo || ! $this->participant($todo)) {
+        if (! $todo || (! $this->participant($todo) && ! $this->collaboration->canRead($this->workspaceSession, $id))) {
             DomainError::fail('NOT_FOUND', '找不到或無權存取這筆待辦');
         }
 
@@ -261,6 +265,7 @@ class Todos
             ]],
         ];
         $this->store->put('todos', $id, $todo);
+        $this->collaboration->initialize($this->workspaceSession, $id);
         $this->notify($todo, $assigneeId, 'assigned');
 
         return [

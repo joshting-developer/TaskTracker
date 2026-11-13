@@ -27,6 +27,7 @@ WorkspaceMember::where('workspace_id', $workspace->id)->where('user_id', $user->
 $project = Project::where('workspace_id', $workspace->id)->where('public_id', $input['projectId'])->where('code', 'VRT')->sole();
 $empty = Project::where('workspace_id', $workspace->id)->where('public_id', $input['emptyId'])->where('code', 'EMPTY')->sole();
 DB::transaction(function () use ($project, $empty) {
+    DB::table('todo_comments')->where('workspace_id', $project->workspace_id)->update(['created_at' => '2026-11-13 04:00:00']);
     $project->update(['created_at' => '2026-11-13 03:00:00', 'updated_at' => '2026-11-13 04:00:00']);
     $empty->update(['created_at' => '2026-11-13 02:00:00', 'updated_at' => '2026-11-13 03:00:00']);
     // TT-302：詳細頁會顯示建立時間與最後異動時間；固定成同一分鐘內、照原本先後各差一秒, 不改任何排序。

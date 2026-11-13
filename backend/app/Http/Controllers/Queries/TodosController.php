@@ -12,6 +12,7 @@ use App\Http\Resources\Queries\TodoDetailResource;
 use App\Http\Resources\Queries\TodoNotificationResource;
 use App\Http\Resources\Queries\TodoSummaryResource;
 use App\Http\WorkspaceTransaction;
+use App\Services\TodoCollaborationService;
 use App\Services\TodoReadService;
 use Illuminate\Http\Request;
 
@@ -23,8 +24,9 @@ class TodosController extends Controller
      *
      * @param  WorkspaceTransaction  $workspace  此Controller的穩定協作者
      * @param  TodoReadService  $todos  此Controller的穩定協作者
+     * @param  TodoCollaborationService  $collaboration  有界協作事件
      */
-    public function __construct(private WorkspaceTransaction $workspace, private TodoReadService $todos) {}
+    public function __construct(private WorkspaceTransaction $workspace, private TodoReadService $todos, private TodoCollaborationService $collaboration) {}
 
     /**
      * 取得個人待辦摘要分頁，不附其他頁面資料。
@@ -126,5 +128,16 @@ class TodosController extends Controller
         $data = $this->workspace->read($request, fn (WorkspaceContext $context) => ['page' => $this->todos->assignees($context, $request->pagination())]);
 
         return new ApiResponse(PageResource::wrap($data['page'], array_map(fn ($member) => ['id' => $member->id, 'name' => $member->name, 'email' => $member->email], $data['page']->items())));
+    }
+
+    /** 只讀已授權單筆的留言或經手分頁
+     * @param  PageQueryRequest  $request  有界分頁
+     * @param  string  $todo  待辦公開ID
+     * @param  string  $kind  路由固定事件種類
+     * @return ApiResponse 事件分頁
+     */
+    public function events(PageQueryRequest $request, string $todo, string $kind): ApiResponse
+    {
+        return new ApiResponse($this->workspace->read($request, fn (WorkspaceContext $context) => $this->collaboration->events($context, $todo, $kind, $request->pagination())));
     }
 }

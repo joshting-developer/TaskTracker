@@ -4,7 +4,7 @@ import Icon from './Icon.vue';
 defineProps({ loading: Boolean, error: String, page: {type:Number,default:1}, pageCount: {type:Number,default:1}, notifications: Array });
 const emit = defineEmits(['close', 'open', 'page', 'reload']);
 const dialog = ref(null);
-const labels = { assigned: '交給你一件待辦', edited: '更新待辦內容', completed: '完成你的交辦', reopened: '重新開啟待辦', returned: '將待辦退回給你', canceled: '取消待辦', converted: '將待辦轉成正式卡片' };
+const labels = { assigned: '交給你一件待辦', commented: '回覆待辦', forwarded: '轉發待辦給你', edited: '更新待辦內容', completed: '完成你的交辦', reopened: '重新開啟待辦', returned: '將待辦退回給你', canceled: '取消待辦', converted: '將待辦轉成正式卡片' };
 onMounted(() => dialog.value.showModal());
 </script>
 <template>

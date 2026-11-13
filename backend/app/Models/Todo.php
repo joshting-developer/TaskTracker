@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * 對應todos的關聯式資料模型；租戶範圍由repository及資料庫外鍵共同限制。
@@ -62,5 +63,13 @@ class Todo extends Model
     protected function casts(): array
     {
         return ['legacy_attributes' => 'array'];
+    }
+
+    /** 目前交接路徑僅用於有界EXISTS能力投影
+     * @return HasMany 路徑資料
+     */
+    public function assignmentPaths(): HasMany
+    {
+        return $this->hasMany(TodoAssignmentPath::class, 'todo_id');
     }
 }

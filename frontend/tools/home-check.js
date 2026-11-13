@@ -48,7 +48,7 @@ try {
   await page.goBack(); await page.getByRole('button', { name: '任務列表', exact: true }).waitFor();
   assert.equal(page.url(), projectUrl);
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
-  await todos.waitFor(); await todos.locator('.todo-content > summary').getByText('未送出的首頁速記', { exact: true }).waitFor();
+  await todos.waitFor(); await todos.locator('.todo-plain,.todo-content > summary').getByText('未送出的首頁速記', { exact: true }).waitFor();
   mkdirSync('artifacts/home', { recursive: true });
   for (const width of [1440, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });

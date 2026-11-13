@@ -144,4 +144,13 @@ class TodoController extends Controller
 
         return new ApiResponse($result);
     }
+
+    /** 驗證同一待辦的新留言或轉發輸入, 沿用既有寫入交易
+     * @param  TodoWriteRequest  $request  原始簽章輸入
+     * @return ApiResponse 最小寫入結果
+     */
+    public function collaborate(TodoWriteRequest $request): ApiResponse
+    {
+        return new ApiResponse($this->rpc->executeData($request, $request->toDto()));
+    }
 }

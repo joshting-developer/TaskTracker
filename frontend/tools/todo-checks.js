@@ -62,13 +62,13 @@ export async function checkTodoWorkflow(browser, failures, baseURL = 'http://127
   assert.equal(await row.getByRole('checkbox').count(), 0, '列首不再用checkbox變更狀態');
   await row.getByLabel('待辦操作').focus();
   await member.keyboard.press('Enter');
-  await row.getByRole('button', { name: '標記為已完成', exact: true }).click();
+  await row.getByRole('button', { name: '完成', exact: true }).click();
   await row.waitFor({ state: 'hidden' });
   await personal.getByRole('button', { name: /顯示已完成/ }).click();
   await row.getByLabel('待辦操作').click();
   await row.getByRole('button', { name: '重新開啟', exact: true }).click();
   await row.getByLabel('待辦操作').click();
-  await row.getByRole('button', { name: '標記為已完成', exact: true }).waitFor();
+  await row.getByRole('button', { name: '完成', exact: true }).waitFor();
 
   // 普通成員交給 owner, 直接加入而非等待接受
   await personal.getByLabel('快速新增待辦', { exact: true }).fill('幫忙確認 614 範圍');
@@ -78,7 +78,7 @@ export async function checkTodoWorkflow(browser, failures, baseURL = 'http://127
   const outgoing = personal.locator('.todo-row').filter({ hasText: '幫忙確認 614 範圍' });
   await outgoing.waitFor();
   await outgoing.getByLabel('待辦操作').click();
-  assert.equal(await outgoing.getByRole('button', { name: '標記為已完成', exact: true }).count(), 0, '交辦者不能代承辦者完成');
+  assert.equal(await outgoing.getByRole('button', { name: '完成', exact: true }).count(), 0, '交辦者不能代承辦者完成');
   await owner.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
   await owner.getByRole('button', { name: /待辦通知（1 則未讀）/ }).waitFor();
   await owner.getByRole('button', { name: /待辦通知/ }).click();
@@ -87,9 +87,9 @@ export async function checkTodoWorkflow(browser, failures, baseURL = 'http://127
   const received = ownerTodos.locator('.todo-row').filter({ hasText: '幫忙確認 614 範圍' });
   await received.waitFor();
   await received.getByLabel('待辦操作').click();
-  await received.getByRole('button', { name: '標記為已完成', exact: true }).waitFor();
+  await received.getByRole('button', { name: '完成', exact: true }).waitFor();
   owner.once('dialog', dialog => dialog.accept());
-  await received.getByRole('button', { name: '退回給交辦者', exact: true }).click();
+  await received.getByRole('button', { name: '退回上一手', exact: true }).click();
   await received.waitFor({ state: 'hidden' });
   await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
   await personal.getByRole('tab', { name: /我的待辦/ }).click();
@@ -108,7 +108,7 @@ export async function checkTodoWorkflow(browser, failures, baseURL = 'http://127
   await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
   const converting = personal.locator('.todo-row').filter({ hasText: '把小事變成大事' });
   await converting.getByLabel('待辦操作').click();
-  assert.equal(await converting.getByRole('button', { name: '轉成正式卡片', exact: true }).isDisabled(), true);
+  assert.equal(await converting.getByRole('button', { name: '轉為卡片', exact: true }).isDisabled(), true);
   const project = await owner.evaluate(async () => {
     const { api } = await import('/src/api/index.js');
     let project = await api.createProject({ name: '待辦正式專案', code: 'TODOPROJ', requestId: crypto.randomUUID() });
@@ -120,7 +120,7 @@ export async function checkTodoWorkflow(browser, failures, baseURL = 'http://127
   });
   await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
   await converting.getByLabel('待辦操作').click();
-  await converting.getByRole('button', { name: '轉成正式卡片', exact: true }).click();
+  await converting.getByRole('button', { name: '轉為卡片', exact: true }).click();
   let panel = member.getByRole('dialog', { name: '轉成正式卡片', exact: true });
   assert.equal(await panel.getByLabel(/任務標題/).inputValue(), '把小事變成大事');
   assert.equal(await panel.getByLabel('描述', { exact: true }).inputValue(), '轉換時保留這段背景');

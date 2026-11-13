@@ -36,12 +36,12 @@ Base URL是你實際部署TaskTracker的origin。公開Bearer前綴為`/api/publ
 
 | 方法與路徑 | Token | 用途 |
 | --- | --- | --- |
-| `GET /api/public/v1/todos` | read | `scope=mine`（交辦給我, 預設）或 `sent`（我交辦出去）, `state=open／closed`, 分頁最多100 |
-| `GET /api/public/v1/todos/{todo}` | read | 單筆含完整內容；不是交辦人或承辦人回404 |
+| `GET /api/public/v1/todos` | read | `scope=mine`（交辦給我, 預設）、`sent`（我交辦出去）或 `involved`（我經手的）, `state=open／closed`, 分頁最多100 |
+| `GET /api/public/v1/todos/{todo}` | read | 單筆含完整內容；建立人、目前承辦人與曾經手者可讀；非經手者回404 |
 | `GET /api/public/v1/todo-assignees` | read | 可交辦對象, 只回 `id`、`name` |
 | `POST /api/public/v1/todos` | write | 建立；`title` 或 `content` 擇一, `assigneeId` 省略時是自己的待辦 |
 | `PATCH /api/public/v1/todos/{todo}` | write | 交辦人修改內容 |
-| `POST /api/public/v1/todos/{todo}/complete`、`/reopen`、`/return` | write | 承辦人完成、重開已完成的、退回給交辦人（可附 `note`） |
+| `POST /api/public/v1/todos/{todo}/complete`、`/reopen`、`/return` | write | 承辦人完成、重開已完成的、退回上一手（可附 `reply`, 舊 `note` 仍可用） |
 
 寫入都要 `requestId`（UUID）, 除了建立都要 `expectedRevision`；成功只回 `{id, revision}`, 要最新內容另外GET。同requestId重送回第一次的結果。錯誤代碼：400 INVALID_INPUT、401 UNAUTHENTICATED、403 FORBIDDEN（Token只有read、或不是可以做這個動作的人）、404 NOT_FOUND、409 REVISION_CONFLICT／REQUEST_CONFLICT、429 RATE_LIMIT。
 
@@ -241,3 +241,15 @@ Issue詳細多了 `createdBy`（建卡者的使用者ID）、`createdByName` 和
 ## 一般私有附件（OpenAPI 0.18.0）
 
 PDF／ZIP與圖片共用既有附件路由及授權, 但一般附件只能下載, 不接受Markdown圖片引用；下載一律attachment、nosniff與no-store。limits.general提供獨立大小／配額與download-only-structural政策, 原mimeTypes仍只列圖片。格式／ZIP目錄檢查不代表防毒掃描, 詳見consumer的docs/general-attachments.md
+
+
+## 小待辦留言與轉發（OpenAPI 0.19.0）
+
+- `GET /api/public/v1/todos/{todo}/comments`、`/handoffs` 按需讀留言及完整交接紀錄, 使用page／perPage, 上限100, 依createdAt與內部ID穩定正序
+- `POST /api/public/v1/todos/{todo}/comments` 帶content（1～2000字）、expectedRevision、requestId新增留言
+- `POST /api/public/v1/todos/{todo}/forward` 帶assigneeId、expectedRevision、requestId與可選reply（最多2000字）, 轉給同空間有效成員
+- complete／return可附reply, 留言與狀態／交接同交易保存；回覆空白也可完成或轉發
+- 建立人、目前承辦人與曾經手者可讀／留言；同空間Owner若未經手也不能讀, 移除工作區資格立即失效
+- 只有目前承辦人能完成、轉發或退回, 轉發另需todo.assign；退回沿目前交接路徑回上一手, 不抹除完整歷史。上一手停用時回400, 改選有效對象轉發
+- summary不帶留言／交接正文, 新增initialAssigneeName及comment／forward能力。read Token的所有寫入能力為false, write Token仍受當次permission限制
+- 相同requestId與payload重送回首次結果, 不重複留言或交接；重播仍先驗有效工作區、參與資格與permission。409時保留草稿, 讀最新revision後由操作者確認再送

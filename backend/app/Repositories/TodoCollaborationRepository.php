@@ -7,7 +7,9 @@ use App\Data\PersonalReadContext;
 use App\Models\Todo;
 use App\Models\WorkspaceMember;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /** 待辦協作資料入口, 每次查詢都限定Workspace與單一待辦 */
 class TodoCollaborationRepository
@@ -29,7 +31,7 @@ class TodoCollaborationRepository
      */
     public function lock(PersonalReadContext $context, string $id): ?Todo
     {
-        return Todo::where('workspace_id', $context->workspaceId)->where('public_id', $id)->lockForUpdate()->first(['id', 'workspace_id', 'public_id', 'created_by_id', 'initial_assignee_id', 'assignee_id', 'creator_name', 'assignee_name', 'state', 'revision', 'title', 'created_at']);
+        return $this->query($context, $id)->lockForUpdate()->first();
     }
 
     /** 檢查目前或過去經手資格, 不以工作區Owner身份放行
@@ -134,6 +136,60 @@ class TodoCollaborationRepository
         }
         $columns = $table === 'todo_comments' ? ['public_id', 'author_id', 'author_name', 'content', 'created_at'] : ['public_id', 'from_id', 'to_id', 'from_name', 'to_name', 'kind', 'created_at'];
 
-        return DB::table($table)->where('workspace_id', $todo->workspace_id)->where('todo_id', $todo->id)->orderBy('created_at')->orderBy('id')->paginate($page->perPage,$columns,'page',$page->page);
+        return DB::table($table)->where('workspace_id', $todo->workspace_id)->where('todo_id', $todo->id)->orderBy('created_at')->orderBy('id')->paginate($page->perPage, $columns, 'page', $page->page);
+    }
+
+    /** 以資料庫成員鍵讀取單一有效對象及顯示名稱
+     * @param  int  $workspaceId  可信工作區
+     * @param  int  $memberId  同空間成員鍵
+     * @return ?object 最小成員投影
+     */
+    public function memberByKey(int $workspaceId, int $memberId): ?object
+    {
+        return DB::table('workspace_members as m')->join('users as u', 'u.id', '=', 'm.user_id')->where('m.workspace_id', $workspaceId)->where('m.id', $memberId)->whereNull('m.disabled_at')->first(['m.id', 'm.user_id', 'm.role', 'u.name']);
+    }
+
+    /** 在待辦鎖內追加單一歷史事件, 不重讀或重寫全部歷史
+     * @param  Todo  $todo  已鎖定待辦
+     * @param  array<string,mixed>  $event  已驗證的歷史欄位
+     * @return void
+     */
+    public function audit(Todo $todo, array $event): void
+    {
+        $q = DB::table('audit_events')->where('workspace_id', $todo->workspace_id)->where('entity_type', 'todos')->where('entity_id', $todo->id)->where('stream', 'history');
+        $position = (int) ($q->max('position') ?? -1) + 1;
+        DB::table('audit_events')->insert(['workspace_id' => $todo->workspace_id, 'entity_type' => 'todos', 'entity_id' => $todo->id, 'stream' => 'history', 'position' => $position, 'event_data' => json_encode($event, JSON_THROW_ON_ERROR)]);
+    }
+
+    /** 建立Service已驗過收件資格的通知
+     * @param  Todo  $todo  同工作區待辦
+     * @param  int  $recipientId  已驗證收件成員
+     * @param  string  $event  異動事件
+     * @param  string  $actor  操作者名稱
+     * @return void
+     */
+    public function notify(Todo $todo, int $recipientId, string $event, string $actor): void
+    {
+        DB::table('todo_notifications')->insert(['public_id' => (string) Str::uuid(), 'workspace_id' => $todo->workspace_id, 'todo_id' => $todo->id, 'recipient_id' => $recipientId, 'event' => $event, 'actor' => $actor, 'created_at' => now()]);
+    }
+
+    /** 單筆讀取不取寫入鎖, 仍保留租戶範圍與最小投影
+     * @param  PersonalReadContext  $context  可信範圍
+     * @param  string  $id  待辦公開ID
+     * @return ?Todo 單筆資料
+     */
+    public function read(PersonalReadContext $context, string $id): ?Todo
+    {
+        return $this->query($context, $id)->first();
+    }
+
+    /** 共用單筆範圍, 不預載內容或全部歷史
+     * @param  PersonalReadContext  $context  可信範圍
+     * @param  string  $id  待辦公開ID
+     * @return Builder<Todo> 尚未執行的查詢
+     */
+    private function query(PersonalReadContext $context, string $id): Builder
+    {
+        return Todo::where('workspace_id', $context->workspaceId)->where('public_id', $id)->select(['id', 'workspace_id', 'public_id', 'created_by_id', 'initial_assignee_id', 'assignee_id', 'creator_name', 'assignee_name', 'state', 'revision', 'title', 'created_at']);
     }
 }
