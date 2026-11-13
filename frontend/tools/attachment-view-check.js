@@ -31,7 +31,7 @@ createApp({setup(){const source=ref(fixture.source);window.setSource=value=>sour
   async function call(path, data, method = 'POST', client = context) {
     const csrf = await (await client.request.get(`${base}/api/csrf-cookie`)).json();
     const response = await client.request.fetch(`${base}${path}`, { method, data: { requestId: crypto.randomUUID(), ...data }, headers: { 'X-CSRF-TOKEN': csrf.csrfToken } });
-    assert.equal(response.status(), 200, await response.text()); return (await fixtureResponse(context.request, response)).data;
+    assert.equal(response.status(), 200, await response.text()); return (await fixtureResponse(client.request, response)).data;
   }
   const identity = await call('/api/auth/register', { name: '附件檢視測試', email: `view-${crypto.randomUUID()}@example.test`, password: 'isolated-image-view', workspaceName: '附件測試' });
   const project = await call('/api/rpc/createProject', { name: '附件測試', code: 'VIEW' });

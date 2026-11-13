@@ -1,3 +1,4 @@
+import { verifyFixtureInBrowser } from './fixtures/verification.js';
 // TT-302：詳細頁直接看到建立者／建立時間與最後異動；異動紀錄新的在上, 「載入更多」在下面接更舊的, 詳細頁和快速編輯一致。
 import assert from 'node:assert/strict';
 import { preview } from 'vite';
@@ -29,6 +30,7 @@ try {
   await page.getByLabel('密碼', { exact: true }).fill('isolated-history-browser');
   await page.getByLabel('工作空間名稱', { exact: true }).fill('異動排序');
   await page.getByRole('button', { name: '建立工作空間', exact: true }).click();
+  await verifyFixtureInBrowser(page);
   await page.locator('.app-shell').waitFor();
   const project = await call('createProject', { name: '異動排序專案', code: 'HIS' });
   let issue = await call('createIssue', { projectId: project.id, title: '排序測試 起點' });

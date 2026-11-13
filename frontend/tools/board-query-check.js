@@ -32,10 +32,10 @@ try {
   await page.goto(`http://127.0.0.1:${e2ePort}/app/#/projects/${project.id}`); await page.reload();
   await page.waitForFunction(() => document.querySelectorAll('.issue-table tbody tr').length === 20);
   const mineResponse=page.waitForResponse(r=>new URL(r.url()).pathname.endsWith('/issues')&&new URL(r.url()).searchParams.get('scope')==='mine'&&r.status()===200);
-  await page.getByRole('button',{name:'我的任務',exact:true}).click(); await mineResponse;
+  await page.getByRole('link',{name:'我的任務',exact:true}).click(); await mineResponse;
   await page.waitForFunction(() => document.querySelectorAll('.issue-table tbody tr').length === 1);
   assert.equal(await page.getByRole('button',{name:'Visible task',exact:true}).count(),1);
-  await page.getByRole('button',{name:'任務列表',exact:true}).click();
+  await page.getByRole('link',{name:'任務列表',exact:true}).click();
   await page.waitForFunction(() => document.querySelectorAll('.issue-table tbody tr').length === 20);
   const nextPage = page.waitForResponse(r => new URL(r.url()).pathname.endsWith('/issues') && new URL(r.url()).searchParams.get('page') === '2' && r.status() === 200);
   await page.getByRole('button', {name:'下一頁',exact:true}).click(); await nextPage;
