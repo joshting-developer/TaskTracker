@@ -56,9 +56,7 @@ class IssueReadRepository
      */
     private function timeProjection(Builder $q, ?string $timeUser, bool $teamTime, bool $detail = false): void
     {
-        $q->select($this->columns($detail))->selectSub(DB::table('issues as epic_child')
-            ->whereColumn('epic_child.workspace_id', 'issues.workspace_id')->whereColumn('epic_child.project_id', 'issues.project_id')
-            ->whereColumn('epic_child.epic_id', 'issues.id')->selectRaw('COALESCE(SUM(estimate_minutes),0)'), 'epic_estimate_minutes');
+        $q->select($this->columns($detail));
         if ($timeUser !== null || $teamTime) {
             $minutes = DB::table('time_entries as tracked')->whereColumn('tracked.workspace_id', 'issues.workspace_id')
                 ->whereColumn('tracked.project_id', 'issues.project_id')->whereNull('tracked.voided_at')
@@ -115,8 +113,33 @@ class IssueReadRepository
             $q->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')->orderBy('due_date');
         }
 
-        return $q->orderByDesc('updated_at')->orderBy('identifier')->orderBy('public_id')
+        $page = $q->orderByDesc('updated_at')->orderBy('identifier')->orderBy('public_id')
             ->paginate($filters->pagination->perPage, $this->columns(), 'page', $filters->pagination->page);
+        if (! $listOnly) {
+            $this->loadEpicEstimates($project, $page->items());
+        }
+
+        return $page;
+    }
+
+    /**
+     * 只對當頁實際出現的Epic批次加總, 一般卡片不執行估時子查詢
+     *
+     * @param  Project  $project  已授權且限定工作區的專案
+     * @param  list<Issue>  $issues  當頁至多100筆或單卡詳細
+     * @return void
+     */
+    private function loadEpicEstimates(Project $project, array $issues): void
+    {
+        $epics = array_values(array_filter($issues, fn (Issue $issue) => $issue->type === 'epic'));
+        if ($epics === []) {
+            return;
+        }
+        $totals = $this->query($project)->whereIn('epic_id', array_map(fn (Issue $issue) => $issue->id, $epics))
+            ->select('epic_id')->selectRaw('SUM(estimate_minutes) AS total')->groupBy('epic_id')->pluck('total', 'epic_id');
+        foreach ($epics as $epic) {
+            $epic->setAttribute('epic_estimate_minutes', (int) ($totals[$epic->id] ?? 0));
+        }
     }
 
     /**
@@ -241,7 +264,12 @@ class IssueReadRepository
         $q = $this->query($project)->where('public_id', $id)->with([...$this->relations(), 'epic.status:id,code', 'parent.status:id,code', 'relatedIssues' => fn ($related) => $related->select(['issues.id', 'issues.public_id', 'issues.title', 'issues.identifier', 'issues.type', 'issues.project_id', 'issues.state_id'])->with('status:id,code')->orderBy('issues.public_id')->limit(201)]);
         $this->timeProjection($q, $timeUser, $teamTime, true);
 
-        return $q->first($this->columns(true));
+        $issue = $q->first($this->columns(true));
+        if ($issue !== null) {
+            $this->loadEpicEstimates($project, [$issue]);
+        }
+
+        return $issue;
     }
 
     /**

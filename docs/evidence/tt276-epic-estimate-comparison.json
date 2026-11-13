@@ -1,0 +1,176 @@
+{
+  "engine": "8.4.13",
+  "fixtureIssues": 10000,
+  "conditions": "same fixture, interleaved old/new, two warmups excluded, nine samples each; repository only, no HTTP/p95 claim",
+  "cases": {
+    "20": {
+      "stats": {
+        "before": {
+          "medianMs": 43.960583,
+          "minMs": 41.267,
+          "maxMs": 48.816584,
+          "samplesMs": [
+            41.267,
+            41.397,
+            41.799,
+            42.6345,
+            43.960583,
+            44.790709,
+            47.126792,
+            47.474875,
+            48.816584
+          ]
+        },
+        "after": {
+          "medianMs": 12.844333,
+          "minMs": 12.384208,
+          "maxMs": 15.639709,
+          "samplesMs": [
+            12.384208,
+            12.565458,
+            12.64075,
+            12.73775,
+            12.844333,
+            13.335708,
+            13.5405,
+            14.381583,
+            15.639709
+          ]
+        }
+      },
+      "evidence": {
+        "before": {
+          "queryCount": 4,
+          "plans": [
+            {
+              "sql": "select count(*) as `aggregate` from `issues` where `workspace_id` = ? and `project_id` = ?",
+              "plan": [
+                {
+                  "EXPLAIN": "-> Aggregate: count(0)  (cost=1044 rows=1) (actual time=1.15..1.15 rows=1 loops=1)\n    -> Covering index lookup on issues using issues_project_unique (workspace_id=1, project_id=1)  (cost=525 rows=5193) (actual time=0.0309..0.919 rows=10000 loops=1)\n"
+                }
+              ]
+            },
+            {
+              "sql": "select `id`, `workspace_id`, `public_id`, `project_id`, `identifier`, `title`, `type`, `state_id`, `priority`, `assignee_id`, `epic_id`, `parent_issue_id`, `due_date`, `estimate_minutes`, `revision`, `created_at`, `updated_at`, (select COALESCE(SUM(estimate_minutes),0) from `issues` as `epic_child` where `epic_child`.`workspace_id` = `issues`.`workspace_id` and `epic_child`.`project_id` = `issues`.`project_id` and `epic_child`.`epic_id` = `issues`.`id`) as `epic_estimate_minutes` from `issues` where `workspace_id` = ? and `project_id` = ? order by `updated_at` desc, `identifier` asc, `public_id` asc limit 20 offset 0",
+              "plan": [
+                {
+                  "EXPLAIN": "-> Limit: 20 row(s)  (cost=312 rows=20) (actual time=13.6..13.6 rows=20 loops=1)\n    -> Sort: issues.updated_at DESC, issues.identifier, issues.public_id, limit input to 20 row(s) per chunk  (cost=312 rows=5193) (actual time=13.5..13.5 rows=20 loops=1)\n        -> Filter: (issues.project_id = 1)  (cost=312 rows=5193) (actual time=0.028..8.48 rows=10000 loops=1)\n            -> Index lookup on issues using issues_public_unique (workspace_id=1)  (cost=312 rows=5193) (actual time=0.0276..7.97 rows=10000 loops=1)\n-> Select #2 (subquery in projection; dependent)\n    -> Aggregate: sum(epic_child.estimate_minutes)  (cost=90.3 rows=1) (actual time=1.87..1.87 rows=1 loops=20)\n        -> Filter: ((epic_child.workspace_id = issues.workspace_id) and (epic_child.project_id = issues.project_id) and (epic_child.epic_id = issues.id))  (cost=89.3 rows=10.4) (actual time=1.87..1.87 rows=0 loops=20)\n            -> Table scan on epic_child  (cost=89.3 rows=10386) (actual time=0.00394..1.4 rows=10000 loops=20)\n"
+                }
+              ]
+            }
+          ],
+          "rowCount": 20
+        },
+        "after": {
+          "queryCount": 4,
+          "plans": [
+            {
+              "sql": "select count(*) as `aggregate` from `issues` where `workspace_id` = ? and `project_id` = ?",
+              "plan": [
+                {
+                  "EXPLAIN": "-> Aggregate: count(0)  (cost=1044 rows=1) (actual time=1.11..1.11 rows=1 loops=1)\n    -> Covering index lookup on issues using issues_project_unique (workspace_id=1, project_id=1)  (cost=525 rows=5193) (actual time=0.0124..0.876 rows=10000 loops=1)\n"
+                }
+              ]
+            },
+            {
+              "sql": "select `id`, `workspace_id`, `public_id`, `project_id`, `identifier`, `title`, `type`, `state_id`, `priority`, `assignee_id`, `epic_id`, `parent_issue_id`, `due_date`, `estimate_minutes`, `revision`, `created_at`, `updated_at` from `issues` where `workspace_id` = ? and `project_id` = ? order by `updated_at` desc, `identifier` asc, `public_id` asc limit 20 offset 0",
+              "plan": [
+                {
+                  "EXPLAIN": "-> Limit: 20 row(s)  (cost=312 rows=20) (actual time=12.6..12.6 rows=20 loops=1)\n    -> Sort: issues.updated_at DESC, issues.identifier, issues.public_id, limit input to 20 row(s) per chunk  (cost=312 rows=5193) (actual time=12.6..12.6 rows=20 loops=1)\n        -> Filter: (issues.project_id = 1)  (cost=312 rows=5193) (actual time=0.0271..7.84 rows=10000 loops=1)\n            -> Index lookup on issues using issues_public_unique (workspace_id=1)  (cost=312 rows=5193) (actual time=0.0269..7.38 rows=10000 loops=1)\n"
+                }
+              ]
+            }
+          ],
+          "rowCount": 20
+        }
+      }
+    },
+    "100": {
+      "stats": {
+        "before": {
+          "medianMs": 172.841209,
+          "minMs": 167.843334,
+          "maxMs": 187.872584,
+          "samplesMs": [
+            167.843334,
+            169.504458,
+            170.900959,
+            170.958,
+            172.841209,
+            175.912833,
+            179.844667,
+            185.226833,
+            187.872584
+          ]
+        },
+        "after": {
+          "medianMs": 25.453042,
+          "minMs": 24.702875,
+          "maxMs": 27.138917,
+          "samplesMs": [
+            24.702875,
+            24.811708,
+            25.047375,
+            25.157375,
+            25.453042,
+            26.176167,
+            26.359875,
+            26.438084,
+            27.138917
+          ]
+        }
+      },
+      "evidence": {
+        "before": {
+          "queryCount": 4,
+          "plans": [
+            {
+              "sql": "select count(*) as `aggregate` from `issues` where `workspace_id` = ? and `project_id` = ?",
+              "plan": [
+                {
+                  "EXPLAIN": "-> Aggregate: count(0)  (cost=1044 rows=1) (actual time=1.15..1.15 rows=1 loops=1)\n    -> Covering index lookup on issues using issues_project_unique (workspace_id=1, project_id=1)  (cost=525 rows=5193) (actual time=0.0189..0.91 rows=10000 loops=1)\n"
+                }
+              ]
+            },
+            {
+              "sql": "select `id`, `workspace_id`, `public_id`, `project_id`, `identifier`, `title`, `type`, `state_id`, `priority`, `assignee_id`, `epic_id`, `parent_issue_id`, `due_date`, `estimate_minutes`, `revision`, `created_at`, `updated_at`, (select COALESCE(SUM(estimate_minutes),0) from `issues` as `epic_child` where `epic_child`.`workspace_id` = `issues`.`workspace_id` and `epic_child`.`project_id` = `issues`.`project_id` and `epic_child`.`epic_id` = `issues`.`id`) as `epic_estimate_minutes` from `issues` where `workspace_id` = ? and `project_id` = ? order by `updated_at` desc, `identifier` asc, `public_id` asc limit 100 offset 0",
+              "plan": [
+                {
+                  "EXPLAIN": "-> Limit: 100 row(s)  (cost=312 rows=100) (actual time=24.3..24.4 rows=100 loops=1)\n    -> Sort: issues.updated_at DESC, issues.identifier, issues.public_id, limit input to 100 row(s) per chunk  (cost=312 rows=5193) (actual time=24.3..24.4 rows=100 loops=1)\n        -> Filter: (issues.project_id = 1)  (cost=312 rows=5193) (actual time=0.0263..8.05 rows=10000 loops=1)\n            -> Index lookup on issues using issues_public_unique (workspace_id=1)  (cost=312 rows=5193) (actual time=0.0259..7.58 rows=10000 loops=1)\n-> Select #2 (subquery in projection; dependent)\n    -> Aggregate: sum(epic_child.estimate_minutes)  (cost=90.3 rows=1) (actual time=1.8..1.8 rows=1 loops=100)\n        -> Filter: ((epic_child.workspace_id = issues.workspace_id) and (epic_child.project_id = issues.project_id) and (epic_child.epic_id = issues.id))  (cost=89.3 rows=10.4) (actual time=1.8..1.8 rows=0 loops=100)\n            -> Table scan on epic_child  (cost=89.3 rows=10386) (actual time=0.00304..1.34 rows=10000 loops=100)\n"
+                }
+              ]
+            }
+          ],
+          "rowCount": 100
+        },
+        "after": {
+          "queryCount": 4,
+          "plans": [
+            {
+              "sql": "select count(*) as `aggregate` from `issues` where `workspace_id` = ? and `project_id` = ?",
+              "plan": [
+                {
+                  "EXPLAIN": "-> Aggregate: count(0)  (cost=1044 rows=1) (actual time=1.13..1.13 rows=1 loops=1)\n    -> Covering index lookup on issues using issues_project_unique (workspace_id=1, project_id=1)  (cost=525 rows=5193) (actual time=0.0193..0.9 rows=10000 loops=1)\n"
+                }
+              ]
+            },
+            {
+              "sql": "select `id`, `workspace_id`, `public_id`, `project_id`, `identifier`, `title`, `type`, `state_id`, `priority`, `assignee_id`, `epic_id`, `parent_issue_id`, `due_date`, `estimate_minutes`, `revision`, `created_at`, `updated_at` from `issues` where `workspace_id` = ? and `project_id` = ? order by `updated_at` desc, `identifier` asc, `public_id` asc limit 100 offset 0",
+              "plan": [
+                {
+                  "EXPLAIN": "-> Limit: 100 row(s)  (cost=312 rows=100) (actual time=26.1..26.2 rows=100 loops=1)\n    -> Sort: issues.updated_at DESC, issues.identifier, issues.public_id, limit input to 100 row(s) per chunk  (cost=312 rows=5193) (actual time=26.1..26.1 rows=100 loops=1)\n        -> Filter: (issues.project_id = 1)  (cost=312 rows=5193) (actual time=0.0204..8.64 rows=10000 loops=1)\n            -> Index lookup on issues using issues_public_unique (workspace_id=1)  (cost=312 rows=5193) (actual time=0.0202..8.1 rows=10000 loops=1)\n"
+                }
+              ]
+            }
+          ],
+          "rowCount": 100
+        }
+      }
+    }
+  },
+  "tests": {
+    "backend": "34 passed, 1530 assertions; EpicEstimateProjectionTest/MySqlEpicEstimateProjectionTest/BoardReadApiTest/PublicQueriesTest/MySqlPublicQueriesTest/MySqlApiTest",
+    "browser": "npm --prefix frontend run test:board exit0 against isolated 13089",
+    "limits": "no production latency or full visual-baseline claim; response schema unchanged"
+  }
+}

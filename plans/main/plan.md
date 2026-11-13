@@ -1,3 +1,9 @@
+## TT-276 修正與驗證完成
+
+- 一般Task移除Epic相關子查詢, 當頁Epic才用同Project限定ID一次聚合；Task／Bug／空Epic／單卡與列表投影有memory＋MySQL讀取範圍測試
+- 相同一萬卡、各9次交錯舊新, 20筆43.96→12.84ms／100筆172.84→25.45ms中位數, 卡片ID一致；34項1530assertions、看板真瀏覽器、限定Pint及Skill hash通過
+- 回應／UI沒有變, 沒有改baseline；不是正式p95。報告docs/tt276-board-epic-estimates.md, 提交與本人實際工時回填後closed再接277；他人開發者文件差異保留不stage
+
 ## 2026-11-13 TT-299 開發者文件頁加回到TaskTracker的入口
 
 - Josh回報進了 `/api/public/docs` 就回不去TaskTracker, 標題列的「TaskTracker」改成連回首頁, 右邊加「回到 TaskTracker」, 「API 文件」字樣連回文件首頁
@@ -10,6 +16,13 @@
 - 首頁選單是「登入／免費建立工作空間」, 登入頁多一個「產品介紹」連回首頁（Josh回報只靠標誌回介紹頁不直覺）；建立工作空間帶 `?mode=register` 直接打開建立表單, 首頁正文主按鈕也改成建立
 - 手機390寬原本按鈕字會擠成兩行, 改成不換行並縮小間距, 「免費」兩字在窄螢幕藏起來
 - 已測guest-pages-check（dev和build）, 三種寬度沒有橫向捲動, 連結都44px；截圖等這輪UI卡做完一起給Josh核准
+
+## 2026-11-13 使用者指定分輪實作
+
+- 順序TT-276→277→280→191→287→282→288→289→296→278→279, 每張先估時／領取、實測／提交、正式工時與回填後再下一張
+- 本輪從276開始, 先保留20／100一般卡與Epic的MySQL計畫baseline, 改最小投影避免無條件Epic子查詢, 不改HTTP欄位與授權
+- 共用工程／Laravel Architecture與Patterns／Addy／benchmark／Ponytail lite及追蹤規範已讀, UI或前端資料流卡到時補相應Skills
+- 起始main前端AuthGate／GuestTopBar／guest-pages與index有他人異動, 不stage／覆蓋；測試只用本次專用Compose, 主庫不seed/reset, 不push
 
 ## 2026-11-13 TT-297 首頁改成產品介紹, 登入移到/login
 
