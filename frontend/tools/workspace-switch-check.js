@@ -1,3 +1,4 @@
+import { verifyFixtureInBrowser } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { preview } from 'vite';
@@ -8,7 +9,7 @@ async function call(page, operation, input = {}, group = 'rpc') {
   return page.evaluate(async ({ operation, input, group }) => {
     const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();
     const response = await fetch(`/api/${group}/${operation}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken }, body: JSON.stringify({ requestId: crypto.randomUUID(), ...input }) });
-    const result = await response.json(); if (!result.ok) throw new Error(JSON.stringify(result)); if (result.data?.verificationRequired) { const csrf = await (await fetch('/api/csrf-cookie')).json(); const verified = await fetch('/api/auth/verify-email', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.csrfToken }, body: JSON.stringify({ code: 'local666' }) }); if (!verified.ok) throw new Error('Fixture email verification failed'); result.data = (await verified.json()).data; } return result.data;
+    const result = await response.json(); if (!result.ok) throw new Error(JSON.stringify(result)); if (result.data?.verificationRequired) { const csrf = await (await fetch('/api/csrf-cookie')).json(); const verify = () => fetch('/api/auth/verify-email', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.csrfToken }, body: JSON.stringify({ code: 'local666' }) }); let verified = await verify(); if (verified.status === 429) { const seconds = Number(verified.headers.get('Retry-After')); if (!Number.isFinite(seconds) || seconds < 0 || seconds > 60) throw new Error('Bounded Retry-After required'); await new Promise(resolve => setTimeout(resolve, seconds * 1000 + 250)); verified = await verify(); } if (!verified.ok) throw new Error('Fixture email verification failed'); result.data = (await verified.json()).data; } return result.data;
   }, { operation, input, group });
 }
 try {
@@ -71,7 +72,8 @@ try {
   const todos = await call(first, 'getTodos'); assert.equal(todos.todos.some(todo => todo.title === '舊分頁不能錯寫'), false); await stale.getByText('A工作區速記', { exact: true }).first().waitFor({ state: 'hidden' });
   console.log('PASS: Owner側欄設定、身份隔離、既有登入邀請、兩個工作區切換、私有專案與待辦隔離、草稿取消／確認、另一分頁舊請求409與重讀、三尺寸');
   const c = await call(second, 'inviteMember', { email: `ws-new-${token}@example.test` });
-  const fresh = await (await browser.newContext()).newPage(); fresh.setDefaultTimeout(10000); await fresh.goto(`http://127.0.0.1:5175/app/#/invite?token=${c.token}`); await fresh.getByLabel('你的名字').fill('新同事'); await fresh.getByLabel('Email', { exact: true }).fill(c.email); await fresh.getByLabel('密碼', { exact: true }).fill(password); await fresh.getByRole('button', { name: '加入工作空間', exact: true }).click(); await fresh.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
+  const fresh = await (await browser.newContext()).newPage(); fresh.setDefaultTimeout(10000); await fresh.goto(`http://127.0.0.1:5175/app/#/invite?token=${c.token}`); await fresh.getByLabel('你的名字').fill('新同事'); await fresh.getByLabel('Email', { exact: true }).fill(c.email); await fresh.getByLabel('密碼', { exact: true }).fill(password); await fresh.getByRole('button', { name: '加入工作空間', exact: true }).click();
+  await verifyFixtureInBrowser(fresh); await fresh.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
   const existing = await (await browser.newContext()).newPage(); existing.setDefaultTimeout(10000); await existing.goto(inviteUrl); await existing.getByRole('button', { name: '已有帳號？登入', exact: true }).click(); await existing.getByLabel('Email', { exact: true }).fill(a.user.email); await existing.getByLabel('密碼', { exact: true }).fill(password); await existing.getByRole('button', { name: '登入並接受邀請', exact: true }).click(); await existing.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
   assert.equal((await call(existing, 'getWorkspace')).meta.workspace.id, b.workspace.id);
   const mismatch = await (await browser.newContext()).newPage(); mismatch.setDefaultTimeout(10000); mismatch.on('pageerror', e => errors.push(e.message));

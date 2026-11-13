@@ -8,3 +8,4 @@
 - local666只在local／testing的有效pending challenge通過, 正式環境拒絕
 - 沿用TT-189加密outbox與背景寄送, 自動測試只用Mail fake；邀請是手動連結, 新帳號同樣驗證
 - 同步Session契約、前端登入／註冊／重載、測試fixture與手機流程, 隔離MySQL／Chrome／核准視覺驗證後提交及填工時
+- 後續測試修整階段：補六支畫面註冊fixture, 只更新測試契約及等待, 不修改產品；SMTP字級失敗獨立TT-334, 不降低原可讀性門檻

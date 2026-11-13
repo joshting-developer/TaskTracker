@@ -1,3 +1,4 @@
+import { verifyFixtureInBrowser } from './fixtures/verification.js';
 import { openProjectList } from './navigation.js';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
@@ -34,7 +35,8 @@ async function register(page, email, inviteToken = '') {
   await page.getByLabel('密碼', { exact: true }).fill('flow-test-password');
   if (!inviteToken) await page.getByLabel('工作空間名稱', { exact: true }).fill('流程回驗空間');
   await page.getByRole('button', { name: inviteToken ? '加入工作空間' : '建立工作空間', exact: true }).click();
-  await page.getByRole('heading', { name: '首頁', exact: true }).waitFor();
+  await verifyFixtureInBrowser(page);
+  await page.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
 }
 try {
   vite = await createServer({ server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': apiTarget } } });
@@ -57,7 +59,8 @@ try {
     project = await api.project(project.id);
     let second = await api.createProject({ name: '流程 second', code: 'SECOND', requestId: crypto.randomUUID() });
     second = await api.project(second.id);
-    const issue = await api.createIssue({ projectId: project.id, title: '閱讀與編輯的分工', assignee: ws.meta.userId, requestId: crypto.randomUUID() });
+    let issue = await api.createIssue({ projectId: project.id, title: '閱讀與編輯的分工', assignee: ws.meta.userId, requestId: crypto.randomUUID() });
+    issue = await api.issue(project.id, issue.id);
     await api.createIssue({ projectId: project.id, title: '其他未指派工作', requestId: crypto.randomUUID() });
     return { memberId: person.id, ownerId: ws.meta.userId, project, second, issue };
   }, email);
@@ -71,8 +74,9 @@ try {
   await todos.getByLabel('編輯待辦內容', { exact: true }).fill('切換後保留的草稿');
   await todos.getByRole('tab', { name: /我交辦的/ }).click();
   await todos.getByRole('status').filter({ hasText: '切換清單會保留草稿' }).waitFor();
+  await todos.locator('.todo-row').first().waitFor();
   assert.equal(await todos.locator('.todo-actions').count(), 3, '其他 tab 操作仍可用');
-  await todos.getByRole('button', { name: '顯示全部待辦（5）', exact: true }).click();
+  await todos.getByRole('button', { name: '展開待辦清單（5）', exact: true }).click();
   assert.equal(await todos.locator('.todo-row').count(), 5);
   // 即使另一筆交辦被取消, 原本編輯的草稿也保留。
   const other = todos.locator('.todo-row').first();
@@ -98,7 +102,8 @@ try {
   assert.equal(saved.title, '切換後保留的草稿');
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：流程 first', exact: true }).click();
-  await page.getByRole('button', { name: /^我的任務/ }).click();
+  await page.getByRole('link', { name: /^我的任務/ }).click();
+  await page.locator('tbody tr').first().waitFor();
   assert.equal(await page.locator('tbody tr').count(), 1);
   await page.reload(); await page.locator('tbody tr').first().waitFor();
   assert.equal(await page.locator('tbody tr').count(), 1);

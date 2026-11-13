@@ -1,3 +1,4 @@
+import { verifyFixtureInBrowser } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { preview } from 'vite';
@@ -17,6 +18,7 @@ try {
   await page.getByLabel('密碼', { exact: true }).fill('home-test-only-password');
   await page.getByLabel('工作空間名稱', { exact: true }).fill('工作桌');
   await page.getByRole('button', { name: '建立工作空間', exact: true }).click();
+  await verifyFixtureInBrowser(page);
   const todos = page.getByRole('region', { name: '首頁小待辦', exact: true }); await todos.waitFor();
   assert.equal(await page.locator('.project-home,.page-heading').count(), 0);
   assert.equal(await page.getByRole('button', { name: '建立專案', exact: true }).count(), 0);

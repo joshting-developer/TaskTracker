@@ -1,3 +1,4 @@
+import { verifyFixtureInBrowser } from './fixtures/verification.js';
 // TT-258：狀態篩選勾選選項不得使頁面崩潰；在任務列表、我的任務與看板逐一勾選／取消／清除。
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
@@ -24,7 +25,8 @@ try {
   await page.getByLabel('密碼', { exact: true }).fill('filter-test-password');
   await page.getByLabel('工作空間名稱', { exact: true }).fill('狀態篩選回驗');
   await page.getByRole('button', { name: '建立工作空間', exact: true }).click();
-  await page.getByRole('heading', { name: '首頁', exact: true }).waitFor();
+  await verifyFixtureInBrowser(page);
+  await page.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
   await page.evaluate(async () => {
     const { api } = await import('/src/api/index.js');
     const ws = await api.getWorkspace();
@@ -71,7 +73,7 @@ try {
   }
   await page.getByRole('link', { name: '任務列表', exact: true }).click();
   await exercise('任務列表');
-  await page.getByRole('button', { name: /^我的任務/ }).click();
+  await page.getByRole('link', { name: /^我的任務/ }).click();
   await exercise('我的任務');
   await page.getByRole('link', { name: '任務看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();

@@ -1,3 +1,4 @@
+import { verifyFixtureInBrowser } from './fixtures/verification.js';
 const port = Number(process.env.E2E_FRONTEND_PORT || 5175), baseURL = `http://127.0.0.1:${port}`;
 import { openProjectList } from './navigation.js';
 import assert from 'node:assert/strict';
@@ -25,7 +26,8 @@ try {
   await page.getByLabel('密碼', { exact: true }).fill('ui-local-test-password');
   await page.getByLabel('工作空間名稱', { exact: true }).fill('UI 驗證空間');
   await page.getByRole('button', { name: '建立工作空間', exact: true }).click();
-  await page.getByRole('heading', { name: '首頁', exact: true }).waitFor();
+  await verifyFixtureInBrowser(page);
+  await page.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
   const fixture = await page.evaluate(async () => {
     const { api } = await import('/src/api/index.js');
     let project = await api.createProject({ name: 'UI 驗證專案', code: 'UX', requestId: crypto.randomUUID() });
@@ -44,11 +46,11 @@ try {
   const todoTabs = personal.getByRole('tablist', { name: '待辦範圍', exact: true });
   await todoTabs.getByRole('tab').first().focus();
   await page.keyboard.press('ArrowRight');
-  assert.equal(await todoTabs.getByRole('tab').last().getAttribute('aria-selected'), 'true');
+  assert.equal(await todoTabs.getByRole('tab', { name: /我交辦的/ }).getAttribute('aria-selected'), 'true');
   assert.equal(await todoTabs.getByRole('tab').first().getAttribute('tabindex'), '-1');
   await page.keyboard.press('Home');
   assert.equal(await todoTabs.getByRole('tab').first().getAttribute('aria-selected'), 'true');
-  await personal.getByRole('button', { name: '顯示全部待辦（8）', exact: true }).click();
+  await personal.getByRole('button', { name: '展開待辦清單（8）', exact: true }).click();
   assert.equal(await personal.locator('.todo-row').count(), 8);
   await personal.getByRole('button', { name: '收起待辦', exact: true }).click();
   assert.equal(await personal.locator('.todo-row').count(), 3);
@@ -103,7 +105,7 @@ try {
   assert.equal(saved[0].minutes, 30);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByRole('link', { name: '通知預覽', exact: true }).click();
-  const readable = await page.locator('.smtp-card small').evaluate(el => {
+  const readable = await page.locator('.smtp-card p').evaluate(el => {
     const style = getComputedStyle(el), parent = getComputedStyle(el.closest('.smtp-card'));
     const luminance = rgb => {
       const parts = rgb.match(/[\d.]+/g).slice(0, 3).map(Number).map(v => v / 255).map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);

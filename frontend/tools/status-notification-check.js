@@ -1,3 +1,4 @@
+import { verifyFixtureInBrowser } from './fixtures/verification.js';
 // TT-314：通知預覽要把「已關閉」「待驗收」的狀態通知標成重要。
 // 後端誰會收到通知由PHPUnit驗證；這裡用真的後端建工作空間與專案, 只在通知列表回應裡加兩筆人造通知, 檢查瀏覽器上的標示與版面。
 import assert from 'node:assert/strict';
@@ -19,6 +20,7 @@ try {
   await page.getByLabel('密碼', { exact: true }).fill('status-test-only-password');
   await page.getByLabel('工作空間名稱', { exact: true }).fill('通知檢查');
   await page.getByRole('button', { name: '建立工作空間', exact: true }).click();
+  await verifyFixtureInBrowser(page);
   await openProjectList(page);
   await page.getByRole('button', { name: '建立專案', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: '建立專案', exact: true });

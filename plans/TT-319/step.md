@@ -17,3 +17,10 @@
 
 - 54張正式視覺比較通過, 包含原48張與新增驗證碼／顯式啟用各3尺寸, 容忍參數不變, 舊基準已封存
 - 一般選擇依Josh授權先實作並發待辦；本卡最後需Josh以未註冊信箱實測收信與啟用, 提交後改review
+
+- 2026-11-14接Claude新交辦d8fd429e：補剩餘用畫面註冊的瀏覽器測試OTP步驟, 不跳過產品驗證；原卡從review轉回open再領取。原估360分鐘仍足夠, 本階段預估30分鐘
+- 六支中workspace-switch已由API fixture驗證, 將實跑確認；另外三個非OTP失敗先區分舊斷言與產品回歸, 不直接改產品迎合測試
+- 補共用verifyFixtureInBrowser, 實際填local666送驗證表單；只在明確E2E_ISOLATED啟用, 429依有界Retry-After等候一次, 不放寬產品限制
+- 六支註冊流程已接通；home、狀態篩選、通知、工作區切換、usability完整回歸通過。修正待辦第三個經手分頁、遠端清單按鈕名稱／載入等待及最小createIssue回應需另讀單卡的舊斷言
+- uiux-check已過註冊／待辦／填工時, 仍在SMTP狀態文字12px失敗（門檻至少13px, 對比5.02通過）。另建TT-334並收Bug, 沒有降低門檻或宣稱完整UI回歸通過；本階段只改測試工具, 未改產品畫面／權限／API
+- Claude另外列的browser-check父任務狀態、issue-time reader工時tab與account-settings第二帳號刷新尚未在本階段重跑；回覆交辦並保留後續追蹤, 不能算通過

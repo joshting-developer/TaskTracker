@@ -17,3 +17,25 @@ export async function fixtureResponse(request, response) {
   assert.equal(verified.status(), 200, await verified.text());
   return verified.json();
 }
+
+// Use the visible form so browser fixtures also cover the pending-account boundary.
+export async function verifyFixtureInBrowser(page) {
+  assert.equal(process.env.E2E_ISOLATED, '1', 'Browser verification requires explicit isolated fixtures');
+  await page.getByLabel('驗證碼', { exact: true }).fill('local666');
+  const submit = async () => {
+    const [response] = await Promise.all([
+      page.waitForResponse(value => value.url().endsWith('/api/auth/verify-email') && value.request().method() === 'POST'),
+      page.getByRole('button', { name: '驗證並登入', exact: true }).click(),
+    ]);
+    return response;
+  };
+  let response = await submit();
+  if (response.status() === 429) {
+    const seconds = Number(response.headers()['retry-after']);
+    assert.ok(Number.isFinite(seconds) && seconds >= 0 && seconds <= 60, 'Bounded Retry-After required');
+    await page.waitForTimeout(seconds * 1000 + 250);
+    response = await submit();
+  }
+  assert.equal(response.status(), 200, await response.text());
+  await page.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
+}
