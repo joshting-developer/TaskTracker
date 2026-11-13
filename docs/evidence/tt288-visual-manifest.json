@@ -1,0 +1,74 @@
+{
+  "card": "TT-288",
+  "images": [
+    {
+      "name": "primary-1440.png",
+      "source": "artifacts/tt288/primary-1440.png",
+      "sha256": "a093da7af72517ce285a89f271748e310abf4545b6b05b1c4a6fdfe0276d1dde"
+    },
+    {
+      "name": "primary-390.png",
+      "source": "artifacts/tt288/primary-390.png",
+      "sha256": "407a51f7a974abb77564ed5f79457b35859bebc53aea02425f377f1754a3221b"
+    },
+    {
+      "name": "primary-768.png",
+      "source": "artifacts/tt288/primary-768.png",
+      "sha256": "a093da7af72517ce285a89f271748e310abf4545b6b05b1c4a6fdfe0276d1dde"
+    },
+    {
+      "name": "properties-1440.png",
+      "source": "artifacts/tt288/properties-1440.png",
+      "sha256": "cc7865370f97cdbc8a28e0a1eccd734f1faa55a96b5489271a3cb8384f7a2867"
+    },
+    {
+      "name": "properties-390.png",
+      "source": "artifacts/tt288/properties-390.png",
+      "sha256": "cc1ec374d068fa84daeb2f0be44c2b133f2edc93060d5ef9c47ffc6b576e1fe6"
+    },
+    {
+      "name": "properties-768.png",
+      "source": "artifacts/tt288/properties-768.png",
+      "sha256": "cc7865370f97cdbc8a28e0a1eccd734f1faa55a96b5489271a3cb8384f7a2867"
+    },
+    {
+      "name": "conflict-1440.png",
+      "source": "artifacts/tt288/conflict-1440.png",
+      "sha256": "bbd49dfd852184f8c22f41a28140680962d583e2e30fb64909673cd92e1bd048"
+    },
+    {
+      "name": "conflict-390.png",
+      "source": "artifacts/tt288/conflict-390.png",
+      "sha256": "d97e52d605cafd5a5e9b8cdfab63d592f6381a0feda84a47cba5303d070ae335"
+    },
+    {
+      "name": "conflict-768.png",
+      "source": "artifacts/tt288/conflict-768.png",
+      "sha256": "e22e026936fb9aea431c1cb5e036e66eca4241eba470227b155cd1457e90b41d"
+    }
+  ],
+  "harness": [
+    {
+      "path": "frontend/src/components/IssuePanel.vue",
+      "sha256": "1ee0962e927329c05666076a7460f23185e44e1230797d672cf7340bb0e73ebe"
+    },
+    {
+      "path": "frontend/src/components/MarkdownEditor.vue",
+      "sha256": "157a386ef9dd29d9b12007c4e447839540a75c5fa010861633c1359592212b5c"
+    },
+    {
+      "path": "frontend/tools/issue-form-check.js",
+      "sha256": "4cc250fe47f8bbfcaa16f3628b08ded3ae968253bb039e7d854665e6e43fa561"
+    },
+    {
+      "path": "frontend/tools/compare-reviewed-issue-form.js",
+      "sha256": "e6d4a199e45972c4797acd9fbea95f008206d41c532b472e2d7d87eeb35c4054"
+    }
+  ],
+  "policy": {
+    "animations": "disabled",
+    "caret": "hide",
+    "maxDiffPixels": 0,
+    "threshold": 0.02
+  }
+}

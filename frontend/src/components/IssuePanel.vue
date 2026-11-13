@@ -13,7 +13,9 @@ import { FIELD_LABELS, hours, ISSUE_FIELDS, PRIORITIES, statusesFor, TYPES } fro
 
 const props = defineProps({ projectLoader: Function, projectOptionsLoader: Function, lookup: Function, activityLoader: Function, issue: Object, todo: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, defaultEpicId: String, defaultBoardId: String, members: Array, issues: Array, entries: Array, canExpand: Boolean });
 const emit = defineEmits(['close', 'saved', 'converted', 'reload', 'open', 'expand']);
-const dialog = ref(null), descriptionEditor = ref(null);
+const dialog = ref(null), descriptionEditor = ref(null), saveError = ref(null);
+const propertiesOpen = ref(false), titleError = ref('');
+const formId = useId();
 const form = reactive({ parentIssueId: '', relatedIssueIds: [] });
 const relationsTool = ref(null), picked = ref([]), pickedMembers = ref([]), pickedProjects = ref([]), hydratedProject = ref(null), projectLoading = ref(false);
 let projectRequest, projectGeneration=0;
@@ -51,8 +53,13 @@ function resetForm() {
   savedValues.value = JSON.stringify(values());
   error.value = '';
   conflict.value = false;
-  pending = null;
+  pending = null; titleError.value = '';
 }
+const projectModel = computed({ get: () => form.projectId, set: value => {
+  if (value === form.projectId) return;
+  if (descriptionEditor.value?.attachmentDirty || /attachment:[a-f0-9-]+/i.test(form.description || '')) { conflict.value = false; error.value = '描述仍有圖片或未完成上傳, 請先處理圖片再切換專案'; nextTick(() => saveError.value?.focus()); return; }
+  form.projectId = value; error.value = '';
+} });
 const availableProjects = computed(() => [...new Map([...props.projects, ...pickedProjects.value].map(project=>[project.id,project])).values()]);
 const selectedProject = computed(() => hydratedProject.value?.id === form.projectId ? hydratedProject.value : availableProjects.value.find(project => project.id === form.projectId));
 watch(() => form.projectId, async id => {
@@ -79,6 +86,27 @@ watch(() => form.parentIssueId, () => { if (parentIssue.value && Object.hasOwn(p
 const estimateHours = computed({ get: () => (form.estimateMinutes || 0) / 60, set: (value) => { form.estimateMinutes = Math.round(Number(value) * 60); } });
 watch(() => form.type, (type) => { if (type === 'epic') { form.epicId = ''; form.estimateMinutes = 0; form.parentIssueId = ''; } });
 const spent = computed(() => props.issue?.spentMinutes ?? props.entries.filter((entry) => !entry.voidedAt && entry.issueId === props.issue?.id).reduce((sum, entry) => sum + entry.minutes, 0));
+const propertySummary = computed(() => [
+  TYPES.find(item => item.id === form.type)?.label || form.type,
+  states.value.find(item => item.id === form.state)?.label,
+  availableMembers.value.find(item => item.id === form.assignee)?.name || (form.assignee ? '已指派' : '未指派'),
+].filter(Boolean).join(' · '));
+const saveStatus = computed(() => {
+  if (saving.value) return '儲存中…';
+  if (descriptionEditor.value?.uploadBusy) return '圖片上傳中…';
+  if (error.value) return '操作未完成, 修改已保留';
+  if (descriptionEditor.value?.attachmentBlocked) return '請重試或取消未完成的圖片';
+  if (dirty.value) return '尚未儲存';
+  return props.issue ? `版本 ${baseRevision.value} · 已儲存` : '尚未建立';
+});
+function invalidField(event) {
+  if (event.target.name === 'title') { titleError.value = '請輸入任務標題'; return; }
+  if (!propertiesOpen.value) {
+    event.preventDefault(); error.value = event.target.validationMessage; propertiesOpen.value = true;
+    nextTick(() => event.target.focus());
+  }
+}
+watch(() => form.title, () => { titleError.value = ''; });
 const inputDisabled = computed(() => saving.value || projectLoading.value);
 const dirty = computed(() => JSON.stringify(values()) !== savedValues.value || Boolean(descriptionEditor.value?.attachmentDirty));
 defineExpose({ dirty: computed(() => dirty.value || Boolean(comment.value.trim()) || Boolean(relationsTool.value?.dirty)), saving: computed(() => inputDisabled.value || Boolean(descriptionEditor.value?.uploadBusy)) });
@@ -106,6 +134,7 @@ onBeforeUnmount(() => { projectGeneration++;projectRequest?.abort();window.remov
 
 async function save() {
   if (inputDisabled.value || descriptionEditor.value?.attachmentBlocked) return;
+  if (!form.title?.trim()) { titleError.value = '請輸入任務標題'; await nextTick(); dialog.value.querySelector('[name=title]')?.focus(); return; }
   if (props.projectLoader && !hydratedProject.value?.permissions.includes('issue.write')) { error.value='請先選擇可編輯的專案'; return; }
   saving.value = true;
   error.value = '';
@@ -123,6 +152,7 @@ async function save() {
     error.value = failure.message;
     conflict.value = failure.code === 'REVISION_CONFLICT';
   } finally { saving.value = false; }
+  if (error.value) { await nextTick(); saveError.value?.focus(); }
 }
 async function createChild(title) {
   if (saving.value || !title.trim()) return;
@@ -179,19 +209,21 @@ function timestamp(value) {
   <dialog ref="dialog" class="issue-dialog" aria-labelledby="issue-heading" @cancel.prevent="close" @click="event => { if (event.target === dialog) close(); }">
     <div class="panel-shell">
       <header class="panel-header">
-        <div class="eyebrow"><Icon name="diamond" :size="16" /> {{ issue?.identifier || 'NEW ISSUE' }} <span class="subtle">/ {{ issue ? '任務詳細內容' : '建立任務' }}</span></div>
+        <div class="panel-identity"><span>{{ issue?.identifier || selectedProject?.code }}</span><h2 id="issue-heading">{{ todo ? '轉成正式卡片' : issue ? '任務詳細內容' : '新增一個任務' }}</h2></div>
         <button v-if="issue && canExpand" type="button" class="button secondary issue-expand" :disabled="inputDisabled" @click="emit('expand')"><Icon name="arrow" :size="16" />開啟完整頁</button>
         <button type="button" class="icon-button" aria-label="關閉任務" :disabled="inputDisabled" @click="close"><Icon name="close" /></button>
       </header>
       <div class="panel-content">
-        <h2 id="issue-heading">{{ todo ? '轉成正式卡片' : issue ? '任務詳細內容' : '新增一個任務' }}</h2>
 
-        <div v-if="error" class="error-box" role="alert">{{ error }} <button v-if="conflict" type="button" class="text-button" :disabled="inputDisabled" @click="reload">重新載入最新版本</button></div>
-        <form id="issue-form" @submit.prevent="save">
-          <label class="field">任務標題 <span class="required">*</span><input v-model="form.title" name="title" placeholder="輸入任務標題…" maxlength="180" required :disabled="inputDisabled" /></label>
+        <div v-if="error" ref="saveError" class="error-box" role="alert" tabindex="-1">{{ error }}<p v-if="conflict">目前修改仍保留, 重新載入會捨棄這份修改</p> <button v-if="conflict" type="button" class="text-button" :disabled="inputDisabled" @click="reload">重新載入最新版本</button></div>
+        <form id="issue-form" @submit.prevent="save" @invalid.capture="invalidField" :aria-busy="saving">
+          <label class="field">任務標題 <span class="required">*</span><input v-model="form.title" name="title" placeholder="輸入任務標題…" maxlength="180" required :disabled="inputDisabled" :aria-invalid="Boolean(titleError)" :aria-describedby="titleError ? `${formId}-title-error` : undefined" /><span v-if="titleError" :id="`${formId}-title-error`" class="issue-field-error" role="alert">{{ titleError }}</span></label>
+          <div v-if="todo" class="issue-conversion-project"><PagedSelect autoload v-if="projectOptionsLoader" v-model="projectModel" label="專案" :options="availableProjects" :context="todo?.id || 'new'" :load="projectOptionsLoader" :disabled="inputDisabled || !todo" empty-label="選擇所屬專案" required @choose="item => { pickedProjects = [...pickedProjects.filter(project=>project.id!==item.id),item]; }" /><label v-else class="field">專案<select v-model="projectModel" aria-label="專案" :disabled="!todo || saving" required><option v-if="todo" value="" disabled>選擇所屬專案</option><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option></select></label></div>
           <MarkdownEditor ref="descriptionEditor" allow-attachments v-model="form.description" :project-id="form.projectId" label="描述" name="description" placeholder="輸入描述…" :rows="5" :maxlength="6000" :disabled="inputDisabled" />
+          <details class="issue-properties" :open="propertiesOpen" @toggle="propertiesOpen = $event.target.open"><summary><span>任務屬性</span><span>{{ propertySummary }}</span></summary>
           <div class="form-grid">
-            <PagedSelect autoload v-if="projectOptionsLoader" v-model="form.projectId" label="專案" :options="availableProjects" :context="todo?.id || 'new'" :load="projectOptionsLoader" :disabled="inputDisabled" empty-label="選擇所屬專案" required @choose="item => { pickedProjects = [...pickedProjects.filter(project=>project.id!==item.id),item]; }" /><label v-else class="field">專案<select v-model="form.projectId" aria-label="專案" :disabled="!todo || saving" required><option v-if="todo" value="" disabled>選擇所屬專案</option><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option></select></label>
+            <div v-if="!todo"><PagedSelect autoload v-if="projectOptionsLoader" v-model="projectModel" label="專案" :options="availableProjects" :context="todo?.id || 'new'" :load="projectOptionsLoader" :disabled="inputDisabled || !todo" empty-label="選擇所屬專案" required @choose="item => { pickedProjects = [...pickedProjects.filter(project=>project.id!==item.id),item]; }" /><label v-else class="field">專案<select v-model="projectModel" aria-label="專案" :disabled="!todo || saving" required><option v-if="todo" value="" disabled>選擇所屬專案</option><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option></select></label></div>
+
             <label class="field">狀態<select v-model="form.state" aria-label="狀態" :disabled="inputDisabled"><option v-for="state in states" :key="state.id" :value="state.id">{{ state.label }}</option></select></label>
             <label class="field">類型<select v-model="form.type" aria-label="類型" :disabled="inputDisabled"><option v-for="type in TYPES" :key="type.id" :value="type.id">{{ type.label }}</option></select></label>
             <label class="field">優先級<select v-model="form.priority" aria-label="優先級" :disabled="inputDisabled"><option v-for="priority in PRIORITIES" :key="priority.id" :value="priority.id">{{ priority.label }}</option></select></label>
@@ -199,7 +231,7 @@ function timestamp(value) {
             <label class="field">到期日<input v-model="form.dueDate" type="date" :disabled="inputDisabled" /></label>
             <PagedSelect v-if="lookup && form.type !== 'epic'" v-model="form.epicId" label="所屬 Epic" :options="epics" :context="form.projectId" :load="(filters, options) => lookupForProject('epic', filters, options)" :disabled="inputDisabled || Boolean(form.parentIssueId)" empty-label="不屬於 Epic" @choose="remember" /><label v-else-if="form.type !== 'epic'" class="field">所屬 Epic<select v-model="form.epicId" aria-label="所屬 Epic" :disabled="inputDisabled || Boolean(form.parentIssueId)"><option value="">不屬於 Epic</option><option v-for="epic in epics" :key="epic.id" :value="epic.id">{{ epic.identifier }} · {{ epic.title }}</option></select></label>
             <label v-if="form.type !== 'epic'" class="field">預估小時<input v-model="estimateHours" type="number" min="0" max="8760" step="any" :disabled="inputDisabled" /></label>
-          </div>
+          </div></details>
         </form>
         <IssueRelations v-if="selectedProject" ref="relationsTool" :lookup="lookup ? lookupForProject : undefined" :activity-loader="activityLoader" :issue="issue" :issues="availableIssues" :project="selectedProject" :type="form.type" :parent-id="form.parentIssueId" :related-ids="form.relatedIssueIds" :saving="inputDisabled" @candidate="remember" @parent="form.parentIssueId = $event" @related="form.relatedIssueIds = $event" @open="jump" @create-child="createChild" />
         <p v-if="issue && form.type !== 'epic'" class="detail-spent"><Icon name="clock" :size="14" />已投入 {{ hours(spent) }} / {{ form.estimateMinutes ? `預估 ${hours(form.estimateMinutes)}` : '尚未估時' }}</p>
@@ -227,7 +259,7 @@ function timestamp(value) {
           </div>
         </section>
       </div>
-      <footer class="panel-footer"><span class="subtle">{{ dirty ? '有尚未儲存的修改' : issue ? `版本 ${issue.revision} · 已儲存` : '' }}</span><button type="submit" form="issue-form" class="button primary" :disabled="inputDisabled || descriptionEditor?.attachmentBlocked || (Boolean(issue) && !dirty) || (Boolean(todo) && !form.projectId)"><Icon :name="saving ? 'clock' : 'check'" :size="17" />{{ saving ? '儲存中…' : todo ? '建立卡片並完成轉換' : issue ? '儲存修改' : '建立任務' }}</button></footer>
+      <footer class="panel-footer"><span class="subtle" role="status">{{ saveStatus }}</span><button type="submit" form="issue-form" class="button primary" :disabled="inputDisabled || descriptionEditor?.attachmentBlocked || (Boolean(issue) && !dirty) || (Boolean(todo) && !form.projectId)"><Icon :name="saving ? 'clock' : 'check'" :size="17" />{{ saving ? '儲存中…' : todo ? '建立卡片並完成轉換' : issue ? '儲存修改' : '建立任務' }}</button></footer>
     </div>
     <div v-if="activityLoader && ['comments','history'].includes(tab)" class="activity-pagination">
     <p v-if="activity.error.value" class="error-box" role="alert">{{ activity.error.value }}</p>
@@ -236,3 +268,20 @@ function timestamp(value) {
 
   </dialog>
 </template>
+
+<style scoped>
+.panel-identity { min-width: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.panel-identity > span { font-size: 12px; color: var(--text-secondary); }
+.panel-identity h2 { font-size: 17px; font-weight: 600; margin: 0; }
+.issue-properties { margin: 8px 0 20px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.issue-properties > summary { min-height: 48px; padding: 14px 0; cursor: pointer; color: var(--text-primary); font-size: 14px; }
+.issue-properties > summary > :last-child { margin-left: 12px; color: var(--text-secondary); font-size: 12px; overflow-wrap: anywhere; }
+.issue-properties > .form-grid { padding-top: 12px; }
+.issue-field-error { display: block; margin-top: 6px; color: #a52c3d; font-size: 13px; }
+.field input[aria-invalid="true"] { border-color: #a52c3d; }
+.error-box p { margin: 8px 0; }
+.error-box:focus-visible, .issue-properties > summary:focus-visible { outline: 2px solid #6653bd; outline-offset: 3px; }
+.panel-footer .button { box-shadow: none; flex-shrink: 0; }
+.panel-footer .subtle { min-width: 0; overflow-wrap: anywhere; }
+@media(max-width: 500px) { .panel-header { padding: 16px 20px; }.issue-properties > summary > :last-child { display: block; margin: 4px 0 0; }.form-grid { grid-template-columns: 1fr; }.panel-footer { align-items: center; } }
+</style>

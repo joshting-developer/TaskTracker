@@ -1,12 +1,13 @@
+import { expandIssueProperties } from './issue-form-actions.js';
 import assert from 'node:assert/strict';
 
-export async function checkTodoWorkflow(browser, failures) {
+export async function checkTodoWorkflow(browser, failures, baseURL = 'http://127.0.0.1:5175') {
   const token = crypto.randomUUID().slice(0, 8);
   const ownerContext = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
   const memberContext = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
   const owner = await ownerContext.newPage(), member = await memberContext.newPage();
   for (const page of [owner, member]) { page.setDefaultTimeout(15000); page.on('pageerror', error => failures.push(error.message)); }
-  await owner.goto('http://127.0.0.1:5175/login');
+  await owner.goto(`${baseURL}/login`);
   await owner.getByRole('button', { name: '第一次使用？建立工作空間' }).click();
   await owner.getByLabel('你的名字').fill('Todo Owner');
   await owner.getByLabel('Email', { exact: true }).fill(`todo-owner-${token}@example.test`);
@@ -15,7 +16,7 @@ export async function checkTodoWorkflow(browser, failures) {
   await owner.getByRole('button', { name: '建立工作空間', exact: true }).click();
   await owner.getByRole('region', { name: '首頁小待辦', exact: true }).waitFor();
   const invite = await owner.evaluate(async email => (await import('/src/api/index.js')).api.inviteMember({ email }), `todo-member-${token}@example.test`);
-  await member.goto(`http://127.0.0.1:5175/app/#/invite?token=${invite.token}`);
+  await member.goto(`${baseURL}/app/#/invite?token=${invite.token}`);
   await member.getByLabel('你的名字').fill('Todo Member');
   await member.getByLabel('Email', { exact: true }).fill(`todo-member-${token}@example.test`);
   await member.getByLabel('密碼', { exact: true }).fill('todo-test-password');
@@ -125,6 +126,7 @@ export async function checkTodoWorkflow(browser, failures) {
   assert.equal(await panel.getByLabel('描述', { exact: true }).inputValue(), '轉換時保留這段背景');
   assert.equal(await panel.getByRole('button', { name: '建立卡片並完成轉換', exact: true }).isDisabled(), true);
   await panel.getByLabel('專案', { exact: true }).selectOption(project.id);
+  await expandIssueProperties(panel);
   await panel.getByLabel('類型', { exact: true }).selectOption('bug');
   await panel.getByLabel('狀態', { exact: true }).selectOption('todo_review');
   await panel.getByLabel(/任務標題/).fill('正式追蹤 614 整合');
@@ -146,6 +148,7 @@ export async function checkTodoWorkflow(browser, failures) {
   member.once('dialog', dialog => dialog.accept());
   await panel.getByRole('button', { name: '重新載入最新版本', exact: true }).click();
   await panel.getByLabel('專案', { exact: true }).selectOption(project.id);
+  await expandIssueProperties(panel);
   await panel.getByLabel('類型', { exact: true }).selectOption('bug');
   await panel.getByLabel('狀態', { exact: true }).selectOption('todo_review');
   await panel.getByLabel(/任務標題/).fill('正式追蹤 614 整合');
