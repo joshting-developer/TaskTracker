@@ -146,7 +146,7 @@ final class WorkspaceOperationServices
      */
     public function timeReport(): WorkspaceTimeReport
     {
-        return $this->once('timeReport', fn () => new WorkspaceTimeReport($this->store, $this->workspaceSession, $this->timeReports));
+        return $this->once('timeReport', fn () => new WorkspaceTimeReport($this->timeReports));
     }
 
     /**

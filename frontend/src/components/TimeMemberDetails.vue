@@ -16,7 +16,7 @@ async function load(focusHeading = false) {
   loading.value = true;
   error.value = '';
   try {
-    const result = await api.getTimeReport({
+    const result = await api.timeReportDetails({
       ...props.member.range, userId: props.member.id,
       detailGroup: group.value, detailPage: page.value,
       entryGroupKey: expandedKey.value, entryPage: entryPage.value,

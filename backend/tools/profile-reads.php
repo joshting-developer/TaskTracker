@@ -64,7 +64,7 @@ $context = [
 ];
 $store = fn () => (new RecordStore)->forWorkspace(DemoSeeder::WORKSPACE_ID);
 $workspace = fn () => $app->make(WorkspaceServicesFactory::class)->forSession($context)->query()->getWorkspace();
-$report = fn () => (new WorkspaceTimeReport($store(), $context, new TimeReportRepository))->get(['startDate' => '2025-01-01', 'endDate' => '2025-12-31']);
+$report = fn () => (new WorkspaceTimeReport(new TimeReportRepository))->get($context, ['startDate' => '2025-01-01', 'endDate' => '2025-12-31']);
 echo json_encode(['baselineEntries' => DB::table('time_entries')->count(), 'baselineIssues' => DB::table('issues')->count()], JSON_THROW_ON_ERROR).PHP_EOL;
 sample('seed.workspace', $workspace);
 sample('seed.report2025', $report);

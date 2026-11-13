@@ -104,6 +104,6 @@ class WorkspaceRpc
      */
     public function timeReport(Request $request, TimeReportData $filters): array
     {
-        return $this->transaction->read($request, fn (WorkspaceContext $context) => $this->services->forSession($context->legacyIdentity())->timeReport()->get($filters));
+        return $this->transaction->read($request, fn (WorkspaceContext $context) => $this->services->forSession($context->legacyIdentity())->timeReport()->get($context->legacyIdentity(), $filters));
     }
 }

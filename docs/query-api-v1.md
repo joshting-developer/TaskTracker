@@ -112,3 +112,13 @@ ProjectTasksWorkspace與useProjectTaskQueries已取代原BoardWorkspace／useBoa
 ## 2026-11-12 TT-246 寫入結果收斂
 
 Project建立／修改／狀態更新新結果為`{id, revision}`，Board建立／修改／移除為`{id, projectId, revision}`；不附描述、設定歷史或收錄清單。需要最新內容時使用上列單Project／Board查詢；寫入結果不得作完整read model或草稿基準。舊receipt仍回第一次保存的原結果，先重驗資格，不能為改契約重新執行業務。其餘領域專用Request／typed Data、前端與逐端點矩陣見[TT-246契約](other-write-contracts-2026-11-12.md)。
+
+## 工時分析分責（TT-277）
+
+- `GET /api/v1/time-report?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&projectId=&userId=`：統計摘要、成員／專案分布、日期及配對, 不附選項、卡片標題或填報說明
+- `GET /api/v1/time-report/details`：相同期間／專案篩選, 必填`userId`及`detailGroup=dates|issues`；`detailPage`、`entryGroupKey`與`entryPage`沿用20筆雙層分頁, 只回`range/summary/details`, 不重算全部配對
+- `GET /api/v1/time-report/options/{projects|members}?search=&page=1&perPage=30`：只回`id/name`及PageResource分頁, 每頁最多100筆；名稱搜尋採字面LIKE, 保留歷史成員
+- 每次重驗workspace.read及workspace.timeReports.read, 專案需project.read與timeEntry.readTeam, 明細另需issue.read；Any能力及逐專案角色權限取交集, 外租戶與未授權專案不納入SQL
+- 日期最多366天；摘要最多2000個成員×專案配對, 超過回400 INVALID_INPUT並要求縮小範圍, 不以截斷資料計算不完整總計。明細不受配對上限影響, 原始列只在展開時讀取
+- 舊`POST /api/rpc/getTimeReport`僅保留相容, options只附第一頁各100筆, 不保證完整目錄；新前端使用上述GET介面。新整合應使用搜尋分頁, 不依賴舊options
+- 這些為Session v1介面, 不宣稱公開PAT工時API已提供；公開機器契約不因本次內部拆分變更

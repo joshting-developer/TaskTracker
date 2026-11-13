@@ -4,6 +4,8 @@ import { preview } from 'vite';
 import { chromium } from 'playwright';
 import { dateInTaipei } from '../src/domain/model.js';
 if (!process.env.E2E_API_URL) throw new Error('請指定隔離的 E2E_API_URL，不使用業務資料庫');
+const port = Number(process.env.E2E_FRONTEND_PORT || 5175);
+const base = `http://127.0.0.1:${port}`;
 let server, browser;
 async function call(page, operation, input = {}, group = 'rpc') {
   return page.evaluate(async ({ operation, input, group }) => {
@@ -15,12 +17,12 @@ async function call(page, operation, input = {}, group = 'rpc') {
   }, { operation, input, group });
 }
 try {
-  server = await preview({ preview: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
+  server = await preview({ preview: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const page = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage();
   page.setDefaultTimeout(10000);
   const errors = []; page.on('pageerror', error => errors.push(error.message));
-  await page.goto('http://127.0.0.1:5175/login');
+  await page.goto(`${base}/login`);
   const today = dateInTaipei(), token = crypto.randomUUID();
   await call(page, 'register', { name: '工時負責人', email: `member-detail-${token}@example.test`, password: 'detail-test-password', workspaceName: '成員明細測試' }, 'auth');
   const first = await call(page, 'createProject', { name: '會員服務', code: 'MEMBERS' });
@@ -65,7 +67,7 @@ try {
   assert.ok(notes.some(note => note.includes('<img src=x onerror=alert(1)>')));
   assert.equal(await details.locator('img').count(), 0);
   await Promise.all([
-    page.waitForResponse(response => response.url().endsWith('/api/rpc/getTimeReport')),
+    page.waitForResponse(response => new URL(response.url()).pathname === '/api/v1/time-report/details'),
     page.getByRole('button', { name: '重新整理工作空間', exact: true }).click(),
   ]);
   await idle();
@@ -78,7 +80,7 @@ try {
     await page.screenshot({ path: `artifacts/member-time-details/cards-${width}.png`, fullPage: false });
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.route('**/api/rpc/getTimeReport', route => route.abort('failed'), { times: 1 });
+  await page.route('**/api/v1/time-report/details*', route => route.abort('failed'), { times: 1 });
   await details.getByRole('button', { name: '依日期', exact: true }).click();
   await details.getByRole('alert').filter({ hasText: '暫時無法連線' }).waitFor();
   assert.equal(await details.locator('.member-note').count(), 0);
@@ -96,4 +98,4 @@ try {
   await details.getByRole('button', { name: '返回成員分析', exact: true }).click();
   assert.deepEqual(errors, []);
   console.log('PASS: 成員日期／卡片、兩層20筆分頁、整段總計、直接Epic工時、說明XSS安全、範圍保留、錯誤重試及三尺寸');
-} finally { await browser?.close(); await new Promise(resolve => server?.httpServer.close(resolve)); }
+} finally { await browser?.close(); if (server) await new Promise(resolve => server.httpServer.close(resolve)); }

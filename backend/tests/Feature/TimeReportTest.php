@@ -8,7 +8,6 @@ use App\Models\Issue;
 use App\Models\Project;
 use App\Models\TimeEntry;
 use App\Models\User;
-use App\Repositories\RecordStore;
 use App\Repositories\TimeReportRepository;
 use App\Services\WorkspaceTimeReport;
 use Carbon\CarbonImmutable;
@@ -218,7 +217,7 @@ class TimeReportTest extends TestCase
             'workspace' => $owner['workspace'],
             'permissions' => ['workspace.read', 'workspace.timeReports.read'],
         ];
-        $limited = (new WorkspaceTimeReport((new RecordStore)->forWorkspace($owner['workspace']['id']), $limitedSession, app(TimeReportRepository::class)))->get($range);
+        $limited = (new WorkspaceTimeReport(app(TimeReportRepository::class)))->get($limitedSession, $range);
         $this->assertSame(155, $limited['summary']['totalMinutes'], '報表入口權限不跳過逐專案團隊工時資格');
         $this->assertSame([$first['id']], array_values(array_unique(array_column($limited['allocations'], 'projectId'))));
         $this->assertSame([$first['id']], array_column($limited['options']['projects'], 'id'));
@@ -236,21 +235,21 @@ class TimeReportTest extends TestCase
         $this->assertSame('工作說明 60', $expanded['rows'][0]['note']);
         $this->assertArrayNotHasKey('history', $expanded['rows'][0]);
         $this->assertArrayNotHasKey('userId', $expanded['rows'][0]);
-        $limitedDetails = (new WorkspaceTimeReport((new RecordStore)->forWorkspace($owner['workspace']['id']), $limitedSession, app(TimeReportRepository::class)))->get([
+        $limitedDetails = (new WorkspaceTimeReport(app(TimeReportRepository::class)))->get($limitedSession, [
             ...$range, 'userId' => $owner['user']['id'], 'detailGroup' => 'issues',
         ]);
         $this->assertSame([$first['id']], array_values(array_unique(array_column($limitedDetails['details']['rows'], 'projectId'))));
         $aggregateOnlySession = [...$limitedSession, 'permissions' => [
             ...$limitedSession['permissions'], 'project.readAny', 'timeEntry.readTeamAny',
         ]];
-        $aggregateOnly = new WorkspaceTimeReport((new RecordStore)->forWorkspace($owner['workspace']['id']), $aggregateOnlySession, app(TimeReportRepository::class));
-        $this->assertSame(275, $aggregateOnly->get($range)['summary']['totalMinutes']);
-        $visibleDetails = $aggregateOnly->get([...$range, 'userId' => $owner['user']['id'], 'detailGroup' => 'issues']);
+        $aggregateOnly = new WorkspaceTimeReport(app(TimeReportRepository::class));
+        $this->assertSame(275, $aggregateOnly->get($aggregateOnlySession, $range)['summary']['totalMinutes']);
+        $visibleDetails = $aggregateOnly->get($aggregateOnlySession, [...$range, 'userId' => $owner['user']['id'], 'detailGroup' => 'issues']);
         $this->assertSame(135, $visibleDetails['summary']['totalMinutes'], '明細卡片名稱仍需issue.read，不能只靠團隊工時權限');
         $this->assertSame([$first['id']], array_values(array_unique(array_column($visibleDetails['details']['rows'], 'projectId'))));
         foreach ([$bug['id'], $foreignIssue['id']] as $hiddenKey) {
             try {
-                (new WorkspaceTimeReport((new RecordStore)->forWorkspace($owner['workspace']['id']), $limitedSession, app(TimeReportRepository::class)))->get([
+                (new WorkspaceTimeReport(app(TimeReportRepository::class)))->get($limitedSession, [
                     ...$range, 'userId' => $owner['user']['id'], 'detailGroup' => 'issues', 'entryGroupKey' => $hiddenKey,
                 ]);
                 $this->fail('不可展開未授權的卡片工時');
@@ -393,7 +392,7 @@ class TimeReportTest extends TestCase
             'detailGroup' => 'issues', 'entryGroupKey' => $first['issue']['id'],
         ]);
         $projects = [$first['project']['id'] => $first['project']];
-        $expanded = $repository->details($first['identity']['workspace']['id'], [$first['project']['id']], $details, $projects, []);
+        $expanded = $repository->details($first['identity']['workspace']['id'], [$first['project']['id']], $details, []);
         $this->assertSame('first私有說明', $expanded['expanded']['rows'][0]['note']);
         $this->assertSame('first', $expanded['rows'][0]['title']);
         $this->assertSame([], $repository->summary($first['identity']['workspace']['id'], [], $details)['allocations']);

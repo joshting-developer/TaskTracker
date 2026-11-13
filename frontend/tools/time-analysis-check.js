@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
 import { dateInTaipei } from '../src/domain/model.js';
 if (!process.env.E2E_API_URL) throw new Error('請設定獨立隔離 E2E_API_URL');
+const port = Number(process.env.E2E_FRONTEND_PORT || 5175);
+const base = `http://127.0.0.1:${port}`;
 let server, browser;
 async function request(page, operation, input = {}, group = 'rpc') {
   return page.evaluate(async ({ operation, input, group }) => {
@@ -16,12 +18,13 @@ async function call(page, operation, input = {}, group = 'rpc') {
   const result = await request(page, operation, input, group); assert.equal(result.ok, true, JSON.stringify(result)); return result.data;
 }
 try {
-  server = await preview({ preview: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
+  server = await preview({ preview: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const owner = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage();
   const member = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage();
+  const reads = []; owner.on('request', request => { if (request.url().includes('/time-report') || request.url().includes('/getTimeReport')) reads.push(new URL(request.url()).pathname); });
   const errors = [];
-  for (const page of [owner, member]) { page.setDefaultTimeout(10000); page.on('pageerror', error => errors.push(error.message)); await page.goto('http://127.0.0.1:5175/login'); }
+  for (const page of [owner, member]) { page.setDefaultTimeout(10000); page.on('pageerror', error => errors.push(error.message)); await page.goto(`${base}/login`); }
   const today = dateInTaipei(), token = crypto.randomUUID(), password = 'analysis-test-password';
   const identity = await call(owner, 'register', { name: '分析負責人', email: `analysis-owner-${token}@example.test`, password, workspaceName: '團隊工時' }, 'auth');
   const first = await call(owner, 'createProject', { name: '會員服務', code: 'MEMBER' }), second = await call(owner, 'createProject', { name: '營運維護', code: 'OPS' });
@@ -48,6 +51,16 @@ try {
       await owner.mouse.move(1, 1);
       if (width === 390) await owner.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
       assert.equal(await owner.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${label} ${width}不能整頁橫向溢位`);
+      if (label !== 'index') {
+        for (const name of ['分析開始日期', '分析結束日期', '分析專案', '分析成員']) {
+          assert.equal(await region.getByLabel(name, { exact: true }).evaluate(element => {
+            const rect = element.getBoundingClientRect();
+            const target = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+            return element === target || element.contains(target);
+          }), true, `${label} ${width} ${name}不能被其他篩選欄位遮住`);
+        }
+      }
+      if (width === 1440 && label !== 'index') writeFileSync(`artifacts/time-analysis/${label}.html`, (await owner.content()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '').replace(/https?:\/\/127\.0\.0\.1:\d+\/assets\//g, '/assets/'));
       await owner.screenshot({ path: `artifacts/time-analysis/${label}-${width}.png`, fullPage: true });
     }
     await owner.setViewportSize({ width: 1440, height: 1000 });
@@ -83,16 +96,16 @@ try {
   await region.getByRole('button', { name: '返回工時分析', exact: true }).click();
   console.log('PASS: 三個分析入口／深連結／重新整理，Epic及子卡各計一次，成員／專案／日期加總一致，三尺寸');
   await region.getByRole('button', { name: /^成員投入/ }).click(); await region.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();
-  await region.getByLabel('分析專案').selectOption(first.id);
+  await region.getByLabel('分析專案', { exact: true }).selectOption(first.id);
   await region.getByText('篩選已調整，請按「套用範圍」更新報表。', { exact: true }).waitFor();
-  await Promise.all([owner.waitForResponse(response => response.url().endsWith('/api/rpc/getTimeReport')) /* 手動重新整理重查報表，仍用已套用範圍 */, owner.getByRole('button', { name: '重新整理工作空間', exact: true }).click()]);
+  await Promise.all([owner.waitForResponse(response => new URL(response.url()).pathname === '/api/v1/time-report') /* 手動重新整理重查報表，仍用已套用範圍 */, owner.getByRole('button', { name: '重新整理工作空間', exact: true }).click()]);
   await region.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();
   await region.getByRole('button', { name: '套用範圍', exact: true }).click(); await region.locator('.analysis-totals').getByText('2 h', { exact: true }).waitFor();
-  await region.getByLabel('分析成員').selectOption(memberIdentity.user.id); await region.getByRole('button', { name: '套用範圍', exact: true }).click(); await region.locator('.analysis-totals').getByText('0.5 h', { exact: true }).waitFor();
-  await region.getByLabel('分析專案').selectOption(second.id); await region.getByRole('button', { name: '套用範圍', exact: true }).click(); await region.getByText(/尚無符合條件的工時紀錄/).waitFor(); assert.equal(await region.locator('table').count(), 0);
-  await region.getByLabel('分析專案').selectOption(''); await region.getByLabel('分析成員').selectOption(''); await region.getByLabel('分析開始日期').fill('2020-01-01'); await region.getByRole('button', { name: '套用範圍', exact: true }).click(); await region.getByRole('alert').filter({ hasText: '最多366天' }).waitFor();
+  await region.getByLabel('分析成員', { exact: true }).selectOption(memberIdentity.user.id); await region.getByRole('button', { name: '套用範圍', exact: true }).click(); await region.locator('.analysis-totals').getByText('0.5 h', { exact: true }).waitFor();
+  await region.getByLabel('分析專案', { exact: true }).selectOption(second.id); await region.getByRole('button', { name: '套用範圍', exact: true }).click(); await region.getByText(/尚無符合條件的工時紀錄/).waitFor(); assert.equal(await region.locator('table').count(), 0);
+  await region.getByLabel('分析專案', { exact: true }).selectOption(''); await region.getByLabel('分析成員', { exact: true }).selectOption(''); await region.getByLabel('分析開始日期').fill('2020-01-01'); await region.getByRole('button', { name: '套用範圍', exact: true }).click(); await region.getByRole('alert').filter({ hasText: '最多366天' }).waitFor();
   await region.getByLabel('分析開始日期').fill(`${today.slice(0, 7)}-01`);
-  await owner.route('**/api/rpc/getTimeReport', route => route.abort('failed'), { times: 1 });
+  await owner.route('**/api/v1/time-report*', route => route.abort('failed'), { times: 1 });
   await region.getByRole('button', { name: '套用範圍', exact: true }).click(); await region.getByRole('alert').filter({ hasText: '暫時無法連線' }).waitFor();
   assert.equal(await region.locator('table').count(), 0, '錯誤不留舊報表冒充新結果');
   await region.getByRole('button', { name: '重試', exact: true }).click(); await region.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();
@@ -100,7 +113,7 @@ try {
   await member.reload(); assert.equal(await member.getByRole('button', { name: '工時分析', exact: true }).count(), 0);
   const query = { startDate: today, endDate: today };
   assert.equal((await request(member, 'getTimeReport', query)).status, 403);
-  await member.goto('http://127.0.0.1:5175/app/#/time-analysis/projects'); await member.waitForURL('**/#/');
+  await member.goto(`${base}/app/#/time-analysis/projects`); await member.waitForURL('**/#/');
   await call(owner, 'setWorkspaceMemberRole', { userId: memberIdentity.user.id, roleId: 'manager', expectedRevision: 0 });
   await member.reload(); await member.getByRole('button', { name: '工時分析', exact: true }).click(); await member.getByRole('button', { name: /^專案投入/ }).click();
   const managerRegion = member.getByRole('region', { name: '工時分析', exact: true }); await managerRegion.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();
@@ -113,6 +126,8 @@ try {
   assert.equal(await managerRegion.count(), 0); assert.equal((await request(member, 'getTimeReport', query)).status, 403);
   await owner.getByRole('button', { name: '工時分析', exact: true }).click(); await owner.goBack(); await region.getByRole('heading', { name: '成員投入', exact: true }).waitFor();
   assert.deepEqual(errors, []);
+  for (const path of ['time-report', 'time-report/details', 'time-report/options/projects', 'time-report/options/members']) assert.ok(reads.includes(`/api/v1/${path}`), `前端必須使用獨立${path}介面`);
+  assert.equal(reads.includes('/api/rpc/getTimeReport'), false, '前端不能回退整包分析RPC');
   assert.ok(identity.user.id);
   console.log('PASS: Owner／Manager入口、一般成員後端403與深連結拒絕、撤權清除、返回歷史及無瀏覽器錯誤');
-} finally { await browser?.close(); await new Promise(resolve => server?.httpServer.close(resolve)); }
+} finally { await browser?.close(); if (server) await new Promise(resolve => server.httpServer.close(resolve)); }

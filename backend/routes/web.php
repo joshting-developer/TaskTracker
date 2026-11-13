@@ -14,6 +14,7 @@ use App\Http\Controllers\Queries\ProjectMembersController;
 use App\Http\Controllers\Queries\ProjectNotificationsController;
 use App\Http\Controllers\Queries\ProjectsController;
 use App\Http\Controllers\Queries\ProjectTimeController;
+use App\Http\Controllers\Queries\TimeReportsController;
 use App\Http\Controllers\Queries\TodosController;
 use App\Http\Controllers\Queries\WorkspaceSettingsController;
 use App\Http\Controllers\RealtimeController;
@@ -89,6 +90,9 @@ Route::post('/api/rpc/verifySmtp', [SmtpController::class, 'verify'])->name('rpc
 
 // v1先共用Session／CSRF可信邊界，Application Service可供後續PAT適配器沿用。
 Route::prefix('/api/v1')->group(function () {
+    Route::get('/time-report', [TimeReportsController::class, 'index'])->name('v1.time-report');
+    Route::get('/time-report/details', [TimeReportsController::class, 'details'])->name('v1.time-report.details');
+    Route::get('/time-report/options/{kind}', [TimeReportsController::class, 'options'])->whereIn('kind', ['projects', 'members'])->name('v1.time-report.options');
     Route::get('/workspace/settings', [WorkspaceSettingsController::class, 'show'])->name('v1.workspace.settings');
     Route::get('/workspace/members', [WorkspaceSettingsController::class, 'members'])->name('v1.workspace.members');
     Route::get('/operation-logs', [OperationLogsController::class, 'index'])->name('v1.operation-logs');

@@ -40,7 +40,7 @@ class WorkspaceService
         $services = $this->services->forSession($workspaceSession);
         $services->operationAccess()->authorize($operation, $input);
         if ($operation === 'getTimeReport') {
-            return $services->timeReport()->get($input);
+            return $services->timeReport()->get($workspaceSession, $input);
         }
         if ($operation === 'getWorkspace') {
             return $services->query()->getWorkspace();

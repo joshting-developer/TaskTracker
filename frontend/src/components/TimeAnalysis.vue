@@ -7,6 +7,7 @@ import TimeDistributionChart from './TimeDistributionChart.vue';
 import TimeTrendChart from './TimeTrendChart.vue';
 import TimeMemberDetails from './TimeMemberDetails.vue';
 import ReportPagination from './ReportPagination.vue';
+import PagedSelect from './PagedSelect.vue';
 const props = defineProps({ mode: { type: String, default: 'index' }, workspaceVersion: { type: String, default: '' } });
 const emit = defineEmits(['navigate']);
 const analyses = [
@@ -17,8 +18,10 @@ const analyses = [
 const selected = computed(() => analyses.find(item => item.id === props.mode));
 const today = dateInTaipei();
 const startDate = shallowRef(`${today.slice(0, 7)}-01`), endDate = shallowRef(today), projectId = shallowRef(''), userId = shallowRef('');
-const report = shallowRef(null), options = shallowRef({ members: [], projects: [] }), loading = shallowRef(false), error = shallowRef('');
+const report = shallowRef(null), loading = shallowRef(false), error = shallowRef('');
 const memberDetail = shallowRef(null);
+const selectedProjectOptions = computed(() => (report.value?.projects || []).filter(item => item.id === projectId.value));
+const selectedMemberOptions = computed(() => (report.value?.members || []).filter(item => item.id === userId.value));
 const tablePage = shallowRef(1);
 let generation = 0, applied = null;
 const rows = computed(() => report.value?.[props.mode] || []);
@@ -39,11 +42,11 @@ async function load(useDraft = true) {
   loading.value = true; error.value = ''; report.value = null;
   try {
     const input = useDraft || !applied ? { startDate: startDate.value, endDate: endDate.value, projectId: projectId.value, userId: userId.value } : applied;
-    const result = await api.getTimeReport(input);
+    const result = await api.timeReport(input);
     if (current !== generation) return;
-    report.value = result; options.value = result.options;
+    report.value = result;
     applied = { startDate: result.range.startDate, endDate: result.range.endDate, projectId: result.range.projectId, userId: result.range.userId };
-  } catch (failure) { if (current === generation) { error.value = failure.message; if (['FORBIDDEN', 'UNAUTHENTICATED'].includes(failure.code)) options.value = { members: [], projects: [] }; } }
+  } catch (failure) { if (current === generation) { error.value = failure.message;  } }
   finally { if (current === generation) loading.value = false; }
 }
 async function drill(id, selectedProjectId = '') {
@@ -52,8 +55,8 @@ async function drill(id, selectedProjectId = '') {
     const range = { ...report.value.range, projectId: selectedProjectId || report.value.range.projectId };
     memberDetail.value = {
       id, range,
-      name: options.value.members.find(member => member.id === id)?.name || '歷史成員',
-      projectName: options.value.projects.find(project => project.id === range.projectId)?.name || '',
+      name: report.value.members.find(member => member.id === id)?.name || '歷史成員',
+      projectName: report.value.projects.find(project => project.id === range.projectId)?.name || '',
     };
     return;
   } else {
@@ -116,11 +119,11 @@ onBeforeUnmount(() => { generation++; });
       </header>
       <nav class="analysis-modes" aria-label="分析方式"><button v-for="analysis in analyses" :key="analysis.id" :aria-current="mode === analysis.id ? 'page' : undefined" :disabled="loading" @click="analysis.id !== mode && emit('navigate', analysis.id)">{{ analysis.title }}</button></nav>
       <form class="analysis-filters" @submit.prevent="load">
-        <label class="field">開始日期<input v-model="startDate" aria-label="分析開始日期" type="date" min="1000-01-01" max="9999-12-31" required /></label>
+        <label class="field range-start">開始日期<input v-model="startDate" aria-label="分析開始日期" type="date" min="1000-01-01" max="9999-12-31" required /></label>
         <span class="range-divider" aria-hidden="true">—</span>
-        <label class="field">結束日期<input v-model="endDate" aria-label="分析結束日期" type="date" :min="startDate" max="9999-12-31" required /></label>
-        <label class="field">專案<select v-model="projectId" aria-label="分析專案"><option value="">所有專案</option><option v-for="project in options.projects" :key="project.id" :value="project.id">{{ project.name }}</option></select></label>
-        <label class="field">成員<select v-model="userId" aria-label="分析成員"><option value="">所有成員</option><option v-for="member in options.members" :key="member.id" :value="member.id">{{ member.name }}</option></select></label>
+        <label class="field range-end">結束日期<input v-model="endDate" aria-label="分析結束日期" type="date" :min="startDate" max="9999-12-31" required /></label>
+        <PagedSelect class="report-project-filter" v-model="projectId" label="分析專案" empty-label="所有專案" :context="workspaceVersion" :options="selectedProjectOptions" :load="(filters, options) => api.timeReportOptions('projects', filters, options)" autoload />
+        <PagedSelect class="report-member-filter" v-model="userId" label="分析成員" empty-label="所有成員" :context="workspaceVersion" :options="selectedMemberOptions" :load="(filters, options) => api.timeReportOptions('members', filters, options)" autoload />
         <button class="button primary" :disabled="loading">{{ loading ? '分析中…' : '套用範圍' }}</button>
       </form>
       <p v-if="loading" class="analysis-loading" role="status">正在整理工時…</p>
@@ -177,7 +180,8 @@ onBeforeUnmount(() => { generation++; });
 .analysis-filters { display: grid; grid-template-columns: minmax(140px, 1fr) 12px minmax(140px, 1fr) minmax(130px, 1fr) minmax(130px, 1fr) auto; align-items: end; gap: 12px; padding: 16px; margin-bottom: 24px; border: 1px solid var(--analysis-line); border-radius: 8px; background: #faf9fc; }
 .analysis-filters .field { margin: 0; min-width: 0; font-size: 12px; color: var(--analysis-muted); gap: 6px; }
 .analysis-filters input, .analysis-filters select { min-height: 44px; font-size: 14px; background: #fff; padding: 8px 10px; border-color: #d8d4e2; border-radius: 6px; color: var(--text-primary, #242936); min-width: 0; }
-.analysis-filters button { box-shadow: none; /* taste-skill-ignore: 明確移除既有按鈕陰影 */ min-height: 44px; font-size: 13px; padding-inline: 16px; }
+.analysis-filters > .button { box-shadow: none; /* taste-skill-ignore: 明確移除既有按鈕陰影 */ min-height: 44px; font-size: 13px; padding-inline: 16px; }
+.analysis-filters :deep(.paged-select-control .icon-button) { width: 44px; min-width: 44px; height: 44px; padding: 0; flex-shrink: 0; }
 .range-divider { padding-bottom: 12px; color: #928b9f; }
 .analysis-report-heading { display: flex; align-items: center; justify-content: space-between; }
 .analysis-period { margin: 0 0 12px; color: var(--analysis-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
@@ -200,13 +204,13 @@ onBeforeUnmount(() => { generation++; });
 .analysis-share { min-width: 100px; }.analysis-bar { display: block; height: 4px; background: #f0edf7; margin-top: 7px; width: 88px; margin-left: auto; border-radius: 2px; }.analysis-bar i { display: block; height: 100%; background: #9e90d7; border-radius: 2px; }
 .analysis-empty { padding: 40px 20px; border: 1px dashed var(--analysis-line); border-radius: 8px; text-align: center; font-size: 14px; color: var(--analysis-muted); }
 .analysis-loading { padding: 28px 0; color: var(--analysis-muted); font-size: 14px; }.analysis-pending { color: #805c1b; font-size: 13px; padding: 10px 12px; background: #fcf8ee; border-radius: 6px; }
-@media(max-width:1000px) { .analysis-filters .field:nth-of-type(1) { grid-column: 1; grid-row: 1; }.analysis-filters .field:nth-of-type(2) { grid-column: 2; grid-row: 1; }.analysis-filters .field:nth-of-type(3) { grid-column: 1; grid-row: 2; }.analysis-filters .field:nth-of-type(4) { grid-column: 2; grid-row: 2; } .analysis-filters { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; }.range-divider { display: none; }.analysis-filters button { grid-column: 3; grid-row: 2; }.analysis-index { gap: 12px; }.analysis-choice { padding: 18px; gap: 24px; } }
+@media(max-width:1000px) { .analysis-filters > .range-start { grid-column: 1; grid-row: 1; }.analysis-filters > .range-end { grid-column: 2; grid-row: 1; }.analysis-filters > .report-project-filter { grid-column: 1; grid-row: 2; }.analysis-filters > .report-member-filter { grid-column: 2; grid-row: 2; } .analysis-filters { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; }.range-divider { display: none; }.analysis-filters > .button { grid-column: 3; grid-row: 2; }.analysis-index { gap: 12px; }.analysis-choice { padding: 18px; gap: 24px; } }
 @media(max-width:600px) {
   .time-analysis { margin-inline: 2px; }
   .analysis-index { grid-template-columns: 1fr; gap: 12px; }.analysis-choice { display: grid; grid-template-columns: 88px minmax(0, 1fr); column-gap: 20px; row-gap: 6px; padding: 16px; }.choice-top { display: none; }.choice-preview { grid-row: 1; width: 88px; height: 60px; }.choice-title { font-size: 17px; }
   .analysis-back { min-height: 44px; }.analysis-presets .button { min-height: 44px; }
   .analysis-heading h1 { font-size: 24px; }.analysis-heading { gap: 12px; margin-bottom: 16px; }.analysis-presets .button { padding-inline: 10px; }.analysis-modes { gap: 22px; margin-bottom: 16px; }
-  .analysis-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 14px; margin-bottom: 20px; }.analysis-filters button { grid-column: 1 / -1; grid-row: auto; }
+  .analysis-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 14px; margin-bottom: 20px; }.analysis-filters > .button { grid-column: 1 / -1; grid-row: auto; }
   .analysis-totals > div { padding-inline: 14px; }.analysis-totals dd { font-size: 22px; }.analysis-totals > div:first-child dd { font-size: 26px; }.analysis-totals dt { font-size: 11px; }
   .analysis-chart-panel { padding: 18px 14px; margin-bottom: 24px; }.analysis-table { min-width: 460px; }.analysis-table th, .analysis-table td { padding: 14px 8px; }
 }

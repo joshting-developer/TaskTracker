@@ -1,0 +1,56 @@
+{
+    "engine": "8.4.13",
+    "fixture": {
+        "projects": 1001,
+        "unrelatedIssues": 10000,
+        "projectAuditRows": 1000,
+        "matchingTimeEntries": 0
+    },
+    "conditions": "same fixture, interleaved old\/new, 2 warmups excluded, 9 samples; service only, no HTTP\/p95 claim",
+    "cases": {
+        "before": {
+            "queries": 12,
+            "responseBytes": 48638,
+            "summary": {
+                "totalMinutes": 0,
+                "entryCount": 0,
+                "activeDays": 0
+            },
+            "historyQueries": 3,
+            "medianMs": 58.45225,
+            "samplesMs": [
+                49.7075,
+                49.720209,
+                52.218959,
+                53.282542,
+                58.45225,
+                59.147917,
+                62.732166,
+                67.43075,
+                77.2485
+            ]
+        },
+        "after": {
+            "queries": 3,
+            "responseBytes": 1707,
+            "summary": {
+                "totalMinutes": 0,
+                "entryCount": 0,
+                "activeDays": 0
+            },
+            "historyQueries": 0,
+            "medianMs": 1.66925,
+            "samplesMs": [
+                1.015958,
+                1.36575,
+                1.375708,
+                1.442375,
+                1.66925,
+                1.825667,
+                2.217875,
+                2.282875,
+                2.91475
+            ]
+        }
+    }
+}

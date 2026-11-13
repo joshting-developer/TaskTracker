@@ -4,55 +4,66 @@ namespace App\Services;
 
 use App\Authorization\ProjectAccess;
 use App\Authorization\WorkspacePermissions;
+use App\Data\PageQueryData;
 use App\Data\TimeReportData;
+use App\Data\WorkspaceContext;
 use App\Domain\DomainError;
-use App\Repositories\RecordStore;
 use App\Repositories\TimeReportRepository;
 use DateTimeImmutable;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Query\Builder;
 
 /** 彙整工作空間內有權讀取的有效工時，不重複累計Epic彙總。 */
 class WorkspaceTimeReport
 {
     /**
-     * 接收已由Session驗證的租戶資料入口與操作者資格。
+     * 注入無狀態工時資料入口, 當次租戶資格由方法傳入
      *
-     * @param  RecordStore  $store  目前工作空間的儲存入口
-     * @param  array  $workspaceSession  後端重新驗證的資格
      * @param  TimeReportRepository  $reports  有租戶／期間範圍的資料查詢
      */
-    public function __construct(private RecordStore $store, private array $workspaceSession, private TimeReportRepository $reports) {}
+    public function __construct(private TimeReportRepository $reports) {}
+
+    /**
+     * 只讀統計或指定成員的明細
+     *
+     * @param  WorkspaceContext  $context  交易內重驗的身分
+     * @param  TimeReportData  $filters  已驗證期間與範圍
+     * @param  bool  $details  是否只回明細
+     * @return array 對應用途的最小回應
+     */
+    public function report(WorkspaceContext $context, TimeReportData $filters, bool $details): array
+    {
+        if ($details !== ($filters->detailGroup !== null)) {
+            DomainError::fail('INVALID_INPUT', '請使用對應的分析或成員明細介面');
+        }
+
+        return $this->get($context->legacyIdentity(), $filters, false, $details);
+    }
 
     /**
      * 依工作日期與可選成員／專案範圍回傳統計，按需查單人成員明細。
      *
+     * @param  array  $workspaceSession  交易內重驗的租戶資格
      * @param  array|TimeReportData  $input  HTTP DTO或既有非HTTP條件
+     * @param  bool  $includeOptions  僅舊RPC附帶第一頁相容選項
+     * @param  bool  $detailOnly  只回明細與總計
      * @return array 分鐘整數、成員／專案分布、含零日期序列及可選分頁明細
      */
-    public function get(array|TimeReportData $input): array
+    public function get(array $workspaceSession, array|TimeReportData $input, bool $includeOptions = true, bool $detailOnly = false): array
     {
-        WorkspacePermissions::authorize($this->workspaceSession, 'workspace.read');
-        WorkspacePermissions::authorize($this->workspaceSession, 'workspace.timeReports.read');
+        WorkspacePermissions::authorize($workspaceSession, 'workspace.read');
+        WorkspacePermissions::authorize($workspaceSession, 'workspace.timeReports.read');
         $filters = $input instanceof TimeReportData ? $input : TimeReportData::from($input);
         $start = $filters->startDate;
         $end = $filters->endDate;
         $detailGroup = $filters->detailGroup;
-        $allProjects = $this->store->all('projects');
-        $allMembers = $this->store->all('members');
-        $access = ProjectAccess::forRead($this->store, $this->workspaceSession, $allProjects, $allMembers);
-        $projects = [];
-        foreach ($allProjects as $project) {
-            $canReadDetails = $detailGroup === null || $access->can($project['id'], 'issue.read');
-            if ($access->can($project['id'], 'project.read') && $access->can($project['id'], 'timeEntry.readTeam') && $canReadDetails) {
-                $projects[$project['id']] = $project;
-            }
-        }
-        $members = array_column($allMembers, null, 'id');
+        $allowed = $this->projectScope($workspaceSession, $detailGroup !== null);
         $projectId = $filters->projectId;
         $userId = $filters->userId;
-        if ($projectId !== '' && ! isset($projects[$projectId])) {
+        if ($projectId !== '' && ! $this->reports->projectExists($allowed, $projectId)) {
             DomainError::fail('NOT_FOUND', '找不到可分析的專案');
         }
-        if ($userId !== '' && ! isset($members[$userId])) {
+        if ($userId !== '' && ! $this->reports->memberExists($workspaceSession['workspace']['id'], $userId)) {
             DomainError::fail('NOT_FOUND', '找不到可分析的成員');
         }
         $memberRows = [];
@@ -69,23 +80,23 @@ class WorkspaceTimeReport
         }
         $totalMinutes = 0;
         $entryCount = 0;
-        $aggregate = $this->reports->summary($this->workspaceSession['workspace']['id'], array_keys($projects), $filters);
+        $aggregate = $this->reports->summary($workspaceSession['workspace']['id'], clone $allowed, $filters, ! $detailOnly);
         foreach ($aggregate['allocations'] as $entry) {
             $member = $entry['userId'];
             $project = $entry['projectId'];
             $memberRows[$member] ??= [
-                'id' => $member, 'name' => $members[$member]['name'] ?? '歷史成員',
+                'id' => $member, 'name' => $entry['memberName'],
                 'minutes' => 0, 'entryCount' => 0, 'projectIds' => [],
             ];
             $projectRows[$project] ??= [
-                'id' => $project, 'name' => $projects[$project]['name'], 'code' => $projects[$project]['code'],
+                'id' => $project, 'name' => $entry['projectName'], 'code' => $entry['projectCode'],
                 'minutes' => 0, 'entryCount' => 0, 'memberIds' => [],
             ];
             $minutes = $entry['minutes'];
             $count = $entry['entryCount'];
             $allocations[] = [
-                'userId' => $member, 'memberName' => $members[$member]['name'] ?? '歷史成員',
-                'projectId' => $project, 'projectName' => $projects[$project]['name'], 'minutes' => $minutes,
+                'userId' => $member, 'memberName' => $entry['memberName'],
+                'projectId' => $project, 'projectName' => $entry['projectName'], 'minutes' => $minutes,
             ];
             $memberRows[$member]['minutes'] += $minutes;
             $memberRows[$member]['entryCount'] += $count;
@@ -98,6 +109,10 @@ class WorkspaceTimeReport
         }
         foreach ($aggregate['days'] as $day) {
             $days[$day['date']] = $day;
+            if ($detailOnly) {
+                $totalMinutes += $day['minutes'];
+                $entryCount += $day['entryCount'];
+            }
         }
         $memberRows = array_values(array_map(function ($row) {
             $row['projectCount'] = count($row['projectIds']);
@@ -131,23 +146,56 @@ class WorkspaceTimeReport
             'projects' => $projectRows,
             'days' => array_values($days),
             'allocations' => array_values($allocations),
-            'options' => [
-                'projects' => array_values(array_map(fn ($project) => [
-                    'id' => $project['id'],
-                    'name' => $project['name'],
-                ], $projects)),
-                'members' => array_values(array_map(fn ($member) => [
-                    'id' => $member['id'],
-                    'name' => $member['name'],
-                ], $members)),
-            ],
+
         ];
         if ($detailGroup !== null) {
             $result['details'] = $this->reports->details(
-                $this->workspaceSession['workspace']['id'], array_keys($projects), $filters, $projects, $days,
+                $workspaceSession['workspace']['id'], clone $allowed, $filters, $days,
             );
         }
 
+        if ($detailOnly) {
+            unset($result['members'], $result['projects'], $result['days'], $result['allocations']);
+        }
+        if ($includeOptions) {
+            $result['options'] = [
+                'projects' => $this->options($workspaceSession, 'projects', new PageQueryData(1, 100))->items(),
+                'members' => $this->options($workspaceSession, 'members', new PageQueryData(1, 100))->items(),
+            ];
+        }
+
         return $result;
+    }
+
+    /**
+     * 以有效permission求必要Project角色交集, 不以角色名稱直接放行
+     *
+     * @param  array  $workspaceSession  交易內重驗的租戶資格
+     * @param  bool  $details  明細另需issue.read
+     * @return Builder 只讀取可分析專案ID的SQL子查詢
+     */
+    private function projectScope(array $workspaceSession, bool $details): Builder
+    {
+        $required = ['project.read', 'timeEntry.readTeam', ...($details ? ['issue.read'] : [])];
+        $missing = array_values(array_filter($required, fn ($permission) => ! in_array(ProjectAccess::ANY[$permission], $workspaceSession['permissions'], true)));
+        $roles = array_column(array_filter(ProjectAccess::roles(), fn ($role) => array_diff($missing, $role['permissions']) === []), 'id');
+
+        return $this->reports->authorizedProjects($workspaceSession['workspace']['id'], $workspaceSession['user']['id'], $missing === [], $roles);
+    }
+
+    /**
+     * 選項另行搜尋分頁, 不在分析結果夾帶整個成員目錄
+     *
+     * @param  array  $workspaceSession  交易內重驗的租戶資格
+     * @param  string  $kind  projects或members
+     * @param  PageQueryData  $page  有界頁面條件
+     * @return LengthAwarePaginator 最小選項
+     */
+    public function options(array $workspaceSession, string $kind, PageQueryData $page): LengthAwarePaginator
+    {
+        WorkspacePermissions::authorize($workspaceSession, 'workspace.read');
+        WorkspacePermissions::authorize($workspaceSession, 'workspace.timeReports.read');
+
+        return $this->reports->options($workspaceSession['workspace']['id'], $this->projectScope($workspaceSession, false), $kind, $page);
     }
 }
