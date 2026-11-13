@@ -89,8 +89,18 @@ const canCreateIssue = computed(() => canWrite.value && (creationBoardId.value =
 const showNewIssueAction = computed(() => selectedProject.value && section.value === 'tasks' && view.value === 'list' && scope.value === 'all' && canCreateIssue.value);
 const currentUserId = computed(() => workspace.value.meta.userId);
 const workContextKey = computed(() => contextKey(currentUserId.value, workspace.value.meta.workspace?.id, selectedProject.value?.id));
+let requestedScope = '';
 function restoreTaskScope() {
-  if (view.value === 'list' && section.value === 'tasks') scope.value = taskScope(workContextKey.value);
+  if (view.value !== 'list' || section.value !== 'tasks') return;
+  if (requestedScope && !workContextKey.value) { scope.value = requestedScope; return; }
+  if (requestedScope) { writeContext(workContextKey.value, { scope: requestedScope }); requestedScope = ''; }
+  scope.value = taskScope(workContextKey.value);
+}
+const sectionHref = target => projectHash(projectId.value, '', target === 'boards' ? 'boards' : 'list', 'default', false, ['tasks', 'boards', 'mine'].includes(target) ? 'tasks' : target) + (target === 'mine' ? '?scope=mine' : '');
+// TT-329：側邊欄改成連結, 一般點擊照舊在目前分頁切換；修飾鍵、中鍵與右鍵選單交給瀏覽器開新分頁或新視窗。
+function follow(event, action) {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  event.preventDefault(); action();
 }
 watch(workContextKey, restoreTaskScope, { flush: 'sync' });
 // 報表只在工作區、操作者、有效權限改變或手動重新整理時重查；一般導覽刷新換掉workspace物件不觸發重讀。
@@ -330,6 +340,7 @@ function readHash(skipGuard = false) {
   detailPage.value = nextDetail;
   section.value = nextSection;
   if (nextDetail) section.value = 'tasks';
+  if (next.scope === 'mine') { requestedScope = 'mine'; scope.value = 'mine'; restoreTaskScope(); }
   if (returning && !projectChanged && !modeChanged && !boardChanged && issueReturn?.section === nextSection) {
     section.value = issueReturn.section; scope.value = issueReturn.scope;
     const scroll = issueReturn.scroll; issueReturn = null;
@@ -415,24 +426,24 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
         </div>
         <p class="nav-label">專案功能</p>
         <nav aria-label="專案任務">
-          <button class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'all' }" :aria-current="section === 'tasks' && view === 'list' && scope === 'all' ? 'page' : undefined" aria-label="任務列表" @click="navigate('all')"><Icon name="list" :size="18" />任務列表</button>
-          <button class="nav-item" :class="{ active: section === 'tasks' && (view === 'board' || view === 'boards') }" :aria-current="section === 'tasks' && (view === 'board' || view === 'boards') ? 'page' : undefined" aria-label="任務看板" @click="navigate('all', projectId, 'boards')"><Icon name="board" :size="18" />任務看板</button>
-          <button class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'mine' }" @click="navigate('mine')"><Icon name="user" :size="18" />我的任務</button>
-          <button v-if="can('timeEntry.readOwn')" class="nav-item" :class="{ active: section === 'time' }" :aria-current="section === 'time' ? 'page' : undefined" @click="changeSection('time')"><Icon name="clock" :size="18" />工時月曆</button>
-          <button v-if="can('project.statuses.update')" class="nav-item" :class="{ active: section === 'settings' }" :aria-current="section === 'settings' ? 'page' : undefined" @click="changeSection('settings')"><Icon name="filter" :size="18" />狀態設定</button>
-          <button v-if="can('project.members.manage')" class="nav-item" :class="{ active: section === 'members' }" :aria-current="section === 'members' ? 'page' : undefined" aria-label="專案成員與權限" @click="changeSection('members')"><Icon name="user" :size="18" />成員與權限</button>
-          <button v-if="notificationPreviewEnabled" class="nav-item" :class="{ active: section === 'notifications' }" :aria-current="section === 'notifications' ? 'page' : undefined" @click="changeSection('notifications')"><Icon name="message" :size="18" />通知預覽</button>
+          <a :href="sectionHref('tasks')" class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'all' }" :aria-current="section === 'tasks' && view === 'list' && scope === 'all' ? 'page' : undefined" aria-label="任務列表" @click="follow($event, () => navigate('all'))"><Icon name="list" :size="18" />任務列表</a>
+          <a :href="sectionHref('boards')" class="nav-item" :class="{ active: section === 'tasks' && (view === 'board' || view === 'boards') }" :aria-current="section === 'tasks' && (view === 'board' || view === 'boards') ? 'page' : undefined" aria-label="任務看板" @click="follow($event, () => navigate('all', projectId, 'boards'))"><Icon name="board" :size="18" />任務看板</a>
+          <a :href="sectionHref('mine')" class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'mine' }" @click="follow($event, () => navigate('mine'))"><Icon name="user" :size="18" />我的任務</a>
+          <a :href="sectionHref('time')" v-if="can('timeEntry.readOwn')" class="nav-item" :class="{ active: section === 'time' }" :aria-current="section === 'time' ? 'page' : undefined" @click="follow($event, () => changeSection('time'))"><Icon name="clock" :size="18" />工時月曆</a>
+          <a :href="sectionHref('settings')" v-if="can('project.statuses.update')" class="nav-item" :class="{ active: section === 'settings' }" :aria-current="section === 'settings' ? 'page' : undefined" @click="follow($event, () => changeSection('settings'))"><Icon name="filter" :size="18" />狀態設定</a>
+          <a :href="sectionHref('members')" v-if="can('project.members.manage')" class="nav-item" :class="{ active: section === 'members' }" :aria-current="section === 'members' ? 'page' : undefined" aria-label="專案成員與權限" @click="follow($event, () => changeSection('members'))"><Icon name="user" :size="18" />成員與權限</a>
+          <a :href="sectionHref('notifications')" v-if="notificationPreviewEnabled" class="nav-item" :class="{ active: section === 'notifications' }" :aria-current="section === 'notifications' ? 'page' : undefined" @click="follow($event, () => changeSection('notifications'))"><Icon name="message" :size="18" />通知預覽</a>
         </nav>
       </template>
       <template v-else>
         <p class="nav-label">工作空間</p>
         <nav aria-label="工作空間">
-          <button class="nav-item" :class="{ active: landing === 'home' }" :aria-current="landing === 'home' ? 'page' : undefined" @click="goHome()"><Icon name="grid" :size="18" />首頁</button>
-          <button class="nav-item" :class="{ active: landing === 'projects' }" :aria-current="landing === 'projects' ? 'page' : undefined" aria-label="專案列表" @click="goProjects()"><Icon name="folder" :size="18" />專案列表<span v-if="!isScopedRoute" class="nav-count">{{ projects.length }}</span></button>
+          <a :href="'#/'" class="nav-item" :class="{ active: landing === 'home' }" :aria-current="landing === 'home' ? 'page' : undefined" @click="follow($event, () => goHome())"><Icon name="grid" :size="18" />首頁</a>
+          <a :href="'#/projects'" class="nav-item" :class="{ active: landing === 'projects' }" :aria-current="landing === 'projects' ? 'page' : undefined" aria-label="專案列表" @click="follow($event, () => goProjects())"><Icon name="folder" :size="18" />專案列表<span v-if="!isScopedRoute" class="nav-count">{{ projects.length }}</span></a>
         </nav>
       </template>
-      <nav v-if="workspace.meta.permissions?.includes('workspace.ownership')" aria-label="工作空間管理"><button class="nav-item" :class="{ active: landing === 'settings' && !selectedProject }" :aria-current="landing === 'settings' && !selectedProject ? 'page' : undefined" @click="openWorkspaceSettings()"><Icon name="settings" :size="18" />工作空間設定</button></nav>
-      <nav v-if="canAnalyze" aria-label="工作空間分析"><button class="nav-item" :class="{ active: landing === 'analysis' && !selectedProject }" :aria-current="landing === 'analysis' && !selectedProject ? 'page' : undefined" @click="goAnalysis()"><Icon name="clock" :size="18" />工時分析</button></nav>
+      <nav v-if="workspace.meta.permissions?.includes('workspace.ownership')" aria-label="工作空間管理"><a :href="'#/workspace/settings'" class="nav-item" :class="{ active: landing === 'settings' && !selectedProject }" :aria-current="landing === 'settings' && !selectedProject ? 'page' : undefined" @click="follow($event, () => openWorkspaceSettings())"><Icon name="settings" :size="18" />工作空間設定</a></nav>
+      <nav v-if="canAnalyze" aria-label="工作空間分析"><a :href="'#/time-analysis'" class="nav-item" :class="{ active: landing === 'analysis' && !selectedProject }" :aria-current="landing === 'analysis' && !selectedProject ? 'page' : undefined" @click="follow($event, () => goAnalysis())"><Icon name="clock" :size="18" />工時分析</a></nav>
     </aside>
 
     <main class="main">

@@ -32,7 +32,7 @@ try {
   const menu = owner.getByRole('menu', { name: '帳號選項', exact: true });
   const profile = owner.getByRole('dialog', { name: '個人資料', exact: true });
   const settings = owner.getByRole('region', { name: '工作空間設定', exact: true });
-  async function choose(name) { if (name === '工作空間設定') { await owner.getByRole('button', { name, exact: true }).click(); return; } await avatar.click(); await menu.getByRole('menuitem', { name, exact: true }).click(); }
+  async function choose(name) { if (name === '工作空間設定') { await owner.getByRole('link', { name, exact: true }).click(); return; } await avatar.click(); await menu.getByRole('menuitem', { name, exact: true }).click(); }
   async function screenshots(label, target) {
     for (const width of [1440, 768, 390]) {
       await owner.setViewportSize({ width, height: width === 390 ? 844 : 1000 });
@@ -79,7 +79,7 @@ try {
   assert.equal(await owner.getByRole('dialog').count(), 0, '工作空間設定為頁面，不使用dialog');
   assert.equal(await owner.getByRole('region', { name: '任務工作區', exact: true }).count(), 0, '設定頁不混入任務工作區');
   await owner.reload(); await settings.getByLabel('工作空間名稱', { exact: true }).waitFor();
-  assert.equal(await owner.locator('.sidebar').getByRole('button', { name: '工作空間設定', exact: true }).getAttribute('aria-current'), 'page');
+  assert.equal(await owner.locator('.sidebar').getByRole('link', { name: '工作空間設定', exact: true }).getAttribute('aria-current'), 'page');
   await settings.getByLabel('工作空間名稱', { exact: true }).fill('工作區草稿');
   owner.once('dialog', dialog => dialog.dismiss()); await owner.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   assert.equal(await settings.getByLabel('工作空間名稱', { exact: true }).inputValue(), '工作區草稿');
@@ -138,7 +138,7 @@ try {
     await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click(); await openProjectList(member); await member.getByRole('button', { name: '進入專案：權限測試專案', exact: true }).waitFor({ state: role === 'manager' ? 'visible' : 'hidden' });
   }
   await owner.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
-  assert.equal(await member.getByRole('button', { name: '工作空間設定', exact: true }).count(), 0, '一般成員無設定入口');
+  assert.equal(await member.getByRole('link', { name: '工作空間設定', exact: true }).count(), 0, '一般成員無設定入口');
   await member.goto('http://127.0.0.1:5175/app/#/workspace/settings/members');
   await member.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
   assert.equal(await member.getByRole('region', { name: '工作空間設定', exact: true }).count(), 0, '無權限深連結回首頁');
@@ -147,16 +147,16 @@ try {
   await member.keyboard.press('Escape');
   await owner.setViewportSize({ width: 390, height: 844 });
   await owner.getByRole('button', { name: '開啟導覽', exact: true }).click();
-  await owner.getByRole('button', { name: '工作空間設定', exact: true }).click();
+  await owner.getByRole('link', { name: '工作空間設定', exact: true }).click();
   await owner.locator('.breadcrumb-home').click();
   await owner.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
   await owner.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
   await owner.setViewportSize({ width: 1440, height: 1000 });
   await openProjectList(owner);
   await owner.getByRole('button', { name: '進入專案：權限測試專案', exact: true }).click(); const hash = await owner.evaluate(() => location.hash);
-  await owner.getByRole('button', { name: '工作空間設定', exact: true }).click(); assert.equal(await owner.evaluate(() => location.hash), '#/workspace/settings');
-  await owner.goBack(); await owner.getByRole('button', { name: '專案成員與權限', exact: true }).waitFor(); assert.equal(await owner.evaluate(() => location.hash), hash);
-  await owner.getByRole('button', { name: '專案成員與權限', exact: true }).click(); await owner.getByRole('region', { name: '專案成員與權限', exact: true }).waitFor(); await owner.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await owner.getByRole('link', { name: '工作空間設定', exact: true }).click(); assert.equal(await owner.evaluate(() => location.hash), '#/workspace/settings');
+  await owner.goBack(); await owner.getByRole('link', { name: '專案成員與權限', exact: true }).waitFor(); assert.equal(await owner.evaluate(() => location.hash), hash);
+  await owner.getByRole('link', { name: '專案成員與權限', exact: true }).click(); await owner.getByRole('region', { name: '專案成員與權限', exact: true }).waitFor(); await owner.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await owner.getByLabel('快速新增待辦', { exact: true }).fill('未保存的速記'); owner.once('dialog', dialog => dialog.dismiss()); await choose('登出'); assert.equal(await owner.getByLabel('快速新增待辦', { exact: true }).inputValue(), '未保存的速記');
   await owner.getByLabel('快速新增待辦', { exact: true }).fill(''); await choose('登出'); await owner.getByRole('button', { name: '登入', exact: true }).waitFor(); assert.deepEqual(errors, []);
   console.log('PASS: 設定獨立頁與分頁網址／重整／返回／草稿與送出中保護、帳號選單、改名衝突、邀請與固定身份、無權限深連結、登出保護、1440／768／390');

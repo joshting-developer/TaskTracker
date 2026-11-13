@@ -33,11 +33,11 @@ try {
   await call(page, 'createIssue', { projectId: other.id, title: 'Other project notice', assignee: identity.user.id });
 
   await page.reload();
-  await page.getByRole('button', { name: '專案列表', exact: true }).click();
+  await page.getByRole('link', { name: '專案列表', exact: true }).click();
   await page.getByRole('button', { name: '進入專案：Utility', exact: true }).click();
-  await page.getByRole('button', { name: '通知預覽', exact: true }).waitFor();
+  await page.getByRole('link', { name: '通知預覽', exact: true }).waitFor();
   requests.length = 0;
-  await page.getByRole('button', { name: '通知預覽', exact: true }).click();
+  await page.getByRole('link', { name: '通知預覽', exact: true }).click();
   await page.locator('.notification-card').nth(19).waitFor();
   assert.equal(await page.locator('.notification-card').count(), 20, '第一頁只顯示20筆');
   assert.equal(await page.getByText('Other project notice').count(), 0, '不含其他專案通知');
@@ -58,7 +58,7 @@ try {
   await page.getByText(/private description \d+/).first().waitFor();
 
   requests.length = 0;
-  await page.getByRole('button', { name: '狀態設定', exact: true }).click();
+  await page.getByRole('link', { name: '狀態設定', exact: true }).click();
   await page.getByLabel('狀態 2 Type', { exact: true }).waitFor();
   await page.waitForFunction(() => !document.querySelector('[role="status"]')?.textContent?.includes('載入狀態用量'));
   assert.equal(await page.getByLabel('狀態 2 Type', { exact: true }).inputValue(), 'inprogress');
@@ -79,10 +79,10 @@ try {
   const receiverRequests = [];
   receiver.on('response', response => { const url = new URL(response.url()); if (url.pathname.startsWith('/api/')) receiverRequests.push(url.pathname); });
   await receiver.reload();
-  await receiver.getByRole('button', { name: '專案列表', exact: true }).click();
+  await receiver.getByRole('link', { name: '專案列表', exact: true }).click();
   await receiver.getByRole('button', { name: '進入專案：Utility', exact: true }).click();
-  assert.equal(await receiver.getByRole('button', { name: '狀態設定', exact: true }).count(), 0);
-  await receiver.getByRole('button', { name: '通知預覽', exact: true }).click();
+  assert.equal(await receiver.getByRole('link', { name: '狀態設定', exact: true }).count(), 0);
+  await receiver.getByRole('link', { name: '通知預覽', exact: true }).click();
   await receiver.locator('.notification-card').nth(19).waitFor();
   assert.equal(await receiver.getByRole('button', { name: '檢查 SMTP 連線' }).count(), 0);
 

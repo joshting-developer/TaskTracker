@@ -38,7 +38,7 @@ try {
     target.items = [...fake, ...target.items];
     await route.fulfill({ response, json: body });
   });
-  await page.getByRole('button', { name: '通知預覽', exact: true }).click();
+  await page.getByRole('link', { name: '通知預覽', exact: true }).click();
   const important = page.locator('.notification-card.important');
   await important.waitFor();
   assert.equal(await important.count(), 1, '只有重要狀態那筆要特別標示');
@@ -63,8 +63,8 @@ try {
     await route.fulfill({ response, json: body });
   });
   await page.goto(notificationsUrl); await page.reload();
-  await page.getByRole('button', { name: '任務列表', exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: '通知預覽', exact: true }).count(), 0, '正式環境不能出現通知預覽入口');
+  await page.getByRole('link', { name: '任務列表', exact: true }).waitFor();
+  assert.equal(await page.getByRole('link', { name: '通知預覽', exact: true }).count(), 0, '正式環境不能出現通知預覽入口');
   assert.equal(await page.locator('.notification-workspace').count(), 0, '正式環境直接開網址也不能顯示通知預覽');
   assert.deepEqual(errors, []);
   console.log('PASS: status_important notifications show the 重要狀態 tag; other kinds do not; no horizontal scroll at 1440/768/390; hidden when notificationPreview feature is off');

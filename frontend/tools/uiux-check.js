@@ -80,7 +80,7 @@ try {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：UI 驗證專案', exact: true }).click();
-  await page.getByRole('button', { name: '工時月曆', exact: true }).click();
+  await page.getByRole('link', { name: '工時月曆', exact: true }).click();
   await page.getByRole('button', { name: new RegExp(`^${dateInTaipei()} 工時 `) }).click();
   const drawer = page.getByRole('dialog', { name: '填報你的工時', exact: true });
   await drawer.getByLabel('工時任務', { exact: true }).selectOption(fixture.issue.id);
@@ -102,7 +102,7 @@ try {
   assert.equal(saved.length, 1);
   assert.equal(saved[0].minutes, 30);
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.getByRole('button', { name: '通知預覽', exact: true }).click();
+  await page.getByRole('link', { name: '通知預覽', exact: true }).click();
   const readable = await page.locator('.smtp-card small').evaluate(el => {
     const style = getComputedStyle(el), parent = getComputedStyle(el.closest('.smtp-card'));
     const luminance = rgb => {
@@ -142,7 +142,7 @@ try {
   assert.equal(await editor.locator(`[id="${await editorTabs.getByRole('tab').last().getAttribute('aria-controls')}"]`).getAttribute('aria-labelledby'), await editorTabs.getByRole('tab').last().getAttribute('id'));
   await editor.getByRole('button', { name: '取消', exact: true }).click();
   await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
-  await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  await page.getByRole('link', { name: '任務看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   for (const width of [768, 1024, 390]) {
     await page.setViewportSize({ width, height: 1024 });
@@ -157,21 +157,21 @@ try {
   await page.setViewportSize({ width: 1440, height: 900 });
   const projectUrl = `${baseURL}/app/#/projects/${fixture.project.id}`;
   for (const [name, route] of [['工時月曆', 'time'], ['狀態設定', 'settings'], ['專案成員與權限', 'members'], ['通知預覽', 'notifications']]) {
-    const nav = page.getByRole('navigation', { name: '專案任務' }).getByRole('button', { name: new RegExp(`^${name}`) });
+    const nav = page.getByRole('navigation', { name: '專案任務' }).getByRole('link', { name: new RegExp(`^${name}`) });
     await nav.click();
     assert.equal(page.url(), `${projectUrl}/${route}`);
     await page.reload();
     await nav.waitFor();
     assert.equal(await nav.getAttribute('aria-current'), 'page', `${name} 重整保留功能`);
   }
-  await page.getByRole('button', { name: '工時月曆', exact: true }).click();
-  await page.getByRole('button', { name: '狀態設定', exact: true }).click();
+  await page.getByRole('link', { name: '工時月曆', exact: true }).click();
+  await page.getByRole('link', { name: '狀態設定', exact: true }).click();
   await page.goBack();
   assert.equal(page.url(), `${projectUrl}/time`);
   await page.getByRole('region', { name: '工時月曆', exact: true }).waitFor();
   await page.goForward();
   assert.equal(page.url(), `${projectUrl}/settings`);
-  await page.getByRole('button', { name: '工時月曆', exact: true }).click();
+  await page.getByRole('link', { name: '工時月曆', exact: true }).click();
   await page.getByRole('button', { name: new RegExp(`^${dateInTaipei()} 工時 `) }).click();
   await drawer.getByLabel('工時任務', { exact: true }).selectOption(fixture.issue.id);
   await drawer.getByRole('spinbutton').fill('1.5');
@@ -208,7 +208,7 @@ try {
     await reader.reload();
     await reader.getByLabel('搜尋任務', { exact: true }).waitFor();
     assert.equal(reader.url(), projectUrl, '未授權功能深連結回任務列表');
-    assert.equal(await reader.getByRole('button', { name: '工時月曆', exact: true }).count(), 0);
+    assert.equal(await reader.getByRole('link', { name: '工時月曆', exact: true }).count(), 0);
   }
   await reader.goto(`${projectUrl}/issues/${fixture.issue.id}?detail=1`);
   const readerDetail = reader.getByRole('region', { name: '任務完整頁', exact: true });

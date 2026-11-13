@@ -47,11 +47,11 @@ try {
   await log(memberPage, task, '2026-10-05', 90, 'member task');
 
   await page.reload();
-  await page.getByRole('button', { name: '專案列表', exact: true }).click();
+  await page.getByRole('link', { name: '專案列表', exact: true }).click();
   await page.getByRole('button', { name: '進入專案：Calendar', exact: true }).click();
-  await page.getByRole('button', { name: '工時月曆', exact: true }).waitFor();
+  await page.getByRole('link', { name: '工時月曆', exact: true }).waitFor();
   requests.length = 0;
-  await page.getByRole('button', { name: '工時月曆', exact: true }).click();
+  await page.getByRole('link', { name: '工時月曆', exact: true }).click();
   const calendar = page.getByRole('region', { name: '工時月曆', exact: true });
   await calendar.waitFor();
   const october = page.waitForResponse(response => response.url().includes('/time-calendar') && new URL(response.url()).searchParams.get('month') === '2026-10');

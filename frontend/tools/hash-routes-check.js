@@ -23,6 +23,13 @@ assert.equal(parseHash('#/projects/p1?view=old').retiredView, true);
 assert.equal(parseHash('#/projects/%E0%A4%A').malformed, true, '壞掉的編碼不丟例外');
 assert.equal(parseHash('#/projects/p1/issues/i1?detail=0').detail, false);
 assert.equal(parseHash('#/projects/p1/boards/issues/i1').board, 'default', 'boards後面不是看板id');
+// TT-329：側邊欄「我的任務」在新分頁靠?scope=mine, 只認專案任務列表
+assert.equal(parseHash('#/projects/p1?scope=mine').scope, 'mine');
+assert.equal(parseHash('#/projects/p1').scope, '');
+assert.equal(parseHash('#/projects/p1/boards?scope=mine').scope, '', '看板不吃scope');
+assert.equal(parseHash('#/projects/p1/issues/i1?scope=mine').scope, '', '卡片詳細不吃scope');
+assert.equal(parseHash('#/projects/p1/time?scope=mine').scope, '', '其他功能頁不吃scope');
+assert.equal(parseHash('#/projects/p1?scope=other').scope, '');
 assert.equal(buildHash({ project: 'p1', issue: 'i1', section: 'time' }), '#/projects/p1/issues/i1', '開卡一律回任務區');
 assert.equal(settingsHash('members'), '#/workspace/settings/members');
 console.log(`PASS: ${roundTrips.length} hash round trips, legacy issue/invite/epics/view links, malformed encoding`);

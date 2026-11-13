@@ -113,7 +113,7 @@ try {
       burstCalls = [...calls]; calls.length = 0;
       assert.equal(burstCalls.filter(path => path.endsWith('/getWorkspace')).length, 1, '雙擊刷新共用工作區讀取');
     }
-    await page.getByRole('button', { name: '工時分析', exact: true }).click();
+    await page.getByRole('link', { name: '工時分析', exact: true }).click();
     await page.getByRole('button', { name: /^成員投入/ }).click();
     await page.locator('.analysis-totals').waitFor(); await frames(page); calls.length = 0;
     const reportStart = performance.now();

@@ -10,5 +10,5 @@ export async function openProjectList(page) {
     await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   }
   await showNavigation();
-  await page.getByRole('button', { name: '專案列表', exact: true }).click();
+  await page.getByRole('link', { name: '專案列表', exact: true }).click();
 }

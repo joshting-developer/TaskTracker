@@ -4,7 +4,7 @@
  * 解析 `location.hash`。
  *
  * @param {string} hash 例如 `#/projects/<id>/board/<boardId>/issues/<issueId>?detail=1`
- * @returns {{ project: string, issue: string, board: string, mode: 'list'|'board'|'boards', section: string, detail: boolean, landing: 'home'|'projects'|'settings'|'analysis', teamTab: 'general'|'members', analysis: 'index'|'members'|'projects'|'trend', invite: string, retiredEpics: boolean, retiredView: boolean, malformed: boolean }}
+ * @returns {{ project: string, issue: string, board: string, mode: 'list'|'board'|'boards', section: string, detail: boolean, landing: 'home'|'projects'|'settings'|'analysis', teamTab: 'general'|'members', analysis: 'index'|'members'|'projects'|'trend', invite: string, scope: ''|'mine', retiredEpics: boolean, retiredView: boolean, malformed: boolean }}
  */
 export function parseHash(hash) {
   const [path, query = ''] = hash.split('?');
@@ -33,6 +33,8 @@ export function parseHash(hash) {
     teamTab: settingsRoute?.[1] || 'general',
     analysis: analysisRoute?.[1] || 'index',
     invite: path === '#/invite' ? params.get('token') || '' : '',
+    // TT-329：「我的任務」的偏好只存在分頁的sessionStorage, 新分頁要靠網址帶?scope=mine
+    scope: route && !route[2] && !issue && params.get('scope') === 'mine' ? 'mine' : '',
     retiredEpics,
     retiredView: Boolean(route && params.has('view')),
   };

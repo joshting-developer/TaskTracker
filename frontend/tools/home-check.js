@@ -25,7 +25,7 @@ try {
   let samePagePrompt = false; const onSamePagePrompt = dialog => { samePagePrompt = true; dialog.dismiss(); };
   page.on('dialog', onSamePagePrompt); await page.getByRole('button', { name: '工作空間', exact: true }).click(); page.off('dialog', onSamePagePrompt);
   assert.equal(samePagePrompt, false, '停留首頁不視為離開，也不丟速記');
-  page.once('dialog', dialog => dialog.dismiss()); await page.getByRole('button', { name: '專案列表', exact: true }).click();
+  page.once('dialog', dialog => dialog.dismiss()); await page.getByRole('link', { name: '專案列表', exact: true }).click();
   assert.equal(await todos.getByLabel('快速新增待辦', { exact: true }).inputValue(), '未送出的首頁速記');
   page.once('dialog', dialog => dialog.dismiss()); await page.evaluate(() => { location.hash = '#/projects'; });
   await page.waitForFunction(() => location.hash === '#/' || location.hash === '');
@@ -41,11 +41,11 @@ try {
   await page.getByRole('button', { name: '進入專案：獨立專案入口', exact: true }).waitFor();
   assert.equal(new URL(page.url()).hash, '#/projects');
   await page.getByRole('button', { name: '進入專案：獨立專案入口', exact: true }).click();
-  await page.getByRole('button', { name: '任務列表', exact: true }).waitFor(); const projectUrl = page.url();
-  await page.reload(); await page.getByRole('button', { name: '任務列表', exact: true }).waitFor();
+  await page.getByRole('link', { name: '任務列表', exact: true }).waitFor(); const projectUrl = page.url();
+  await page.reload(); await page.getByRole('link', { name: '任務列表', exact: true }).waitFor();
   await page.getByRole('button', { name: '專案', exact: true }).click();
   assert.equal(new URL(page.url()).hash, '#/projects');
-  await page.goBack(); await page.getByRole('button', { name: '任務列表', exact: true }).waitFor();
+  await page.goBack(); await page.getByRole('link', { name: '任務列表', exact: true }).waitFor();
   assert.equal(page.url(), projectUrl);
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await todos.waitFor(); await todos.locator('.todo-plain,.todo-content > summary').getByText('未送出的首頁速記', { exact: true }).waitFor();

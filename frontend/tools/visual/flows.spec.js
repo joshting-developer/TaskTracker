@@ -133,7 +133,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   await page.keyboard.press('Escape');
   await expect(editor).not.toBeVisible();
   await navigation(page);
-  await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  await page.getByRole('link', { name: '任務看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await page.locator('.issue-card').first().waitFor();
   await shot(page, '09-board');
@@ -170,7 +170,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   await picker.getByRole('button', { name: '選擇工作空間 受邀工作區', exact: true }).click();
   await expect(picker).not.toBeVisible();
   await page.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
-  await expect(page.getByRole('button', { name: '工作空間設定', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: '工作空間設定', exact: true })).toHaveCount(0);
   await openProjectList(page);
   await page.getByRole('heading', { name: '尚未加入任何專案', exact: true }).waitFor();
   await shot(page, '15-member-empty');

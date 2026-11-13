@@ -104,7 +104,7 @@ try {
   assert.equal(await page.locator('tbody tr').count(), 1);
   assert.match(await page.locator('.nav-item.active').innerText(), /我的任務/);
   assert.equal(await page.getByRole('button', { name: /^已完成/ }).count(), 0);
-  await page.getByRole('button', { name: '工時月曆', exact: true }).click();
+  await page.getByRole('link', { name: '工時月曆', exact: true }).click();
   await page.getByLabel('工時月份', { exact: true }).fill('2026-10');
   await page.getByLabel('工時成員', { exact: true }).selectOption('');
   await page.reload();
@@ -113,12 +113,12 @@ try {
   assert.equal(await page.getByLabel('工時成員', { exact: true }).inputValue(), '');
   await page.screenshot({ path: `${artifacts}/time-context.png` });
   await page.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.second.id}`);
-  await page.getByRole('button', { name: '任務列表', exact: true }).waitFor();
+  await page.getByRole('link', { name: '任務列表', exact: true }).waitFor();
   assert.match(await page.locator('.nav-item.active').innerText(), /任務列表/);
   await page.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.project.id}`);
   await page.locator('tbody tr').first().waitFor();
   assert.match(await page.locator('.nav-item.active').innerText(), /我的任務/);
-  await page.getByRole('button', { name: '任務列表', exact: true }).click();
+  await page.getByRole('link', { name: '任務列表', exact: true }).click();
   await page.reload(); await page.locator('tbody tr').first().waitFor();
   assert.equal(await page.locator('tbody tr').count(), 2);
   // F04：標題閱讀、顯式快速編輯、返回保留來源。
@@ -131,7 +131,7 @@ try {
   await page.getByRole('button', { name: `快速編輯 ${fixture.issue.identifier}`, exact: true }).click();
   await page.getByRole('dialog').getByLabel(/任務標題/).waitFor();
   await page.getByRole('button', { name: '關閉任務', exact: true }).click();
-  await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  await page.getByRole('link', { name: '任務看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await page.getByRole('button', { name: fixture.issue.title, exact: true }).click();
   await detail.getByRole('heading', { name: fixture.issue.title, exact: true }).waitFor();

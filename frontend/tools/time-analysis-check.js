@@ -46,10 +46,10 @@ try {
     execFileSync('docker', ['compose', '-p', process.env.E2E_COMPOSE_PROJECT, '-f', resolve(import.meta.dirname, '../../docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', 'tools/time-analysis-fixture.php'], { cwd: resolve(import.meta.dirname, '../..'), input: JSON.stringify({ userId: identity.user.id, workspaceId: identity.workspace.id, first: first.id, second: second.id }), stdio: ['pipe', 'pipe', 'pipe'] });
     first.id = 'analysis-2'; second.id = 'analysis-1';
   }
-  await owner.reload(); await owner.getByRole('button', { name: '工時分析', exact: true }).click();
+  await owner.reload(); await owner.getByRole('link', { name: '工時分析', exact: true }).click();
   const region = owner.getByRole('region', { name: '工時分析', exact: true });
   await region.getByRole('heading', { name: '工時分析', exact: true }).waitFor();
-  assert.equal(await owner.getByRole('button', { name: '工時分析', exact: true }).getAttribute('aria-current'), 'page');
+  assert.equal(await owner.getByRole('link', { name: '工時分析', exact: true }).getAttribute('aria-current'), 'page');
   assert.equal(await region.locator('.analysis-choice').count(), 3);
   mkdirSync('artifacts/time-analysis', { recursive: true });
   async function screenshots(label) {
@@ -118,12 +118,12 @@ try {
   assert.equal(await region.locator('table').count(), 0, '錯誤不留舊報表冒充新結果');
   await region.getByRole('button', { name: '重試', exact: true }).click(); await region.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();
   console.log('PASS: 日期／專案／成員交集、待套用不被背景更新偷用、空資料、日期上限、錯誤及重試');
-  await member.reload(); assert.equal(await member.getByRole('button', { name: '工時分析', exact: true }).count(), 0);
+  await member.reload(); assert.equal(await member.getByRole('link', { name: '工時分析', exact: true }).count(), 0);
   const query = { startDate: today, endDate: today };
   assert.equal((await request(member, 'getTimeReport', query)).status, 403);
   await member.goto(`${base}/app/#/time-analysis/projects`); await member.waitForURL('**/#/');
   await call(owner, 'setWorkspaceMemberRole', { userId: memberIdentity.user.id, roleId: 'manager', expectedRevision: 0 });
-  await member.reload(); await member.getByRole('button', { name: '工時分析', exact: true }).click(); await member.getByRole('button', { name: /^專案投入/ }).click();
+  await member.reload(); await member.getByRole('link', { name: '工時分析', exact: true }).click(); await member.getByRole('button', { name: /^專案投入/ }).click();
   const managerRegion = member.getByRole('region', { name: '工時分析', exact: true }); await managerRegion.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();
   await managerRegion.getByRole('button', { name: '返回工時分析', exact: true }).click();
   await managerRegion.getByRole('button', { name: /^成員投入/ }).click();
@@ -132,7 +132,7 @@ try {
   await call(owner, 'setWorkspaceMemberRole', { userId: memberIdentity.user.id, roleId: 'user', expectedRevision: 1 });
   await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click(); await member.waitForURL('**/#/');
   assert.equal(await managerRegion.count(), 0); assert.equal((await request(member, 'getTimeReport', query)).status, 403);
-  await owner.getByRole('button', { name: '工時分析', exact: true }).click(); await owner.goBack(); await region.getByRole('heading', { name: '成員投入', exact: true }).waitFor();
+  await owner.getByRole('link', { name: '工時分析', exact: true }).click(); await owner.goBack(); await region.getByRole('heading', { name: '成員投入', exact: true }).waitFor();
   assert.deepEqual(errors, []);
   for (const path of ['time-report', 'time-report/details', 'time-report/options/projects', 'time-report/options/members']) assert.ok(reads.includes(`/api/v1/${path}`), `前端必須使用獨立${path}介面`);
   assert.equal(reads.includes('/api/rpc/getTimeReport'), false, '前端不能回退整包分析RPC');

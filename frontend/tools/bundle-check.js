@@ -73,7 +73,7 @@ try {
     const pattern = '**/assets/TimeAnalysis-*.js';
     await page.route(pattern, route => { attempts++; return route.abort('failed'); });
     await page.context().setOffline(true);
-    await page.locator('.sidebar').getByRole('button', { name: '工時分析', exact: true }).click();
+    await page.locator('.sidebar').getByRole('link', { name: '工時分析', exact: true }).click();
     await page.getByText('無法載入此功能', { exact: true }).waitFor();
     await page.screenshot({ path: new URL('chunk-error.png', artifacts).pathname });
     await page.setViewportSize({ width: 390, height: 900 });

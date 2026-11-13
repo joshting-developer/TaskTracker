@@ -69,11 +69,11 @@ try {
     assert.ok(!failures.length, `${where}：${failures.join('；')}`);
     console.log('PASS', where);
   }
-  await page.getByRole('button', { name: '任務列表', exact: true }).click();
+  await page.getByRole('link', { name: '任務列表', exact: true }).click();
   await exercise('任務列表');
   await page.getByRole('button', { name: /^我的任務/ }).click();
   await exercise('我的任務');
-  await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  await page.getByRole('link', { name: '任務看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await exercise('看板');
   assert.deepEqual(failures, []);

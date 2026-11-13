@@ -70,23 +70,23 @@ async function checkSeedAccounts(browser, failures) {
   await openProjectList(page);
     assert.equal(await page.getByRole('button', { name: '進入專案：second', exact: true }).count(), role === 'developer' ? 0 : 1, 'Project 資格限制首頁範圍');
     if (role === 'owner') {
-      await page.getByRole('button', { name: '工作空間設定', exact: true }).click();
+      await page.getByRole('link', { name: '工作空間設定', exact: true }).click();
       await page.getByRole('tab', { name: '成員與權限', exact: true }).click();
       const team = page.getByRole('region', { name: '工作空間設定', exact: true });
       for (const account of ['owner', 'manager', 'maintainer', 'developer']) await team.getByText(`${account}@example.test`, { exact: true }).waitFor();
       assert.ok(await team.getByRole('combobox', { name: /^工作空間身份 / }).count() > 0);
       await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
-    } else assert.equal(await page.getByRole('button', { name: '工作空間設定', exact: true }).count(), 0);
+    } else assert.equal(await page.getByRole('link', { name: '工作空間設定', exact: true }).count(), 0);
   await openProjectList(page);
     await page.getByRole('button', { name: '進入專案：first', exact: true }).click();
     await page.getByRole('button', { name: '完成登入功能', exact: true }).waitFor();
-    assert.equal(await page.getByRole('button', { name: '狀態設定', exact: true }).count(), maintainer ? 1 : 0);
-    await page.getByRole('button', { name: '我的任務', exact: false }).click();
+    assert.equal(await page.getByRole('link', { name: '狀態設定', exact: true }).count(), maintainer ? 1 : 0);
+    await page.getByRole('link', { name: '我的任務', exact: false }).click();
     assert.equal(await page.locator('tbody tr').count(), role === 'developer' ? 4 : role === 'maintainer' ? 1 : 0, '個人清單按 userId, 非角色名稱');
-    await page.getByRole('button', { name: '任務看板', exact: true }).click();
+    await page.getByRole('link', { name: '任務看板', exact: true }).click();
     await page.getByRole('button', { name: '開啟看板 Default', exact: true }).waitFor();
     assert.equal(await page.getByRole('button', { name: '新增看板', exact: true }).count(), maintainer ? 1 : 0);
-    await page.getByRole('button', { name: '通知預覽', exact: true }).click();
+    await page.getByRole('link', { name: '通知預覽', exact: true }).click();
     await page.getByRole('heading', { name: '通知預覽', exact: true }).waitFor();
     assert.equal(await page.getByRole('button', { name: '檢查 SMTP 連線', exact: true }).count(), role === 'owner' ? 1 : 0);
     await page.screenshot({ path: `artifacts/seed-${role}.png`, fullPage: true });
@@ -272,7 +272,7 @@ async function checkProjectAcl(page, browser, failures) {
     return { project, other, hidden, issue, task, member, board };
   });
   await page.goto(`${baseURL}/app/#/projects/${fixture.project.id}`);
-  await page.getByRole('button', { name: '專案成員與權限', exact: true }).click();
+  await page.getByRole('link', { name: '專案成員與權限', exact: true }).click();
   const members = page.getByRole('region', { name: '專案成員與權限', exact: true });
   await members.getByRole('button', { name: '搜尋加入專案的成員選項', exact: true }).click();
   await members.getByLabel('搜尋加入專案的成員', { exact: true }).fill(fixture.member.email);
@@ -311,7 +311,7 @@ async function checkProjectAcl(page, browser, failures) {
   await openProjectList(teammate);
   await teammate.getByRole('button', { name: '進入專案：ACL 閱讀專案', exact: true }).click();
   assert.equal(await teammate.getByRole('button', { name: '新增任務', exact: true }).count(), 0);
-  for (const name of ['專案成員與權限', '狀態設定', '工時月曆']) assert.equal(await teammate.getByRole('button', { name, exact: true }).count(), 0);
+  for (const name of ['專案成員與權限', '狀態設定', '工時月曆']) assert.equal(await teammate.getByRole('link', { name, exact: true }).count(), 0);
   await teammate.getByRole('button', { name: '受保護的閱讀卡片', exact: true }).click();
   const detail = teammate.getByRole('region', { name: '任務完整頁', exact: true });
   await detail.getByRole('heading', { name: '受保護的閱讀卡片', exact: true }).waitFor();
@@ -321,7 +321,7 @@ async function checkProjectAcl(page, browser, failures) {
   assert.equal(await detail.getByRole('group', { name: '任務狀態' }).getByRole('combobox').count(), 0);
   await detail.getByRole('group', { name: '任務狀態' }).getByText('唯讀', { exact: true }).waitFor();
   await teammate.getByRole('button', { name: '返回任務列表', exact: true }).click();
-  await teammate.getByRole('button', { name: '任務看板', exact: true }).click();
+  await teammate.getByRole('link', { name: '任務看板', exact: true }).click();
   assert.equal(await teammate.getByRole('button', { name: '新增看板', exact: true }).count(), 0);
   await teammate.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await teammate.locator(`[data-issue="${fixture.issue.identifier}"]`).waitFor();
@@ -516,9 +516,9 @@ async function checkBoardWorkflow(page) {
   await page.getByRole('dialog', { name: '任務詳細內容' }).waitFor();
   await page.getByRole('button', { name: '關閉任務', exact: true }).click();
   assert.ok(page.url().endsWith('/board'), '詳細頁重整及關閉保留看板');
-  await page.getByRole('button', { name: '任務列表', exact: true }).click();
+  await page.getByRole('link', { name: '任務列表', exact: true }).click();
   await page.locator('tbody [data-issue="VISUAL-3"]').waitFor();
-  await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  await page.getByRole('link', { name: '任務看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByLabel('看板卡片密度').selectOption('compact');
@@ -776,7 +776,7 @@ async function checkIssueRelations(page, projectUrl) {
   await detail.getByRole('tablist', { name: '任務側欄', exact: true }).getByRole('tab', { name: '關聯', exact: true }).click();
   await detail.getByLabel('父任務', { exact: true }).getByRole('button', { name: /TEST-4.*付款流程/ }).waitFor();
   await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
-  await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  await page.getByRole('link', { name: '任務看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await page.locator('.board-cell [data-issue="TEST-5"] .context-parent').waitFor();
   const summary = await page.evaluate(async () => {
@@ -796,13 +796,13 @@ async function checkIssueRelations(page, projectUrl) {
   await page.screenshot({ path: 'artifacts/mobile-issue-relations.png', fullPage: true });
   await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
   await page.setViewportSize({ width: 1440, height: 1050 });
-  await page.getByRole('button', { name: '任務列表', exact: true }).click();
+  await page.getByRole('link', { name: '任務列表', exact: true }).click();
   console.log('PASS: on-demand related picker, symmetric unlink, inline subtask creation, independent states, parent/Epic context, unique time rollup, list/board/mobile');
 }
 async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.setViewportSize({ width: 1440, height: 1050 });
   await page.goto(projectUrl);
-  await page.getByRole('button', { name: '任務列表', exact: true }).click();
+  await page.getByRole('link', { name: '任務列表', exact: true }).click();
   await page.getByRole('button', { name: '新增任務', exact: false }).first().click();
   await expandIssueProperties(page.getByRole('dialog'));
   await page.getByRole('dialog').getByLabel('類型', { exact: true }).selectOption('epic');
@@ -811,7 +811,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await editor.getByRole('button', { name: '建立任務' }).click();
   await page.locator('tr[data-issue]').filter({ hasText: '會員系統上線' }).waitFor();
   const epicId = await page.evaluate(async () => (await (await import('/src/api/index.js')).api.getWorkspace()).issues.find(issue => issue.type === 'epic').id);
-  await page.getByRole('button', { name: '任務列表', exact: true }).click();
+  await page.getByRole('link', { name: '任務列表', exact: true }).click();
   await openQuickIssue(page, '我建立的任務 <script>alert(1)</script>');
   editor = page.getByRole('dialog');
   await expandIssueProperties(editor);
@@ -821,7 +821,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await editor.getByRole('button', { name: '儲存修改' }).click();
   await editor.getByText(/版本 2 · 已儲存/).waitFor();
   await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
-  await page.getByRole('button', { name: '任務列表', exact: true }).click();
+  await page.getByRole('link', { name: '任務列表', exact: true }).click();
   await openQuickIssue(page, '會員系統上線');
   editor = page.getByRole('dialog');
   await expandIssueProperties(editor);
@@ -830,7 +830,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await editor.getByRole('alert').filter({ hasText: '還有未結案子任務' }).waitFor();
   page.once('dialog', dialog => dialog.accept());
   await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
-  await page.getByRole('button', { name: '狀態設定', exact: true }).click();
+  await page.getByRole('link', { name: '狀態設定', exact: true }).click();
   assert.equal(await page.getByLabel('狀態 1 Type', { exact: true }).inputValue(), 'open');
   assert.equal(await page.getByLabel('移除狀態 1', { exact: true }).isDisabled(), true);
   assert.equal(await page.getByLabel('移除狀態 3', { exact: true }).isDisabled(), true);
@@ -841,8 +841,8 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.getByLabel('狀態 4 名稱', { exact: true }).fill('待測試');
   await page.getByRole('button', { name: '儲存狀態設定' }).click();
   await page.getByRole('status').filter({ hasText: '狀態設定已儲存' }).waitFor();
-  await page.getByRole('button', { name: '任務列表', exact: true }).click();
-  await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  await page.getByRole('link', { name: '任務列表', exact: true }).click();
+  await page.getByRole('link', { name: '任務看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await page.locator('[data-state]').nth(3).waitFor();
   const reviewState = await page.locator('[data-state]').nth(3).getAttribute('data-state');
@@ -850,7 +850,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.locator(`.board-cell[data-column="${reviewState}"] [data-issue="TEST-1"]`).waitFor();
 
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
-  await page.getByRole('button', { name: '工作空間設定', exact: true }).click();
+  await page.getByRole('link', { name: '工作空間設定', exact: true }).click();
   await page.getByRole('tab', { name: '成員與權限', exact: true }).click();
   await page.getByLabel('受邀者 Email', { exact: true }).fill(memberEmail);
   await page.getByRole('button', { name: '建立邀請連結' }).click();
@@ -873,7 +873,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await teammate.getByRole('heading', { name: '尚未加入任何專案', exact: true }).waitFor();
   await openProjectList(teammate);
   assert.equal(await teammate.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).count(), 0);
-  await page.getByRole('button', { name: '專案成員與權限', exact: true }).click();
+  await page.getByRole('link', { name: '專案成員與權限', exact: true }).click();
   const membership = page.getByRole('region', { name: '專案成員與權限', exact: true });
   await membership.getByRole('button', { name: '重新載入成員', exact: true }).click();
   await membership.getByRole('button', { name: '搜尋加入專案的成員選項', exact: true }).click();
@@ -882,13 +882,13 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await membership.getByLabel('專案角色').selectOption('developer');
   await membership.getByRole('button', { name: '儲存專案成員', exact: true }).click();
   await membership.getByRole('button', { name: '編輯成員 Mei', exact: true }).waitFor();
-  await page.getByRole('button', { name: '任務列表', exact: true }).click();
+  await page.getByRole('link', { name: '任務列表', exact: true }).click();
   await teammate.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
   await openProjectList(teammate);
   await teammate.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).waitFor();
   await openProjectList(teammate);
   await teammate.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).click();
-  assert.equal(await teammate.getByRole('button', { name: '狀態設定', exact: true }).count(), 0, '沒有設定權限時不顯示管理入口');
+  assert.equal(await teammate.getByRole('link', { name: '狀態設定', exact: true }).count(), 0, '沒有設定權限時不顯示管理入口');
   await page.getByRole('button', { name: '重新整理工作空間' }).click();
   await openQuickIssue(page, '我建立的任務 <script>alert(1)</script>');
   editor = page.getByRole('dialog');
@@ -897,7 +897,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await editor.getByRole('button', { name: '儲存修改' }).click();
   await editor.getByText(/版本 4 · 已儲存/).waitFor();
   await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
-  await page.getByRole('button', { name: '通知預覽', exact: true }).click();
+  await page.getByRole('link', { name: '通知預覽', exact: true }).click();
   await page.locator('.notification-card').waitFor();
   await page.getByText(`收件人 ${memberEmail}`, { exact: true }).waitFor();
   assert.equal(await page.getByRole('button', { name: '檢查 SMTP 連線' }).isDisabled(), true);
@@ -911,7 +911,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await openQuickIssue(concurrent, '我建立的任務 <script>alert(1)</script>');
   const staleEditor = concurrent.getByRole('dialog');
   await staleEditor.getByLabel(/任務標題/).fill('本機尚未儲存的修改');
-  await teammate.getByRole('button', { name: '任務列表', exact: true }).click();
+  await teammate.getByRole('link', { name: '任務列表', exact: true }).click();
   await teammate.getByRole('button', { name: '重新整理工作空間' }).click();
   await openQuickIssue(teammate, '我建立的任務 <script>alert(1)</script>');
   const teammateEditor = teammate.getByRole('dialog');
@@ -933,7 +933,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await staleEditor.getByRole('button', { name: '關閉任務', exact: true }).click();
   await concurrent.close();
 
-  await teammate.getByRole('button', { name: '工時月曆', exact: true }).click();
+  await teammate.getByRole('link', { name: '工時月曆', exact: true }).click();
   assert.equal(await teammate.getByRole('dialog', { name: '填報你的工時', exact: true }).count(), 0, '未點日期不常駐顯示填報面板');
   const calendarSize = await teammate.locator('.time-layout').evaluate(element => ({ available: element.clientWidth, calendar: element.querySelector('.calendar').getBoundingClientRect().width }));
   assert.ok(Math.abs(calendarSize.available - calendarSize.calendar) < 2, '月曆使用完整內容寬度');
@@ -989,7 +989,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
 
   await teammate.getByRole('button', { name: '儲存工時修改' }).click();
   await teammate.getByRole('button', { name: new RegExp(`^${dateInTaipei()} 工時 2 h$`) }).waitFor();
-  await page.getByRole('button', { name: '工時月曆', exact: true }).click();
+  await page.getByRole('link', { name: '工時月曆', exact: true }).click();
   await page.getByRole('button', { name: '重新整理工作空間' }).click();
   await page.getByRole('combobox', { name: '工時成員', exact: true }).selectOption('');
   await page.getByRole('button', { name: `查看 ${dateInTaipei()} 工時明細`, exact: true }).click();
@@ -1003,7 +1003,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.getByRole('button', { name: '登記工時' }).click();
   await page.getByRole('button', { name: new RegExp(`^${dateInTaipei()} 工時 2.5 h$`) }).waitFor();
   await page.screenshot({ path: 'artifacts/time-calendar.png', fullPage: true });
-  await page.getByRole('button', { name: '任務列表', exact: true }).click();
+  await page.getByRole('link', { name: '任務列表', exact: true }).click();
   await openQuickIssue(page, '我建立的任務 <script>alert(1)</script>');
   editor = page.getByRole('dialog');
   await expandIssueProperties(editor);
@@ -1029,7 +1029,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: '開啟導覽' }).click();
-  await page.getByRole('button', { name: '工時月曆', exact: true }).click();
+  await page.getByRole('link', { name: '工時月曆', exact: true }).click();
   await page.getByRole('combobox', { name: '工時成員', exact: true }).selectOption('');
   await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
   await page.screenshot({ path: 'artifacts/mobile-time-calendar.png', fullPage: true });
@@ -1050,13 +1050,13 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
 
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
   await page.getByRole('button', { name: '開啟導覽' }).click();
-  await page.getByRole('button', { name: '狀態設定', exact: true }).click();
+  await page.getByRole('link', { name: '狀態設定', exact: true }).click();
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
   await page.getByLabel('狀態 4 名稱', { exact: true }).fill('待驗收');
   await page.screenshot({ path: 'artifacts/status-types-mobile.png', fullPage: true });
   const settingsUrl = page.url();
   await page.getByRole('button', { name: '開啟導覽' }).click();
-  assert.equal(await page.locator('.sidebar').getByRole('button', { name: '工作空間設定', exact: true }).count(), 1);
+  assert.equal(await page.locator('.sidebar').getByRole('link', { name: '工作空間設定', exact: true }).count(), 1);
   page.once('dialog', dialog => dialog.dismiss());
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   assert.equal(page.url(), settingsUrl, '取消離開時保留目前專案');
@@ -1091,13 +1091,13 @@ try {
   await openProjectList(page);
   await page.getByRole('heading', { name: '尚無專案' }).waitFor();
   const ownerId = await page.evaluate(async () => (await (await import('/src/api/index.js')).api.getWorkspace()).meta.userId);
-  assert.equal(await page.getByRole('button', { name: '任務看板', exact: true }).count(), 0);
+  assert.equal(await page.getByRole('link', { name: '任務看板', exact: true }).count(), 0);
   assert.equal(await page.getByRole('button', { name: /新增任務/ }).count(), 0);
   assert.equal(await page.getByRole('navigation', { name: '專案任務' }).count(), 0);
   await page.getByRole('button', { name: '載入示範專案' }).click();
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：產品第一版 · 示範', exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: '任務看板', exact: true }).count(), 0);
+  assert.equal(await page.getByRole('link', { name: '任務看板', exact: true }).count(), 0);
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：產品第一版 · 示範', exact: true }).click();
   await page.locator('tbody tr').nth(8).waitFor();
@@ -1141,7 +1141,7 @@ try {
   await setStatusPickerOpen(page, true);
   await page.getByRole('button', { name: '清除狀態', exact: true }).click();
   await setStatusPickerOpen(page, false);
-  await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  await page.getByRole('link', { name: '任務看板', exact: true }).click();
   const boardCards = page.waitForResponse(response => /\/boards\/default\/issues$/.test(new URL(response.url()).pathname));
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await boardCards; // 分頁卡片重讀完成後才拖曳，避免拖到即將被替換的舊畫面
@@ -1168,11 +1168,11 @@ try {
   await page.getByLabel('看板泳道').selectOption('none');
   await page.getByLabel('看板泳道').selectOption('epic');
   await page.getByLabel('看板卡片密度').selectOption('comfortable');
-  await page.getByRole('button', { name: '任務列表', exact: true }).click();
+  await page.getByRole('link', { name: '任務列表', exact: true }).click();
   assert.ok(!page.url().includes('/board'), '列表有自己的路由');
   await page.locator('tbody [data-issue="DEMO-3"]').waitFor();
   assert.equal(await page.locator('[data-issue="DEMO-3"] .status-badge').textContent(), '已關閉');
-  await page.getByRole('button', { name: '任務看板', exact: true }).click();
+  await page.getByRole('link', { name: '任務看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
 
 
@@ -1207,7 +1207,7 @@ try {
   const projectSidebar = page.locator('.sidebar');
   assert.equal(await projectSidebar.getByRole('navigation', { name: '專案', exact: true }).count(), 0, '專案內不列出其他專案');
   assert.equal(await projectSidebar.getByRole('navigation', { name: '工作空間', exact: true }).count(), 0, '專案內不混入工作空間導覽');
-  assert.equal(await projectSidebar.getByRole('button', { name: '工作空間設定', exact: true }).count(), 1);
+  assert.equal(await projectSidebar.getByRole('link', { name: '工作空間設定', exact: true }).count(), 1);
   assert.equal(await projectSidebar.getByRole('button', { name: /建立.*專案|新增專案/ }).count(), 0);
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await openProjectList(page);
@@ -1220,7 +1220,7 @@ try {
   await projectDialog.getByRole('button', { name: '建立專案', exact: true }).click();
   await openProjectList(page);
   await page.getByRole('heading', { name: '專案列表', exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: '任務看板', exact: true }).count(), 0);
+  assert.equal(await page.getByRole('link', { name: '任務看板', exact: true }).count(), 0);
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).click();
   await page.getByRole('heading', { name: /我的測試專案/ }).waitFor();
@@ -1239,13 +1239,13 @@ try {
   await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).waitFor();
   await page.reload();
   await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).waitFor();
-  await page.getByRole('button', { name: '我的任務', exact: false }).click();
+  await page.getByRole('link', { name: '我的任務', exact: false }).click();
   await expectRows(page, 1, '.issue-card, tbody tr');
   const testProjectUrl = page.url();
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await openProjectList(page);
   await page.getByRole('heading', { name: '專案列表', exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: '任務看板', exact: true }).count(), 0);
+  assert.equal(await page.getByRole('link', { name: '任務看板', exact: true }).count(), 0);
   await expectRows(page, 0, '.issue-card, tbody tr');
   await page.screenshot({ path: 'artifacts/desktop-projects.png', fullPage: true });
   await openProjectList(page);
@@ -1255,7 +1255,7 @@ try {
   await page.reload();
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: '任務看板', exact: true }).count(), 0);
+  assert.equal(await page.getByRole('link', { name: '任務看板', exact: true }).count(), 0);
   await page.goto(testProjectUrl);
   await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).waitFor();
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
@@ -1279,7 +1279,7 @@ try {
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: '開啟導覽' }).click();
-  await page.getByRole('button', { name: '任務列表', exact: true }).click();
+  await page.getByRole('link', { name: '任務列表', exact: true }).click();
   await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
   await page.screenshot({ path: 'artifacts/mobile-list.png', fullPage: true });
@@ -1297,7 +1297,7 @@ try {
   await page.getByRole('button', { name: '關閉任務', exact: true }).click();
   await page.getByRole('button', { name: '專案', exact: true }).click();
   await page.screenshot({ path: 'artifacts/mobile-projects.png', fullPage: true });
-  assert.equal(await page.getByRole('button', { name: '任務看板', exact: true }).count(), 0);
+  assert.equal(await page.getByRole('link', { name: '任務看板', exact: true }).count(), 0);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
   await checkCollaboration(page, browser, failures, testProjectUrl);
   await checkIssueRelations(page, testProjectUrl);

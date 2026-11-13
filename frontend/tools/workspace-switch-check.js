@@ -27,8 +27,8 @@ try {
   const invite = await call(second, 'inviteMember', { email: a.user.email });
   const inviteUrl = `http://127.0.0.1:5175/app/#/invite?token=${invite.token}`;
   await first.reload(); await second.reload();
-  await first.getByRole('button', { name: '工作空間設定', exact: true }).waitFor();
-  assert.equal(await first.getByRole('button', { name: '工作空間設定', exact: true }).count(), 1);
+  await first.getByRole('link', { name: '工作空間設定', exact: true }).waitFor();
+  assert.equal(await first.getByRole('link', { name: '工作空間設定', exact: true }).count(), 1);
   await first.getByRole('button', { name: '帳號選單', exact: true }).click(); assert.equal(await first.getByRole('menuitem', { name: '工作空間設定', exact: true }).count(), 0); await first.keyboard.press('Escape');
   await second.goto(inviteUrl); const wrong = second.getByRole('dialog', { name: '工作空間邀請', exact: true }); await wrong.getByText(/目前登入的是/).waitFor(); assert.equal(await wrong.getByRole('button', { name: '接受邀請並進入', exact: true }).count(), 0); await wrong.getByRole('button', { name: '關閉工作空間邀請', exact: true }).click();
   await first.goto(inviteUrl); const invitation = first.getByRole('dialog', { name: '工作空間邀請', exact: true }); await invitation.getByRole('heading', { name: '第二工作區', exact: true }).waitFor();
@@ -36,7 +36,7 @@ try {
   await first.setViewportSize({ width: 1440, height: 1000 });
   await invitation.getByRole('button', { name: '接受邀請並進入', exact: true }).click(); await invitation.waitFor({ state: 'hidden' }); await first.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
   let workspace = await call(first, 'getWorkspace'); assert.equal(workspace.meta.workspace.id, b.workspace.id); assert.equal(workspace.meta.role, 'user'); assert.equal(workspace.projects.length, 0);
-  assert.equal(await first.getByText('A工作區速記', { exact: true }).count(), 0); assert.equal(await first.getByRole('button', { name: '工作空間設定', exact: true }).count(), 0);
+  assert.equal(await first.getByText('A工作區速記', { exact: true }).count(), 0); assert.equal(await first.getByRole('link', { name: '工作空間設定', exact: true }).count(), 0);
   const picker = first.getByRole('dialog', { name: '選擇工作空間', exact: true });
   async function openPicker() { const mobile = first.getByRole('button', { name: '開啟導覽', exact: true }); if (await mobile.isVisible() && await mobile.getAttribute('aria-expanded') === 'false') await mobile.click(); await first.getByRole('button', { name: '切換工作空間', exact: true }).click(); await picker.getByRole('button', { name: '選擇工作空間 第一工作區', exact: true }).waitFor(); }
   mkdirSync('artifacts/workspace-switch', { recursive: true });
@@ -48,8 +48,8 @@ try {
   await picker.getByRole('alert').filter({ hasText: '暫時無法連線' }).waitFor();
   await picker.getByRole('button', { name: '重新載入', exact: true }).click();
   await picker.getByRole('button', { name: '選擇工作空間 第一工作區', exact: true }).click(); await picker.waitFor({ state: 'hidden' }); await first.getByText('A工作區速記', { exact: true }).first().waitFor();
-  assert.equal(await first.getByRole('button', { name: '工作空間設定', exact: true }).count(), 1);
-  await first.getByRole('button', { name: '工作空間設定', exact: true }).click();
+  assert.equal(await first.getByRole('link', { name: '工作空間設定', exact: true }).count(), 1);
+  await first.getByRole('link', { name: '工作空間設定', exact: true }).click();
   const settings = first.getByRole('region', { name: '工作空間設定', exact: true });
   await settings.getByLabel('工作空間名稱', { exact: true }).fill('工作區未送出設定');
   await openPicker(); first.once('dialog', d => d.dismiss());

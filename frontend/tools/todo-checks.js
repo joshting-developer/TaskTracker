@@ -173,7 +173,7 @@ export async function checkTodoWorkflow(browser, failures, baseURL = 'http://127
   await personal.getByLabel('快速新增待辦', { exact: true }).fill('還沒存的速記');
   member.once('dialog', dialog => dialog.dismiss());
   await member.getByRole('button', { name: '開啟導覽', exact: true }).click();
-  await member.getByRole('button', { name: '專案列表', exact: true }).click();
+  await member.getByRole('link', { name: '專案列表', exact: true }).click();
   assert.equal(await personal.getByLabel('快速新增待辦', { exact: true }).inputValue(), '還沒存的速記');
   await personal.getByLabel('快速新增待辦', { exact: true }).fill('');
   await memberContext.close(); await ownerContext.close();

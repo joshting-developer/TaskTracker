@@ -16,7 +16,7 @@ try {
     await page.getByLabel('Email', { exact: true }).fill(`${role}@example.test`);
     await page.getByLabel('密碼', { exact: true }).fill(process.env.E2E_SEED_PASSWORD);
     await page.getByRole('button', { name: '登入', exact: true }).click();
-    await page.getByRole('button', { name: '工時分析', exact: true }).click();
+    await page.getByRole('link', { name: '工時分析', exact: true }).click();
     const region = page.getByRole('region', { name: '工時分析', exact: true });
     for (const [mode, title] of [['members', '成員投入'], ['projects', '專案投入'], ['trend', '時間趨勢']]) {
       await region.getByRole('button', { name: new RegExp(`^${title}`) }).click();

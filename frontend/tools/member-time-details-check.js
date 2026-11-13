@@ -46,7 +46,7 @@ try {
   for (let index = 0; index < 21; index++) await call(page, 'logTime', { issueId: epic.id, workDate: today, minutes: 1, note: index === 20 ? '<img src=x onerror=alert(1)> 文字安全測試' : `確認通知整合 ${index + 1}` });
   }
   await page.reload();
-  await page.getByRole('button', { name: '工時分析', exact: true }).click();
+  await page.getByRole('link', { name: '工時分析', exact: true }).click();
   const region = page.getByRole('region', { name: '工時分析', exact: true });
   await region.getByRole('button', { name: /^成員投入/ }).click();
   await region.getByRole('button', { name: '近 28 天', exact: true }).click();
