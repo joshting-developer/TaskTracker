@@ -48,6 +48,8 @@ services:
       SESSION_DRIVER: database
       CACHE_STORE: file
       QUEUE_CONNECTION: sync
+      # 合成驗證碼fixture不實寄；同步模式另外注入fake連線測試
+      MAIL_DELIVERY_MODE: queue
       BROADCAST_CONNECTION: 'null'
       # TT-335：CI預設5175, Claude 5198、Codex 5199；隔離環境放寬帳號限流, 讓多支檢查連續註冊
       ALLOWED_ORIGINS: ${TASKTRACKER_VISUAL_ORIGIN:-http://127.0.0.1:5175},http://127.0.0.1:5198,http://127.0.0.1:5199

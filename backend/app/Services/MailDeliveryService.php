@@ -26,7 +26,7 @@ class MailDeliveryService
      */
     public function __construct(private MailDeliveryRepository $deliveries, private Dispatcher $bus, private Factory $mail, private MailConnectionService $connection) {}
 
-    /** 保存唯一業務事件, commit後才排Job；Queue不可用不回滾業務或等SMTP
+    /** 保存唯一業務事件, commit後在交易外依明確模式寄送
      * @param  MailDeliveryData  $data  可信範本及收件帳號
      * @return MailDelivery 唯一事件的狀態
      */
@@ -51,12 +51,21 @@ class MailDeliveryService
         });
     }
 
-    /** 非同步派送, broker失敗只留安全代碼供有界重派恢復
+    /** 預設請求內交付, 可選Queue；錯誤只存安全狀態, 不破壞已提交業務
      * @param  string  $id  信件UUID
      * @return void
      */
     private function dispatch(string $id): void
     {
+        if (config('delivery.mode') !== 'queue') {
+            try {
+                $this->deliver($id);
+            } catch (\Throwable) {
+                // Commit已完成, 保留pending Session與安全錯誤狀態供明確重寄。
+            }
+
+            return;
+        }
         try {
             if (in_array(config('delivery.connection'), ['sync', 'null'], true)) {
                 throw new RuntimeException('ASYNC_QUEUE_REQUIRED');
@@ -127,7 +136,7 @@ class MailDeliveryService
                 if ($current->status !== 'sending') {
                     return;
                 }
-                $last = $current->attempts >= config('delivery.tries');
+                $last = config('delivery.mode') !== 'queue' || $current->attempts >= config('delivery.tries');
                 $delay = config('delivery.backoff')[min($current->attempts - 1, 1)];
                 $this->deliveries->update($current, ['status' => $last ? 'failed' : 'pending', 'error_code' => 'SMTP_CONNECTION_FAILED', 'started_at' => null, 'next_attempt_at' => now()->addSeconds($delay), ...($last ? ['payload' => null] : [])]);
             });

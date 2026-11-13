@@ -14,5 +14,4 @@ Schedule::command('model:prune', ['--model' => [HttpOperationLog::class]])->dail
 
 Schedule::command('attachments:cleanup')->hourly()->withoutOverlapping();
 
-// 部署需啟用scheduler；broker中斷時保留outbox, 恢復後每輪最多100筆。
-Schedule::command('mail:dispatch')->everyMinute()->withoutOverlapping();
+// 信件預設在請求commit後交付, 不依賴每分鐘排程或常駐worker。

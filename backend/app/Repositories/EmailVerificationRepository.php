@@ -84,6 +84,16 @@ class EmailVerificationRepository
         $row->forceFill($attributes)->save();
     }
 
+    /** 只讀本人當次驗證的安全寄送狀態, 不解密payload
+     * @param  string  $userId  帳號UUID
+     * @param  string  $id  當次challenge UUID
+     * @return string 狀態或pending
+     */
+    public function deliveryStatus(string $userId, string $id): string
+    {
+        return MailDelivery::where('user_id', $userId)->where('verification_id', $id)->value('status') ?? 'pending';
+    }
+
     /** 撤銷指定舊challenge尚未寄出的信件
      * @param  string  $id  舊challenge UUID
      * @return void

@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "0e30d14e8522950a45f4fbcd5ac72c9f9e1f7c8fa9ced7fd200f9075a8b339fc",
+  "harnessSha256": "370508b3a5e686f196c8640b538c581f091ad28dc3a515e219e720d4746feb5b",
   "profile": "darwin-arm64",
   "reviewer": "Josh",
-  "note": "依持續授權核准安全更新66張三尺寸；任務詳細等空留言及圖片鈕就緒, 來源一致, 比較門檻未改, 舊候選與失敗已封存",
-  "manifestSha256": "8c3a783a2b2e86c8116951760f34b1d9e1ed72bc4754b51066b14cc472617d45",
+  "note": "依持續授權核准TT162共69張, 視覺合成冷卻時間對齊固定clock, 真實HTTP冷卻另測；原失敗與舊基準封存, 不遮罩或放寬像素門檻",
+  "manifestSha256": "9a12c3600051f1846a2cab09aaafbd334a516a67d203cdf7ccb66e563ff00ba5",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

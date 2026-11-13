@@ -61,7 +61,7 @@ abstract class MySqlTestCase extends BaseTestCase
         if (getenv('TASKTRACKER_MYSQL_TEST') !== '1' || getenv('DB_USERNAME') !== 'tasktracker_test') {
             throw new \RuntimeException('不是隔離MySQL帳號');
         }
-        foreach (['APP_ENV' => 'testing', 'DB_CONNECTION' => 'mysql', 'DB_HOST' => 'mysql', 'DB_DATABASE' => $this->testDatabase, 'DB_URL' => '', 'SESSION_DRIVER' => 'array', 'CACHE_STORE' => 'array', 'QUEUE_CONNECTION' => 'sync', 'BROADCAST_CONNECTION' => 'null'] as $key => $value) {
+        foreach (['APP_ENV' => 'testing', 'DB_CONNECTION' => 'mysql', 'DB_HOST' => 'mysql', 'DB_DATABASE' => $this->testDatabase, 'DB_URL' => '', 'SESSION_DRIVER' => 'array', 'CACHE_STORE' => 'array', 'QUEUE_CONNECTION' => 'sync', 'MAIL_DELIVERY_MODE' => 'queue', 'BROADCAST_CONNECTION' => 'null'] as $key => $value) {
             putenv($key.'='.$value);
             $_ENV[$key] = $_SERVER[$key] = $value;
         }

@@ -245,7 +245,7 @@ npm ci
 npm run dev
 ```
 
-本機 `.env.example` 預設使用資料庫 Queue／Cache, 不要求先裝 Redis。若要執行 Reverb 與 Redis 整合檢查, 建議使用 Compose 的完整服務配置；本機另啟 Reverb 時需自行產生 key／secret, 並明確設定可信 origin
+本機 `.env.example` 預設同步Queue與資料庫Cache, 不要求先裝Redis；寄信採commit後inline。若要執行 Reverb 與 Redis 整合檢查, 建議使用 Compose 的完整服務配置；本機另啟 Reverb 時需自行產生 key／secret, 並明確設定可信 origin
 
 ## 驗證
 
@@ -313,6 +313,6 @@ Laravel使用ECC `laravel-patterns`與本地`laravel-architecture`；Vue使用`v
 
 工時分析示範：執行`docker compose exec backend php artisan tasktracker:seed-demo`會在既有f-ws FIRST／SECOND補最近28天的四帳號工時，不用`--reset`；月內重跑不重複，跨月工作日去重，原密碼／卡片／工時保留。登入Owner或Manager → 工時分析 → 選分析 →「近28天」可比較完整差異，本月範圍也有資料。沒有FIRST／SECOND時跳過，不重建被刪專案。
 
-## 背景寄信
+## 寄信
 
-SMTP實際寄送、MAIL設定同步、Queue／Scheduler與狀態查閱見[背景寄信](docs/smtp-delivery.md)。自動測試使用Mail fake；手動實寄仍須依AGENTS取得明確授權。註冊驗證由TT-319接續, 一般通知信尚未啟用
+SMTP實際寄送與狀態查閱見[寄信](docs/smtp-delivery.md), 預設commit後inline, 不需要寄信worker或分鐘排程。維護CLI與尚未配置的Fly外部執行者見[執行方式](docs/synchronous-mail-and-maintenance-2026-11-14.md)。自動測試使用Mail fake；手動實寄仍須依AGENTS取得明確授權。一般通知信尚未啟用

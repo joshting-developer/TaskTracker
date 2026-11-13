@@ -31,3 +31,7 @@ Josh決定先不為寄信常駐Queue worker或每分鐘跑Scheduler。信件改�
 搜尋backend/app、routes、config的dispatch、ShouldQueue、ShouldBroadcast、afterCommit、Schedule、Cache及Session使用；對照寄信狀態機、附件清理、Prunable、ProjectSignals與診斷命令, 沒有只列套件名稱
 
 本卡只改文件與plans, 沒有寄真信、操作現用DB清理、啟動worker或建立付費雲端資源。TT-162執行後須更新本文件的現況, 保留本次盤點與新實作的差異
+
+## TT-162接續
+
+同步寄信／安全狀態與受控maintenance CLI已開始落地, 目前實作及Fly剩餘驗收見[synchronous-mail-and-maintenance-2026-11-14.md](synchronous-mail-and-maintenance-2026-11-14.md)。本文件上方保留盤點時的現況, 不是要求恢復mail每分鐘排程

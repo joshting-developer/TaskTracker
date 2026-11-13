@@ -78,7 +78,10 @@ class AccountSessionBoundary
             };
         };
 
-        return DB::transaction(fn () => $this->lease->around($request, $authenticate));
+        $result = DB::transaction(fn () => $this->lease->around($request, $authenticate));
+
+        // afterCommit同步寄送完成後才取安全狀態, 不將SMTP IO放進帳號交易。
+        return $operation === 'register' && ! empty($result['verificationRequired']) ? $this->verification->status($request->session()->get('pending_user_id')) : $result;
     }
 
     /**

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker Session Authentication",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Session and CSRF only; not the PAT API. Legacy accounts keep their existing eligibility. New registration requires verification. Activation GET only renders the page, with token in URL fragment."
   },
   "paths": {
@@ -458,7 +458,8 @@
           "email",
           "expiresAt",
           "resendAt",
-          "resendAfterSeconds"
+          "resendAfterSeconds",
+          "deliveryStatus"
         ],
         "properties": {
           "verificationRequired": {
@@ -480,6 +481,18 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 60
+          },
+          "deliveryStatus": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "sending",
+              "sent",
+              "failed",
+              "uncertain",
+              "skipped"
+            ],
+            "description": "當次驗證的寄送狀態, 失敗可在冷卻後明確重寄, 不回傳內部錯誤或信件秘密"
           }
         }
       },

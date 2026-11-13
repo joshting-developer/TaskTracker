@@ -6,12 +6,14 @@ use App\Events\ProjectChanged;
 use App\Models\User;
 use App\Repositories\ProjectReadRepository;
 use App\Services\ProjectSignals;
+use Illuminate\Broadcasting\BroadcastEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
@@ -211,5 +213,18 @@ class RealtimeTest extends TestCase
             'title' => '仍需保存',
         ]);
         Log::shouldHaveReceived('warning')->once()->with('Project realtime dispatch failed; polling remains available', ['exception' => \RuntimeException::class]);
+    }
+
+    /** 正式停廣播時, 寫卡不留下無人消費的Queue Job
+     * @return void
+     */
+    public function test_null_broadcast_never_queues_a_project_change(): void
+    {
+        config(['broadcasting.default' => 'null', 'delivery.mode' => 'inline', 'mail.default' => 'array']);
+        Queue::fake();
+        $this->register('null-broadcast-'.Str::uuid().'@example.test');
+        $project = $this->rpc('createProject', ['name' => 'No socket', 'code' => 'NOSOCKET'])->assertOk()->json('data');
+        $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => 'No background signal'])->assertOk();
+        Queue::assertNotPushed(BroadcastEvent::class);
     }
 }

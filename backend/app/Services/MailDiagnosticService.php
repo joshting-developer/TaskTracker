@@ -23,13 +23,13 @@ class MailDiagnosticService
      * @param  string  $key  本次測試的穩定UUID
      * @return string outbox UUID
      */
-    public function queue(string $email, string $key): string
+    public function send(string $email, string $key): string
     {
         if (! in_array(config('app.env'), ['local', 'testing'], true) || ! Str::isUuid($key)) {
             DomainError::fail('INVALID_INPUT', '測試寄信只允許本機環境與有效識別碼');
         }
         $user = $this->accounts->byEmail(mb_strtolower(trim($email))) ?? DomainError::fail('NOT_FOUND', '找不到收件帳號');
-        $row = $this->mail->enqueue(new MailDeliveryData($user->id, 'diagnostic:'.$key, 'diagnostic', 'TaskTracker 郵件測試', "TaskTracker 背景寄信測試\n\n這封信由背景Queue寄出, 用於確認SMTP設定\n", now()->addHour()));
+        $row = $this->mail->enqueue(new MailDeliveryData($user->id, 'diagnostic:'.$key, 'diagnostic', 'TaskTracker 郵件測試', "TaskTracker 寄信測試\n\n這封信由明確操作建立, 用於確認SMTP設定\n", now()->addHour()));
 
         return $row->id;
     }

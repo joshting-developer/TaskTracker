@@ -15,9 +15,9 @@ use Illuminate\Support\Str;
 /** 信箱驗證用例, 同一帳號鎖序列化重寄、錯誤次數與一次性啟用 */
 class EmailVerificationService
 {
-    /** 注入驗證資料入口與背景寄信服務
+    /** 注入驗證資料入口與寄送服務
      * @param  EmailVerificationRepository  $verifications  驗證資料入口
-     * @param  MailDeliveryService  $mail  commit後背景寄信
+     * @param  MailDeliveryService  $mail  commit後交易外寄信
      */
     public function __construct(private EmailVerificationRepository $verifications, private MailDeliveryService $mail) {}
 
@@ -54,7 +54,7 @@ class EmailVerificationService
      */
     public function resend(string $id, ?string $email): array
     {
-        return DB::transaction(function () use ($id, $email) {
+        DB::transaction(function () use ($id, $email) {
             $user = $this->verifications->user($id) ?? DomainError::fail('UNAUTHENTICATED', '請重新登入');
             $row = $this->verifications->current($id) ?? DomainError::fail('UNAUTHENTICATED', '請重新登入');
             if ($user->email_verified_at || $row->consumed_at) {
@@ -76,6 +76,8 @@ class EmailVerificationService
 
             return $this->issue($user, $row->workspace_id);
         });
+
+        return $this->status($id);
     }
 
     /** 驗證一次性憑證並建立已驗證資格
@@ -125,7 +127,7 @@ class EmailVerificationService
         return $result;
     }
 
-    /** 產生新憑證雜湊並排背景寄信
+    /** 產生新憑證雜湊與待交付事件
      * @param  User  $user  已鎖帳號
      * @param  string  $workspaceId  可信工作區
      * @return array<string,mixed> 新驗證資訊
@@ -159,6 +161,6 @@ class EmailVerificationService
      */
     private function view(User $user, EmailVerification $row): array
     {
-        return ['verificationRequired' => true, 'email' => $user->email, 'expiresAt' => $row->expires_at->toISOString(), 'resendAt' => $row->sent_at->copy()->addSeconds(60)->toISOString(), 'resendAfterSeconds' => max(0, $row->sent_at->timestamp + 60 - now()->timestamp)];
+        return ['verificationRequired' => true, 'deliveryStatus' => $this->verifications->deliveryStatus($user->id, $row->id), 'email' => $user->email, 'expiresAt' => $row->expires_at->toISOString(), 'resendAt' => $row->sent_at->copy()->addSeconds(60)->toISOString(), 'resendAfterSeconds' => max(0, $row->sent_at->timestamp + 60 - now()->timestamp)];
     }
 }

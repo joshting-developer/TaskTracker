@@ -81,7 +81,8 @@ async function backToLogin() {
 
       <template v-if="verification || activationToken">
         <h2>驗證信箱</h2>
-        <p v-if="verification" class="verification-recipient">驗證碼已寄到 {{ verification.email }}, 請到信箱查看</p>
+        <p v-if="verification" class="verification-recipient">{{ verification.deliveryStatus === 'sent' ? '驗證碼已寄到' : '驗證信箱' }} {{ verification.email }}</p>
+        <v-alert v-if="verification && ['failed', 'uncertain', 'skipped'].includes(verification.deliveryStatus)" type="error" variant="tonal" role="alert">{{ verification.deliveryStatus === 'uncertain' ? '無法確認寄送結果, 請先查看信箱；未收到再重寄' : '驗證信未寄出, 請稍後按重寄驗證碼' }}</v-alert>
         <v-alert v-if="error" type="error" variant="tonal" class="mb-5" role="alert">{{ error }}</v-alert>
         <form @submit.prevent="verify">
           <v-text-field v-if="!activationToken" v-model="code" label="驗證碼" autocomplete="one-time-code" autocapitalize="characters" :spellcheck="false" maxlength="8" required :disabled="busy" />

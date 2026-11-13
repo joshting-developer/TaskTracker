@@ -100,9 +100,28 @@ test('representative workspace flows', async ({ page, browser }) => {
   await page.goto('/login');
 
   await call(page.request, 'register', { name: '驗證畫面測試', email: `visual-pending-${test.info().project.name}@example.test`, password, workspaceName: '驗證畫面' }, 'auth', false);
+  // Visual fixture metadata uses the same fixed clock as the browser; real cooldown is covered by HTTP tests.
+  let deliveryStatus = 'pending';
+  await page.route('**/api/auth/current', async route => {
+    const response = await route.fetch();
+    const body = await response.json();
+    body.data.deliveryStatus = deliveryStatus;
+    body.data.resendAt = new Date(fixedTime.getTime() + 60000).toISOString();
+    body.data.expiresAt = new Date(fixedTime.getTime() + 1800000).toISOString();
+    body.data.resendAfterSeconds = 60;
+    await route.fulfill({ response, json: body });
+  });
   await page.reload();
   await page.getByRole('heading', { name: '驗證信箱', exact: true }).waitFor();
   await shot(page, '17-verification');
+  deliveryStatus = 'failed';
+  await page.reload();
+  await page.getByRole('alert').filter({ hasText: '驗證信未寄出' }).waitFor();
+  await shot(page, '23-verification-mail-failed');
+  await page.unroute('**/api/auth/current');
+  await page.reload();
+  await page.getByLabel('驗證碼', { exact: true }).waitFor();
+
   await call(page.request, 'logout', {}, 'auth');
   await page.goto('/login#/activate/' + 'a'.repeat(64));
   await page.getByRole('button', { name: '啟用帳號', exact: true }).waitFor();
