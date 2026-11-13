@@ -69,7 +69,7 @@ class AccountSessionBoundary
             }
 
             return match ($operation) {
-                'current' => $this->session->context($request),
+                'current' => [...$this->session->context($request), 'features' => $this->features()],
                 'register' => $this->establishSession($request, $this->accounts->register($input)),
                 'login' => $this->establishSession($request, $this->accounts->login($input)),
                 default => DomainError::fail('NOT_FOUND', '找不到這個操作'),
@@ -77,6 +77,16 @@ class AccountSessionBoundary
         };
 
         return DB::transaction(fn () => $this->lease->around($request, $authenticate));
+    }
+
+    /**
+     * 依執行環境決定的介面開關；TT-314起通知預覽只在local／testing顯示，正式環境等通知完善再開放。
+     *
+     * @return array{notificationPreview: bool} 前端依此隱藏尚未開放的功能入口
+     */
+    private function features(): array
+    {
+        return ['notificationPreview' => in_array(config('app.env'), ['local', 'testing'], true)];
     }
 
     /**

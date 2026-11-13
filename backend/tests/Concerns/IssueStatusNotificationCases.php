@@ -53,6 +53,24 @@ trait IssueStatusNotificationCases
     }
 
     /**
+     * 通知預覽入口只在local／testing開放：目前身分帶旗標, 正式環境為false。
+     *
+     * @return void
+     */
+    public function test_notification_preview_feature_only_in_local_environments(): void
+    {
+        $this->postJson('/api/auth/register', ['name' => 'Owner', 'email' => 'feature-'.Str::uuid().'@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Feature'])->assertOk();
+        $this->postJson('/api/auth/current')->assertOk()->assertJsonPath('data.features.notificationPreview', true);
+
+        config(['app.env' => 'production']);
+        try {
+            $this->postJson('/api/auth/current')->assertOk()->assertJsonPath('data.features.notificationPreview', false);
+        } finally {
+            config(['app.env' => 'testing']);
+        }
+    }
+
+    /**
      * 建卡者A、負責人B, 第三人C改狀態：A、B各收一則；改成已關閉時是重要類型；同requestId重送不重複；改狀態的人自己不收。
      *
      * @return void

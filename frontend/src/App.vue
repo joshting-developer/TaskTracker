@@ -44,6 +44,8 @@ const profileOpen = shallowRef(false), accountMenu = useTemplateRef('accountMenu
 let settingsOpener;
 const section = shallowRef('tasks');
 const sectionPermissions = { settings: 'project.statuses.update', members: 'project.members.manage', time: 'timeEntry.readOwn' };
+// TT-314：通知預覽只在local／testing開放, 由後端目前身分的features決定, 正式環境隱藏入口。
+const notificationPreviewEnabled = shallowRef(false);
 const workspaceTool = useTemplateRef('workspaceTool');
 const loading = shallowRef(true);
 const error = shallowRef('');
@@ -117,6 +119,7 @@ async function refreshWorkspace() {
     // 所有頁面都只取身分＋目前Project；整包getWorkspace已退役，見docs/workspace-payload-retirement-2026-11-12.md。
     const identity = await api.current();
     if (generation !== refreshGeneration) return;
+    notificationPreviewEnabled.value = identity.features?.notificationPreview === true;
     const previousWorkspace=workspace.value.meta.workspace?.id;
     if(previousWorkspace&&previousWorkspace!==identity.workspace.id){
       setWorkspaceContext(identity.workspace.id);
@@ -162,7 +165,7 @@ function ensureSectionAccess() {
     notify('你沒有工時分析的存取權限');
   }
   const permission = sectionPermissions[section.value];
-  if (selectedProject.value && permission && !can(permission)) {
+  if (selectedProject.value && ((permission && !can(permission)) || (section.value === 'notifications' && !notificationPreviewEnabled.value))) {
     section.value = 'tasks'; view.value = 'list'; boardId.value = 'default';
     history.replaceState(null, '', projectHash(projectId.value));
     notify('你沒有此功能的存取權限, 已返回任務列表');
@@ -413,7 +416,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
           <button v-if="can('timeEntry.readOwn')" class="nav-item" :class="{ active: section === 'time' }" :aria-current="section === 'time' ? 'page' : undefined" @click="changeSection('time')"><Icon name="clock" :size="18" />工時月曆</button>
           <button v-if="can('project.statuses.update')" class="nav-item" :class="{ active: section === 'settings' }" :aria-current="section === 'settings' ? 'page' : undefined" @click="changeSection('settings')"><Icon name="filter" :size="18" />狀態設定</button>
           <button v-if="can('project.members.manage')" class="nav-item" :class="{ active: section === 'members' }" :aria-current="section === 'members' ? 'page' : undefined" aria-label="專案成員與權限" @click="changeSection('members')"><Icon name="user" :size="18" />成員與權限</button>
-          <button class="nav-item" :class="{ active: section === 'notifications' }" :aria-current="section === 'notifications' ? 'page' : undefined" @click="changeSection('notifications')"><Icon name="message" :size="18" />通知預覽</button>
+          <button v-if="notificationPreviewEnabled" class="nav-item" :class="{ active: section === 'notifications' }" :aria-current="section === 'notifications' ? 'page' : undefined" @click="changeSection('notifications')"><Icon name="message" :size="18" />通知預覽</button>
         </nav>
       </template>
       <template v-else>
@@ -446,7 +449,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
         <TimeCalendar :can-write="can('timeEntry.writeOwn')" v-if="section === 'time' && can('timeEntry.readOwn')" ref="workspaceTool" :key="workContextKey" :context-key="workContextKey" :project="selectedProject" :can-read-team="can('timeEntry.readTeam')" :user-id="currentUserId" @updated="toolUpdated" @open="openIssue" @access="refresh" />
         <ProjectStatusWorkspace v-if="section === 'settings' && can('project.statuses.update')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" @access="refresh" />
         <ProjectMembers @access="refresh" v-if="section === 'members' && can('project.members.manage')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" />
-        <NotificationPreview ref="workspaceTool" v-if="section === 'notifications'" :project="selectedProject" :permissions="workspace.meta.permissions || []" @open="openIssue" @access="refresh" />
+        <NotificationPreview ref="workspaceTool" v-if="section === 'notifications' && notificationPreviewEnabled" :project="selectedProject" :permissions="workspace.meta.permissions || []" @open="openIssue" @access="refresh" />
         </template>
         <footer class="page-footer"><span>TaskTracker <b>v0.2</b></span></footer>
       </div>

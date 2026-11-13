@@ -21,7 +21,7 @@
 | `/api/v1/projects/{project}/boards/{board}/version` | 看板輕量變更檢查：只回`{projectId, boardId, version}`不透明版本，見下節 |
 | `/api/v1/projects/{project}/member-options` | 同Project有效成員id/name選項，分頁／搜尋，不含email或歷史 |
 
-登入身分沿用`POST /api/auth/current`，不是另做一個大型bootstrap。專案與任務查詢在相同交易內重新驗證帳號、Workspace與permission＋scope；不可見資源404，已知資源缺少操作權403，工作區變更409。Resource僅序列化已預載欄位，不發lazy query。
+登入身分沿用`POST /api/auth/current`，不是另做一個大型bootstrap。回應另帶`features.notificationPreview`（TT-314），只在local／testing為true，前端據此顯示通知預覽入口；這只是介面開關，不是權限邊界。專案與任務查詢在相同交易內重新驗證帳號、Workspace與permission＋scope；不可見資源404，已知資源缺少操作權403，工作區變更409。Resource僅序列化已預載欄位，不發lazy query。
 
 列表輸入：`page`（1起）、`perPage`（預設20，上限100）、`search`（最多200字）。任務另支援精準`identifier`（AI／工具不必模糊搜尋編號）、`state[]`、`priority`、`type`、`assignee`、`epicId`（含unlinked）、`scope=all|mine`、`condition=overdue|unassigned`與`sort=updated|created|priority|due`與`direction=asc|desc`（TT-306, 省略方向時更新／建立新到舊、優先級緊急到低、到期日近到遠；到期日反向時沒填的排最前）。搜尋字詞中的`%`／`_`以文字處理，排序有穩定tie-breaker。
 

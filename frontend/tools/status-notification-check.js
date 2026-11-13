@@ -54,8 +54,20 @@ try {
     await important.scrollIntoViewIfNeeded();
     await page.screenshot({ path: `artifacts/status-notification/notifications-${width}.png` });
   }
+  // 正式環境（features.notificationPreview=false）：側邊欄沒有通知預覽, 直接開網址會回任務列表。
+  const notificationsUrl = page.url();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.route('**/api/auth/current', async route => {
+    const response = await route.fetch(), body = await response.json();
+    (body.data ?? body).features = { notificationPreview: false };
+    await route.fulfill({ response, json: body });
+  });
+  await page.goto(notificationsUrl); await page.reload();
+  await page.getByRole('button', { name: '任務列表', exact: true }).waitFor();
+  assert.equal(await page.getByRole('button', { name: '通知預覽', exact: true }).count(), 0, '正式環境不能出現通知預覽入口');
+  assert.equal(await page.locator('.notification-workspace').count(), 0, '正式環境直接開網址也不能顯示通知預覽');
   assert.deepEqual(errors, []);
-  console.log('PASS: status_important notifications show the 重要狀態 tag; other kinds do not; no horizontal scroll at 1440/768/390');
+  console.log('PASS: status_important notifications show the 重要狀態 tag; other kinds do not; no horizontal scroll at 1440/768/390; hidden when notificationPreview feature is off');
 } finally {
   await browser?.close();
   await new Promise(resolve => server ? server.httpServer.close(resolve) : resolve());
