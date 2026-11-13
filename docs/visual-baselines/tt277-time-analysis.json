@@ -1,0 +1,10 @@
+{
+  "approved": true,
+  "reviewer": "Josh",
+  "note": "核准這批畫面",
+  "reviewUrl": "http://127.0.0.1:5292",
+  "manifestFile": "docs/evidence/tt277-visual-manifest.json",
+  "manifestSha256": "7b67f883cedd7298cfb11ac510feb1b97205bc9beb7ccbd0753ba69825f14a8b",
+  "images": 13,
+  "scope": "TT-277 synthetic screenshots only; no approval of other agent changes"
+}

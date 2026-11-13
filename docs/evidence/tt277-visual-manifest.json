@@ -1,0 +1,99 @@
+{
+  "scope": "TT-277 time analysis and member details only",
+  "fixedDate": "2026-11-13",
+  "policy": {
+    "animations": "disabled",
+    "caret": "hide",
+    "maxDiffPixels": 0,
+    "threshold": 0.02
+  },
+  "harness": [
+    {
+      "path": "frontend/tools/time-analysis-check.js",
+      "sha256": "3d2ab42f36c57c3320781007974a62b34065079510c8dacad7f6b2a529538c28"
+    },
+    {
+      "path": "frontend/tools/member-time-details-check.js",
+      "sha256": "27f963884ccac19ac56e82b1296bab8c6b10c3884e8b95c874f40b8c59da3e12"
+    },
+    {
+      "path": "frontend/tools/compare-reviewed-time-analysis.js",
+      "sha256": "326a37d99f0af1d0cf54e1cc5824a3f3cafdafd98ff2b6301ba6ff9485fd099e"
+    },
+    {
+      "path": "frontend/tools/visual/policy.json",
+      "sha256": "da94ff33d9a90ee8d1f0aa26e3e9b543bf42d48044abe893bd3356cebdb9476b"
+    },
+    {
+      "path": "backend/tools/time-analysis-fixture.php",
+      "sha256": "013f35297ba120dbbcaf6a26b5274c79e2253c28f57d21630008929691448ce8"
+    }
+  ],
+  "images": [
+    {
+      "name": "analysis-members-1440.png",
+      "source": "frontend/artifacts/time-analysis/members-1440.png",
+      "sha256": "c08da30ea0b09ba38b858bf780b8b0b7ebbbb0a2aca41911cf47612d0515ba94"
+    },
+    {
+      "name": "analysis-members-390.png",
+      "source": "frontend/artifacts/time-analysis/members-390.png",
+      "sha256": "658f4dc39bd92730811f044ed76218fa66b40eac82a456c33a6b963937502da5"
+    },
+    {
+      "name": "analysis-members-768.png",
+      "source": "frontend/artifacts/time-analysis/members-768.png",
+      "sha256": "27eb0e2343bed4a34db2ed783653d81d4d6b1be3bfeba7f1c8450546399af90a"
+    },
+    {
+      "name": "analysis-projects-1440.png",
+      "source": "frontend/artifacts/time-analysis/projects-1440.png",
+      "sha256": "79a6f637119bbe982d3ef8934597242939aed0b0b7167d08ea4888717a7a70d2"
+    },
+    {
+      "name": "analysis-projects-390.png",
+      "source": "frontend/artifacts/time-analysis/projects-390.png",
+      "sha256": "f7b454d61fb16270bbd58b7c4607c4349af8f1d466284091b4ca695487c5c50c"
+    },
+    {
+      "name": "analysis-projects-768.png",
+      "source": "frontend/artifacts/time-analysis/projects-768.png",
+      "sha256": "ff514b2c25bf1b0fd675338239abb54adff5f4faee69c7b58fa39af55e11c0ae"
+    },
+    {
+      "name": "analysis-trend-1440.png",
+      "source": "frontend/artifacts/time-analysis/trend-1440.png",
+      "sha256": "c94dd9cfaf3d361acad290df6807797cb88c50bff12d988c5500d604929e5ca8"
+    },
+    {
+      "name": "analysis-trend-390.png",
+      "source": "frontend/artifacts/time-analysis/trend-390.png",
+      "sha256": "c3ed826f6a77cec1eb35d458768e919aec6f47a26adef44643a605457aa985c8"
+    },
+    {
+      "name": "analysis-trend-768.png",
+      "source": "frontend/artifacts/time-analysis/trend-768.png",
+      "sha256": "c356e5671bc0af9c2e319b37b83c053f2372d35fa46b3dada9e82740fb042827"
+    },
+    {
+      "name": "detail-cards-1440.png",
+      "source": "frontend/artifacts/member-time-details/cards-1440.png",
+      "sha256": "a87110aec6f81dcceeb8875ae5ee187c4f570f1bbd0af513737f14d5b8154bae"
+    },
+    {
+      "name": "detail-cards-390.png",
+      "source": "frontend/artifacts/member-time-details/cards-390.png",
+      "sha256": "5ad9f485ac7708cdeb16728c79a174e5b99a659781565aba87b45453c8a62582"
+    },
+    {
+      "name": "detail-cards-768.png",
+      "source": "frontend/artifacts/member-time-details/cards-768.png",
+      "sha256": "b52328611c0bc3c567c8bb3d98b472a5a3fbc980e11d8d7b99088cafde98f722"
+    },
+    {
+      "name": "detail-dates-1440.png",
+      "source": "frontend/artifacts/member-time-details/dates-1440.png",
+      "sha256": "8431d9d4e678bea419367a04b3818eeec8d030d518e31afb884eb4a2fa695d44"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
 import { dateInTaipei } from '../src/domain/model.js';
@@ -22,18 +22,29 @@ try {
   const page = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage();
   page.setDefaultTimeout(10000);
   const errors = []; page.on('pageerror', error => errors.push(error.message));
+  if (process.env.E2E_VISUAL_FIXTURE === '1') await page.clock.setFixedTime(new Date('2026-11-13T01:00:00Z'));
   await page.goto(`${base}/login`);
-  const today = dateInTaipei(), token = crypto.randomUUID();
+  const today = process.env.E2E_VISUAL_FIXTURE === '1' ? '2026-11-13' : dateInTaipei();
+  const token = crypto.randomUUID();
+  let first, second, task, epic;
+  if (process.env.E2E_REVIEW_FIXTURE) {
+    if (process.env.E2E_VISUAL_FIXTURE !== '1') throw new Error('Reviewed fixture requires fixed visual test date');
+    const fixture = JSON.parse(readFileSync(process.env.E2E_REVIEW_FIXTURE, 'utf8'));
+    const identity = await call(page, 'login', { email: fixture.email, password: 'detail-test-password' }, 'auth');
+    assert.equal(identity.user.id, fixture.userId); assert.equal(identity.workspace.id, fixture.workspaceId);
+    ({ first, second, task, epic } = fixture);
+  } else {
   await call(page, 'register', { name: '工時負責人', email: `member-detail-${token}@example.test`, password: 'detail-test-password', workspaceName: '成員明細測試' }, 'auth');
-  const first = await call(page, 'createProject', { name: '會員服務', code: 'MEMBERS' });
-  const second = await call(page, 'createProject', { name: '通知服務', code: 'NOTIFY' });
-  const task = { ...{ projectId: first.id, title: '會員登入與錯誤處理', type: 'task' }, ...(await call(page, 'createIssue', { projectId: first.id, title: '會員登入與錯誤處理', type: 'task' })) }; // 寫入只回有界結果（TT-178）
-  const epic = { ...{ projectId: second.id, title: '通知整合', type: 'epic' }, ...(await call(page, 'createIssue', { projectId: second.id, title: '通知整合', type: 'epic' })) }; // 寫入只回有界結果（TT-178）
+  first = await call(page, 'createProject', { name: '會員服務', code: 'MEMBERS' });
+  second = await call(page, 'createProject', { name: '通知服務', code: 'NOTIFY' });
+  task = { ...{ projectId: first.id, title: '會員登入與錯誤處理', type: 'task' }, ...(await call(page, 'createIssue', { projectId: first.id, title: '會員登入與錯誤處理', type: 'task' })) }; // 寫入只回有界結果（TT-178）
+  epic = { ...{ projectId: second.id, title: '通知整合', type: 'epic' }, ...(await call(page, 'createIssue', { projectId: second.id, title: '通知整合', type: 'epic' })) }; // 寫入只回有界結果（TT-178）
   for (let day = 0; day < 23; day++) {
     const date = new Date(`${today}T12:00:00Z`); date.setUTCDate(date.getUTCDate() - day);
     await call(page, 'logTime', { issueId: task.id, workDate: date.toISOString().slice(0, 10), minutes: 30, note: `處理會員登入流程，第 ${day + 1} 次測試` });
   }
   for (let index = 0; index < 21; index++) await call(page, 'logTime', { issueId: epic.id, workDate: today, minutes: 1, note: index === 20 ? '<img src=x onerror=alert(1)> 文字安全測試' : `確認通知整合 ${index + 1}` });
+  }
   await page.reload();
   await page.getByRole('button', { name: '工時分析', exact: true }).click();
   const region = page.getByRole('region', { name: '工時分析', exact: true });

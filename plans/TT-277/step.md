@@ -7,3 +7,5 @@
 - 已拆GET摘要／明細／兩種選項, 前端改PagedSelect, 手機遮擋與樣式撞名已修並加幾何檢查
 - 隔離後端28項1037assertions、分析／成員明細真瀏覽器三尺寸、build／api／composables、Pint與Skill integrity通過；benchmark與範圍審查見docs/tt277-time-report-reads.md
 - 人工畫面核准待回覆, 不改closed；視覺檢閱http://127.0.0.1:5292, 僅合成資料。明確交接後可先接TT-280, 不因本地commit假定整卡完成
+
+- Josh已核准13張畫面, 固定合成資料後依既有policy比較通過, 8400像素退化注入確實失敗並清舊成功產物。本人後續驗收工時8分鐘已填, 合計33分鐘；0026607為實作提交, 本階段保存approval及重播比較, 結案後接280

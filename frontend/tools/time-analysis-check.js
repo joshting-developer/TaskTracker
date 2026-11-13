@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { resolve } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
@@ -24,8 +26,9 @@ try {
   const member = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage();
   const reads = []; owner.on('request', request => { if (request.url().includes('/time-report') || request.url().includes('/getTimeReport')) reads.push(new URL(request.url()).pathname); });
   const errors = [];
-  for (const page of [owner, member]) { page.setDefaultTimeout(10000); page.on('pageerror', error => errors.push(error.message)); await page.goto(`${base}/login`); }
-  const today = dateInTaipei(), token = crypto.randomUUID(), password = 'analysis-test-password';
+  for (const page of [owner, member]) { page.setDefaultTimeout(10000); page.on('pageerror', error => errors.push(error.message)); if (process.env.E2E_VISUAL_FIXTURE === '1') await page.clock.setFixedTime(new Date('2026-11-13T01:00:00Z')); await page.goto(`${base}/login`); }
+  const today = process.env.E2E_VISUAL_FIXTURE === '1' ? '2026-11-13' : dateInTaipei();
+  const token = crypto.randomUUID(), password = 'analysis-test-password';
   const identity = await call(owner, 'register', { name: '分析負責人', email: `analysis-owner-${token}@example.test`, password, workspaceName: '團隊工時' }, 'auth');
   const first = await call(owner, 'createProject', { name: '會員服務', code: 'MEMBER' }), second = await call(owner, 'createProject', { name: '營運維護', code: 'OPS' });
   const epic = await call(owner, 'createIssue', { projectId: first.id, title: '會員功能', type: 'epic' });
@@ -38,6 +41,11 @@ try {
   const acl = await call(owner, 'getProjectMembers', { projectId: first.id });
   await call(owner, 'setProjectMember', { projectId: first.id, userId: memberIdentity.user.id, roleId: 'developer', expectedRevision: acl.revision });
   await call(member, 'logTime', { issueId: task.id, minutes: 30, workDate: today });
+  if (process.env.E2E_VISUAL_FIXTURE === '1') {
+    if (!process.env.E2E_COMPOSE_PROJECT) throw new Error('Visual fixture requires explicit isolated E2E_COMPOSE_PROJECT');
+    execFileSync('docker', ['compose', '-p', process.env.E2E_COMPOSE_PROJECT, '-f', resolve(import.meta.dirname, '../../docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', 'tools/time-analysis-fixture.php'], { cwd: resolve(import.meta.dirname, '../..'), input: JSON.stringify({ userId: identity.user.id, workspaceId: identity.workspace.id, first: first.id, second: second.id }), stdio: ['pipe', 'pipe', 'pipe'] });
+    first.id = 'analysis-2'; second.id = 'analysis-1';
+  }
   await owner.reload(); await owner.getByRole('button', { name: '工時分析', exact: true }).click();
   const region = owner.getByRole('region', { name: '工時分析', exact: true });
   await region.getByRole('heading', { name: '工時分析', exact: true }).waitFor();
