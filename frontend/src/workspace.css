@@ -318,3 +318,21 @@
 .sort-direction:hover { color: #5646b8; border-color: #c9c0ee; }
 .sort-direction:focus-visible { outline: 2px solid #6654c5; outline-offset: 1px; }
 @media (max-width: 700px) { .sort-direction { width: 44px; height: 44px; } }
+
+/* TT-305：當天明細收進抽屜；月曆下方只留日期合計與「查看工時明細」 */
+.time-layout { grid-template-columns: minmax(0, 1fr); }
+.time-day-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; padding: 12px 16px; background: #fff; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; color: var(--text-primary); }
+.time-drawer-tabs { display: flex; gap: 4px; padding: 10px 24px 0; border-bottom: 1px solid var(--border); }
+.time-drawer-tabs [role="tab"] { min-height: 44px; padding: 0 14px; font-size: 14px; color: var(--text-secondary); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.time-drawer-tabs [role="tab"][aria-selected="true"] { color: #4f3fb8; font-weight: 600; border-bottom-color: #6654c5; }
+.time-drawer-tabs [role="tab"]:focus-visible { outline: 2px solid #6654c5; outline-offset: -2px; }
+.time-drawer-details { padding: 16px 24px 24px; overflow-y: auto; }
+.time-drawer-total { margin: 0 0 12px; font-size: 14px; color: var(--text-secondary); }
+.time-entry-group { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; background: #fff; }
+.time-entry-group > summary { display: flex; justify-content: space-between; gap: 12px; min-height: 44px; align-items: center; padding: 0 14px; cursor: pointer; font-size: 14px; font-weight: 600; list-style-position: inside; }
+.time-entry-group > summary span:last-child { font-weight: 400; color: var(--text-secondary); }
+.time-entry-group > summary:focus-visible { outline: 2px solid #6654c5; outline-offset: -2px; border-radius: 10px; }
+.time-entry-group .time-entry { padding: 12px 14px; }
+.time-entry-group .time-entry p { font-size: 13px; color: var(--text-secondary); }
+.time-entry-group .time-entry-end .text-button { font-size: 13px; padding: 10px 0 0 10px; min-height: 36px; }
+@media (max-width: 700px) { .time-drawer-tabs, .time-drawer-details { padding-left: 16px; padding-right: 16px; } .time-day-summary { flex-wrap: wrap; } }

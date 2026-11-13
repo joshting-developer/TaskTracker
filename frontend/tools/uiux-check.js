@@ -80,7 +80,7 @@ try {
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：UI 驗證專案', exact: true }).click();
   await page.getByRole('button', { name: '工時月曆', exact: true }).click();
-  await page.getByRole('button', { name: new RegExp(`${dateInTaipei()} 工時`) }).click();
+  await page.getByRole('button', { name: new RegExp(`^${dateInTaipei()} 工時 `) }).click();
   const drawer = page.getByRole('dialog', { name: '填報你的工時', exact: true });
   await drawer.getByLabel('工時任務', { exact: true }).selectOption(fixture.issue.id);
   const duration = drawer.getByRole('spinbutton');
@@ -171,7 +171,7 @@ try {
   await page.goForward();
   assert.equal(page.url(), `${projectUrl}/settings`);
   await page.getByRole('button', { name: '工時月曆', exact: true }).click();
-  await page.getByRole('button', { name: new RegExp(`${dateInTaipei()} 工時`) }).click();
+  await page.getByRole('button', { name: new RegExp(`^${dateInTaipei()} 工時 `) }).click();
   await drawer.getByLabel('工時任務', { exact: true }).selectOption(fixture.issue.id);
   await drawer.getByRole('spinbutton').fill('1.5');
   // URL 直接變更／瀏覽器返回同樣必須保護未存草稿。

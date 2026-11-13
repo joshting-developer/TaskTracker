@@ -68,7 +68,10 @@ try {
   let workspace = await call(page, 'getWorkspace'), entry = workspace.timeEntries.find(item => item.note === '從詳細頁填寫');
   assert.equal(entry.minutes, 30); assert.equal(entry.userId, identity.user.id); assert.equal(entry.issueId, task.id);
   await page.getByRole('button', { name: '工時月曆', exact: true }).click();
-  await page.locator('.time-entry').filter({ hasText: '從詳細頁填寫' }).waitFor();
+  // TT-305：當天明細收進月曆的抽屜。
+  await page.getByRole('button', { name: `查看 ${dateInTaipei()} 工時明細`, exact: true }).click();
+  await page.locator('.time-entry-drawer .time-entry').filter({ hasText: '從詳細頁填寫' }).waitFor();
+  await page.locator('.time-entry-drawer').getByRole('button', { name: '關閉工時面板', exact: true }).click();
   console.log('PASS: 詳細頁自動帶任務／今日、整數分鐘驗證、本人保存、原頁更新及月曆一致');
 
   await openIssue(task); await detail.getByRole('button', { name: `修改工時 ${entry.id}`, exact: true }).click();
@@ -124,10 +127,12 @@ try {
   assert.equal(await drawer.getByRole('combobox', { name: '工時任務', exact: true }).inputValue(), child.id, '從Epic改子卡工時不能改掛Epic');
   await drawer.getByRole('button', { name: '關閉工時面板', exact: true }).click();
   await page.getByRole('button', { name: '工時月曆', exact: true }).click();
-  await page.getByRole('button', { name: new RegExp(`${dateInTaipei()} 工時`) }).click();
+  await page.getByRole('button', { name: new RegExp(`^${dateInTaipei()} 工時 `) }).click();
   await drawer.getByRole('combobox', { name: '工時任務', exact: true }).selectOption(epic.id); await drawer.getByLabel('投入小時', { exact: true }).fill('0.25'); await drawer.getByLabel('工時說明').fill('月曆直接填Epic');
   await drawer.getByRole('button', { name: '登記工時', exact: true }).click(); await drawer.waitFor({ state: 'detached' });
-  await page.locator('.time-entry').filter({ hasText: '月曆直接填Epic' }).waitFor();
+  await page.getByRole('button', { name: `查看 ${dateInTaipei()} 工時明細`, exact: true }).click();
+  await page.locator('.time-entry-drawer .time-entry').filter({ hasText: '月曆直接填Epic' }).waitFor();
+  await page.locator('.time-entry-drawer').getByRole('button', { name: '關閉工時面板', exact: true }).click();
   workspace = await call(page, 'getWorkspace');
   assert.equal(epicSummary(epic, workspace.issues, workspace.timeEntries, workspace.projects[0]).spentMinutes, 60);
   const totalMinutes = workspace.timeEntries.filter(item => !item.voidedAt).reduce((sum, item) => sum + item.minutes, 0);

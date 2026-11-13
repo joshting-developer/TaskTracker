@@ -948,8 +948,10 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await teammate.getByLabel('投入小時', { exact: true }).fill('1.5');
   await teammate.getByLabel('工時說明').fill('完成會員登入');
   await teammate.getByRole('button', { name: '登記工時' }).click();
-  await teammate.locator('.time-entry').waitFor();
   await teammate.getByRole('button', { name: new RegExp(`^${dateInTaipei()} 工時 1.5 h$`) }).waitFor();
+  // TT-305：當天明細收進抽屜的「工時明細」分頁, 從明細按修改會切回填報分頁。
+  await teammate.getByRole('button', { name: `查看 ${dateInTaipei()} 工時明細`, exact: true }).click();
+  await teammate.locator('.time-entry-drawer .time-entry').waitFor();
   await teammate.getByRole('button', { name: /^修改工時 / }).click();
   await teammate.getByLabel('投入小時', { exact: true }).fill('2');
   await teammate.evaluate(async () => {
@@ -963,8 +965,9 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   assert.equal(await teammate.getByLabel('投入小時', { exact: true }).inputValue(), '2', '工時版本衝突保留草稿');
   teammate.once('dialog', dialog => dialog.accept());
   await teammate.getByRole('button', { name: '關閉工時面板', exact: true }).click();
-  // 衝突後月曆會重讀；等列表出現另一分頁的版本再編輯，避免點到重讀前的舊列。
-  await teammate.locator('.time-entry').filter({ hasText: '另一個分頁已更新' }).waitFor();
+  // 衝突後月曆會重讀；等明細出現另一分頁的版本再編輯，避免點到重讀前的舊列。
+  await teammate.getByRole('button', { name: `查看 ${dateInTaipei()} 工時明細`, exact: true }).click();
+  await teammate.locator('.time-entry-drawer .time-entry').filter({ hasText: '另一個分頁已更新' }).waitFor();
   await teammate.getByRole('button', { name: /^修改工時 / }).click();
   assert.equal(await teammate.getByLabel('工時說明').inputValue(), '另一個分頁已更新');
   await teammate.getByLabel('投入小時', { exact: true }).fill('2');
@@ -974,8 +977,10 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.getByRole('button', { name: '工時月曆', exact: true }).click();
   await page.getByRole('button', { name: '重新整理工作空間' }).click();
   await page.getByRole('combobox', { name: '工時成員', exact: true }).selectOption('');
-  await page.locator('.time-entry').waitFor();
+  await page.getByRole('button', { name: `查看 ${dateInTaipei()} 工時明細`, exact: true }).click();
+  await page.locator('.time-entry-drawer .time-entry').waitFor();
   assert.equal(await page.getByRole('button', { name: /^修改工時 / }).count(), 0);
+  await page.locator('.time-entry-drawer').getByRole('button', { name: '關閉工時面板', exact: true }).click();
   await page.getByRole('button', { name: new RegExp(`^${dateInTaipei()} 工時 `) }).click();
   await page.getByRole('combobox', { name: '工時任務', exact: true }).selectOption({ label: 'TEST-1 · 我建立的任務 <script>alert(1)</script>' });
   await page.getByLabel('投入小時', { exact: true }).fill('0.5');

@@ -75,13 +75,33 @@ try {
   const dayResponse = page.waitForResponse(response => response.url().includes('/time-entries') && new URL(response.url()).searchParams.get('date') === '2026-10-09');
   await calendar.getByRole('button', { name: '2026-10-09 工時 2.5 h', exact: true }).click();
   await dayResponse;
-  await page.getByRole('button', { name: '關閉工時面板', exact: true }).click();
-  await page.waitForFunction(() => document.querySelectorAll('.time-entry').length === 20);
-  const pager = calendar.getByLabel('工時明細分頁', { exact: true });
+  // TT-305：明細收進抽屜的「工時明細」分頁, 依成員分組；分頁按鈕也在抽屜裡。
+  const dayDrawer = page.locator('.time-entry-drawer');
+  const detailsTab = dayDrawer.getByRole('tab', { name: '2026-10-09 工時明細', exact: true });
+  assert.equal(await dayDrawer.getByRole('tab', { name: '填報工時', exact: true }).getAttribute('aria-selected'), 'true', '點日期預設在填報分頁');
+  await detailsTab.click();
+  assert.equal(await detailsTab.getAttribute('aria-selected'), 'true');
+  await page.waitForFunction(() => document.querySelectorAll('.time-entry-drawer .time-entry').length === 20);
+  assert.ok(await dayDrawer.locator('.time-entry-group').count() >= 1, '依成員分組');
+  assert.equal(await calendar.locator('.time-day-details').count(), 0, '月曆下方不再有明細');
+  const pager = dayDrawer.getByLabel('工時明細分頁', { exact: true });
   await pager.getByRole('button', { name: '下一頁', exact: true }).click();
-  await page.waitForFunction(() => document.querySelectorAll('.time-entry').length === 5);
+  await page.waitForFunction(() => document.querySelectorAll('.time-entry-drawer .time-entry').length === 5);
   await pager.getByRole('button', { name: '上一頁', exact: true }).click();
-  await page.waitForFunction(() => document.querySelectorAll('.time-entry').length === 20);
+  await page.waitForFunction(() => document.querySelectorAll('.time-entry-drawer .time-entry').length === 20);
+  // 從明細按修改：切回填報分頁並帶入那筆紀錄。
+  const editButton = dayDrawer.getByRole('button', { name: /^修改工時 / }).first();
+  if (await editButton.count()) {
+    await editButton.click();
+    await page.locator('.time-entry-drawer').getByRole('heading', { name: '修改你的工時', exact: true }).waitFor();
+    assert.equal(await page.locator('.time-entry-drawer').getByRole('tab', { name: '修改工時', exact: true }).getAttribute('aria-selected'), 'true', '修改時在填報分頁');
+    assert.ok(Number(await page.locator('.time-entry-drawer').getByLabel('投入小時', { exact: true }).inputValue()) > 0, '帶入原本的時數');
+  }
+  await page.locator('.time-entry-drawer').getByRole('button', { name: '關閉工時面板', exact: true }).click();
+  // 月曆下方的「查看工時明細」直接開在明細分頁。
+  await calendar.getByRole('button', { name: '查看 2026-10-09 工時明細', exact: true }).click();
+  assert.equal(await page.locator('.time-entry-drawer').getByRole('tab', { name: '2026-10-09 工時明細', exact: true }).getAttribute('aria-selected'), 'true');
+  await page.locator('.time-entry-drawer').getByRole('button', { name: '關閉工時面板', exact: true }).click();
 
   // 成員篩選由伺服器限定。
   await calendar.getByRole('button', { name: '搜尋工時成員選項', exact: true }).click();
@@ -112,8 +132,10 @@ try {
   requests.length = 0;
   await drawer.getByRole('button', { name: '登記工時', exact: true }).click();
   await drawer.waitFor({ state: 'detached' });
-  await calendar.locator('.time-entry').filter({ hasText: '月曆新增' }).waitFor();
   await calendar.getByText('本月合計 6 h', { exact: true }).waitFor();
+  await calendar.getByRole('button', { name: '查看 2026-10-07 工時明細', exact: true }).click();
+  await page.locator('.time-entry-drawer .time-entry').filter({ hasText: '月曆新增' }).waitFor();
+  await page.locator('.time-entry-drawer').getByRole('button', { name: '關閉工時面板', exact: true }).click();
   assert.ok(requests.some(item => item.path.endsWith('/time-calendar') && item.params.get('month') === '2026-10'));
   assert.ok(requests.some(item => item.path.endsWith('/time-entries') && item.params.get('date') === '2026-10-07'));
 
