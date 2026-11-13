@@ -11,10 +11,10 @@ import MarkdownContent from './MarkdownContent.vue';
 import { api } from '../api/index.js';
 import { FIELD_LABELS, hours, ISSUE_FIELDS, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
-const props = defineProps({ projectLoader: Function, projectOptionsLoader: Function, lookup: Function, activityLoader: Function, issue: Object, todo: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, defaultEpicId: String, defaultBoardId: String, members: Array, issues: Array, entries: Array, canExpand: Boolean });
+const props = defineProps({ projectLoader: Function, projectOptionsLoader: Function, lookup: Function, activityLoader: Function, issue: Object, todo: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, defaultEpicId: String, defaultBoardId: String, members: Array, issues: Array, entries: Array, canExpand: Boolean, inline: Boolean });
 const emit = defineEmits(['close', 'saved', 'converted', 'reload', 'open', 'expand']);
 const dialog = ref(null), descriptionEditor = ref(null), saveError = ref(null);
-const propertiesOpen = ref(false), titleError = ref('');
+const propertiesOpen = ref(props.inline), titleError = ref('');
 const formId = useId();
 const form = reactive({ parentIssueId: '', relatedIssueIds: [] });
 const relationsTool = ref(null), picked = ref([]), pickedMembers = ref([]), pickedProjects = ref([]), hydratedProject = ref(null), projectLoading = ref(false);
@@ -23,7 +23,7 @@ function lookupForProject(kind, filters, options) { return props.lookup(kind, fi
 function remember(item) { picked.value = [...picked.value.filter(row => row.id !== item.id), item]; }
 const tab = ref('comments');
 
-const activity = useIssueActivity({ issue: toRef(props, 'issue'), tab, load: toRef(props, 'activityLoader') });
+const activity = useIssueActivity({ issue: toRef(props, 'issue'), tab: computed(() => props.inline ? '' : tab.value), load: toRef(props, 'activityLoader') });
 const activityComments = activity.comments, activityHistory = activity.history;
 const tabId = useId();
 const comment = ref('');
@@ -125,7 +125,7 @@ function beforeUnload(event) {
 }
 onMounted(async () => {
   resetForm();
-  dialog.value.showModal();
+  if (!props.inline) dialog.value.showModal();
   window.addEventListener('beforeunload', beforeUnload);
   await nextTick();
   dialog.value.querySelector('[name="title"]').focus();
@@ -206,12 +206,13 @@ function timestamp(value) {
 </script>
 
 <template>
-  <dialog ref="dialog" class="issue-dialog" aria-labelledby="issue-heading" @cancel.prevent="close" @click="event => { if (event.target === dialog) close(); }">
+  <component :is="inline ? 'section' : 'dialog'" ref="dialog" class="issue-dialog" :class="{ 'issue-editor-inline': inline }" :aria-label="inline ? '編輯任務完整頁' : undefined" :aria-labelledby="inline ? undefined : 'issue-heading'" @cancel.prevent="close" @click="event => { if (!inline && event.target === dialog) close(); }">
     <div class="panel-shell">
       <header class="panel-header">
-        <div class="panel-identity"><span>{{ issue?.identifier || selectedProject?.code }}</span><h2 id="issue-heading">{{ todo ? '轉成正式卡片' : issue ? '任務詳細內容' : '新增一個任務' }}</h2></div>
-        <button v-if="issue && canExpand" type="button" class="button secondary issue-expand" :disabled="inputDisabled" @click="emit('expand')"><Icon name="arrow" :size="16" />開啟完整頁</button>
-        <button type="button" class="icon-button" aria-label="關閉任務" :disabled="inputDisabled" @click="close"><Icon name="close" /></button>
+        <div class="panel-identity"><span>{{ issue?.identifier || selectedProject?.code }}</span><component :is="inline ? 'h1' : 'h2'" id="issue-heading">{{ inline ? '編輯任務' : todo ? '轉成正式卡片' : issue ? '任務詳細內容' : '新增一個任務' }}</component></div>
+        <button v-if="issue && canExpand && !inline" type="button" class="button secondary issue-expand" :disabled="inputDisabled" @click="emit('expand')"><Icon name="arrow" :size="16" />開啟完整頁</button>
+        <button v-if="inline" type="button" class="button secondary" :disabled="inputDisabled" @click="close">取消</button>
+        <button v-else type="button" class="icon-button" aria-label="關閉任務" :disabled="inputDisabled" @click="close"><Icon name="close" /></button>
       </header>
       <div class="panel-content">
 
@@ -235,7 +236,7 @@ function timestamp(value) {
         </form>
         <IssueRelations v-if="selectedProject" ref="relationsTool" :lookup="lookup ? lookupForProject : undefined" :activity-loader="activityLoader" :issue="issue" :issues="availableIssues" :project="selectedProject" :type="form.type" :parent-id="form.parentIssueId" :related-ids="form.relatedIssueIds" :saving="inputDisabled" @candidate="remember" @parent="form.parentIssueId = $event" @related="form.relatedIssueIds = $event" @open="jump" @create-child="createChild" />
         <p v-if="issue && form.type !== 'epic'" class="detail-spent"><Icon name="clock" :size="14" />已投入 {{ hours(spent) }} / {{ form.estimateMinutes ? `預估 ${hours(form.estimateMinutes)}` : '尚未估時' }}</p>
-        <section v-if="issue" class="discussion">
+        <section v-if="issue && !inline" class="discussion">
           <div class="discussion-tabs" role="tablist" aria-label="任務紀錄" @keydown="onTabKeydown">
             <button :class="{ active: tab === 'comments' }" :id="`${tabId}-comments-tab`" role="tab" :aria-controls="`${tabId}-activity`" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" @click="tab = 'comments'">留言 <span>{{ activityComments.length }}</span></button>
             <button :class="{ active: tab === 'history' }" :id="`${tabId}-history-tab`" role="tab" :aria-controls="`${tabId}-activity`" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" @click="tab = 'history'">異動紀錄 <span>{{ activityHistory.length }}</span></button>
@@ -261,18 +262,18 @@ function timestamp(value) {
       </div>
       <footer class="panel-footer"><span class="subtle" role="status">{{ saveStatus }}</span><button type="submit" form="issue-form" class="button primary" :disabled="inputDisabled || descriptionEditor?.attachmentBlocked || (Boolean(issue) && !dirty) || (Boolean(todo) && !form.projectId)"><Icon :name="saving ? 'clock' : 'check'" :size="17" />{{ saving ? '儲存中…' : todo ? '建立卡片並完成轉換' : issue ? '儲存修改' : '建立任務' }}</button></footer>
     </div>
-    <div v-if="activityLoader && ['comments','history'].includes(tab)" class="activity-pagination">
+    <div v-if="!inline && activityLoader && ['comments','history'].includes(tab)" class="activity-pagination">
     <p v-if="activity.error.value" class="error-box" role="alert">{{ activity.error.value }}</p>
     <button v-if="activity.more.value" class="button secondary" :disabled="activity.loading.value" @click="activity.fetchPage(true)">載入更多</button>
   </div>
 
-  </dialog>
+  </component>
 </template>
 
 <style scoped>
 .panel-identity { min-width: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
 .panel-identity > span { font-size: 12px; color: var(--text-secondary); }
-.panel-identity h2 { font-size: 17px; font-weight: 600; margin: 0; }
+.panel-identity :is(h1, h2) { font-size: 17px; font-weight: 600; margin: 0; }
 .issue-properties { margin: 8px 0 20px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .issue-properties > summary { min-height: 48px; padding: 14px 0; cursor: pointer; color: var(--text-primary); font-size: 14px; }
 .issue-properties > summary > :last-child { margin-left: 12px; color: var(--text-secondary); font-size: 12px; overflow-wrap: anywhere; }
@@ -284,4 +285,21 @@ function timestamp(value) {
 .panel-footer .button { box-shadow: none; flex-shrink: 0; }
 .panel-footer .subtle { min-width: 0; overflow-wrap: anywhere; }
 @media(max-width: 500px) { .panel-header { padding: 16px 20px; }.issue-properties > summary > :last-child { display: block; margin: 4px 0 0; }.form-grid { grid-template-columns: 1fr; }.panel-footer { align-items: center; } }
+.issue-editor-inline { position: relative; inset: auto; margin: 0; width: 100%; height: auto; max-height: none; box-shadow: none; }
+.issue-editor-inline .panel-shell { height: auto; min-height: calc(100dvh - 60px); }
+.issue-editor-inline .panel-content { overflow: visible; padding: 24px 32px; }
+.issue-editor-inline #issue-form { display: grid; grid-template-columns: minmax(0, 1fr) 280px; grid-template-rows: auto 1fr; gap: 24px 32px; align-items: start; }
+.issue-editor-inline #issue-form > .field, .issue-editor-inline #issue-form > .markdown-editor { grid-column: 1; min-width: 0; }
+.issue-editor-inline [name="title"] { font-size: 22px; font-weight: 600; }
+.issue-editor-inline .issue-properties { grid-column: 2; grid-row: 1 / span 2; margin: 0; padding-left: 24px; border: 0; border-left: 1px solid var(--border); }
+.issue-editor-inline .issue-properties > summary { display: none; }
+.issue-editor-inline .form-grid { grid-template-columns: 1fr; padding: 0; }
+.issue-editor-inline .panel-footer { position: sticky; bottom: 0; z-index: 2; background: #fff; }
+@media(max-width: 900px) {
+  .issue-editor-inline .panel-content { padding: 20px; }
+  .issue-editor-inline #issue-form { grid-template-columns: 1fr; grid-template-rows: auto; gap: 16px; }
+  .issue-editor-inline .issue-properties { grid-column: 1; grid-row: auto; border-left: 0; border-top: 1px solid var(--border); padding: 20px 0 0; }
+  .issue-editor-inline .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+}
+@media(max-width: 500px) { .issue-editor-inline .form-grid { grid-template-columns: 1fr; } }
 </style>

@@ -95,7 +95,8 @@ test('representative workspace flows', async ({ page, browser }) => {
   const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
   await detail.getByRole('heading', { name: '建立登入畫面', exact: true }).waitFor();
   await shot(page, '07-detail');
-  await detail.getByRole('button', { name: '編輯任務', exact: true }).click();
+  await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
+  await page.locator('.issue-row').filter({ has: page.getByRole('button', { name: '建立登入畫面', exact: true }) }).getByRole('button', { name: /^快速編輯 / }).click();
   const editor = page.getByRole('dialog', { name: '任務詳細內容', exact: true });
   await editor.getByRole('textbox', { name: /任務標題/ }).waitFor();
   await expect(editor.getByRole('textbox', { name: /任務標題/ })).toBeFocused();
@@ -105,7 +106,6 @@ test('representative workspace flows', async ({ page, browser }) => {
   expect(await editor.evaluate(element => element.contains(document.activeElement))).toBe(true);
   await page.keyboard.press('Escape');
   await expect(editor).not.toBeVisible();
-  await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
   await navigation(page);
   await page.getByRole('button', { name: '任務看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();

@@ -1,0 +1,44 @@
+{
+  "card": "TT-310",
+  "images": [
+    {
+      "name": "editing-1440.png",
+      "source": "artifacts/tt310/after/editing-1440.png",
+      "sha256": "b8f7b3792fda7f4a41700fe05d3a2a39c029763e6a6a4d2f9e2865a232553880"
+    },
+    {
+      "name": "editing-390.png",
+      "source": "artifacts/tt310/after/editing-390.png",
+      "sha256": "d14cc320095ccdb118d76d0817742ea9111507101aa72fdd8e246561551bba9c"
+    },
+    {
+      "name": "editing-768.png",
+      "source": "artifacts/tt310/after/editing-768.png",
+      "sha256": "a5863a6aa817f79c3766cc803d1849ee511bce1bca52feeeaf424e21cfe350bd"
+    }
+  ],
+  "harness": [
+    {
+      "path": "frontend/src/components/IssuePanel.vue",
+      "sha256": "0e457827cd9aa1cd6c79475b853c88f5c6c2b050ef3ccdce5dcef0fb7d7119e1"
+    },
+    {
+      "path": "frontend/src/components/ProjectTasksWorkspace.vue",
+      "sha256": "cc5367b926f1d40e7694a7c81132ebc16c18f19d3f6d99680d9e70d7b22943b9"
+    },
+    {
+      "path": "frontend/tools/issue-inline-check.js",
+      "sha256": "a8aff7df8ff7bff28c638d0a5d796385519338c33fabe6003919c5cc59682ef5"
+    },
+    {
+      "path": "frontend/tools/compare-reviewed-inline-editing.js",
+      "sha256": "d1f69c2bb16383607b172a83786f89b35db6f657fe953e23b6e1e8a06d98e379"
+    }
+  ],
+  "policy": {
+    "animations": "disabled",
+    "caret": "hide",
+    "maxDiffPixels": 0,
+    "threshold": 0.02
+  }
+}

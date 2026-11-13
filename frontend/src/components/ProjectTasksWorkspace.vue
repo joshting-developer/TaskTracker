@@ -96,7 +96,7 @@ async function loadDetail() {
   try {
     const value = await api.issue(props.project.id, id, { signal: detailRequest.signal });
     if (current !== detailGeneration) return false;
-    detail.value = value;
+    detail.value = value; error.value = '';
     if (!props.detailPage && canWrite.value) await prepareEditor(value);
     return current === detailGeneration;
   } catch (failure) {
@@ -137,9 +137,12 @@ async function savedIssue(result, isNew = false) {
   const opened = editor.value;
   if (isNew) editor.value = null;
   else if (opened?.issue) {
-    const fresh = await api.issue(props.project.id, opened.issue.id);
-    detail.value = props.issueId === fresh.id ? fresh : detail.value;
-    editor.value = { ...opened, issue: fresh };
+    try {
+      const fresh = await api.issue(props.project.id, opened.issue.id);
+      detail.value = props.issueId === fresh.id ? fresh : detail.value;
+      editor.value = props.detailPage ? null : { ...opened, issue: fresh };
+      if (props.detailPage) { await nextTick(); detailTool.value?.focus(); }
+    } catch (failure) { handleFailure(failure); return; }
   } else if (props.issueId) {
     detail.value = await api.issue(props.project.id, props.issueId);
   }
@@ -148,7 +151,7 @@ async function savedIssue(result, isNew = false) {
   emit('notify', '任務已儲存');
 }
 
-function closeEditor() { editor.value = null; if (!props.detailPage && props.issueId) emit('close-issue'); }
+function closeEditor() { editor.value = null; if (!props.detailPage && props.issueId) emit('close-issue'); else nextTick(() => detailTool.value?.focus()); }
 async function archive() {
   if (archiving.value || !window.confirm(`封存看板「${board.value.name}」？卡片、留言和工時都會保留，之後可以在「已封存」裡查看或還原。`)) return;
   const key = `${board.value.id}:${board.value.revision}`;
@@ -201,9 +204,9 @@ onBeforeUnmount(() => { alive = false; optionGeneration++; optionRequest?.abort(
 
 <template>
   <div class="board-workspace-page">
-    <div v-if="error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="reload">重新載入</button></div>
+    <div v-if="error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="detailPage ? loadDetail() : reload()">重新載入</button></div>
     <p v-if="loading" role="status">載入中…</p>
-    <IssueDetail v-if="detail && detailPage" ref="detailTool" :key="detail.id" :issue="detail" :busy="Boolean(transition.moving.value)" :project="project" :issues="detailRows" :members="memberNames" :entries="[]" :return-label="mode === 'list' ? '返回任務列表' : '返回看板'" :can-write="canWrite" :can-read-time="project.permissions.includes('timeEntry.readOwn') || project.permissions.includes('timeEntry.readTeam')" :can-log-time="project.permissions.includes('timeEntry.writeOwn')" :user-id="userId" :can-delete="canDelete" :deleting="deleting" :activity-loader="loadActivity" @delete="removeIssue" @edit="prepareEditor(detail)" @state="value => transition.moveIssue(detail, { state: value })" @open="(issue, full = true) => emit('issue', issue, full)" @close="emit('close-issue')" @saved="savedIssue" @reload="loadDetail" @time-updated="savedIssue" />
+    <IssueDetail v-if="detail && detailPage" v-show="!editor" ref="detailTool" :key="detail.id" :issue="detail" :busy="Boolean(transition.moving.value)" :project="project" :issues="detailRows" :members="memberNames" :entries="[]" :return-label="mode === 'list' ? '返回任務列表' : '返回看板'" :can-write="canWrite" :can-read-time="project.permissions.includes('timeEntry.readOwn') || project.permissions.includes('timeEntry.readTeam')" :can-log-time="project.permissions.includes('timeEntry.writeOwn')" :user-id="userId" :can-delete="canDelete" :deleting="deleting" :activity-loader="loadActivity" @delete="removeIssue" @edit="prepareEditor(detail)" @state="value => transition.moveIssue(detail, { state: value })" @open="(issue, full = true) => emit('issue', issue, full)" @close="emit('close-issue')" @saved="savedIssue" @reload="loadDetail" @time-updated="savedIssue" />
     <template v-else>
       <section v-if="mode === 'list'" class="task-workspace">
         <IssueFilters v-model:expanded="filtersExpanded" :lookup="lookup" :lookup-context="project.id" @option="rememberOption" v-model="filterInput" :states="filters.projectStates.value" :members="memberNames" :issues="detailRows" :active-filter-chips="filters.activeFilterChips.value" :filter-warnings="[]" @remove="filters.removeFilter" @clear="filters.clearFilters" />
@@ -224,6 +227,6 @@ onBeforeUnmount(() => { alive = false; optionGeneration++; optionRequest?.abort(
       </section>
     </template>
     <BoardDialog v-if="boardEditor" ref="boardTool" :project="project" :issues="[]" :board="boardEditor.board" :remote="true" @close="boardEditor = null" @saved="savedBoard" @reload="reload" />
-    <IssuePanel :lookup="lookup" v-if="editor && canWrite" ref="issueTool" :key="editor.issue?.id || 'create'" :issue="editor.issue" :projects="[project]" :default-project="project.id" :default-type="editor.type || 'task'" :default-state="editor.state || project.statuses[0].id" :default-epic-id="editor.epicId || ''" :default-board-id="boardId" :members="memberNames" :issues="detailRows" :entries="[]" :activity-loader="loadActivity" :can-expand="true" @expand="emit('issue', detail, true)" @close="closeEditor" @open="(issue, full = false) => emit('issue', issue, full)" @saved="savedIssue" @reload="reloadEditor" />
+    <IssuePanel :inline="Boolean(detailPage && detail)" :lookup="lookup" v-if="editor && canWrite" ref="issueTool" :key="editor.issue?.id || 'create'" :issue="editor.issue" :projects="[project]" :default-project="project.id" :default-type="editor.type || 'task'" :default-state="editor.state || project.statuses[0].id" :default-epic-id="editor.epicId || ''" :default-board-id="boardId" :members="memberNames" :issues="detailRows" :entries="[]" :activity-loader="loadActivity" :can-expand="true" @expand="emit('issue', detail, true)" @close="closeEditor" @open="(issue, full = false) => emit('issue', issue, full)" @saved="savedIssue" @reload="reloadEditor" />
   </div>
 </template>

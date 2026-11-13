@@ -1,3 +1,4 @@
+const port = Number(process.env.E2E_FRONTEND_PORT || 5175), baseURL = `http://127.0.0.1:${port}`;
 import { openProjectList } from './navigation.js';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
@@ -11,13 +12,13 @@ mkdirSync(artifacts, { recursive: true });
 let vite, browser;
 const failures = [];
 try {
-  vite = await createServer({ server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': apiTarget } } });
+  vite = await createServer({ server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': apiTarget } } });
   await vite.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   page.setDefaultTimeout(12000);
   page.on('pageerror', error => failures.push(error.message));
-  await page.goto('http://127.0.0.1:5175/login');
+  await page.goto(`${baseURL}/login`);
   await page.getByRole('button', { name: '第一次使用？建立工作空間' }).click();
   await page.getByLabel('你的名字').fill('UI Review');
   await page.getByLabel('Email', { exact: true }).fill(`ui-${crypto.randomUUID()}@example.test`);
@@ -113,7 +114,7 @@ try {
   });
   assert.ok(readable.size >= 13 && readable.contrast >= 4.5, JSON.stringify(readable));
   await page.screenshot({ path: `${artifacts}/notifications-1440.png` });
-  await page.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.project.id}/issues/${fixture.issue.id}?detail=1`);
+  await page.goto(`${baseURL}/app/#/projects/${fixture.project.id}/issues/${fixture.issue.id}?detail=1`);
   const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
   await detail.getByRole('heading', { name: fixture.issue.title, exact: true }).waitFor();
   await page.setViewportSize({ width: 390, height: 844 });
@@ -133,13 +134,13 @@ try {
   assert.equal(await activityTabs.getByRole('tab').first().getAttribute('aria-selected'), 'true');
   await page.setViewportSize({ width: 1440, height: 900 });
   await detail.getByRole('button', { name: '編輯任務', exact: true }).click();
-  const editor = page.getByRole('dialog');
-  const editorTabs = editor.getByRole('tablist', { name: '任務紀錄' });
+  const editor = page.getByRole('region', { name: '編輯任務完整頁', exact: true });
+  const editorTabs = editor.getByRole('tablist', { name: '描述模式' });
   await editorTabs.getByRole('tab').first().focus();
   await page.keyboard.press('ArrowLeft');
   assert.equal(await editorTabs.getByRole('tab').last().getAttribute('aria-selected'), 'true');
   assert.equal(await editor.locator(`[id="${await editorTabs.getByRole('tab').last().getAttribute('aria-controls')}"]`).getAttribute('aria-labelledby'), await editorTabs.getByRole('tab').last().getAttribute('id'));
-  await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
+  await editor.getByRole('button', { name: '取消', exact: true }).click();
   await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
   await page.getByRole('button', { name: '任務看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
@@ -154,7 +155,7 @@ try {
     await page.screenshot({ path: `${artifacts}/board-${width}.png` });
   }
   await page.setViewportSize({ width: 1440, height: 900 });
-  const projectUrl = `http://127.0.0.1:5175/app/#/projects/${fixture.project.id}`;
+  const projectUrl = `${baseURL}/app/#/projects/${fixture.project.id}`;
   for (const [name, route] of [['工時月曆', 'time'], ['狀態設定', 'settings'], ['專案成員與權限', 'members'], ['通知預覽', 'notifications']]) {
     const nav = page.getByRole('navigation', { name: '專案任務' }).getByRole('button', { name: new RegExp(`^${name}`) });
     await nav.click();
@@ -190,7 +191,7 @@ try {
   const invite = await page.evaluate(async () => (await import('/src/api/index.js')).api.inviteMember({ email: `reader-${crypto.randomUUID()}@example.test` }));
   const reader = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   reader.on('pageerror', error => failures.push(error.message));
-  await reader.goto(`http://127.0.0.1:5175/app/#/invite?token=${invite.token}`);
+  await reader.goto(`${baseURL}/app/#/invite?token=${invite.token}`);
   await reader.getByLabel('你的名字').fill('UI Reader');
   await reader.getByLabel('Email', { exact: true }).fill(invite.email);
   await reader.getByLabel('密碼', { exact: true }).fill('ui-local-test-password');

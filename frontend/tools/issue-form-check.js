@@ -47,7 +47,7 @@ try {
   await page.unroute('**/api/rpc/createIssue');
   const list = await (await context.request.get(`${base}/api/v1/projects/${project.id}/issues?perPage=20&page=1`)).json(); const issue = list.data.items.find(row => row.title === '表單體驗驗證'); assert.ok(issue);
   // Two actors editing the same version: the browser's unsaved source must survive the 409.
-  await page.getByRole('button', { name: '表單體驗驗證', exact: true }).click(); await page.getByRole('button', { name: '編輯任務', exact: true }).click();
+  await page.getByRole('button', { name: `快速編輯 ${issue.identifier}`, exact: true }).click();
   editor = page.getByRole('dialog', { name: '任務詳細內容', exact: true }); await editor.waitFor(); await description().fill('衝突後仍保留的內容');
   await call('updateIssue', { id: issue.id, expectedRevision: issue.revision, title: '另一個人的更新' });
   await editor.getByRole('button', { name: '儲存修改', exact: true }).click(); await editor.getByText('目前修改仍保留, 重新載入會捨棄這份修改').waitFor(); assert.equal(await description().inputValue(), '衝突後仍保留的內容');

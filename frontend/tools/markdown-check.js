@@ -1,3 +1,4 @@
+const port = Number(process.env.E2E_FRONTEND_PORT || 5175), baseURL = `http://127.0.0.1:${port}`;
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'vite';
@@ -8,7 +9,7 @@ let vite, browser;
 const artifacts = 'artifacts/markdown';
 mkdirSync(artifacts, { recursive: true });
 try {
-  vite = await createServer({ server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
+  vite = await createServer({ server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   await vite.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
@@ -16,7 +17,7 @@ try {
   const failures = [], unwantedRequests = [];
   page.on('pageerror', error => failures.push(error.message));
   page.on('request', request => { if (request.url().includes('markdown-test.invalid')) unwantedRequests.push(request.url()); });
-  await page.goto('http://127.0.0.1:5175/login');
+  await page.goto(`${baseURL}/login`);
   await page.evaluate(async () => (await import('/src/api/index.js')).api.register({ name: 'Markdown檢查', email: `markdown-${crypto.randomUUID()}@example.test`, password: 'markdown-test-password', workspaceName: '內容編輯驗證' }));
   await page.reload();
   const home = page.getByRole('region', { name: '首頁小待辦', exact: true });
@@ -84,7 +85,7 @@ try {
   await panel.waitFor({ state: 'hidden' });
   const issue = await page.evaluate(async () => (await (await import('/src/api/index.js')).api.getWorkspace()).issues[0]);
   assert.equal(issue.description, source);
-  await page.goto(`http://127.0.0.1:5175/app/#/projects/${project.id}/issues/${issue.id}?detail=1`);
+  await page.goto(`${baseURL}/app/#/projects/${project.id}/issues/${issue.id}?detail=1`);
   const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
   await detail.getByRole('heading', { name: '會議速記', exact: true }).waitFor();
   const danger = '# 安全顯示\n\n<script>window.markdownExecuted = true</script>\n<img src="https://markdown-test.invalid/pixel" onerror="window.markdownExecuted = true">\n\n[危險](javascript:alert(1))\n[編碼危險](java&#x73;cript:alert(1))\n![圖片](https://markdown-test.invalid/image)\n<svg onload="window.markdownExecuted = true"></svg>\n<iframe src="https://markdown-test.invalid/frame"></iframe>';
@@ -107,13 +108,13 @@ try {
     measurements.push({ width, overflow: false });
   }
   await page.getByRole('button', { name: '編輯任務', exact: true }).click();
-  const editor = page.getByRole('dialog', { name: '任務詳細內容', exact: true });
+  const editor = page.getByRole('region', { name: '編輯任務完整頁', exact: true });
   assert.equal(await editor.getByLabel('描述', { exact: true }).inputValue(), source);
   await editor.getByRole('group', { name: '描述編輯器', exact: true }).getByRole('tab', { name: '預覽', exact: true }).click();
   await editor.screenshot({ path: `${artifacts}/editor-preview-390.png` });
   await editor.getByRole('group', { name: '描述編輯器', exact: true }).getByRole('tab', { name: '編輯', exact: true }).click();
   await editor.screenshot({ path: `${artifacts}/editor-source-390.png` });
-  await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
+  await editor.getByRole('button', { name: '取消', exact: true }).click();
   assert.deepEqual(failures, []);
   writeFileSync(`${artifacts}/checks.json`, JSON.stringify({ measurements, scriptExecuted: false, unwantedRequests }, null, 2));
   console.log('PASS: Markdown toolbar/undo/IME, preview, multi-line TODO source/reload/edit/conversion, card/comments and unsafe HTML/URLs/external image requests, desktop/tablet/mobile');

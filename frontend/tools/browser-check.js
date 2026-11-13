@@ -207,11 +207,10 @@ async function checkIssueDetailPage(page) {
   await detail.getByText('閱讀頁未送出草稿', { exact: true }).waitFor();
   assert.equal(await detail.getByLabel('新增留言', { exact: true }).inputValue(), '');
   await detail.getByRole('button', { name: '編輯任務', exact: true }).click();
-  const editor = page.getByRole('dialog', { name: '任務詳細內容', exact: true });
+  const editor = page.getByRole('region', { name: '編輯任務完整頁', exact: true });
   await editor.getByLabel('描述', { exact: true }).fill('從完整頁編輯並保存');
   await editor.getByRole('button', { name: '儲存修改', exact: true }).click();
-  await editor.getByText(/版本 .* · 已儲存/).waitFor();
-  await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
+  await editor.waitFor({ state: 'hidden' });
   await detail.getByText('從完整頁編輯並保存', { exact: true }).waitFor();
   await detail.getByRole('tab', { name: /異動紀錄/ }).click();
   await detail.getByText('描述：同伴修改後的說明 → 從完整頁編輯並保存', { exact: true }).waitFor();
