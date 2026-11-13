@@ -28,13 +28,13 @@ const visible = computed(() => {
     <label class="search-field"><Icon name="search" :size="18" /><input v-model="search" aria-label="搜尋看板" placeholder="搜尋看板名稱…" /></label>
     <div class="board-list-grid"><article v-for="{ board, total, closed, percent } in visible" :key="board.id" class="board-summary-card">
       <button class="board-summary-open" :aria-label="`開啟看板 ${board.name}`" :aria-describedby="`board-counts-${board.id}`" @click="$emit('open', board.id)">
-        <Icon name="board" :size="24" /><h3>{{ board.name }}</h3>
+        <Icon name="board" :size="24" /><h3>{{ board.name }}</h3><span v-if="board.description" class="board-summary-description" :title="board.description">{{ board.description }}</span>
         <span :id="`board-counts-${board.id}`" class="board-summary-counts"><span>{{ total }} 張卡片</span><span class="board-summary-closed">已完成 {{ closed }}</span><span v-if="board.archivedAt" class="board-summary-archived">封存於 {{ archivedDate(board.archivedAt) }}</span></span>
         <span class="progress-track board-summary-progress" aria-hidden="true"><span :style="{ width: `${percent}%` }" /></span>
       </button>
       <footer v-if="!board.isDefault && canManage" class="board-summary-actions">
         <button v-if="board.archivedAt" class="button secondary board-summary-edit" :aria-label="`還原看板 ${board.name}`" :disabled="loading" @click="$emit('restore', board)"><Icon name="refresh" :size="15" />還原</button>
-        <button v-else class="button secondary board-summary-edit" :aria-label="`編輯收錄 ${board.name}`" @click="$emit('edit', board)"><Icon name="edit" :size="15" />編輯收錄</button>
+        <button v-else class="button secondary board-summary-edit" :aria-label="`編輯看板 ${board.name}`" @click="$emit('edit', board)"><Icon name="edit" :size="15" />編輯</button>
       </footer>
     </article></div>
     <p v-if="!visible.length && !loading" class="subtle">{{ archived ? (search.trim() ? '沒有符合名稱的封存看板' : '目前沒有封存的看板') : '沒有符合名稱的看板' }}</p>

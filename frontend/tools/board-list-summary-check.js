@@ -51,10 +51,10 @@ try {
       const described = await card(name).getByRole('button', { name: `開啟看板 ${name}`, exact: true }).getAttribute('aria-describedby');
       assert.equal(await page.locator(`#${described}`).count(), 1, 'counts described for assistive tech');
     }
-    assert.equal(await card('Default').getByRole('button', { name: /^編輯收錄/ }).count(), 0, 'Default沒有編輯收錄');
+    assert.equal(await card('Default').getByRole('button', { name: /^編輯看板/ }).count(), 0, 'Default沒有編輯收錄');
     assert.ok(!requests.some(path => path.endsWith('/getWorkspace')), `看板列表不讀整包Workspace: ${requests.join(',')}`);
     await page.keyboard.press('Tab');
-    const edit = card('會員功能看板').getByRole('button', { name: '編輯收錄 會員功能看板', exact: true });
+    const edit = card('會員功能看板').getByRole('button', { name: '編輯看板 會員功能看板', exact: true });
     await edit.focus();
     assert.equal(await edit.evaluate(element => element === document.activeElement), true);
   }
@@ -75,7 +75,7 @@ try {
   }
   if (!before) {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await card('會員功能看板').getByRole('button', { name: '編輯收錄 會員功能看板', exact: true }).click();
+    await card('會員功能看板').getByRole('button', { name: '編輯看板 會員功能看板', exact: true }).click();
     await page.getByRole('dialog').waitFor();
   }
   assert.deepEqual(errors, []);

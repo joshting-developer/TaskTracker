@@ -14,7 +14,7 @@ class BoardWriteRequest extends DomainWriteRequest
      */
     public function rules(): array
     {
-        return [...$this->commonRules(), 'name' => ['sometimes', 'nullable', 'string'], 'projectId' => ['sometimes', 'nullable', 'string'], 'selectedIssueIds' => ['sometimes', 'nullable', 'array'], 'selectedIssueIds.*' => ['string']];
+        return [...$this->commonRules(), 'name' => ['sometimes', 'nullable', 'string'], 'description' => ['sometimes', 'nullable', 'string'], 'projectId' => ['sometimes', 'nullable', 'string'], 'selectedIssueIds' => ['sometimes', 'nullable', 'array'], 'selectedIssueIds.*' => ['string']];
     }
 
     /**

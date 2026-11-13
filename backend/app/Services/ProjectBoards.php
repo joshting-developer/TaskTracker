@@ -34,6 +34,7 @@ class ProjectBoards
             'id' => 'default',
             'projectId' => $project['id'],
             'name' => 'Default',
+            'description' => '',
             'selectedIssueIds' => [],
             'isDefault' => true,
             'revision' => 0,
@@ -47,9 +48,10 @@ class ProjectBoards
      *
      * @param  array  $input  此次操作的原始輸入欄位
      * @param  string  $projectId  所屬專案識別碼
+     * @param  string  $currentDescription  更新時既有的簡述；輸入沒帶description時沿用
      * @return array
      */
-    private function fields(array $input, string $projectId): array
+    private function fields(array $input, string $projectId, string $currentDescription = ''): array
     {
         $this->store->require('projects', $projectId);
         $ids = $input['selectedIssueIds'] ?? [];
@@ -70,6 +72,8 @@ class ProjectBoards
 
         return [
             'name' => Fields::text($input['name'] ?? null, '看板名稱', 60, true),
+            // TT-309：簡述說明這個看板收哪類卡片；舊呼叫端沒帶時保留原值, 不會被清空。
+            'description' => array_key_exists('description', $input) ? Fields::text($input['description'] ?? '', '看板簡述', 300) : $currentDescription,
             'selectedIssueIds' => $ids,
         ];
     }
@@ -135,7 +139,7 @@ class ProjectBoards
         $board = $this->current($input);
         $board = [
             ...$board,
-            ...$this->fields($input, $board['projectId']),
+            ...$this->fields($input, $board['projectId'], (string) ($board['description'] ?? '')),
             'revision' => $board['revision'] + 1,
             'updatedAt' => now()->utc()->toISOString(),
         ];

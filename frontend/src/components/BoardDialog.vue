@@ -8,7 +8,7 @@ import { includedIssues } from '../domain/boards.js';
 const props = defineProps({ remote: Boolean, project: Object, issues: Array, board: Object });
 const emit = defineEmits(['close', 'saved', 'reload']);
 const dialog = ref(null), busy = ref(false), error = ref('');
-const form = reactive({ name: props.board?.name || '', selectedIssueIds: [...(props.board?.selectedIssueIds || [])] });
+const form = reactive({ name: props.board?.name || '', description: props.board?.description || '', selectedIssueIds: [...(props.board?.selectedIssueIds || [])] });
 const initial = JSON.stringify(form);
 const baseRevision = props.board?.revision;
 const dirty = computed(() => JSON.stringify(form) !== initial);
@@ -46,6 +46,8 @@ async function save() {
     <div v-if="error" class="error-box" role="alert">{{ error }}</div>
     <form @submit.prevent="save">
       <label class="field">看板名稱<input v-model="form.name" maxlength="60" required autofocus :disabled="busy" placeholder="例如：本次交付" /></label>
+      <!-- TT-309：簡述寫清楚這個看板收哪類卡片, 之後分類照這段判斷 -->
+      <label class="field">簡述<textarea v-model="form.description" maxlength="300" rows="3" :disabled="busy" placeholder="這個看板收哪類卡片，例如：只收量測過的效能改善" aria-describedby="board-description-hint"></textarea><span id="board-description-hint" class="field-hint">寫清楚收什麼、不收什麼，最多 300 字（{{ form.description.length }} / 300）</span></label>
       <label class="search-field"><Icon name="search" :size="17" /><input v-model="search" aria-label="搜尋收錄項目" placeholder="搜尋 Epic、卡片編號或標題…" /></label>
       <div class="board-picker" role="group" aria-label="收錄項目">
         <label v-for="issue in candidates" :key="issue.id" class="board-picker-item"><input v-model="form.selectedIssueIds" type="checkbox" :value="issue.id" :aria-label="`收錄 ${issue.identifier}`" :disabled="busy" /><span><strong>{{ issue.identifier }} · {{ issue.title }}</strong><small>{{ TYPES.find(type => type.id === issue.type)?.label }}</small></span></label>

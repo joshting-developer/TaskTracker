@@ -343,7 +343,7 @@ async function checkProjectAcl(page, browser, failures) {
   await teammate.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.other.id}/board/${fixture.board.id}`);
   await teammate.locator(`[data-issue="${fixture.task.identifier}"][draggable="true"]`).waitFor();
   assert.equal(await teammate.locator('.issue-card select').count(), 0);
-  assert.equal(await teammate.getByRole('button', { name: /新增任務|新增卡片|編輯收錄|封存看板/ }).count(), 0, '開發者可移動既有卡片, 但不可修改自訂收錄或新增並收錄');
+  assert.equal(await teammate.getByRole('button', { name: /新增任務|新增卡片|編輯看板|封存看板/ }).count(), 0, '開發者可移動既有卡片, 但不可修改自訂收錄或新增並收錄');
 
   // 撤權時已開啟、未儲存的任務也必須卸載
   await teammate.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.other.id}`);
@@ -575,7 +575,7 @@ async function checkCustomBoards(page) {
   await page.waitForFunction(() => document.querySelectorAll('.issue-card').length === 3);
   assert.equal(await page.getByRole('button', { name: '父工作', exact: true }).count(), 1, '明確收錄不隨 Epic 移除');
   assert.equal(await page.getByRole('button', { name: '子工作', exact: true }).count(), 0);
-  await page.getByRole('button', { name: '編輯收錄', exact: true }).click();
+  await page.getByRole('button', { name: '編輯看板', exact: true }).click();
   dialog = page.getByRole('dialog', { name: '編輯看板', exact: true });
   await dialog.getByLabel(`收錄 ${fixture.epic.identifier}`, { exact: true }).uncheck();
   await dialog.getByRole('button', { name: '儲存看板', exact: true }).click();
@@ -594,7 +594,7 @@ async function checkCustomBoards(page) {
   await page.getByRole('button', { name: '清除全部篩選', exact: true }).click();
   assert.equal(await page.locator('.issue-card').count(), 2);
   await page.getByRole('button', { name: '任務篩選', exact: true }).click();
-  await page.getByRole('button', { name: '編輯收錄', exact: true }).click();
+  await page.getByRole('button', { name: '編輯看板', exact: true }).click();
   dialog = page.getByRole('dialog', { name: '編輯看板', exact: true });
   await dialog.getByLabel('看板名稱', { exact: true }).fill('未儲存草稿');
   page.once('dialog', event => event.dismiss());
@@ -609,7 +609,7 @@ async function checkCustomBoards(page) {
   assert.equal(await dialog.getByLabel('看板名稱', { exact: true }).inputValue(), '未儲存草稿');
   page.once('dialog', event => event.accept());
   await dialog.getByRole('button', { name: '關閉看板設定', exact: true }).click();
-  await page.getByRole('button', { name: '編輯收錄', exact: true }).click();
+  await page.getByRole('button', { name: '編輯看板', exact: true }).click();
   dialog = page.getByRole('dialog', { name: '編輯看板', exact: true });
   assert.equal(await dialog.getByLabel('看板名稱', { exact: true }).inputValue(), '另一分頁命名');
   await dialog.getByRole('button', { name: '關閉看板設定', exact: true }).click();
@@ -621,7 +621,7 @@ async function checkCustomBoards(page) {
   await page.screenshot({ path: 'artifacts/board-list-mobile.png', fullPage: true });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   await page.getByRole('button', { name: '開啟看板 另一分頁命名', exact: true }).click();
-  await page.getByRole('button', { name: '編輯收錄', exact: true }).click();
+  await page.getByRole('button', { name: '編輯看板', exact: true }).click();
   dialog = page.getByRole('dialog', { name: '編輯看板', exact: true });
   assert.equal(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth), true);
   await page.screenshot({ path: 'artifacts/board-picker-mobile.png', fullPage: true });

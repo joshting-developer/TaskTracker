@@ -74,6 +74,7 @@ class EntityDefinitions
             'fields' => [
                 ['projectId', 'project_id', 'ref', null, 'projects'],
                 ['name', 'name', 'string', null, null],
+                ['description', 'description', 'string', '', null],
                 ['revision', 'revision', 'int', 1, null],
                 ['createdBy', 'created_by_id', 'ref', null, 'members'],
                 ['createdAt', 'created_at', 'time', null, null],

@@ -39,7 +39,7 @@ class BoardReadRepository
         // TT-283：使用中依名稱排序；已封存依封存時間新到舊, 兩者都以public_id穩定排序。
         return Board::where('workspace_id', $project->workspace_id)->where('project_id', $project->id)
             ->when($archived, fn ($q) => $q->whereNotNull('archived_at'), fn ($q) => $q->whereNull('archived_at'))
-            ->select(['id', 'public_id', 'project_id', 'name', 'revision', 'archived_at'])->selectSub($count->selectRaw('COUNT(*)'), 'issue_count')
+            ->select(['id', 'public_id', 'project_id', 'name', 'description', 'revision', 'archived_at'])->selectSub($count->selectRaw('COUNT(*)'), 'issue_count')
             ->selectSub($closed->selectRaw('COUNT(*)'), 'closed_count')
             ->when($filters->search !== '', fn ($q) => $q->whereRaw("LOWER(name) LIKE ? ESCAPE '!'", [$term]))
             ->when($archived, fn ($q) => $q->orderByDesc('archived_at'), fn ($q) => $q->orderBy('name'))->orderBy('public_id')->paginate($filters->perPage, ['*'], 'page', $filters->page);
@@ -55,7 +55,7 @@ class BoardReadRepository
     public function find(Project $project, string $id): ?Board
     {
         return Board::where('workspace_id', $project->workspace_id)->where('project_id', $project->id)
-            ->where('public_id', $id)->first(['id', 'public_id', 'project_id', 'name', 'revision', 'archived_at']);
+            ->where('public_id', $id)->first(['id', 'public_id', 'project_id', 'name', 'description', 'revision', 'archived_at']);
     }
 
     /**

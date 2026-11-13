@@ -46,7 +46,7 @@ try {
   assert.equal(await list.getByRole('button', { name: '已封存' }).getAttribute('aria-pressed'), 'true');
   assert.match(await list.locator('.board-summary-archived').innerText(), /封存於/);
   assert.equal(await list.getByRole('button', { name: '新增看板' }).count(), 0);
-  assert.equal(await list.getByRole('button', { name: /^編輯收錄/ }).count(), 0);
+  assert.equal(await list.getByRole('button', { name: /^編輯看板/ }).count(), 0);
   for (const [width, height] of [[1440, 900], [768, 1024], [390, 844]]) {
     await page.setViewportSize({ width, height }); await page.waitForTimeout(100);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);

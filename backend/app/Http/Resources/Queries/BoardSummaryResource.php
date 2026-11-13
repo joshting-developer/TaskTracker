@@ -31,7 +31,7 @@ class BoardSummaryResource extends JsonResource
     {
         $board = $this->resource;
 
-        return ['id' => $board->public_id, 'projectId' => $this->projectId, 'name' => $board->name,
+        return ['id' => $board->public_id, 'projectId' => $this->projectId, 'name' => $board->name, 'description' => (string) $board->description,
             'revision' => (int) $board->revision, 'isDefault' => false, 'issueCount' => (int) $board->issue_count,
             'closedCount' => (int) $board->closed_count, 'archivedAt' => DatabaseTimes::public($board->archived_at)];
     }

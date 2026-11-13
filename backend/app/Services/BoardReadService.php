@@ -128,7 +128,7 @@ class BoardReadService
     private function summary(Project $project, ?Board $board): array
     {
         return ['id' => $board?->public_id ?? 'default', 'projectId' => $project->public_id,
-            'name' => $board?->name ?? 'Default', 'isDefault' => $board === null,
+            'name' => $board?->name ?? 'Default', 'description' => (string) ($board?->description ?? ''), 'isDefault' => $board === null,
             'revision' => $board?->revision ?? 0, 'archivedAt' => $board ? DatabaseTimes::public($board->archived_at) : null, ...$this->boards->count($project, $board)];
     }
 }

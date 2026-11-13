@@ -9,7 +9,7 @@
 | 前綴／操作 | Request／Data | 新結果與最新內容取得 |
 | --- | --- | --- |
 | rpc/createProject、updateProject、updateStatuses | ProjectWriteRequest／ProjectWriteData | `{id, revision}`；GET `/api/v1/projects/{id}` |
-| rpc/createBoard、updateBoard、archiveBoard、restoreBoard | BoardWriteRequest／BoardWriteData | `{id, projectId, revision}`；GET `/api/v1/projects/{project}/boards/{id}`；封存後仍可唯讀查閱, restoreBoard（board.manage、expectedRevision、requestId）還原（TT-283） |
+| rpc/createBoard、updateBoard、archiveBoard、restoreBoard | BoardWriteRequest／BoardWriteData | `{id, projectId, revision}`；GET `/api/v1/projects/{project}/boards/{id}`；封存後仍可唯讀查閱, restoreBoard（board.manage、expectedRevision、requestId）還原（TT-283）；create／update可帶 `description`（最多300字）, 更新時沒帶就保留原值（TT-309） |
 | rpc/createTodo、updateTodo、completeTodo、reopenTodo、returnTodo、cancelTodo、convertTodo | TodoWriteRequest／TodoWriteData | 保留原有 `{id, revision}`；GET `/api/v1/todos/{id}`／列表分頁。轉卡依可見性從查詢取得連結 |
 | rpc/readTodoNotification | TodoWriteRequest／TodoWriteData | 保留 `{id}`；未讀及列表按需重讀 |
 | rpc/setProjectMember、removeProjectMember | ProjectMemberWriteRequest／ProjectMemberWriteData | 保留 `{projectId, revision}`；ACL metadata／成員分頁分責重讀 |
