@@ -237,3 +237,7 @@ Issue詳細新增activityCounts.comments／history／time, 為SQL總數, 不附�
 ## TT-302 單卡建卡者與最後異動（OpenAPI 0.18.0）
 
 Issue詳細多了 `createdBy`（建卡者的使用者ID）、`createdByName` 和 `lastChange`（最後一筆異動紀錄的 `actor`、`at`, 沒有紀錄時是null）。TT-314以前建立、對不到人的舊卡, `createdBy` 和 `createdByName` 是空字串。只帶最後操作者和時間, 改了什麼仍然要讀history分頁；history分頁一直是新的在前
+
+## 一般私有附件（OpenAPI 0.18.0）
+
+PDF／ZIP與圖片共用既有附件路由及授權, 但一般附件只能下載, 不接受Markdown圖片引用；下載一律attachment、nosniff與no-store。limits.general提供獨立大小／配額與download-only-structural政策, 原mimeTypes仍只列圖片。格式／ZIP目錄檢查不代表防毒掃描, 詳見consumer的docs/general-attachments.md

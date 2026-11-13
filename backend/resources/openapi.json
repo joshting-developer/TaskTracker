@@ -9003,7 +9003,17 @@
                       "image/png",
                       "image/jpeg",
                       "image/webp"
-                    ]
+                    ],
+                    "general": {
+                      "mimeTypes": [
+                        "application/pdf",
+                        "application/zip"
+                      ],
+                      "maxBytes": 10485760,
+                      "perIssue": 10,
+                      "workspaceBytes": 268435456,
+                      "scanPolicy": "download-only-structural"
+                    }
                   }
                 }
               }
@@ -9568,7 +9578,7 @@
               },
               "encoding": {
                 "file": {
-                  "contentType": "image/png, image/jpeg, image/webp"
+                  "contentType": "image/png, image/jpeg, image/webp, application/pdf, application/zip"
                 }
               }
             }
@@ -10179,7 +10189,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Raw authenticated image bytes, not JSON; no-store, nosniff, sandbox, safe Content-Disposition. No signed URL or redirect.",
+            "description": "Raw authenticated bytes, no-store/nosniff/sandbox. PDF/ZIP always use attachment disposition, even without download=true. No redirect or signed URL.",
             "content": {
               "image/png": {
                 "schema": {
@@ -10194,6 +10204,18 @@
                 }
               },
               "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/zip": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
@@ -12970,7 +12992,9 @@
             "enum": [
               "image/png",
               "image/jpeg",
-              "image/webp"
+              "image/webp",
+              "application/pdf",
+              "application/zip"
             ]
           },
           "bytes": {
@@ -13040,6 +13064,44 @@
               ]
             },
             "maxItems": 3
+          },
+          "general": {
+            "type": "object",
+            "properties": {
+              "mimeTypes": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "application/pdf",
+                    "application/zip"
+                  ]
+                },
+                "maxItems": 2
+              },
+              "maxBytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "perIssue": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "workspaceBytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "scanPolicy": {
+                "const": "download-only-structural"
+              }
+            },
+            "required": [
+              "mimeTypes",
+              "maxBytes",
+              "perIssue",
+              "workspaceBytes",
+              "scanPolicy"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
@@ -13047,7 +13109,8 @@
           "maxPixels",
           "perIssue",
           "pendingHours",
-          "mimeTypes"
+          "mimeTypes",
+          "general"
         ],
         "additionalProperties": false
       },
@@ -13061,7 +13124,7 @@
           "file": {
             "type": "string",
             "format": "binary",
-            "description": "PNG/JPEG/WebP bytes, not a URL or base64 JSON. Limits endpoint is authoritative; default 10 MiB and 25 million pixels."
+            "description": "PNG/JPEG/WebP images or download-only PDF/ZIP bytes, never a URL/base64 JSON. Limits endpoint provides independent image/general quotas. ZIP central directory is bounded and checked without extraction; no antivirus-clean claim."
           }
         },
         "required": [

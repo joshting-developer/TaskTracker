@@ -34,7 +34,7 @@ class AttachmentContentResponse
             'Content-Type' => $row->mime_type, 'Content-Length' => (string) $row->byte_size,
             'X-Content-Type-Options' => 'nosniff', 'Cache-Control' => 'private, no-store',
             'Content-Security-Policy' => "default-src 'none'; sandbox", 'Cross-Origin-Resource-Policy' => 'same-origin',
-            'Content-Disposition' => HeaderUtils::makeDisposition($download ? 'attachment' : 'inline', $row->original_name, 'image'),
+            'Content-Disposition' => HeaderUtils::makeDisposition(($download || ! str_starts_with($row->mime_type, 'image/')) ? 'attachment' : 'inline', $row->original_name, 'attachment'),
         ]);
     }
 }

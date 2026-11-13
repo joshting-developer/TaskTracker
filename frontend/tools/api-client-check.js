@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { requestJson, queryApi, queryString, setWorkspaceContext } from '../src/api/http.js';
+import { requestJson, requestImage, requestAttachment, queryApi, queryString, setWorkspaceContext } from '../src/api/http.js';
 const reply = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 assert.equal(queryString({ state: ['open', 'closed'], page: 2, search: 'a b', none: '' }), 'state%5B%5D=open&state%5B%5D=closed&page=2&search=a+b');
 setWorkspaceContext('first');
@@ -63,3 +63,14 @@ assert.equal(calls.filter(c => c.url !== '/api/csrf-cookie').length, 1);
 assert.ok(calls.filter(c => c.url !== '/api/csrf-cookie').every(c => c.options.method === 'POST'));
 assert.deepEqual(JSON.parse(calls.find(c => c.url === '/api/rpc/createProject').options.body), projectInput);
 console.log('PASS: fixed resource write result, no implicit GET, original retry payload');
+
+const pdfBytes = '%PDF-1.7\n%%EOF\n';
+const binaryReply = (mime = 'application/pdf', disposition = 'attachment; filename="test.pdf"') => new Response(pdfBytes, { headers: { 'Content-Type': mime, 'Content-Length': String(Buffer.byteLength(pdfBytes)), 'Content-Disposition': disposition } });
+globalThis.fetch = async () => binaryReply();
+assert.equal((await requestAttachment('/file')).bytes, Buffer.byteLength(pdfBytes));
+await assert.rejects(requestImage('/file'), e => e.code === 'INVALID_IMAGE');
+globalThis.fetch = async () => binaryReply('application/pdf', 'inline');
+await assert.rejects(requestAttachment('/file'), e => e.code === 'INVALID_ATTACHMENT');
+globalThis.fetch = async () => binaryReply('text/html');
+await assert.rejects(requestAttachment('/file'), e => e.code === 'INVALID_ATTACHMENT');
+console.log('PASS: general download types/disposition remain separate from strict image preview');

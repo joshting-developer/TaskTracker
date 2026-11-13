@@ -79,15 +79,16 @@ class AttachmentRepository
     /** 配額包含尚未完成及刪除保留中的實體bytes
      * @param  Project  $project  已授權專案
      * @param  string  $user  操作者
-     * @return array{bytes:int,pending:int} 工作區與本人用量
+     * @return array{bytes:int,pending:int,generalBytes:int} 工作區與本人用量
      */
     public function quota(Project $project, string $user): array
     {
         $row = Attachment::where('workspace_id', $project->workspace_id)->where('status', '!=', 'purged')
             ->selectRaw('COALESCE(SUM(byte_size), 0) as bytes')
+            ->selectRaw("COALESCE(SUM(CASE WHEN mime_type NOT LIKE 'image/%' THEN byte_size ELSE 0 END), 0) as general_bytes")
             ->selectRaw("SUM(CASE WHEN uploaded_by = ? AND status IN ('uploading', 'pending') THEN 1 ELSE 0 END) as pending", [$user])->first();
 
-        return ['bytes' => (int) $row->bytes, 'pending' => (int) $row->pending];
+        return ['bytes' => (int) $row->bytes, 'pending' => (int) $row->pending, 'generalBytes' => (int) $row->general_bytes];
     }
 
     /** 指定Issue的有效附件分頁
@@ -104,11 +105,12 @@ class AttachmentRepository
     /** 同Issue有效附件數
      * @param  Project  $project  已授權專案
      * @param  Issue  $issue  同專案任務
-     * @return int 張數
+     * @param  bool  $generalOnly  只計PDF／ZIP
+     * @return int 件數
      */
-    public function count(Project $project, Issue $issue): int
+    public function count(Project $project, Issue $issue, bool $generalOnly = false): int
     {
-        return $this->query($project)->where('issue_id', $issue->id)->where('status', 'active')->count();
+        return $this->query($project)->where('issue_id', $issue->id)->where('status', 'active')->when($generalOnly, fn ($query) => $query->where('mime_type', 'not like', 'image/%'))->count();
     }
 
     /** 取Issue版本最小欄位

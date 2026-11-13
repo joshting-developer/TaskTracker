@@ -3,6 +3,12 @@
 return [
     'disk' => env('ATTACHMENTS_DISK', 'attachments'),
     'max_bytes' => (int) env('ATTACHMENTS_MAX_BYTES', 10 * 1024 * 1024),
+    'general_max_bytes' => (int) env('ATTACHMENTS_GENERAL_MAX_BYTES', 10 * 1024 * 1024),
+    'general_per_issue' => (int) env('ATTACHMENTS_GENERAL_PER_ISSUE', 10),
+    'general_workspace_bytes' => (int) env('ATTACHMENTS_GENERAL_WORKSPACE_BYTES', 256 * 1024 * 1024),
+    'zip_max_entries' => 1000,
+    'zip_max_expanded_bytes' => 100 * 1024 * 1024,
+    'zip_max_ratio' => 100,
     'max_pixels' => (int) env('ATTACHMENTS_MAX_PIXELS', 25000000),
     'per_issue' => (int) env('ATTACHMENTS_PER_ISSUE', 20),
     'pending_per_user' => (int) env('ATTACHMENTS_PENDING_PER_USER', 20),

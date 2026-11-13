@@ -3,8 +3,8 @@
   "harnessSha256": "e52705c45e3236bc1803415a76b700e5355013e93f62ef8feae5b553beebed40",
   "profile": "darwin-arm64",
   "reviewer": "Josh",
-  "note": "依持續授權核准TT-293留言圖片與Claude交辦TT-302建立／異動欄位, 已檢視三尺寸；等待非同步資料穩定, 比較容忍值不變",
-  "manifestSha256": "7d54b122f5570217a81111ab4c9536a613c918bf9879e4a401feb17a159ba1c6",
+  "note": "依持續授權核准TT-295任務附件分頁與手機任務資訊入口, 已檢視PDF／ZIP清單三尺寸, 比較參數不變",
+  "manifestSha256": "216f914db8d441eae522d44b5e26d849c196e4d0e7adc3dd6854d0aca9ed06f5",
   "environment": {
     "platform": "darwin",
     "arch": "arm64",
@@ -26,12 +26,11 @@
   },
   "artifactRunId": null,
   "cards": [
-    "TT-293",
-    "TT-302"
+    "TT-295"
   ],
   "reviewedChanges": [
-    "TT-293：留言圖片入口與私有預覽, 完整頁／抽屜, 三尺寸",
-    "TT-302：建立與最後異動欄位, 新異動在上, 固定合成時間",
-    "完整頁與抽屜等待非同步資料穩定後擷取, 容忍值不變"
+    "任務側欄新增按需附件分頁",
+    "手機入口改為任務資訊, PDF／ZIP只有下載",
+    "三尺寸私有檔案清單與既有48張流程比較, 容忍值不變"
   ]
 }

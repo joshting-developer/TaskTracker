@@ -135,6 +135,84 @@ trait AttachmentCases
         $this->assertSame(2, $model->fresh()->revision);
     }
 
+    /** 一般附件獨立限制與只下載, 不讓PDF／ZIP內嵌成Markdown圖片
+     *
+     * @return void
+     */
+    public function test_general_files_are_download_only_and_have_independent_quotas(): void
+    {
+        Storage::fake('attachments');
+        $this->postJson('/api/auth/register', ['name' => 'Files', 'email' => Str::uuid().'@example.test', 'password' => 'attachment-test-password', 'workspaceName' => 'Files'])->assertOk();
+        $project = $this->postJson('/api/rpc/createProject', ['name' => 'Files', 'code' => 'FILES', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $issue = $this->postJson('/api/rpc/createIssue', ['projectId' => $project['id'], 'title' => 'Files', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $root = '/api/v1/projects/'.$project['id'].'/attachments';
+        $pdf = "%PDF-1.7\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n";
+        $request = (string) Str::uuid();
+        $upload = fn ($name, $bytes, $key = null) => $this->post($root, ['requestId' => $key ?? (string) Str::uuid(), 'file' => UploadedFile::fake()->createWithContent($name, $bytes)], ['Accept' => 'application/json']);
+        $file = $upload('document.pdf', $pdf, $request)->assertOk()->json('data');
+        $upload('document.pdf', $pdf, $request)->assertOk()->assertJsonPath('data.id', $file['id']);
+        $this->getJson($root.'/limits')->assertOk()->assertJsonPath('data.general.maxBytes', 10485760)->assertJsonPath('data.general.scanPolicy', 'download-only-structural');
+        $this->postJson('/api/rpc/addComment', ['id' => $issue['id'], 'content' => '![pdf](attachment:'.$file['id'].')', 'expectedRevision' => 1, 'requestId' => (string) Str::uuid()])->assertStatus(400);
+        $this->postJson($root.'/'.$file['id'].'/bind', ['issueId' => $issue['id'], 'issueRevision' => 1, 'expectedRevision' => 1, 'requestId' => (string) Str::uuid()])->assertOk();
+        $response = $this->get($root.'/'.$file['id'].'/content')->assertOk()->assertHeader('Content-Type', 'application/pdf')->assertHeader('X-Content-Type-Options', 'nosniff')->assertStreamedContent($pdf);
+        $this->assertStringStartsWith('attachment;', $response->headers->get('Content-Disposition'));
+        $this->assertStringContainsString('sandbox', $response->headers->get('Content-Security-Policy'));
+        $upload('fake.zip', $pdf)->assertStatus(400);
+        $upload('fake.pdf', '<html>bad</html>')->assertStatus(400);
+        $upload('truncated.pdf', '%PDF-1.7 no ending')->assertStatus(400);
+        config(['attachments.general_max_bytes' => 1]);
+        $upload('large.pdf', $pdf)->assertStatus(400);
+        config(['attachments.general_max_bytes' => 10485760, 'attachments.general_workspace_bytes' => 1]);
+        $upload('quota.pdf', $pdf)->assertStatus(400);
+        config(['attachments.general_workspace_bytes' => 268435456, 'attachments.general_per_issue' => 1]);
+        $next = $upload('other.pdf', $pdf)->assertOk()->json('data');
+        $this->postJson($root.'/'.$next['id'].'/bind', ['issueId' => $issue['id'], 'issueRevision' => 2, 'expectedRevision' => 1, 'requestId' => (string) Str::uuid()])->assertStatus(400);
+        $this->assertSame('pending', $this->attachmentRows()->where('public_id', $next['id'])->value('status'));
+    }
+
+    /** ZIP只查有界目錄, 拒絕壓縮炸彈、路徑穿越、加密及symlink
+     *
+     * @return void
+     */
+    public function test_zip_structure_limits_reject_abuse_without_extracting(): void
+    {
+        Storage::fake('attachments');
+        $this->postJson('/api/auth/register', ['name' => 'Zip', 'email' => Str::uuid().'@example.test', 'password' => 'attachment-test-password', 'workspaceName' => 'Archives'])->assertOk();
+        $project = $this->postJson('/api/rpc/createProject', ['name' => 'Files', 'code' => 'ZIP', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $make = function (string $name, string $content, bool $encrypted = false, bool $link = false): string {
+            $path = tempnam(sys_get_temp_dir(), 'tt-zip-');
+            try {
+                $zip = new \ZipArchive;
+                $this->assertTrue($zip->open($path, \ZipArchive::OVERWRITE) === true);
+                $zip->addFromString($name, $content);
+                if ($encrypted) {
+                    $zip->setEncryptionName($name, \ZipArchive::EM_AES_256, 'isolated-password');
+                }
+                if ($link) {
+                    $zip->setExternalAttributesName($name, \ZipArchive::OPSYS_UNIX, 0120777 << 16);
+                }
+                $zip->close();
+
+                return file_get_contents($path);
+            } finally {
+                unlink($path);
+            }
+        };
+        $upload = fn ($bytes) => $this->post('/api/v1/projects/'.$project['id'].'/attachments', ['requestId' => (string) Str::uuid(), 'file' => UploadedFile::fake()->createWithContent('archive.zip', $bytes)], ['Accept' => 'application/json']);
+        $valid = $make('notes/readme.txt', 'plain synthetic data');
+        $id = $upload($valid)->assertOk()->json('data.id');
+        $response = $this->get('/api/v1/projects/'.$project['id'].'/attachments/'.$id.'/content')->assertOk()->assertHeader('Content-Type', 'application/zip')->assertStreamedContent($valid);
+        $this->assertStringStartsWith('attachment;', $response->headers->get('Content-Disposition'));
+        foreach ([$make('../outside.txt', 'data'), $make('/absolute.txt', 'data'), $make('link', '../secret', link: true), $make('encrypted.txt', 'data', encrypted: true), $make('bomb.txt', str_repeat('a', 1024 * 1024))] as $invalid) {
+            $upload($invalid)->assertStatus(400);
+        }
+        config(['attachments.zip_max_expanded_bytes' => 1]);
+        $upload($valid)->assertStatus(400);
+        config(['attachments.zip_max_expanded_bytes' => 104857600, 'attachments.zip_max_entries' => 0]);
+        $upload($valid)->assertStatus(400);
+        $this->assertSame(1, $this->attachmentRows()->count());
+    }
+
     /** 上傳、綁定、下載、冪等與刪除保存
      * @return void
      */

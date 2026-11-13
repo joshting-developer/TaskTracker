@@ -117,6 +117,26 @@ trait PublicAttachmentCases
         $this->postJson($path, $input, ['Authorization' => 'Bearer '.$write])->assertNotFound();
     }
 
+    /** PDF的PAT操作保留scope、下載標頭與正式Schema
+     *
+     * @return void
+     */
+    public function test_public_pdf_uses_download_only_contract_and_rechecks_access(): void
+    {
+        [$identity, $project, $read, $write] = $this->attachmentTokenFixture();
+        $root = '/api/public/v1/projects/'.$project['id'];
+        $pdf = "%PDF-1.7\n1 0 obj<</Type/Catalog>>endobj\n%%EOF\n";
+        $payload = ['requestId' => (string) Str::uuid(), 'file' => UploadedFile::fake()->createWithContent('notes.pdf', $pdf)];
+        Auth::forgetGuards();
+        $this->post($root.'/attachments', $payload, ['Accept' => 'application/json', 'Authorization' => 'Bearer '.$read])->assertForbidden();
+        $row = $this->post($root.'/attachments', $payload, ['Accept' => 'application/json', 'Authorization' => 'Bearer '.$write])->assertOk()->json('data');
+        $this->attachmentSchema($row, 'Attachment');
+        $response = $this->get($root.'/attachments/'.$row['id'].'/content', ['Authorization' => 'Bearer '.$read])->assertOk()->assertHeader('Content-Type', 'application/pdf')->assertHeader('X-Content-Type-Options', 'nosniff')->assertStreamedContent($pdf);
+        $this->assertStringStartsWith('attachment;', $response->headers->get('Content-Disposition'));
+        WorkspaceMember::where('user_id', $identity['user']['id'])->update(['role' => 'user']);
+        $this->get($root.'/attachments/'.$row['id'].'/content', ['Authorization' => 'Bearer '.$read])->assertNotFound();
+    }
+
     /** 雙版本綁定、原結果重播、read禁止寫入及資格撤銷
      * @return void
      */

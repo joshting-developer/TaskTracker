@@ -47,6 +47,9 @@ class AttachmentService
         $pending = [];
         foreach ($ids as $id) {
             $row = $rows[$id] ?? DomainError::fail('NOT_FOUND', '找不到可用附件');
+            if (! str_starts_with($row->mime_type, 'image/')) {
+                DomainError::fail('INVALID_INPUT', '一般附件只能從附件清單下載');
+            }
             if ($row->status === 'active' && $row->issue_id === $issue->id) {
                 continue;
             }
@@ -72,7 +75,7 @@ class AttachmentService
     {
         $this->projects->require($context, $projectId, 'issue.write');
 
-        return ['maxBytes' => config('attachments.max_bytes'), 'maxPixels' => config('attachments.max_pixels'), 'perIssue' => config('attachments.per_issue'), 'pendingHours' => config('attachments.pending_hours'), 'mimeTypes' => ['image/png', 'image/jpeg', 'image/webp']];
+        return ['maxBytes' => config('attachments.max_bytes'), 'maxPixels' => config('attachments.max_pixels'), 'perIssue' => config('attachments.per_issue'), 'pendingHours' => config('attachments.pending_hours'), 'mimeTypes' => ['image/png', 'image/jpeg', 'image/webp'], 'general' => ['mimeTypes' => ['application/pdf', 'application/zip'], 'maxBytes' => config('attachments.general_max_bytes'), 'perIssue' => config('attachments.general_per_issue'), 'workspaceBytes' => config('attachments.general_workspace_bytes'), 'scanPolicy' => 'download-only-structural']];
     }
 
     /** 授權並保留上傳配額, IO由外層在交易外執行
@@ -97,6 +100,9 @@ class AttachmentService
         $quota = $this->attachments->quota($project, $context->userId);
         if (config('attachments.workspace_bytes') < $quota['bytes'] + $file->bytes || $quota['pending'] >= config('attachments.pending_per_user')) {
             DomainError::fail('INVALID_INPUT', '附件配額已滿, 請清理暫存圖片');
+        }
+        if (! str_starts_with($file->mime, 'image/') && config('attachments.general_workspace_bytes') < $quota['generalBytes'] + $file->bytes) {
+            DomainError::fail('INVALID_INPUT', '一般附件配額已滿');
         }
         $disk = config('attachments.disk');
         $this->storage->assertConfigured($disk);
@@ -198,6 +204,9 @@ class AttachmentService
             }
             if (! $delete && $this->attachments->count($project, $issue) >= config('attachments.per_issue')) {
                 DomainError::fail('INVALID_INPUT', '任務附件數量已達上限');
+            }
+            if (! $delete && ! str_starts_with($attachment->mime_type, 'image/') && $this->attachments->count($project, $issue, true) >= config('attachments.general_per_issue')) {
+                DomainError::fail('INVALID_INPUT', '任務一般附件數量已達上限');
             }
             $this->attachments->save($attachment, ['status' => $delete ? 'deleted' : 'active', 'issue_id' => $issue?->id,
                 'revision' => $attachment->revision + 1, 'deleted_at' => $delete ? now() : null,

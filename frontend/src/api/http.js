@@ -70,12 +70,15 @@ export async function requestJson(path, { method = 'GET', input, scoped = true, 
     if (binary && response.ok) {
       const mime = response.headers.get('Content-Type')?.split(';')[0];
       const length = Number(response.headers.get('Content-Length'));
-      if (!['image/png', 'image/jpeg', 'image/webp'].includes(mime) || !length || length > 10 * 1024 * 1024) throw failure('INVALID_IMAGE', '圖片格式或大小不正確');
+      const label = binary === 'attachment' ? '附件' : '圖片', errorCode = binary === 'attachment' ? 'INVALID_ATTACHMENT' : 'INVALID_IMAGE';
+      const allowed = binary === 'attachment' ? ['image/png', 'image/jpeg', 'image/webp', 'application/pdf', 'application/zip'] : ['image/png', 'image/jpeg', 'image/webp'];
+      if (!allowed.includes(mime) || !length || length > 10 * 1024 * 1024) throw failure(errorCode, `${label}格式或大小不正確`);
       const blob = await response.blob();
       if (scoped && captured !== generation) throw failure('STALE_RESPONSE', '工作空間已切換');
-      if (blob.size !== length) throw failure('INVALID_IMAGE', '圖片未完整載入');
+      if (blob.size !== length) throw failure(errorCode, `${label}未完整載入`);
       const disposition = response.headers.get('Content-Disposition') || '';
-      let name = '圖片';
+      if (binary === 'attachment' && !/^attachment(?:;|$)/i.test(disposition)) throw failure('INVALID_ATTACHMENT', '附件下載回應不正確');
+      let name = label;
       try { name = decodeURIComponent(disposition.match(/filename\*=utf-8''([^;]+)/i)?.[1] || disposition.match(/filename="([^"]+)"/)?.[1] || name); } catch { /* Use the safe fallback label. */ }
       return { blob, name, bytes: length };
     }
@@ -121,6 +124,9 @@ export function queryApi(path, filters = {}, options = {}) {
 
 /** Private images share tenant cancellation and current authorization with JSON reads. */
 export function requestImage(path, options = {}) { return requestJson(path, { ...options, binary: true }); }
+
+/** Download-only files retain tenant cancellation and strict binary size/type checks. */
+export function requestAttachment(path, options = {}) { return requestJson(path, { ...options, binary: 'attachment' }); }
 
 /** Multipart keeps the same tenant/CSRF boundary, with actual upload progress. */
 export async function requestUpload(path, form, { signal, onProgress } = {}) {

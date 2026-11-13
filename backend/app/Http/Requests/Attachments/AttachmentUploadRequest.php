@@ -7,7 +7,7 @@ use App\Domain\DomainError;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
-/** 只接受multipart圖片與UUID, 不接受遠端匯入 */
+/** 只接受multipart附件與UUID, 不接受遠端匯入 */
 class AttachmentUploadRequest extends FormRequest
 {
     /** 授權留交易內重驗
@@ -23,11 +23,11 @@ class AttachmentUploadRequest extends FormRequest
      */
     public function rules(): array
     {
-        return ['requestId' => ['required', 'uuid'], 'file' => ['required', 'file', 'max:'.(int) ceil(config('attachments.max_bytes') / 1024)]];
+        return ['requestId' => ['required', 'uuid'], 'file' => ['required', 'file', 'max:'.(int) ceil(max(config('attachments.max_bytes'), config('attachments.general_max_bytes')) / 1024)]];
     }
 
     /** 轉成已嗅探資料
-     * @return AttachmentUploadData 圖片資料
+     * @return AttachmentUploadData 附件資料
      */
     public function toDto(): AttachmentUploadData
     {
@@ -40,6 +40,6 @@ class AttachmentUploadRequest extends FormRequest
      */
     protected function failedValidation(Validator $validator): void
     {
-        DomainError::fail('INVALID_INPUT', '請上傳限制大小內的圖片與有效requestId');
+        DomainError::fail('INVALID_INPUT', '請上傳限制大小內的附件與有效requestId');
     }
 }

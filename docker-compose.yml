@@ -54,6 +54,7 @@ x-backend: &backend
   volumes:
     - ./backend/app:/app/app:ro
     - ./backend/routes:/app/routes:ro
+    - ./backend/resources:/app/resources:ro
     - ./backend/config:/app/config:ro
     - ./backend/database/migrations:/app/database/migrations:ro
     - ./backend/database/seeders:/app/database/seeders:ro

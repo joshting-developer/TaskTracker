@@ -120,7 +120,7 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(await detail.locator('.property-fields').isVisible(), false);
   assert.ok((await detail.getByRole('heading', { name: '描述', exact: true }).boundingBox()).y < 500);
-  const properties = detail.getByRole('button', { name: '屬性與關聯', exact: true });
+  const properties = detail.getByRole('button', { name: '任務資訊', exact: true });
   await properties.click();
   assert.equal(await detail.locator('.property-fields').isVisible(), true);
   await properties.click();

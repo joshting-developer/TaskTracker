@@ -4,6 +4,7 @@ import { toRef } from 'vue';
 import { useIssueActivity } from '../composables/useIssueActivity.js';
 import { onTabKeydown } from '../ui/tabs.js';
 import Icon from './Icon.vue';
+import AttachmentFiles from './AttachmentFiles.vue';
 import MarkdownEditor from './MarkdownEditor.vue';
 import MarkdownContent from './MarkdownContent.vue';
 import TimeEntryDrawer from './TimeEntryDrawer.vue';
@@ -12,6 +13,7 @@ import { FIELD_LABELS, hours, PRIORITIES, statusesFor, TYPES } from '../domain/m
 
 const props = defineProps({ activityLoader: Function, issue: Object, project: Object, issues: Array, members: Array, entries: Array, returnLabel: String, busy: Boolean, canWrite: { type: Boolean, default: true }, canReadTime: { type: Boolean, default: true }, canLogTime: { type: Boolean, default: false }, canDelete: { type: Boolean, default: false }, deleting: Boolean, userId: String });
 const emit = defineEmits(['close', 'open', 'edit', 'saved', 'reload', 'state', 'time-updated', 'delete']);
+const attachments = ref(null), attachmentsOpened = ref(false);
 const commentEditor = ref(null), commentEditorKey = ref(0);
 const tab = ref('comments'), comment = ref(''), saving = ref(false), error = ref(''), conflict = ref(false);
 
@@ -26,8 +28,8 @@ watch([() => props.canReadTime, () => props.canLogTime], ([read, write]) => {
   if (!write) { timeOpen.value = false; editingTime.value = null; }
 });
 const commentDirty = computed(() => Boolean(comment.value.trim()));
-const dirty = computed(() => commentDirty.value || Boolean(commentEditor.value?.attachmentDirty) || Boolean(timeDrawer.value?.dirty));
-const isSaving = computed(() => saving.value || Boolean(commentEditor.value?.uploadBusy) || Boolean(timeDrawer.value?.saving));
+const dirty = computed(() => Boolean(attachments.value?.dirty) || commentDirty.value || Boolean(commentEditor.value?.attachmentDirty) || Boolean(timeDrawer.value?.dirty));
+const isSaving = computed(() => Boolean(attachments.value?.saving) || saving.value || Boolean(commentEditor.value?.uploadBusy) || Boolean(timeDrawer.value?.saving));
 defineExpose({ dirty, saving: isSaving, focus: () => heading.value?.focus() });
 const states = computed(() => statusesFor(props.project));
 const state = issue => states.value.find(item => item.id === issue.state);
@@ -148,14 +150,16 @@ function timeSaved() {
         </section>
       </div>
       <aside class="issue-detail-sidebar" aria-label="任務資訊">
-        <button class="mobile-properties-toggle" :aria-expanded="propertiesExpanded" aria-controls="detail-sidebar-content" aria-label="屬性與關聯" @click="propertiesExpanded = !propertiesExpanded">
-          屬性與關聯 <span>{{ propertiesExpanded ? '收起' : '展開' }}</span>
+        <button class="mobile-properties-toggle" :aria-expanded="propertiesExpanded" aria-controls="detail-sidebar-content" aria-label="任務資訊" @click="propertiesExpanded = !propertiesExpanded">
+          任務資訊 <span>{{ propertiesExpanded ? '收起' : '展開' }}</span>
         </button>
         <div id="detail-sidebar-content" class="sidebar-content" :class="{ expanded: propertiesExpanded }">
           <div class="sidebar-tabs" role="tablist" aria-label="任務側欄" @keydown="onTabKeydown">
             <button id="detail-properties-tab" role="tab" aria-controls="detail-properties" :tabindex="sidebarTab === 'properties' ? 0 : -1" :aria-selected="sidebarTab === 'properties'" :class="{ active: sidebarTab === 'properties' }" @click="sidebarTab = 'properties'">屬性</button>
             <button id="detail-relations-tab" role="tab" aria-controls="detail-relations" :tabindex="sidebarTab === 'relations' ? 0 : -1" :aria-selected="sidebarTab === 'relations'" :class="{ active: sidebarTab === 'relations' }" @click="sidebarTab = 'relations'">關聯</button>
+            <button id="detail-attachments-tab" role="tab" aria-controls="detail-attachments" :tabindex="sidebarTab === 'attachments' ? 0 : -1" :aria-selected="sidebarTab === 'attachments'" :class="{ active: sidebarTab === 'attachments' }" @click="attachmentsOpened = true; sidebarTab = 'attachments'">附件</button>
           </div>
+          <div v-if="attachmentsOpened" v-show="sidebarTab === 'attachments'" id="detail-attachments" class="sidebar-panel" role="tabpanel" tabindex="0" aria-labelledby="detail-attachments-tab"><AttachmentFiles ref="attachments" :issue="issue" :can-write="canWrite" @changed="emit('reload')" /></div>
           <div v-show="sidebarTab === 'properties'" id="detail-properties" class="sidebar-panel property-fields" role="tabpanel" tabindex="0" aria-labelledby="detail-properties-tab">
             <dl>
               <div><dt>類型</dt><dd>{{ TYPES.find(item => item.id === issue.type)?.label || issue.type }}</dd></div>
