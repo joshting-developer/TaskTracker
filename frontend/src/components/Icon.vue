@@ -13,6 +13,8 @@ const paths = {
   check: 'M5 12l4 4L19 6',
   chevron: 'M9 5l7 7-7 7',
   arrow: 'M7 17L17 7M7 7h10v10',
+  arrowDown: 'M12 5v14M6 13l6 6 6-6',
+  arrowUp: 'M12 19V5M6 11l6-6 6 6',
   folder: 'M3 7V4h6l3 3h9v13H3z',
   user: 'M20 21v-2a7 7 0 0 0-14 0v2 M17 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
   clock: 'M12 8v5l3 2 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',

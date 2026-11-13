@@ -22,7 +22,8 @@ class IssueQueryRequest extends PageQueryRequest
             'type' => ['sometimes', 'nullable', Rule::in(['epic', 'task', 'bug'])],
             'assignee' => ['sometimes', 'nullable', 'string', 'max:100'], 'epicId' => ['sometimes', 'nullable', 'string', 'max:100'],
             'condition' => ['sometimes', 'nullable', Rule::in(['overdue', 'unassigned'])],
-            'sort' => ['sometimes', Rule::in(['updated', 'priority', 'due'])],
+            'sort' => ['sometimes', Rule::in(['updated', 'created', 'priority', 'due'])],
+            'direction' => ['sometimes', Rule::in(['asc', 'desc'])],
             'scope' => ['sometimes', Rule::in(['all', 'mine'])],
         ];
     }
@@ -36,6 +37,6 @@ class IssueQueryRequest extends PageQueryRequest
     {
         $d = $this->validated();
 
-        return new IssueQueryData($this->pagination(), $d['state'] ?? [], $d['priority'] ?? '', $d['type'] ?? '', $d['assignee'] ?? '', $d['epicId'] ?? '', $d['condition'] ?? '', $d['sort'] ?? 'updated', $d['scope'] ?? 'all', $d['identifier'] ?? '');
+        return new IssueQueryData($this->pagination(), $d['state'] ?? [], $d['priority'] ?? '', $d['type'] ?? '', $d['assignee'] ?? '', $d['epicId'] ?? '', $d['condition'] ?? '', $d['sort'] ?? 'updated', $d['scope'] ?? 'all', $d['identifier'] ?? '', $d['direction'] ?? '');
     }
 }

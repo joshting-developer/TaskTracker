@@ -8,6 +8,7 @@ import { useBoardRealtime } from '../ui/boardRealtime.js';
 import { useIssueTransitions } from '../composables/useIssueTransitions.js';
 import { useProjectTaskQueries } from '../composables/useProjectTaskQueries.js';
 import { useIssueQuery } from '../composables/useIssueQuery.js';
+import { contextKey, readContext, writeContext } from '../ui/workContext.js';
 import IssueFilters from './IssueFilters.vue';
 import IssueList from './IssueList.vue';
 
@@ -46,6 +47,11 @@ const localScope = computed(() => props.scope), pageView = computed(() => props.
 const filters = useIssueQuery({ remote: computed(() => props.mode === 'list'), project: computed(() => props.project), issues: computed(() => unique([...contextRows.value, ...candidates.value])), boardIssues: rows,
   members: memberNames, userId: computed(() => props.userId), today: computed(() => props.today), view: pageView, scope: localScope, projectId: computed(() => props.project.id) });
 const filterInput = filters.filterInput;
+// TT-306：排序與方向依使用者／工作空間／專案存在這個分頁, 重新整理後還在；只存排序, 不存篩選內容。
+const sortKey = computed(() => contextKey(props.userId, props.workspaceId, props.project.id));
+const savedSort = readContext(sortKey.value).sort;
+if (savedSort && ['updated', 'created', 'priority', 'due'].includes(savedSort.by)) filterInput.value = { ...filterInput.value, sort: savedSort.by, direction: ['asc', 'desc'].includes(savedSort.direction) ? savedSort.direction : '' };
+watch(() => [filterInput.value.sort, filterInput.value.direction], ([by, direction]) => writeContext(sortKey.value, { sort: { by, direction } }));
 const data = useProjectTaskQueries({ onDetail: loadDetail, detailMode: computed(() => Boolean(props.issueId && props.detailPage)), projectId: computed(() => props.project.id), boardId: computed(() => props.boardId), mode: computed(() => props.mode), context: scopeKey, rows, listQuery: computed(() => ({...filterInput.value, scope: props.scope, page: filters.page.value, perPage: 20})), blocked: computed(() => busy.value || dirty.value), hold: holdBackground, onProject: value => emit('project', value), onError: handleFailure, onSuccess: () => { error.value = ''; } });
 const { board, boardPage, issuePage, listPage, listSearch, listArchived, loading, loadingCards, pageVisible, reload } = data;
 watch(issuePage, value => { if (value && filters.page.value > value.lastPage) filters.page.value = value.lastPage; });

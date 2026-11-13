@@ -23,7 +23,7 @@
 
 登入身分沿用`POST /api/auth/current`，不是另做一個大型bootstrap。專案與任務查詢在相同交易內重新驗證帳號、Workspace與permission＋scope；不可見資源404，已知資源缺少操作權403，工作區變更409。Resource僅序列化已預載欄位，不發lazy query。
 
-列表輸入：`page`（1起）、`perPage`（預設20，上限100）、`search`（最多200字）。任務另支援精準`identifier`（AI／工具不必模糊搜尋編號）、`state[]`、`priority`、`type`、`assignee`、`epicId`（含unlinked）、`scope=all|mine`、`condition=overdue|unassigned`與`sort=updated|priority|due`。搜尋字詞中的`%`／`_`以文字處理，排序有穩定tie-breaker。
+列表輸入：`page`（1起）、`perPage`（預設20，上限100）、`search`（最多200字）。任務另支援精準`identifier`（AI／工具不必模糊搜尋編號）、`state[]`、`priority`、`type`、`assignee`、`epicId`（含unlinked）、`scope=all|mine`、`condition=overdue|unassigned`與`sort=updated|created|priority|due`與`direction=asc|desc`（TT-306, 省略方向時更新／建立新到舊、優先級緊急到低、到期日近到遠；到期日反向時沒填的排最前）。搜尋字詞中的`%`／`_`以文字處理，排序有穩定tie-breaker。
 
 分頁形狀：`data.items`、`page`、`perPage`、`total`、`lastPage`。允許頁碼超出最後一頁回空items；不把新查詢任意改寫為未授權的全域exists檢查。
 

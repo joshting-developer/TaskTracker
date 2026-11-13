@@ -15,9 +15,10 @@ readonly class IssueQueryData
      * @param  string  $assignee  承辦者User ID
      * @param  string  $epicId  Epic公開ID，unlinked代表未掛Epic
      * @param  string  $condition  overdue或unassigned等條件
-     * @param  string  $sort  排序方式
+     * @param  string  $sort  排序方式（updated／created／priority／due）
      * @param  string  $scope  all或mine
      * @param  string  $identifier  精確卡號
+     * @param  string  $direction  排序方向asc／desc；空字串用各排序的預設（TT-306）
      */
     public function __construct(
         public PageQueryData $pagination,
@@ -30,5 +31,6 @@ readonly class IssueQueryData
         public string $sort = 'updated',
         public string $scope = 'all',
         public string $identifier = '',
+        public string $direction = '',
     ) {}
 }

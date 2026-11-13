@@ -107,13 +107,20 @@ class IssueReadRepository
             $this->timeProjection($q, $timeUser, $teamTime);
         }
         $this->applyFilters($q, $userId, $filters);
+        // TT-306：四種排序都能換方向；沒指定時更新／建立新到舊, 優先級緊急到低, 到期日近到遠。
+        // 方向只來自allowlist驗證後的asc／desc, 再對照一次才放進SQL；同時間的卡用卡號、公開ID排, 換頁不重複不漏。
+        $direction = ['asc' => 'asc', 'desc' => 'desc'][$filters->direction] ?? (in_array($filters->sort, ['priority', 'due'], true) ? 'asc' : 'desc');
         if ($filters->sort === 'priority') {
-            $q->orderByRaw("CASE priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END");
+            $q->orderByRaw("CASE priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END ".$direction);
         } elseif ($filters->sort === 'due') {
-            $q->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')->orderBy('due_date');
+            // 沒填到期日的卡照方向走：近到遠時排最後, 遠到近時排最前。
+            $q->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END '.$direction)->orderBy('due_date', $direction);
+        } elseif ($filters->sort === 'created') {
+            $q->orderBy('created_at', $direction);
         }
+        $q->orderBy('updated_at', $filters->sort === 'updated' ? $direction : 'desc');
 
-        $page = $q->orderByDesc('updated_at')->orderBy('identifier')->orderBy('public_id')
+        $page = $q->orderBy('identifier')->orderBy('public_id')
             ->paginate($filters->pagination->perPage, $this->columns(), 'page', $filters->pagination->page);
         if (! $listOnly) {
             $this->loadEpicEstimates($project, $page->items());
@@ -209,9 +216,18 @@ class IssueReadRepository
         if ($since !== null) {
             $q->where('updated_at', '>=', DatabaseTimes::store($since));
         }
+        // TT-306：預設舊到新（適合增量同步）；desc從最新往回讀, cursor比較方向跟著反過來。
+        $desc = $filters->direction === 'desc';
         if ($after !== null) {
-            $q->where(function ($q) use ($after) {
-                if ($after['time'] === null) {
+            $q->where(function ($q) use ($after, $desc) {
+                if ($desc) {
+                    // 倒序時沒有更新時間的卡排在最後。
+                    if ($after['time'] === null) {
+                        $q->whereNull('updated_at')->where('id', '<', $after['id']);
+                    } else {
+                        $q->where('updated_at', '<', $after['time'])->orWhereNull('updated_at')->orWhere(fn ($q) => $q->where('updated_at', $after['time'])->where('id', '<', $after['id']));
+                    }
+                } elseif ($after['time'] === null) {
                     $q->whereNotNull('updated_at')->orWhere(fn ($q) => $q->whereNull('updated_at')->where('id', '>', $after['id']));
                 } else {
                     $q->where('updated_at', '>', $after['time'])->orWhere(fn ($q) => $q->where('updated_at', $after['time'])->where('id', '>', $after['id']));
@@ -219,7 +235,7 @@ class IssueReadRepository
             });
         }
 
-        return $q->with(['externalRefs' => fn ($refs) => $refs->select(['id', 'issue_id', 'source', 'external_id'])->orderBy('source')])->orderBy('updated_at')->orderBy('id')->limit($filters->pagination->perPage + 1)->get();
+        return $q->with(['externalRefs' => fn ($refs) => $refs->select(['id', 'issue_id', 'source', 'external_id'])->orderBy('source')])->orderBy('updated_at', $desc ? 'desc' : 'asc')->orderBy('id', $desc ? 'desc' : 'asc')->limit($filters->pagination->perPage + 1)->get();
     }
 
     /**

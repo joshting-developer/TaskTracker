@@ -79,7 +79,7 @@ Token與來源清單只讀本人目前Session Workspace，固定每頁20筆、id
 
 Project／成員／Issue／留言分頁皆為page（預設1，上限1000000）、perPage（預設20，上限100）；超出最後頁回空items。Project與成員可search（最長200字），SQL處理字面%／_。Project依updatedAt降序、id穩定排序；成員依user ID；留言依建立順序與穩定id。狀態依Project設定排序，自訂type不可硬編成固定enum；open／closed必備。
 
-Issue列表接受identifier（精準卡號，上限100）、state[]=open&state[]=closed（最多30項，每項40字）、priority（urgent/high/normal/low）、type（epic/task/bug）、assignee（User ID）、epicId（Epic ID或unlinked）、scope（all/mine）、condition（overdue/unassigned）、sort（updated/priority/due）。欄位缺省不篩選，sort預設updated；同排序值用穩定ID決勝。條件在SQL執行，不先載入Workspace。未知query忽略，不會改變可信使用者／工作區。
+Issue列表接受identifier（精準卡號，上限100）、state[]=open&state[]=closed（最多30項，每項40字）、priority（urgent/high/normal/low）、type（epic/task/bug）、assignee（User ID）、epicId（Epic ID或unlinked）、scope（all/mine）、condition（overdue/unassigned）、sort（updated/created/priority/due）、direction（asc/desc；省略時updated／created新到舊, priority緊急到低, due近到遠, due反向時沒填到期日的排最前）。欄位缺省不篩選，sort預設updated；同排序值用穩定ID決勝。條件在SQL執行，不先載入Workspace。未知query忽略，不會改變可信使用者／工作區。
 
 identifier查詢仍是摘要列表；得到Issue ID後再GET詳細取得最新revision。詳細提供description、epicId、parentIssueId、relatedIssueIds與references；最多200個關聯，超限409 CONFLICT而非靜默截斷。references最多包含兩個上層參照與200關聯。estimateMinutes在Epic為所屬卡估時加總；spentMinutes僅具工時讀取資格時回傳。列表不回描述／關聯／活動或工時。留言獨立分頁，不在詳細附完整comments／history。
 
@@ -160,7 +160,7 @@ curl --fail-with-body -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
 
 ## 增量摘要與cursor
 
-`GET /api/public/v1/projects/{project}/issue-changes`回items／perPage／nextCursor／syncUntil（不回total／page）。預設20，最多100；按updated_at升冪、唯一內部鍵打破同秒／同微秒平手，回應仍只用公開ID。updatedSince接受有時區ISO 8601，包含邊界；不傳則全量起點，含無日期歷史卡片。type／state[]／priority／assignee等篩選沿Issue列表。只支援時間升冪，不接受page或其他sort。
+`GET /api/public/v1/projects/{project}/issue-changes`回items／perPage／nextCursor／syncUntil（不回total／page）。預設20，最多100；預設按updated_at升冪（direction=asc）、唯一內部鍵打破同秒／同微秒平手。direction=desc改成從最新往回讀, 只適合「看最近改了什麼」, 不適合拿來做增量同步；cursor記住當初的方向, 換方向拿舊cursor續讀回400。回應仍只用公開ID。updatedSince接受有時區ISO 8601，包含邊界；不傳則全量起點，含無日期歷史卡片。type／state[]／priority／assignee等篩選沿Issue列表。只支援時間升冪，不接受page或其他sort。
 
 保存上一批nextCursor後重送，須沿用原完整filters／updatedSince／perPage；syncUntil在同一輪固定。Cursor為不透明認證加密字串，不自行解析，URL請encode；變造、換本人／Workspace／Project／條件會400，無Project資格仍404／失效PAT401。Cursor不保存權限，每頁重新驗證；換Token但仍同本人及範圍可接續。APP_KEY變更使舊cursor無效，重新掃描即可。
 

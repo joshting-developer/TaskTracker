@@ -51,6 +51,8 @@ PAT 不印在對話／卡片／Commit／log，不傳給不受信任網址，不�
 
 大量或增量讀取用OpenAPI的listPublicIssueChanges（項目附externalRefs，syncUntil留有數秒緩衝、下一輪會重讀，請依id／revision去重；刪除的卡片請另讀listPublicIssueDeletions（issue-deletions）移除，並定期不帶篩選全量對帳）（Project issue-changes），避免深頁碼／COUNT。保留所有filters與perPage，上一批成功保存後送回nextCursor；nextCursor為null才以syncUntil開新輪updatedSince，邊界包含且按id／revision去重。同一秒多張卡片不只用時間戳當cursor；不要把live列表當多請求snapshot或刪除feed。Python下載範例含完整接續迴圈；其他注意事項見contract的增量章節。
 
+增量同步請用預設的舊到新（不帶direction）。`direction=desc` 是從最新往回讀, 適合「看看最近改了什麼」, 不適合接著做增量同步；cursor會記住當初的方向, 換方向要從頭讀。任務列表也可以用 `sort=created` 和 `direction` 排序, 細節看OpenAPI。
+
 ## 外部識別對應
 
 從其他系統匯入或同步卡片時，用OpenAPI的upsertPublicIssueByExternalId（`PUT .../issues/external/{source}/{externalId}`）代替「先搜尋描述再決定建立或更新」。第一次送出建立並回created=true；之後要更新同一張卡，先用getPublicIssueByExternalId讀revision，再帶expectedRevision送出，409時重讀後再決定。每次新的變更用新的requestId；逾時才以同requestId與同內容重送核對。外部識別區分大小寫、不能含斜線。

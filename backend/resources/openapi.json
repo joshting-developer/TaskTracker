@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker API",
-    "version": "0.11.0",
+    "version": "0.12.0",
     "description": "公開Bearer v1讀取及Issue建立／PATCH／留言及外部識別查詢／upsert／批次；小待辦讀取、交辦、完成與退回；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。"
   },
   "servers": [
@@ -3028,11 +3028,24 @@
             "schema": {
               "enum": [
                 "updated",
+                "created",
                 "priority",
                 "due"
               ],
               "default": "updated"
-            }
+            },
+            "description": "updated更新時間、created建立日期、priority優先級、due到期日；同值時再依更新時間、卡號排序, 換頁穩定"
+          },
+          {
+            "in": "query",
+            "name": "direction",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            },
+            "description": "省略時用各排序的預設：updated／created新到舊（desc）、priority緊急到低（asc）、due近到遠（asc）。due反向時沒填到期日的卡排在最前"
           },
           {
             "in": "query",
@@ -5348,6 +5361,18 @@
               "maxLength": 40
             },
             "description": "有時區ISO 8601，包含邊界；不傳表示全量起點（含無日期歷史資料）。"
+          },
+          {
+            "in": "query",
+            "name": "direction",
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "asc"
+            },
+            "description": "預設asc舊到新, 適合增量同步；desc從最新往回讀, 不適合拿來做增量同步。cursor會記住當初的方向, 換方向拿舊cursor續讀回400"
           }
         ],
         "x-required-permission": "issue.read",

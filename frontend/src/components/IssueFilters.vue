@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, shallowRef, useTemplateRef } from 'vue';
 import { PRIORITIES, TYPES } from '../domain/model.js';
-import { CONDITIONS } from '../domain/filters.js';
+import { CONDITIONS, defaultDirection } from '../domain/filters.js';
 import Icon from './Icon.vue';
 import PagedSelect from './PagedSelect.vue';
 
@@ -26,7 +26,14 @@ function field(key) {
 }
 const search = field('search'), stateFilter = field('state'), priorityFilter = field('priority');
 const assigneeFilter = field('assignee'), epicFilter = field('epicId'), typeFilter = field('type');
-const conditionFilter = field('condition'), sort = field('sort');
+const conditionFilter = field('condition');
+// TT-306：換排序時方向回到該排序的預設；方向按鈕只在預設與反向之間切換。
+const sort = computed({ get: () => model.value.sort, set: value => { model.value = { ...model.value, sort: value, direction: '' }; } });
+const DIRECTION_LABELS = { updated: { desc: '新到舊', asc: '舊到新' }, created: { desc: '新到舊', asc: '舊到新' }, priority: { asc: '緊急到低', desc: '低到緊急' }, due: { asc: '近到遠', desc: '遠到近' } };
+const currentDirection = computed(() => model.value.direction || defaultDirection(model.value.sort));
+const nextDirection = computed(() => currentDirection.value === 'asc' ? 'desc' : 'asc');
+const directionLabel = computed(() => `目前${DIRECTION_LABELS[model.value.sort][currentDirection.value]}，切換為${DIRECTION_LABELS[model.value.sort][nextDirection.value]}`);
+function toggleDirection() { model.value = { ...model.value, direction: nextDirection.value === defaultDirection(model.value.sort) ? '' : nextDirection.value }; }
 
 // 狀態多選：focusout只處理鍵盤移出（relatedTarget在外）；點選項文字時relatedTarget為null，
 // 若同步關閉details，Chrome 157會在label啟動checkbox時使渲染程序崩潰（TT-258）。點外部改由pointerdown關閉。
@@ -58,8 +65,9 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutside
         <Icon name="filter" :size="17" />篩選<span v-if="activeFilterChips.length" class="filter-count">{{ activeFilterChips.length }}</span>
       </button>
       <select v-model="sort" aria-label="排序方式">
-        <option value="updated">最近更新</option><option value="priority">優先級排序</option><option value="due">到期日排序</option>
+        <option value="updated">更新時間</option><option value="created">建立日期</option><option value="priority">優先級</option><option value="due">到期日</option>
       </select>
+      <button type="button" class="icon-button sort-direction" :aria-label="directionLabel" :title="directionLabel" @click="toggleDirection"><Icon :name="currentDirection === 'desc' ? 'arrowDown' : 'arrowUp'" :size="17" /></button>
     </div>
   </div>
   <div id="task-filters" v-show="filtersOpen" class="advanced-filters" role="group" aria-label="任務篩選條件">

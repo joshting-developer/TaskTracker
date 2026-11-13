@@ -7,14 +7,14 @@ export function useIssueQuery({ project, issues, boardIssues, members, userId, t
   const search = shallowRef('');
   const stateFilter = ref([]);
   const priorityFilter = shallowRef(''), assigneeFilter = shallowRef(''), epicFilter = shallowRef('');
-  const typeFilter = shallowRef(''), conditionFilter = shallowRef(''), sort = shallowRef('updated');
+  const typeFilter = shallowRef(''), conditionFilter = shallowRef(''), sort = shallowRef('updated'), direction = shallowRef('');
   const page = shallowRef(1);
   const pageSize = 20;
   const projectStates = computed(() => statusesFor(project.value));
   const filters = computed(() => ({
     search: search.value, scope: scope.value, state: stateFilter.value, priority: priorityFilter.value,
     assignee: assigneeFilter.value, epicId: epicFilter.value, type: typeFilter.value,
-    condition: conditionFilter.value, sort: sort.value, view: view.value,
+    condition: conditionFilter.value, sort: sort.value, direction: direction.value, view: view.value,
   }));
   const filterWarnings = computed(() => project.value ? missingFilters(filters.value, project.value, members.value, issues.value) : []);
   const visibleIssues = computed(() => toValue(remote) ? issues.value : project.value ? filterIssues(
@@ -29,11 +29,13 @@ export function useIssueQuery({ project, issues, boardIssues, members, userId, t
     get: () => ({
       search: search.value, state: stateFilter.value, priority: priorityFilter.value,
       assignee: assigneeFilter.value, epicId: epicFilter.value, type: typeFilter.value,
-      condition: conditionFilter.value, sort: sort.value,
+      condition: conditionFilter.value, sort: sort.value, direction: direction.value,
     }),
     set: value => {
       search.value = value.search;
       sort.value = value.sort;
+      // TT-306：空字串代表用各排序的預設方向
+      direction.value = value.direction || '';
       Object.entries(fields).forEach(([key, field]) => { field.value = value[key]; });
     },
   });
@@ -53,7 +55,7 @@ export function useIssueQuery({ project, issues, boardIssues, members, userId, t
     search.value = '';
     Object.keys(fields).forEach(removeFilter);
   }
-  watch([search, stateFilter, priorityFilter, assigneeFilter, epicFilter, typeFilter, conditionFilter, sort, scope, projectId], () => { page.value = 1; });
+  watch([search, stateFilter, priorityFilter, assigneeFilter, epicFilter, typeFilter, conditionFilter, sort, direction, scope, projectId], () => { page.value = 1; });
   watch(pageCount, count => { if (!toValue(remote) && page.value > count) page.value = count; });
 
   return {

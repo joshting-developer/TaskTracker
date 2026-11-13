@@ -30,8 +30,22 @@ export function filterIssues(issues, filters, { project, userId, members, today,
     const name = members.find((member) => member.id === issue.assignee)?.name || issue.assignee;
     return !term || [issue.title, issue.description, issue.identifier, name].some((value) => String(value || '').toLowerCase().includes(term));
   }).sort((a, b) => {
-    if (filters.sort === 'priority') return PRIORITIES.findIndex(item => item.id === a.priority) - PRIORITIES.findIndex(item => item.id === b.priority) || b.updatedAt.localeCompare(a.updatedAt);
-    if (filters.sort === 'due') return (a.dueDate || '9999').localeCompare(b.dueDate || '9999') || b.updatedAt.localeCompare(a.updatedAt);
-    return b.updatedAt.localeCompare(a.updatedAt) || a.identifier.localeCompare(b.identifier);
+    // TT-306：跟後端同一套規則；sign=1是各排序的預設方向, 反向時整個主排序反過來（到期日沒填的也跟著換到最前）。
+    const sign = filters.direction && filters.direction !== defaultDirection(filters.sort) ? -1 : 1;
+    const tie = (b.updatedAt || '').localeCompare(a.updatedAt || '') || a.identifier.localeCompare(b.identifier);
+    if (filters.sort === 'priority') return sign * (PRIORITIES.findIndex(item => item.id === a.priority) - PRIORITIES.findIndex(item => item.id === b.priority)) || tie;
+    if (filters.sort === 'due') return sign * (a.dueDate || '9999').localeCompare(b.dueDate || '9999') || tie;
+    if (filters.sort === 'created') return sign * (b.createdAt || '').localeCompare(a.createdAt || '') || tie;
+    return sign * (b.updatedAt || '').localeCompare(a.updatedAt || '') || a.identifier.localeCompare(b.identifier);
   });
+}
+
+/**
+ * 各排序沒指定方向時的預設：更新／建立新到舊, 優先級緊急到低, 到期日近到遠。
+ *
+ * @param {string} sort updated／created／priority／due
+ * @returns {'asc'|'desc'} 預設方向
+ */
+export function defaultDirection(sort) {
+  return sort === 'priority' || sort === 'due' ? 'asc' : 'desc';
 }

@@ -16,7 +16,7 @@ class IssueChangesRequest extends IssueQueryRequest
      */
     public function rules(): array
     {
-        return [...parent::rules(), 'state.*' => ['string', 'max:100'], 'page' => ['prohibited'], 'sort' => ['sometimes', 'in:updated'],
+        return [...parent::rules(), 'state.*' => ['string', 'max:100'], 'page' => ['prohibited'], 'sort' => ['sometimes', 'in:updated'], 'direction' => ['sometimes', 'in:asc,desc'],
             'cursor' => ['sometimes', 'string', 'max:4000'],
             'updatedSince' => ['sometimes', 'date', 'regex:/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/D', 'max:40']];
     }
