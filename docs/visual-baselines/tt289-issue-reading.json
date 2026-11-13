@@ -1,0 +1,9 @@
+{
+  "approved": true,
+  "reviewer": "Josh",
+  "authorization": "Standing authorization: directly approve future UI candidates while retaining real browser and regression checks; not per-image human review",
+  "manifestFile": "docs/evidence/tt289-visual-manifest.json",
+  "manifestSha256": "dd654f345285537da2cb995c797c1681f1b27ed0b590c30f62d3c5ffec395280",
+  "harnessSha256": "2674f28a028f422379c155c24a02975a8aaa8f31209056b267a6e3c0f5f9bc37",
+  "images": 6
+}

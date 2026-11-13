@@ -1,0 +1,67 @@
+{
+  "card": "TT-289",
+  "images": [
+    {
+      "name": "image-1440.png",
+      "source": "artifacts/tt289/after/image-1440.png",
+      "sha256": "a27f9950def5998cee1619904c1db50a7ff88bb6e34b331834177baa5de7a08a"
+    },
+    {
+      "name": "image-390.png",
+      "source": "artifacts/tt289/after/image-390.png",
+      "sha256": "0a2ea396a1d67c2e1b6b41923a03a382dc21a8e59d8cd70f7f432767ea6c37ed"
+    },
+    {
+      "name": "image-768.png",
+      "source": "artifacts/tt289/after/image-768.png",
+      "sha256": "0f31c942788ba138fd3932d397f5f0ea23e800f47ea7603dd23b2e0e8d216985"
+    },
+    {
+      "name": "reading-1440.png",
+      "source": "artifacts/tt289/after/reading-1440.png",
+      "sha256": "ed5f747d22b3fd718ec4cb6627ad9fe7303b06d96e0676f4f3d7ca5e0cfb912c"
+    },
+    {
+      "name": "reading-390.png",
+      "source": "artifacts/tt289/after/reading-390.png",
+      "sha256": "b63deda07f6638768c852809ba3ef3929d294e9c0dea58c24d66d00da3bf4aa9"
+    },
+    {
+      "name": "reading-768.png",
+      "source": "artifacts/tt289/after/reading-768.png",
+      "sha256": "e15424d1aa429931e07b8296d3c8f94160ef21b369454e97d856b2f267dcf204"
+    }
+  ],
+  "harness": [
+    {
+      "path": "frontend/src/components/IssueDetail.vue",
+      "sha256": "7cfaa3d8e455ce16357b9eb8a61fa6817eab086daf7da1bdf554984891d7a74f"
+    },
+    {
+      "path": "frontend/src/components/AttachmentImage.vue",
+      "sha256": "47fe7df8efc77384fbc0ac5e69f931c24ac42362190f4cd5ac58e5d3ab228260"
+    },
+    {
+      "path": "frontend/src/components/MarkdownContent.vue",
+      "sha256": "1871e33bb3c0309da63f152079717662910be42a761c9165fbcf00ba314fc198"
+    },
+    {
+      "path": "frontend/tools/issue-reading-check.js",
+      "sha256": "50fd8f13860e2559e9f749478e8656c0dab02be18a97dd399e2a311db8fcb7f4"
+    },
+    {
+      "path": "frontend/tools/compare-reviewed-issue-reading.js",
+      "sha256": "edbe53fd628bdc8d44cb02763126556eb761aa3126a9b4c5ae6dd5931d3640a5"
+    },
+    {
+      "path": "frontend/src/composables/useIssueActivity.js",
+      "sha256": "6dc0d28a4afd1d0ce58ce16644263ef6cbe8de58b88a843d8865b1dcaabea019"
+    }
+  ],
+  "policy": {
+    "animations": "disabled",
+    "caret": "hide",
+    "maxDiffPixels": 0,
+    "threshold": 0.02
+  }
+}

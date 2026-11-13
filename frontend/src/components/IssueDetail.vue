@@ -95,6 +95,9 @@ function timeSaved() {
         <button v-if="canWrite" class="button primary" :disabled="saving || busy || deleting" @click="emit('edit')">編輯任務</button>
       </span>
     </header>
+    <div class="issue-detail-layout">
+      <div class="issue-detail-heading">
+      <h1 ref="heading" tabindex="-1">{{ issue.title }}</h1>
     <div class="issue-state-control" role="group" aria-label="任務狀態" :aria-busy="busy">
       <span class="state-label">目前狀態</span>
       <span class="status-badge" :style="{ '--status-color': state(issue)?.color }" aria-live="polite" aria-atomic="true"><i aria-hidden="true"></i>{{ state(issue)?.label || issue.state }}</span>
@@ -108,19 +111,20 @@ function timeSaved() {
       <span v-else class="subtle">唯讀</span>
       <span v-if="busy" class="subtle" role="status">更新中…</span>
     </div>
-    <div class="issue-detail-layout">
-      <h1 ref="heading" tabindex="-1">{{ issue.title }}</h1>
+      </div>
       <div class="issue-detail-body">
-        <section class="issue-detail-description" aria-label="任務描述"><h2>描述</h2><MarkdownContent v-if="issue.description" :source="issue.description" :project-id="project.id" /><p v-else>尚未填寫描述</p></section>
+        <section class="issue-detail-description" aria-label="任務描述"><h2>描述</h2><MarkdownContent v-if="issue.description" :source="issue.description" :project-id="project.id" /><p v-else class="quiet-message">尚未填寫描述</p></section>
         <section class="issue-detail-activity" aria-label="任務活動">
           <div class="discussion-tabs" role="tablist" aria-label="任務紀錄" @keydown="onTabKeydown">
             <button id="detail-comments-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" :class="{ active: tab === 'comments' }" @click="tab = 'comments'">留言 <span>{{ activityComments.length }}</span></button>
             <button id="detail-history-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" :class="{ active: tab === 'history' }" @click="tab = 'history'">異動紀錄 <span>{{ activityHistory.length }}</span></button>
             <button v-if="canReadTime || canLogTime" id="detail-time-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'time' ? 0 : -1" :aria-selected="tab === 'time'" :class="{ active: tab === 'time' }" @click="tab = 'time'">工時 <span v-if="canReadTime">{{ work.length }}</span></button>
           </div>
-          <div id="detail-activity" role="tabpanel" tabindex="0" :aria-labelledby="`detail-${tab}-tab`">
+          <div id="detail-activity" role="tabpanel" tabindex="0" :aria-busy="activity.loading.value" :aria-labelledby="`detail-${tab}-tab`">
+            <p v-if="activity.loading.value" class="quiet-message" role="status">載入紀錄中…</p>
+            <div v-if="activity.error.value" class="error-box" role="alert">{{ activity.error.value }} <button class="text-button" :disabled="activity.loading.value" @click="activity.fetchPage()">重試載入紀錄</button></div>
             <template v-if="tab === 'comments'">
-              <p v-if="!activityComments.length" class="quiet-message">尚無留言</p>
+              <p v-if="!activityComments.length && !activity.loading.value && !activity.error.value" class="quiet-message">尚無留言</p>
               <article v-for="entry in activityComments" :key="entry.id" class="comment"><div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><MarkdownContent :source="entry.content" /></div></article>
             </template>
             <template v-else-if="tab === 'history'">
@@ -129,10 +133,11 @@ function timeSaved() {
             <template v-else>
               <div v-if="canLogTime" class="issue-time-toolbar"><button class="button secondary" :disabled="busy || saving || !timeIssues.length" @click="openTime()"><Icon name="plus" :size="16" />填報工時</button></div>
               <template v-if="canReadTime">
-                <p v-if="!work.length" class="quiet-message">尚無工時紀錄</p>
+                <p v-if="!work.length && !activity.loading.value && !activity.error.value" class="quiet-message">尚無工時紀錄</p>
                 <article v-for="entry in work" :key="entry.id" class="issue-detail-work"><div><strong>{{ entry.workDate }} · {{ entry.userName || memberName(entry.userId) }}</strong><p>{{ entry.note || '未填說明' }}</p></div><div class="issue-work-actions"><span>{{ hours(entry.minutes) }}</span><button v-if="canLogTime && entry.userId === userId" class="text-button" :disabled="busy || saving" :aria-label="`修改工時 ${entry.id}`" @click="openTime(entry)">修改</button></div></article>
               </template>
             </template>
+            <button v-if="activity.more.value" class="button secondary activity-more" :disabled="activity.loading.value" @click="activity.fetchPage(true)">載入更多</button>
           </div>
           <form v-if="canWrite" v-show="tab === 'comments'" class="comment-form" @submit.prevent="sendComment">
             <div v-if="error" class="error-box" role="alert">{{ error }}<button v-if="conflict" class="text-button" type="button" :disabled="saving || busy" @click="emit('reload')">更新任務資料（保留留言）</button></div>
@@ -179,10 +184,6 @@ function timeSaved() {
     </div>
     <TimeEntryDrawer v-if="timeOpen && canLogTime" ref="timeDrawer" :key="timeFormKey" :issues="timeIssues" :default-issue-id="issue.id" lock-issue :entry="editingTime" @close="timeOpen = false; editingTime = null" @saved="timeSaved" @conflict="reloadTime" />
   </section>
-  <div v-if="activityLoader && ['comments','history','time'].includes(tab)" class="activity-pagination">
-    <p v-if="activity.error.value" class="error-box" role="alert">{{ activity.error.value }}</p>
-    <button v-if="activity.more.value" class="button secondary" :disabled="activity.loading.value" @click="activity.fetchPage(true)">載入更多</button>
-  </div>
 </template>
 
 <style scoped>
@@ -192,9 +193,12 @@ function timeSaved() {
 .issue-detail-page { background: #fff; color: #242936; min-height: calc(100dvh - 60px); }
 .issue-detail-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding: 18px 24px; border-bottom: 1px solid #daddE5; }
 .issue-detail-actions { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+.issue-detail-actions .button { box-shadow: none; }
 .issue-detail-actions .danger-text { color: #a4455a; border-color: #e6c9d0; }
 .back-icon { transform: rotate(180deg); }
-.issue-state-control { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 10px 24px; border-bottom: 1px solid #daddE5; font-size: 14px; }
+.issue-detail-heading { grid-column: 1; padding: 24px 32px 20px; min-width: 0; }
+.activity-more { margin-top: 16px; }
+.issue-state-control { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 0 0; font-size: 13px; }
 .state-label { color: #5f6673; }
 .state-action { min-width: 0; max-width: 100%; }
 .state-action select { appearance: auto; min-height: 44px; width: 100%; max-width: 240px; padding: 8px 32px 8px 12px; font: inherit; color: #424b5c; background-color: #fff; border: 1px solid #8c93a3; border-radius: 6px; cursor: pointer; }
@@ -203,13 +207,15 @@ function timeSaved() {
 .state-action select:disabled { cursor: wait; opacity: 0.65; }
 .issue-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; grid-template-rows: auto 1fr; }
 .issue-detail-body { min-width: 0; padding: 0 32px 48px; grid-column: 1; }
-h1 { font-size: 26px; line-height: 1.5; font-weight: 650; overflow-wrap: anywhere; margin: 0; padding: 28px 32px 24px; grid-column: 1; }
+h1 { font-size: 25px; line-height: 1.5; font-weight: 650; overflow-wrap: anywhere; margin: 0; padding: 0; }
 h1:focus { outline: none; }
 h2 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
 h2 span { color: #5f6673; font-weight: 400; margin-left: 8px; }
+.issue-detail-description { max-width: 880px; }
+.issue-detail-description h2 { color: #5f6673; font-size: 13px; font-weight: 500; margin-top: 0; }
 .issue-detail-description p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.9; }
 .issue-detail-activity { margin-top: 28px; border-top: 1px solid #daddE5; padding-top: 18px; }
-.issue-detail-sidebar { grid-column: 2; grid-row: 1 / span 2; padding: 18px 20px 24px; border-left: 1px solid #daddE5; background: #fcfcfe; min-width: 0; }
+.issue-detail-sidebar { grid-column: 2; grid-row: 1 / span 2; padding: 18px 20px 24px; border-left: 1px solid #e6e8ee; background: #fff; min-width: 0; }
 .sidebar-tabs { display: flex; gap: 20px; border-bottom: 1px solid #daddE5; margin-bottom: 20px; }
 .sidebar-tabs button { min-height: 44px; padding: 10px 4px; border-bottom: 2px solid transparent; color: #5f6673; font-size: 14px; }
 .sidebar-tabs button.active { border-bottom-color: #6653bd; color: #5844a0; font-weight: 600; }
@@ -225,8 +231,8 @@ h2 span { color: #5f6673; font-weight: 400; margin-left: 8px; }
 .relation-item .status-badge i { flex-shrink: 0; }
 .mobile-properties-toggle { display: none; }
 dl { margin: 0; }
-dl > div { margin-bottom: 22px; }
-dt { color: #5f6673; font-size: 13px; margin-bottom: 7px; }
+dl > div { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 12px; padding: 10px 0; }
+dt { color: #5f6673; font-size: 13px; padding-top: 2px; }
 dd { margin: 0; font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
 dd button { text-align: left; color: #5844a0; }
 .issue-detail-work { display: flex; gap: 16px; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #edf0f5; font-size: 14px; }
@@ -235,14 +241,17 @@ dd button { text-align: left; color: #5844a0; }
 .issue-detail-work > span { flex-shrink: 0; }
 .issue-detail-work + .subtle { margin-top: 14px; }
 .comment-form .field { text-align: left; }
-@media(max-width:1000px) { .issue-detail-layout { grid-template-columns: minmax(0, 1fr) 260px; } .issue-detail-body { padding: 0 24px 40px; } h1 { padding: 24px; } }
+@media(max-width:1000px) { .issue-detail-layout { grid-template-columns: minmax(0, 1fr) 260px; } .issue-detail-body { padding: 0 24px 40px; } .issue-detail-heading { padding: 24px; } }
 @media(max-width:700px) {
-  .issue-state-control { padding: 10px 18px; gap: 10px; }
+  .issue-detail-heading { grid-column: 1; padding: 24px 32px 20px; min-width: 0; }
+.activity-more { margin-top: 16px; }
+.issue-state-control { padding: 12px 0 0; gap: 8px; }
+  .issue-detail-heading { padding: 22px 18px 16px; }
   .issue-detail-layout { display: flex; flex-direction: column; }
   .issue-detail-toolbar { padding: 14px 16px; gap: 10px; }
   .issue-detail-toolbar .button { padding: 9px 10px; font-size: 13px; }
   .issue-detail-body { padding: 22px 18px 30px; order: 2; }
-  h1 { font-size: 23px; padding: 22px 18px; }
+  h1 { font-size: 23px; padding: 0; }
   .issue-detail-sidebar { order: 1; padding: 18px; border-left: 0; border-bottom: 1px solid #daddE5; }
   .mobile-properties-toggle { display: flex; width: 100%; gap: 12px; justify-content: space-between; text-align: left; font-size: 14px; min-height: 44px; align-items: center; }
   .mobile-properties-toggle span { flex-shrink: 0; color: #5844a0; }
@@ -250,7 +259,8 @@ dd button { text-align: left; color: #5844a0; }
   .sidebar-content.expanded { display: block; padding-top: 12px; }
   .sidebar-panel { max-height: 55dvh; }
   dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-  dl > div { margin: 0; }
+  dl > div { display: block; padding: 0; }
+  dt { margin-bottom: 4px; }
   .property-fields > p { margin-top: 14px; }
 }
 </style>

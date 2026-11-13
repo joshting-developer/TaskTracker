@@ -28,7 +28,7 @@ export function useIssueActivity({ issue, tab, load }) {
   }
   function clear() { generation++; controller?.abort(); loading.value = false; pages.value = {}; error.value = ''; }
   watch(() => `${issue.value?.id}:${issue.value?.revision}`, () => { clear(); fetchPage(); });
-  watch([tab, () => issue.value?.id], () => { controller?.abort(); loading.value = false; generation++; fetchPage(); }, { immediate: true });
+  watch([tab, () => issue.value?.id], () => { controller?.abort(); loading.value = false; error.value = ''; generation++; fetchPage(); }, { immediate: true });
   onScopeDispose(clear);
   return { comments, history, time, children, more, loading, error, fetchPage, refresh: () => { clear(); fetchPage(); } };
 }
