@@ -64,6 +64,7 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA', env('MYSQL_SSL_ENABLED', false)
                     ? '/etc/ssl/certs/ca-certificates.crt' : null),
+                PDO::ATTR_TIMEOUT => (int) env('DB_CONNECT_TIMEOUT', 3),
                 Mysql::ATTR_SSL_VERIFY_SERVER_CERT => env('MYSQL_SSL_ENABLED', false)
                     ? env('MYSQL_SSL_VERIFY_SERVER_CERT', true) : null,
             ], static fn ($value) => $value !== null) : [],
@@ -160,7 +161,16 @@ return [
 
         'default' => [
             'url' => env('REDIS_URL'),
+            'scheme' => env('REDIS_SCHEME', 'tcp'),
             'host' => env('REDIS_HOST', '127.0.0.1'),
+            'timeout' => (float) env('REDIS_CONNECT_TIMEOUT', 3),
+            'read_write_timeout' => (float) env('REDIS_READ_TIMEOUT', 3),
+            'ssl' => [
+                'cafile' => env('REDIS_SSL_CA'),
+                'verify_peer' => true,
+                'verify_peer_name' => true,
+                'peer_name' => env('REDIS_SSL_PEER_NAME', env('REDIS_HOST', '127.0.0.1')),
+            ],
             'username' => env('REDIS_USERNAME'),
             'password' => env('REDIS_PASSWORD_FILE')
                 ? trim(file_get_contents(env('REDIS_PASSWORD_FILE'))) : env('REDIS_PASSWORD'),
@@ -174,7 +184,16 @@ return [
 
         'cache' => [
             'url' => env('REDIS_URL'),
+            'scheme' => env('REDIS_SCHEME', 'tcp'),
             'host' => env('REDIS_HOST', '127.0.0.1'),
+            'timeout' => (float) env('REDIS_CONNECT_TIMEOUT', 3),
+            'read_write_timeout' => (float) env('REDIS_READ_TIMEOUT', 3),
+            'ssl' => [
+                'cafile' => env('REDIS_SSL_CA'),
+                'verify_peer' => true,
+                'verify_peer_name' => true,
+                'peer_name' => env('REDIS_SSL_PEER_NAME', env('REDIS_HOST', '127.0.0.1')),
+            ],
             'username' => env('REDIS_USERNAME'),
             'password' => env('REDIS_PASSWORD_FILE')
                 ? trim(file_get_contents(env('REDIS_PASSWORD_FILE'))) : env('REDIS_PASSWORD'),
