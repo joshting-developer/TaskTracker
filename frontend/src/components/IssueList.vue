@@ -33,7 +33,8 @@ const rows = computed(() => {
         <tr><th class="type-column" scope="col">類型</th><th>任務</th><th>狀態</th><th>優先級</th><th>負責人</th><th>到期日</th><th class="end-column"></th></tr>
       </thead>
       <tbody>
-        <tr v-for="row in rows" :key="row.issue.id" :data-issue="row.issue.identifier">
+        <!-- TT-281：焦點在這列時按F2快速編輯；只是捷徑, 鉛筆按鈕仍是主要入口 -->
+        <tr v-for="row in rows" :key="row.issue.id" :data-issue="row.issue.identifier" @keydown.f2.prevent="canWrite && emit('open', row.issue, false)">
           <td class="type-column"><span class="issue-type-label">{{ row.type }}</span></td>
           <td class="task-title-cell">
             <button class="task-title" @click="emit('open', row.issue, true)">{{ row.issue.title }}</button>
@@ -51,8 +52,8 @@ const rows = computed(() => {
           </td>
           <td><span :class="['due-date', { overdue: row.overdue }]">{{ row.dueDate }}<span v-if="row.overdue" class="overdue-dot" title="已過期"></span></span></td>
           <td class="issue-row-actions">
-            <button v-if="canWrite" class="text-button quick-edit" :aria-label="`快速編輯 ${row.issue.identifier}`" @click="emit('open', row.issue, false)">快速編輯</button>
-            <button class="icon-button row-open" :aria-label="`開啟完整頁 ${row.issue.identifier}`" title="開啟完整頁" @click="emit('open', row.issue, true)"><Icon name="chevron" :size="17" /></button>
+            <button v-if="canWrite" class="icon-button row-action row-edit" :aria-label="`快速編輯 ${row.issue.identifier}`" title="快速編輯（F2）" aria-keyshortcuts="F2" @click="emit('open', row.issue, false)"><Icon name="edit" :size="16" /></button>
+            <button class="icon-button row-action row-open" :aria-label="`開啟完整頁 ${row.issue.identifier}`" title="開啟完整頁" @click="emit('open', row.issue, true)"><Icon name="chevron" :size="17" /></button>
           </td>
         </tr>
       </tbody>

@@ -253,8 +253,17 @@
 .home-layout > * { min-width: 0; }
 .home-layout .todo-home { width: 100%; max-width: 520px; }
 .heading-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.issue-row-actions { white-space: nowrap; }
-.quick-edit { min-height: 44px; font-size: 13px; margin-right: 8px; }
+/* TT-281：列尾動作統一成安靜的圖示按鈕；平常淡色, 滑過或聚焦這一列時才清楚, 不再每列一條紫色底線文字 */
+.issue-row-actions { white-space: nowrap; text-align: right; }
+.issue-row-actions .row-action { width: 36px; height: 36px; padding: 0; border-color: transparent; color: #8a8f9e; opacity: 1; }
+.issue-row-actions .row-action + .row-action { margin-left: 2px; }
+.issue-table tr:hover .row-action, .issue-table tr:focus-within .row-action { color: #5f6577; border-color: #e4e1ee; }
+.issue-row-actions .row-action:hover:not(:disabled), .issue-row-actions .row-action:focus-visible { color: #5646b8; background: #efedf7; border-color: #d9d3f0; }
+.issue-row-actions .row-action:focus-visible { outline: 2px solid #6654c5; outline-offset: 1px; }
+/* 觸控裝置沒有hover：按鈕固定清楚並放大到44px */
+@media (hover: none), (max-width: 700px) { .issue-row-actions .row-action { width: 44px; height: 44px; color: #5f6577; border-color: #e4e1ee; } }
+/* 手機原本整欄藏起來, 等於沒有快速編輯入口；放回這欄只留鉛筆, 完整頁直接點標題 */
+@media (max-width: 700px) { .issue-table td:nth-child(7), .issue-table th:nth-child(7) { display: table-cell; width: 54px; padding-left: 0; padding-right: 8px; } .issue-row-actions .row-open { display: none; } }
 
 
 /* 返回操作屬於導覽，使用中性色與方向提示，不沿用內容連結樣式。 */

@@ -27,7 +27,7 @@ mkdirSync(artifacts, { recursive: true });
 let vite, browser;
 const failures = [];
 async function register(page, email, inviteToken = '') {
-  await page.goto(`http://127.0.0.1:5175/${inviteToken ? `#/invite?token=${inviteToken}` : ''}`);
+  await page.goto(`http://127.0.0.1:5175/login${inviteToken ? `#/invite?token=${inviteToken}` : ''}`);
   if (!inviteToken) await page.getByRole('button', { name: '第一次使用？建立工作空間' }).click();
   await page.getByLabel('你的名字').fill(inviteToken ? 'Flow Member' : 'Flow Owner');
   await page.getByLabel('Email', { exact: true }).fill(email);

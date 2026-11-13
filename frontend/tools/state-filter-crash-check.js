@@ -17,7 +17,7 @@ try {
   page.on('pageerror', error => failures.push(error.message));
   page.on('crash', () => failures.push('PAGE_CRASH'));
   const token = crypto.randomUUID();
-  await page.goto('http://127.0.0.1:5175/');
+  await page.goto('http://127.0.0.1:5175/login');
   await page.getByRole('button', { name: '第一次使用？建立工作空間' }).click();
   await page.getByLabel('你的名字').fill('Filter Owner');
   await page.getByLabel('Email', { exact: true }).fill(`filter-${token}@example.test`);
