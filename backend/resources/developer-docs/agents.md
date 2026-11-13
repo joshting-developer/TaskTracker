@@ -30,6 +30,13 @@
 4. 做完用 `POST /todos/{todo}/complete` 完成；不要放著不處理。完成、重開、退回都要帶最新revision和新的requestId, 重送規則跟卡片一樣。
 5. 自己交辦出去的用 `GET /todos?scope=sent` 追蹤, 對方退回時待辦會回到自己身上。
 
+## 我的通知：開工前也看一下
+
+1. 開工前除了小待辦, 也用 `GET /notifications` 看寄給自己的任務通知, 例如被指派、自己負責的卡有新留言、卡的狀態被改。第一次不帶 `after` 會從最早的讀起
+2. 把回傳的 `nextAfter` 存起來, 下次帶 `after=<nextAfter>` 接著讀；`hasMore` 是true就馬上再讀一次, 不要每次從頭讀
+3. 通知只有摘要, 要看內容用 `issueId` 讀那張卡或它的留言；`kind` 是 `status_important` 代表狀態改成已關閉或待驗收, 通常要回頭確認
+4. 沒有未讀篩選和標記已讀, 自己存的 `nextAfter` 就是讀到哪裡；已經不能讀那個專案時, 那個專案的通知會跳過
+
 ## 分頁與失敗續接
 
 列表預設20、最多100，data.items/page/perPage/total/lastPage；page 超最後頁回空。請依 lastPage 翻頁，不把第一頁當全部。state 篩選用 `state[]=open&state[]=closed`，identifier 是精準匹配；其他限制依 OpenAPI。
@@ -86,3 +93,9 @@ search是完整卡號時（例如tt-12）, 會轉成大寫並只找同專案該�
 任務列表的(page-1)×perPage最多10000, 超過回400 INVALID_INPUT且不執行Issue查詢。total與lastPage保留真實總數, maxOffset固定10000, accessibleLastPage是可翻閱上限；網頁按此上限停用下一頁並提示縮小篩選。一般PageQuery其他資源及看板分頁不套此任務列表專屬界限
 
 完整第三方同步使用既有issue-changes cursor, 不靠遞增page匯出全部。原有穩定identifier／public_id次排序與changes keyset索引保留, CASE優先級與NULL到期日語意不變。新增倒序索引不代表其他排序或COUNT已變成固定成本
+
+## TT-317 單卡活動總數與工時
+
+Issue詳細新增activityCounts.comments／history／time, 為SQL總數, 不附活動內容；列表不增加活動欄位。每個活動仍按需讀每頁最多100筆（畫面20筆）, 頁籤數字採總數並用分頁total校正
+
+2026-11-13 Josh確認：有issue.read的人可看該卡片所有成員的有效工時與筆數, Epic包含所屬卡片, 作廢紀錄不計。修改仍限本人且要timeEntry.writeOwn；月曆／工作區分析沿原權限, 不因能讀卡片就開放全部報表。跨Project／Workspace或撤權仍拒絕

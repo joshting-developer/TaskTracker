@@ -68,6 +68,9 @@ class IssueReadRepository
             if (! $teamTime) {
                 $minutes->whereIn('tracked.member_id', DB::table('workspace_members')->select('id')->where('user_id', $timeUser)->whereColumn('workspace_id', 'issues.workspace_id'));
             }
+            if ($detail) {
+                $q->selectSub((clone $minutes)->selectRaw('COUNT(*)'), 'time_entry_count');
+            }
             $q->selectSub($minutes->selectRaw('COALESCE(SUM(minutes),0)'), 'spent_minutes');
         }
     }
@@ -304,6 +307,8 @@ class IssueReadRepository
     {
         $q = $this->query($project)->where('public_id', $id)->with([...$this->relations(), 'epic.status:id,code', 'parent.status:id,code', 'relatedIssues' => fn ($related) => $related->select(['issues.id', 'issues.public_id', 'issues.title', 'issues.identifier', 'issues.type', 'issues.project_id', 'issues.state_id'])->with('status:id,code')->orderBy('issues.public_id')->limit(201)]);
         $this->timeProjection($q, $timeUser, $teamTime, true);
+        $q->selectSub(DB::table('issue_comments')->whereColumn('issue_id', 'issues.id')->selectRaw('COUNT(*)'), 'comment_count');
+        $q->selectSub(DB::table('audit_events')->whereColumn('workspace_id', 'issues.workspace_id')->where('entity_type', 'issues')->whereColumn('entity_id', 'issues.id')->where('stream', 'history')->selectRaw('COUNT(*)'), 'history_count');
 
         $issue = $q->first($this->columns(true));
         if ($issue !== null) {

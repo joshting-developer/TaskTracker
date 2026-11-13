@@ -8,6 +8,7 @@ export function useIssueActivity({ issue, tab, load }) {
   const children = computed(() => pages.value.children?.items || []);
   const time = computed(() => pages.value.time?.items || []);
   const history = computed(() => pages.value.history?.items || issue.value?.history || []);
+  const counts = computed(() => Object.fromEntries(['comments', 'history', 'time'].map(kind => [kind, pages.value[kind]?.total ?? issue.value?.activityCounts?.[kind] ?? (!load.value ? issue.value?.[kind]?.length ?? null : null)])));
   const more = computed(() => {
     const page = pages.value[tab.value];
     return page && page.page < page.lastPage;
@@ -27,8 +28,8 @@ export function useIssueActivity({ issue, tab, load }) {
     finally { if (current === generation) loading.value = false; }
   }
   function clear() { generation++; controller?.abort(); loading.value = false; pages.value = {}; error.value = ''; }
-  watch(() => `${issue.value?.id}:${issue.value?.revision}`, () => { clear(); fetchPage(); });
+  watch(() => JSON.stringify([issue.value?.id, issue.value?.revision, issue.value?.activityCounts]), () => { clear(); fetchPage(); });
   watch([tab, () => issue.value?.id], () => { controller?.abort(); loading.value = false; error.value = ''; generation++; fetchPage(); }, { immediate: true });
   onScopeDispose(clear);
-  return { comments, history, time, children, more, loading, error, fetchPage, refresh: () => { clear(); fetchPage(); } };
+  return { comments, history, time, children, counts, more, loading, error, fetchPage, refresh: () => { clear(); fetchPage(); } };
 }

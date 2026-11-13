@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import { effectScope, nextTick, shallowRef } from 'vue';
+import { useIssueActivity } from '../src/composables/useIssueActivity.js';
+const scope = effectScope(), issue = shallowRef({ id: 'card', revision: 1, activityCounts: { comments: 21, history: 45, time: 2 } });
+const tab = shallowRef('comments');
+let totals = { comments: 23, history: 45, time: 2 }, calls = [];
+const load = shallowRef(async (id, kind, query) => {
+  calls.push(kind);
+  return { items: Array.from({ length: 20 }, (_, n) => ({ id: `${kind}-${query.page}-${n}` })), page: query.page, total: totals[kind], lastPage: Math.ceil(totals[kind] / 20) };
+});
+const activity = scope.run(() => useIssueActivity({ issue, tab, load }));
+assert.deepEqual(activity.counts.value, { comments: 21, history: 45, time: 2 }, 'Snapshot counts before pages arrive');
+await nextTick(); await nextTick();
+assert.equal(activity.counts.value.comments, 23, 'Page total corrects stale detail snapshot');
+assert.deepEqual(calls, ['comments'], 'Other activities remain lazy');
+tab.value = 'history'; await nextTick(); await nextTick();
+assert.equal(activity.history.value.length, 20); assert.equal(activity.counts.value.history, 45);
+await activity.fetchPage(true); assert.equal(activity.history.value.length, 40); assert.equal(activity.counts.value.history, 45);
+totals = { ...totals, time: 3 }; issue.value = { ...issue.value, activityCounts: { ...issue.value.activityCounts, time: 3 } };
+await nextTick(); await nextTick();
+assert.equal(activity.counts.value.time, 3, 'Time-only change refreshes counts without an Issue revision change');
+issue.value = { id: 'other', revision: 1, activityCounts: { comments: 0, history: 1 } }; tab.value = '';
+await nextTick(); assert.deepEqual(activity.counts.value, { comments: 0, history: 1, time: null }, 'No stale counts leak between cards');
+scope.stop();
+console.log('PASS: exact initial counts, page total correction, lazy loading, >20 totals, time-only invalidation and cross-card isolation');

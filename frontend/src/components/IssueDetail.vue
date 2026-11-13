@@ -15,7 +15,7 @@ const emit = defineEmits(['close', 'open', 'edit', 'saved', 'reload', 'state', '
 const tab = ref('comments'), comment = ref(''), saving = ref(false), error = ref(''), conflict = ref(false);
 
 const activity = useIssueActivity({ issue: toRef(props, 'issue'), tab, load: toRef(props, 'activityLoader') });
-const activityComments = activity.comments, activityHistory = activity.history;
+const activityComments = activity.comments, activityHistory = activity.history, activityCounts = activity.counts;
 const timeOpen = ref(false), timeDrawer = ref(null), editingTime = ref(null), timeFormKey = ref(0);
 const heading = ref(null), propertiesExpanded = ref(false), sidebarTab = ref('properties');
 let pending;
@@ -116,9 +116,9 @@ function timeSaved() {
         <section class="issue-detail-description" aria-label="任務描述"><h2>描述</h2><MarkdownContent v-if="issue.description" :source="issue.description" :project-id="project.id" /><p v-else class="quiet-message">尚未填寫描述</p></section>
         <section class="issue-detail-activity" aria-label="任務活動">
           <div class="discussion-tabs" role="tablist" aria-label="任務紀錄" @keydown="onTabKeydown">
-            <button id="detail-comments-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" :class="{ active: tab === 'comments' }" @click="tab = 'comments'">留言 <span>{{ activityComments.length }}</span></button>
-            <button id="detail-history-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" :class="{ active: tab === 'history' }" @click="tab = 'history'">異動紀錄 <span>{{ activityHistory.length }}</span></button>
-            <button v-if="canReadTime || canLogTime" id="detail-time-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'time' ? 0 : -1" :aria-selected="tab === 'time'" :class="{ active: tab === 'time' }" @click="tab = 'time'">工時 <span v-if="canReadTime">{{ work.length }}</span></button>
+            <button id="detail-comments-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" :class="{ active: tab === 'comments' }" @click="tab = 'comments'">留言 <span v-if="activityCounts.comments !== null">{{ activityCounts.comments }}</span></button>
+            <button id="detail-history-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" :class="{ active: tab === 'history' }" @click="tab = 'history'">異動紀錄 <span v-if="activityCounts.history !== null">{{ activityCounts.history }}</span></button>
+            <button v-if="canReadTime || canLogTime" id="detail-time-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'time' ? 0 : -1" :aria-selected="tab === 'time'" :class="{ active: tab === 'time' }" @click="tab = 'time'">工時 <span v-if="canReadTime && (!activityLoader || activityCounts.time !== null)">{{ activityCounts.time ?? work.length }}</span></button>
           </div>
           <div id="detail-activity" role="tabpanel" tabindex="0" :aria-busy="activity.loading.value" :aria-labelledby="`detail-${tab}-tab`">
             <p v-if="activity.loading.value" class="quiet-message" role="status">載入紀錄中…</p>

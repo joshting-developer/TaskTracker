@@ -24,7 +24,7 @@ function remember(item) { picked.value = [...picked.value.filter(row => row.id !
 const tab = ref('comments');
 
 const activity = useIssueActivity({ issue: toRef(props, 'issue'), tab: computed(() => props.inline ? '' : tab.value), load: toRef(props, 'activityLoader') });
-const activityComments = activity.comments, activityHistory = activity.history;
+const activityComments = activity.comments, activityHistory = activity.history, activityCounts = activity.counts;
 const tabId = useId();
 const comment = ref('');
 const saving = ref(false);
@@ -238,8 +238,8 @@ function timestamp(value) {
         <p v-if="issue && form.type !== 'epic'" class="detail-spent"><Icon name="clock" :size="14" />已投入 {{ hours(spent) }} / {{ form.estimateMinutes ? `預估 ${hours(form.estimateMinutes)}` : '尚未估時' }}</p>
         <section v-if="issue && !inline" class="discussion">
           <div class="discussion-tabs" role="tablist" aria-label="任務紀錄" @keydown="onTabKeydown">
-            <button :class="{ active: tab === 'comments' }" :id="`${tabId}-comments-tab`" role="tab" :aria-controls="`${tabId}-activity`" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" @click="tab = 'comments'">留言 <span>{{ activityComments.length }}</span></button>
-            <button :class="{ active: tab === 'history' }" :id="`${tabId}-history-tab`" role="tab" :aria-controls="`${tabId}-activity`" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" @click="tab = 'history'">異動紀錄 <span>{{ activityHistory.length }}</span></button>
+            <button :class="{ active: tab === 'comments' }" :id="`${tabId}-comments-tab`" role="tab" :aria-controls="`${tabId}-activity`" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" @click="tab = 'comments'">留言 <span v-if="activityCounts.comments !== null">{{ activityCounts.comments }}</span></button>
+            <button :class="{ active: tab === 'history' }" :id="`${tabId}-history-tab`" role="tab" :aria-controls="`${tabId}-activity`" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" @click="tab = 'history'">異動紀錄 <span v-if="activityCounts.history !== null">{{ activityCounts.history }}</span></button>
           </div>
           <div :id="`${tabId}-activity`" role="tabpanel" :aria-labelledby="`${tabId}-${tab}-tab`" tabindex="0">
           <div v-if="tab === 'comments'" class="comments">

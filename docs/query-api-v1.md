@@ -132,3 +132,9 @@ Project建立／修改／狀態更新新結果為`{id, revision}`，Board建立�
 任務列表的(page-1)×perPage最多10000, 超過回400 INVALID_INPUT且不執行Issue查詢。total與lastPage保留真實總數, maxOffset固定10000, accessibleLastPage是可翻閱上限；網頁按此上限停用下一頁並提示縮小篩選。一般PageQuery其他資源及看板分頁不套此任務列表專屬界限
 
 完整第三方同步使用既有issue-changes cursor, 不靠遞增page匯出全部。原有穩定identifier／public_id次排序與changes keyset索引保留, CASE優先級與NULL到期日語意不變。新增倒序索引不代表其他排序或COUNT已變成固定成本
+
+## TT-317 單卡活動總數與工時
+
+Issue詳細新增activityCounts.comments／history／time, 為SQL總數, 不附活動內容；列表不增加活動欄位。每個活動仍按需讀每頁最多100筆（畫面20筆）, 頁籤數字採總數並用分頁total校正
+
+2026-11-13 Josh確認：有issue.read的人可看該卡片所有成員的有效工時與筆數, Epic包含所屬卡片, 作廢紀錄不計。修改仍限本人且要timeEntry.writeOwn；月曆／工作區分析沿原權限, 不因能讀卡片就開放全部報表。跨Project／Workspace或撤權仍拒絕

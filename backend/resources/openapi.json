@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker API",
-    "version": "0.15.0",
+    "version": "0.16.0",
     "description": "公開Bearer v1讀取及Issue建立／PATCH／留言及外部識別查詢／upsert／批次；小待辦讀取、交辦、完成與退回；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。 支援受PAT與即時專案權限限制的私有附件上傳／metadata／內容／綁定。"
   },
   "servers": [
@@ -3433,7 +3433,12 @@
                     "estimateMinutes": 0,
                     "description": "Example detail",
                     "relatedIssueIds": [],
-                    "references": []
+                    "references": [],
+                    "activityCounts": {
+                      "comments": 0,
+                      "history": 0,
+                      "time": 0
+                    }
                   }
                 }
               }
@@ -5448,7 +5453,12 @@
                     "estimateMinutes": 0,
                     "description": "Example detail",
                     "relatedIssueIds": [],
-                    "references": []
+                    "references": [],
+                    "activityCounts": {
+                      "comments": 0,
+                      "history": 0,
+                      "time": 0
+                    }
                   }
                 }
               }
@@ -11311,7 +11321,8 @@
           "estimateMinutes",
           "description",
           "relatedIssueIds",
-          "references"
+          "references",
+          "activityCounts"
         ],
         "additionalProperties": false,
         "properties": {
@@ -11412,6 +11423,30 @@
               "$ref": "#/components/schemas/IssueReference"
             },
             "maxItems": 202
+          },
+          "activityCounts": {
+            "type": "object",
+            "required": [
+              "comments",
+              "history",
+              "time"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "comments": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "history": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "time": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "description": "Exact SQL counts; details remain lazy/paged. time includes all members for the readable card (and Epic children), excludes voided entries. Card read permission grants card-scoped time visibility, not calendar/analytics or editing others."
           }
         }
       },

@@ -64,10 +64,8 @@ class IssueReadService
     public function show(WorkspaceContext $context, string $projectId, string $id): Issue
     {
         $access = $this->projects->authorized($context, $projectId, 'issue.read');
-        $own = in_array('timeEntry.readOwn', $access->permissions, true);
-        $team = in_array('timeEntry.readTeam', $access->permissions, true);
-
-        $issue = $this->issues->find($access->project, $id, $own ? $context->userId : null, $team) ?? DomainError::fail('NOT_FOUND', '找不到這個專案內的任務');
+        // TT-317：已授權issue.read可看該卡片所有有效工時。
+        $issue = $this->issues->find($access->project, $id, teamTime: true) ?? DomainError::fail('NOT_FOUND', '找不到這個專案內的任務');
         if ($issue->getRelation('relatedIssues')->count() > 200) {
             DomainError::fail('CONFLICT', '既有關聯超過支援上限，請先整理關聯資料');
         }
@@ -145,18 +143,15 @@ class IssueReadService
      * @param  PageQueryData  $filters  有界分頁
      * @return LengthAwarePaginator 有效工時分頁
      *
-     * @throws DomainError 缺少工時讀取權或任務不存在
+     * @throws DomainError 缺少卡片讀取權或任務不存在
      */
     public function time(WorkspaceContext $context, string $projectId, string $id, PageQueryData $filters): LengthAwarePaginator
     {
         $access = $this->projects->authorized($context, $projectId, 'issue.read');
-        $team = in_array('timeEntry.readTeam', $access->permissions, true);
-        if (! $team && ! in_array('timeEntry.readOwn', $access->permissions, true)) {
-            DomainError::fail('FORBIDDEN', '沒有工時讀取權限');
-        }
+        // 僅此卡片活動入口沿issue.read, 月曆／分析仍使用各自權限。
         $issue = $this->issues->reference($access->project, $id) ?? DomainError::fail('NOT_FOUND', '找不到任務');
 
-        return $this->issues->time($issue, $context->userId, $team, $filters);
+        return $this->issues->time($issue, $context->userId, team: true, filters: $filters);
     }
 
     /**

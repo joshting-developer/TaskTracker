@@ -20,6 +20,8 @@ class IssueDetailResource extends IssueSummaryResource
         $linked = collect([$issue->getRelation('epic'), $issue->getRelation('parent')])->filter()->concat($refs)->unique('public_id');
 
         return [...parent::toArray($request), 'description' => $issue->description,
+            'activityCounts' => ['comments' => (int) $issue->comment_count, 'history' => (int) $issue->history_count,
+                ...($issue->getAttribute('time_entry_count') !== null ? ['time' => (int) $issue->time_entry_count] : [])],
             'relatedIssueIds' => $refs->pluck('public_id')->all(),
             'references' => $linked->map(fn ($i) => ['id' => $i->public_id, 'projectId' => $issue->getRelation('project')->public_id, 'identifier' => $i->identifier, 'title' => $i->title, 'type' => $i->type, 'state' => $i->getRelation('status')->code])->values()->all()];
     }

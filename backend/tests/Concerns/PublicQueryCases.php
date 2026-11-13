@@ -125,7 +125,8 @@ trait PublicQueryCases
         ProjectMember::create(['public_id' => ProjectAccess::memberId($pa['id'], $a['user']['id']), 'workspace_id' => $member->workspace_id, 'project_id' => $project->id, 'member_id' => $member->id, 'role_id' => 'reader']);
         $this->assertSame(1, $this->publicRead($ta['plainTextToken'], '/projects', '/projects')['data']['total']);
         $detail = $this->publicRead($ta['plainTextToken'], $prefix.'/issues/'.$ia['id'], '/projects/{project}/issues/{issue}')['data'];
-        $this->assertArrayNotHasKey('spentMinutes', $detail);
+        $this->assertArrayHasKey('spentMinutes', $detail, 'TT-317: card readers can see card-scoped time');
+        $this->assertArrayHasKey('time', $detail['activityCounts']);
         ProjectMember::where('member_id', $member->id)->update(['removed_at' => now()]);
         $this->publicRead($ta['plainTextToken'], $prefix, '/projects/{project}', 404);
         $member->update(['disabled_at' => now()]);
