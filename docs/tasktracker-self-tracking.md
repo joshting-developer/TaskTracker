@@ -19,7 +19,15 @@ python3 tools/tasktracker.py --agent codex claim TT-243
 python3 tools/tasktracker.py --agent claude claim TT-244
 python3 tools/tasktracker.py --agent codex comment TT-243 --body-file /path/to/result.md
 python3 tools/tasktracker.py --agent codex status TT-243 --state closed
+# TT-312：小待辦。開工前先看交辦給自己的；交辦內容第一行寫要做什麼, 後面寫完成條件和卡號
+python3 tools/tasktracker.py --agent codex todos                       # 交辦給我的未完成待辦
+python3 tools/tasktracker.py --agent claude todos --scope sent         # 我交辦出去的
+python3 tools/tasktracker.py --agent claude todo-create --assignee codex --body-file /path/to/todo.md
+python3 tools/tasktracker.py --agent codex todo-complete <待辦ID>
+python3 tools/tasktracker.py --agent codex todo-return <待辦ID> --body-file /path/to/reason.md
 ```
+
+小待辦的使用規則（接任務前先看、一個待辦不要太大、需要驗收和工時的開卡片）放在共用task-tracker-usage Skill。用PAT的共用CLI也有同樣的指令（todos、todo-create、todo-complete等）。
 
 `claim`先指派自己，再移inprogress，每步使用回應的最新revision及獨立requestId。只領open卡；他人已承辦或revision衝突就停止。第二步失敗可能保留「open＋自己承辦」，先讀回核對再續接，不假定兩個HTTP操作是一筆交易。自己已inprogress的重複claim不再寫入。原`status --state inprogress`亦走相同領卡檢查；其他status只允許目前帳號承辦卡片。完成後仍須驗證、依卡號提交、留言及closed，不能以領取取代驗收。
 

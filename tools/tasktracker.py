@@ -148,13 +148,47 @@ def import_cards(client, manifest):
         print(issue['identifier'], card['state'], flush=True)  # 寫入只回有界結果（TT-178）
 
 
+def handle_todo(client, args):
+    """TT-312：小待辦；接任務前先 `todos` 看有沒有被交代事情, 用 `todo-create` 交辦給別人。"""
+    todo_path = '/api/v1/todos/'
+    if args.command == 'todos':
+        query = urllib.parse.urlencode({'scope': args.scope, 'perPage': 100, **({'state': args.state} if args.state else {'state': 'open'})})
+        for item in client.call('/api/v1/todos?' + query)['items']:
+            print(item['id'], item['state'], f"from={item['creatorName']}", f"to={item['assigneeName']}", item['title'])
+        return
+    if args.command == 'todo-create':
+        if not args.body_file:
+            raise RuntimeError('todo-create需要--body-file（第一行是要做什麼, 後面寫完成條件和卡號）')
+        body = {'content': args.body_file.read_text(), 'requestId': str(uuid.uuid4())}
+        if args.assignee:
+            members = client.call('/api/v1/todo-assignees?' + urllib.parse.urlencode({'search': args.assignee, 'perPage': 100}))['items']
+            match = [m for m in members if m['name'] == args.assignee]
+            if len(match) != 1:
+                raise RuntimeError('找不到唯一的交辦對象：' + args.assignee)
+            body['assigneeId'] = match[0]['id']
+        result = client.rpc('createTodo', **body)
+        print('created', result['id'])
+        return
+    if not args.identifier:
+        raise RuntimeError('需要待辦ID')
+    todo = client.call(todo_path + urllib.parse.quote(args.identifier, safe=''))
+    operation, capability = {'todo-complete': ('completeTodo', 'complete'), 'todo-return': ('returnTodo', 'return')}[args.command]
+    if not todo['capabilities'].get(capability):
+        raise RuntimeError('目前不能對這筆待辦做這個動作（不是承辦人或狀態不符）')
+    extra = {'note': args.body_file.read_text()} if args.command == 'todo-return' and args.body_file else {}
+    client.rpc(operation, id=todo['id'], expectedRevision=todo['revision'], requestId=str(uuid.uuid4()), **extra)
+    print('updated', todo['id'])
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--agent', choices=['codex', 'claude'], default='codex', help='執行者；Claude必須指定--agent claude')
-    parser.add_argument('command', choices=['list', 'import', 'verify', 'claim', 'status', 'comment'])
+    parser.add_argument('command', choices=['list', 'import', 'verify', 'claim', 'status', 'comment', 'todos', 'todo-create', 'todo-complete', 'todo-return'])
     parser.add_argument('identifier', nargs='?')
     parser.add_argument('--state')
     parser.add_argument('--body-file', type=Path)
+    parser.add_argument('--scope', choices=['mine', 'sent'], default='mine', help='todos：mine交辦給我、sent我交辦出去')
+    parser.add_argument('--assignee', help='todo-create：交辦對象的顯示名稱, 例如codex、Josh')
     args = parser.parse_args()
     if args.command in ('claim', 'status', 'comment') and not args.identifier:
         parser.error('此操作需要卡號')
@@ -165,6 +199,9 @@ def main():
     client = Client(config)
     client.login()
     try:
+        if args.command.startswith('todo'):
+            handle_todo(client, args)
+            return
         manifest = json.loads(MANIFEST.read_text())
         if args.command == 'import':
             import_cards(client, manifest)

@@ -33,6 +33,7 @@ HTTP API、Repository、查詢、前端資料載入或輪詢異動，必讀共�
 所有既有／未來工作先查重並建對應卡片，依主題收錄，待辦先open未指派。專案定位及帳號位置查Memory.md／docs/tasktracker-self-tracking.md；使用共用task-tracker-usage，不因失敗回退Owner或舊共用帳號。
 
 - Codex用自己的帳號先指派再進行中：`python3 tools/tasktracker.py --agent codex claim TT-243`；Claude改`--agent claude`。衝突或他人承辦即停止，不搶領；第二步失敗先讀回。
+- 開工前（領任何卡之前）先看交辦給自己的小待辦：`python3 tools/tasktracker.py --agent <codex|claude> todos`；交辦、拆小與完成規則依共用task-tracker-usage, 不在此複製。
 - 真的開始處理那張才claim；被指派或排入計畫不等於開工。同一Agent同時只留一張進行中，依共用task-tracker-usage自律執行，不靠工具硬擋。
 - list／claim／status／comment維持同一Agent；有實質進度即留言已完成、實測、限制與下一步，不只留對話。
 - 看板分類、領卡前預估及逐階段本人實際工時，依共用task-tracker-usage的references/classification-and-time.md；不以留言代替正式工時。
