@@ -89,7 +89,8 @@ class BoardReadApiTest extends TestCase
         Issue::where('project_id', $source->project_id)->update(['description' => str_repeat('large-body', 500)]);
         $this->assertSame($summary, $this->getJson($path)->assertOk()->json('data'));
         $this->rpc('archiveBoard', ['id' => $board['id'], 'expectedRevision' => $board['revision']])->assertOk();
-        $this->getJson($path.'/'.$board['id'].'/issues')->assertStatus(404);
+        // TT-283：封存看板改成唯讀可查, 不再回404。
+        $this->getJson($path.'/'.$board['id'].'/issues')->assertOk();
         WorkspaceMember::where('user_id', $actor['user']['id'])->update(['role' => 'user']);
         $this->getJson($path.'/default/issues')->assertStatus(404);
     }

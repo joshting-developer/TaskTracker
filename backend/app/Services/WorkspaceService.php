@@ -98,6 +98,7 @@ class WorkspaceService
             'createBoard' => $services->boards()->create($input),
             'updateBoard' => $services->boards()->update($input),
             'archiveBoard' => $services->boards()->archive($input),
+            'restoreBoard' => $services->boards()->restore($input),
             'setProjectMember' => $services->members()->change($input, false),
             'removeProjectMember' => $services->members()->change($input, true),
             'loadDemo' => $this->demo->loadProject($services->workspaceSession),
@@ -113,7 +114,7 @@ class WorkspaceService
         };
         $projectId = match ($operation) {
             'createProject', 'updateProject', 'updateStatuses' => $result['id'],
-            'archiveBoard' => $result['projectId'],
+            'archiveBoard', 'restoreBoard' => $result['projectId'],
             default => $result['projectId'] ?? '',
         };
         $services->signals()->changed($projectId);

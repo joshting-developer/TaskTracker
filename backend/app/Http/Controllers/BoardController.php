@@ -59,4 +59,18 @@ class BoardController extends Controller
 
         return new ApiResponse($result);
     }
+
+    /**
+     * TT-283：驗證JSON後還原已封存的看板, 回傳與封存相同的格式。
+     *
+     * @param  BoardWriteRequest  $request  目前HTTP請求與Session
+     * @return ApiResponse
+     */
+    public function restore(BoardWriteRequest $request): ApiResponse
+    {
+        $input = $request->toDto();
+        $result = $this->rpc->executeData($request, $input);
+
+        return new ApiResponse($result);
+    }
 }

@@ -297,3 +297,12 @@
 .navigation-back:active { background: #eceef2; }
 .navigation-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .navigation-back { transition: none; } }
+
+/* TT-283：看板列表的使用中／已封存切換, 以及封存看板頁的唯讀提示 */
+.board-list-tabs { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 14px; background: #f3f2f8; border-radius: 8px; }
+.board-list-tab { min-height: 36px; padding: 0 14px; border-radius: 6px; font-size: 14px; color: #555d6e; }
+.board-list-tab[aria-pressed="true"] { background: #fff; color: #2d2a3a; font-weight: 600; box-shadow: 0 1px 2px #1d183012; }
+.board-list-tab:focus-visible { outline: 2px solid #6654c5; outline-offset: 1px; }
+.board-summary-archived { color: #6b6378; }
+.board-archived-note { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 20px 12px; padding: 10px 14px; border-radius: 8px; background: #f6f3fd; border: 1px solid #e3dcf7; color: #463e5c; font-size: 14px; }
+@media (max-width: 700px) { .board-list-tab { min-height: 44px; } .board-archived-note { margin: 0 12px 12px; } }

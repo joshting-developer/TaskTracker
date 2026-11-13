@@ -6,7 +6,8 @@ import { pollIntervals } from '../ui/pollingConfig.js';
 /** 專案任務查詢與備援生命週期；不管理編輯表單或DOM操作。 */
 export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId, mode, context, blocked, onProject, onError, onSuccess, listQuery, rows = shallowRef([]), hold = shallowRef(false) }) {
   const board = shallowRef(null), boardPage = shallowRef(null), issuePage = shallowRef(null);
-  const listPage = ref(1), listSearch = ref(''), loading = ref(false), loadingCards = ref(false);
+  // TT-283：看板列表可切換看使用中或已封存。
+  const listPage = ref(1), listSearch = ref(''), listArchived = ref(false), loading = ref(false), loadingCards = ref(false);
   let generation = 0, request, debounce, silent = false, deferred = false, knownVersion = '';
   async function reload(showLoading = true) {
     // 拖曳或移動送出中不換掉列資料：背景重讀（輪詢／即時通知）延後到解除後補一次。
@@ -37,7 +38,7 @@ export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId
         if (current !== generation) return;
         rows.value = data.items; issuePage.value = data;
       } else if (mode.value === 'boards') {
-        const data = await api.boards(projectId.value, { page: listPage.value, search: listSearch.value, perPage: 20 }, options);
+        const data = await api.boards(projectId.value, { page: listPage.value, search: listSearch.value, perPage: 20, ...(listArchived.value ? { archived: 1 } : {}) }, options);
         if (current !== generation) return;
         boardPage.value = data;
       } else {
@@ -73,8 +74,9 @@ export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId
     else if (!value && deferred) { deferred = false; reload(false); }
   });
   watch(context, () => { deferred = false; knownVersion = ''; rows.value = []; boardPage.value = null; board.value = null; listPage.value = 1; reload(); poller.start(); }, { immediate: true });
-  watch([listPage, listSearch], () => { clearTimeout(debounce); debounce = setTimeout(() => reload(), 250); });
+  watch(listArchived, () => { listPage.value = 1; });
+  watch([listPage, listSearch, listArchived], () => { clearTimeout(debounce); debounce = setTimeout(() => reload(), 250); });
   watch(() => mode.value === 'list' ? JSON.stringify(listQuery.value) : '', () => { if (mode.value !== 'list') return; clearTimeout(debounce); debounce = setTimeout(() => reload(), 250); });
   onScopeDispose(() => { generation++; request?.abort(); clearTimeout(debounce); });
-  return { rows, board, boardPage, issuePage, listPage, listSearch, loading, loadingCards, pageVisible: poller.visible, reload };
+  return { rows, board, boardPage, issuePage, listPage, listSearch, listArchived, loading, loadingCards, pageVisible: poller.visible, reload };
 }

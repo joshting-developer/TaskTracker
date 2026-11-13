@@ -44,7 +44,7 @@ trait OtherWriteBoundaryCases
     {
         $domains = [
             'Project' => ['createProject', 'updateProject', 'updateStatuses'],
-            'Board' => ['createBoard', 'updateBoard', 'archiveBoard'],
+            'Board' => ['createBoard', 'updateBoard', 'archiveBoard', 'restoreBoard'],
             'Todo' => ['createTodo', 'updateTodo', 'completeTodo', 'reopenTodo', 'returnTodo', 'cancelTodo', 'convertTodo', 'readTodoNotification'],
             'ProjectMember' => ['setProjectMember', 'removeProjectMember'],
             'Workspace' => ['inviteMember', 'loadDemo'],

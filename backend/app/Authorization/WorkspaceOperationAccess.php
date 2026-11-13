@@ -52,7 +52,7 @@ class WorkspaceOperationAccess
             'updateProject' => ['projects', 'id', 'project.update'],
             'updateStatuses' => ['projects', 'projectId', 'project.statuses.update'],
             'createBoard' => ['projects', 'projectId', 'board.manage'],
-            'updateBoard', 'archiveBoard' => ['boards', 'id', 'board.manage'],
+            'updateBoard', 'archiveBoard', 'restoreBoard' => ['boards', 'id', 'board.manage'],
             'logTime' => ['issues', 'issueId', 'timeEntry.writeOwn'],
             'updateTime', 'voidTime' => ['timeEntries', 'id', 'timeEntry.writeOwn'],
             'getProjectMembers', 'setProjectMember', 'removeProjectMember' => ['projects', 'projectId', 'project.members.manage'],

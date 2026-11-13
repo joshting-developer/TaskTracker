@@ -99,7 +99,8 @@ trait BoardVersionCases
         $login($email);
         $board = $this->getJson($path.$board['id'])->assertOk()->json('data');
         $this->rpc('archiveBoard', ['id' => $board['id'], 'expectedRevision' => $board['revision']])->assertOk();
-        $this->getJson($path.$board['id'].'/version')->assertStatus(404);
+        // TT-283：封存看板唯讀可查, 版本也讀得到。
+        $this->getJson($path.$board['id'].'/version')->assertOk();
         $this->rpc('removeProjectMember', ['projectId' => $project['id'], 'userId' => $reader->id, 'expectedRevision' => $acl['revision']])->assertOk();
         $login($reader->email);
         $this->assertContains($this->getJson($path.'default/version')->status(), [403, 404], '撤權後不能探測版本');

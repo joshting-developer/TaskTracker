@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Queries;
 
 use App\Data\WorkspaceContext;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\BoardPageQueryRequest;
 use App\Http\Requests\IssueQueryRequest;
-use App\Http\Requests\PageQueryRequest;
 use App\Http\Resources\ApiResponse;
 use App\Http\Resources\Queries\BoardSummaryResource;
 use App\Http\Resources\Queries\IssueSummaryResource;
@@ -32,9 +32,9 @@ class BoardsController extends Controller
      * @param  string  $project  Project公開ID
      * @return ApiResponse 摘要分頁
      */
-    public function index(PageQueryRequest $request, string $project): ApiResponse
+    public function index(BoardPageQueryRequest $request, string $project): ApiResponse
     {
-        $data = $this->workspace->read($request, fn (WorkspaceContext $context) => $this->boards->index($context, $project, $request->pagination()));
+        $data = $this->workspace->read($request, fn (WorkspaceContext $context) => $this->boards->index($context, $project, $request->pagination(), $request->archived()));
         $items = array_map(fn ($b) => (new BoardSummaryResource($b, $project))->resolve(), $data['page']->items());
 
         return new ApiResponse([...PageResource::wrap($data['page'], $items), 'defaultBoard' => $data['defaultBoard']]);

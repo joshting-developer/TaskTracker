@@ -70,6 +70,7 @@ Route::post('/api/rpc/voidTime', [TimeEntryController::class, 'invalidate'])->na
 Route::post('/api/rpc/createBoard', [BoardController::class, 'store'])->name('rpc.createBoard');
 Route::post('/api/rpc/updateBoard', [BoardController::class, 'update'])->name('rpc.updateBoard');
 Route::post('/api/rpc/archiveBoard', [BoardController::class, 'archive'])->name('rpc.archiveBoard');
+Route::post('/api/rpc/restoreBoard', [BoardController::class, 'restore'])->name('rpc.restoreBoard');
 
 Route::post('/api/rpc/getProjectMembers', [ProjectMemberController::class, 'index'])->name('rpc.getProjectMembers');
 Route::post('/api/rpc/setProjectMember', [ProjectMemberController::class, 'save'])->name('rpc.setProjectMember');

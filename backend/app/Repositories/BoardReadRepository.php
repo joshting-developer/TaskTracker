@@ -26,24 +26,27 @@ class BoardReadRepository
      *
      * @param  Project  $project  已授權Project
      * @param  PageQueryData  $filters  有界搜尋與分頁
+     * @param  bool  $archived  true時只列已封存、依封存時間新到舊；false只列使用中
      * @return LengthAwarePaginator<Board> 看板摘要
      */
-    public function page(Project $project, PageQueryData $filters): LengthAwarePaginator
+    public function page(Project $project, PageQueryData $filters, bool $archived = false): LengthAwarePaginator
     {
         $count = Issue::whereColumn('issues.project_id', 'boards.project_id')->whereColumn('issues.workspace_id', 'boards.workspace_id');
         $this->scope->apply($count, null);
         $closed = $this->closed(clone $count);
         $term = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($filters->search)).'%';
 
-        return Board::where('workspace_id', $project->workspace_id)->where('project_id', $project->id)->whereNull('archived_at')
-            ->select(['id', 'public_id', 'project_id', 'name', 'revision'])->selectSub($count->selectRaw('COUNT(*)'), 'issue_count')
+        // TT-283：使用中依名稱排序；已封存依封存時間新到舊, 兩者都以public_id穩定排序。
+        return Board::where('workspace_id', $project->workspace_id)->where('project_id', $project->id)
+            ->when($archived, fn ($q) => $q->whereNotNull('archived_at'), fn ($q) => $q->whereNull('archived_at'))
+            ->select(['id', 'public_id', 'project_id', 'name', 'revision', 'archived_at'])->selectSub($count->selectRaw('COUNT(*)'), 'issue_count')
             ->selectSub($closed->selectRaw('COUNT(*)'), 'closed_count')
             ->when($filters->search !== '', fn ($q) => $q->whereRaw("LOWER(name) LIKE ? ESCAPE '!'", [$term]))
-            ->orderBy('name')->orderBy('public_id')->paginate($filters->perPage, ['*'], 'page', $filters->page);
+            ->when($archived, fn ($q) => $q->orderByDesc('archived_at'), fn ($q) => $q->orderBy('name'))->orderBy('public_id')->paginate($filters->perPage, ['*'], 'page', $filters->page);
     }
 
     /**
-     * 僅查同Project尚未封存的看板屬性。
+     * 查同Project的看板屬性；TT-283起包含已封存（唯讀查閱）, 寫入由ProjectBoards::current擋下。
      *
      * @param  Project  $project  已授權Project
      * @param  string  $id  看板公開ID
@@ -52,7 +55,7 @@ class BoardReadRepository
     public function find(Project $project, string $id): ?Board
     {
         return Board::where('workspace_id', $project->workspace_id)->where('project_id', $project->id)
-            ->where('public_id', $id)->whereNull('archived_at')->first(['id', 'public_id', 'project_id', 'name', 'revision']);
+            ->where('public_id', $id)->first(['id', 'public_id', 'project_id', 'name', 'revision', 'archived_at']);
     }
 
     /**

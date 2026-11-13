@@ -88,7 +88,7 @@ class ProjectBoards
         $board = $this->store->require('boards', Fields::text($input['id'] ?? null, '看板', 100, true));
         $this->store->require('projects', $board['projectId']);
         if (! empty($board['archivedAt'])) {
-            DomainError::fail('NOT_FOUND', '看板已移除');
+            DomainError::fail('NOT_FOUND', '看板已封存, 請先還原');
         }
         if (($input['expectedRevision'] ?? null) !== $board['revision']) {
             DomainError::fail('REVISION_CONFLICT', '看板已被更新, 請關閉重開後再修改');
@@ -158,6 +158,30 @@ class ProjectBoards
             'archivedAt' => now()->utc()->toISOString(),
             'revision' => $board['revision'] + 1,
         ]);
+
+        return ['id' => $board['id'], 'projectId' => $board['projectId'], 'revision' => $board['revision'] + 1];
+    }
+
+    /**
+     * TT-283：還原已封存的自訂看板；收錄設定原封不動, 卡片本來就沒被封存。
+     *
+     * @param  array  $input  id、expectedRevision與requestId
+     * @return array 看板ID、所屬Project與新revision
+     */
+    public function restore(array $input): array
+    {
+        if (($input['id'] ?? '') === 'default') {
+            DomainError::fail('INVALID_INPUT', 'Default 是固定看板, 不會被封存');
+        }
+        $board = $this->store->require('boards', Fields::text($input['id'] ?? null, '看板', 100, true));
+        $this->store->require('projects', $board['projectId']);
+        if (empty($board['archivedAt'])) {
+            DomainError::fail('INVALID_INPUT', '這個看板沒有封存');
+        }
+        if (($input['expectedRevision'] ?? null) !== $board['revision']) {
+            DomainError::fail('REVISION_CONFLICT', '看板已被更新, 請重新整理後再還原');
+        }
+        $this->store->put('boards', $board['id'], [...$board, 'archivedAt' => null, 'revision' => $board['revision'] + 1]);
 
         return ['id' => $board['id'], 'projectId' => $board['projectId'], 'revision' => $board['revision'] + 1];
     }

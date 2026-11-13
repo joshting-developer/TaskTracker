@@ -18,7 +18,7 @@ final class WriteResults
     public const PROJECT_OPERATIONS = ['createProject', 'updateProject', 'updateStatuses'];
 
     /** 有界看板寫入操作。 */
-    public const BOARD_OPERATIONS = ['createBoard', 'updateBoard', 'archiveBoard'];
+    public const BOARD_OPERATIONS = ['createBoard', 'updateBoard', 'archiveBoard', 'restoreBoard'];
 
     /**
      * 只保留資源識別與版本，不把設定歷史／描述／收錄清單放進新receipt。

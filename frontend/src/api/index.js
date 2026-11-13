@@ -82,6 +82,7 @@ export const api = {
   updateBoard: (input) => callApi('updateBoard', input),
   /** @returns {Promise<BoardWriteResult>} 新結果；不含selectedIssueIds。 */
   archiveBoard: (input) => callApi('archiveBoard', input),
+  restoreBoard: (input) => callApi('restoreBoard', input),
   /** @returns {Promise<ResourceWriteResult>} 新結果；舊receipt可能帶既存欄位。 */
   createProject: (input) => callApi('createProject', input),
   /** @returns {Promise<ResourceWriteResult>} 新結果；舊receipt可能帶既存欄位。 */

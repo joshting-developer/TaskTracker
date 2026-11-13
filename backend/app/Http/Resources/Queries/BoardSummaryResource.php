@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Queries;
 
+use App\Database\DatabaseTimes;
 use App\Models\Board;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -32,6 +33,6 @@ class BoardSummaryResource extends JsonResource
 
         return ['id' => $board->public_id, 'projectId' => $this->projectId, 'name' => $board->name,
             'revision' => (int) $board->revision, 'isDefault' => false, 'issueCount' => (int) $board->issue_count,
-            'closedCount' => (int) $board->closed_count];
+            'closedCount' => (int) $board->closed_count, 'archivedAt' => DatabaseTimes::public($board->archived_at)];
     }
 }

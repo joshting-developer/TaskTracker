@@ -15,8 +15,8 @@
 | `/api/v1/projects/{project}/issues/{issue}/comments` | 指定卡片留言分頁 |
 | `/api/v1/projects/{project}/issues/{issue}/history` | 指定卡片異動分頁 |
 | `/api/v1/projects/{project}/issues/{issue}/time` | 有效工時分頁；Epic含本身與所屬卡，按本人／團隊資格限定 |
-| `/api/v1/projects/{project}/boards` | 看板摘要搜尋分頁及獨立defaultBoard，不附卡片內容；每列`issueCount`與`closedCount`（狀態type＝closed）在同SQL以相同收錄／Epic展開去重計算（TT-248） |
-| `/api/v1/projects/{project}/boards/{board}` | 單看板屬性（含`issueCount`／`closedCount`）及明確收錄ID，上限1000；default為虛擬看板 |
+| `/api/v1/projects/{project}/boards` | 看板摘要搜尋分頁及獨立defaultBoard，不附卡片內容；每列`issueCount`與`closedCount`（狀態type＝closed）在同SQL以相同收錄／Epic展開去重計算（TT-248）。`archived=1` 改列已封存看板, 依封存時間新到舊；每列多回 `archivedAt`（使用中為null）（TT-283） |
+| `/api/v1/projects/{project}/boards/{board}` | 單看板屬性（含`issueCount`／`closedCount`、`archivedAt`）及明確收錄ID，上限1000；default為虛擬看板。已封存看板也讀得到（唯讀）, `issues`／`version` 同樣可查（TT-283） |
 | `/api/v1/projects/{project}/boards/{board}/issues` | SQL套看板範圍＋Epic動態展開去重後的卡片摘要分頁 |
 | `/api/v1/projects/{project}/boards/{board}/version` | 看板輕量變更檢查：只回`{projectId, boardId, version}`不透明版本，見下節 |
 | `/api/v1/projects/{project}/member-options` | 同Project有效成員id/name選項，分頁／搜尋，不含email或歷史 |

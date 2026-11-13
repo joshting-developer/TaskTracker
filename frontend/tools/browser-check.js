@@ -343,7 +343,7 @@ async function checkProjectAcl(page, browser, failures) {
   await teammate.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.other.id}/board/${fixture.board.id}`);
   await teammate.locator(`[data-issue="${fixture.task.identifier}"][draggable="true"]`).waitFor();
   assert.equal(await teammate.locator('.issue-card select').count(), 0);
-  assert.equal(await teammate.getByRole('button', { name: /新增任務|新增卡片|編輯收錄|移除看板/ }).count(), 0, '開發者可移動既有卡片, 但不可修改自訂收錄或新增並收錄');
+  assert.equal(await teammate.getByRole('button', { name: /新增任務|新增卡片|編輯收錄|封存看板/ }).count(), 0, '開發者可移動既有卡片, 但不可修改自訂收錄或新增並收錄');
 
   // 撤權時已開啟、未儲存的任務也必須卸載
   await teammate.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.other.id}`);
@@ -626,12 +626,13 @@ async function checkCustomBoards(page) {
   assert.equal(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth), true);
   await page.screenshot({ path: 'artifacts/board-picker-mobile.png', fullPage: true });
   await dialog.getByRole('button', { name: '關閉看板設定', exact: true }).click();
-  page.once('dialog', event => event.accept()); await page.getByRole('button', { name: '移除看板', exact: true }).click();
+  page.once('dialog', event => event.accept()); await page.getByRole('button', { name: '封存看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await page.getByRole('button', { name: '由自訂看板建立', exact: true }).waitFor();
-  assert.equal(await page.locator('.issue-card').count(), 7, '移除看板保留所有卡片與Epic');
-  await page.goto(customUrl); await page.getByRole('button', { name: '開啟看板 Default', exact: true }).waitFor();
-  assert.ok(page.url().endsWith('/boards'));
+  assert.equal(await page.locator('.issue-card').count(), 7, '封存看板保留所有卡片與Epic');
+  // TT-283：封存看板的舊網址改成唯讀查看, 不再導回清單。
+  await page.goto(customUrl); await page.getByRole('status').filter({ hasText: '這個看板已封存' }).waitFor();
+  assert.equal(page.url(), customUrl);
   console.log('PASS: project board index/default, Epic dynamic inclusion/dedup, explicit card override, atomic creation, filter intersection, deep links, conflict drafts, archive and mobile');
 }
 async function checkTaskFilters(page, projectUrl) {

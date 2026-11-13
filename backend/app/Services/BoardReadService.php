@@ -2,9 +2,10 @@
 
 namespace App\Services;
 
-use App\Data\WorkspaceContext;
 use App\Data\IssueQueryData;
 use App\Data\PageQueryData;
+use App\Data\WorkspaceContext;
+use App\Database\DatabaseTimes;
 use App\Domain\DomainError;
 use App\Models\Board;
 use App\Models\Project;
@@ -30,13 +31,14 @@ class BoardReadService
      * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  Project公開ID
      * @param  PageQueryData  $filters  有界條件
+     * @param  bool  $archived  true時列已封存的看板（TT-283）
      * @return array{page:LengthAwarePaginator,defaultBoard:array<string,mixed>} 看板摘要
      */
-    public function index(WorkspaceContext $context, string $projectId, PageQueryData $filters): array
+    public function index(WorkspaceContext $context, string $projectId, PageQueryData $filters, bool $archived = false): array
     {
         $project = $this->projects->require($context, $projectId, 'issue.read');
 
-        return ['page' => $this->boards->page($project, $filters), 'defaultBoard' => $this->summary($project, null)];
+        return ['page' => $this->boards->page($project, $filters, $archived), 'defaultBoard' => $this->summary($project, null)];
     }
 
     /**
@@ -127,6 +129,6 @@ class BoardReadService
     {
         return ['id' => $board?->public_id ?? 'default', 'projectId' => $project->public_id,
             'name' => $board?->name ?? 'Default', 'isDefault' => $board === null,
-            'revision' => $board?->revision ?? 0, ...$this->boards->count($project, $board)];
+            'revision' => $board?->revision ?? 0, 'archivedAt' => $board ? DatabaseTimes::public($board->archived_at) : null, ...$this->boards->count($project, $board)];
     }
 }
