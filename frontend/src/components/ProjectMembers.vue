@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
+import { useLeaveGuard } from '../ui/leaveGuard.js';
 import { usePagedLookup } from '../composables/usePagedLookup.js';
 import PagedSelect from './PagedSelect.vue';
 import Icon from './Icon.vue';
@@ -92,7 +93,8 @@ function toggleHistory(event) {
 watch(() => props.project.id, () => { data.value = null; cancelEdit(); historyOpen.value = false; load(); }, { immediate: true });
 watch(() => members.result.value, result => { if (result && members.page.value > result.lastPage) members.page.value = result.lastPage; });
 onScopeDispose(() => { generation++; controller?.abort(); });
-defineExpose({ dirty, saving: busy, refresh: reload });
+useLeaveGuard({ dirty: () => Boolean(dirty.value), saving: () => Boolean(busy.value), unload: true });
+defineExpose({ refresh: reload });
 </script>
 <template>
   <section class="project-members" aria-label="專案成員與權限">

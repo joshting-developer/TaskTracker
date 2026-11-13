@@ -1,11 +1,12 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { api } from '../api/index.js';
+import { useLeaveGuard } from '../ui/leaveGuard.js';
 import Icon from './Icon.vue';
 const emit = defineEmits(['close', 'saved']);
 const dialog = ref(null), profile = ref(null), name = ref(''), loading = ref(true), saving = ref(false), error = ref(''), conflict = ref(false);
 const dirty = computed(() => Boolean(profile.value && name.value !== profile.value.name));
-defineExpose({ dirty, saving });
+useLeaveGuard({ dirty: () => Boolean(dirty.value), saving: () => Boolean(saving.value), unload: true });
 let pending;
 function close() { if (!saving.value && (!dirty.value || window.confirm('還有未儲存的個人資料，確定要關閉嗎？'))) emit('close'); }
 function beforeUnload(event) { if (dirty.value) { event.preventDefault(); event.returnValue = ''; } }

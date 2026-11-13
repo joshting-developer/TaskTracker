@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, shallowRef } from 'vue';
 import { api } from '../api/index.js';
+import { useLeaveGuard } from '../ui/leaveGuard.js';
 const props = defineProps({ workspaceName: String });
 const emit = defineEmits(['close']);
 const root = shallowRef(null), name = shallowRef(''), scope = shallowRef('read'), expiresAt = shallowRef(''), rows = shallowRef([]), page = shallowRef(1), last = shallowRef(1), busy = shallowRef(false), error = shallowRef(''), secret = shallowRef('');
@@ -15,7 +16,7 @@ function trap(event) {
 onBeforeUnmount(() => { secret.value = ''; opener?.focus?.(); });
 let requestId;
 const dirty = computed(() => Boolean(name.value || expiresAt.value));
-defineExpose({ saving: busy, dirty });
+useLeaveGuard({ dirty: () => Boolean(dirty.value), saving: () => Boolean(busy.value) });
 function close() { if (!busy.value && (!dirty.value || window.confirm('還有未送出的Token設定，確定要關閉嗎？'))) { secret.value = ''; emit('close'); } }
 async function load(next = 1) {
   busy.value = true; error.value = '';

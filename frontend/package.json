@@ -12,6 +12,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "test:e2e": "node tools/browser-check.js",
     "test:composables": "node tools/refactor-composables-check.js",
+    "test:routes": "node tools/hash-routes-check.js",
     "test:markdown": "node tools/markdown-check.js",
     "test:settings": "node tools/account-settings-check.js",
     "test:board": "node tools/board-ux-check.js",

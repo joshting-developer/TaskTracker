@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, ref, toRef } from 'vue';
 import { api } from '../api/index.js';
+import { useLeaveGuard } from '../ui/leaveGuard.js';
 import { usePersonalQueries } from '../composables/usePersonalQueries.js';
 import TodoHome from './TodoHome.vue';
 const props = defineProps({ userId: String, workspaceId: String, permissions: Array, versions: Object, resumed: Number });
@@ -11,7 +12,8 @@ const query = usePersonalQueries({ versions: toRef(props, 'versions'), resumed: 
 const { scope, page, closedPage, showClosed, open, closed, counts, loading, error, data, canConvert } = query;
 async function refresh() { await query.refresh(); }
 async function focus(id) { await query.focus(id, { userId: props.userId, focus: async (id) => { await nextTick(); return tool.value?.focus(id); } }); }
-defineExpose({ dirty: computed(() => Boolean(tool.value?.dirty)), saving: computed(() => Boolean(tool.value?.saving)), focus, focusQuickEntry: () => tool.value?.focusQuickEntry(), refresh });
+useLeaveGuard({ dirty: () => Boolean(tool.value?.dirty), saving: () => Boolean(tool.value?.saving), unload: true });
+defineExpose({ focus, focusQuickEntry: () => tool.value?.focusQuickEntry(), refresh });
 </script>
 <template>
   <div>

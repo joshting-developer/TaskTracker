@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onScopeDispose, ref, shallowRef, useId, watch } from 'vue';
 import { api } from '../api/index.js';
+import { useLeaveGuard } from '../ui/leaveGuard.js';
 import { usePagedLookup } from '../composables/usePagedLookup.js';
 import { onTabKeydown } from '../ui/tabs.js';
 const props = defineProps({ meta: Object, activeTab: { type: String, default: 'general' } });
@@ -113,7 +114,8 @@ watch(() => props.activeTab, next => {
 watch(context, () => { data.value = null; roleChoices.value = []; link.value = ''; email.value = ''; load(); }, { immediate: true });
 watch(() => members.result.value, result => { if (result && members.page.value > result.lastPage) members.page.value = result.lastPage; });
 onScopeDispose(() => { generation++; controller?.abort(); });
-defineExpose({ dirty, saving: busy, refresh: () => load(true) });
+useLeaveGuard({ dirty: () => Boolean(dirty.value), saving: () => Boolean(busy.value), unload: true });
+defineExpose({ refresh: () => load(true) });
 </script>
 <template>
   <section class="workspace-settings-page" aria-labelledby="workspace-settings-heading">

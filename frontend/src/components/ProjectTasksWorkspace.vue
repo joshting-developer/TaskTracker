@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
+import { useLeaveGuard } from '../ui/leaveGuard.js';
 import Icon from './Icon.vue';
 import { lazyFeature } from '../ui/lazyFeature.js';
 import { useBoardRealtime } from '../ui/boardRealtime.js';
@@ -60,7 +61,8 @@ function applyMove(issue, fields) {
   rows.value = rows.value.map(row => row === original ? moved : row);
   return () => { if (rows.value.includes(moved)) rows.value = rows.value.map(row => row === moved ? original : row); };
 }
-defineExpose({ create: prepareEditor, dirty, saving: computed(() => busy.value || Boolean(moving.value)), refresh: reload });
+useLeaveGuard({ dirty: () => Boolean(dirty.value), saving: () => Boolean(busy.value || moving.value) });
+defineExpose({ create: prepareEditor, refresh: reload });
 const realtime = useBoardRealtime({ active: computed(() => props.mode === 'board' && !props.detailPage && pageVisible.value), userId: computed(() => props.userId), workspaceId: computed(() => props.workspaceId), projectId: computed(() => props.project.id), refresh: () => reload(false) });
 
 function handleFailure(failure) {

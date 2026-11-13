@@ -1,11 +1,12 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { api } from '../api/index.js';
+import { useLeaveGuard } from '../ui/leaveGuard.js';
 import Icon from './Icon.vue';
 const props = defineProps({ token: String, email: String, accept: Function });
 const emit = defineEmits(['close', 'logout']);
 const dialog = ref(null), invitation = ref(null), loading = ref(true), busy = ref(false), error = ref('');
-defineExpose({ saving: busy });
+useLeaveGuard({ saving: () => Boolean(busy.value) });
 function close() { if (!busy.value) emit('close'); }
 async function load() {
   loading.value = true; error.value = '';

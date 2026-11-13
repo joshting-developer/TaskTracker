@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
+import { useLeaveGuard } from '../ui/leaveGuard.js';
 import { usePolling } from '../composables/usePolling.js';
 import { pollIntervals } from '../ui/pollingConfig.js';
 import { dateInTaipei, hours } from '../domain/model.js';
@@ -95,7 +96,8 @@ watch(dayPage, loadDay);
 watch([month, member, selectedDate], () => writeContext(props.contextKey, { time: { month: month.value, member: member.value, date: selectedDate.value } }), { flush: 'post' });
 poller.start();
 onScopeDispose(() => { summaryGeneration++; dayGeneration++; summaryRequest?.abort(); dayRequest?.abort(); });
-defineExpose({ dirty, saving, refresh });
+useLeaveGuard({ dirty: () => Boolean(dirty.value), saving: () => Boolean(saving.value), unload: true });
+defineExpose({ refresh });
 
 function moveMonth(direction) {
   const [year, current] = (month.value || dateInTaipei().slice(0, 7)).split('-').map(Number);

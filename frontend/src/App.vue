@@ -11,13 +11,15 @@ import { contextKey, taskScope, writeContext } from './ui/workContext.js';
 import { usePersonalSync } from './composables/usePersonalSync.js';
 import { api, setWorkspaceContext } from './api/index.js';
 import { syncEntryPath } from './entryPath.js';
+import { provideLeaveGuards } from './ui/leaveGuard.js';
+import { buildHash, parseHash, settingsHash } from './ui/hashRoutes.js';
 import WorkspaceSwitcher from './components/WorkspaceSwitcher.vue';
 
 const ProjectDialog = lazyFeature(() => import('./components/ProjectDialog.vue'));
 const ProjectTasksWorkspace = lazyFeature(() => import('./components/ProjectTasksWorkspace.vue'));
 const WorkspaceSettings = lazyFeature(() => import('./components/WorkspaceSettings.vue'));
 const PersonalTokensDialog = lazyFeature(() => import('./components/PersonalTokensDialog.vue'));
-const tokensOpen = shallowRef(false), tokenTool = useTemplateRef('tokenTool');
+const tokensOpen = shallowRef(false);
 const ProfileDialog = lazyFeature(() => import('./components/ProfileDialog.vue'));
 const TimeCalendar = lazyFeature(() => import('./components/TimeCalendar.vue'));
 const TimeAnalysis = lazyFeature(() => import('./components/TimeAnalysis.vue'));
@@ -30,14 +32,15 @@ const PersonalNotifications = lazyFeature(() => import('./components/PersonalNot
 const NotificationPreview = lazyFeature(() => import('./components/NotificationPreview.vue'));
 const WorkspaceInvitation = lazyFeature(() => import('./components/WorkspaceInvitation.vue'));
 
+const leaveGuards = provideLeaveGuards();
 const workspace = shallowRef({ projects: [], members: [], meta: {} });
 const authenticated = shallowRef(false);
-const todoTool = useTemplateRef('todoTool'), conversionTool = useTemplateRef('conversionTool'), convertingTodo = shallowRef(null), todoNotificationsOpen = shallowRef(false);
+const todoTool = useTemplateRef('todoTool'), convertingTodo = shallowRef(null), todoNotificationsOpen = shallowRef(false);
 const todoUnread = computed(() => personalSync.unread.value);
-const switchingWorkspace = shallowRef(false), workspaceInviteToken = shallowRef(''), invitationTool = useTemplateRef('invitationTool');
+const switchingWorkspace = shallowRef(false), workspaceInviteToken = shallowRef('');
 const teamTab = shallowRef('general'), teamTool = useTemplateRef('teamTool');
 const canManageWorkspace = computed(() => workspace.value.meta.permissions?.includes('workspace.ownership'));
-const profileOpen = shallowRef(false), profileTool = useTemplateRef('profileTool'), accountMenu = useTemplateRef('accountMenu');
+const profileOpen = shallowRef(false), accountMenu = useTemplateRef('accountMenu');
 let settingsOpener;
 const section = shallowRef('tasks');
 const sectionPermissions = { settings: 'project.statuses.update', members: 'project.members.manage', time: 'timeEntry.readOwn' };
@@ -146,12 +149,10 @@ async function refreshWorkspace() {
     } else error.value = failure.message; } }
   finally { if (generation === refreshGeneration) loading.value = false; }
 }
-function projectHash(id, issueId = '', mode = view.value, selectedBoardId = boardId.value, fullPage = detailPage.value, targetSection = issueId ? 'tasks' : section.value) {
-  const featurePath = targetSection !== 'tasks' ? `/${targetSection}` : mode === 'boards' ? '/boards' : mode === 'board' ? `/board${selectedBoardId === 'default' ? '' : `/${encodeURIComponent(selectedBoardId)}`}` : '';
-  return id ? `#/projects/${encodeURIComponent(id)}${featurePath}${issueId ? `/issues/${encodeURIComponent(issueId)}${fullPage ? '?detail=1' : ''}` : ''}` : landing.value === 'analysis' ? `#/time-analysis${analysisMode.value === 'index' ? '' : `/${analysisMode.value}`}` : landing.value === 'settings' ? workspaceSettingsHash(teamTab.value) : landing.value === 'projects' ? '#/projects' : '#/';
+function projectHash(id, issueId = '', mode = view.value, selectedBoardId = boardId.value, fullPage = detailPage.value, targetSection = section.value) {
+  return buildHash({ project: id, issue: issueId, mode, board: selectedBoardId, detail: fullPage, section: targetSection, landing: landing.value, analysis: analysisMode.value, teamTab: teamTab.value });
 }
 function issueMissing() { notify('找不到這個專案內的任務'); history.replaceState(null, '', projectHash(projectId.value)); readHash(true); }
-function workspaceSettingsHash(tab = 'general') { return `#/workspace/settings${tab === 'members' ? '/members' : ''}`; }
 function ensureSectionAccess() {
   if (landing.value === 'settings' && !canManageWorkspace.value) {
     history.replaceState(null, '', '#/'); readHash(true); notify('你沒有工作空間設定的存取權限');
@@ -168,10 +169,9 @@ function ensureSectionAccess() {
   }
 }
 function canLeave() {
-  if (switchingWorkspace.value || invitationTool.value?.saving) return false;
-  if (projectTasksTool.value?.saving || projectTasksTool.value?.dirty) { if (projectTasksTool.value?.saving || !window.confirm('還有未儲存的內容, 確定要離開嗎？')) return false; }
-  if (tokenTool.value?.saving || teamTool.value?.saving || profileTool.value?.saving || workspaceTool.value?.saving || todoTool.value?.saving || conversionTool.value?.saving) return false;
-  return (!tokenTool.value?.dirty && !teamTool.value?.dirty && !profileTool.value?.dirty && !todoTool.value?.dirty && !conversionTool.value?.dirty && !workspaceTool.value?.dirty) || window.confirm('還有未儲存的內容, 確定要離開嗎？');
+  // 各草稿owner自己登記（ui/leaveGuard.js）；儲存中一律不離開, 有未儲存內容先確認。
+  if (switchingWorkspace.value || leaveGuards.saving()) return false;
+  return !leaveGuards.dirty() || window.confirm('還有未儲存的內容, 確定要離開嗎？');
 }
 function changeSection(value) {
   if ((value !== section.value || selectedId.value) && canLeave()) {
@@ -184,7 +184,7 @@ function openWorkspaceSettings(tab = 'general') {
   if (!canManageWorkspace.value) return;
   if (landing.value === 'settings' && teamTab.value === tab) { sidebarOpen.value = false; return; }
   if (!canLeave()) return;
-  history.pushState(null, '', workspaceSettingsHash(tab));
+  history.pushState(null, '', settingsHash(tab));
   readHash(true); sidebarOpen.value = false;
 }
 function openProfile() { settingsOpener = document.activeElement; profileOpen.value = true; }
@@ -303,29 +303,10 @@ function openIssue(issue, fullPage = detailPage.value, approved = false) {
   if (fullPage) nextTick(() => window.scrollTo(0, 0));
 }
 function readHash(skipGuard = false) {
-  const [path, query = ''] = location.hash.split('?');
-  const route = path.match(/^#\/projects\/([^/]+)(?:\/(board|boards)(?:\/((?!issues(?:\/|$))[^/]+))?)?(?:\/issues\/([^/]+))?$/);
-  const featureRoute = path.match(/^#\/projects\/([^/]+)\/(epics|time|settings|members|notifications)$/);
-  const legacyId = path.match(/^#\/issue\/([^/]+)$/)?.[1];
-  const retiredView = route && new URLSearchParams(query).has('view');
-  let nextProject = '', nextIssue = '', nextBoard = 'default';
-  try {
-    nextProject = route || featureRoute ? decodeURIComponent((route || featureRoute)[1]) : '';
-    nextIssue = route?.[4] ? decodeURIComponent(route[4]) : legacyId ? decodeURIComponent(legacyId) : '';
-    if (route?.[2] === 'board' && route[3]) nextBoard = decodeURIComponent(route[3]);
-    // 舊#/issue/<id>由refresh以issue-locations解析可讀位置，不再從整包Issue查找。
-  } catch { history.replaceState(null, '', '#/'); }
-  const analysisRoute = path.match(/^#\/time-analysis(?:\/(members|projects|trend))?$/);
-  const nextAnalysis = analysisRoute?.[1] || 'index';
-  const settingsRoute = path.match(/^#\/workspace\/settings(?:\/(general|members))?$/);
-  const nextTeamTab = settingsRoute?.[1] || 'general';
-  const nextLanding = settingsRoute ? 'settings' : analysisRoute ? 'analysis' : path === '#/projects' || path === '#/projects/' ? 'projects' : 'home';
-  const nextInvite = path === '#/invite' ? new URLSearchParams(query).get('token') || '' : '';
+  const next = parseHash(location.hash);
+  if (next.malformed) history.replaceState(null, '', '#/');
+  const { project: nextProject, issue: nextIssue, board: nextBoard, mode: nextMode, section: nextSection, detail: nextDetail, landing: nextLanding, teamTab: nextTeamTab, analysis: nextAnalysis, invite: nextInvite, retiredEpics, retiredView } = next;
   const landingChanged = landing.value !== nextLanding || (nextLanding === 'settings' && teamTab.value !== nextTeamTab) || analysisMode.value !== nextAnalysis || workspaceInviteToken.value !== nextInvite;
-  const nextMode = route?.[2] || 'list';
-  const retiredEpics = featureRoute?.[2] === 'epics';
-  const nextSection = retiredEpics ? 'tasks' : featureRoute?.[2] || 'tasks';
-  const nextDetail = Boolean(nextIssue && new URLSearchParams(query).get('detail') === '1');
   const issueChanged = selectedId.value !== nextIssue || detailPage.value !== nextDetail;
   const returning = Boolean(selectedId.value && !nextIssue);
   const projectChanged = projectId.value !== nextProject, modeChanged = view.value !== nextMode, boardChanged = boardId.value !== nextBoard;
@@ -394,7 +375,7 @@ async function loadDemo() {
   } catch (failure) { error.value = failure.message; }
   finally { demoLoading.value = false; }
 }
-function beforeUnload(event) { if (teamTool.value?.dirty || profileTool.value?.dirty || todoTool.value?.dirty || conversionTool.value?.dirty || workspaceTool.value?.dirty) { event.preventDefault(); event.returnValue = ''; } }
+function beforeUnload(event) { if (leaveGuards.dirty({ unload: true })) { event.preventDefault(); event.returnValue = ''; } }
 function keydown(event) {
   if (event.key === 'Escape') sidebarOpen.value = false;
 }
@@ -470,12 +451,12 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
         <footer class="page-footer"><span>TaskTracker <b>v0.2</b></span></footer>
       </div>
     </main>
-    <WorkspaceInvitation v-if="workspaceInviteToken" ref="invitationTool" :key="workspaceInviteToken" :token="workspaceInviteToken" :email="workspace.members.find(member => member.id === currentUserId)?.email" :accept="token => changeWorkspace('', token)" @close="closeInvitation" @logout="loginForInvitation" />
-    <TodoConversion v-if="convertingTodo" ref="conversionTool" :key="`convert:${convertingTodo.id}`" :todo="convertingTodo" :user="workspace.members.find(member=>member.id===currentUserId)" @close="convertingTodo=null" @converted="convertedTodo" @reload="reloadConversion" @open="jumpFromConversion" />
+    <WorkspaceInvitation v-if="workspaceInviteToken" :key="workspaceInviteToken" :token="workspaceInviteToken" :email="workspace.members.find(member => member.id === currentUserId)?.email" :accept="token => changeWorkspace('', token)" @close="closeInvitation" @logout="loginForInvitation" />
+    <TodoConversion v-if="convertingTodo" :key="`convert:${convertingTodo.id}`" :todo="convertingTodo" :user="workspace.members.find(member=>member.id===currentUserId)" @close="convertingTodo=null" @converted="convertedTodo" @reload="reloadConversion" @open="jumpFromConversion" />
     <PersonalNotifications v-if="todoNotificationsOpen" :workspace-id="workspace.meta.workspace.id" :version="`${personalSync.versions.value?.notifications}:${personalSync.versions.value?.todos}`" @close="todoNotificationsOpen=false" @open="openTodoNotification" />
 
-    <PersonalTokensDialog v-if="tokensOpen" ref="tokenTool" :key="workspace.meta.workspace?.id" :workspace-name="workspace.meta.workspace?.name" @close="tokensOpen = false" />
-    <ProfileDialog v-if="profileOpen" ref="profileTool" @close="closeSettings('profile')" @saved="savedProfile" />
+    <PersonalTokensDialog v-if="tokensOpen" :key="workspace.meta.workspace?.id" :workspace-name="workspace.meta.workspace?.name" @close="tokensOpen = false" />
+    <ProfileDialog v-if="profileOpen" @close="closeSettings('profile')" @saved="savedProfile" />
     <ProjectDialog :lookup="(filters,options)=>api.projectLeads({...filters,project:editingProject?.id},options)" v-if="creatingProject || editingProject" :project="editingProject" :members="workspace.members" :user-id="currentUserId" @close="creatingProject = false; editingProject = null" @created="createdProject" />
     <Transition name="toast"><div v-if="toast" class="toast-message" role="status"><span><Icon name="check" :size="16" /></span>{{ toast }}</div></Transition>
   </div>

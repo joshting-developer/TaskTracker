@@ -29,3 +29,11 @@ TT-179／2026-11-13。範圍：frontend/src/App.vue（587行）與ProjectTasksWo
 - TT-285 以草稿leave registry取代App逐一查詢工具ref，並抽出導覽／工作區Session composable（決策2、3）。
 
 本卡為評估交付：只新增本文件與卡片，未改產品程式；驗收以靜態路由分析（readHash只產生list／board／boards）與模板條件交叉核對為依據，實際刪除時需跑完整browser-check與核准視覺比較。
+
+## 實作結果（2026-11-13, Claude）
+
+- TT-284：舊整包任務區已從App.vue刪掉。實際比評估時更確定是死碼：App的 `workspace.issues` 一律是空陣列, 舊詳細頁和編輯面板根本不可能出現。側欄在非任務頁顯示的任務數也是讀這份空資料, 一直是0, 一起拿掉
+- TT-285：
+  - 離開保護改成 `src/ui/leaveGuard.js`：各草稿owner在setup裡 `useLeaveGuard({ dirty, saving, unload })` 自己登記, 卸載自動移除；App的 `canLeave()` 只剩「有人儲存中就不離開, 有未儲存就先確認」。`unload: true` 的owner才會在關閉分頁時提醒, 範圍跟原本的beforeunload一樣
+  - hash網址的解析和組成抽成純函式 `src/ui/hashRoutes.js`（`parseHash`／`buildHash`／`settingsHash`）, 有 `npm run test:routes` 驗17種既有網址組回去一模一樣；App的readHash只負責把結果套到畫面狀態
+  - `useWorkspaceSession` 這次不抽：TT-284刪完後登入／切換／登出只剩約30行, 而且跟重設畫面狀態綁很緊, 抽出去只是把十幾個ref傳來傳去, 不符合「不為行數拆」的原則。之後如果Session流程再長大再拆

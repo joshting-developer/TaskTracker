@@ -1,6 +1,7 @@
 <script setup>
-import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
+import { onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
+import { useLeaveGuard } from '../ui/leaveGuard.js';
 import ProjectSettings from './ProjectSettings.vue';
 const props = defineProps({ project: Object });
 const emit = defineEmits(['updated', 'access']);
@@ -26,7 +27,8 @@ async function refresh() {
 }
 watch(() => [props.project.id, props.project.revision], refresh, { immediate: true });
 onScopeDispose(() => { generation++; controller?.abort(); });
-defineExpose({ refresh, dirty: computed(() => Boolean(tool.value?.dirty)), saving: computed(() => Boolean(tool.value?.saving)) });
+useLeaveGuard({ dirty: () => Boolean(tool.value?.dirty), saving: () => Boolean(tool.value?.saving), unload: true });
+defineExpose({ refresh });
 </script>
 <template>
   <div>
