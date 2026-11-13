@@ -1,3 +1,9 @@
+## 2026-11-13 TT-299 開發者文件頁加回到TaskTracker的入口
+
+- Josh回報進了 `/api/public/docs` 就回不去TaskTracker, 標題列的「TaskTracker」改成連回首頁, 右邊加「回到 TaskTracker」, 「API 文件」字樣連回文件首頁
+- 只改文件頁的HTML和樣式, 沒動OpenAPI和文件內容
+- 已測：DeveloperDocumentationTest（隔離環境另外掛上resources才讀得到新模板）、test:docs五頁三尺寸沒有橫向捲動
+
 ## 2026-11-13 TT-298 訪客TopBar改成品牌＋登入＋建立工作空間
 
 - Josh說開始做我建議的那幾輪卡, 有問題先用我的建議, 再留言給他

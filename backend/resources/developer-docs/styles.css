@@ -5,8 +5,10 @@ a { color:var(--brand); text-underline-offset:3px; overflow-wrap:anywhere; }
 a:focus-visible,pre:focus-visible { outline:3px solid var(--brand); outline-offset:3px; }
 header { min-height:72px; padding:12px 32px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; gap:20px; }
 header a { min-height:44px; display:inline-flex; align-items:center; }
-.brand { color:var(--ink); font-size:22px; font-weight:700; text-decoration:none; gap:18px; }
-.brand span { font-size:14px; font-weight:400; color:var(--muted); }
+.brand { display:flex; align-items:center; gap:18px; }
+.brand-site { color:var(--ink); font-size:22px; font-weight:700; text-decoration:none; }
+.brand-docs { font-size:14px; color:var(--muted); text-decoration:none; }
+.header-links { display:flex; align-items:center; gap:20px; }
 .layout { max-width:1240px; margin:auto; display:grid; grid-template-columns:210px minmax(0,1fr); gap:48px; padding:32px; }
 nav { align-self:start; position:sticky; top:24px; display:grid; gap:4px; }
 nav a { min-height:44px; padding:8px 12px; text-decoration:none; color:var(--muted); border-radius:4px; }
@@ -25,4 +27,4 @@ table { display:block; width:100%; overflow-x:auto; border-collapse:collapse; fo
 blockquote { margin:24px 0; border-left:3px solid var(--line); padding-left:20px; color:var(--muted); }
 .skip { position:absolute; top:-100px; left:16px; padding:10px; background:white; } .skip:focus { top:8px; }
 @media(max-width:800px) { header{padding:12px 20px;} .layout { grid-template-columns:minmax(0,1fr); gap:20px; padding:20px; } nav { position:static; display:flex; flex-wrap:wrap; border-bottom:1px solid var(--line); padding-bottom:16px; gap:4px; } h1 { font-size:26px; } }
-@media(max-width:420px) { header { flex-wrap:wrap; gap:4px; } .brand { font-size:20px; } .layout { padding:16px; } pre { padding:12px; font-size:14px; } }
+@media(max-width:420px) { header { flex-wrap:wrap; gap:4px; } .brand-site { font-size:20px; } .header-links { gap:16px; } .layout { padding:16px; } pre { padding:12px; font-size:14px; } }
