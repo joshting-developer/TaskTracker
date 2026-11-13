@@ -3,6 +3,7 @@ import { mkdirSync } from 'node:fs';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
 import { dateInTaipei, epicSummary } from '../src/domain/model.js';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 if (!process.env.E2E_API_URL) throw new Error('請設定隔離E2E_API_URL，不可使用業務資料庫');
 let server, browser;
 async function request(page, operation, input = {}, group = 'rpc') {
@@ -16,22 +17,22 @@ async function call(page, operation, input = {}, group = 'rpc') {
   const result = await request(page, operation, input, group); assert.equal(result.ok, true, JSON.stringify(result)); if (result.data?.verificationRequired) return call(page, 'verify-email', { code: 'local666' }, 'auth'); return result.data;
 }
 try {
-  server = await preview({ preview: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
+  server = await preview({ preview: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } }), page = await context.newPage(), errors = [];
   page.setDefaultTimeout(10000); page.on('pageerror', error => errors.push(error.message));
-  await page.goto('http://127.0.0.1:5175/login');
+  await page.goto(`http://127.0.0.1:${e2ePort}/login`);
   const token = crypto.randomUUID(), password = 'issue-time-test-only-password';
   const identity = await call(page, 'register', { name: '工時負責人', email: `time-owner-${token}@example.test`, password, workspaceName: '工時驗證' }, 'auth');
   const project = await call(page, 'createProject', { name: '詳細頁填報', code: 'TIME' });
   const task = { ...{ projectId: project.id, title: '整理操作說明', type: 'task' }, ...(await call(page, 'createIssue', { projectId: project.id, title: '整理操作說明', type: 'task' })) }; // 寫入只回有界結果（TT-178）
   const epic = { ...{ projectId: project.id, title: '發佈準備', type: 'epic' }, ...(await call(page, 'createIssue', { projectId: project.id, title: '發佈準備', type: 'epic' })) }; // 寫入只回有界結果（TT-178）
   const child = { ...{ projectId: project.id, title: '上線前檢查', type: 'bug', epicId: epic.id }, ...(await call(page, 'createIssue', { projectId: project.id, title: '上線前檢查', type: 'bug', epicId: epic.id })) }; // 寫入只回有界結果（TT-178）
-  const url = issue => `http://127.0.0.1:5175/app/#/projects/${project.id}/issues/${issue.id}?detail=1`;
+  const url = issue => `http://127.0.0.1:${e2ePort}/app/#/projects/${project.id}/issues/${issue.id}?detail=1`;
   const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
   const drawer = page.locator('.time-entry-drawer');
   async function openIssue(issue) { await page.goto(url(issue)); await page.reload(); const response=page.waitForResponse(r => new URL(r.url()).pathname.endsWith(`/issues/${issue.id}/time`) && r.status()===200); await detail.getByRole('tab', { name: /^工時/ }).click(); const data=(await (await response).json()).data; await page.waitForFunction(count => document.querySelectorAll('.issue-detail-work').length===count,data.items.length); }
-  await page.goto(`http://127.0.0.1:5175/app/#/projects/${project.id}/epics`);
+  await page.goto(`http://127.0.0.1:${e2ePort}/app/#/projects/${project.id}/epics`);
   await page.reload();
   await page.locator(`tr[data-issue="${epic.identifier}"]`).waitFor();
   assert.equal(new URL(page.url()).hash, `#/projects/${project.id}`, '舊概覽網址返回原專案列表');
@@ -76,7 +77,7 @@ try {
 
   await openIssue(task); await detail.getByRole('button', { name: `修改工時 ${entry.id}`, exact: true }).click();
   await drawer.getByLabel('投入小時', { exact: true }).fill('0.75'); await drawer.getByLabel('工時說明').fill('保留的工時草稿');
-  const otherTab = await context.newPage(); await otherTab.goto('http://127.0.0.1:5175/login');
+  const otherTab = await context.newPage(); await otherTab.goto(`http://127.0.0.1:${e2ePort}/login`);
   await call(otherTab, 'updateTime', { id: entry.id, expectedRevision: entry.revision, workDate: entry.workDate, minutes: 60, note: '另一視窗修改' });
   await page.getByRole('button', { name: '重新整理工作空間', exact: true }).evaluate(button => button.click());
   const conflict = page.waitForResponse(response => response.url().endsWith('/api/rpc/updateTime') && response.status() === 409);
@@ -142,7 +143,7 @@ try {
   console.log('PASS: 每日上限、遺失回應重試不重複、Epic詳細頁與月曆直接填報、本人修改、子卡不改掛、總覽／加總去重／作廢排除');
 
   const invite = await call(page, 'inviteMember', { email: `time-member-${token}@example.test` });
-  const member = await (await browser.newContext()).newPage(); member.on('pageerror', error => errors.push(error.message)); await member.goto('http://127.0.0.1:5175/login');
+  const member = await (await browser.newContext()).newPage(); member.on('pageerror', error => errors.push(error.message)); await member.goto(`http://127.0.0.1:${e2ePort}/login`);
   const memberIdentity = await call(member, 'register', { name: '工時成員', email: invite.email, password, inviteToken: invite.token }, 'auth');
   let acl = await call(page, 'getProjectMembers', { projectId: project.id });
   await call(page, 'setProjectMember', { projectId: project.id, userId: memberIdentity.user.id, roleId: 'developer', expectedRevision: acl.revision });

@@ -2,13 +2,14 @@ import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import { moveBoardCard } from './board-actions.js';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 // TT-149：拖曳立即回饋、送出中暫停背景換列、失敗／衝突還原；只連隔離E2E服務。
 if (!process.env.E2E_API_URL) throw new Error('必須指定隔離E2E_API_URL');
 // 看板輪詢縮為10秒，讓背景輪次落在HTTP 20秒逾時之前，同時驗證VITE_POLL_BOARD_MS覆寫。
 process.env.VITE_POLL_BOARD_MS = '10000';
 let server, browser;
 try {
-  server = await createServer({ root: new URL('..', import.meta.url).pathname, server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
+  server = await createServer({ root: new URL('..', import.meta.url).pathname, server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } }), errors = [], requests = [];
@@ -17,7 +18,7 @@ try {
   const sizes = { version: 0, issues: 0 };
   page.on('response', async response => { const path = new URL(response.url()).pathname; const key = /\/version$/.test(path) ? 'version' : /\/boards\/[^/]+\/issues$/.test(path) ? 'issues' : ''; if (key) try { sizes[key] = (await response.body()).length; } catch { /* 導覽後不可取 */ } });
   page.on('request', request => { const url = new URL(request.url()); if (url.pathname.startsWith('/api/')) requests.push(url.pathname); });
-  await page.goto('http://127.0.0.1:5175/login');
+  await page.goto(`http://127.0.0.1:${e2ePort}/login`);
   async function call(op, input = {}, group = 'rpc') {
     return page.evaluate(async ({ op, input, group }) => {
       const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();
@@ -34,7 +35,7 @@ try {
 
   // 先裝假時鐘再載入，背景輪詢計時器受fastForward控制。
   await page.clock.install();
-  await page.goto(`http://127.0.0.1:5175/app/#/projects/${project.id}/board`);
+  await page.goto(`http://127.0.0.1:${e2ePort}/app/#/projects/${project.id}/board`);
   await page.reload();
   const card = identifier => page.locator(`.issue-card[data-issue="${identifier}"]`);
   const inColumn = (identifier, state) => page.locator(`[data-column="${state}"] [data-issue="${identifier}"]`);

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 // TT-226：各頁允許的API、初次請求數／回應bytes門檻與背景請求回歸；500卡隔離資料，只連隔離E2E服務。
 // 門檻來自本工具在隔離MySQL的實測值再留餘裕（見docs/api-budgets-2026-11-12.md），不是正式SLO。
 if (!process.env.E2E_API_URL) throw new Error('必須指定隔離E2E_API_URL');
@@ -18,7 +19,7 @@ const MEASURE = process.env.BUDGET_MEASURE === '1';
 const FORBIDDEN = /\/api\/rpc\/(getWorkspace|getTodos)$/;
 let server, browser;
 try {
-  server = await createServer({ root: new URL('..', import.meta.url).pathname, server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
+  server = await createServer({ root: new URL('..', import.meta.url).pathname, server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } }), errors = [];
@@ -32,7 +33,7 @@ try {
     log.push(item);
     try { item.bytes = (await response.body()).length; } catch { /* 導覽後不可取 */ }
   });
-  await page.goto('http://127.0.0.1:5175/login');
+  await page.goto(`http://127.0.0.1:${e2ePort}/login`);
   async function call(op, input = {}, group = 'rpc') {
     return page.evaluate(async ({ op, input, group }) => {
       const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();

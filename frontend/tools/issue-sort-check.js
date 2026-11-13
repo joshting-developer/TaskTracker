@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 const api = process.env.E2E_API_URL || '';
 if (!/^http:\/\/127\.0\.0\.1:13\d{3}$/.test(api)) throw new Error('請設定隔離E2E_API_URL（127.0.0.1:13xxx），不可使用業務資料庫');
 const folder = 'artifacts/tt306';
@@ -18,18 +19,18 @@ async function call(page, operation, input = {}, group = 'rpc') {
   }, { operation, input, group });
 }
 try {
-  server = await createServer({ server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': api } } });
+  server = await createServer({ server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': api } } });
   await server.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, locale: 'zh-TW', reducedMotion: 'reduce' });
   page.setDefaultTimeout(15000);
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto('http://127.0.0.1:5175/login');
+  await page.goto(`http://127.0.0.1:${e2ePort}/login`);
   await call(page, 'register', { name: '排序驗收', email: `tt306-${crypto.randomUUID()}@example.test`, password: 'tt306-test-password', workspaceName: '排序驗收' }, 'auth');
   const project = await call(page, 'createProject', { name: '排序', code: 'TTSRT' });
   // 依序建立：第一張最舊；只有第二、三張有到期日。
   for (const [title, dueDate] of [['第一張', ''], ['第二張', '2026-12-20'], ['第三張', '2026-12-10'], ['第四張', '']]) await call(page, 'createIssue', { projectId: project.id, title, dueDate });
-  const url = `http://127.0.0.1:5175/app/#/projects/${project.id}`;
+  const url = `http://127.0.0.1:${e2ePort}/app/#/projects/${project.id}`;
   await page.goto(url);
   const titles = () => page.locator('.issue-table .task-title').allInnerTexts();
   // 換排序後列表會延遲重讀；等到順序符合預期再比對, 最多5秒。

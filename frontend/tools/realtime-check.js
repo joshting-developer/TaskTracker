@@ -4,6 +4,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 
 // 本測試只使用獨立Compose；斷線測試會暫停該專案的Reverb，絕不操作主服務。
 const testProject = 'tasktracker-realtime-test';
@@ -24,7 +25,7 @@ async function call(page, operation, input = {}, group = 'rpc') {
   assert.equal(result.ok, true, JSON.stringify(result)); if (result.data?.verificationRequired) return call(page, 'verify-email', { code: 'local666' }, 'auth'); return result.data;
 }
 try {
-  server = await preview({ preview: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL, '/reverb': { target: 'http://127.0.0.1:18080', ws: true, rewrite: path => path.replace(/^\/reverb/, '') } } } });
+  server = await preview({ preview: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL, '/reverb': { target: 'http://127.0.0.1:18080', ws: true, rewrite: path => path.replace(/^\/reverb/, '') } } } });
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const owner = await (await browser.newContext()).newPage(), reader = await (await browser.newContext()).newPage();
   const errors = [], signals = []; let closed = 0;
@@ -33,7 +34,7 @@ try {
     socket.on('framereceived', ({ payload }) => { try { const message = JSON.parse(payload); if (message.event === 'project.changed') signals.push(typeof message.data === 'string' ? JSON.parse(message.data) : message.data); } catch {} });
     socket.on('close', () => closed++);
   });
-  await owner.goto('http://127.0.0.1:5175/login'); await reader.goto('http://127.0.0.1:5175/login');
+  await owner.goto(`http://127.0.0.1:${e2ePort}/login`); await reader.goto(`http://127.0.0.1:${e2ePort}/login`);
   const token = crypto.randomUUID(), password = 'realtime-browser-password';
   const identity = await call(owner, 'register', { name: '即時負責人', email: `live-owner-${token}@example.test`, password, workspaceName: '即時協作' }, 'auth');
   const project = await call(owner, 'createProject', { name: '多人同步', code: 'SOCKET' });
@@ -44,7 +45,7 @@ try {
   assert.equal((await request(reader, 'authorize', { channel_name: channel, socket_id: '123.456' }, 'realtime')).status, 404);
   let acl = await call(owner, 'getProjectMembers', { projectId: project.id });
   acl = await call(owner, 'setProjectMember', { projectId: project.id, userId: member.user.id, roleId: 'developer', expectedRevision: acl.revision });
-  const boardUrl = `http://127.0.0.1:5175/app/#/projects/${project.id}/board`;
+  const boardUrl = `http://127.0.0.1:${e2ePort}/app/#/projects/${project.id}/board`;
   await owner.goto(boardUrl); await owner.reload(); await reader.goto(boardUrl); await reader.reload();
   const live = page => page.getByRole('status', { name: '看板同步狀態', exact: true });
   await live(owner).filter({ hasText: '即時同步' }).waitFor(); await live(reader).filter({ hasText: '即時同步' }).waitFor();
@@ -95,7 +96,7 @@ try {
   await reader.locator('.visual-board').waitFor({ state: 'detached', timeout: 8000 });
   assert.equal((await request(reader, 'authorize', { channel_name: channel, socket_id: '123.456' }, 'realtime')).status, 404);
   assert.ok(closed > 0, '失去Project資格時清除連線');
-  const noCsrf = await reader.context().request.post('http://127.0.0.1:5175/api/realtime/authorize', { headers: { 'Content-Type': 'application/json' }, data: {} });
+  const noCsrf = await reader.context().request.post(`http://127.0.0.1:${e2ePort}/api/realtime/authorize`, { headers: { 'Content-Type': 'application/json' }, data: {} });
   assert.equal(noCsrf.status(), 419);
   assert.deepEqual(errors, []);
   console.log('PASS: 撤權即時清空看板並斷線、拒絕重訂閱，HTTP CSRF保護、三尺寸與瀏覽器無錯誤');

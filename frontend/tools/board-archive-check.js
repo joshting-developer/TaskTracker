@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 const api = process.env.E2E_API_URL || '';
 if (!/^http:\/\/127\.0\.0\.1:13\d{3}$/.test(api)) throw new Error('請設定隔離E2E_API_URL（127.0.0.1:13xxx），不可使用業務資料庫');
 const folder = 'artifacts/tt283';
@@ -18,18 +19,18 @@ async function call(page, operation, input = {}, group = 'rpc') {
   }, { operation, input, group });
 }
 try {
-  server = await createServer({ server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': api } } });
+  server = await createServer({ server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': api } } });
   await server.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, locale: 'zh-TW', reducedMotion: 'reduce' });
   page.setDefaultTimeout(15000);
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto('http://127.0.0.1:5175/login');
+  await page.goto(`http://127.0.0.1:${e2ePort}/login`);
   await call(page, 'register', { name: '封存驗收', email: `tt283-${crypto.randomUUID()}@example.test`, password: 'tt283-test-password', workspaceName: '封存驗收' }, 'auth');
   const project = await call(page, 'createProject', { name: '封存流程', code: 'TTARC' });
   const issue = await call(page, 'createIssue', { projectId: project.id, title: '留在看板裡的卡片' });
   const board = await call(page, 'createBoard', { projectId: project.id, name: '第一階段', selectedIssueIds: [issue.id] });
-  const root = `http://127.0.0.1:5175/app/#/projects/${project.id}`;
+  const root = `http://127.0.0.1:${e2ePort}/app/#/projects/${project.id}`;
 
   // 從看板頁封存：文案是「封存」, 確認後回清單。
   await page.goto(`${root}/board/${board.id}`);

@@ -4,13 +4,14 @@ import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import { openProjectList } from './navigation.js';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 
 const apiTarget = process.env.E2E_API_URL;
 if (!apiTarget) throw new Error('請設定 E2E_API_URL 指向隔離 Laravel 測試服務');
 let vite, browser;
 const failures = [];
 try {
-  vite = await createServer({ logLevel: 'error', server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': apiTarget } } });
+  vite = await createServer({ logLevel: 'error', server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': apiTarget } } });
   await vite.listen();
   browser = await chromium.launch({ headless: !process.env.E2E_HEADED, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
@@ -18,7 +19,7 @@ try {
   page.on('pageerror', error => failures.push(error.message));
   page.on('crash', () => failures.push('PAGE_CRASH'));
   const token = crypto.randomUUID();
-  await page.goto('http://127.0.0.1:5175/login');
+  await page.goto(`http://127.0.0.1:${e2ePort}/login`);
   await page.getByRole('button', { name: '第一次使用？建立工作空間' }).click();
   await page.getByLabel('你的名字').fill('Filter Owner');
   await page.getByLabel('Email', { exact: true }).fill(`filter-${token}@example.test`);

@@ -12,7 +12,7 @@ import uuid
 
 def main():
     base = os.environ.get('E2E_API_URL')
-    if base not in {'http://127.0.0.1:13029', 'http://127.0.0.1:13049'}:
+    if base not in {'http://127.0.0.1:13029', 'http://127.0.0.1:13049', 'http://127.0.0.1:13198', 'http://127.0.0.1:13199'}:
         raise SystemExit('Only isolated test API ports are allowed')
     opener = urllib.request.build_opener(
         urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))

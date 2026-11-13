@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 // TT-256：大型看板初次掛載量測。production build、CDP CPU節流、真實API與100筆分頁；A／B兩份build交錯取樣。
 // MOUNT_DIST_A／MOUNT_DIST_B為build輸出目錄（未給B時只量A）。只連隔離E2E服務。
 if (!process.env.E2E_API_URL) throw new Error('必須指定隔離E2E_API_URL');
@@ -9,7 +10,7 @@ const CARDS = Number(process.env.MOUNT_CARDS || 500), CPU = Number(process.env.M
 const variants = [['A', process.env.MOUNT_DIST_A || `${root}dist`], ...(process.env.MOUNT_DIST_B ? [['B', process.env.MOUNT_DIST_B]] : [])];
 let browser;
 const median = values => { const sorted = [...values].sort((a, b) => a - b); return sorted[Math.floor(sorted.length / 2)]; };
-async function serve(outDir) { return preview({ root, build: { outDir }, preview: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } }); }
+async function serve(outDir) { return preview({ root, build: { outDir }, preview: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } }); }
 try {
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
@@ -17,7 +18,7 @@ try {
   page.setDefaultTimeout(60000);
   page.on('pageerror', error => errors.push(error.message));
   let server = await serve(variants[0][1]);
-  await page.goto('http://127.0.0.1:5175/login');
+  await page.goto(`http://127.0.0.1:${e2ePort}/login`);
   async function call(op, input = {}, group = 'rpc') {
     return page.evaluate(async ({ op, input, group }) => {
       const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();
@@ -37,7 +38,7 @@ try {
   });
   const cdp = await context.newCDPSession(page);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: CPU });
-  const url = `http://127.0.0.1:5175/app/#/projects/${project.id}/board`;
+  const url = `http://127.0.0.1:${e2ePort}/app/#/projects/${project.id}/board`;
   const samples = [];
   for (let round = 0; round < SAMPLES; round++) {
     for (const [name, outDir] of variants) {

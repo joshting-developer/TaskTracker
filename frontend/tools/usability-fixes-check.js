@@ -5,6 +5,7 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import { contextKey, taskScope, timeSelection, writeContext } from '../src/ui/workContext.js';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 const values = new Map();
 globalThis.sessionStorage = { getItem: key => values.get(key), setItem: (key, value) => values.set(key, value) };
 const key = contextKey('u', 'w', 'p');
@@ -28,7 +29,7 @@ mkdirSync(artifacts, { recursive: true });
 let vite, browser;
 const failures = [];
 async function register(page, email, inviteToken = '') {
-  await page.goto(`http://127.0.0.1:5175/login${inviteToken ? `#/invite?token=${inviteToken}` : ''}`);
+  await page.goto(`http://127.0.0.1:${e2ePort}/login${inviteToken ? `#/invite?token=${inviteToken}` : ''}`);
   if (!inviteToken) await page.getByRole('button', { name: '第一次使用？建立工作空間' }).click();
   await page.getByLabel('你的名字').fill(inviteToken ? 'Flow Member' : 'Flow Owner');
   await page.getByLabel('Email', { exact: true }).fill(email);
@@ -39,7 +40,7 @@ async function register(page, email, inviteToken = '') {
   await page.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
 }
 try {
-  vite = await createServer({ server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': apiTarget } } });
+  vite = await createServer({ server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': apiTarget } } });
   await vite.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
@@ -117,10 +118,10 @@ try {
   assert.equal(await page.getByLabel('工時月份', { exact: true }).inputValue(), '2026-10');
   assert.equal(await page.getByLabel('工時成員', { exact: true }).inputValue(), '');
   await page.screenshot({ path: `${artifacts}/time-context.png` });
-  await page.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.second.id}`);
+  await page.goto(`http://127.0.0.1:${e2ePort}/app/#/projects/${fixture.second.id}`);
   await page.getByRole('link', { name: '任務列表', exact: true }).waitFor();
   assert.match(await page.locator('.nav-item.active').innerText(), /任務列表/);
-  await page.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.project.id}`);
+  await page.goto(`http://127.0.0.1:${e2ePort}/app/#/projects/${fixture.project.id}`);
   await page.locator('tbody tr').first().waitFor();
   assert.match(await page.locator('.nav-item.active').innerText(), /我的任務/);
   await page.getByRole('link', { name: '任務列表', exact: true }).click();

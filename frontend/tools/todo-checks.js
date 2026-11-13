@@ -1,7 +1,8 @@
 import { expandIssueProperties } from './issue-form-actions.js';
 import assert from 'node:assert/strict';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 
-export async function checkTodoWorkflow(browser, failures, baseURL = 'http://127.0.0.1:5175') {
+export async function checkTodoWorkflow(browser, failures, baseURL = `http://127.0.0.1:${e2ePort}`) {
   const token = crypto.randomUUID().slice(0, 8);
   const ownerContext = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
   const memberContext = await browser.newContext({ viewport: { width: 1440, height: 1050 } });

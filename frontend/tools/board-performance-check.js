@@ -3,6 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
 import { moveBoardCard } from './board-actions.js';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 
 if (process.env.E2E_API_URL !== 'http://127.0.0.1:13029') throw new Error('500卡fixture只允許獨立MySQL測試服務13029，禁止指向業務服務');
 const root = new URL('..', import.meta.url).pathname;
@@ -10,7 +11,7 @@ const artifacts = new URL('../artifacts/board-performance/', import.meta.url); m
 const fixturePath = new URL('fixture.json', artifacts);
 let server, browser;
 try {
-  server = await preview({ root, preview: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
+  server = await preview({ root, preview: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   page.setDefaultTimeout(20000);
@@ -18,7 +19,7 @@ try {
   page.on('dialog', async dialog => { confirmations.push(dialog.message()); await dialog.dismiss(); });
   page.on('pageerror', error => errors.push(error.message));
   page.on('request', request => { if (request.url().includes('/api/')) calls.push(new URL(request.url()).pathname); });
-  const base = 'http://127.0.0.1:5175';
+  const base = `http://127.0.0.1:${e2ePort}`;
   await page.goto(`${base}/login`);
   async function call(operation, input = {}, group = 'rpc') {
     return page.evaluate(async ({ operation, input, group }) => {

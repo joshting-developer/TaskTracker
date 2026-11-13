@@ -41,13 +41,14 @@ Route::get('/api/csrf-cookie', [SystemController::class, 'csrf'])->name('system.
 Route::post('/api/realtime/config', [RealtimeController::class, 'config'])->name('realtime.config');
 Route::post('/api/realtime/authorize', [RealtimeController::class, 'authorizeChannel'])->name('realtime.authorize')->middleware('throttle:120,1');
 
-Route::post('/api/auth/verify-email', [EmailVerificationController::class, 'verify'])->name('auth.verify-email')->middleware('throttle:10,1');
-Route::post('/api/auth/resend-verification', [EmailVerificationController::class, 'resend'])->name('auth.resend-verification')->middleware('throttle:5,1');
+$authThrottle = fn (int $perMinute) => 'throttle:'.($perMinute * config('tasktracker.auth_throttle_scale', 1)).',1';
+Route::post('/api/auth/verify-email', [EmailVerificationController::class, 'verify'])->name('auth.verify-email')->middleware($authThrottle(10));
+Route::post('/api/auth/resend-verification', [EmailVerificationController::class, 'resend'])->name('auth.resend-verification')->middleware($authThrottle(5));
 
 Route::get('/api/auth/registration-policy', [AuthController::class, 'registrationPolicy'])->name('auth.registration-policy')->withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class]);
 
-Route::post('/api/auth/register', [AuthController::class, 'register'])->name('auth.register')->middleware('throttle:20,1');
-Route::post('/api/auth/login', [AuthController::class, 'login'])->name('auth.login')->middleware('throttle:20,1');
+Route::post('/api/auth/register', [AuthController::class, 'register'])->name('auth.register')->middleware($authThrottle(20));
+Route::post('/api/auth/login', [AuthController::class, 'login'])->name('auth.login')->middleware($authThrottle(20));
 Route::post('/api/auth/current', [AuthController::class, 'current'])->name('auth.current');
 Route::post('/api/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 

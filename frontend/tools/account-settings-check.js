@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { createServer, preview } from 'vite';
 import { chromium } from 'playwright';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 if (!process.env.E2E_API_URL) throw new Error('請設定獨立隔離 E2E_API_URL');
 const artifacts = 'artifacts/account-settings';
 mkdirSync(artifacts, { recursive: true });
@@ -16,7 +17,7 @@ async function call(page, operation, input = {}, group = 'rpc') {
   }, { operation, input, group });
 }
 try {
-  const server = { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } };
+  const server = { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } };
   vite = built ? await preview({ preview: server }) : await createServer({ server });
   if (!built) await vite.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
@@ -25,7 +26,7 @@ try {
   const errors = [];
   for (const page of [owner, member]) { page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message)); }
   const token = crypto.randomUUID();
-  await owner.goto('http://127.0.0.1:5175/login');
+  await owner.goto(`http://127.0.0.1:${e2ePort}/login`);
   await call(owner, 'register', { name: 'Owner', email: `settings-owner-${token}@example.test`, password: 'settings-ui-test-password', workspaceName: '協作工作區' }, 'auth');
   await owner.reload();
   const avatar = owner.getByRole('button', { name: '帳號選單', exact: true });
@@ -139,7 +140,7 @@ try {
   }
   await owner.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   assert.equal(await member.getByRole('link', { name: '工作空間設定', exact: true }).count(), 0, '一般成員無設定入口');
-  await member.goto('http://127.0.0.1:5175/app/#/workspace/settings/members');
+  await member.goto(`http://127.0.0.1:${e2ePort}/app/#/workspace/settings/members`);
   await member.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
   assert.equal(await member.getByRole('region', { name: '工作空間設定', exact: true }).count(), 0, '無權限深連結回首頁');
   await member.getByRole('button', { name: '帳號選單', exact: true }).click();

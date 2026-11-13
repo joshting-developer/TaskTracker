@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 if (process.env.E2E_API_URL !== 'http://127.0.0.1:13079') throw new Error('Use isolated visual API on 13079');
 const before = process.env.E2E_BEFORE === '1', folder = `../artifacts/tt264/${before ? 'before' : 'after'}`;
 mkdirSync(folder, { recursive: true });
@@ -39,15 +40,15 @@ async function measureViewports(page, state) {
   await page.setViewportSize({ width: 1440, height: 900 });
 }
 try {
-  server = await createServer({ server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } }); await server.listen();
+  server = await createServer({ server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } }); await server.listen();
   browser = await chromium.launch({ headless: true, args: ['--disable-gpu'], ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'zh-TW', timezoneId: 'Asia/Taipei' }), page = await context.newPage();
   page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message));
-  await page.goto('http://127.0.0.1:5175/login');
+  await page.goto(`http://127.0.0.1:${e2ePort}/login`);
   const key = crypto.randomUUID();
   const owner = await call(page, 'register', { name: '待辦管理者', email: `quick-owner-${key}@example.test`, password: 'synthetic-quick-test-only', workspaceName: '待辦排版測試' }, 'auth');
   const email = `quick-member-${key}@example.test`, invite = await call(page, 'inviteMember', { email });
-  const member = await (await browser.newContext()).newPage(); await member.goto('http://127.0.0.1:5175/login');
+  const member = await (await browser.newContext()).newPage(); await member.goto(`http://127.0.0.1:${e2ePort}/login`);
   const recipient = await call(member, 'register', { name: '測試承辦者', email, password: 'synthetic-quick-test-only', inviteToken: invite.token }, 'auth');
   await page.reload();
   const todos = page.getByRole('region', { name: '首頁小待辦', exact: true }), input = todos.getByLabel('快速新增待辦', { exact: true });

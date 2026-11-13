@@ -3,7 +3,7 @@ import { preview } from 'vite';
 import { chromium } from 'playwright';
 if (!['http://127.0.0.1:13029', 'http://127.0.0.1:13049'].includes(process.env.E2E_API_URL)) throw new Error('只允許隔離文件測試API');
 const docsPort = Number(process.env.E2E_DOCS_PORT || 5175);
-if (![5175, 5185].includes(docsPort)) throw new Error('只允許隔離文件測試埠');
+if (![5175, 5185, 5198, 5199].includes(docsPort)) throw new Error('只允許隔離文件測試埠');
 let server, browser;
 try {
   server = await preview({ preview: { host: '127.0.0.1', port: docsPort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });

@@ -4,6 +4,7 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import { todoDate } from '../src/domain/todoContent.js';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 
 const now = new Date('2026-11-13T12:00:00Z');
 for (const [item, user, want] of [
@@ -32,12 +33,12 @@ async function call(page, operation, input = {}, group = 'rpc') {
 const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei', month: 'numeric', day: 'numeric' }).formatToParts(new Date());
 const md = `${today.find(p => p.type === 'month').value}/${today.find(p => p.type === 'day').value}`;
 try {
-  server = await createServer({ server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': api } } });
+  server = await createServer({ server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': api } } });
   await server.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const owner = await browser.newPage({ viewport: { width: 1440, height: 900 }, locale: 'zh-TW', reducedMotion: 'reduce' });
   const member = await (await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'zh-TW' })).newPage();
-  for (const page of [owner, member]) { page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message)); await page.goto('http://127.0.0.1:5175/login'); }
+  for (const page of [owner, member]) { page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message)); await page.goto(`http://127.0.0.1:${e2ePort}/login`); }
   await call(owner, 'register', { name: '交辦人', email: `tt313-${crypto.randomUUID()}@example.test`, password: 'tt313-test-password', workspaceName: '日期驗收' }, 'auth');
   const invite = await call(owner, 'inviteMember', { email: `tt313m-${crypto.randomUUID()}@example.test` });
   await call(member, 'register', { name: '承辦人', email: invite.email, password: 'tt313-test-password', inviteToken: invite.token }, 'auth');
@@ -45,7 +46,7 @@ try {
   await call(owner, 'createTodo', { title: '自己的待辦' });
   await call(owner, 'createTodo', { title: '交辦出去的待辦', assigneeId: assignees.find(m => m.name === '承辦人').id });
 
-  await owner.goto('http://127.0.0.1:5175/app/#/');
+  await owner.goto(`http://127.0.0.1:${e2ePort}/app/#/`);
   const home = owner.getByRole('region', { name: '首頁小待辦', exact: true });
   await home.locator('.todo-row').filter({ hasText: '自己的待辦' }).locator('.todo-date').filter({ hasText: `${md} 建立` }).waitFor();
   await home.getByRole('tab', { name: /我交辦的/ }).click();
@@ -54,7 +55,7 @@ try {
   await sent.locator('.todo-date').filter({ hasText: `${md} 交辦` }).waitFor();
   assert.match(await sent.locator('.todo-date').getAttribute('title'), /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/, '滑鼠提示是完整日期時間');
 
-  await member.goto('http://127.0.0.1:5175/app/#/');
+  await member.goto(`http://127.0.0.1:${e2ePort}/app/#/`);
   const inbox = member.getByRole('region', { name: '首頁小待辦', exact: true }).locator('.todo-row').filter({ hasText: '交辦出去的待辦' });
   await inbox.getByText('來自 交辦人 · ').waitFor();
   await inbox.locator('.todo-date').filter({ hasText: `${md} 交辦` }).waitFor();

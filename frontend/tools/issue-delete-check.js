@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 const api = process.env.E2E_API_URL || '';
 if (!/^http:\/\/127\.0\.0\.1:13\d{3}$/.test(api)) throw new Error('請設定隔離E2E_API_URL（127.0.0.1:13xxx），不可使用業務資料庫');
 const folder = 'artifacts/tt250';
@@ -18,19 +19,19 @@ async function call(page, operation, input = {}, group = 'rpc') {
   }, { operation, input, group });
 }
 try {
-  server = await createServer({ server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': api } } });
+  server = await createServer({ server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': api } } });
   await server.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, locale: 'zh-TW', reducedMotion: 'reduce' });
   page.setDefaultTimeout(15000);
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto('http://127.0.0.1:5175/login');
+  await page.goto(`http://127.0.0.1:${e2ePort}/login`);
   await call(page, 'register', { name: '刪除驗收', email: `tt250-${crypto.randomUUID()}@example.test`, password: 'tt250-test-password', workspaceName: '刪除驗收' }, 'auth');
   const project = await call(page, 'createProject', { name: '刪除流程', code: 'TTDEL' });
   const doomed = await call(page, 'createIssue', { projectId: project.id, title: '誤建的卡片' });
   const timed = await call(page, 'createIssue', { projectId: project.id, title: '已填工時的卡片' });
   await call(page, 'logTime', { issueId: timed.id, workDate: new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10), minutes: 30 });
-  const root = `http://127.0.0.1:5175/app/#/projects/${project.id}`;
+  const root = `http://127.0.0.1:${e2ePort}/app/#/projects/${project.id}`;
   const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
 
   await page.goto(`${root}/issues/${timed.id}?detail=1`);

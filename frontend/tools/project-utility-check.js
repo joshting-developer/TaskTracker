@@ -1,17 +1,18 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 if (!process.env.E2E_API_URL) throw new Error('必須指定隔離E2E_API_URL');
 let server, browser;
 try {
-  server = await createServer({ root: new URL('..', import.meta.url).pathname, server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
+  server = await createServer({ root: new URL('..', import.meta.url).pathname, server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } }), errors = [], requests = [];
   page.setDefaultTimeout(10000);
   page.on('pageerror', error => errors.push(error.message));
   page.on('response', async response => { const url = new URL(response.url()); if (!url.pathname.startsWith('/api/')) return; const item = { path: url.pathname, bytes: 0 }; requests.push(item); try { item.bytes = (await response.body()).length; } catch { /* 導覽後body不可取 */ } });
-  await page.goto('http://127.0.0.1:5175/login');
+  await page.goto(`http://127.0.0.1:${e2ePort}/login`);
   async function call(target, op, input = {}, group = 'rpc') {
     return target.evaluate(async ({ op, input, group }) => {
       const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();
@@ -25,7 +26,7 @@ try {
   const other = await call(page, 'createProject', { name: 'Other', code: 'OTHR' });
   const invite = await call(page, 'inviteMember', { email: `receiver-${crypto.randomUUID()}@example.test` });
   const receiver = await (await browser.newContext()).newPage();
-  await receiver.goto('http://127.0.0.1:5175/login');
+  await receiver.goto(`http://127.0.0.1:${e2ePort}/login`);
   const identity = await call(receiver, 'register', { name: 'Receiver', email: invite.email, password: 'isolated-test-password', inviteToken: invite.token }, 'auth');
   await call(page, 'setProjectMember', { projectId: project.id, userId: identity.user.id, roleId: 'developer', expectedRevision: 0 });
   await call(page, 'setProjectMember', { projectId: other.id, userId: identity.user.id, roleId: 'developer', expectedRevision: 0 });

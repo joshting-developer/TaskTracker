@@ -3,6 +3,7 @@ import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'n
 import { gzipSync } from 'node:zlib';
 import { preview } from 'vite';
 import { chromium, request } from 'playwright';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 
 // 只量測讀取與本地UI切換；API資料由外部明確啟動的隔離seed服務提供。
 const target = new URL(process.env.E2E_API_URL || 'http://invalid');
@@ -60,7 +61,7 @@ try {
       if (role === 'owner') ownerState = await client.storageState();
     } finally { await client.dispose(); }
   }
-  server = await preview({ preview: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': target.origin } } });
+  server = await preview({ preview: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': target.origin } } });
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const first = ownerWorkspace.projects.find(project => project.code === 'FIRST');
   assert.ok(first, 'FIRST seed專案存在');
@@ -80,7 +81,7 @@ try {
       if (PerformanceObserver.supportedEntryTypes.includes('event')) new PerformanceObserver(list => window.__perf.eventDurations.push(...list.getEntries().filter(e => e.interactionId).map(e => e.duration))).observe({ type: 'event', buffered: true, durationThreshold: 16 });
     });
     const start = performance.now();
-    await Promise.all([page.waitForResponse(r => r.url().endsWith('/api/rpc/getTodos')), page.goto('http://127.0.0.1:5175/app/#/')]);
+    await Promise.all([page.waitForResponse(r => r.url().endsWith('/api/rpc/getTodos')), page.goto(`http://127.0.0.1:${e2ePort}/app/#/`)]);
     await page.locator('.todo-home').waitFor(); await frames(page);
     const homeReadyMs = performance.now() - start;
     const homeCalls = [...calls]; calls.length = 0;

@@ -2,17 +2,18 @@ import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 if (!process.env.E2E_API_URL) throw new Error('必須指定隔離 E2E_API_URL');
 let server, browser;
 try {
-  server = await createServer({ root: new URL('..', import.meta.url).pathname, server: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
+  server = await createServer({ root: new URL('..', import.meta.url).pathname, server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
   const owner = await browser.newPage({ viewport: { width: 1440, height: 1000 } }), guest = await (await browser.newContext()).newPage();
   const requests = [], errors = [];
   owner.on('request', request => { const path = new URL(request.url()).pathname; if (path.startsWith('/api/')) requests.push(path); });
   owner.on('pageerror', failure => errors.push(failure.message));
-  await owner.goto('http://127.0.0.1:5175/login'); await guest.goto('http://127.0.0.1:5175/login');
+  await owner.goto(`http://127.0.0.1:${e2ePort}/login`); await guest.goto(`http://127.0.0.1:${e2ePort}/login`);
   async function call(page, operation, input = {}, group = 'rpc') {
     for (let attempt = 0; attempt < 5; attempt++) {
       const result = await page.evaluate(async ({ operation, input, group }) => {
@@ -39,7 +40,7 @@ try {
     if (index % 5 === 4) console.log('Fixture members', index + 1);
   }
   requests.length = 0;
-  await owner.goto('http://127.0.0.1:5175/app/#/workspace/settings'); await owner.reload();
+  await owner.goto(`http://127.0.0.1:${e2ePort}/app/#/workspace/settings`); await owner.reload();
   const settings = owner.getByRole('region', { name: '工作空間設定', exact: true });
   await settings.getByLabel('工作空間名稱', { exact: true }).waitFor();
   assert.equal(requests.filter(path => /\/workspace\/(members|member-roles)$/.test(path)).length, 0, '一般設定未開名單');

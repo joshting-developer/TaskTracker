@@ -223,7 +223,7 @@ try {
     for (let index = 1; index <= 5; index++) todos.push(await api.createTodo({ title: `通知定位 ${index}`, assigneeId: userId, requestId: crypto.randomUUID() }));
     return todos;
   }, invite.email);
-  await reader.goto('http://127.0.0.1:5175/app/#/');
+  await reader.goto(`http://127.0.0.1:${port}/app/#/`);
   await reader.reload();
   const readerTodos = reader.getByRole('region', { name: '首頁小待辦', exact: true });
   await readerTodos.locator('.todo-row').first().waitFor();

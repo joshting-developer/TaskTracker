@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 
 if (!process.env.E2E_API_URL) throw new Error('請設定隔離 E2E_API_URL');
 const before = process.env.E2E_BEFORE === '1';
@@ -10,12 +11,12 @@ const artifacts = new URL('../artifacts/bundle/', import.meta.url);
 mkdirSync(artifacts, { recursive: true });
 let server, browser;
 try {
-  server = await preview({ root, preview: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
+  server = await preview({ root, preview: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const failures = [];
   page.on('pageerror', error => failures.push(error.message));
-  const base = 'http://127.0.0.1:5175';
+  const base = `http://127.0.0.1:${e2ePort}`;
   await page.goto(`${base}/login`);
   await page.getByRole('heading', { name: '登入工作空間' }).waitFor();
   async function measure() {

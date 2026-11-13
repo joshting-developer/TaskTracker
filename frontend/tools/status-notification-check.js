@@ -6,14 +6,15 @@ import { mkdirSync } from 'node:fs';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
 import { openProjectList } from './navigation.js';
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 if (!process.env.E2E_API_URL) throw new Error('請設定隔離E2E_API_URL，不可使用業務資料庫');
 let server, browser;
 try {
-  server = await preview({ preview: { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
+  server = await preview({ preview: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } }), errors = [];
   page.on('pageerror', error => errors.push(error.message)); page.setDefaultTimeout(10000);
-  await page.goto('http://127.0.0.1:5175/login');
+  await page.goto(`http://127.0.0.1:${e2ePort}/login`);
   await page.getByRole('button', { name: '第一次使用？建立工作空間', exact: true }).click();
   await page.getByLabel('你的名字', { exact: true }).fill('狀態通知檢查者');
   await page.getByLabel('Email', { exact: true }).fill(`status-${crypto.randomUUID()}@example.test`);
