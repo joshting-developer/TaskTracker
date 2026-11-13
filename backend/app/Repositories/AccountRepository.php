@@ -42,6 +42,14 @@ class AccountRepository
         return User::where('email', $email)->exists();
     }
 
+    /** 註冊bootstrap只需知道是否已有空間, 不讀完整工作區清單
+     * @return bool 是否至少有一個工作區
+     */
+    public function hasWorkspaces(): bool
+    {
+        return Workspace::query()->exists();
+    }
+
     /**
      * 以Service已驗證欄位建立帳號，與外層交易一起提交。
      *

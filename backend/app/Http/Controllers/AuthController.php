@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\AccountSessionBoundary;
 use App\Http\Requests\Writes\AccountWriteRequest;
 use App\Http\Resources\ApiResponse;
+use App\Services\AccountService;
 use Illuminate\Http\Request;
 
 /**
@@ -15,9 +16,18 @@ class AuthController extends Controller
     /**
      * 注入此Controller共用的交易邊界與應用用例，不在建構時取得租戶或查詢。
      *
+     * @param  AccountService  $policy  匿名註冊設定用例
      * @param  AccountSessionBoundary  $accounts  此Controller的穩定協作者
      */
-    public function __construct(private AccountSessionBoundary $accounts) {}
+    public function __construct(private AccountSessionBoundary $accounts, private AccountService $policy) {}
+
+    /** 不建立Session的匿名註冊設定
+     * @return ApiResponse 是否開放公開註冊
+     */
+    public function registrationPolicy(): ApiResponse
+    {
+        return new ApiResponse($this->policy->registrationPolicy());
+    }
 
     /**
      * 驗證註冊或邀請後建立帳號並更新Session。

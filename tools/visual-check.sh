@@ -13,6 +13,7 @@ if ! mkdir "$lock" 2>/dev/null; then
   exit 2
 fi
 export TASKTRACKER_TEST_PORT=13079
+export TASKTRACKER_VISUAL_ORIGIN=http://127.0.0.1:5195
 export E2E_API_URL=http://127.0.0.1:13079
 compose() { docker compose -p tasktracker-codex-visual -f docker-compose.mysql-test.yml "$@"; }
 cleanup() {

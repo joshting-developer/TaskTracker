@@ -10,11 +10,12 @@ import { moveBoardCard } from '../board-actions.js';
 
 const require = createRequire(import.meta.url);
 const playwrightVersion = require('playwright/package.json').version;
+const origin = process.env.TASKTRACKER_VISUAL_ORIGIN;
 const fixedTime = new Date('2026-11-13T12:00:00+08:00');
 const password = 'synthetic-visual-test-only';
 async function call(request, operation, input = {}, group = 'rpc', verifiedFixture = true) {
   const csrf = await (await request.get('/api/csrf-cookie')).json();
-  const response = await request.post(`/api/${group}/${operation}`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken, Origin: 'http://127.0.0.1:5175' }, data: { requestId: crypto.randomUUID(), ...input } });
+  const response = await request.post(`/api/${group}/${operation}`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken, Origin: origin }, data: { requestId: crypto.randomUUID(), ...input } });
   const result = verifiedFixture ? await fixtureResponse(request, response) : await response.json();
   expect(result.ok, `${operation}: ${JSON.stringify(result.error || '')}`).toBe(true);
   return result.data;
@@ -52,7 +53,7 @@ async function fixture(page, browser) {
   for (let index = 0; index < 8; index++) tasks.push(await call(page.request, 'createIssue', { projectId: project.id, title: ['建立登入畫面', '驗證錯誤提示', '調整手機版導覽', '整理操作說明', '完成帳號設定', '測試資料隔離', '準備上線檢查', '確認郵件通知'][index], type: index === 1 ? 'bug' : 'task', state: index % 3 === 1 ? 'inprogress' : index % 3 === 2 ? 'closed' : 'open', description: '## 交付條件\n\n- 保留既有操作流程\n- 驗證桌面與手機版', assignee: identity.user.id, epicId: epic.id, priority: index === 1 ? 'high' : 'normal', estimateMinutes: 90, dueDate: '2026-11-30' }));
   const empty = await call(page.request, 'createProject', { name: '空白專案', code: 'EMPTY', description: '尚未建立卡片' });
   await call(page.request, 'createTodo', { title: '確認下一次測試範圍', content: '確認下一次測試範圍\n\n- [ ] 確認測試資料\n- [ ] 補齊操作紀錄' });
-  const otherContext = await browser.newContext({ baseURL: 'http://127.0.0.1:5175' });
+  const otherContext = await browser.newContext({ baseURL: origin });
   try {
     const other = await call(otherContext.request, 'register', { name: '另一位管理者', email: `visual-other-${crypto.randomUUID()}@example.test`, password, workspaceName: '受邀工作區' }, 'auth');
     const privateProject = await call(otherContext.request, 'createProject', { name: '未授權專案', code: 'SECRET' });
@@ -66,11 +67,15 @@ async function fixture(page, browser) {
 
 test('representative workspace flows', async ({ page, browser }) => {
   mkdirSync(new URL('../../../artifacts/visual/', import.meta.url), { recursive: true });
-  writeFileSync(new URL('../../../artifacts/visual/environment.json', import.meta.url), JSON.stringify({ platform: process.platform, arch: process.arch, browser: browser.version(), playwright: playwrightVersion, dpr: 1, locale: 'zh-TW', timezone: 'Asia/Taipei', clock: fixedTime.toISOString(), colorScheme: 'light', reducedMotion: 'reduce', chromiumArgs: ['--disable-gpu'], comparison: { maxDiffPixels: screenshotPolicy.maxDiffPixels, threshold: screenshotPolicy.threshold } }, null, 2));
+  writeFileSync(new URL('../../../artifacts/visual/environment.json', import.meta.url), JSON.stringify({ origin, platform: process.platform, arch: process.arch, browser: browser.version(), playwright: playwrightVersion, dpr: 1, locale: 'zh-TW', timezone: 'Asia/Taipei', clock: fixedTime.toISOString(), colorScheme: 'light', reducedMotion: 'reduce', chromiumArgs: ['--disable-gpu'], comparison: { maxDiffPixels: screenshotPolicy.maxDiffPixels, threshold: screenshotPolicy.threshold } }, null, 2));
   page.setDefaultTimeout(15000);
   await page.clock.setFixedTime(fixedTime);
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/');
+  await page.getByRole('heading', { level: 1 }).waitFor();
+  await page.waitForFunction(() => !document.documentElement.classList.contains('auth-pending'));
+  await shot(page, '21-public-entry');
   await page.goto('/login');
   await page.getByRole('button', { name: '登入', exact: true }).waitFor();
   await shot(page, '01-login');
@@ -79,6 +84,16 @@ test('representative workspace flows', async ({ page, browser }) => {
   await page.getByRole('button', { name: '登入', exact: true }).click();
   expect(await page.getByLabel('Email', { exact: true }).evaluate(element => element.validity.valid)).toBe(false);
   await shot(page, '02-validation');
+  // Change only our ephemeral visual topology's compiled config; no product test endpoint.
+  const compose = ['compose', '-p', 'tasktracker-codex-visual', '-f', resolve(import.meta.dirname, '../../../docker-compose.mysql-test.yml'), 'exec', '-T'];
+  try {
+    execFileSync('docker', [...compose, '-e', 'TASKTRACKER_PUBLIC_REGISTRATION=false', 'backend', 'php', 'artisan', 'config:cache'], { stdio: 'pipe' });
+    await page.goto('/login?mode=register');
+    await page.getByText('目前僅接受邀請註冊', { exact: true }).waitFor();
+    await shot(page, '22-invitation-only');
+  } finally { execFileSync('docker', [...compose, 'backend', 'php', 'artisan', 'config:clear'], { stdio: 'pipe' }); }
+  await page.goto('/login');
+
   await call(page.request, 'register', { name: '驗證畫面測試', email: `visual-pending-${test.info().project.name}@example.test`, password, workspaceName: '驗證畫面' }, 'auth', false);
   await page.reload();
   await page.getByRole('heading', { name: '驗證信箱', exact: true }).waitFor();

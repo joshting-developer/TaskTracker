@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker Session Authentication",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Session and CSRF only; not the PAT API. Legacy accounts keep their existing eligibility. New registration requires verification. Activation GET only renders the page, with token in URL fragment."
   },
   "paths": {
@@ -81,6 +81,9 @@
           },
           "429": {
             "description": "Rate limit, honor Retry-After"
+          },
+          "403": {
+            "description": "FORBIDDEN: public signup is closed and no valid invitation was supplied"
           }
         },
         "security": [
@@ -88,7 +91,8 @@
             "sessionCookie": [],
             "csrf": []
           }
-        ]
+        ],
+        "description": "Public signup is rejected with 403 when TASKTRACKER_PUBLIC_REGISTRATION is false. A valid, unconsumed, matching-email invitation remains allowed and new accounts still require email verification."
       }
     },
     "/api/auth/login": {
@@ -391,6 +395,44 @@
             "csrf": []
           }
         ]
+      }
+    },
+    "/api/auth/registration-policy": {
+      "get": {
+        "summary": "Read invitation-only/public signup policy without a session or database query",
+        "responses": {
+          "200": {
+            "description": "Only the public signup capability; no email allowlist or secrets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "publicRegistration"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "publicRegistration": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   },

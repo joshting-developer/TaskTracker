@@ -83,6 +83,14 @@ class AccountService
         ];
     }
 
+    /** 公開註冊是否開放, 只讀部署設定且不查帳號或工作區
+     * @return array{publicRegistration:bool} 匿名畫面需要的最小能力
+     */
+    public function registrationPolicy(): array
+    {
+        return ['publicRegistration' => (bool) config('tasktracker.registration.public', false)];
+    }
+
     /**
      * 驗證註冊或邀請後建立帳號，回傳待建立Session的資格。
      *
@@ -91,23 +99,29 @@ class AccountService
      */
     public function register(array $input): AuthenticatedAccountData
     {
+        if (empty($input['inviteToken']) && ! $this->registrationPolicy()['publicRegistration']) {
+            DomainError::fail('FORBIDDEN', '目前僅接受邀請註冊');
+        }
         $email = $this->email($input['email'] ?? null);
         $name = Fields::text($input['name'] ?? null, '姓名', 60, true);
         $password = Fields::text($input['password'] ?? null, '密碼', 128, true);
         if (mb_strlen($password) < 10) {
             DomainError::fail('INVALID_INPUT', '密碼至少 10 字');
         }
-        if ($this->accounts->emailExists($email)) {
-            DomainError::fail('CONFLICT', '此 Email 已註冊, 請登入');
-        }
         $store = $this->stores->global();
         $role = 'owner';
+        $invite = null;
         if (! empty($input['inviteToken'])) {
             $token = Fields::text($input['inviteToken'], '邀請碼', 100, true);
             $invite = $store->get('invites', hash('sha256', $token));
             if (! $invite || ! empty($invite['consumedAt']) || $invite['expiresAt'] <= now()->utc()->toISOString() || $invite['email'] !== $email) {
                 DomainError::fail('INVALID_INPUT', '邀請已失效或 Email 不符');
             }
+        }
+        if ($this->accounts->emailExists($email)) {
+            DomainError::fail('CONFLICT', '此 Email 已註冊, 請登入');
+        }
+        if ($invite !== null) {
             $workspace = $store->require('workspaces', $invite['workspaceId']);
             $role = 'user';
             $store->put('invites', $invite['id'], [
@@ -120,7 +134,7 @@ class AccountService
                 'name' => Fields::text($input['workspaceName'] ?? null, '工作空間名稱', 60, true),
                 'createdAt' => now()->utc()->toISOString(),
             ];
-            $first = ! $store->all('workspaces');
+            $first = ! $this->accounts->hasWorkspaces();
             $store->put('workspaces', $workspace['id'], $workspace);
         }
         $user = $this->accounts->create([

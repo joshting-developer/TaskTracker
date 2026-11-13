@@ -12,6 +12,7 @@ export const api = {
   personalTokens: filters => queryApi('personal-tokens', filters),
   createPersonalToken: input => requestJson('/api/v1/personal-tokens', { method: 'POST', input }),
   revokePersonalToken: id => requestJson(`/api/v1/personal-tokens/${encodeURIComponent(id)}/revoke`, { method: 'POST', input: {} }),
+  registrationPolicy: options => requestJson('/api/auth/registration-policy', { ...options, scoped: false, notifyAccess: false }),
   current: () => callApi('current', {}, 'auth'),
   projectLeads: (filters, options) => queryApi('project-lead-options', filters, options),
   statusUsage: (project, options) => queryApi(`projects/${encodeURIComponent(project)}/status-usage`, {}, options),

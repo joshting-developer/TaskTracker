@@ -5,7 +5,7 @@ import { createServer, preview } from 'vite';
 import { chromium } from 'playwright';
 const api = process.env.E2E_API_URL || '';
 if (!/^http:\/\/127\.0\.0\.1:13\d{3}$/.test(api)) throw new Error('請設定隔離E2E_API_URL（127.0.0.1:13xxx），不可使用業務資料庫');
-const built = process.env.E2E_PREVIEW === '1', folder = `artifacts/guest-pages${built ? '-build' : ''}`, origin = 'http://127.0.0.1:5175';
+const built = process.env.E2E_PREVIEW === '1', folder = `artifacts/guest-pages${built ? '-build' : ''}`, port = Number(process.env.E2E_FRONTEND_PORT || 5175), origin = `http://127.0.0.1:${port}`;
 mkdirSync(folder, { recursive: true });
 let server, browser;
 const errors = [], measurements = [];
@@ -27,8 +27,8 @@ async function measure(page, name) {
   await page.setViewportSize({ width: 1440, height: 900 });
 }
 try {
-  const config = { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': api } };
-  server = built ? await preview({ preview: config }) : await createServer({ server: config });
+  const config = { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': api } };
+  server = built ? await preview({ root: new URL('..', import.meta.url).pathname, preview: config }) : await createServer({ root: new URL('..', import.meta.url).pathname, server: config });
   if (!built) await server.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, locale: 'zh-TW', reducedMotion: 'reduce' });
@@ -57,6 +57,8 @@ try {
   await page.getByLabel('密碼').fill('guest-pages-password');
   await page.getByLabel('工作空間名稱').fill('訪客驗收');
   await page.getByRole('button', { name: '建立工作空間' }).click();
+  await page.getByLabel('驗證碼', { exact: true }).fill('local666');
+  await page.getByRole('button', { name: '驗證並登入', exact: true }).click();
   await page.locator('.app-shell').waitFor();
   assert.equal(await page.locator('.guest-topbar').count(), 0, '登入後App不顯示訪客TopBar');
   assert.equal(pathOf(page), '/app/#/projects', '登入後在/app/保留原深層連結');
@@ -80,7 +82,7 @@ try {
   assert.ok(await page.locator('.guest-topbar').isVisible(), '已登入看介紹頁也有上方選單');
   assert.equal(await memberNav.getByRole('link', { name: '回到工作區' }).getAttribute('href'), '/app/');
   assert.equal(await memberNav.getByRole('link', { name: '登入', exact: true }).count(), 0, '已登入不顯示登入');
-  assert.equal(await page.getByRole('link', { name: '免費建立工作空間' }).count(), 0, '已登入不顯示建立工作空間');
+  assert.equal(await page.getByRole('link', { name: '登入 TaskTracker' }).count(), 0, '已登入不顯示建立工作空間');
   await memberNav.getByRole('link', { name: '回到工作區' }).click();
   await page.locator('.app-shell').waitFor();
   await page.goto(`${origin}/`);
@@ -114,11 +116,12 @@ try {
   await page.waitForURL(url => url.pathname === '/login');
   await page.getByRole('heading', { name: '登入工作空間' }).waitFor();
 
-  // 首頁的「建立工作空間」直接打開建立表單（TopBar與正文CTA同目標）。
+  // 首頁進入登入, 只有伺服器開放公開註冊時才可從登入頁建立工作空間。
   await page.goto(`${origin}/`);
   await page.waitForFunction(() => !document.documentElement.classList.contains('auth-pending'));
-  await nav.getByRole('link', { name: /建立工作空間/ }).click();
-  await page.waitForURL(url => url.pathname === '/login' && url.search === '?mode=register');
+  await nav.getByRole('link', { name: '登入', exact: true }).click();
+  await page.waitForURL(url => url.pathname === '/login');
+  await page.getByRole('button', { name: '第一次使用？建立工作空間', exact: true }).click();
   await page.getByRole('heading', { name: '建立工作空間' }).waitFor();
   await page.getByLabel('工作空間名稱').waitFor();
 

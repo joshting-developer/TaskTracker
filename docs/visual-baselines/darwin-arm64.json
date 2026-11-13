@@ -1,11 +1,12 @@
 {
   "approved": true,
-  "harnessSha256": "62f84323f22dbe776db7b0fc5f11f470ea6aa53af82d954e48635f26f084c79f",
+  "harnessSha256": "69440f7cb0ec17930d57e09a9a64dc0aab73a10f6b807f04652bcd752cc0299b",
   "profile": "darwin-arm64",
   "reviewer": "Josh",
-  "note": "依Josh持續授權保存TT-325留言與轉發畫面, 已檢視三尺寸候選及三人協作真Chrome流程, 保留舊54張並新增6張留言／轉發狀態, 比較參數不變",
-  "manifestSha256": "5f19ac30e3bc36c8e8e498373af494bcf133e26d450798ee760859964da78b3d",
+  "note": "依Josh持續授權保存TT-185邀請制登入與公開入口, 合併已提交TT-329側欄連結, 三尺寸66張已檢視；測試改專用5195並納入origin與Compose指紋, 比較參數未放寬",
+  "manifestSha256": "e780f8d0eb0b8d505dedcb942865ed9c49e8dd08df66b250d4410f45d4622b7c",
   "environment": {
+    "origin": "http://127.0.0.1:5195",
     "platform": "darwin",
     "arch": "arm64",
     "browser": "157.0.8103.52",
