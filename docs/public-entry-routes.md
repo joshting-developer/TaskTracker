@@ -34,7 +34,7 @@
 
 ## 公開介紹頁（TT-207）
 
-- 原`frontend/about/index.html`，TT-297起為網站首頁`frontend/index.html`（樣式與程式在`frontend/landing/`），工作空間殼層移到`frontend/app/index.html`；同一映像，Dockerfile已COPY。原始HTML即含title、description、H1、功能摘要、開始步驟與CTA，不需執行JS；圖像為以SVG繪製的看板示意（非偽造截圖）。文案只描述現有功能，使用者授權採Claude建議定稿，之後可再調整。
+- 原`frontend/about/index.html`，TT-297起為網站首頁`frontend/index.html`（樣式與程式在`frontend/landing/`），工作空間殼層移到`frontend/app/index.html`；同一映像，Dockerfile已COPY。原始HTML即含title、description、H1、功能摘要、開始步驟與CTA，不需執行JS；產品示意TT-301起改成HTML組成的看板、待辦、轉任務和工時片段, 手機上字一樣讀得清楚, 都標示是示意畫面（非偽造截圖）。文案只描述現有功能，使用者授權採Claude建議定稿，之後可再調整。
 - `landing/landing.js`（原 `about.js`）只呼叫 `/api/csrf-cookie` 和 `/api/auth/current` 判斷有沒有登入, 有登入就轉進 `/app/`（TT-297）, 失敗一律當訪客, 不讀私人資料。判斷期間用 `auth-pending` 先藏起TopBar, 最多3秒；沒有JS時不加這個class, TopBar照常顯示
 - 驗證：`VITE_SITE_ORIGIN=http://127.0.0.1:5175 E2E_API_URL=… node tools/guest-pages-check.js`驗原始HTML內容、無JS可讀、不含私人資料、已登入隱藏TopBar與CTA切換、三尺寸無橫向溢出。
 

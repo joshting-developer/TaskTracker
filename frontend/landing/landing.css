@@ -1,35 +1,116 @@
 /* 共用訪客TopBar在CSS層內嵌，避免與App入口產生共享JS chunk（登入頁維持單一JS）。 */
 @import '../src/guest-topbar.css';
-/* TT-207／297：公開介紹頁（網站首頁/）；無JS也完整可讀，沿用品牌紫與深色TopBar。 */
-:root { --ink: #2b2734; --muted: #5f5a6b; --accent: #6a5bd6; --accent-ink: #ffffff; --line: #e3e0ec; --ground: #f6f5fa; --surface: #ffffff; }
+/* TT-207／297／301：網站首頁的產品介紹；無JS也完整可讀，沿用品牌紫與深色TopBar。
+   產品示意用HTML組成（不是縮小的整張圖），手機上字一樣讀得清楚。 */
+:root { --ink: #2b2734; --muted: #5f5a6b; --accent: #6a5bd6; --accent-ink: #ffffff; --accent-soft: #efebfc; --line: #e3e0ec; --ground: #f6f5fa; --surface: #ffffff; --open: #9a9da9; --doing: #e7a443; --done: #4aab8a; }
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', sans-serif; color: var(--ink); background: var(--ground); line-height: 1.7; }
 html.auth-pending .guest-topbar { display: none; }
 main { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
-.hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; padding: 72px 0 64px; }
-.hero h1 { font-size: clamp(30px, 3.6vw, 44px); line-height: 1.35; letter-spacing: -0.5px; margin: 0 0 20px; }
-.lead { font-size: 18px; color: var(--muted); margin: 0 0 32px; max-width: 34em; }
-.cta-row, .steps-cta { display: flex; flex-wrap: wrap; gap: 12px; }
-.cta { display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 8px; font-size: 16px; font-weight: 600; text-decoration: none; }
+/* 標題兩行時平均分配，避免最後一行只剩一兩個字 */
+h1, h2, h3 { text-wrap: balance; }
+p, dd, .mock-card b { text-wrap: pretty; }
+h2 { font-size: clamp(26px, 2.6vw, 32px); line-height: 1.35; margin: 0 0 12px; letter-spacing: -0.3px; }
+h3 { margin: 0; }
+h4 { margin: 0; }
+[hidden] { display: none !important; }
+
+/* 首屏：短標題＋一個主要行動，右側是讀得清楚的看板示意 */
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 56px; align-items: center; padding: 80px 0 72px; }
+.hero h1 { font-size: clamp(34px, 4.4vw, 56px); line-height: 1.2; letter-spacing: -1px; margin: 0 0 22px; }
+.lead { font-size: 18px; color: var(--muted); margin: 0 0 34px; max-width: 30em; }
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; }
+.cta { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 22px; border-radius: 8px; font-size: 16px; font-weight: 600; text-decoration: none; }
 .cta.primary { background: var(--accent); color: var(--accent-ink); }
 .cta.primary:hover { background: #5a4bc4; }
 .cta.secondary { background: var(--surface); color: var(--ink); border: 1px solid #cfcadb; }
 .cta.secondary:hover { border-color: var(--accent); }
 .cta:focus-visible, .site-footer a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-[hidden] { display: none !important; }
 .hero-figure { margin: 0; }
-.hero-figure svg { display: block; width: 100%; height: auto; box-shadow: 0 2px 6px #1d183008; border-radius: 14px; }
 .hero-figure figcaption { margin-top: 12px; font-size: 14px; color: var(--muted); }
-.features, .steps { padding: 56px 0; border-top: 1px solid var(--line); }
-.features h2, .steps h2 { font-size: 26px; margin: 0 0 28px; }
-.feature-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-.feature-list li { background: var(--surface); padding: 24px; }
-.feature-list h3 { font-size: 18px; margin: 0 0 8px; }
-.feature-list p { margin: 0; color: var(--muted); font-size: 16px; }
-.steps ol { margin: 0 0 28px; padding-left: 1.4em; font-size: 17px; }
-.steps li { margin-bottom: 10px; }
+
+/* 產品示意元件（對應實際看板的欄位、卡片與狀態色） */
+.mock-board { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; }
+.mock-board-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 17px; }
+.mock-board-head span { font-size: 14px; color: var(--muted); }
+.mock-progress { height: 6px; margin: 12px 0 18px; border-radius: 3px; background: #f0edf8; overflow: hidden; }
+.mock-progress i { display: block; height: 100%; background: #a99be7; }
+.mock-columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.mock-column, .mock-mini-board > div { background: var(--ground); border-radius: 10px; padding: 12px; min-height: 230px; display: flex; flex-direction: column; gap: 10px; }
+.mock-column h4, .mock-mini-board h4 { display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.dot.open { background: var(--open); } .dot.doing { background: var(--doing); } .dot.done { background: var(--done); }
+.mock-card { background: var(--surface); border: 1px solid #e6e2ef; border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; }
+.mock-card small { font-size: 13px; color: #6a5bd6; font-weight: 600; }
+.mock-card small.bug { color: #c2474a; }
+.mock-card b { font-size: 15px; font-weight: 600; line-height: 1.45; }
+.mock-card.active { border-color: #cfc5f4; box-shadow: inset 3px 0 0 var(--accent); }
+.mock-card.done small { color: #3f7d64; }
+.mock-card.done b { color: var(--muted); }
+.mock-meta { display: flex; gap: 8px; align-items: center; margin-top: 4px; font-size: 13px; color: var(--muted); }
+.mock-meta em { font-style: normal; font-weight: 600; color: var(--ink); background: var(--accent-soft); border-radius: 5px; padding: 0 6px; }
+
+/* 一條實際流程：文字與對應示意左右交錯 */
+.flow, .more, .start { padding: 60px 0; border-top: 1px solid var(--line); }
+.section-lead { margin: 0 0 36px; color: var(--muted); font-size: 16px; }
+.flow-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 40px; }
+.flow-step { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
+.flow-step:nth-child(even) .flow-text { order: 2; }
+.flow-no { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; margin-bottom: 14px; }
+.flow-text h3 { font-size: 23px; line-height: 1.4; margin-bottom: 10px; }
+.flow-text p { margin: 0; color: var(--muted); font-size: 16px; max-width: 30em; }
+.mock-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.mock-todo { display: flex; align-items: center; gap: 10px; font-size: 15px; padding: 8px 4px; border-bottom: 1px solid #f0edf5; }
+.mock-todo:last-child { border-bottom: 0; }
+.mock-todo i { width: 16px; height: 16px; border: 1.5px solid #b9b3c8; border-radius: 4px; flex: none; }
+.mock-todo.checked { color: var(--muted); text-decoration: line-through; }
+.mock-todo.checked i { background: var(--done); border-color: var(--done); }
+.mock-convert { align-items: stretch; }
+.mock-arrow { align-self: center; font-size: 13px; font-weight: 600; color: #4f3fb8; background: var(--accent-soft); border-radius: 999px; padding: 2px 12px; }
+.mock-arrow::after { content: ' ↓'; }
+.mock-mini-board { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px; }
+.mock-mini-board > div { min-height: 150px; }
+.mock-time { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; font-size: 15px; padding: 8px 4px; border-bottom: 1px solid #f0edf5; }
+.mock-time span { color: var(--muted); font-size: 14px; }
+.mock-time b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mock-time em { font-style: normal; font-weight: 700; }
+.mock-time.total { border-bottom: 0; background: var(--ground); border-radius: 8px; padding: 10px 12px; }
+
+/* 其他功能：精簡清單，不再是一排相同的卡片 */
+.more h2 { margin-bottom: 28px; }
+.more-list { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 56px; }
+.more-list dt { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.more-list dd { margin: 0; color: var(--muted); font-size: 16px; }
+
+.start h2 { margin-bottom: 24px; }
+.start-steps { margin: 0 0 32px; padding: 0; list-style: none; counter-reset: step; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.start-steps li { counter-increment: step; color: var(--muted); font-size: 16px; }
+.start-steps li::before { content: counter(step); display: block; font-size: 30px; font-weight: 700; color: var(--accent); line-height: 1.2; margin-bottom: 6px; }
+.start-steps b { display: block; color: var(--ink); font-size: 18px; margin-bottom: 4px; }
+.start-cta { margin: 0; }
+
 .site-footer { max-width: 1160px; margin: 0 auto; padding: 28px 24px 40px; display: flex; justify-content: space-between; gap: 16px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); }
 .site-footer a { color: var(--accent); }
-@media (max-width: 900px) { .hero { grid-template-columns: 1fr; padding: 48px 0; gap: 32px; } .feature-list { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 560px) { main { padding: 0 16px; } .feature-list { grid-template-columns: 1fr; } .lead { font-size: 17px; } .cta { flex: 1 1 auto; justify-content: center; } .site-footer { padding: 24px 16px 32px; } }
+
+@media (max-width: 900px) {
+  .hero { grid-template-columns: minmax(0, 1fr); padding: 52px 0 56px; gap: 36px; }
+  .flow-step { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .flow-step:nth-child(even) .flow-text { order: 0; }
+  .flow, .more, .start { padding: 56px 0; }
+}
+@media (max-width: 560px) {
+  main { padding: 0 16px; }
+  .lead { font-size: 16px; }
+  .cta { flex: 1 1 auto; }
+  /* 手機只留前兩欄、字級不縮，讀得到卡片內容（不是把整張桌面版縮小） */
+  .mock-board { padding: 16px; }
+  .mock-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mock-column:nth-child(3) { display: none; }
+  .mock-column { min-height: 0; }
+  .mock-mini-board > div { min-height: 0; }
+  .more-list, .start-steps { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .flow-steps { gap: 44px; }
+  .site-footer { padding: 24px 16px 32px; }
+}
