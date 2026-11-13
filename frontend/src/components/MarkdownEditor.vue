@@ -3,7 +3,7 @@ import { computed, nextTick, ref, useId, watch } from 'vue';
 import { onTabKeydown } from '../ui/tabs.js';
 import MarkdownContent from './MarkdownContent.vue';
 
-const props = defineProps({ modelValue: { type: String, default: '' }, label: { type: String, required: true }, placeholder: String, maxlength: { type: Number, default: 6000 }, rows: { type: Number, default: 4 }, disabled: Boolean, required: Boolean, name: String });
+const props = defineProps({ modelValue: { type: String, default: '' }, label: { type: String, required: true }, placeholder: String, maxlength: { type: Number, default: 6000 }, rows: { type: Number, default: 4 }, disabled: Boolean, required: Boolean, name: String, projectId: { type: String, default: '' } });
 const emit = defineEmits(['update:modelValue']);
 const id = useId(), input = ref(null), mode = ref('write'), composing = ref(false), message = ref('');
 const model = computed({ get: () => props.modelValue, set: value => { message.value = ''; emit('update:modelValue', value); } });
@@ -81,7 +81,7 @@ function onKeydown(event) {
       <textarea :id="`${id}-input`" ref="input" v-model="model" :name="name" :aria-label="label" :aria-describedby="`${id}-help`" :placeholder="placeholder" :maxlength="maxlength" :rows="rows" :disabled="disabled" :required="required" @keydown="onKeydown" @compositionstart="composing = true" @compositionend="composing = false"></textarea>
     </div>
     <div v-show="mode === 'preview'" :id="`${id}-reading`" class="editor-preview" role="tabpanel" tabindex="0" :aria-labelledby="`${id}-preview`">
-      <MarkdownContent v-if="mode === 'preview' && modelValue.trim()" :source="modelValue" />
+      <MarkdownContent v-if="mode === 'preview' && modelValue.trim()" :source="modelValue" :project-id="projectId" />
       <p v-else class="editor-empty">尚無內容</p>
     </div>
     <div :id="`${id}-help`" class="editor-footer"><span>{{ message }}</span><span>{{ modelValue.length }} / {{ maxlength }}</span></div>

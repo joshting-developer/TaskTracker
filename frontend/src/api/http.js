@@ -5,6 +5,7 @@ export function setWorkspaceContext(id) {
   if (workspaceId === id) return;
   workspaceId = id;
   generation++;
+  globalThis.window?.dispatchEvent(new Event('tasktracker:workspace-changed'));
   for (const controller of active) controller.abort();
 }
 
@@ -41,7 +42,7 @@ function waitForToken(signal) {
 }
 
 /** HTTP傳輸：租戶generation、取消與逾時不與DomainError混為連線失敗。 */
-export async function requestJson(path, { method = 'GET', input, scoped = true, signal, timeoutMs = 20000, retryCsrf = true, notifyAccess = true } = {}) {
+export async function requestJson(path, { method = 'GET', input, scoped = true, signal, timeoutMs = 20000, retryCsrf = true, notifyAccess = true, binary = false } = {}) {
   const captured = generation;
   const controller = new AbortController();
   let timedOut = false;
@@ -58,13 +59,25 @@ export async function requestJson(path, { method = 'GET', input, scoped = true, 
     }
     if (scoped && captured !== generation) throw failure('STALE_RESPONSE', '工作空間已切換');
     if (scoped && workspaceId) headers['X-Workspace-ID'] = workspaceId;
-    const response = await fetch(path, { method, credentials: 'include', headers, signal: controller.signal, ...(input === undefined ? {} : { body: JSON.stringify(input) }) });
+    const response = await fetch(path, { method, credentials: 'include', headers, signal: controller.signal, ...(binary ? { redirect: 'error' } : {}), ...(input === undefined ? {} : { body: JSON.stringify(input) }) });
     const rotated = response.headers.get('X-CSRF-TOKEN');
     if (rotated) csrfToken = rotated;
     if (scoped && captured !== generation) throw failure('STALE_RESPONSE', '工作空間已切換，已捨棄舊回應');
     if (response.status === 419 && method !== 'GET' && retryCsrf) {
       csrfToken = '';
       return await requestJson(path, { method, input, scoped, signal: controller.signal, timeoutMs, retryCsrf: false, notifyAccess });
+    }
+    if (binary && response.ok) {
+      const mime = response.headers.get('Content-Type')?.split(';')[0];
+      const length = Number(response.headers.get('Content-Length'));
+      if (!['image/png', 'image/jpeg', 'image/webp'].includes(mime) || !length || length > 10 * 1024 * 1024) throw failure('INVALID_IMAGE', '圖片格式或大小不正確');
+      const blob = await response.blob();
+      if (scoped && captured !== generation) throw failure('STALE_RESPONSE', '工作空間已切換');
+      if (blob.size !== length) throw failure('INVALID_IMAGE', '圖片未完整載入');
+      const disposition = response.headers.get('Content-Disposition') || '';
+      let name = '圖片';
+      try { name = decodeURIComponent(disposition.match(/filename\*=utf-8''([^;]+)/i)?.[1] || disposition.match(/filename="([^"]+)"/)?.[1] || name); } catch { /* Use the safe fallback label. */ }
+      return { blob, name, bytes: length };
     }
     let body;
     try { body = await response.json(); }
@@ -105,3 +118,6 @@ export function queryApi(path, filters = {}, options = {}) {
   const query = queryString(filters);
   return requestJson(`/api/v1/${path}${query ? `?${query}` : ''}`, options);
 }
+
+/** Private images share tenant cancellation and current authorization with JSON reads. */
+export function requestImage(path, options = {}) { return requestJson(path, { ...options, binary: true }); }

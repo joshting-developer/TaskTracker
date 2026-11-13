@@ -189,7 +189,7 @@ function timestamp(value) {
         <div v-if="error" class="error-box" role="alert">{{ error }} <button v-if="conflict" type="button" class="text-button" :disabled="inputDisabled" @click="reload">重新載入最新版本</button></div>
         <form id="issue-form" @submit.prevent="save">
           <label class="field">任務標題 <span class="required">*</span><input v-model="form.title" name="title" placeholder="輸入任務標題…" maxlength="180" required :disabled="inputDisabled" /></label>
-          <MarkdownEditor v-model="form.description" label="描述" name="description" placeholder="輸入描述…" :rows="5" :maxlength="6000" :disabled="inputDisabled" />
+          <MarkdownEditor v-model="form.description" :project-id="form.projectId" label="描述" name="description" placeholder="輸入描述…" :rows="5" :maxlength="6000" :disabled="inputDisabled" />
           <div class="form-grid">
             <PagedSelect autoload v-if="projectOptionsLoader" v-model="form.projectId" label="專案" :options="availableProjects" :context="todo?.id || 'new'" :load="projectOptionsLoader" :disabled="inputDisabled" empty-label="選擇所屬專案" required @choose="item => { pickedProjects = [...pickedProjects.filter(project=>project.id!==item.id),item]; }" /><label v-else class="field">專案<select v-model="form.projectId" aria-label="專案" :disabled="!todo || saving" required><option v-if="todo" value="" disabled>選擇所屬專案</option><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option></select></label>
             <label class="field">狀態<select v-model="form.state" aria-label="狀態" :disabled="inputDisabled"><option v-for="state in states" :key="state.id" :value="state.id">{{ state.label }}</option></select></label>

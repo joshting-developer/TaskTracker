@@ -1,12 +1,28 @@
 <script setup>
-import { computed } from 'vue';
-import { renderMarkdown } from '../ui/markdown.js';
-const props = defineProps({ source: { type: String, default: '' } });
-const html = computed(() => renderMarkdown(props.source));
+import { computed, h } from 'vue';
+import { renderMarkdownDocument } from '../ui/markdown.js';
+import AttachmentImage from './AttachmentImage.vue';
+const props = defineProps({ source: { type: String, default: '' }, projectId: { type: String, default: '' } });
+// Only sanitized DOM becomes Vue nodes. User HTML stays escaped by the Markdown renderer.
+const nodes = computed(() => {
+  const document = renderMarkdownDocument(props.source, Boolean(props.projectId));
+  const template = window.document.createElement('template');
+  template.innerHTML = document.html;
+  function node(element) {
+    if (element.nodeType === Node.TEXT_NODE) return element.textContent;
+    if (element.nodeType !== Node.ELEMENT_NODE) return null;
+    const attachment = document.attachments[Number(element.getAttribute('data-attachment-slot'))];
+    if (element.hasAttribute('data-attachment-slot') && attachment) return h(AttachmentImage, { key: `${props.projectId}:${attachment.id}:${element.getAttribute('data-attachment-slot')}`, projectId: props.projectId, attachmentId: attachment.id, label: attachment.label });
+    const attrs = Object.fromEntries([...element.attributes].map(attr => [attr.name, ['checked', 'disabled'].includes(attr.name) ? true : attr.value]));
+    return h(element.tagName.toLowerCase(), attrs, [...element.childNodes].map(node));
+  }
+  return [...template.content.childNodes].map(node);
+});
+const Content = () => nodes.value;
 </script>
 
 <template>
-  <div class="markdown-body" v-html="html"></div>
+  <div class="markdown-body"><Content /></div>
 </template>
 
 <style scoped>

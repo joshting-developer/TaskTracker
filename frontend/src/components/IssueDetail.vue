@@ -111,7 +111,7 @@ function timeSaved() {
     <div class="issue-detail-layout">
       <h1 ref="heading" tabindex="-1">{{ issue.title }}</h1>
       <div class="issue-detail-body">
-        <section class="issue-detail-description" aria-label="任務描述"><h2>描述</h2><MarkdownContent v-if="issue.description" :source="issue.description" /><p v-else>尚未填寫描述</p></section>
+        <section class="issue-detail-description" aria-label="任務描述"><h2>描述</h2><MarkdownContent v-if="issue.description" :source="issue.description" :project-id="project.id" /><p v-else>尚未填寫描述</p></section>
         <section class="issue-detail-activity" aria-label="任務活動">
           <div class="discussion-tabs" role="tablist" aria-label="任務紀錄" @keydown="onTabKeydown">
             <button id="detail-comments-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" :class="{ active: tab === 'comments' }" @click="tab = 'comments'">留言 <span>{{ activityComments.length }}</span></button>
