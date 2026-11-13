@@ -248,6 +248,10 @@ Vue／SFC／Composition API／reactivity／composables工作使用 [vue-best-pra
 
 「AI整合/API」只收個人PAT、Scope／期限／撤銷、外部REST操作、OpenAPI／使用文件與獨立客戶端驗收；外部同步／批次／Webhook屬後續能力，不是最小Token操作流程的前置。內部DI／Factory／Context／PHPDoc、Request／DTO與分責／效能重構歸「效能改進」（含架構品質），UI／一般功能與skills沿革歸「實際功能」；不能只因名稱含API或AI就收進對外整合看板。只有專屬TT-3可在API板動態展開，不整包收跨主題Epic。現行分類與移動清單見[2026-11-12盤點](docs/api-board-classification-2026-11-12.md)，取代早期把工程skills也收API板的規則。分類不代表自動變更進度或新增開發授權。
 
+## 正式部署目標（2026-11-13）
+
+Josh已確認正式網址 `https://task-tracker.josh-ting.com`；正式MySQL沿用外部主機129.203.169.36的 `task_tracker` 庫（不是 `task_tracker_testing`），正式需要Redis並使用外部129.203.136.170。帳密只放Fly Secrets，不寫進Git／卡片／映像。發版流程是打 `v*` tag由GitHub Actions建映像推GHCR（TT-320），設定清單TT-321，首次Fly部署TT-323。決定細節見docs/產品討論紀錄.md同日章節。
+
 ## 現用本地MySQL／Redis（2026-11-12）
 
 使用者因遠端SQL RTT影響效率，授權完整反向同步後切回本地。33表／5818筆全內容雜湊一致才切換，現用MySQL8.4.13／tasktracker與本地Redis；根忽略.env選docker-compose.yml及.local/local-volumes.yml，指向全新mysql-local-20261112／redis-local-20261112 volumes。原本地volume／外部庫保留但不再同步，不能直接切回覆蓋新資料。APP_KEY／資格／Session保留，Redis namespace仍由env指定；本地現用庫同樣不能拿來seed／RefreshDatabase／壓測。見docs/local-services-return-2026-11-12.md。下節為歷史外部設定。
