@@ -32,6 +32,7 @@ HEALTH
 compose exec -T -e TASKTRACKER_MYSQL_TEST=0 backend php artisan test --do-not-cache-result
 compose exec -T backend php artisan test --filter='MySqlIssueChangesTest|MySqlPublicQueriesTest|MySqlPublicWritesTest|MySqlTokenRevocationRaceTest' --do-not-cache-result
 python3 tools/documented_examples_check.py
+E2E_ISOLATED=1 python3 tools/public_attachment_acceptance.py
 python3 tools/public_client_acceptance.py
 npm --prefix frontend run test:docs
 # 限流會耗盡隔離IP桶，必須最後執行。

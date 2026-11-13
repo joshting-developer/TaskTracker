@@ -131,6 +131,12 @@ trait IssueChildrenEpicCases
         {
             public int $calls = 0;
 
+            /** 注入批次異常以驗證原子回滾
+             * @param  IssueChildrenScope  $scope  隔離專案範圍
+             * @param  array  $changes  有界批次
+             * @param  string  $at  事件時間
+             * @return int 受影響筆數
+             */
             public function apply(IssueChildrenScope $scope, array $changes, string $at): int
             {
                 $count = parent::apply($scope, $changes, $at);
@@ -160,6 +166,12 @@ trait IssueChildrenEpicCases
     {
         $fault = new class extends IssueChildrenRepository
         {
+            /** 注入批次異常以驗證原子回滾
+             * @param  IssueChildrenScope  $scope  隔離專案範圍
+             * @param  array  $changes  有界批次
+             * @param  string  $at  事件時間
+             * @return int 受影響筆數
+             */
             public function apply(IssueChildrenScope $scope, array $changes, string $at): int
             {
                 DB::table('issues')->where('id', $changes[0]['id'])->increment('revision');

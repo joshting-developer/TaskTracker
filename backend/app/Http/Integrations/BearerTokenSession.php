@@ -64,6 +64,21 @@ class BearerTokenSession
     }
 
     /**
+     * 上傳保留階段的鎖後授權, 完成IO後才由writeOnce記成功receipt與來源
+     *
+     * @template T
+     *
+     * @param  Request  $request  純Bearer請求
+     * @param  Closure(TokenContext):T  $use  保留配額／metadata, 不執行外部IO
+     * @param  string  $projectId  目標Project公開ID
+     * @return T 已保留的上傳資料
+     */
+    public function stageUpload(Request $request, Closure $use, string $projectId): mixed
+    {
+        return $this->run($request, true, $use, $projectId, 'issue.write');
+    }
+
+    /**
      * 鎖後重驗Token／資格及Project permission，成功結果與來源紀錄同交易提交。
      *
      * @template T

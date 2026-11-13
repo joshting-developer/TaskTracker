@@ -62,3 +62,14 @@ PAT 不印在對話／卡片／Commit／log，不傳給不受信任網址，不�
 ## 來源參照與回音
 
 寫入時可帶`X-Client-Reference: <你的run或工作ID>`，方便日後從本人來源紀錄追溯是哪次執行寫的；不要放秘密。讀issue-changes時，`lastWrite.sameToken`為true的項目是你自己剛寫回的版本，同步時可以略過，避免來回循環。lastWrite為null代表最新版本來自Web或其他來源，需要處理。
+
+
+## 私有圖片與附件（OpenAPI 0.13.0）
+
+先用getPublicAttachmentLimits取得部署限制, 再以uploadPublicAttachment送multipart的requestId與file, 不送JSON base64、遠端URL或storage key。網路不確定時保留同一requestId與相同檔案／檔名補送；改內容要用新ID, 409不自動覆蓋。上傳預設每IP30次／分鐘, 仍計入公開API共用120次／分鐘
+
+回傳pending metadata與`attachment:<UUID>`參照。建立／修改Issue時把`![說明](attachment:<UUID>)`放到description, 會在同一交易綁定；也可用bindPublicAttachment帶附件expectedRevision及卡片issueRevision明確綁定, 完成後重讀單卡revision。未綁定附件預設24小時到期, 僅上傳者可讀／綁定, 不當成永久檔案庫
+
+getPublicAttachment／listPublicIssueAttachments只回安全metadata；getPublicAttachmentContent回PNG／JPEG／WebP原始bytes, 不是JSON, 可帶download=true下載。每次重新驗當下Token及Project資格, 沒有公開或簽署儲存URL。讀取需要read, 上傳／綁定需要write, 都仍受目前專案permission限制；limits需要issue.write資格。圖片失效、刪除或撤權後不再可讀
+
+下載Python範例時可加`IMAGE_FILE=/本機/測試.png`, 它會上傳、同requestId補送、建含圖Issue並讀回原始內容核對。只對已授權的專案執行, 不把真實圖片或PAT貼在卡片／log

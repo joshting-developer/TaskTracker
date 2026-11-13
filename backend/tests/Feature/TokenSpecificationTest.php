@@ -31,7 +31,7 @@ class TokenSpecificationTest extends TestCase
             foreach ($methods as $method => $operation) {
                 $operations[] = $operation['operationId'];
                 $declared[] = strtoupper($method).' '.$path;
-                $route = $this->app['router']->getRoutes()->match(Request::create(str_replace(['{token}', '{project}', '{issue}'], '1', $path), strtoupper($method)));
+                $route = $this->app['router']->getRoutes()->match(Request::create(str_replace(['{token}', '{project}', '{issue}', '{attachment}'], '1', $path), strtoupper($method)));
                 $this->assertSame(ltrim($path, '/'), $route->uri());
                 $this->assertNotNull($route->getAction('controller'));
                 $this->assertArrayHasKey('200', $operation['responses']);
@@ -58,7 +58,8 @@ class TokenSpecificationTest extends TestCase
                             }
                         }
                     }
-                    $schema = $operation['requestBody']['content']['application/json']['schema'];
+                    $requestMedia = reset($operation['requestBody']['content']);
+                    $schema = $requestMedia['schema'];
                     if (isset($schema['$ref'])) {
                         $schema = $spec['components']['schemas'][basename($schema['$ref'])];
                     }
@@ -68,10 +69,14 @@ class TokenSpecificationTest extends TestCase
                     $this->assertSame($required, $documented, 'FormRequest與OpenAPI必填欄位不一致');
                 }
                 foreach ($operation['responses'] as $response) {
-                    $this->verifyExample($spec, $response['content']['application/json']);
+                    foreach ($response['content'] as $media) {
+                        $this->verifyExample($spec, $media);
+                    }
                 }
                 if (isset($operation['requestBody'])) {
-                    $this->verifyExample($spec, $operation['requestBody']['content']['application/json']);
+                    foreach ($operation['requestBody']['content'] as $media) {
+                        $this->verifyExample($spec, $media);
+                    }
                 }
             }
         }
@@ -100,6 +105,11 @@ class TokenSpecificationTest extends TestCase
      */
     private function verifyExample(array $spec, array $media): void
     {
+        if (($media['schema']['format'] ?? '') === 'binary') {
+            $this->assertSame('string', $media['schema']['type']);
+
+            return;
+        }
         $schema = json_decode(json_encode(['$schema' => 'https://json-schema.org/draft/2020-12/schema', ...$media['schema'], 'components' => $spec['components']]));
         $this->assertTrue((new CompliantValidator)->validate(json_decode(json_encode($media['example'])), $schema)->isValid(), '範例與正式Schema不一致');
     }

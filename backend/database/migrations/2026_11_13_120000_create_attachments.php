@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Schema;
 /** 私有附件只存metadata, 範圍外鍵防止跨租戶綁定 */
 return new class extends Migration
 {
+    /** 建立私有附件metadata與範圍索引
+     * @return void
+     */
     public function up(): void
     {
         Schema::create('attachments', function (Blueprint $table) {
@@ -39,6 +42,9 @@ return new class extends Migration
         });
     }
 
+    /** 移除本遷移建立的附件資料表
+     * @return void
+     */
     public function down(): void
     {
         Schema::dropIfExists('attachments');

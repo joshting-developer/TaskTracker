@@ -79,12 +79,19 @@ class PublicApiContractTest extends TestCase
             foreach ($methods as $operation) {
                 $this->assertFalse($operation['deprecated']);
                 foreach ($operation['responses'] as $response) {
-                    $media = $response['content']['application/json'];
-                    $this->matchesSchema(json_decode(json_encode($media['example'])), $media['schema']);
+                    foreach ($response['content'] as $type => $media) {
+                        if ($type !== 'application/json') {
+                            $this->assertSame(['type' => 'string', 'format' => 'binary'], $media['schema']);
+
+                            continue;
+                        }
+                        $this->matchesSchema(json_decode(json_encode($media['example'])), $media['schema']);
+                    }
                 }
                 if (isset($operation['requestBody'])) {
-                    $media = $operation['requestBody']['content']['application/json'];
-                    $this->matchesSchema(json_decode(json_encode($media['example'])), $media['schema']);
+                    foreach ($operation['requestBody']['content'] as $media) {
+                        $this->matchesSchema(json_decode(json_encode($media['example'])), $media['schema']);
+                    }
                 }
             }
         }

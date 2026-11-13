@@ -40,6 +40,12 @@ trait AttachmentCases
         {
             public bool $fail = false;
 
+            /** 注入綁定失敗以驗證交易回滾
+             * @param  Project  $project  隔離專案
+             * @param  Issue  $issue  隔離卡片
+             * @param  array  $ids  待綁定ID
+             * @return void
+             */
             public function bindDescription(Project $project, Issue $issue, array $ids): void
             {
                 parent::bindDescription($project, $issue, $ids);
@@ -215,6 +221,12 @@ trait AttachmentCases
         {
             public bool $fail = true;
 
+            /** 注入私有儲存失敗
+             * @param  string  $disk  測試disk
+             * @param  string  $key  測試key
+             * @param  string  $path  圖片暫存路徑
+             * @return void
+             */
             public function put(string $disk, string $key, string $path): void
             {
                 if ($this->fail) {
@@ -259,6 +271,11 @@ trait AttachmentCases
         {
             public bool $fail = true;
 
+            /** 注入清理失敗與重試
+             * @param  string  $disk  測試disk
+             * @param  string  $key  測試key
+             * @return bool 清理結果
+             */
             public function delete(string $disk, string $key): bool
             {
                 return $this->fail ? false : parent::delete($disk, $key);
@@ -325,6 +342,11 @@ trait AttachmentCases
 
             public bool $failBind = true;
 
+            /** 注入完成保存失敗
+             * @param  Attachment  $attachment  隔離附件
+             * @param  array  $attributes  保存欄位
+             * @return Attachment 保存結果
+             */
             public function save(Attachment $attachment, array $attributes): Attachment
             {
                 if ($this->failFinalize && ($attributes['status'] ?? '') === 'pending') {
@@ -334,6 +356,11 @@ trait AttachmentCases
                 return parent::save($attachment, $attributes);
             }
 
+            /** 注入更新卡片後失敗
+             * @param  Issue  $issue  隔離卡片
+             * @param  array  $event  合成事件
+             * @return void
+             */
             public function touchIssue(Issue $issue, array $event): void
             {
                 parent::touchIssue($issue, $event);

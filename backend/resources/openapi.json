@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker API",
-    "version": "0.12.0",
-    "description": "公開Bearer v1讀取及Issue建立／PATCH／留言及外部識別查詢／upsert／批次；小待辦讀取、交辦、完成與退回；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。"
+    "version": "0.13.0",
+    "description": "公開Bearer v1讀取及Issue建立／PATCH／留言及外部識別查詢／upsert／批次；小待辦讀取、交辦、完成與退回；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。 支援受PAT與即時專案權限限制的私有附件上傳／metadata／內容／綁定。"
   },
   "servers": [
     {
@@ -8922,6 +8922,1797 @@
           }
         }
       }
+    },
+    "/api/public/v1/projects/{project}/attachments/limits": {
+      "get": {
+        "operationId": "getPublicAttachmentLimits",
+        "summary": "取得目前上傳限制",
+        "tags": [
+          "Attachments"
+        ],
+        "security": [
+          {
+            "bearerPat": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AttachmentLimits"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "maxBytes": 10485760,
+                    "maxPixels": 25000000,
+                    "perIssue": 20,
+                    "pendingHours": 24,
+                    "mimeTypes": [
+                      "image/png",
+                      "image/jpeg",
+                      "image/webp"
+                    ]
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              }
+            }
+          },
+          "401": {
+            "description": "認證／成員資格失效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "UNAUTHENTICATED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "認證／成員資格失效"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "來源、Scope或操作權限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "FORBIDDEN"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "來源、Scope或操作權限不足"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "請求超過限額",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "RATE_LIMIT"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "RATE_LIMIT",
+                    "message": "請求超過限額"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateReset"
+              }
+            }
+          },
+          "500": {
+            "description": "服務暫時無法處理請求",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "INTERNAL_ERROR"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "服務暫時無法處理請求"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "查詢條件不合法",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "請確認查詢範圍"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "資源不存在或不可見",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "請確認查詢範圍"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Requires read ability and current issue.write permission; upload additionally requires write ability.",
+        "deprecated": false,
+        "x-tasktracker-context": "token-workspace",
+        "x-rate-limit": {
+          "requests": 120,
+          "windowSeconds": 60,
+          "key": "client IP; shared across public v1 routes",
+          "sharedWithOtherOperations": true
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "公開資源ID；不是內部SQL ID"
+          }
+        ],
+        "x-required-permission": "issue.write",
+        "x-required-token-ability": "read"
+      }
+    },
+    "/api/public/v1/projects/{project}/attachments": {
+      "post": {
+        "operationId": "uploadPublicAttachment",
+        "summary": "上傳私有圖片, 同requestId與相同檔案可補送",
+        "tags": [
+          "Attachments"
+        ],
+        "security": [
+          {
+            "bearerPat": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Attachment"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "id": "33333333-3333-4333-8333-333333333333",
+                    "name": "capture.png",
+                    "mime": "image/png",
+                    "bytes": 1200,
+                    "status": "pending",
+                    "revision": 1,
+                    "reference": "attachment:33333333-3333-4333-8333-333333333333",
+                    "expiresAt": "2026-11-14T12:00:00Z"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              }
+            }
+          },
+          "401": {
+            "description": "認證／成員資格失效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "UNAUTHENTICATED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "認證／成員資格失效"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "來源、Scope或操作權限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "FORBIDDEN"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "來源、Scope或操作權限不足"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "請求超過限額",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "RATE_LIMIT"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "RATE_LIMIT",
+                    "message": "請求超過限額"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateReset"
+              }
+            }
+          },
+          "500": {
+            "description": "服務暫時無法處理請求",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "INTERNAL_ERROR"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "服務暫時無法處理請求"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "查詢條件不合法",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "請確認查詢範圍"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "資源不存在或不可見",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "請確認查詢範圍"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "REVISION_CONFLICT過期版本、REQUEST_CONFLICT同key異內容、CONFLICT既有資源限制",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "REVISION_CONFLICT",
+                    "message": "任務已被更新，請重新載入"
+                  }
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "私有儲存IO失敗, 可用相同requestId與檔案補送",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "STORAGE_ERROR"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "STORAGE_ERROR",
+                    "message": "圖片暫時無法儲存, 請重試"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Default 10 MiB, 25 million pixels; 20 attachments per issue, 20 pending per user, 1 GiB per workspace. Deployment limits may differ; call limits first. Pending expires after 24 hours by default. Retry with the same requestId, name and bytes; changed payload is 409. IO failure is 502; pending reservation remains retryable. No redirects or remote imports.",
+        "deprecated": false,
+        "x-tasktracker-context": "token-workspace",
+        "x-rate-limit": {
+          "requests": 30,
+          "windowSeconds": 60,
+          "key": "client IP; upload bucket plus public API shared bucket",
+          "sharedWithOtherOperations": true,
+          "additionalPublicLimit": {
+            "requests": 120,
+            "windowSeconds": 60,
+            "key": "client IP; shared across public v1 routes"
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "公開資源ID；不是內部SQL ID"
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Reference",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._:/@#-]{1,120}$"
+            },
+            "description": "選填。外部run、工作或交付物參照，只寫入來源稽核（本人可在personal-token-audits查到），不進卡片、不屬requestId簽章；同requestId重送不會新增紀錄。不要放秘密。格式不符400。"
+          }
+        ],
+        "x-required-permission": "issue.write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadAttachment"
+              },
+              "example": {
+                "requestId": "33333333-3333-4333-8333-333333333333",
+                "file": "<binary PNG/JPEG/WebP>"
+              },
+              "encoding": {
+                "file": {
+                  "contentType": "image/png, image/jpeg, image/webp"
+                }
+              }
+            }
+          }
+        },
+        "x-required-token-ability": "write"
+      }
+    },
+    "/api/public/v1/projects/{project}/attachments/{attachment}": {
+      "get": {
+        "operationId": "getPublicAttachment",
+        "summary": "取得目前可讀的附件metadata",
+        "tags": [
+          "Attachments"
+        ],
+        "security": [
+          {
+            "bearerPat": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Attachment"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "id": "33333333-3333-4333-8333-333333333333",
+                    "name": "capture.png",
+                    "mime": "image/png",
+                    "bytes": 1200,
+                    "status": "pending",
+                    "revision": 1,
+                    "reference": "attachment:33333333-3333-4333-8333-333333333333",
+                    "expiresAt": "2026-11-14T12:00:00Z"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              }
+            }
+          },
+          "401": {
+            "description": "認證／成員資格失效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "UNAUTHENTICATED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "認證／成員資格失效"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "來源、Scope或操作權限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "FORBIDDEN"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "來源、Scope或操作權限不足"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "請求超過限額",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "RATE_LIMIT"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "RATE_LIMIT",
+                    "message": "請求超過限額"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateReset"
+              }
+            }
+          },
+          "500": {
+            "description": "服務暫時無法處理請求",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "INTERNAL_ERROR"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "服務暫時無法處理請求"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "查詢條件不合法",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "請確認查詢範圍"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "資源不存在或不可見",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "請確認查詢範圍"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "純Bearer read能力與當下project.read交集；工作區由PAT固定，不接受Session代替。列表SQL分頁，超出頁數空items；未知query欄位忽略，不能指定actor／Workspace。",
+        "deprecated": false,
+        "x-tasktracker-context": "token-workspace",
+        "x-rate-limit": {
+          "requests": 120,
+          "windowSeconds": 60,
+          "key": "client IP; shared across public v1 routes",
+          "sharedWithOtherOperations": true
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "公開資源ID；不是內部SQL ID"
+          },
+          {
+            "in": "path",
+            "name": "attachment",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "公開資源ID"
+          }
+        ],
+        "x-required-permission": "issue.read",
+        "x-required-token-ability": "read"
+      }
+    },
+    "/api/public/v1/projects/{project}/issues/{issue}/attachments": {
+      "get": {
+        "operationId": "listPublicIssueAttachments",
+        "summary": "單卡有效附件metadata, 固定每頁20筆",
+        "tags": [
+          "Attachments"
+        ],
+        "security": [
+          {
+            "bearerPat": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "items",
+                        "page",
+                        "perPage",
+                        "total",
+                        "lastPage"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Attachment"
+                          },
+                          "maxItems": 20
+                        },
+                        "page": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "perPage": {
+                          "const": 20
+                        },
+                        "total": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "lastPage": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "items": [],
+                    "page": 1,
+                    "perPage": 20,
+                    "total": 0,
+                    "lastPage": 1
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              }
+            }
+          },
+          "401": {
+            "description": "認證／成員資格失效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "UNAUTHENTICATED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "認證／成員資格失效"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "來源、Scope或操作權限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "FORBIDDEN"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "來源、Scope或操作權限不足"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "請求超過限額",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "RATE_LIMIT"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "RATE_LIMIT",
+                    "message": "請求超過限額"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateReset"
+              }
+            }
+          },
+          "500": {
+            "description": "服務暫時無法處理請求",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "INTERNAL_ERROR"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "服務暫時無法處理請求"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "查詢條件不合法",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "請確認查詢範圍"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "資源不存在或不可見",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "請確認查詢範圍"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "純Bearer read能力與當下project.read交集；工作區由PAT固定，不接受Session代替。列表SQL分頁，超出頁數空items；未知query欄位忽略，不能指定actor／Workspace。",
+        "deprecated": false,
+        "x-tasktracker-context": "token-workspace",
+        "x-rate-limit": {
+          "requests": 120,
+          "windowSeconds": 60,
+          "key": "client IP; shared across public v1 routes",
+          "sharedWithOtherOperations": true
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "公開資源ID；不是內部SQL ID"
+          },
+          {
+            "in": "path",
+            "name": "issue",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "公開資源ID"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ],
+        "x-required-permission": "issue.read",
+        "x-required-token-ability": "read"
+      }
+    },
+    "/api/public/v1/projects/{project}/attachments/{attachment}/content": {
+      "get": {
+        "operationId": "getPublicAttachmentContent",
+        "summary": "即時授權後讀取圖片或下載",
+        "tags": [
+          "Attachments"
+        ],
+        "security": [
+          {
+            "bearerPat": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Raw authenticated image bytes, not JSON; no-store, nosniff, sandbox, safe Content-Disposition. No signed URL or redirect.",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              }
+            }
+          },
+          "401": {
+            "description": "認證／成員資格失效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "UNAUTHENTICATED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "認證／成員資格失效"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "來源、Scope或操作權限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "FORBIDDEN"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "來源、Scope或操作權限不足"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "請求超過限額",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "RATE_LIMIT"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "RATE_LIMIT",
+                    "message": "請求超過限額"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateReset"
+              }
+            }
+          },
+          "500": {
+            "description": "服務暫時無法處理請求",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "INTERNAL_ERROR"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "服務暫時無法處理請求"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "查詢條件不合法",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "請確認查詢範圍"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "資源不存在或不可見",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "請確認查詢範圍"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "純Bearer read能力與當下project.read交集；工作區由PAT固定，不接受Session代替。列表SQL分頁，超出頁數空items；未知query欄位忽略，不能指定actor／Workspace。",
+        "deprecated": false,
+        "x-tasktracker-context": "token-workspace",
+        "x-rate-limit": {
+          "requests": 120,
+          "windowSeconds": 60,
+          "key": "client IP; shared across public v1 routes",
+          "sharedWithOtherOperations": true
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "公開資源ID；不是內部SQL ID"
+          },
+          {
+            "in": "path",
+            "name": "attachment",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "公開資源ID"
+          },
+          {
+            "in": "query",
+            "name": "download",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "x-required-permission": "issue.read",
+        "x-required-token-ability": "read"
+      }
+    },
+    "/api/public/v1/projects/{project}/attachments/{attachment}/bind": {
+      "post": {
+        "operationId": "bindPublicAttachment",
+        "summary": "以附件與卡片revision原子綁定, 同requestId重播原結果",
+        "tags": [
+          "Attachments"
+        ],
+        "security": [
+          {
+            "bearerPat": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AttachmentMutationResult"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "id": "33333333-3333-4333-8333-333333333333",
+                    "revision": 2,
+                    "status": "active",
+                    "issueId": "22222222-2222-4222-8222-222222222222",
+                    "issueRevision": 2
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              }
+            }
+          },
+          "401": {
+            "description": "認證／成員資格失效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "UNAUTHENTICATED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "認證／成員資格失效"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "來源、Scope或操作權限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "FORBIDDEN"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "來源、Scope或操作權限不足"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "請求超過限額",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "RATE_LIMIT"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "RATE_LIMIT",
+                    "message": "請求超過限額"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateReset"
+              }
+            }
+          },
+          "500": {
+            "description": "服務暫時無法處理請求",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "INTERNAL_ERROR"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "服務暫時無法處理請求"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "查詢條件不合法",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "請確認查詢範圍"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "資源不存在或不可見",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "請確認查詢範圍"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "REVISION_CONFLICT過期版本、REQUEST_CONFLICT同key異內容、CONFLICT既有資源限制",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "REVISION_CONFLICT",
+                    "message": "任務已被更新，請重新載入"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "純Bearer write與本人issue.write交集；User→Workspace鎖後重驗。requestId同內容回原有界結果、不重複業務／通知／audit，異內容409。expectedRevision對更新／留言必填，衝突409後重讀。無刪除／封存。",
+        "deprecated": false,
+        "x-tasktracker-context": "token-workspace",
+        "x-rate-limit": {
+          "requests": 120,
+          "windowSeconds": 60,
+          "key": "client IP; shared across public v1 routes",
+          "sharedWithOtherOperations": true
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "公開資源ID；不是內部SQL ID"
+          },
+          {
+            "in": "path",
+            "name": "attachment",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "公開資源ID"
+          },
+          {
+            "in": "header",
+            "name": "X-Client-Reference",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._:/@#-]{1,120}$"
+            },
+            "description": "選填。外部run、工作或交付物參照，只寫入來源稽核（本人可在personal-token-audits查到），不進卡片、不屬requestId簽章；同requestId重送不會新增紀錄。不要放秘密。格式不符400。"
+          }
+        ],
+        "x-required-permission": "issue.write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BindAttachment"
+              },
+              "example": {
+                "requestId": "33333333-3333-4333-8333-333333333333",
+                "expectedRevision": 1,
+                "issueId": "22222222-2222-4222-8222-222222222222",
+                "issueRevision": 1
+              }
+            }
+          }
+        },
+        "x-required-token-ability": "write"
+      }
     }
   },
   "components": {
@@ -10798,6 +12589,180 @@
             "minimum": 1
           }
         }
+      },
+      "Attachment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "mime": {
+            "enum": [
+              "image/png",
+              "image/jpeg",
+              "image/webp"
+            ]
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "active"
+            ]
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "reference": {
+            "type": "string",
+            "pattern": "^attachment:[a-f0-9-]{36}$"
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "mime",
+          "bytes",
+          "status",
+          "revision",
+          "reference",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "AttachmentLimits": {
+        "type": "object",
+        "properties": {
+          "maxBytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "maxPixels": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "perIssue": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pendingHours": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "mimeTypes": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "image/png",
+                "image/jpeg",
+                "image/webp"
+              ]
+            },
+            "maxItems": 3
+          }
+        },
+        "required": [
+          "maxBytes",
+          "maxPixels",
+          "perIssue",
+          "pendingHours",
+          "mimeTypes"
+        ],
+        "additionalProperties": false
+      },
+      "UploadAttachment": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "PNG/JPEG/WebP bytes, not a URL or base64 JSON. Limits endpoint is authoritative; default 10 MiB and 25 million pixels."
+          }
+        },
+        "required": [
+          "requestId",
+          "file"
+        ],
+        "additionalProperties": false
+      },
+      "BindAttachment": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "issueId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "issueRevision": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "requestId",
+          "expectedRevision",
+          "issueId",
+          "issueRevision"
+        ],
+        "additionalProperties": false
+      },
+      "AttachmentMutationResult": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status": {
+            "const": "active"
+          },
+          "issueId": {
+            "type": "string"
+          },
+          "issueRevision": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "status",
+          "issueId",
+          "issueRevision"
+        ],
+        "additionalProperties": false
       }
     },
     "headers": {

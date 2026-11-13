@@ -3,6 +3,7 @@
 use App\Http\Controllers\Integrations\ApiSpecificationController;
 use App\Http\Controllers\Integrations\DeveloperDocumentationController;
 use App\Http\Controllers\Integrations\PersonalTokensController;
+use App\Http\Controllers\Integrations\PublicAttachmentsController;
 use App\Http\Controllers\Integrations\PublicIssueChangesController;
 use App\Http\Controllers\Integrations\PublicIssueExternalController;
 use App\Http\Controllers\Integrations\PublicIssuesController;
@@ -57,6 +58,19 @@ Route::prefix('/api/public/v1/projects/{project}/issues')->middleware('throttle:
     Route::delete('/{issue}', [$writes, 'execute'])->name('public.issues.delete');
     Route::put('/external/{source}/{externalId}', [PublicIssueExternalController::class, 'upsert'])->name('public.issues.upsert');
     Route::post('/external-batch', [PublicIssueExternalController::class, 'batch'])->name('public.issues.batch');
+});
+
+// Attachment metadata and bytes remain private even with a public API route.
+Route::prefix('/api/public/v1/projects/{project}')->middleware('throttle:public-api-v1')->withoutMiddleware([
+    StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class,
+])->group(function () {
+    $attachments = PublicAttachmentsController::class;
+    Route::get('/attachments/limits', [$attachments, 'limits'])->name('public.v1.attachments.limits');
+    Route::post('/attachments', [$attachments, 'upload'])->middleware('throttle:30,1')->name('public.attachments.upload');
+    Route::get('/attachments/{attachment}', [$attachments, 'show'])->name('public.v1.attachments.show');
+    Route::get('/attachments/{attachment}/content', [$attachments, 'content'])->name('public.v1.attachments.content');
+    Route::get('/issues/{issue}/attachments', [$attachments, 'index'])->name('public.v1.attachments.index');
+    Route::post('/attachments/{attachment}/bind', [$attachments, 'bind'])->name('public.attachments.bind');
 });
 
 // TT-311：小待辦是工作空間層級, 不在Project底下。

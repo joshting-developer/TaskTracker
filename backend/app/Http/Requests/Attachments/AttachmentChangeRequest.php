@@ -22,7 +22,9 @@ class AttachmentChangeRequest extends JsonOperationRequest
      */
     public function rules(): array
     {
-        return ['requestId' => ['required', 'uuid'], 'expectedRevision' => ['required', 'integer:strict', 'min:1'], 'issueId' => ['sometimes', 'string', 'max:100'], 'issueRevision' => ['sometimes', 'integer:strict', 'min:1']];
+        $bind = $this->routeIs('public.attachments.bind');
+
+        return ['requestId' => ['required', 'uuid'], 'expectedRevision' => ['required', 'integer:strict', 'min:1'], 'issueId' => [$bind ? 'required' : 'sometimes', 'string', 'max:100'], 'issueRevision' => [$bind ? 'required' : 'sometimes', 'integer:strict', 'min:1']];
     }
 
     /** 統一錯誤格式

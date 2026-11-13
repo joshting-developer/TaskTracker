@@ -191,3 +191,16 @@ curl --fail-with-body -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
 - 本人可在Session的`GET /api/v1/personal-token-audits`看到每筆成功寫入的operation、resourceId、resourceRevision與clientReference。
 - 補送：同requestId重送只回原結果，不新增稽核，所以補送保持同一個冪等身分。
 - 批次每個成功項目各記一筆稽核；失敗項目保存在該批次receipt的逐項結果，用原requestId重送即可取回。
+
+
+## 私有附件（OpenAPI 0.13.0）
+
+公開前綴`/api/public/v1/projects/{project}`新增attachments限制、multipart上傳、單筆metadata／內容、單卡`issues/{issue}/attachments`固定每頁20筆與明確bind。路徑、欄位及成功／錯誤Schema以OpenAPI為準
+
+read允許目前有issue.read資格者取metadata／內容；write仍須issue.write才能上傳與綁定。limits需要read及issue.write資格。pending只有上傳者可用, 跨工作區／Project、不再可見的卡片、到期、刪除及撤權均拒絕。內容是原始PNG／JPEG／WebP串流, 有private no-store／nosniff／sandbox與安全下載檔名, 不提供公開key或redirect儲存URL
+
+預設10MiB、2500萬pixels、每卡20張、每人20張未完成、工作區1GiB, 實際部署可調整, 以limits回應為準。上傳每IP30次／60秒, 同時計入公開v1共用每IP120次／60秒。pending預設24小時失效, 刪除保留30天後清理的內部生命週期維持；本版未開放公開刪除附件API
+
+上傳以requestId＋相同檔名／bytes／MIME去重；相同ID換檔案回409, IO失敗回502且可補送相同檔案。保留配額與完成分開鎖後驗權, 外部IO不持有資料庫交易；成功完成receipt與來源只記一次。補送前仍須當下資格, 同一Token若已撤銷不會取回舊結果。明確bind帶expectedRevision與issueRevision, 409不產生半綁定
+
+上傳回傳的reference可放入Issue description, 由既有建卡／改卡交易自動綁定。獨立HTTP驗收使用匿名下載的Python範例及合成圖片, 不依賴Session內部路由作公開功能

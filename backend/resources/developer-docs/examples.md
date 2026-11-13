@@ -40,3 +40,18 @@ curl --fail-with-body -X POST -H "Authorization: Bearer $TASKTRACKER_TOKEN" -H '
 實務中請保存每次 requestId 與有效 payload 供重試。範例沒有自動「衝突後覆蓋」：如果中途有人修改，會停止；先 GET 最新並確認意圖，再決定下一次操作。
 
 Python範例另外驗證增量摘要cursor接續與inclusive水位；處理成功才保存接續點，不將全集放在記憶體。
+
+
+## 圖片上傳與建卡
+
+Python下載範例可選擇帶本機圖片：`CONFIRM_WRITE=1 IMAGE_FILE=/本機/測試.png python3 workflow.py`。除了既有BASE_URL、TASKTRACKER_TOKEN與PROJECT_ID, 不需Cookie或SDK；它先取得限制, 以multipart上傳並重送同一requestId, 再建立包含參照的Issue, 查metadata與讀回圖片核對SHA256。沒有IMAGE_FILE時維持原本純文字流程
+
+用cURL上傳時不要自行設定multipart Content-Type, 讓curl產生boundary：
+
+```sh
+curl --fail-with-body -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
+  -F "requestId=<本次保留的UUID>" -F "file=@/本機/測試.png;type=image/png" \
+  "$BASE_URL/api/public/v1/projects/$PROJECT_ID/attachments"
+```
+
+保留回傳的reference, 將`![說明](attachment:<UUID>)`放進建卡description, 即可和新卡同交易綁定。明確綁定現有卡時使用OpenAPI的bindPublicAttachment, 同時帶附件與卡片的最新revision；409先讀回再決定, 不盲目重送新版本。上傳大小／格式／配額與24小時到期見Agent指南及limits, 不提供遠端URL匯入
