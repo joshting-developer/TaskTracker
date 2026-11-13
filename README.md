@@ -224,7 +224,7 @@ docker compose exec backend php artisan tasktracker:import-legacy /legacy/tasktr
 
 ## 不使用 Docker 的開發方式
 
-需要符合 `backend/composer.lock` 的 PHP 及 Composer；Composer最低需求為PHP8.3，Docker指定PHP8.5.12安全修補版。前端使用 Node 22.18 以上的 22.x 或 Node 24.12 以上
+需要符合 `backend/composer.lock` 的 PHP 及 Composer；目前lockfile的最低需求為PHP8.4.1, Composer宣告已對齊, Docker維持PHP8.5.12。前端使用 Node 22.18 以上的 22.x 或 Node 24.12 以上
 
 ```sh
 cd backend

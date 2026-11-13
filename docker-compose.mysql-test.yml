@@ -1,7 +1,7 @@
 # 隔離測試專用；不繼承主服務volume、埠或Compose標籤。
 services:
   secrets:
-    image: tasktracker-backend
+    image: ${TASKTRACKER_TEST_IMAGE:-tasktracker-backend}
     user: '0:0'
     entrypoint: ["php", "/app/docker/initialize-mysql.php"]
     network_mode: none
@@ -31,7 +31,7 @@ services:
       timeout: 3s
       retries: 45
   backend:
-    image: tasktracker-backend
+    image: ${TASKTRACKER_TEST_IMAGE:-tasktracker-backend}
     init: true
     environment:
       APP_ENV: testing

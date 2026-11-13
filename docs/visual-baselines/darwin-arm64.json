@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "69440f7cb0ec17930d57e09a9a64dc0aab73a10f6b807f04652bcd752cc0299b",
+  "harnessSha256": "0e30d14e8522950a45f4fbcd5ac72c9f9e1f7c8fa9ced7fd200f9075a8b339fc",
   "profile": "darwin-arm64",
   "reviewer": "Josh",
-  "note": "依Josh持續授權保存TT-185邀請制登入與公開入口, 合併已提交TT-329側欄連結, 三尺寸66張已檢視；測試改專用5195並納入origin與Compose指紋, 比較參數未放寬",
-  "manifestSha256": "e780f8d0eb0b8d505dedcb942865ed9c49e8dd08df66b250d4410f45d4622b7c",
+  "note": "依持續授權核准安全更新66張三尺寸；任務詳細等空留言及圖片鈕就緒, 來源一致, 比較門檻未改, 舊候選與失敗已封存",
+  "manifestSha256": "8c3a783a2b2e86c8116951760f34b1d9e1ed72bc4754b51066b14cc472617d45",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

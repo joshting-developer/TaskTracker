@@ -27,6 +27,11 @@ async function navigation(page) {
 async function shot(page, name) {
   // Detail/editor load attachment limits and relations independently; capture the settled screen.
   if (['07-detail', '08-editor'].includes(name)) await page.waitForLoadState('networkidle');
+  if (name === '07-detail') {
+    const activity = page.getByRole('region', { name: '任務完整頁', exact: true }).locator('.issue-detail-activity');
+    await activity.getByText('尚無留言', { exact: true }).waitFor();
+    await activity.getByRole('button', { name: '選擇新增留言圖片', exact: true }).waitFor();
+  }
   await page.evaluate(() => document.fonts.ready);
   await page.mouse.move(0, 0);
   let injected;

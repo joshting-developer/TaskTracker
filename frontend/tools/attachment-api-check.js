@@ -20,7 +20,7 @@ try {
   const id = crypto.randomUUID();
   const upload = () => owner.post(root, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken, 'X-Workspace-ID': identity.workspace.id }, multipart: { requestId: id, file: { name: 'screen.png', mimeType: 'text/html', buffer: png } } });
   const response = await upload(); assert.equal(response.status(), 200, await response.text());
-  const attachment = (await fixtureResponse(client, response)).data;
+  const attachment = (await response.json()).data;
   assert.equal(attachment.mime, 'image/png', 'Server sniffs bytes, never trusts browser MIME');
   assert.equal((await (await upload()).json()).data.id, attachment.id);
   for (const key of ['storage_disk', 'storage_key', 'checksum']) assert.equal(key in attachment, false);
