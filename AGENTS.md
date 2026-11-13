@@ -16,7 +16,7 @@
 - 唯一正文由共用庫維護；`.agents/skills`是發現入口，`skills/`舊路徑為相容連結／來源與歷史索引。缺庫或失效入口須回報，不靜默回退全域同名Skill。
 - 所有開發／review／重構／測試使用 `01-common/side-project-development-standards`；框架／UI／效能依registry選讀。通用規則回共用庫更新，只有實際專用Skill才留專案並說明理由。
 - Skill選用／檢查以共用registry.json的selectionRules為唯一矩陣；執行 `python3 tools/check-task-skills.py --consumer . --base HEAD --tag implementation`，間接畫面／資料影響加ui／data-access標籤。標籤只能加門檻，不可略過；實際讀取與檢查證據依共用check_evidence.py驗證。
-- 框架、UI／UX與效能按矩陣搭配；Ponytail採lite、不啟用全域hook／plugin，安全、嚴格分層、DI／PHPDoc、可及性與驗證優先。品牌／技術棧及產品綁定留consumer文件；缺核准visual baseline不能PASS。
+- 框架、UI／UX與效能按矩陣搭配；Ponytail採lite、不啟用全域hook／plugin，安全、嚴格分層、DI／PHPDoc、可及性與驗證優先。品牌／技術棧及產品綁定留consumer文件；缺核准visual baseline不能PASS。使用者已持續授權畫面候選可直接保存為核准基準, 不再逐批詢問；真實瀏覽器、視覺比較與安全驗證仍須執行, 授權不能代替測試通過。
 - 使用者→consumer安全／產品契約→共用工程／框架→Ponytail→審美；除明確指定外不讀其他專案／全域Skill。來源／沿革連結不等於授權載入外部規則。
 - 寫任何中文文字前（docs文件、卡片描述／留言、plans、給使用者的回覆與報告）先讀 `/Users/josh/workspace/common-skills/josh-writing-style/SKILL.md` 並照它寫, 為使用者2026-11-13明確指定例外；commit訊息仍依下方Git規則。
 

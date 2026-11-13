@@ -1,0 +1,53 @@
+{
+  "card": "TT-282",
+  "images": [
+    {
+      "name": "draft-1440.png",
+      "source": "artifacts/tt282/draft-1440.png",
+      "sha256": "1d5e35e3c35122c3ca7e6ce1ba0f255caf44fe5d0bb4a396be5ccc83e60c44e3"
+    },
+    {
+      "name": "draft-768.png",
+      "source": "artifacts/tt282/draft-768.png",
+      "sha256": "fe9bd2cb62175ef94ca78b1fb1bd238cd9d1766db624051ef601361c70f977e9"
+    },
+    {
+      "name": "draft-390.png",
+      "source": "artifacts/tt282/draft-390.png",
+      "sha256": "cbbf80217e762a98189440c7461d91b98455ad98206fb855ec96beb1127ad60e"
+    }
+  ],
+  "harness": [
+    {
+      "path": "frontend/src/api/http.js",
+      "sha256": "04a70687f3a2b23c1e444c6cad741658107fd80b5afbb0272da93f2ed3ba2075"
+    },
+    {
+      "path": "frontend/src/components/IssuePanel.vue",
+      "sha256": "93bb079730c67b784bf3a30ec1e930d770227b73dd5bf4f4f662a458a381968e"
+    },
+    {
+      "path": "frontend/src/components/MarkdownEditor.vue",
+      "sha256": "157a386ef9dd29d9b12007c4e447839540a75c5fa010861633c1359592212b5c"
+    },
+    {
+      "path": "frontend/src/composables/useAttachmentUpload.js",
+      "sha256": "229218a375888fca2e00a0b13c96cb07285a211e3ae51dafd95d58198421f025"
+    },
+    {
+      "path": "frontend/tools/attachment-draft-check.js",
+      "sha256": "65aa3f83bce30cd337363a45b2035a1efa8668e2df04be6bcf45f519c8a63518"
+    },
+    {
+      "path": "frontend/tools/compare-reviewed-attachment-drafts.js",
+      "sha256": "297f17b4a75644a22ef8e99fb4245f6a5e1b0391d0bb145a6f75f1a9586516e3"
+    }
+  ],
+  "policy": {
+    "animations": "disabled",
+    "caret": "hide",
+    "maxDiffPixels": 0,
+    "threshold": 0.02
+  },
+  "scope": "Real IssuePanel in isolated Laravel/MySQL; WebP file, PNG clipboard, JPEG drop"
+}

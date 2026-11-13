@@ -8,6 +8,7 @@ use App\Repositories\IssueChildrenRepository;
 use App\Repositories\ProjectReadRepository;
 use App\Repositories\RecordStore;
 use App\Repositories\TimeReportRepository;
+use App\Services\AttachmentService;
 use App\Services\IssueService;
 use App\Services\ProjectBoards;
 use App\Services\ProjectMembers;
@@ -34,8 +35,9 @@ final class WorkspaceOperationServices
      * @param  TimeReportRepository  $timeReports  工時分析查詢（無租戶狀態）
      * @param  ProjectReadRepository  $projects  訊號目標專案資料入口
      * @param  IssueChildrenRepository  $children  子任務最小投影與批次寫入
+     * @param  AttachmentService  $attachments  描述附件用例
      */
-    public function __construct(public readonly RecordStore $store, public readonly array $workspaceSession, private TimeReportRepository $timeReports, private ProjectReadRepository $projects, private IssueChildrenRepository $children) {}
+    public function __construct(public readonly RecordStore $store, public readonly array $workspaceSession, private TimeReportRepository $timeReports, private ProjectReadRepository $projects, private IssueChildrenRepository $children, private AttachmentService $attachments) {}
 
     /**
      * 取得或建立指定協作者並記錄名稱。
@@ -98,7 +100,7 @@ final class WorkspaceOperationServices
      */
     public function issues(): IssueService
     {
-        return $this->once('issues', fn () => new IssueService($this->store, $this->workspaceSession, $this->access(), fn () => $this->boards(), $this->children));
+        return $this->once('issues', fn () => new IssueService($this->store, $this->workspaceSession, $this->access(), fn () => $this->boards(), $this->children, $this->attachments));
     }
 
     /**

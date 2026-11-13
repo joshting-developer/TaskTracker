@@ -13,6 +13,7 @@ use App\Repositories\IssueChildrenRepository;
 use App\Repositories\ProjectReadRepository;
 use App\Repositories\RecordStore;
 use App\Repositories\TimeReportRepository;
+use App\Services\AttachmentService;
 use App\Services\ReceiptCodec;
 use App\Services\RequestReplay;
 use App\Services\WorkspaceService;
@@ -41,7 +42,7 @@ class WorkspaceServiceContainerTest extends TestCase
     {
         parent::setUp();
         $bundles = $this->bundles = new \ArrayObject;
-        $this->app->bind(WorkspaceServicesFactory::class, fn ($app) => new class($app->make(RecordStoreFactory::class), $app->make(TimeReportRepository::class), $app->make(ProjectReadRepository::class), $app->make(IssueChildrenRepository::class), $bundles) extends WorkspaceServicesFactory
+        $this->app->bind(WorkspaceServicesFactory::class, fn ($app) => new class($app->make(RecordStoreFactory::class), $app->make(TimeReportRepository::class), $app->make(ProjectReadRepository::class), $app->make(IssueChildrenRepository::class), $app->make(AttachmentService::class), $bundles) extends WorkspaceServicesFactory
         {
             /**
              * 保留紀錄陣列參照。
@@ -50,11 +51,12 @@ class WorkspaceServiceContainerTest extends TestCase
              * @param  TimeReportRepository  $reports  報表查詢
              * @param  ProjectReadRepository  $projects  訊號目標查詢
              * @param  IssueChildrenRepository  $children  批次子任務查詢
+             * @param  AttachmentService  $attachments  描述附件用例
              * @param  \ArrayObject  $bundles  紀錄
              */
-            public function __construct(RecordStoreFactory $stores, TimeReportRepository $reports, ProjectReadRepository $projects, IssueChildrenRepository $children, private \ArrayObject $bundles)
+            public function __construct(RecordStoreFactory $stores, TimeReportRepository $reports, ProjectReadRepository $projects, IssueChildrenRepository $children, AttachmentService $attachments, private \ArrayObject $bundles)
             {
-                parent::__construct($stores, $reports, $projects, $children);
+                parent::__construct($stores, $reports, $projects, $children, $attachments);
             }
 
             /**

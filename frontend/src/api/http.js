@@ -121,3 +121,44 @@ export function queryApi(path, filters = {}, options = {}) {
 
 /** Private images share tenant cancellation and current authorization with JSON reads. */
 export function requestImage(path, options = {}) { return requestJson(path, { ...options, binary: true }); }
+
+/** Multipart keeps the same tenant/CSRF boundary, with actual upload progress. */
+export async function requestUpload(path, form, { signal, onProgress } = {}) {
+  const captured = generation, controller = new AbortController();
+  const abort = () => controller.abort();
+  signal?.addEventListener('abort', abort, { once: true });
+  if (signal?.aborted) abort();
+  active.add(controller);
+  try {
+    const token = await waitForToken(controller.signal);
+    if (captured !== generation) throw failure('STALE_RESPONSE', '工作空間已切換');
+    return await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const cancel = () => xhr.abort();
+      controller.signal.addEventListener('abort', cancel, { once: true });
+      const cleanup = () => controller.signal.removeEventListener('abort', cancel);
+      xhr.open('POST', path); xhr.withCredentials = true; xhr.timeout = 30000;
+      xhr.setRequestHeader('Accept', 'application/json'); xhr.setRequestHeader('X-CSRF-TOKEN', token);
+      if (workspaceId) xhr.setRequestHeader('X-Workspace-ID', workspaceId);
+      xhr.upload.onprogress = event => { if (event.lengthComputable) onProgress?.(Math.round(event.loaded / event.total * 100)); };
+      xhr.onload = () => {
+        cleanup();
+        if (captured !== generation) return reject(failure('STALE_RESPONSE', '工作空間已切換'));
+        try {
+          const body = JSON.parse(xhr.responseText);
+          if (xhr.status === 419) csrfToken = '';
+          if (xhr.status !== 200 || body.ok !== true) {
+            const code = body.error?.code || 'HTTP_ERROR'; accessChanged(code, 'POST');
+            return reject(failure(code, body.error?.message || '圖片上傳失敗', xhr.status));
+          }
+          resolve(body.data);
+        } catch { reject(failure('INVALID_RESPONSE', '圖片上傳回應不正確', xhr.status)); }
+      };
+      xhr.onerror = () => { cleanup(); reject(failure('NETWORK_ERROR', '圖片上傳失敗, 可重試')); };
+      xhr.ontimeout = () => { cleanup(); reject(failure('TIMEOUT', '圖片上傳逾時, 可重試')); };
+      xhr.onabort = () => { cleanup(); reject(failure('ABORTED', '圖片上傳已取消')); };
+      if (controller.signal.aborted) { cleanup(); return reject(failure('ABORTED', '圖片上傳已取消')); }
+      xhr.send(form);
+    });
+  } finally { active.delete(controller); signal?.removeEventListener('abort', abort); }
+}

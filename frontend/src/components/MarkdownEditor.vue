@@ -1,10 +1,12 @@
 <script setup>
 import { computed, nextTick, ref, useId, watch } from 'vue';
+import { useAttachmentUpload } from '../composables/useAttachmentUpload.js';
 import { onTabKeydown } from '../ui/tabs.js';
 import MarkdownContent from './MarkdownContent.vue';
 
-const props = defineProps({ modelValue: { type: String, default: '' }, label: { type: String, required: true }, placeholder: String, maxlength: { type: Number, default: 6000 }, rows: { type: Number, default: 4 }, disabled: Boolean, required: Boolean, name: String, projectId: { type: String, default: '' } });
+const props = defineProps({ modelValue: { type: String, default: '' }, label: { type: String, required: true }, placeholder: String, maxlength: { type: Number, default: 6000 }, rows: { type: Number, default: 4 }, disabled: Boolean, required: Boolean, name: String, allowAttachments: Boolean, projectId: { type: String, default: '' } });
 const emit = defineEmits(['update:modelValue']);
+const fileInput = ref(null);
 const id = useId(), input = ref(null), mode = ref('write'), composing = ref(false), message = ref('');
 const model = computed({ get: () => props.modelValue, set: value => { message.value = ''; emit('update:modelValue', value); } });
 const formats = [
@@ -19,7 +21,32 @@ let undoFormat = null, redoFormat = null;
 watch(() => props.modelValue, value => { if (!value) mode.value = 'write'; });
 
 async function focus() { mode.value = 'write'; await nextTick(); input.value?.scrollIntoView({ block: 'nearest' }); input.value?.focus({ preventScroll: true }); }
-defineExpose({ focus });
+const uploads = useAttachmentUpload({ projectId: computed(() => props.allowAttachments ? props.projectId : ''), source: computed(() => props.modelValue), maxlength: computed(() => props.maxlength), insert: insertAttachment });
+const uploadRows = uploads.rows, uploadError = uploads.error, uploadLimits = uploads.limits;
+const attachmentBlocked = uploads.unsettled;
+defineExpose({ focus, uploadBusy: uploads.busy, attachmentDirty: uploads.unsettled, attachmentBlocked });
+async function insertAttachment(text, anchor) {
+  if (composing.value) await new Promise(resolve => { const stop = watch(composing, value => { if (!value) { stop(); resolve(); } }); });
+  if (!input.value || props.disabled) return false;
+  mode.value = 'write'; await nextTick();
+  const start = Math.max(0, Math.min(anchor, props.modelValue.length));
+  input.value.focus(); input.value.setSelectionRange(start, start);
+  if (!document.execCommand('insertText', false, text)) await replace(props.modelValue.slice(0, start) + text + props.modelValue.slice(start), start + text.length, start + text.length);
+  return true;
+}
+function addImages(files) {
+  if (props.disabled || !props.allowAttachments) return;
+  uploads.add([...files], input.value?.selectionStart ?? props.modelValue.length);
+}
+function pasteImage(event) {
+  const images = [...(event.clipboardData?.files || [])];
+  if (!props.allowAttachments || !images.length) return;
+  event.preventDefault(); addImages(images);
+}
+function dropImage(event) {
+  if (!props.allowAttachments || !event.dataTransfer?.files.length) return;
+  event.preventDefault(); addImages(event.dataTransfer.files);
+}
 
 async function replace(next, start, end) {
   emit('update:modelValue', next);
@@ -74,22 +101,40 @@ function onKeydown(event) {
         <button :id="`${id}-preview`" type="button" role="tab" :aria-selected="mode === 'preview'" :aria-controls="`${id}-reading`" :tabindex="mode === 'preview' ? 0 : -1" :disabled="disabled" @click="mode = 'preview'">預覽</button>
       </div>
     </div>
-    <div v-show="mode === 'write'" :id="`${id}-writing`" role="tabpanel" :aria-labelledby="`${id}-write`">
+    <div v-show="mode === 'write'" @dragover="event => allowAttachments && event.dataTransfer?.types.includes('Files') && event.preventDefault()" @drop="dropImage" :id="`${id}-writing`" role="tabpanel" :aria-labelledby="`${id}-write`">
       <div class="editor-tools" role="group" :aria-label="`${label}格式`">
         <button v-for="item in formats" :key="item.id" type="button" :disabled="disabled || composing" :aria-label="`${label}：${item.id === 'checklist' ? '待辦清單' : item.label}`" :title="item.label" @mousedown.prevent @click="format(item)">{{ item.label }}</button>
+        <button v-if="allowAttachments" type="button" :disabled="disabled || !uploadLimits" aria-label="選擇描述圖片" @click="fileInput.click()">圖片</button>
+        <input v-if="allowAttachments" ref="fileInput" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden aria-label="上傳描述圖片" @change="event => { addImages(event.target.files); event.target.value = ''; }" />
       </div>
-      <textarea :id="`${id}-input`" ref="input" v-model="model" :name="name" :aria-label="label" :aria-describedby="`${id}-help`" :placeholder="placeholder" :maxlength="maxlength" :rows="rows" :disabled="disabled" :required="required" @keydown="onKeydown" @compositionstart="composing = true" @compositionend="composing = false"></textarea>
+      <textarea :id="`${id}-input`" ref="input" v-model="model" :name="name" :aria-label="label" :aria-describedby="`${id}-help${allowAttachments && uploadError ? ` ${id}-upload-error` : ''}`" :placeholder="placeholder" :maxlength="maxlength" :rows="rows" :disabled="disabled" :required="required" @paste="pasteImage" @keydown="onKeydown" @compositionstart="composing = true" @compositionend="composing = false"></textarea>
     </div>
     <div v-show="mode === 'preview'" :id="`${id}-reading`" class="editor-preview" role="tabpanel" tabindex="0" :aria-labelledby="`${id}-preview`">
       <MarkdownContent v-if="mode === 'preview' && modelValue.trim()" :source="modelValue" :project-id="projectId" />
       <p v-else class="editor-empty">尚無內容</p>
     </div>
+    <ul v-if="allowAttachments && uploadRows.some(row => row.state !== 'canceled')" class="attachment-uploads" aria-label="圖片上傳狀態">
+      <li v-for="row in uploadRows.filter(item => item.state !== 'canceled')" :key="row.id">
+        <span>{{ row.file.name || '圖片' }}</span>
+        <progress v-if="row.state === 'uploading'" :value="row.progress" max="100" :aria-label="`${row.file.name}上傳進度`"></progress>
+        <span :role="row.state === 'failed' ? 'alert' : 'status'">{{ row.state === 'done' ? '已加入描述' : row.state === 'queued' ? '等待上傳' : row.state === 'failed' ? row.error : `${row.progress}%` }}</span>
+        <button v-if="row.state === 'failed'" type="button" @click="uploads.retry(row)">重試</button>
+        <button v-if="row.state !== 'done'" type="button" @click="uploads.cancel(row)">取消</button>
+      </li>
+    </ul>
+    <p v-if="allowAttachments && uploadError" :id="`${id}-upload-error`" class="attachment-error" role="alert">{{ uploadError }}</p>
     <div :id="`${id}-help`" class="editor-footer"><span>{{ message }}</span><span>{{ modelValue.length }} / {{ maxlength }}</span></div>
     <p v-if="message" class="sr-only" role="status">{{ message }}</p>
   </div>
 </template>
 
 <style scoped>
+.attachment-uploads { padding: 0; margin: 8px 0; list-style: none; font-size: 13px; }
+.attachment-uploads li { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 4px 0; overflow-wrap: anywhere; }
+.attachment-uploads li > :first-child { flex: 1; min-width: 100px; }
+.attachment-uploads progress { width: 100px; accent-color: #6653bd; }
+.attachment-uploads button { min-height: 44px; padding: 8px; color: #5844a0; }
+.attachment-error { color: #a52c3d; font-size: 13px; }
 .markdown-editor { min-width: 0; width: 100%; margin: 0 0 16px; color: #424b5c; font-size: 14px; text-align: left; }
 .editor-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
 .editor-heading > label { font-weight: 500; }

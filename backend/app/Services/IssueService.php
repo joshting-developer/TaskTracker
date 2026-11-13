@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Authorization\ProjectAccess;
+use App\Data\WorkspaceContext;
 use App\Domain\DomainError;
 use App\Domain\Fields;
 use App\Domain\RecordRevision;
@@ -23,8 +24,9 @@ class IssueService
      * @param  ProjectAccess  $access  本次操作共用的Project權限檢查
      * @param  \Closure(): ProjectBoards  $boards  建立卡片帶boardId時才取得的看板用例
      * @param  IssueChildrenRepository  $children  同交易批次子任務更新
+     * @param  AttachmentService  $attachments  同交易描述附件綁定
      */
-    public function __construct(private RecordStore $store, private array $workspaceSession, private ProjectAccess $access, private \Closure $boards, private IssueChildrenRepository $children) {}
+    public function __construct(private RecordStore $store, private array $workspaceSession, private ProjectAccess $access, private \Closure $boards, private IssueChildrenRepository $children, private AttachmentService $attachments) {}
 
     /**
      * 取得目前UTC ISO時間供紀錄與歷史使用。
@@ -79,6 +81,7 @@ class IssueService
             'nextNumber' => $project['nextNumber'] + 1,
         ]);
         $this->store->put('issues', $issue['id'], $issue);
+        $this->attachments->bindDescription(new WorkspaceContext($this->workspaceSession), $project['id'], $issue['id'], $issue['description']);
         $this->syncRelations($issue, []);
         if (! empty($input['boardId']) && $input['boardId'] !== 'default') {
             ($this->boards)()->includeCreatedIssue(Fields::text($input['boardId'], '看板', 100, true), $issue);
@@ -283,6 +286,9 @@ class IssueService
         $fields = Fields::issue([...$current, ...$input], $project);
         $this->validateLinks($project, $fields, $current);
         $issue = $this->writeIssue($current, $fields);
+        if ($fields['description'] !== $current['description']) {
+            $this->attachments->bindDescription(new WorkspaceContext($this->workspaceSession), $project['id'], $issue['id'], $issue['description']);
+        }
         if ($issue['revision'] === $current['revision']) {
             return $issue;
         }

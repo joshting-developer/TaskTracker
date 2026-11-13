@@ -13,7 +13,7 @@ import { FIELD_LABELS, hours, ISSUE_FIELDS, PRIORITIES, statusesFor, TYPES } fro
 
 const props = defineProps({ projectLoader: Function, projectOptionsLoader: Function, lookup: Function, activityLoader: Function, issue: Object, todo: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, defaultEpicId: String, defaultBoardId: String, members: Array, issues: Array, entries: Array, canExpand: Boolean });
 const emit = defineEmits(['close', 'saved', 'converted', 'reload', 'open', 'expand']);
-const dialog = ref(null);
+const dialog = ref(null), descriptionEditor = ref(null);
 const form = reactive({ parentIssueId: '', relatedIssueIds: [] });
 const relationsTool = ref(null), picked = ref([]), pickedMembers = ref([]), pickedProjects = ref([]), hydratedProject = ref(null), projectLoading = ref(false);
 let projectRequest, projectGeneration=0;
@@ -80,8 +80,8 @@ const estimateHours = computed({ get: () => (form.estimateMinutes || 0) / 60, se
 watch(() => form.type, (type) => { if (type === 'epic') { form.epicId = ''; form.estimateMinutes = 0; form.parentIssueId = ''; } });
 const spent = computed(() => props.issue?.spentMinutes ?? props.entries.filter((entry) => !entry.voidedAt && entry.issueId === props.issue?.id).reduce((sum, entry) => sum + entry.minutes, 0));
 const inputDisabled = computed(() => saving.value || projectLoading.value);
-const dirty = computed(() => JSON.stringify(values()) !== savedValues.value);
-defineExpose({ dirty: computed(() => dirty.value || Boolean(comment.value.trim()) || Boolean(relationsTool.value?.dirty)), saving: inputDisabled });
+const dirty = computed(() => JSON.stringify(values()) !== savedValues.value || Boolean(descriptionEditor.value?.attachmentDirty));
+defineExpose({ dirty: computed(() => dirty.value || Boolean(comment.value.trim()) || Boolean(relationsTool.value?.dirty)), saving: computed(() => inputDisabled.value || Boolean(descriptionEditor.value?.uploadBusy)) });
 watch(() => props.issue, () => { if (!dirty.value) resetForm(); });
 function close() {
   if (inputDisabled.value) return;
@@ -105,7 +105,7 @@ onMounted(async () => {
 onBeforeUnmount(() => { projectGeneration++;projectRequest?.abort();window.removeEventListener('beforeunload', beforeUnload); });
 
 async function save() {
-  if (inputDisabled.value) return;
+  if (inputDisabled.value || descriptionEditor.value?.attachmentBlocked) return;
   if (props.projectLoader && !hydratedProject.value?.permissions.includes('issue.write')) { error.value='請先選擇可編輯的專案'; return; }
   saving.value = true;
   error.value = '';
@@ -189,7 +189,7 @@ function timestamp(value) {
         <div v-if="error" class="error-box" role="alert">{{ error }} <button v-if="conflict" type="button" class="text-button" :disabled="inputDisabled" @click="reload">重新載入最新版本</button></div>
         <form id="issue-form" @submit.prevent="save">
           <label class="field">任務標題 <span class="required">*</span><input v-model="form.title" name="title" placeholder="輸入任務標題…" maxlength="180" required :disabled="inputDisabled" /></label>
-          <MarkdownEditor v-model="form.description" :project-id="form.projectId" label="描述" name="description" placeholder="輸入描述…" :rows="5" :maxlength="6000" :disabled="inputDisabled" />
+          <MarkdownEditor ref="descriptionEditor" allow-attachments v-model="form.description" :project-id="form.projectId" label="描述" name="description" placeholder="輸入描述…" :rows="5" :maxlength="6000" :disabled="inputDisabled" />
           <div class="form-grid">
             <PagedSelect autoload v-if="projectOptionsLoader" v-model="form.projectId" label="專案" :options="availableProjects" :context="todo?.id || 'new'" :load="projectOptionsLoader" :disabled="inputDisabled" empty-label="選擇所屬專案" required @choose="item => { pickedProjects = [...pickedProjects.filter(project=>project.id!==item.id),item]; }" /><label v-else class="field">專案<select v-model="form.projectId" aria-label="專案" :disabled="!todo || saving" required><option v-if="todo" value="" disabled>選擇所屬專案</option><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option></select></label>
             <label class="field">狀態<select v-model="form.state" aria-label="狀態" :disabled="inputDisabled"><option v-for="state in states" :key="state.id" :value="state.id">{{ state.label }}</option></select></label>
@@ -227,7 +227,7 @@ function timestamp(value) {
           </div>
         </section>
       </div>
-      <footer class="panel-footer"><span class="subtle">{{ dirty ? '有尚未儲存的修改' : issue ? `版本 ${issue.revision} · 已儲存` : '' }}</span><button type="submit" form="issue-form" class="button primary" :disabled="inputDisabled || (Boolean(issue) && !dirty) || (Boolean(todo) && !form.projectId)"><Icon :name="saving ? 'clock' : 'check'" :size="17" />{{ saving ? '儲存中…' : todo ? '建立卡片並完成轉換' : issue ? '儲存修改' : '建立任務' }}</button></footer>
+      <footer class="panel-footer"><span class="subtle">{{ dirty ? '有尚未儲存的修改' : issue ? `版本 ${issue.revision} · 已儲存` : '' }}</span><button type="submit" form="issue-form" class="button primary" :disabled="inputDisabled || descriptionEditor?.attachmentBlocked || (Boolean(issue) && !dirty) || (Boolean(todo) && !form.projectId)"><Icon :name="saving ? 'clock' : 'check'" :size="17" />{{ saving ? '儲存中…' : todo ? '建立卡片並完成轉換' : issue ? '儲存修改' : '建立任務' }}</button></footer>
     </div>
     <div v-if="activityLoader && ['comments','history'].includes(tab)" class="activity-pagination">
     <p v-if="activity.error.value" class="error-box" role="alert">{{ activity.error.value }}</p>

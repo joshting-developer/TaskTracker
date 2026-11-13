@@ -23,6 +23,45 @@ class AttachmentService
      */
     public function __construct(private AttachmentRepository $attachments, private ProjectReadService $projects, private RecordStoreFactory $stores, private RequestReplay $replay) {}
 
+    /** 同建卡／改卡交易接收描述引用, 不另增Issue版本或建立receipt
+     * @param  WorkspaceContext  $context  交易內可信資格
+     * @param  string  $projectId  任務專案公開ID
+     * @param  string  $issueId  已於同交易寫入的任務
+     * @param  string  $description  經長度驗證的Markdown
+     * @return void
+     */
+    public function bindDescription(WorkspaceContext $context, string $projectId, string $issueId, string $description): void
+    {
+        preg_match_all('/!\[[^\]\r\n]*\]\(attachment:([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\)/i', $description, $matches);
+        $ids = array_values(array_unique(array_map('strtolower', $matches[1])));
+        if (! $ids) {
+            return;
+        }
+        if (count($ids) > config('attachments.per_issue')) {
+            DomainError::fail('INVALID_INPUT', '附件數量已達上限');
+        }
+        $project = $this->projects->require($context, $projectId, 'issue.write');
+        $issue = $this->attachments->issue($project, $issueId) ?? DomainError::fail('NOT_FOUND', '找不到這筆資料');
+        $rows = $this->attachments->forDescription($project, $ids);
+        $pending = [];
+        foreach ($ids as $id) {
+            $row = $rows[$id] ?? DomainError::fail('NOT_FOUND', '找不到可用附件');
+            if ($row->status === 'active' && $row->issue_id === $issue->id) {
+                continue;
+            }
+            if ($row->status !== 'pending' || $row->uploaded_by !== $context->userId || $row->issue_id !== null || ! $row->expires_at || $row->expires_at->isPast()) {
+                DomainError::fail('NOT_FOUND', '找不到可用附件');
+            }
+            $pending[] = $row->id;
+        }
+        if ($pending) {
+            if ($this->attachments->count($project, $issue) + count($pending) > config('attachments.per_issue')) {
+                DomainError::fail('INVALID_INPUT', '附件數量已達上限');
+            }
+            $this->attachments->bindDescription($project, $issue, $pending);
+        }
+    }
+
     /** 編輯器取得與後端一致的限制, 不回傳私有儲存配置
      * @param  WorkspaceContext  $context  可信資格
      * @param  string  $projectId  專案公開ID

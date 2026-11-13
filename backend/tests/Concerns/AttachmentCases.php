@@ -30,6 +30,65 @@ trait AttachmentCases
         return Attachment::where('uploaded_by', Auth::id());
     }
 
+    /** 描述與附件共用建卡交易, 重播與失敗均不留半完成
+     * @return void
+     */
+    public function test_description_bind_is_atomic_scoped_and_replay_safe(): void
+    {
+        Storage::fake('attachments');
+        $fault = new class extends AttachmentRepository
+        {
+            public bool $fail = false;
+
+            public function bindDescription(Project $project, Issue $issue, array $ids): void
+            {
+                parent::bindDescription($project, $issue, $ids);
+                if ($this->fail) {
+                    DomainError::fail('CONFLICT', 'Injected failure');
+                }
+            }
+        };
+        $this->app->instance(AttachmentRepository::class, $fault);
+        $this->postJson('/api/auth/register', ['name' => 'Draft', 'email' => Str::uuid().'@example.test', 'password' => 'attachment-test-password', 'workspaceName' => 'Drafts'])->assertOk();
+        $project = $this->postJson('/api/rpc/createProject', ['name' => 'Images', 'code' => 'IMG', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aN1cAAAAASUVORK5CYII=');
+        $upload = fn () => $this->post('/api/v1/projects/'.$project['id'].'/attachments', ['requestId' => (string) Str::uuid(), 'file' => UploadedFile::fake()->createWithContent('draft.png', $png)], ['Accept' => 'application/json'])->assertOk()->json('data');
+        $one = $upload();
+        $input = ['projectId' => $project['id'], 'title' => 'With image', 'description' => '![Draft](attachment:'.$one['id'].')', 'requestId' => (string) Str::uuid()];
+        $issue = $this->postJson('/api/rpc/createIssue', $input)->assertOk()->assertJsonPath('data.revision', 1)->json('data');
+        $this->postJson('/api/rpc/createIssue', $input)->assertOk()->assertJsonPath('data.id', $issue['id']);
+        $row = $this->attachmentRows()->where('public_id', $one['id'])->firstOrFail();
+        $this->assertSame('active', $row->status);
+        $this->assertSame(2, $row->revision);
+        $this->assertNull($row->expires_at);
+        $second = $upload();
+        $other = $this->postJson('/api/rpc/createProject', ['name' => 'Other', 'code' => 'OTHER', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $this->postJson('/api/rpc/createIssue', ['projectId' => $other['id'], 'title' => 'Wrong scope', 'description' => '![Draft](attachment:'.$second['id'].')', 'requestId' => (string) Str::uuid()])->assertStatus(404);
+        $this->assertSame('pending', $this->attachmentRows()->where('public_id', $second['id'])->value('status'));
+        $this->assertSame(0, Issue::where('project_id', Project::where('public_id', $other['id'])->value('id'))->count());
+        $this->postJson('/api/rpc/createIssue', ['projectId' => $project['id'], 'title' => 'Wrong card', 'description' => $input['description'], 'requestId' => (string) Str::uuid()])->assertStatus(404);
+        $pendingRow = $this->attachmentRows()->where('public_id', $second['id'])->firstOrFail();
+        $pendingRow->update(['expires_at' => now()->subMinute()]);
+        $expired = ['projectId' => $project['id'], 'title' => 'Expired', 'description' => '![Draft](attachment:'.$second['id'].')', 'requestId' => (string) Str::uuid()];
+        $this->postJson('/api/rpc/createIssue', $expired)->assertStatus(404);
+        $owner = $pendingRow->uploaded_by;
+        $foreign = User::factory()->create(['id' => (string) Str::uuid()]);
+        $pendingRow->update(['expires_at' => now()->addHour(), 'uploaded_by' => $foreign->id]);
+        $this->postJson('/api/rpc/createIssue', [...$expired, 'requestId' => (string) Str::uuid()])->assertStatus(404);
+        $pendingRow->update(['uploaded_by' => $owner]);
+        $fault->fail = true;
+        $draft = ['projectId' => $project['id'], 'title' => 'Atomic', 'description' => '![Draft](attachment:'.$second['id'].')', 'requestId' => (string) Str::uuid()];
+        $this->postJson('/api/rpc/createIssue', $draft)->assertStatus(409);
+        $this->assertSame('pending', $this->attachmentRows()->where('public_id', $second['id'])->value('status'));
+        $this->assertSame(1, Issue::where('project_id', $row->project_id)->count());
+        $fault->fail = false;
+        $created = $this->postJson('/api/rpc/createIssue', $draft)->assertOk()->json('data');
+        $this->assertSame('IMG-2', $created['identifier']);
+        $this->postJson('/api/rpc/updateIssue', ['id' => $created['id'], 'expectedRevision' => 0, 'description' => $draft['description'], 'requestId' => (string) Str::uuid()])->assertStatus(409);
+        $this->deleteJson('/api/v1/projects/'.$project['id'].'/attachments/'.$second['id'], ['requestId' => (string) Str::uuid(), 'expectedRevision' => 2, 'issueId' => $created['id'], 'issueRevision' => 1])->assertOk();
+        $this->postJson('/api/rpc/updateIssue', ['id' => $created['id'], 'expectedRevision' => 2, 'title' => 'Unrelated edit', 'requestId' => (string) Str::uuid()])->assertOk()->assertJsonPath('data.revision', 3);
+    }
+
     /** 上傳、綁定、下載、冪等與刪除保存
      * @return void
      */

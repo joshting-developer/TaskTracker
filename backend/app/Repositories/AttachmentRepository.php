@@ -23,6 +23,27 @@ class AttachmentRepository
         return $this->query($project)->where('public_id', $id)->first();
     }
 
+    /** 同專案鎖定有界描述附件, 與清理器協調
+     * @param  Project  $project  已授權專案
+     * @param  list<string>  $ids  最多20個公開ID
+     * @return array<string,Attachment> 以公開ID索引
+     */
+    public function forDescription(Project $project, array $ids): array
+    {
+        return $this->query($project)->whereIn('public_id', $ids)->orderBy('id')->lockForUpdate()->get()->keyBy('public_id')->all();
+    }
+
+    /** 同Issue一次綁定已驗證的pending附件
+     * @param  Project  $project  已授權專案
+     * @param  Issue  $issue  同專案任務
+     * @param  list<int>  $ids  已驗證的內部ID
+     * @return void
+     */
+    public function bindDescription(Project $project, Issue $issue, array $ids): void
+    {
+        $this->query($project)->whereIn('id', $ids)->update(['issue_id' => $issue->id, 'status' => 'active', 'revision' => DB::raw('revision + 1'), 'expires_at' => null, 'updated_at' => now()]);
+    }
+
     /** 同租戶上傳requestId查重, 跨Project重用也須比對簽章
      * @param  Project  $project  已授權專案
      * @param  string  $user  操作者
