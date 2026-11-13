@@ -96,7 +96,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   await detail.getByRole('heading', { name: '建立登入畫面', exact: true }).waitFor();
   await shot(page, '07-detail');
   await detail.getByRole('button', { name: '返回任務列表', exact: true }).click();
-  await page.locator('.issue-row').filter({ has: page.getByRole('button', { name: '建立登入畫面', exact: true }) }).getByRole('button', { name: /^快速編輯 / }).click();
+  await page.locator('.issue-table tbody tr').filter({ has: page.getByRole('button', { name: '建立登入畫面', exact: true }) }).getByRole('button', { name: /^快速編輯 / }).click();
   const editor = page.getByRole('dialog', { name: '任務詳細內容', exact: true });
   await editor.getByRole('textbox', { name: /任務標題/ }).waitFor();
   await expect(editor.getByRole('textbox', { name: /任務標題/ })).toBeFocused();
