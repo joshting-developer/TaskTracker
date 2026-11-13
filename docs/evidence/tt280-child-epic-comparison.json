@@ -1,0 +1,146 @@
+{
+    "engine": "8.4.13",
+    "conditions": "Same synthetic MySQL fixture; interleaved before\/after; 2 warmups excluded, 7 samples per size; transaction rolled back each sample; service + DB transaction, no HTTP\/p95 claim",
+    "historyPerChild": 60,
+    "commentsPerChild": 20,
+    "cases": {
+        "1": {
+            "before": {
+                "queries": 51,
+                "childRevisionCount": 1,
+                "httpResultProjectionBytes": 99,
+                "hydratedIssueModels": 5,
+                "commentReads": 5,
+                "historyJsonReads": 6,
+                "medianMs": 31.098708,
+                "samplesMs": [
+                    30.446459,
+                    30.699751,
+                    30.906,
+                    31.098708,
+                    31.424292,
+                    31.965125,
+                    31.976042
+                ]
+            },
+            "after": {
+                "queries": 37,
+                "childRevisionCount": 1,
+                "httpResultProjectionBytes": 99,
+                "hydratedIssueModels": 3,
+                "commentReads": 3,
+                "historyJsonReads": 4,
+                "minimalReadPlan": {
+                    "sql": "select `issues`.`id`, `issues`.`public_id`, `issues`.`revision`, `epic`.`public_id` as `epic_public_id`, (select position + 1 from `audit_events` where `workspace_id` = ? and `entity_type` = ? and `stream` = ? and `entity_id` = `issues`.`id` order by `entity_id` desc, `position` desc limit 1) as `history_position` from `issues` left join `issues` as `epic` on `epic`.`id` = `issues`.`epic_id` and `epic`.`workspace_id` = `issues`.`workspace_id` and `epic`.`project_id` = `issues`.`project_id` where `issues`.`workspace_id` = ? and `issues`.`project_id` = ? and `issues`.`parent_issue_id` = ? and `issues`.`id` > ? order by `issues`.`id` asc limit 100",
+                    "plan": [
+                        {
+                            "EXPLAIN": "-> Limit: 100 row(s)  (cost=0.75 rows=1) (actual time=0.0599..0.0601 rows=1 loops=1)\n    -> Nested loop left join  (cost=0.75 rows=1) (actual time=0.0551..0.0553 rows=1 loops=1)\n        -> Sort: issues.id  (cost=0.4 rows=1) (actual time=0.0507..0.0508 rows=1 loops=1)\n            -> Filter: ((issues.parent_issue_id = 15868) and (issues.project_id = 1) and (issues.workspace_id = 1) and (issues.id > 0))  (cost=0.4 rows=1) (actual time=0.0323..0.0338 rows=1 loops=1)\n                -> Intersect rows sorted by row ID  (cost=0.4 rows=1) (actual time=0.0237..0.0251 rows=1 loops=1)\n                    -> Index range scan on issues using issues_parent_issue_id_fk over (workspace_id = 1 AND project_id = 1 AND parent_issue_id = 15868 AND 0 < id)  (cost=0.25..0.25 rows=1) (actual time=0.0173..0.0185 rows=1 loops=1)\n        -> Filter: ((epic.project_id = 1) and (epic.workspace_id = 1))  (cost=0.35 rows=1) (actual time=0.00137..0.00137 rows=0 loops=1)\n            -> Single-row index lookup on epic using PRIMARY (id=issues.epic_id)  (cost=0.35 rows=1) (actual time=0.00121..0.00121 rows=0 loops=1)\n-> Select #2 (subquery in projection; dependent)\n    -> Limit: 1 row(s)  (cost=11.2 rows=1) (actual time=0.0262..0.0262 rows=1 loops=1)\n        -> Filter: (audit_events.workspace_id = 1)  (cost=11.2 rows=18.6) (actual time=0.026..0.026 rows=1 loops=1)\n            -> Index lookup on audit_events using audit_events_entity_type_entity_id_stream_position_unique (entity_type='issues', entity_id=issues.id, stream='history') (reverse)  (cost=11.2 rows=37.2) (actual time=0.0186..0.0186 rows=1 loops=1)\n"
+                        }
+                    ]
+                },
+                "medianMs": 23.720625,
+                "samplesMs": [
+                    22.077375,
+                    22.240584,
+                    23.405917,
+                    23.720625,
+                    24.707083,
+                    25.178167,
+                    28.478083
+                ]
+            }
+        },
+        "20": {
+            "before": {
+                "queries": 374,
+                "childRevisionCount": 20,
+                "httpResultProjectionBytes": 101,
+                "hydratedIssueModels": 43,
+                "commentReads": 43,
+                "historyJsonReads": 44,
+                "medianMs": 130.401709,
+                "samplesMs": [
+                    116.476958,
+                    122.608334,
+                    129.864625,
+                    130.401709,
+                    139.296041,
+                    140.3105,
+                    152.8695
+                ]
+            },
+            "after": {
+                "queries": 37,
+                "childRevisionCount": 20,
+                "httpResultProjectionBytes": 101,
+                "hydratedIssueModels": 3,
+                "commentReads": 3,
+                "historyJsonReads": 4,
+                "minimalReadPlan": {
+                    "sql": "select `issues`.`id`, `issues`.`public_id`, `issues`.`revision`, `epic`.`public_id` as `epic_public_id`, (select position + 1 from `audit_events` where `workspace_id` = ? and `entity_type` = ? and `stream` = ? and `entity_id` = `issues`.`id` order by `entity_id` desc, `position` desc limit 1) as `history_position` from `issues` left join `issues` as `epic` on `epic`.`id` = `issues`.`epic_id` and `epic`.`workspace_id` = `issues`.`workspace_id` and `epic`.`project_id` = `issues`.`project_id` where `issues`.`workspace_id` = ? and `issues`.`project_id` = ? and `issues`.`parent_issue_id` = ? and `issues`.`id` > ? order by `issues`.`id` asc limit 100",
+                    "plan": [
+                        {
+                            "EXPLAIN": "-> Limit: 100 row(s)  (cost=7.66 rows=10) (actual time=0.0441..0.0509 rows=20 loops=1)\n    -> Nested loop left join  (cost=7.66 rows=10) (actual time=0.0437..0.0496 rows=20 loops=1)\n        -> Sort: issues.id  (cost=4.41 rows=10) (actual time=0.0415..0.0424 rows=20 loops=1)\n            -> Filter: ((issues.parent_issue_id = 15871) and (issues.project_id = 1) and (issues.workspace_id = 1) and (issues.id > 0))  (cost=4.41 rows=10) (actual time=0.0189..0.0364 rows=20 loops=1)\n                -> Intersect rows sorted by row ID  (cost=4.41 rows=10) (actual time=0.018..0.0338 rows=20 loops=1)\n                    -> Index range scan on issues using issues_parent_issue_id_fk over (workspace_id = 1 AND project_id = 1 AND parent_issue_id = 15871 AND 0 < id)  (cost=0.0135..0.269 rows=20) (actual time=0.0147..0.0196 rows=20 loops=1)\n        -> Filter: ((epic.project_id = 1) and (epic.workspace_id = 1))  (cost=0.261 rows=1) (actual time=225e-6..225e-6 rows=0 loops=20)\n            -> Single-row index lookup on epic using PRIMARY (id=issues.epic_id)  (cost=0.261 rows=1) (actual time=112e-6..112e-6 rows=0 loops=20)\n-> Select #2 (subquery in projection; dependent)\n    -> Limit: 1 row(s)  (cost=11.2 rows=1) (actual time=0.00779..0.00781 rows=1 loops=20)\n        -> Filter: (audit_events.workspace_id = 1)  (cost=11.2 rows=18.6) (actual time=0.00771..0.00771 rows=1 loops=20)\n            -> Index lookup on audit_events using audit_events_entity_type_entity_id_stream_position_unique (entity_type='issues', entity_id=issues.id, stream='history') (reverse)  (cost=11.2 rows=37.2) (actual time=0.00761..0.00761 rows=1 loops=20)\n"
+                        }
+                    ]
+                },
+                "medianMs": 26.104875,
+                "samplesMs": [
+                    24.129167,
+                    24.2145,
+                    24.664,
+                    26.104875,
+                    26.957833,
+                    27.197542,
+                    40.141
+                ]
+            }
+        },
+        "100": {
+            "before": {
+                "queries": 1735,
+                "childRevisionCount": 100,
+                "httpResultProjectionBytes": 103,
+                "hydratedIssueModels": 203,
+                "commentReads": 203,
+                "historyJsonReads": 204,
+                "medianMs": 522.254542,
+                "samplesMs": [
+                    505.505708,
+                    506.598375,
+                    507.650417,
+                    522.254542,
+                    527.618792,
+                    528.451542,
+                    538.878001
+                ]
+            },
+            "after": {
+                "queries": 38,
+                "childRevisionCount": 100,
+                "httpResultProjectionBytes": 103,
+                "hydratedIssueModels": 3,
+                "commentReads": 3,
+                "historyJsonReads": 4,
+                "minimalReadPlan": {
+                    "sql": "select `issues`.`id`, `issues`.`public_id`, `issues`.`revision`, `epic`.`public_id` as `epic_public_id`, (select position + 1 from `audit_events` where `workspace_id` = ? and `entity_type` = ? and `stream` = ? and `entity_id` = `issues`.`id` order by `entity_id` desc, `position` desc limit 1) as `history_position` from `issues` left join `issues` as `epic` on `epic`.`id` = `issues`.`epic_id` and `epic`.`workspace_id` = `issues`.`workspace_id` and `epic`.`project_id` = `issues`.`project_id` where `issues`.`workspace_id` = ? and `issues`.`project_id` = ? and `issues`.`parent_issue_id` = ? and `issues`.`id` > ? order by `issues`.`id` asc limit 100",
+                    "plan": [
+                        {
+                            "EXPLAIN": "-> Limit: 100 row(s)  (cost=40.1 rows=50) (actual time=0.552..0.627 rows=100 loops=1)\n    -> Nested loop left join  (cost=40.1 rows=50) (actual time=0.552..0.62 rows=100 loops=1)\n        -> Sort: issues.id  (cost=22.6 rows=50) (actual time=0.549..0.56 rows=100 loops=1)\n            -> Filter: ((issues.parent_issue_id = 15893) and (issues.project_id = 1) and (issues.workspace_id = 1) and (issues.id > 0))  (cost=22.6 rows=50) (actual time=0.428..0.529 rows=100 loops=1)\n                -> Intersect rows sorted by row ID  (cost=22.6 rows=50) (actual time=0.427..0.517 rows=100 loops=1)\n                    -> Index range scan on issues using issues_parent_issue_id_fk over (workspace_id = 1 AND project_id = 1 AND parent_issue_id = 15893 AND 0 < id)  (cost=0.00349..0.349 rows=100) (actual time=0.421..0.444 rows=100 loops=1)\n        -> Filter: ((epic.project_id = 1) and (epic.workspace_id = 1))  (cost=0.252 rows=1) (actual time=364e-6..364e-6 rows=0 loops=100)\n            -> Single-row index lookup on epic using PRIMARY (id=issues.epic_id)  (cost=0.252 rows=1) (actual time=251e-6..251e-6 rows=0 loops=100)\n-> Select #2 (subquery in projection; dependent)\n    -> Limit: 1 row(s)  (cost=11.2 rows=1) (actual time=0.013..0.013 rows=1 loops=100)\n        -> Filter: (audit_events.workspace_id = 1)  (cost=11.2 rows=18.6) (actual time=0.0128..0.0128 rows=1 loops=100)\n            -> Index lookup on audit_events using audit_events_entity_type_entity_id_stream_position_unique (entity_type='issues', entity_id=issues.id, stream='history') (reverse)  (cost=11.2 rows=37.2) (actual time=0.0126..0.0126 rows=1 loops=100)\n"
+                        }
+                    ]
+                },
+                "medianMs": 33.24875,
+                "samplesMs": [
+                    32.03,
+                    32.464041,
+                    32.674792,
+                    33.24875,
+                    33.570167,
+                    34.269917,
+                    37.387
+                ]
+            }
+        }
+    }
+}

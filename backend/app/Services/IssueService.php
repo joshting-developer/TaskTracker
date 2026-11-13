@@ -6,6 +6,7 @@ use App\Authorization\ProjectAccess;
 use App\Domain\DomainError;
 use App\Domain\Fields;
 use App\Domain\RecordRevision;
+use App\Repositories\IssueChildrenRepository;
 use App\Repositories\RecordStore;
 use Illuminate\Support\Str;
 
@@ -21,8 +22,9 @@ class IssueService
      * @param  array  $workspaceSession  從後端Session重新驗證的工作空間身分與權限
      * @param  ProjectAccess  $access  本次操作共用的Project權限檢查
      * @param  \Closure(): ProjectBoards  $boards  建立卡片帶boardId時才取得的看板用例
+     * @param  IssueChildrenRepository  $children  同交易批次子任務更新
      */
-    public function __construct(private RecordStore $store, private array $workspaceSession, private ProjectAccess $access, private \Closure $boards) {}
+    public function __construct(private RecordStore $store, private array $workspaceSession, private ProjectAccess $access, private \Closure $boards, private IssueChildrenRepository $children) {}
 
     /**
      * 取得目前UTC ISO時間供紀錄與歷史使用。
@@ -283,9 +285,7 @@ class IssueService
         }
         $this->syncRelations($issue, $current['relatedIssueIds'] ?? []);
         if ($issue['epicId'] !== $current['epicId']) {
-            foreach ($this->store->issueChildIds($project['id'], $issue['id']) as $childId) {
-                $this->writeIssue($this->store->require('issues', $childId), ['epicId' => $issue['epicId']]);
-            }
+            $this->syncChildrenEpic($issue);
         }
         if ($issue['assignee'] !== $current['assignee']) {
             $this->notify($issue, '指派任務', $this->workspaceSession['user']['name'].' 將任務指派給你', $issue['assignee']);
@@ -298,6 +298,33 @@ class IssueService
         }
 
         return $issue;
+    }
+
+    /**
+     * 只為實際換Epic的子卡追加版本與歷史, 不載舊活動
+     *
+     * @param  array  $issue  已更新且授權的父任務
+     * @return void
+     */
+    private function syncChildrenEpic(array $issue): void
+    {
+        $scope = $this->children->scope($this->workspaceSession['workspace']['id'], $issue['projectId'], $issue['id'], $issue['epicId']);
+        foreach ($this->children->batches($scope) as $rows) {
+            $changes = [];
+            $at = $this->now();
+            foreach ($rows as $row) {
+                $before = $row->epic_public_id ?? '';
+                if ($before === $issue['epicId']) {
+                    continue;
+                }
+                $changes[] = ['id' => (int) $row->id, 'revision' => (int) $row->revision, 'position' => (int) $row->history_position,
+                    'event' => ['id' => $this->id(), 'kind' => 'updated', 'actor' => $this->workspaceSession['user']['name'], 'at' => $at,
+                        'changes' => [['field' => 'epicId', 'before' => $before, 'after' => $issue['epicId']]]]];
+            }
+            if ($this->children->apply($scope, $changes, $at) !== count($changes)) {
+                DomainError::fail('CONFLICT', '子任務版本已更新, 請重新載入');
+            }
+        }
     }
 
     /**

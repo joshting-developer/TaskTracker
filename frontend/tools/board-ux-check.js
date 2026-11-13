@@ -7,6 +7,8 @@ if (!process.env.E2E_API_URL) throw new Error('請設定隔離E2E_API_URL，不�
 const before = process.env.E2E_BEFORE === '1', built = process.env.E2E_PREVIEW === '1';
 const artifacts = `artifacts/board-ux-${before ? 'before' : 'after'}`;
 mkdirSync(artifacts, { recursive: true });
+const port = Number(process.env.E2E_FRONTEND_PORT || 5175);
+const base = `http://127.0.0.1:${port}`;
 let server, browser;
 async function call(page, operation, input = {}, group = 'rpc') {
   return page.evaluate(async ({ operation, input, group }) => {
@@ -16,20 +18,20 @@ async function call(page, operation, input = {}, group = 'rpc') {
   }, { operation, input, group });
 }
 try {
-  const config = { host: '127.0.0.1', port: 5175, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } };
+  const config = { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } };
   server = built ? await preview({ preview: config }) : await createServer({ server: config });
   if (!built) await server.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   page.setDefaultTimeout(15000); const errors = []; page.on('pageerror', error => errors.push(error.message));
-  await page.goto('http://127.0.0.1:5175/login');
+  await page.goto(`${base}/login`);
   const identity = await call(page, 'register', { name: '看板試用者', email: `board-ux-${crypto.randomUUID()}@example.test`, password: 'board-ux-test-password', workspaceName: '看板協作' }, 'auth');
   const project = await call(page, 'createProject', { name: '長期產品開發', code: 'UXBOARD', requestId: crypto.randomUUID() });
   const epic = await call(page, 'createIssue', { projectId: project.id, type: 'epic', title: '會員功能第一版', requestId: crypto.randomUUID() });
   const otherEpic = await call(page, 'createIssue', { projectId: project.id, type: 'epic', title: '下一輪交付', requestId: crypto.randomUUID() });
   const tasks = [];
   for (let i = 1; i <= 18; i++) tasks.push(await call(page, 'createIssue', { projectId: project.id, title: `執行工作 ${String(i).padStart(2, '0')}`, type: i === 2 ? 'bug' : 'task', epicId: epic.id, assignee: identity.user.id, estimateMinutes: 120, dueDate: '2026-12-10', description: i === 1 ? '這是比較卡片顯示密度的描述，預期詳細會顯示，精簡會隱藏。' : '', requestId: crypto.randomUUID() }));
-  const boardUrl = `http://127.0.0.1:5175/app/#/projects/${project.id}/board`;
+  const boardUrl = `${base}/app/#/projects/${project.id}/board`;
   const key = `tasktracker-board:${identity.user.id}:${project.id}`;
   await page.goto(boardUrl); await page.reload(); await page.locator('.issue-card').first().waitFor();
   const board = page.locator('.visual-board'), first = page.locator(`[data-issue="${tasks[0].identifier}"]`);

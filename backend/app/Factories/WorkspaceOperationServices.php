@@ -4,6 +4,7 @@ namespace App\Factories;
 
 use App\Authorization\ProjectAccess;
 use App\Authorization\WorkspaceOperationAccess;
+use App\Repositories\IssueChildrenRepository;
 use App\Repositories\ProjectReadRepository;
 use App\Repositories\RecordStore;
 use App\Repositories\TimeReportRepository;
@@ -32,8 +33,9 @@ final class WorkspaceOperationServices
      * @param  array<string,mixed>  $workspaceSession  交易內由Session重驗的身分、工作區與權限
      * @param  TimeReportRepository  $timeReports  工時分析查詢（無租戶狀態）
      * @param  ProjectReadRepository  $projects  訊號目標專案資料入口
+     * @param  IssueChildrenRepository  $children  子任務最小投影與批次寫入
      */
-    public function __construct(public readonly RecordStore $store, public readonly array $workspaceSession, private TimeReportRepository $timeReports, private ProjectReadRepository $projects) {}
+    public function __construct(public readonly RecordStore $store, public readonly array $workspaceSession, private TimeReportRepository $timeReports, private ProjectReadRepository $projects, private IssueChildrenRepository $children) {}
 
     /**
      * 取得或建立指定協作者並記錄名稱。
@@ -96,7 +98,7 @@ final class WorkspaceOperationServices
      */
     public function issues(): IssueService
     {
-        return $this->once('issues', fn () => new IssueService($this->store, $this->workspaceSession, $this->access(), fn () => $this->boards()));
+        return $this->once('issues', fn () => new IssueService($this->store, $this->workspaceSession, $this->access(), fn () => $this->boards(), $this->children));
     }
 
     /**
