@@ -186,14 +186,42 @@ class IssueReadRepository
         } elseif ($filters->condition === 'unassigned') {
             $q->whereNull('assignee_id');
         }
-        if ($filters->pagination->search !== '') {
-            $term = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($filters->pagination->search)).'%';
-            $q->where(function ($q) use ($term) {
-                $q->whereRaw("LOWER(title) LIKE ? ESCAPE '!'", [$term])->orWhereRaw("LOWER(identifier) LIKE ? ESCAPE '!'", [$term])
-                    ->orWhereRaw("LOWER(description) LIKE ? ESCAPE '!'", [$term])
-                    ->orWhereHas('assignee.user', fn ($q) => $q->whereRaw("LOWER(name) LIKE ? ESCAPE '!'", [$term]));
-            });
+        $this->applySearch($q, $filters->pagination->search, true);
+
+    }
+
+    /** 卡號走索引, 其他文字保留字面contains；不把FULLTEXT近似結果當原本語意
+     * @param  Builder  $q  已限定Project的查詢
+     * @param  string  $search  已驗證搜尋
+     * @param  bool  $full  是否包含描述與承辦者
+     * @return void
+     */
+    private function applySearch(Builder $q, string $search, bool $full): void
+    {
+        $search = trim($search);
+        if ($search === '') {
+            return;
         }
+        if (preg_match('/^[A-Za-z][A-Za-z0-9_]{0,11}-[1-9][0-9]*$/D', $search)) {
+            $q->where('identifier', strtoupper($search));
+
+            return;
+        }
+        if (preg_match('/^[A-Za-z][A-Za-z0-9_]{0,11}-[0-9]*\*$/D', $search)) {
+            $prefix = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], strtoupper(substr($search, 0, -1)));
+            $q->whereRaw("identifier LIKE ? ESCAPE '!'", [$prefix.'%']);
+
+            return;
+        }
+        $literal = str_starts_with(mb_strtolower($search), 'text:') ? substr($search, 5) : $search;
+        $term = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($literal)).'%';
+        $q->where(function (Builder $query) use ($term, $full) {
+            $query->whereRaw("LOWER(title) LIKE ? ESCAPE '!'", [$term])->orWhereRaw("LOWER(identifier) LIKE ? ESCAPE '!'", [$term]);
+            if ($full) {
+                $query->orWhereRaw("LOWER(description) LIKE ? ESCAPE '!'", [$term])
+                    ->orWhereHas('assignee.user', fn ($q) => $q->whereRaw("LOWER(name) LIKE ? ESCAPE '!'", [$term]));
+            }
+        });
     }
 
     /**
@@ -257,10 +285,7 @@ class IssueReadRepository
         if ($filters->exclude !== '') {
             $q->where('public_id', '!=', $filters->exclude);
         }
-        if ($filters->pagination->search !== '') {
-            $term = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($filters->pagination->search)).'%';
-            $q->where(fn ($q) => $q->whereRaw("LOWER(title) LIKE ? ESCAPE '!'", [$term])->orWhereRaw("LOWER(identifier) LIKE ? ESCAPE '!'", [$term]));
-        }
+        $this->applySearch($q, $filters->pagination->search, false);
 
         return $q->orderBy('identifier')->orderBy('public_id')->paginate($filters->pagination->perPage,
             ['id', 'public_id', 'identifier', 'title', 'type', 'state_id', 'epic_id', 'parent_issue_id'], 'page', $filters->pagination->page);

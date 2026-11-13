@@ -54,7 +54,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutside
   <div class="filter-toolbar">
     <label class="search-field">
       <Icon name="search" :size="18" />
-      <input v-model="search" placeholder="搜尋任務、編號或負責人…" aria-label="搜尋任務" maxlength="180" />
+      <input v-model="search" placeholder="搜尋文字或完整卡號…" aria-label="搜尋任務" maxlength="180" />
       <button v-if="search" class="icon-button" aria-label="清除搜尋" @click="search = ''"><Icon name="close" :size="15" /></button>
     </label>
     <div class="filters">

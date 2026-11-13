@@ -1,0 +1,160 @@
+{
+  "engine": "8.4.13",
+  "topology": "isolated Docker MySQL, in-container SQL; warm DB RTT, not HTTP or production p95",
+  "warmup": 5,
+  "samples": 30,
+  "sizes": [
+    {
+      "rows": 1000,
+      "queries": {
+        "contains": {
+          "count": {
+            "samples": 30,
+            "p50Ms": 1.02,
+            "p95Ms": 1.123
+          },
+          "data": {
+            "samples": 30,
+            "p50Ms": 1.03,
+            "p95Ms": 1.123
+          }
+        },
+        "exact": {
+          "count": {
+            "samples": 30,
+            "p50Ms": 0.095,
+            "p95Ms": 0.179
+          },
+          "data": {
+            "samples": 30,
+            "p50Ms": 0.097,
+            "p95Ms": 0.131
+          }
+        },
+        "prefix": {
+          "count": {
+            "samples": 30,
+            "p50Ms": 0.089,
+            "p95Ms": 0.097
+          },
+          "data": {
+            "samples": 30,
+            "p50Ms": 0.093,
+            "p95Ms": 0.109
+          }
+        }
+      }
+    },
+    {
+      "rows": 10000,
+      "queries": {
+        "contains": {
+          "count": {
+            "samples": 30,
+            "p50Ms": 10.955,
+            "p95Ms": 11.334
+          },
+          "data": {
+            "samples": 30,
+            "p50Ms": 11.209,
+            "p95Ms": 12.978
+          }
+        },
+        "exact": {
+          "count": {
+            "samples": 30,
+            "p50Ms": 0.158,
+            "p95Ms": 0.188
+          },
+          "data": {
+            "samples": 30,
+            "p50Ms": 0.156,
+            "p95Ms": 0.176
+          }
+        },
+        "prefix": {
+          "count": {
+            "samples": 30,
+            "p50Ms": 0.164,
+            "p95Ms": 0.174
+          },
+          "data": {
+            "samples": 30,
+            "p50Ms": 0.176,
+            "p95Ms": 0.2
+          }
+        }
+      }
+    },
+    {
+      "rows": 50000,
+      "queries": {
+        "contains": {
+          "count": {
+            "samples": 30,
+            "p50Ms": 63.749,
+            "p95Ms": 106.504
+          },
+          "data": {
+            "samples": 30,
+            "p50Ms": 57.176,
+            "p95Ms": 62.394
+          }
+        },
+        "exact": {
+          "count": {
+            "samples": 30,
+            "p50Ms": 0.169,
+            "p95Ms": 0.333
+          },
+          "data": {
+            "samples": 30,
+            "p50Ms": 0.144,
+            "p95Ms": 0.227
+          }
+        },
+        "prefix": {
+          "count": {
+            "samples": 30,
+            "p50Ms": 0.156,
+            "p95Ms": 0.231
+          },
+          "data": {
+            "samples": 30,
+            "p50Ms": 0.278,
+            "p95Ms": 0.543
+          }
+        }
+      }
+    }
+  ],
+  "ngram": {
+    "size": 2,
+    "insert50000Ms": 2039.93,
+    "literalComparison": [
+      {
+        "term": "中",
+        "containsCount": 50000,
+        "ngramCount": 0
+      },
+      {
+        "term": "會員",
+        "containsCount": 50000,
+        "ngramCount": 50000
+      },
+      {
+        "term": "100%_!",
+        "containsCount": 50000,
+        "ngramCount": 0
+      },
+      {
+        "term": "API",
+        "containsCount": 50000,
+        "ngramCount": 0
+      }
+    ],
+    "update1000PlainMs": 63.39,
+    "update1000NgramMs": 61.71
+  },
+  "decision": "Keep literal contains fallback; use existing scoped unique index for full identifiers, no production fulltext index"
+}

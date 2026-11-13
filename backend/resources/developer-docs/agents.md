@@ -73,3 +73,10 @@ PAT 不印在對話／卡片／Commit／log，不傳給不受信任網址，不�
 getPublicAttachment／listPublicIssueAttachments只回安全metadata；getPublicAttachmentContent回PNG／JPEG／WebP原始bytes, 不是JSON, 可帶download=true下載。每次重新驗當下Token及Project資格, 沒有公開或簽署儲存URL。讀取需要read, 上傳／綁定需要write, 都仍受目前專案permission限制；limits需要issue.write資格。圖片失效、刪除或撤權後不再可讀
 
 下載Python範例時可加`IMAGE_FILE=/本機/測試.png`, 它會上傳、同requestId補送、建含圖Issue並讀回原始內容核對。只對已授權的專案執行, 不把真實圖片或PAT貼在卡片／log
+
+
+## 任務搜尋（OpenAPI 0.14.0）
+
+search是完整卡號時（例如tt-12）, 會轉成大寫並只找同專案該卡, 不再掃描述內提到該卡號的所有卡片。明確尾端星號如TT-12*搜尋卡號前綴。需要找描述／標題提及卡號時用text:TT-12；其他搜尋仍是大小寫不敏感的字面contains, 中文單字、空格、標點及%_不當成SQL萬用字元。identifier參數仍是明確等值條件, 與其他filters交集
+
+沒有把一般文字改成近似的FULLTEXT。列表與增量共用搜尋語意, cursor的filters不可中途更換；卡號prefix可能匹配很多張, 仍須按分頁／cursor接續

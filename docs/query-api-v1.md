@@ -122,3 +122,7 @@ Project建立／修改／狀態更新新結果為`{id, revision}`，Board建立�
 - 日期最多366天；摘要最多2000個成員×專案配對, 超過回400 INVALID_INPUT並要求縮小範圍, 不以截斷資料計算不完整總計。明細不受配對上限影響, 原始列只在展開時讀取
 - 舊`POST /api/rpc/getTimeReport`僅保留相容, options只附第一頁各100筆, 不保證完整目錄；新前端使用上述GET介面。新整合應使用搜尋分頁, 不依賴舊options
 - 這些為Session v1介面, 不宣稱公開PAT工時API已提供；公開機器契約不因本次內部拆分變更
+
+## TT-278 卡號搜尋路徑
+
+任務列表／增量與任務候選的search, 完整卡號自動轉大寫等值, 明確尾端*採卡號prefix。text:前綴強制既有字面contains, 其他文字維持中文／英文／標點與%_字面搜尋。看板本地篩選同步, 不以FULLTEXT丟棄短詞或改搜尋結果；Project／Workspace與其他filters仍交集

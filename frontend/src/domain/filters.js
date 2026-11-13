@@ -14,6 +14,9 @@ export function missingFilters(filters, project, members, issues) {
 }
 export function filterIssues(issues, filters, { project, userId, members, today, includeEpics = false }) {
   const term = filters.search.trim().toLowerCase();
+  const exact = /^[a-z][a-z0-9_]{0,11}-[1-9][0-9]*$/.test(term);
+  const prefix = /^[a-z][a-z0-9_]{0,11}-[0-9]*\*$/.test(term);
+  const literal = term.startsWith('text:') ? term.slice(5) : term;
   return issues.filter((issue) => {
     if (issue.projectId !== project.id || (!includeEpics && issue.type === 'epic')) return false;
     const closed = isClosed(issue);
@@ -28,7 +31,9 @@ export function filterIssues(issues, filters, { project, userId, members, today,
     if (filters.condition === 'overdue' && (closed || !issue.dueDate || issue.dueDate >= today)) return false;
     if (filters.condition === 'unassigned' && issue.assignee) return false;
     const name = members.find((member) => member.id === issue.assignee)?.name || issue.assignee;
-    return !term || [issue.title, issue.description, issue.identifier, name].some((value) => String(value || '').toLowerCase().includes(term));
+    if (exact) return issue.identifier.toLowerCase() === term;
+    if (prefix) return issue.identifier.toLowerCase().startsWith(term.slice(0, -1));
+    return !term || [issue.title, issue.description, issue.identifier, name].some((value) => String(value || '').toLowerCase().includes(literal));
   }).sort((a, b) => {
     // TT-306：跟後端同一套規則；sign=1是各排序的預設方向, 反向時整個主排序反過來（到期日沒填的也跟著換到最前）。
     const sign = filters.direction && filters.direction !== defaultDirection(filters.sort) ? -1 : 1;

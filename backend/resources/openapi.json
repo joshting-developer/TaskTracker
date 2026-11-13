@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker API",
-    "version": "0.13.0",
+    "version": "0.14.0",
     "description": "公開Bearer v1讀取及Issue建立／PATCH／留言及外部識別查詢／upsert／批次；小待辦讀取、交辦、完成與退回；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。 支援受PAT與即時專案權限限制的私有附件上傳／metadata／內容／綁定。"
   },
   "servers": [
@@ -2948,7 +2948,7 @@
               "type": "string",
               "maxLength": 200
             },
-            "description": "字面搜尋，%與_不當萬用字元"
+            "description": "完整卡號（不分大小寫）採等值索引；如TT-12只找該卡。卡號尾端*如TT-12*為前綴。其他文字為大小寫不敏感的字面contains（含中文短字與%_）；text:前綴強制contains, 如text:TT-12也找提到卡號的文字。"
           },
           {
             "in": "query",
@@ -5258,7 +5258,7 @@
               "type": "string",
               "maxLength": 200
             },
-            "description": "字面搜尋，%與_不當萬用字元"
+            "description": "完整卡號（不分大小寫）採等值索引；如TT-12只找該卡。卡號尾端*如TT-12*為前綴。其他文字為大小寫不敏感的字面contains（含中文短字與%_）；text:前綴強制contains, 如text:TT-12也找提到卡號的文字。"
           },
           {
             "in": "query",

@@ -204,3 +204,10 @@ read允許目前有issue.read資格者取metadata／內容；write仍須issue.wr
 上傳以requestId＋相同檔名／bytes／MIME去重；相同ID換檔案回409, IO失敗回502且可補送相同檔案。保留配額與完成分開鎖後驗權, 外部IO不持有資料庫交易；成功完成receipt與來源只記一次。補送前仍須當下資格, 同一Token若已撤銷不會取回舊結果。明確bind帶expectedRevision與issueRevision, 409不產生半綁定
 
 上傳回傳的reference可放入Issue description, 由既有建卡／改卡交易自動綁定。獨立HTTP驗收使用匿名下載的Python範例及合成圖片, 不依賴Session內部路由作公開功能
+
+
+## 任務搜尋（OpenAPI 0.14.0）
+
+search是完整卡號時（例如tt-12）, 會轉成大寫並只找同專案該卡, 不再掃描述內提到該卡號的所有卡片。明確尾端星號如TT-12*搜尋卡號前綴。需要找描述／標題提及卡號時用text:TT-12；其他搜尋仍是大小寫不敏感的字面contains, 中文單字、空格、標點及%_不當成SQL萬用字元。identifier參數仍是明確等值條件, 與其他filters交集
+
+沒有把一般文字改成近似的FULLTEXT。列表與增量共用搜尋語意, cursor的filters不可中途更換；卡號prefix可能匹配很多張, 仍須按分頁／cursor接續

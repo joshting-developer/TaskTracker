@@ -163,3 +163,18 @@ await new Promise(resolve => setImmediate(resolve));
 assert.equal(staleLookup.result.value.items[0].id, 'new', '即使取消後舊transport仍回應，也不能蓋掉新候選');
 staleLookupScope.stop();
 console.log('PASS: 慢選項取消及generation拒絕舊回應');
+
+const { filterIssues } = await import('../src/domain/filters.js');
+const searchRows = [
+  { id: 'exact', projectId: 'p', identifier: 'TT-1', title: '會員 API 100%_!', type: 'task' },
+  { id: 'mention', projectId: 'p', identifier: 'TT-2', title: '提到 TT-1', type: 'task' },
+  { id: 'prefix', projectId: 'p', identifier: 'TT-10', title: '其他', type: 'task' },
+];
+const searchBase = { search: '', scope: 'all', state: [], priority: '', assignee: '', type: '', epicId: '', condition: '', sort: 'updated' };
+const searchResult = search => filterIssues(searchRows, { ...searchBase, search }, { project: project.value, userId: 'u', members: [], today: '2026-11-13', includeEpics: true });
+assert.deepEqual(searchResult('tt-1').map(row => row.id), ['exact']);
+assert.equal(searchResult('TT-1*').length, 2);
+assert.equal(searchResult('text:TT-1').length, 3);
+assert.deepEqual(searchResult('會').map(row => row.id), ['exact']);
+assert.deepEqual(searchResult('%_').map(row => row.id), ['exact']);
+console.log('PASS: board literal search and exact/prefix card numbers');
