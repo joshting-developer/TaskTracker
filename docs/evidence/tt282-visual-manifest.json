@@ -36,7 +36,7 @@
     },
     {
       "path": "frontend/tools/attachment-draft-check.js",
-      "sha256": "65aa3f83bce30cd337363a45b2035a1efa8668e2df04be6bcf45f519c8a63518"
+      "sha256": "1c7c4e9e6829490870f0d5027aab5431cbe56b2f3473f70e8830814b23f0d30c"
     },
     {
       "path": "frontend/tools/compare-reviewed-attachment-drafts.js",

@@ -21,7 +21,7 @@ try {
   // A deterministic private image from synthetic content, no external or user data.
   await page.setContent('<body style="margin:0;background:#f5f6f8;color:#242936;font:20px system-ui;padding:32px"><h1>登入畫面</h1><p>請確認輸入欄位與按鈕間距</p><div style="height:80px;background:white;border:1px solid #bfc6d2"></div></body>');
   await page.setViewportSize({ width: 700, height: 300 }); const png = await page.screenshot();
-  const formats = await page.evaluate(async b64 => { const bitmap = await createImageBitmap(new Blob([Uint8Array.from(atob(b64), c => c.charCodeAt(0))], {type:'image/png'})); const canvas = document.createElement('canvas'); canvas.width = bitmap.width; canvas.height = bitmap.height; canvas.getContext('2d').drawImage(bitmap,0,0); return {webp:canvas.toDataURL('image/webp',.9).split(',')[1], jpeg:canvas.toDataURL('image/jpeg',.9).split(',')[1]}; }, png.toString('base64')); 
+  const formats = await page.evaluate(async b64 => { const bitmap = await createImageBitmap(new Blob([Uint8Array.from(atob(b64), c => c.charCodeAt(0))], {type:'image/png'})); const canvas = document.createElement('canvas'); canvas.width = bitmap.width; canvas.height = bitmap.height; canvas.getContext('2d').drawImage(bitmap,0,0); return {webp:canvas.toDataURL('image/webp',.9).split(',')[1], jpeg:canvas.toDataURL('image/jpeg',.9).split(',')[1]}; }, png.toString('base64'));
   await page.setViewportSize({ width: 1440, height: 1050 }); const root = `${base}/app/#/projects/${project.id}`; await page.goto(root);
   await page.getByRole('button', { name: '新增任務', exact: false }).first().click();
   const editor = page.getByRole('dialog').first(); await editor.getByLabel(/任務標題/).fill('描述貼圖驗證');

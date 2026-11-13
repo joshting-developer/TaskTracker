@@ -4,8 +4,8 @@
   "authorization": "Standing authorization: directly approve future UI candidates while retaining real browser and regression checks; not per-image human review",
   "note": "之後如果有需要核准的畫面都直接核准就好了 繼續完成任務吧",
   "manifestFile": "docs/evidence/tt282-visual-manifest.json",
-  "manifestSha256": "f567c566184ded3ad6af478855a2824ccaecbe8045ff274bca846ef0be151ebc",
-  "harnessSha256": "afc2038b0fa60218449a1f53698f89637753fc1ab62c7afe590474fa6f316331",
+  "manifestSha256": "74d5610b93d414324fc2f099b5d8ae212a74f7cf336ad034ce99ba511565aa40",
+  "harnessSha256": "cd9ba79843c6368520064f6d629743df2a25680e71c665fe25c8b8b2edfc3979",
   "images": 3,
   "capturePolicy": "Wait for real image load/dimensions and network idle; no masking or threshold change"
 }
