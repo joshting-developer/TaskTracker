@@ -138,3 +138,7 @@ Project建立／修改／狀態更新新結果為`{id, revision}`，Board建立�
 Issue詳細新增activityCounts.comments／history／time, 為SQL總數, 不附活動內容；列表不增加活動欄位。每個活動仍按需讀每頁最多100筆（畫面20筆）, 頁籤數字採總數並用分頁total校正
 
 2026-11-13 Josh確認：有issue.read的人可看該卡片所有成員的有效工時與筆數, Epic包含所屬卡片, 作廢紀錄不計。修改仍限本人且要timeEntry.writeOwn；月曆／工作區分析沿原權限, 不因能讀卡片就開放全部報表。跨Project／Workspace或撤權仍拒絕
+
+## TT-302 單卡建卡者與最後異動
+
+Issue詳細新增createdBy／createdByName／lastChange（actor、at）, 最後異動在SQL只取一筆的actor和at, 不讀改了什麼。網頁詳細頁右側屬性直接顯示「建立」「最後異動」；異動紀錄詳細頁和快速編輯都改成新的在上, 下方「載入更多」接更舊的

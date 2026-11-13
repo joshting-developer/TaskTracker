@@ -39,6 +39,16 @@ class Issue extends Model
     }
 
     /**
+     * TT-302：建卡的人（TT-314新增）；舊卡可能沒有。
+     *
+     * @return BelongsTo
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(WorkspaceMember::class, 'created_by_id');
+    }
+
+    /**
      * 取得parent關聯，使用資料庫內部外鍵避免不同租戶公開ID衝突。
      *
      * @return BelongsTo

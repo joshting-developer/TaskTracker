@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker API",
-    "version": "0.17.0",
+    "version": "0.18.0",
     "description": "公開Bearer v1讀取及Issue建立／PATCH／留言及外部識別查詢／upsert／批次；小待辦讀取、交辦、完成與退回；讀取寄給自己的任務通知；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。 支援受PAT與即時專案權限限制的私有附件上傳／metadata／內容／綁定。"
   },
   "servers": [
@@ -3438,6 +3438,12 @@
                       "comments": 0,
                       "history": 0,
                       "time": 0
+                    },
+                    "createdBy": "00000000-0000-4000-8000-000000000001",
+                    "createdByName": "Example user",
+                    "lastChange": {
+                      "actor": "Example user",
+                      "at": "2026-11-13T02:00:00.000000Z"
                     }
                   }
                 }
@@ -5458,6 +5464,12 @@
                       "comments": 0,
                       "history": 0,
                       "time": 0
+                    },
+                    "createdBy": "00000000-0000-4000-8000-000000000001",
+                    "createdByName": "Example user",
+                    "lastChange": {
+                      "actor": "Example user",
+                      "at": "2026-11-13T02:00:00.000000Z"
                     }
                   }
                 }
@@ -11589,7 +11601,10 @@
           "description",
           "relatedIssueIds",
           "references",
-          "activityCounts"
+          "activityCounts",
+          "createdBy",
+          "createdByName",
+          "lastChange"
         ],
         "additionalProperties": false,
         "properties": {
@@ -11714,6 +11729,39 @@
               }
             },
             "description": "Exact SQL counts; details remain lazy/paged. time includes all members for the readable card (and Epic children), excludes voided entries. Card read permission grants card-scoped time visibility, not calendar/analytics or editing others."
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "建卡者的使用者ID；TT-314以前建立且對不到人的舊卡是空字串"
+          },
+          "createdByName": {
+            "type": "string",
+            "description": "建卡者名稱；不知道時是空字串"
+          },
+          "lastChange": {
+            "description": "最後一筆異動紀錄的操作者名稱與時間；沒有異動紀錄時是null",
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "actor",
+                  "at"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "actor": {
+                    "type": "string"
+                  },
+                  "at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       },
@@ -11902,7 +11950,8 @@
           "content": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 2000
+            "maxLength": 2000,
+            "description": "Markdown原稿上限2000字, 圖片使用![名稱](attachment:UUID)。先上傳同專案圖片, 留言成功時同交易綁定本人未過期的pending附件；可重用這張卡已綁定的圖片, 不可引用其他卡片或其他人的pending附件"
           },
           "requestId": {
             "type": "string",

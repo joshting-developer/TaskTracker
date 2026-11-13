@@ -19,7 +19,12 @@ class IssueDetailResource extends IssueSummaryResource
         $refs = $issue->getRelation('relatedIssues');
         $linked = collect([$issue->getRelation('epic'), $issue->getRelation('parent')])->filter()->concat($refs)->unique('public_id');
 
+        // TT-302：建卡者與最後一筆異動, 讓詳細頁不用翻異動紀錄就看得到；舊卡沒記建卡者時是空字串。
+        $creator = $issue->getRelation('creator');
+
         return [...parent::toArray($request), 'description' => $issue->description,
+            'createdBy' => $creator?->user_id ?? '', 'createdByName' => $creator?->getRelation('user')?->name ?? '',
+            'lastChange' => $issue->last_at === null ? null : ['actor' => (string) $issue->last_actor, 'at' => (string) $issue->last_at],
             'activityCounts' => ['comments' => (int) $issue->comment_count, 'history' => (int) $issue->history_count,
                 ...($issue->getAttribute('time_entry_count') !== null ? ['time' => (int) $issue->time_entry_count] : [])],
             'relatedIssueIds' => $refs->pluck('public_id')->all(),

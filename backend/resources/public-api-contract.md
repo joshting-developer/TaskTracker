@@ -233,3 +233,7 @@ search是完整卡號時（例如tt-12）, 會轉成大寫並只找同專案該�
 Issue詳細新增activityCounts.comments／history／time, 為SQL總數, 不附活動內容；列表不增加活動欄位。每個活動仍按需讀每頁最多100筆（畫面20筆）, 頁籤數字採總數並用分頁total校正
 
 2026-11-13 Josh確認：有issue.read的人可看該卡片所有成員的有效工時與筆數, Epic包含所屬卡片, 作廢紀錄不計。修改仍限本人且要timeEntry.writeOwn；月曆／工作區分析沿原權限, 不因能讀卡片就開放全部報表。跨Project／Workspace或撤權仍拒絕
+
+## TT-302 單卡建卡者與最後異動（OpenAPI 0.18.0）
+
+Issue詳細多了 `createdBy`（建卡者的使用者ID）、`createdByName` 和 `lastChange`（最後一筆異動紀錄的 `actor`、`at`, 沒有紀錄時是null）。TT-314以前建立、對不到人的舊卡, `createdBy` 和 `createdByName` 是空字串。只帶最後操作者和時間, 改了什麼仍然要讀history分頁；history分頁一直是新的在前

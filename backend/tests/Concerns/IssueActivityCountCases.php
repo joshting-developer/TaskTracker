@@ -37,14 +37,20 @@ trait IssueActivityCountCases
         DB::flushQueryLog();
         try {
             $response = $this->getJson($root)->assertOk()->assertJsonPath('data.activityCounts', ['comments' => 21, 'history' => 21, 'time' => 1]);
-            $this->assertStringNotContainsString('activity-sentinel', $response->getContent());
+            // TT-302：詳細只多帶最後一筆異動的操作者和時間, 留言、工時說明和異動內容仍然不帶。
+            $this->assertSame(['actor' => 'activity-sentinel-history', 'at' => '2026-11-13T00:00:00Z'], $response->json('data.lastChange'));
+            $this->assertStringNotContainsString('activity-sentinel', str_replace('"activity-sentinel-history"', '', $response->getContent()));
             foreach (['comments', 'history', 'timeEntries'] as $field) {
                 $this->assertArrayNotHasKey($field, $response->json('data'));
             }
             foreach (DB::getQueryLog() as $query) {
                 if (str_contains($query['query'], 'issue_comments') || str_contains($query['query'], 'audit_events')) {
+                    // TT-302的最後異動子查詢只能取actor／at兩個JSON值, 而且限一筆；拿掉這兩個取值後不能再出現event_data。
+                    if (str_contains($query['query'], 'event_data')) {
+                        $this->assertMatchesRegularExpression('/limit 1/i', $query['query']);
+                        $this->assertStringNotContainsString('event_data', preg_replace('/event_data[`"]?, \'\$\."(actor|at)"\'/', '', $query['query']));
+                    }
                     $this->assertStringContainsString('COUNT(*)', $query['query']);
-                    $this->assertStringNotContainsString('event_data', $query['query']);
                     $this->assertStringNotContainsString('content', $query['query']);
                 }
             }

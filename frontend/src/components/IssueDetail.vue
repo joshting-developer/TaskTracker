@@ -128,7 +128,7 @@ function timeSaved() {
               <article v-for="entry in activityComments" :key="entry.id" class="comment"><div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><MarkdownContent :source="entry.content" /></div></article>
             </template>
             <template v-else-if="tab === 'history'">
-              <article v-for="entry in [...activityHistory].reverse()" :key="entry.id" class="history-entry"><span class="history-dot"></span><div><p><strong>{{ entry.actor }}</strong> {{ entry.kind === 'created' ? '建立了任務' : '更新了任務' }} <time>{{ timestamp(entry.at) }}</time></p><p v-for="change in entry.changes" :key="change.field" class="history-change">{{ FIELD_LABELS[change.field] || change.field }}：{{ display(change.field, change.before) }} → {{ display(change.field, change.after) }}</p></div></article>
+              <article v-for="entry in activityHistory" :key="entry.id" class="history-entry"><span class="history-dot"></span><div><p><strong>{{ entry.actor }}</strong> {{ entry.kind === 'created' ? '建立了任務' : '更新了任務' }} <time>{{ timestamp(entry.at) }}</time></p><p v-for="change in entry.changes" :key="change.field" class="history-change">{{ FIELD_LABELS[change.field] || change.field }}：{{ display(change.field, change.before) }} → {{ display(change.field, change.after) }}</p></div></article>
             </template>
             <template v-else>
               <div v-if="canLogTime" class="issue-time-toolbar"><button class="button secondary" :disabled="busy || saving || !timeIssues.length" @click="openTime()"><Icon name="plus" :size="16" />填報工時</button></div>
@@ -163,6 +163,9 @@ function timeSaved() {
               <div><dt>到期日</dt><dd>{{ issue.dueDate || '未設定' }}</dd></div>
               <div><dt>預估工時</dt><dd>{{ estimate ? hours(estimate) : '尚未估時' }}</dd></div>
               <div v-if="canReadTime"><dt>已投入工時</dt><dd>{{ hours(spent) }}{{ issue.type === 'epic' ? '（含所屬卡片）' : '' }}</dd></div>
+              <!-- TT-302：不用翻異動紀錄就看得到誰建的、最後誰改的 -->
+              <div v-if="issue.createdAt"><dt>建立</dt><dd>{{ issue.createdByName || '不明' }}<time class="property-time">{{ timestamp(issue.createdAt) }}</time></dd></div>
+              <div v-if="issue.lastChange"><dt>最後異動</dt><dd>{{ issue.lastChange.actor }}<time class="property-time">{{ timestamp(issue.lastChange.at) }}</time></dd></div>
             </dl>
             <p class="subtle">版本 {{ issue.revision }} · 已儲存</p>
           </div>

@@ -83,7 +83,7 @@ class IssueReadRepository
      */
     private function columns(bool $detail = false): array
     {
-        return ['id', 'workspace_id', 'public_id', 'project_id', 'identifier', 'title', 'type', 'state_id', 'priority', 'assignee_id', 'epic_id', 'parent_issue_id', 'due_date', 'estimate_minutes', 'revision', 'created_at', 'updated_at', ...($detail ? ['description'] : [])];
+        return ['id', 'workspace_id', 'public_id', 'project_id', 'identifier', 'title', 'type', 'state_id', 'priority', 'assignee_id', 'epic_id', 'parent_issue_id', 'due_date', 'estimate_minutes', 'revision', 'created_at', 'updated_at', ...($detail ? ['description', 'created_by_id'] : [])];
     }
 
     /**
@@ -305,10 +305,14 @@ class IssueReadRepository
      */
     public function find(Project $project, string $id, ?string $timeUser = null, bool $teamTime = false): ?Issue
     {
-        $q = $this->query($project)->where('public_id', $id)->with([...$this->relations(), 'epic.status:id,code', 'parent.status:id,code', 'relatedIssues' => fn ($related) => $related->select(['issues.id', 'issues.public_id', 'issues.title', 'issues.identifier', 'issues.type', 'issues.project_id', 'issues.state_id'])->with('status:id,code')->orderBy('issues.public_id')->limit(201)]);
+        $q = $this->query($project)->where('public_id', $id)->with([...$this->relations(), 'epic.status:id,code', 'parent.status:id,code', 'creator:id,user_id', 'creator.user:id,name', 'relatedIssues' => fn ($related) => $related->select(['issues.id', 'issues.public_id', 'issues.title', 'issues.identifier', 'issues.type', 'issues.project_id', 'issues.state_id'])->with('status:id,code')->orderBy('issues.public_id')->limit(201)]);
         $this->timeProjection($q, $timeUser, $teamTime, true);
         $q->selectSub(DB::table('issue_comments')->whereColumn('issue_id', 'issues.id')->selectRaw('COUNT(*)'), 'comment_count');
         $q->selectSub(DB::table('audit_events')->whereColumn('workspace_id', 'issues.workspace_id')->where('entity_type', 'issues')->whereColumn('entity_id', 'issues.id')->where('stream', 'history')->selectRaw('COUNT(*)'), 'history_count');
+        // TT-302：最後一筆異動是誰、何時；與history分頁同一個排序, 在SQL只取actor和at兩個值, 不讀改了什麼。
+        $last = fn () => DB::table('audit_events')->whereColumn('workspace_id', 'issues.workspace_id')->where('entity_type', 'issues')->whereColumn('entity_id', 'issues.id')->where('stream', 'history')->orderByDesc('position')->orderByDesc('id')->limit(1);
+        $q->selectSub($last()->select('event_data->actor'), 'last_actor');
+        $q->selectSub($last()->select('event_data->at'), 'last_at');
 
         $issue = $q->first($this->columns(true));
         if ($issue !== null) {

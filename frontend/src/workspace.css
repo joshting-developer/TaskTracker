@@ -339,3 +339,5 @@
 .time-entry-group .time-entry p { font-size: 13px; color: var(--text-secondary); }
 .time-entry-group .time-entry-end .text-button { font-size: 13px; padding: 10px 0 0 10px; min-height: 36px; }
 @media (max-width: 700px) { .time-drawer-tabs, .time-drawer-details { padding-left: 16px; padding-right: 16px; } .time-day-summary { flex-wrap: wrap; } }
+/* TT-302：屬性欄的建立／最後異動, 時間放第二行 */
+.property-fields .property-time { display: block; margin-top: 2px; font-size: 12px; color: var(--text-secondary); }

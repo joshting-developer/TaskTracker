@@ -7,7 +7,8 @@ export function useIssueActivity({ issue, tab, load }) {
   const comments = computed(() => pages.value.comments?.items || issue.value?.comments || []);
   const children = computed(() => pages.value.children?.items || []);
   const time = computed(() => pages.value.time?.items || []);
-  const history = computed(() => pages.value.history?.items || issue.value?.history || []);
+  // TT-302：異動紀錄一律新的在上；分頁本來就是新到舊, 舊版整包history是舊到新所以反過來。下方「載入更多」接更舊的。
+  const history = computed(() => pages.value.history?.items || [...(issue.value?.history || [])].reverse());
   const counts = computed(() => Object.fromEntries(['comments', 'history', 'time'].map(kind => [kind, pages.value[kind]?.total ?? issue.value?.activityCounts?.[kind] ?? (!load.value ? issue.value?.[kind]?.length ?? null : null)])));
   const more = computed(() => {
     const page = pages.value[tab.value];

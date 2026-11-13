@@ -253,7 +253,7 @@ function timestamp(value) {
             </form>
           </div>
           <div v-else class="history-list">
-            <article v-for="entry in [...activityHistory].reverse()" :key="entry.id" class="history-entry">
+            <article v-for="entry in activityHistory" :key="entry.id" class="history-entry">
               <span class="history-dot"></span><div><p><strong>{{ entry.actor }}</strong> {{ entry.kind === 'created' ? '建立了任務' : '更新了任務' }} <time>{{ timestamp(entry.at) }}</time></p><p v-for="change in entry.changes" :key="change.field" class="history-change">{{ FIELD_LABELS[change.field] || change.field }}：{{ display(change.field, change.before) }} → {{ display(change.field, change.after) }}</p></div>
             </article>
           </div>
