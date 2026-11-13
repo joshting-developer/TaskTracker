@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Factories\SmtpTransportFactory;
 use App\Domain\DomainError;
+use App\Factories\SmtpTransportFactory;
 
 /**
  * 檢查SMTP設定與TLS認證，僅驗證連線而不寄信。
@@ -24,13 +24,13 @@ class SmtpService
      */
     public function status(): array
     {
-        $configured = (bool) (config('tasktracker.smtp.host') && config('tasktracker.smtp.from'));
+        $configured = (bool) (config('mail.default') === 'smtp' && config('mail.mailers.smtp.host') && config('mail.from.address'));
 
         return [
             'configured' => $configured,
-            'mode' => 'preview',
+            'mode' => config('mail.default') === 'smtp' ? 'queue' : 'preview',
             'provider' => $configured ? 'SMTP' : '尚未設定',
-            'canSend' => false,
+            'canSend' => $configured && config('mail.default') === 'smtp',
         ];
     }
 
@@ -42,9 +42,9 @@ class SmtpService
     public function verify(): array
     {
         if (! $this->status()['configured']) {
-            DomainError::fail('INVALID_INPUT', '請先在伺服器設定 SMTP_HOST 與 SMTP_FROM');
+            DomainError::fail('INVALID_INPUT', '請先在伺服器設定 MAIL_HOST 與 MAIL_FROM_ADDRESS');
         }
-        $config = config('tasktracker.smtp');
+        $config = config('mail.mailers.smtp');
         $port = filter_var($config['port'], FILTER_VALIDATE_INT, ['options' => [
             'min_range' => 1,
             'max_range' => 65535,
@@ -52,11 +52,11 @@ class SmtpService
         if (! $port) {
             DomainError::fail('INVALID_INPUT', 'SMTP_PORT 設定不正確');
         }
-        $transport = $this->transports->make((string) $config['host'], $port, $config['secure'] === null ? null : (bool) $config['secure']);
+        $transport = $this->transports->make((string) $config['host'], $port, ($config['scheme'] ?? null) === 'smtps' ? true : null);
         $transport->setRequireTls(true);
         $transport->getStream()->setTimeout(10);
-        if ($config['user']) {
-            $transport->setUsername($config['user']);
+        if ($config['username']) {
+            $transport->setUsername($config['username']);
             $transport->setPassword($config['password'] ?? '');
         }
         try {

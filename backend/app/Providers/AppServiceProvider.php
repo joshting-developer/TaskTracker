@@ -3,12 +3,15 @@
 namespace App\Providers;
 
 use App\Database\WorkspaceSqliteConnection;
+use App\Events\MailDeliveryFailed;
 use App\Http\Middleware\GuardedStartSession;
+use App\Listeners\RecordMailDeliveryFailure;
 use App\Models\PersonalAccessToken;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Connection;
 use Illuminate\Http\Request;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
@@ -36,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Event::listen(MailDeliveryFailed::class, RecordMailDeliveryFailure::class);
         RateLimiter::for('personal-token-create', fn (Request $request) => Limit::perMinute(20)->by($request->user()?->getAuthIdentifier() ?? 'guest:'.$request->ip()));
         RateLimiter::for('personal-token-revoke', fn (Request $request) => Limit::perMinute(60)->by($request->user()?->getAuthIdentifier() ?? 'guest:'.$request->ip()));
         RateLimiter::for('public-api-v1', fn (Request $request) => Limit::perMinute(120)->by($request->ip()));

@@ -4,6 +4,8 @@ x-backend: &backend
     context: .
     dockerfile: backend/Dockerfile
   init: true
+  env_file:
+    - ${TASKTRACKER_MAIL_ENV_FILE:-./backend/docker/mail.env.example}
   environment: &backend-env
     APP_NAME: TaskTracker
     APP_ENV: local
@@ -87,13 +89,22 @@ services:
 
   queue:
     <<: *backend
-    command: ["php", "artisan", "queue:work", "redis", "--sleep=1", "--tries=3", "--timeout=60"]
+    command: ["php", "artisan", "queue:work", "redis", "--queue=default,mail", "--sleep=1", "--tries=3", "--timeout=60"]
     restart: unless-stopped
     stop_grace_period: 70s
     depends_on:
       backend:
         condition: service_healthy
       websocket:
+        condition: service_healthy
+
+  scheduler:
+    <<: *backend
+    command: ["php", "artisan", "schedule:work"]
+    restart: unless-stopped
+    stop_grace_period: 20s
+    depends_on:
+      backend:
         condition: service_healthy
 
   websocket:

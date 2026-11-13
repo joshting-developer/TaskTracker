@@ -6,8 +6,4 @@ return [
     // TT-173：增量同步下一輪水位往前退的秒數，涵蓋時間戳已寫入但較晚提交的交易。
     'sync' => ['settle_seconds' => (int) env('TASKTRACKER_SYNC_SETTLE_SECONDS', 10)],
     'receipts' => ['codec' => env('TASKTRACKER_RECEIPT_CODEC', 'json'), 'min_bytes' => (int) env('TASKTRACKER_RECEIPT_CODEC_MIN_BYTES', 4096)],
-    'smtp' => [
-        'host' => env('SMTP_HOST'), 'port' => env('SMTP_PORT', 587), 'secure' => env('SMTP_SECURE', false),
-        'user' => env('SMTP_USER'), 'password' => env('SMTP_PASSWORD'), 'from' => env('SMTP_FROM'),
-    ],
 ];

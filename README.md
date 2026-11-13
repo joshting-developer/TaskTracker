@@ -312,3 +312,7 @@ Markdown 專用檢查：在 `frontend/` 執行 `E2E_API_URL=http://127.0.0.1:130
 Laravel使用ECC `laravel-patterns`與本地`laravel-architecture`；Vue使用`vue-best-practices`，UI／UX仍搭配原有兩份skills。入口集中於`.agents/skills/`，僅專案內生效。舊後端規範skill已移除；2026-11-06依使用者指示先配置規範，暫緩重構。來源與具體約束見[開發skills配置](docs/development-skills.md)。
 
 工時分析示範：執行`docker compose exec backend php artisan tasktracker:seed-demo`會在既有f-ws FIRST／SECOND補最近28天的四帳號工時，不用`--reset`；月內重跑不重複，跨月工作日去重，原密碼／卡片／工時保留。登入Owner或Manager → 工時分析 → 選分析 →「近28天」可比較完整差異，本月範圍也有資料。沒有FIRST／SECOND時跳過，不重建被刪專案。
+
+## 背景寄信
+
+SMTP實際寄送、MAIL設定同步、Queue／Scheduler與狀態查閱見[背景寄信](docs/smtp-delivery.md)。自動測試使用Mail fake；手動實寄仍須依AGENTS取得明確授權。註冊驗證由TT-319接續, 一般通知信尚未啟用

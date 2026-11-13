@@ -43,7 +43,7 @@ class PeripheryContainerTest extends TestCase
      */
     public function test_smtp_transport_is_replaceable_without_network(): void
     {
-        config(['tasktracker.smtp' => ['host' => 'smtp.invalid', 'port' => 587, 'secure' => false, 'user' => 'u', 'password' => 'p', 'from' => 'a@example.test']]);
+        config(['mail.default' => 'smtp', 'mail.mailers.smtp' => ['host' => 'smtp.invalid', 'port' => 587, 'scheme' => null, 'username' => 'u', 'password' => 'p'], 'mail.from.address' => 'a@example.test']);
         $made = new \ArrayObject;
         $this->app->bind(SmtpTransportFactory::class, fn () => new class($made) extends SmtpTransportFactory
         {

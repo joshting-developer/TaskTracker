@@ -13,3 +13,6 @@ Artisan::command('inspire', function () {
 Schedule::command('model:prune', ['--model' => [HttpOperationLog::class]])->daily();
 
 Schedule::command('attachments:cleanup')->hourly()->withoutOverlapping();
+
+// 部署需啟用scheduler；broker中斷時保留outbox, 恢復後每輪最多100筆。
+Schedule::command('mail:dispatch')->everyMinute()->withoutOverlapping();

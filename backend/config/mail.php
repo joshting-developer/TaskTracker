@@ -1,5 +1,11 @@
 <?php
 
+// Compose只接收MAIL設定的私有快照, 避免把backend/.env的APP_KEY或DB設定一起覆蓋。
+$mailSnapshot = json_decode(base64_decode((string) env('TASKTRACKER_MAIL_SETTINGS_B64', ''), true) ?: '{}', true);
+$mailSnapshot = is_array($mailSnapshot) ? $mailSnapshot : [];
+$mailEnv = static fn (string $key, mixed $default = null): mixed => env($key, array_key_exists($key, $mailSnapshot) ? $mailSnapshot[$key] : $default);
+$legacy = ! $mailEnv('MAIL_HOST');
+
 return [
 
     /*
@@ -14,7 +20,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    'default' => $mailEnv('MAIL_MAILER', $legacy && env('SMTP_HOST') ? 'smtp' : 'log'),
 
     /*
     |--------------------------------------------------------------------------
@@ -39,14 +45,15 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'scheme' => env('MAIL_SCHEME'),
-            'url' => env('MAIL_URL'),
-            'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
-            'username' => env('MAIL_USERNAME'),
-            'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
-            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+            'scheme' => $mailEnv('MAIL_SCHEME', $legacy && env('SMTP_SECURE', false) ? 'smtps' : null),
+            'url' => $mailEnv('MAIL_URL'),
+            'host' => $mailEnv('MAIL_HOST', env('SMTP_HOST', '127.0.0.1')),
+            'port' => $mailEnv('MAIL_PORT', $legacy ? env('SMTP_PORT', 587) : 587),
+            'username' => $mailEnv('MAIL_USERNAME', $legacy ? env('SMTP_USER') : null),
+            'password' => $mailEnv('MAIL_PASSWORD', $legacy ? env('SMTP_PASSWORD') : null),
+            'timeout' => 10,
+            'require_tls' => true,
+            'local_domain' => $mailEnv('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
         'ses' => [
@@ -67,12 +74,12 @@ return [
 
         'sendmail' => [
             'transport' => 'sendmail',
-            'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
+            'path' => $mailEnv('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
         ],
 
         'log' => [
             'transport' => 'log',
-            'channel' => env('MAIL_LOG_CHANNEL'),
+            'channel' => $mailEnv('MAIL_LOG_CHANNEL'),
         ],
 
         'array' => [
@@ -111,8 +118,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+        'address' => $mailEnv('MAIL_FROM_ADDRESS', $legacy ? env('SMTP_FROM', 'hello@example.com') : 'hello@example.com'),
+        'name' => $mailEnv('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
 ];
