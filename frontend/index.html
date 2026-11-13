@@ -22,7 +22,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <!-- TT-297：舊的/#/…深層連結（任務分享、邀請信）在顯示首頁前轉到/app/；曾登入的瀏覽器直接進工作空間（只是提示，/app/仍會驗證，未登入會回/login）。
          有JS時先隱藏訪客TopBar待確認登入狀態；無JS時不加class，TopBar照常顯示。 -->
-    <script>(function () { var hint = false; try { hint = localStorage.getItem('tasktracker:signed-in') === '1'; } catch (e) {} if (location.hash.indexOf('#/') === 0 || hint) { window.__tasktrackerRedirecting = true; location.replace('/app/' + location.hash); return; } document.documentElement.classList.add('auth-pending'); setTimeout(function () { document.documentElement.classList.remove('auth-pending'); }, 3000); })();</script>
+    <script>(function () { var hint = false; try { hint = localStorage.getItem('tasktracker:signed-in') === '1'; } catch (e) {} var intro = /(?:^|[?&])intro=1(?:&|$)/.test(location.search.slice(1)); if (location.hash.indexOf('#/') === 0 || (hint && !intro)) { window.__tasktrackerRedirecting = true; location.replace('/app/' + location.hash); return; } document.documentElement.classList.add('auth-pending'); setTimeout(function () { document.documentElement.classList.remove('auth-pending'); }, 3000); })();</script>
     <link rel="stylesheet" href="./landing/landing.css" />
     <script type="module" src="./landing/landing.js"></script>
   </head>
@@ -30,8 +30,9 @@
     <header class="guest-topbar">
       <a class="guest-brand" href="/" aria-label="TaskTracker 首頁"><span class="guest-brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>TaskTracker</a>
       <nav class="guest-nav" aria-label="訪客導覽">
-        <a href="/login">登入</a>
-        <a class="guest-cta" href="/login?mode=register"><span class="guest-cta-extra">免費</span>建立工作空間</a>
+        <a href="/login" data-guest>登入</a>
+        <a class="guest-cta" href="/login?mode=register" data-guest><span class="guest-cta-extra">免費</span>建立工作空間</a>
+        <a class="guest-cta" href="/app/" data-member hidden>回到工作區</a>
       </nav>
     </header>
     <main>
@@ -40,7 +41,8 @@
           <h1 id="hero-title">小團隊的任務與工時管理</h1>
           <p class="lead">隨手記下的小事可以直接轉成專案任務，在看板上推進，花了多少時間也記在同一張卡上。不用再在待辦清單、看板和工時表之間來回對照。</p>
           <div class="cta-row">
-            <a class="cta primary" href="/login?mode=register">免費建立工作空間</a>
+            <a class="cta primary" href="/login?mode=register" data-guest>免費建立工作空間</a>
+            <a class="cta primary" href="/app/" data-member hidden>回到工作區</a>
             <a class="cta secondary" href="#flow">看看怎麼運作</a>
           </div>
         </div>
@@ -139,7 +141,7 @@
           <li><b>建立專案和看板</b>設定專案代碼、狀態，以及要追蹤的 Epic。</li>
           <li><b>邀請成員</b>產生邀請連結給同事，依專案指派角色後就能一起用。</li>
         </ol>
-        <p class="start-cta"><a class="cta primary" href="/login?mode=register">免費建立工作空間</a></p>
+        <p class="start-cta"><a class="cta primary" href="/login?mode=register" data-guest>免費建立工作空間</a><a class="cta primary" href="/app/" data-member hidden>回到工作區</a></p>
       </section>
     </main>
     <footer class="site-footer"><span>TaskTracker</span><a href="/api/public/docs">開發者文件</a></footer>

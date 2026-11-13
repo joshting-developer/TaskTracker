@@ -65,6 +65,28 @@ try {
   await page.goto(`${origin}/`);
   await page.locator('.app-shell').waitFor();
   assert.equal(new URL(page.url()).pathname, '/app/', '已登入開首頁進工作空間');
+  // TT-304：帳號選單有「產品介紹」；從那裡進來（?intro=1）已登入也留在介紹頁, 上方選單只剩「回到工作區」。
+  await page.goto(`${origin}/app/#/`);
+  await page.locator('.app-shell').waitFor();
+  await page.getByRole('button', { name: '帳號選單', exact: true }).click();
+  const introItem = page.getByRole('menuitem', { name: '產品介紹', exact: true });
+  assert.equal(await introItem.getAttribute('href'), '/?intro=1');
+  await introItem.click();
+  await page.waitForURL(url => url.pathname === '/' && url.search === '?intro=1');
+  await page.waitForFunction(() => !document.documentElement.classList.contains('auth-pending'));
+  await page.waitForTimeout(300);
+  assert.equal(new URL(page.url()).pathname, '/', '從帳號選單進來不會被轉走');
+  const memberNav = page.getByRole('navigation', { name: '訪客導覽' });
+  assert.ok(await page.locator('.guest-topbar').isVisible(), '已登入看介紹頁也有上方選單');
+  assert.equal(await memberNav.getByRole('link', { name: '回到工作區' }).getAttribute('href'), '/app/');
+  assert.equal(await memberNav.getByRole('link', { name: '登入', exact: true }).count(), 0, '已登入不顯示登入');
+  assert.equal(await page.getByRole('link', { name: '免費建立工作空間' }).count(), 0, '已登入不顯示建立工作空間');
+  await memberNav.getByRole('link', { name: '回到工作區' }).click();
+  await page.locator('.app-shell').waitFor();
+  await page.goto(`${origin}/`);
+  await page.locator('.app-shell').waitFor();
+  assert.equal(new URL(page.url()).pathname, '/app/', '直接開首頁仍然自動轉進工作空間');
+
   // 已登入點舊分享連結：首頁兩段轉址不能互搶, #後的深層連結要保留（重複幾次抓競態）。
   for (let round = 0; round < 3; round++) {
     await page.goto(`${origin}/#/projects`);

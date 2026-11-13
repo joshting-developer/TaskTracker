@@ -28,6 +28,8 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', outside));
       <div class="account-summary" role="presentation"><strong>{{ name }}</strong><span>{{ email }}</span><span>{{ workspaceName }}</span></div>
       <button type="button" role="menuitem" tabindex="-1" @click="choose('profile')">個人資料</button>
       <button type="button" role="menuitem" tabindex="-1" @click="choose('tokens')">個人 API Token</button>
+      <!-- TT-304：已登入的人從這裡看產品介紹；首頁本身仍會自動轉進工作空間 -->
+      <a role="menuitem" tabindex="-1" class="account-intro" href="/?intro=1">產品介紹</a>
       <button type="button" role="menuitem" tabindex="-1" class="account-logout" @click="choose('logout')">登出</button>
     </div>
   </div>
@@ -40,8 +42,9 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', outside));
 .account-summary { padding: 10px 12px 14px; border-bottom: 1px solid #daddE5; margin-bottom: 4px; overflow-wrap: anywhere; }
 .account-summary strong, .account-summary span { display: block; font-size: 14px; line-height: 1.7; }
 .account-summary span { color: #5f6673; font-size: 13px; }
-.account-dropdown > button { display: block; width: 100%; min-height: 44px; padding: 10px 12px; text-align: left; font-size: 14px; border-radius: 4px; }
-.account-dropdown > button:hover, .account-dropdown > button:focus-visible { background: #f1eff8; }
-.account-trigger:focus-visible, .account-dropdown > button:focus-visible { outline: 2px solid #6653bd; outline-offset: 2px; }
+.account-dropdown > button, .account-dropdown > .account-intro { display: block; width: 100%; min-height: 44px; padding: 10px 12px; text-align: left; font-size: 14px; border-radius: 4px; }
+.account-dropdown > button:hover, .account-dropdown > button:focus-visible, .account-dropdown > .account-intro:hover, .account-dropdown > .account-intro:focus-visible { background: #f1eff8; }
+.account-dropdown > .account-intro { color: inherit; text-decoration: none; }
+.account-trigger:focus-visible, .account-dropdown > button:focus-visible, .account-dropdown > .account-intro:focus-visible { outline: 2px solid #6653bd; outline-offset: 2px; }
 .account-dropdown .account-logout { color: #a12c42; border-top: 1px solid #daddE5; margin-top: 4px; }
 </style>

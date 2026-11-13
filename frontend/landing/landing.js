@@ -10,12 +10,19 @@ async function signedIn() {
   }
 }
 // head已經在轉址（舊hash連結或登入提示）就不再判斷, 避免兩個轉址互搶而弄丟#後的深層連結。
+// TT-304：從工作空間帳號選單點「產品介紹」會帶 ?intro=1, 這時已登入也留在介紹頁, 上方選單換成「回到工作區」。
+const intro = new URLSearchParams(location.search).get('intro') === '1';
+function showMemberHeader() {
+  document.querySelectorAll('[data-guest]').forEach(element => { element.hidden = true; });
+  document.querySelectorAll('[data-member]').forEach(element => { element.hidden = false; });
+}
 if (window.__tasktrackerRedirecting) {
   // 等head的轉址完成
 } else if (await signedIn()) {
   // 同步登入提示，下次開首頁時在head即轉址，不先閃出介紹頁。
   try { localStorage.setItem('tasktracker:signed-in', '1'); } catch { /* 無法儲存時每次以API判斷 */ }
-  location.replace('/app/' + location.hash);
+  if (intro) { showMemberHeader(); root.classList.remove('auth-pending'); }
+  else location.replace('/app/' + location.hash);
 } else {
   root.classList.remove('auth-pending');
 }

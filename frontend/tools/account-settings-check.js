@@ -54,6 +54,8 @@ try {
   await avatar.focus(); await owner.keyboard.press('ArrowDown'); await menu.waitFor();
   assert.equal(await menu.getByRole('menuitem', { name: '個人資料', exact: true }).evaluate(el => el === document.activeElement), true);
   await owner.keyboard.press('ArrowDown'); assert.equal(await menu.getByRole('menuitem', { name: '個人 API Token', exact: true }).evaluate(el => el === document.activeElement), true);
+  // TT-304：Token和登出之間多了「產品介紹」
+  await owner.keyboard.press('ArrowDown'); assert.equal(await menu.getByRole('menuitem', { name: '產品介紹', exact: true }).evaluate(el => el === document.activeElement), true);
   await owner.keyboard.press('ArrowDown'); assert.equal(await menu.getByRole('menuitem', { name: '登出', exact: true }).evaluate(el => el === document.activeElement), true);
   await screenshots('menu', menu);
   await owner.keyboard.press('Escape'); await menu.waitFor({ state: 'hidden' }); assert.equal(await avatar.evaluate(el => el === document.activeElement), true);

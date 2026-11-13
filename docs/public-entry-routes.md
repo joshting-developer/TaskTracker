@@ -9,7 +9,7 @@
 
 | 網址 | 沒登入 | 已登入 | 伺服器 |
 | --- | --- | --- | --- |
-| `/` | 產品介紹＋訪客TopBar, 原始HTML就有完整內容 | 轉到 `/app/` | `try_files $uri $uri/index.html` |
+| `/` | 產品介紹＋訪客TopBar, 原始HTML就有完整內容 | 轉到 `/app/`；帶 `?intro=1`（工作空間帳號選單的「產品介紹」）時留在介紹頁, 上方選單換成「回到工作區」（TT-304） | `try_files $uri $uri/index.html` |
 | `/#/…`（舊的分享連結、`/#/invite?token=…` 邀請信） | 首頁顯示前就轉到 `/app/#/…`, 再落到 `/login#/…` | 轉到 `/app/#/…` | 同上 |
 | `/login` | 登入／建立工作空間, 帶 `#/invite?token=…` 時顯示邀請表單 | 同一頁換成 `/app/`, hash保留, 不重新載入 | `try_files /app/index.html` |
 | `/app/` | 同一頁換成 `/login`, hash保留, 登入後回到原本要去的頁面 | 工作空間 | `try_files $uri /app/index.html` |
