@@ -16,7 +16,7 @@ try {
   const failures = [];
   page.on('pageerror', error => failures.push(error.message));
   const base = 'http://127.0.0.1:5175';
-  await page.goto(base);
+  await page.goto(`${base}/login`);
   await page.getByRole('heading', { name: '登入工作空間' }).waitFor();
   async function measure() {
     return page.evaluate(() => performance.getEntriesByType('resource').filter(entry => /\/assets\//.test(entry.name)).map(entry => ({ name: entry.name.split('/').pop(), bytes: entry.decodedBodySize, transferBytes: entry.transferSize })));

@@ -12,7 +12,7 @@ try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     const page = await context.newPage();
     const errors = []; page.on('pageerror', error => errors.push(error.message));
-    await page.goto('http://127.0.0.1:5175');
+    await page.goto('http://127.0.0.1:5175/login');
     await page.getByLabel('Email', { exact: true }).fill(`${role}@example.test`);
     await page.getByLabel('密碼', { exact: true }).fill(process.env.E2E_SEED_PASSWORD);
     await page.getByRole('button', { name: '登入', exact: true }).click();

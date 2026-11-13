@@ -12,7 +12,7 @@ try {
   const errors = [], requests = [];
   page.on('pageerror', failure => errors.push(failure.message));
   page.on('request', request => { const path = new URL(request.url()).pathname; if (path.startsWith('/api/')) requests.push(path); });
-  await page.goto('http://127.0.0.1:5175');
+  await page.goto('http://127.0.0.1:5175/login');
   async function call(target, operation, input = {}, group = 'rpc') {
     for (let attempt = 0; attempt < 5; attempt++) {
       const result = await target.evaluate(async ({ operation, input, group }) => {
@@ -33,7 +33,7 @@ try {
   await call(page, 'register', { name: 'Owner', email: ownerEmail, password: 'test-local-password', workspaceName: 'ACL Read' }, 'auth');
   const project = await call(page, 'createProject', { name: 'ACL Read', code: 'ACL' });
   const guest = await (await browser.newContext()).newPage();
-  await guest.goto('http://127.0.0.1:5175');
+  await guest.goto('http://127.0.0.1:5175/login');
   const users = [];
   let revision = 0;
   for (let i = 0; i < 25; i++) {
@@ -46,7 +46,7 @@ try {
     if (i % 5 === 4) console.log('Fixture members', i + 1);
   }
   requests.length = 0;
-  await page.goto(`http://127.0.0.1:5175/#/projects/${project.id}/members`);
+  await page.goto(`http://127.0.0.1:5175/app/#/projects/${project.id}/members`);
   await page.reload();
   const region = page.getByRole('region', { name: '專案成員與權限', exact: true });
   await region.locator('.project-member-row').first().waitFor();
@@ -92,7 +92,7 @@ try {
     await page.screenshot({ path: new URL(`../artifacts/acl-query/${width}.png`, import.meta.url).pathname });
   }
   await call(guest, 'login', { email: users[0].email, password: 'test-local-password' }, 'auth');
-  await guest.goto(`http://127.0.0.1:5175/#/projects/${project.id}/members`);
+  await guest.goto(`http://127.0.0.1:5175/app/#/projects/${project.id}/members`);
   await guest.reload();
   await guest.getByRole('region', { name: '專案成員與權限', exact: true }).waitFor();
   await call(page, 'removeProjectMember', { projectId: project.id, userId: users[0].id, expectedRevision: revision });

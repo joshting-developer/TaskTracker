@@ -17,7 +17,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   page.setDefaultTimeout(12000);
   page.on('pageerror', error => failures.push(error.message));
-  await page.goto('http://127.0.0.1:5175');
+  await page.goto('http://127.0.0.1:5175/login');
   await page.getByRole('button', { name: '第一次使用？建立工作空間' }).click();
   await page.getByLabel('你的名字').fill('UI Review');
   await page.getByLabel('Email', { exact: true }).fill(`ui-${crypto.randomUUID()}@example.test`);
@@ -113,7 +113,7 @@ try {
   });
   assert.ok(readable.size >= 13 && readable.contrast >= 4.5, JSON.stringify(readable));
   await page.screenshot({ path: `${artifacts}/notifications-1440.png` });
-  await page.goto(`http://127.0.0.1:5175/#/projects/${fixture.project.id}/issues/${fixture.issue.id}?detail=1`);
+  await page.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.project.id}/issues/${fixture.issue.id}?detail=1`);
   const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
   await detail.getByRole('heading', { name: fixture.issue.title, exact: true }).waitFor();
   await page.setViewportSize({ width: 390, height: 844 });
@@ -154,7 +154,7 @@ try {
     await page.screenshot({ path: `${artifacts}/board-${width}.png` });
   }
   await page.setViewportSize({ width: 1440, height: 900 });
-  const projectUrl = `http://127.0.0.1:5175/#/projects/${fixture.project.id}`;
+  const projectUrl = `http://127.0.0.1:5175/app/#/projects/${fixture.project.id}`;
   for (const [name, route] of [['工時月曆', 'time'], ['狀態設定', 'settings'], ['專案成員與權限', 'members'], ['通知預覽', 'notifications']]) {
     const nav = page.getByRole('navigation', { name: '專案任務' }).getByRole('button', { name: new RegExp(`^${name}`) });
     await nav.click();
@@ -190,7 +190,7 @@ try {
   const invite = await page.evaluate(async () => (await import('/src/api/index.js')).api.inviteMember({ email: `reader-${crypto.randomUUID()}@example.test` }));
   const reader = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   reader.on('pageerror', error => failures.push(error.message));
-  await reader.goto(`http://127.0.0.1:5175/#/invite?token=${invite.token}`);
+  await reader.goto(`http://127.0.0.1:5175/app/#/invite?token=${invite.token}`);
   await reader.getByLabel('你的名字').fill('UI Reader');
   await reader.getByLabel('Email', { exact: true }).fill(invite.email);
   await reader.getByLabel('密碼', { exact: true }).fill('ui-local-test-password');
@@ -220,7 +220,7 @@ try {
     for (let index = 1; index <= 5; index++) todos.push(await api.createTodo({ title: `通知定位 ${index}`, assigneeId: userId, requestId: crypto.randomUUID() }));
     return todos;
   }, invite.email);
-  await reader.goto('http://127.0.0.1:5175/#/');
+  await reader.goto('http://127.0.0.1:5175/app/#/');
   await reader.reload();
   const readerTodos = reader.getByRole('region', { name: '首頁小待辦', exact: true });
   await readerTodos.locator('.todo-row').first().waitFor();

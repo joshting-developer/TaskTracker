@@ -17,7 +17,7 @@ try {
   const sizes = { version: 0, issues: 0 };
   page.on('response', async response => { const path = new URL(response.url()).pathname; const key = /\/version$/.test(path) ? 'version' : /\/boards\/[^/]+\/issues$/.test(path) ? 'issues' : ''; if (key) try { sizes[key] = (await response.body()).length; } catch { /* 導覽後不可取 */ } });
   page.on('request', request => { const url = new URL(request.url()); if (url.pathname.startsWith('/api/')) requests.push(url.pathname); });
-  await page.goto('http://127.0.0.1:5175');
+  await page.goto('http://127.0.0.1:5175/login');
   async function call(op, input = {}, group = 'rpc') {
     return page.evaluate(async ({ op, input, group }) => {
       const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();
@@ -34,7 +34,7 @@ try {
 
   // 先裝假時鐘再載入，背景輪詢計時器受fastForward控制。
   await page.clock.install();
-  await page.goto(`http://127.0.0.1:5175/#/projects/${project.id}/board`);
+  await page.goto(`http://127.0.0.1:5175/app/#/projects/${project.id}/board`);
   await page.reload();
   const card = identifier => page.locator(`.issue-card[data-issue="${identifier}"]`);
   const inColumn = (identifier, state) => page.locator(`[data-column="${state}"] [data-issue="${identifier}"]`);

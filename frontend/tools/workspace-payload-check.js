@@ -22,7 +22,7 @@ try {
   page.setDefaultTimeout(10000);
   page.on('pageerror', error => errors.push(error.message));
   page.on('request', request => { const url = new URL(request.url()); if (url.pathname.startsWith('/api/')) requests.push(url.pathname); });
-  await page.goto('http://127.0.0.1:5175');
+  await page.goto('http://127.0.0.1:5175/login');
   async function call(op, input = {}, group = 'rpc') {
     return page.evaluate(async ({ op, input, group }) => {
       const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();

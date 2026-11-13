@@ -24,13 +24,13 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, locale: 'zh-TW', reducedMotion: 'reduce' });
   page.setDefaultTimeout(15000);
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto('http://127.0.0.1:5175');
+  await page.goto('http://127.0.0.1:5175/login');
   await call(page, 'register', { name: '刪除驗收', email: `tt250-${crypto.randomUUID()}@example.test`, password: 'tt250-test-password', workspaceName: '刪除驗收' }, 'auth');
   const project = await call(page, 'createProject', { name: '刪除流程', code: 'TTDEL' });
   const doomed = await call(page, 'createIssue', { projectId: project.id, title: '誤建的卡片' });
   const timed = await call(page, 'createIssue', { projectId: project.id, title: '已填工時的卡片' });
   await call(page, 'logTime', { issueId: timed.id, workDate: new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10), minutes: 30 });
-  const root = `http://127.0.0.1:5175/#/projects/${project.id}`;
+  const root = `http://127.0.0.1:5175/app/#/projects/${project.id}`;
   const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
 
   await page.goto(`${root}/issues/${timed.id}?detail=1`);

@@ -32,7 +32,7 @@ try {
     log.push(item);
     try { item.bytes = (await response.body()).length; } catch { /* 導覽後不可取 */ }
   });
-  await page.goto('http://127.0.0.1:5175');
+  await page.goto('http://127.0.0.1:5175/login');
   async function call(op, input = {}, group = 'rpc') {
     return page.evaluate(async ({ op, input, group }) => {
       const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();

@@ -16,7 +16,7 @@ try {
   const failures = [], unwantedRequests = [];
   page.on('pageerror', error => failures.push(error.message));
   page.on('request', request => { if (request.url().includes('markdown-test.invalid')) unwantedRequests.push(request.url()); });
-  await page.goto('http://127.0.0.1:5175');
+  await page.goto('http://127.0.0.1:5175/login');
   await page.evaluate(async () => (await import('/src/api/index.js')).api.register({ name: 'Markdown檢查', email: `markdown-${crypto.randomUUID()}@example.test`, password: 'markdown-test-password', workspaceName: '內容編輯驗證' }));
   await page.reload();
   const home = page.getByRole('region', { name: '首頁小待辦', exact: true });
@@ -84,7 +84,7 @@ try {
   await panel.waitFor({ state: 'hidden' });
   const issue = await page.evaluate(async () => (await (await import('/src/api/index.js')).api.getWorkspace()).issues[0]);
   assert.equal(issue.description, source);
-  await page.goto(`http://127.0.0.1:5175/#/projects/${project.id}/issues/${issue.id}?detail=1`);
+  await page.goto(`http://127.0.0.1:5175/app/#/projects/${project.id}/issues/${issue.id}?detail=1`);
   const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
   await detail.getByRole('heading', { name: '會議速記', exact: true }).waitFor();
   const danger = '# 安全顯示\n\n<script>window.markdownExecuted = true</script>\n<img src="https://markdown-test.invalid/pixel" onerror="window.markdownExecuted = true">\n\n[危險](javascript:alert(1))\n[編碼危險](java&#x73;cript:alert(1))\n![圖片](https://markdown-test.invalid/image)\n<svg onload="window.markdownExecuted = true"></svg>\n<iframe src="https://markdown-test.invalid/frame"></iframe>';

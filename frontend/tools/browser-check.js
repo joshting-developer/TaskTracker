@@ -54,7 +54,7 @@ async function checkSeedAccounts(browser, failures) {
     const page = await context.newPage();
     page.setDefaultTimeout(15000);
     page.on('pageerror', error => failures.push(error.message));
-    await page.goto('http://127.0.0.1:5175');
+    await page.goto('http://127.0.0.1:5175/login');
     await page.getByLabel('Email', { exact: true }).fill(`${role}@example.test`);
     await page.getByLabel('密碼', { exact: true }).fill(process.env.E2E_SEED_PASSWORD);
     await page.getByRole('button', { name: '登入', exact: true }).click();
@@ -112,7 +112,7 @@ async function checkIssueDetailPage(page) {
     for (let index = 0; index < 21; index++) await create({ title: `分頁驗證 ${index + 1}` });
     return { project, epic, task, child, related, board };
   });
-  const root = `http://127.0.0.1:5175/#/projects/${fixture.project.id}`;
+  const root = `http://127.0.0.1:5175/app/#/projects/${fixture.project.id}`;
   const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
   await page.goto(root); await page.reload();
   await page.getByLabel('搜尋任務', { exact: true }).fill('整理任務完整頁');
@@ -269,7 +269,7 @@ async function checkProjectAcl(page, browser, failures) {
     await api.setProjectMember({ projectId: other.id, userId: member.id, roleId: 'developer', expectedRevision: 0, requestId: crypto.randomUUID() });
     return { project, other, hidden, issue, task, member, board };
   });
-  await page.goto(`http://127.0.0.1:5175/#/projects/${fixture.project.id}`);
+  await page.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.project.id}`);
   await page.getByRole('button', { name: '專案成員與權限', exact: true }).click();
   const members = page.getByRole('region', { name: '專案成員與權限', exact: true });
   await members.getByRole('button', { name: '搜尋加入專案的成員選項', exact: true }).click();
@@ -302,7 +302,7 @@ async function checkProjectAcl(page, browser, failures) {
   const teammate = await browser.newPage({ viewport: { width: 1440, height: 1050 } });
   teammate.setDefaultTimeout(15000);
   teammate.on('pageerror', error => failures.push(error.message));
-  await teammate.goto('http://127.0.0.1:5175');
+  await teammate.goto('http://127.0.0.1:5175/login');
   await teammate.getByLabel('Email', { exact: true }).fill('mei@example.test');
   await teammate.getByLabel('密碼', { exact: true }).fill('test-local-password');
   await teammate.getByRole('button', { name: '登入', exact: true }).click();
@@ -328,25 +328,25 @@ async function checkProjectAcl(page, browser, failures) {
   await teammate.screenshot({ path: 'artifacts/reader-board-acl.png', fullPage: true });
 
   // 同一人另一個 Project 為 developer, 不可把權限攤平給唯讀 Project
-  await teammate.goto(`http://127.0.0.1:5175/#/projects/${fixture.other.id}`);
+  await teammate.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.other.id}`);
   await teammate.getByRole('button', { name: '受保護的開發卡片', exact: true }).waitFor();
   await teammate.getByRole('button', { name: '新增任務', exact: false }).first().waitFor();
   const snapshot = await teammate.evaluate(async () => (await import('/src/api/index.js')).api.getWorkspace());
   assert.equal(snapshot.projects.some(project => project.id === fixture.hidden.id), false);
   assert.equal(snapshot.issues.some(issue => issue.title === '不可洩露的卡片'), false);
-  await teammate.goto(`http://127.0.0.1:5175/#/projects/${fixture.hidden.id}`);
+  await teammate.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.hidden.id}`);
   await openProjectList(teammate);
   await teammate.getByRole('heading', { name: '專案列表', exact: true }).waitFor();
   await openProjectList(teammate);
   assert.equal(await teammate.getByRole('button', { name: '進入專案：ACL 未授權專案', exact: true }).count(), 0);
 
-  await teammate.goto(`http://127.0.0.1:5175/#/projects/${fixture.other.id}/board/${fixture.board.id}`);
+  await teammate.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.other.id}/board/${fixture.board.id}`);
   await teammate.locator(`[data-issue="${fixture.task.identifier}"][draggable="true"]`).waitFor();
   assert.equal(await teammate.locator('.issue-card select').count(), 0);
   assert.equal(await teammate.getByRole('button', { name: /新增任務|新增卡片|編輯收錄|移除看板/ }).count(), 0, '開發者可移動既有卡片, 但不可修改自訂收錄或新增並收錄');
 
   // 撤權時已開啟、未儲存的任務也必須卸載
-  await teammate.goto(`http://127.0.0.1:5175/#/projects/${fixture.other.id}`);
+  await teammate.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.other.id}`);
   await openQuickIssue(teammate, '受保護的開發卡片');
   const editor = teammate.getByRole('dialog');
   await editor.getByLabel(/任務標題/).fill('撤權前未儲存的私有草稿');
@@ -437,7 +437,7 @@ async function checkProjectDetails(page, browser) {
   await page.screenshot({ path: 'artifacts/mobile-project-details.png', fullPage: true });
   await page.getByRole('button', { name: '關閉專案表單', exact: true }).click();
   const lead = await browser.newPage({ viewport: { width: 1440, height: 1050 } });
-  await lead.goto('http://127.0.0.1:5175');
+  await lead.goto('http://127.0.0.1:5175/login');
   await lead.getByLabel('Email', { exact: true }).fill('mei@example.test');
   await lead.getByLabel('密碼', { exact: true }).fill('test-local-password');
   await lead.getByRole('button', { name: '登入', exact: true }).click();
@@ -487,7 +487,7 @@ async function checkBoardWorkflow(page) {
     return { project, first, second };
   });
   await page.goto('about:blank');
-  await page.goto(`http://127.0.0.1:5175/#/projects/${project.id}/board`);
+  await page.goto(`http://127.0.0.1:5175/app/#/projects/${project.id}/board`);
   await page.getByLabel('看板泳道').selectOption('epic');
   const firstLane = page.getByRole('region', { name: '泳道 第一個交付', exact: true });
   const secondLane = page.getByRole('region', { name: '泳道 第二個交付', exact: true });
@@ -506,7 +506,7 @@ async function checkBoardWorkflow(page) {
   assert.equal(task.state, 'inprogress');
   assert.equal(task.revision, 2, '跨欄跨泳道以同一筆版本更新');
   await page.screenshot({ path: 'artifacts/epic-swimlane-board.png', fullPage: true });
-  await page.goto(`http://127.0.0.1:5175/#/projects/${project.id}/board?view=retired-board`);
+  await page.goto(`http://127.0.0.1:5175/app/#/projects/${project.id}/board?view=retired-board`);
   await page.getByRole('status').filter({ hasText: '視圖功能已移除' }).waitFor();
   assert.ok(page.url().endsWith('/board'), '舊參數移除後保留看板位置');
   await openQuickIssue(page, '從泳道新增的工作');
@@ -541,7 +541,7 @@ async function checkCustomBoards(page) {
     const bug = await create({ title: '獨立 Bug', type: 'bug' });
     return { project, epic, otherEpic, task, child, bug };
   });
-  const root = `http://127.0.0.1:5175/#/projects/${fixture.project.id}`;
+  const root = `http://127.0.0.1:5175/app/#/projects/${fixture.project.id}`;
   await page.goto(`${root}/boards`);
   await page.reload();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).waitFor();
@@ -1055,7 +1055,7 @@ try {
   page.setDefaultTimeout(15000);
   const failures = [];
   page.on('pageerror', (error) => failures.push(error.message));
-  await page.goto('http://127.0.0.1:5175');
+  await page.goto('http://127.0.0.1:5175/login');
   await page.getByRole('button', { name: '第一次使用？建立工作空間' }).click();
   await page.getByLabel('你的名字').fill('Josh');
   await page.getByLabel('Email', { exact: true }).fill('josh@example.test');
@@ -1245,7 +1245,7 @@ try {
   assert.equal(await page.getByRole('dialog').getByLabel('專案', { exact: true }).locator('option').textContent(), '產品第一版 · 示範');
   await page.getByRole('button', { name: '關閉任務', exact: true }).click();
   const legacyId = issueUrl.split('/issues/')[1];
-  await page.goto(`http://127.0.0.1:5175/#/issue/${legacyId}`);
+  await page.goto(`http://127.0.0.1:5175/app/#/issue/${legacyId}`);
   await page.getByRole('dialog', { name: '任務詳細內容' }).waitFor();
   await page.getByRole('button', { name: '關閉任務', exact: true }).click();
 

@@ -1,3 +1,11 @@
+## 2026-11-13 TT-297 首頁改成產品介紹, 登入移到/login
+
+- Josh參考Oracle官網決定首頁放介紹, 照Claude建議做：`/` 介紹頁, `/login` 登入, `/app/` 工作空間, `/about` 轉首頁, 舊的 `/#/…` 分享和邀請連結自動轉到 `/app/#/…`
+- 只動前端入口、nginx和Dockerfile, 沒改API；`/login` 和 `/app/` 共用同一個殼層, 依登入狀態換網址不重新載入
+- 測試裡打開根網址當登入頁的地方改成 `/login`, 寫死 `/#/` 比對的網址改成 `/app/#/`；guest-pages-check改寫成驗新路由
+- 已測：nginx容器實測、guest-pages-check（dev和build）、完整browser-check 11項、bundle、api、composables、markdown, 以及切換工作區、設定、首頁、刪卡、開發者文件幾支專項
+- 還沒做：視覺比較要等TT-298的TopBar一起拍新的候選圖, Josh核准後才算過；personal-tokens-check寫死公開API有11個網址, 實際已經15個, 是之前就有的問題, 不在這張處理
+
 ## 2026-11-13 TT-300 產品介紹頁去AI感審查
 
 - 結論輕度SaaS套版感而非重裝飾AI感；標題3行、手機SVG小字約7px、CTA同目標，已留TT-301實際功能open未指派估180。inspect exit1如實保存，品牌／照片數／動畫等機械規則人工排除，沒有假PASS或改baseline。報告與合成DOM證據提交，保留其他承辦者TT-297已stage路由檔案；只commit --only本卡文件。

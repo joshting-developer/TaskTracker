@@ -10,12 +10,26 @@ if (siteOrigin && !/^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(siteOrigin)) throw ne
 const publicOrigin = {
   name: 'tasktracker-public-origin',
   transformIndexHtml: html => siteOrigin ? html.replaceAll('__SITE_ORIGIN__', siteOrigin) : html.replace(/^[ \t]*<(?:link|meta)\b[^>]*__SITE_ORIGIN__[^>]*>\r?\n/gm, ''),
-  // robots只放行公開頁並排除API；sitemap僅列可索引的/about/，需絕對網址所以未設定origin時不產生。
+  // robots放行公開首頁、排除API與工作空間；sitemap僅列可索引的首頁/，需絕對網址所以未設定origin時不產生。
   generateBundle() {
     this.emitFile({ type: 'asset', fileName: 'og-image.png', source: readFileSync(fileURLToPath(new URL('./public-assets/og-image.png', import.meta.url))) });
-    this.emitFile({ type: 'asset', fileName: 'robots.txt', source: `User-agent: *\nAllow: /about/\nDisallow: /api/\n${siteOrigin ? `Sitemap: ${siteOrigin}/sitemap.xml\n` : ''}` });
-    if (siteOrigin) this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${siteOrigin}/about/</loc></url>\n</urlset>\n` });
+    this.emitFile({ type: 'asset', fileName: 'robots.txt', source: `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /app/\n${siteOrigin ? `Sitemap: ${siteOrigin}/sitemap.xml\n` : ''}` });
+    if (siteOrigin) this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${siteOrigin}/</loc></url>\n</urlset>\n` });
   },
+};
+
+// TT-297：與正式nginx相同的入口路由，讓dev／preview（E2E）行為一致：/login用工作空間殼層、/app補斜線、舊/about轉首頁。
+const entryRoutes = (shell) => (request, response, next) => {
+  const [path, query = ''] = request.url.split('?');
+  const redirect = { '/about': '/', '/about/': '/', '/app': '/app/', '/login/': '/login' }[path];
+  if (redirect) { response.statusCode = 301; response.setHeader('Location', redirect + (query && redirect !== '/' ? `?${query}` : '')); return response.end(); }
+  if (path === '/login') request.url = shell + (query ? `?${query}` : '');
+  next();
+};
+const entryRouting = {
+  name: 'tasktracker-entry-routes',
+  configureServer: server => { server.middlewares.use(entryRoutes('/app/index.html')); },
+  configurePreviewServer: server => { server.middlewares.use(entryRoutes('/app/index.html')); },
 };
 
 const proxy = {
@@ -24,7 +38,7 @@ const proxy = {
 };
 
 export default defineConfig({
-  plugins: [vue(), vuetify({ autoImport: true }), publicOrigin],
+  plugins: [vue(), vuetify({ autoImport: true }), publicOrigin, entryRouting],
   base: './',
   publicDir: false,
   // 預先最佳化目前使用的Vuetify元件，避免首次開啟延遲表單時dev server重載草稿。
@@ -35,7 +49,7 @@ export default defineConfig({
     outDir: 'dist', sourcemap: false,
     // 兩個HTML入口會讓polyfill成為共用chunk而多一個請求；支援的瀏覽器皆原生支援modulepreload。
     modulePreload: { polyfill: false },
-    // 公開介紹頁是同一映像的第二個靜態HTML入口（/about/），不另做SSR。
-    rollupOptions: { input: { main: fileURLToPath(new URL('./index.html', import.meta.url)), about: fileURLToPath(new URL('./about/index.html', import.meta.url)) } },
+    // TT-297：首頁/是靜態產品介紹；/app/（亦服務/login）是工作空間SPA殼層；同一映像，不另做SSR。
+    rollupOptions: { input: { landing: fileURLToPath(new URL('./index.html', import.meta.url)), app: fileURLToPath(new URL('./app/index.html', import.meta.url)) } },
   },
 });

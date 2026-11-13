@@ -25,7 +25,7 @@ try {
   const errors = [];
   for (const page of [owner, member]) { page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message)); }
   const token = crypto.randomUUID();
-  await owner.goto('http://127.0.0.1:5175');
+  await owner.goto('http://127.0.0.1:5175/login');
   await call(owner, 'register', { name: 'Owner', email: `settings-owner-${token}@example.test`, password: 'settings-ui-test-password', workspaceName: '協作工作區' }, 'auth');
   await owner.reload();
   const avatar = owner.getByRole('button', { name: '帳號選單', exact: true });
@@ -137,7 +137,7 @@ try {
   }
   await owner.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   assert.equal(await member.getByRole('button', { name: '工作空間設定', exact: true }).count(), 0, '一般成員無設定入口');
-  await member.goto('http://127.0.0.1:5175/#/workspace/settings/members');
+  await member.goto('http://127.0.0.1:5175/app/#/workspace/settings/members');
   await member.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
   assert.equal(await member.getByRole('region', { name: '工作空間設定', exact: true }).count(), 0, '無權限深連結回首頁');
   await member.getByRole('button', { name: '帳號選單', exact: true }).click();

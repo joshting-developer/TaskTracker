@@ -10,7 +10,7 @@ try {
   page.setDefaultTimeout(15000);
   page.on('pageerror', error => errors.push(error.message));
   page.on('request', request => { if (/\/api\/rpc\/(getWorkspace|getTodos)$/.test(new URL(request.url()).pathname)) bulk.push(request.url()); });
-  await page.goto(base);
+  await page.goto(new URL('/login', base).href);
   await page.getByRole('button', { name: '登入', exact: true }).waitFor();
   async function call(op, input = {}, group = 'rpc') {
     return page.evaluate(async ({ op, input, group }) => {

@@ -17,7 +17,7 @@ try {
     requests.push(item);
     try { item.bytes = (await response.body()).length; } catch { /* 導覽後body不可取 */ }
   });
-  await page.goto('http://127.0.0.1:5175');
+  await page.goto('http://127.0.0.1:5175/login');
   async function call(target, op, input = {}, group = 'rpc') {
     return target.evaluate(async ({ op, input, group }) => {
       const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();
@@ -31,7 +31,7 @@ try {
   const other = await call(page, 'createProject', { name: 'Other', code: 'OTH' });
   const invite = await call(page, 'inviteMember', { email: `member-${crypto.randomUUID()}@example.test` });
   const memberPage = await (await browser.newContext()).newPage();
-  await memberPage.goto('http://127.0.0.1:5175');
+  await memberPage.goto('http://127.0.0.1:5175/login');
   const member = await call(memberPage, 'register', { name: 'Calendar Member', email: invite.email, password: 'isolated-test-password', inviteToken: invite.token }, 'auth');
   await call(page, 'setProjectMember', { projectId: project.id, userId: member.user.id, roleId: 'developer', expectedRevision: 0 });
   const epic = await call(page, 'createIssue', { projectId: project.id, title: '月曆 Epic', type: 'epic' });

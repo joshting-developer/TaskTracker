@@ -8,7 +8,7 @@ try {
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const errors = []; page.on('pageerror', error => errors.push(error.message));
-  await page.goto('http://127.0.0.1:5175');
+  await page.goto('http://127.0.0.1:5175/login');
   await page.evaluate(async () => {
     const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();
     const r = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken }, body: JSON.stringify({ name: 'PAT User', email: `pat-${crypto.randomUUID()}@example.test`, password: 'pat-browser-password', workspaceName: 'Token Workspace' }) });

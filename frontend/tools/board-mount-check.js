@@ -17,7 +17,7 @@ try {
   page.setDefaultTimeout(60000);
   page.on('pageerror', error => errors.push(error.message));
   let server = await serve(variants[0][1]);
-  await page.goto('http://127.0.0.1:5175');
+  await page.goto('http://127.0.0.1:5175/login');
   async function call(op, input = {}, group = 'rpc') {
     return page.evaluate(async ({ op, input, group }) => {
       const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();
@@ -37,7 +37,7 @@ try {
   });
   const cdp = await context.newCDPSession(page);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: CPU });
-  const url = `http://127.0.0.1:5175/#/projects/${project.id}/board`;
+  const url = `http://127.0.0.1:5175/app/#/projects/${project.id}/board`;
   const samples = [];
   for (let round = 0; round < SAMPLES; round++) {
     for (const [name, outDir] of variants) {

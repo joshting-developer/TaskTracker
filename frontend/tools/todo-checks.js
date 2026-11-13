@@ -6,7 +6,7 @@ export async function checkTodoWorkflow(browser, failures) {
   const memberContext = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
   const owner = await ownerContext.newPage(), member = await memberContext.newPage();
   for (const page of [owner, member]) { page.setDefaultTimeout(15000); page.on('pageerror', error => failures.push(error.message)); }
-  await owner.goto('http://127.0.0.1:5175');
+  await owner.goto('http://127.0.0.1:5175/login');
   await owner.getByRole('button', { name: '第一次使用？建立工作空間' }).click();
   await owner.getByLabel('你的名字').fill('Todo Owner');
   await owner.getByLabel('Email', { exact: true }).fill(`todo-owner-${token}@example.test`);
@@ -15,7 +15,7 @@ export async function checkTodoWorkflow(browser, failures) {
   await owner.getByRole('button', { name: '建立工作空間', exact: true }).click();
   await owner.getByRole('region', { name: '首頁小待辦', exact: true }).waitFor();
   const invite = await owner.evaluate(async email => (await import('/src/api/index.js')).api.inviteMember({ email }), `todo-member-${token}@example.test`);
-  await member.goto(`http://127.0.0.1:5175/#/invite?token=${invite.token}`);
+  await member.goto(`http://127.0.0.1:5175/app/#/invite?token=${invite.token}`);
   await member.getByLabel('你的名字').fill('Todo Member');
   await member.getByLabel('Email', { exact: true }).fill(`todo-member-${token}@example.test`);
   await member.getByLabel('密碼', { exact: true }).fill('todo-test-password');

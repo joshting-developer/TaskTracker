@@ -92,7 +92,7 @@ if (process.env.LOAD_COLD_RESTART_CMD) {
 const browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
 const page = await context.newPage();
-await page.goto(base);
+await page.goto(new URL('/login', base).href);
 await page.evaluate(async ({ email, password }) => {
   const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();
   await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken }, body: JSON.stringify({ email, password }) });

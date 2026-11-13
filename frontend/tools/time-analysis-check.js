@@ -21,7 +21,7 @@ try {
   const owner = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage();
   const member = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage();
   const errors = [];
-  for (const page of [owner, member]) { page.setDefaultTimeout(10000); page.on('pageerror', error => errors.push(error.message)); await page.goto('http://127.0.0.1:5175'); }
+  for (const page of [owner, member]) { page.setDefaultTimeout(10000); page.on('pageerror', error => errors.push(error.message)); await page.goto('http://127.0.0.1:5175/login'); }
   const today = dateInTaipei(), token = crypto.randomUUID(), password = 'analysis-test-password';
   const identity = await call(owner, 'register', { name: '分析負責人', email: `analysis-owner-${token}@example.test`, password, workspaceName: '團隊工時' }, 'auth');
   const first = await call(owner, 'createProject', { name: '會員服務', code: 'MEMBER' }), second = await call(owner, 'createProject', { name: '營運維護', code: 'OPS' });
@@ -100,7 +100,7 @@ try {
   await member.reload(); assert.equal(await member.getByRole('button', { name: '工時分析', exact: true }).count(), 0);
   const query = { startDate: today, endDate: today };
   assert.equal((await request(member, 'getTimeReport', query)).status, 403);
-  await member.goto('http://127.0.0.1:5175/#/time-analysis/projects'); await member.waitForURL('**/#/');
+  await member.goto('http://127.0.0.1:5175/app/#/time-analysis/projects'); await member.waitForURL('**/#/');
   await call(owner, 'setWorkspaceMemberRole', { userId: memberIdentity.user.id, roleId: 'manager', expectedRevision: 0 });
   await member.reload(); await member.getByRole('button', { name: '工時分析', exact: true }).click(); await member.getByRole('button', { name: /^專案投入/ }).click();
   const managerRegion = member.getByRole('region', { name: '工時分析', exact: true }); await managerRegion.locator('.analysis-totals').getByText('3.5 h', { exact: true }).waitFor();

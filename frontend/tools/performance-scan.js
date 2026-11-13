@@ -80,7 +80,7 @@ try {
       if (PerformanceObserver.supportedEntryTypes.includes('event')) new PerformanceObserver(list => window.__perf.eventDurations.push(...list.getEntries().filter(e => e.interactionId).map(e => e.duration))).observe({ type: 'event', buffered: true, durationThreshold: 16 });
     });
     const start = performance.now();
-    await Promise.all([page.waitForResponse(r => r.url().endsWith('/api/rpc/getTodos')), page.goto('http://127.0.0.1:5175/#/')]);
+    await Promise.all([page.waitForResponse(r => r.url().endsWith('/api/rpc/getTodos')), page.goto('http://127.0.0.1:5175/app/#/')]);
     await page.locator('.todo-home').waitFor(); await frames(page);
     const homeReadyMs = performance.now() - start;
     const homeCalls = [...calls]; calls.length = 0;

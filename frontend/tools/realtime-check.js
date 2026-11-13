@@ -33,7 +33,7 @@ try {
     socket.on('framereceived', ({ payload }) => { try { const message = JSON.parse(payload); if (message.event === 'project.changed') signals.push(typeof message.data === 'string' ? JSON.parse(message.data) : message.data); } catch {} });
     socket.on('close', () => closed++);
   });
-  await owner.goto('http://127.0.0.1:5175'); await reader.goto('http://127.0.0.1:5175');
+  await owner.goto('http://127.0.0.1:5175/login'); await reader.goto('http://127.0.0.1:5175/login');
   const token = crypto.randomUUID(), password = 'realtime-browser-password';
   const identity = await call(owner, 'register', { name: '即時負責人', email: `live-owner-${token}@example.test`, password, workspaceName: '即時協作' }, 'auth');
   const project = await call(owner, 'createProject', { name: '多人同步', code: 'SOCKET' });
@@ -44,7 +44,7 @@ try {
   assert.equal((await request(reader, 'authorize', { channel_name: channel, socket_id: '123.456' }, 'realtime')).status, 404);
   let acl = await call(owner, 'getProjectMembers', { projectId: project.id });
   acl = await call(owner, 'setProjectMember', { projectId: project.id, userId: member.user.id, roleId: 'developer', expectedRevision: acl.revision });
-  const boardUrl = `http://127.0.0.1:5175/#/projects/${project.id}/board`;
+  const boardUrl = `http://127.0.0.1:5175/app/#/projects/${project.id}/board`;
   await owner.goto(boardUrl); await owner.reload(); await reader.goto(boardUrl); await reader.reload();
   const live = page => page.getByRole('status', { name: '看板同步狀態', exact: true });
   await live(owner).filter({ hasText: '即時同步' }).waitFor(); await live(reader).filter({ hasText: '即時同步' }).waitFor();

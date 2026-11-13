@@ -11,7 +11,7 @@ try {
   const errors = [], requests = [];
   page.on('pageerror', error => { errors.push(error.message); console.log('PAGEERROR',error.stack); });
   page.on('response', response => { if (new URL(response.url()).pathname.startsWith('/api/')) { requests.push({ url: response.url(), status: response.status() }); if (response.status() >= 400) console.log('HTTP', response.status(), new URL(response.url()).pathname); } });
-  await page.goto('http://127.0.0.1:5175');
+  await page.goto('http://127.0.0.1:5175/login');
   async function call(operation, input = {}, group = 'rpc') {
     return page.evaluate(async ({ operation, input, group }) => {
       const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();
@@ -28,7 +28,7 @@ try {
   for (let index = 0; index < 101; index++) { const candidate = await call('createIssue', {projectId: project.id, title: `Paged task ${index}`, epicId: epic.id}); if (index === 80) remoteCandidate = candidate; }
   const board = await call('createBoard', { projectId: project.id, name: 'Delivery', selectedIssueIds: [epic.id] });
   requests.length = 0; errors.length = 0;
-  await page.goto(`http://127.0.0.1:5175/#/projects/${project.id}`); await page.reload();
+  await page.goto(`http://127.0.0.1:5175/app/#/projects/${project.id}`); await page.reload();
   await page.waitForFunction(() => document.querySelectorAll('.issue-table tbody tr').length === 20);
   const mineResponse=page.waitForResponse(r=>new URL(r.url()).pathname.endsWith('/issues')&&new URL(r.url()).searchParams.get('scope')==='mine'&&r.status()===200);
   await page.getByRole('button',{name:'我的任務',exact:true}).click(); await mineResponse;
@@ -43,7 +43,7 @@ try {
   await page.waitForFunction(() => document.querySelectorAll('.issue-table tbody tr').length === 1);
   assert.equal(await page.getByRole('button',{name:'Visible task',exact:true}).count(),1);
   assert.equal(requests.filter(r => /\/(getWorkspace|getTodos)$/.test(new URL(r.url).pathname)).length,0);
-  await page.goto(`http://127.0.0.1:5175/#/projects/${project.id}/boards`); await page.reload();
+  await page.goto(`http://127.0.0.1:5175/app/#/projects/${project.id}/boards`); await page.reload();
   try { await page.getByRole('heading', { name: 'Delivery', exact: true }).waitFor({ timeout: 12000 }); }
   catch(error) { console.log((await page.locator('body').innerText()).slice(-3000)); throw error; }
   assert.equal(requests.filter(r => /\/(getWorkspace|getTodos)$/.test(new URL(r.url).pathname)).length,0);

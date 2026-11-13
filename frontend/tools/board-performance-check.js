@@ -19,7 +19,7 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   page.on('request', request => { if (request.url().includes('/api/')) calls.push(new URL(request.url()).pathname); });
   const base = 'http://127.0.0.1:5175';
-  await page.goto(base);
+  await page.goto(`${base}/login`);
   async function call(operation, input = {}, group = 'rpc') {
     return page.evaluate(async ({ operation, input, group }) => {
       const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();

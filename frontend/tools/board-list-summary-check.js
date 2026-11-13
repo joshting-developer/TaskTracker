@@ -24,7 +24,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, locale: 'zh-TW', reducedMotion: 'reduce' });
   page.setDefaultTimeout(15000);
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto('http://127.0.0.1:5175');
+  await page.goto('http://127.0.0.1:5175/login');
   await call(page, 'register', { name: '看板列表驗收', email: `tt248-${crypto.randomUUID()}@example.test`, password: 'tt248-test-password', workspaceName: '看板列表' }, 'auth');
   const project = await call(page, 'createProject', { name: '交付追蹤', code: 'TTBL' });
   const create = input => call(page, 'createIssue', { projectId: project.id, ...input });
@@ -37,7 +37,7 @@ try {
   await call(page, 'createBoard', { projectId: project.id, name: '空看板', selectedIssueIds: [] });
   const requests = [];
   page.on('request', request => { if (request.url().includes('/api/')) requests.push(new URL(request.url()).pathname); });
-  await page.goto(`http://127.0.0.1:5175/#/projects/${project.id}/boards`);
+  await page.goto(`http://127.0.0.1:5175/app/#/projects/${project.id}/boards`);
   await page.reload();
   const card = name => page.locator('.board-summary-card').filter({ has: page.getByRole('button', { name: `開啟看板 ${name}`, exact: true }) });
   await card('會員功能看板').waitFor();

@@ -11,7 +11,7 @@ try {
   page.setDefaultTimeout(10000);
   page.on('pageerror', error => errors.push(error.message));
   page.on('response', async response => { const url = new URL(response.url()); if (!url.pathname.startsWith('/api/')) return; const item = { path: url.pathname, bytes: 0 }; requests.push(item); try { item.bytes = (await response.body()).length; } catch { /* 導覽後body不可取 */ } });
-  await page.goto('http://127.0.0.1:5175');
+  await page.goto('http://127.0.0.1:5175/login');
   async function call(target, op, input = {}, group = 'rpc') {
     return target.evaluate(async ({ op, input, group }) => {
       const { csrfToken } = await (await fetch('/api/csrf-cookie')).json();
@@ -25,7 +25,7 @@ try {
   const other = await call(page, 'createProject', { name: 'Other', code: 'OTHR' });
   const invite = await call(page, 'inviteMember', { email: `receiver-${crypto.randomUUID()}@example.test` });
   const receiver = await (await browser.newContext()).newPage();
-  await receiver.goto('http://127.0.0.1:5175');
+  await receiver.goto('http://127.0.0.1:5175/login');
   const identity = await call(receiver, 'register', { name: 'Receiver', email: invite.email, password: 'isolated-test-password', inviteToken: invite.token }, 'auth');
   await call(page, 'setProjectMember', { projectId: project.id, userId: identity.user.id, roleId: 'developer', expectedRevision: 0 });
   await call(page, 'setProjectMember', { projectId: other.id, userId: identity.user.id, roleId: 'developer', expectedRevision: 0 });

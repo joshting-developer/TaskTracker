@@ -14,6 +14,7 @@ import { contextKey, taskScope, writeContext } from './ui/workContext.js';
 import { useBoardRealtime } from './ui/boardRealtime.js';
 import { usePersonalSync } from './composables/usePersonalSync.js';
 import { api, setWorkspaceContext } from './api/index.js';
+import { syncEntryPath } from './entryPath.js';
 import WorkspaceSwitcher from './components/WorkspaceSwitcher.vue';
 import { statusesFor } from './domain/model.js';
 
@@ -57,6 +58,8 @@ const defaultType = shallowRef('task');
 const defaultEpicId = shallowRef('');
 const loading = shallowRef(true);
 const error = shallowRef('');
+// TT-297：Session確定後才校正路徑（已登入/app/、顯示登入表單時/login），連線中或錯誤時不動網址。
+watch(() => authenticated.value ? 'app' : !loading.value && !error.value ? 'login' : '', where => { if (where) syncEntryPath(where === 'app'); }, { immediate: true });
 const view = shallowRef('list');
 const isTaskRoute = computed(() => Boolean(projectId.value) && section.value === 'tasks' && ['list', 'boards', 'board'].includes(view.value));
 const projectTasksTool = useTemplateRef('projectTasksTool'), projectDirectoryTool=useTemplateRef('projectDirectoryTool');
@@ -237,7 +240,7 @@ async function closeSettings(kind) {
   else accountMenu.value?.focus();
 }
 async function savedProfile() { await refresh(); await closeSettings('profile'); notify('個人資料已儲存'); }
-async function logout() { if (!canLeave()) return; try { await api.logout(); setWorkspaceContext(''); ++refreshGeneration; ++refreshScope; authenticated.value = false; tokensOpen.value = false; convertingTodo.value = null; todoNotificationsOpen.value = false; workspace.value = { projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} }; history.replaceState(null, '', '#/'); readHash(true); } catch (failure) { notify(failure.message); } }
+async function logout() { if (!canLeave()) return; try { await api.logout(); setWorkspaceContext(''); ++refreshGeneration; ++refreshScope; authenticated.value = false; tokensOpen.value = false; convertingTodo.value = null; todoNotificationsOpen.value = false; workspace.value = { projects: [], issues: [], members: [], timeEntries: [], notifications: [], meta: {} }; history.replaceState(null, '', '/login'); readHash(true); } catch (failure) { notify(failure.message); } }
 function resetWorkspaceUI() {
   selectedId.value = ''; creatingIssue.value = false; detailPage.value = false; editingDetail.value = false;
   profileOpen.value = false; tokensOpen.value = false; creatingProject.value = false; editingProject.value = null;

@@ -112,10 +112,10 @@ try {
   assert.equal(await page.getByLabel('工時月份', { exact: true }).inputValue(), '2026-10');
   assert.equal(await page.getByLabel('工時成員', { exact: true }).inputValue(), '');
   await page.screenshot({ path: `${artifacts}/time-context.png` });
-  await page.goto(`http://127.0.0.1:5175/#/projects/${fixture.second.id}`);
+  await page.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.second.id}`);
   await page.getByRole('button', { name: '任務列表', exact: true }).waitFor();
   assert.match(await page.locator('.nav-item.active').innerText(), /任務列表/);
-  await page.goto(`http://127.0.0.1:5175/#/projects/${fixture.project.id}`);
+  await page.goto(`http://127.0.0.1:5175/app/#/projects/${fixture.project.id}`);
   await page.locator('tbody tr').first().waitFor();
   assert.match(await page.locator('.nav-item.active').innerText(), /我的任務/);
   await page.getByRole('button', { name: '任務列表', exact: true }).click();

@@ -12,7 +12,7 @@ try {
   const requests = [], errors = [];
   owner.on('request', request => { const path = new URL(request.url()).pathname; if (path.startsWith('/api/')) requests.push(path); });
   owner.on('pageerror', failure => errors.push(failure.message));
-  await owner.goto('http://127.0.0.1:5175'); await guest.goto('http://127.0.0.1:5175');
+  await owner.goto('http://127.0.0.1:5175/login'); await guest.goto('http://127.0.0.1:5175/login');
   async function call(page, operation, input = {}, group = 'rpc') {
     for (let attempt = 0; attempt < 5; attempt++) {
       const result = await page.evaluate(async ({ operation, input, group }) => {
@@ -39,7 +39,7 @@ try {
     if (index % 5 === 4) console.log('Fixture members', index + 1);
   }
   requests.length = 0;
-  await owner.goto('http://127.0.0.1:5175/#/workspace/settings'); await owner.reload();
+  await owner.goto('http://127.0.0.1:5175/app/#/workspace/settings'); await owner.reload();
   const settings = owner.getByRole('region', { name: '工作空間設定', exact: true });
   await settings.getByLabel('工作空間名稱', { exact: true }).waitFor();
   assert.equal(requests.filter(path => /\/workspace\/(members|member-roles)$/.test(path)).length, 0, '一般設定未開名單');

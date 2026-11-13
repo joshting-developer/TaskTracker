@@ -10,7 +10,7 @@ try {
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } }), errors = [];
   page.on('pageerror', error => errors.push(error.message)); page.setDefaultTimeout(10000);
-  await page.goto('http://127.0.0.1:5175');
+  await page.goto('http://127.0.0.1:5175/login');
   await page.getByRole('button', { name: '第一次使用？建立工作空間', exact: true }).click();
   await page.getByLabel('你的名字', { exact: true }).fill('首頁試用者');
   await page.getByLabel('Email', { exact: true }).fill(`home-${crypto.randomUUID()}@example.test`);

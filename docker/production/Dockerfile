@@ -8,7 +8,8 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --include=dev --no-audit --no-fund
 COPY frontend/index.html frontend/vite.config.js ./
 COPY frontend/src ./src
-COPY frontend/about ./about
+COPY frontend/app ./app
+COPY frontend/landing ./landing
 COPY frontend/public-assets ./public-assets
 # 公開頁canonical／Open Graph／sitemap的正式網址；未提供時建置會省略這些絕對網址標籤。
 ARG VITE_SITE_ORIGIN=""

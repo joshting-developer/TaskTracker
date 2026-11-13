@@ -68,7 +68,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   await page.clock.setFixedTime(fixedTime);
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto('/');
+  await page.goto('/login');
   await page.getByRole('button', { name: '登入', exact: true }).waitFor();
   await shot(page, '01-login');
   // Native validation is a real browser state, not a mocked product response.

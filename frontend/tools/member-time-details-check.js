@@ -20,7 +20,7 @@ try {
   const page = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage();
   page.setDefaultTimeout(10000);
   const errors = []; page.on('pageerror', error => errors.push(error.message));
-  await page.goto('http://127.0.0.1:5175');
+  await page.goto('http://127.0.0.1:5175/login');
   const today = dateInTaipei(), token = crypto.randomUUID();
   await call(page, 'register', { name: '工時負責人', email: `member-detail-${token}@example.test`, password: 'detail-test-password', workspaceName: '成員明細測試' }, 'auth');
   const first = await call(page, 'createProject', { name: '會員服務', code: 'MEMBERS' });
