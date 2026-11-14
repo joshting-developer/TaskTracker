@@ -66,3 +66,13 @@ Fly可把base64編碼的兩張CA放Secrets, 再用files掛載；這裡只示範�
 - [Redis TLS設定](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/)：TLS-only連接埠與ACL搭配, 客戶端憑證驗證可分開設定
 - [MySQL加密連線](https://dev.mysql.com/doc/refman/8.0/en/using-encrypted-connections.html)：自動產生的證書無法滿足VERIFY_IDENTITY, 可更換檔案後重載TLS
 - [Fly Secrets與檔案掛載](https://fly.io/docs/apps/secrets/)：以Secret提供base64檔案內容, 不寫進映像或Git
+
+## 2026-11-14 Fly續驗與待發布修正
+
+Fly已掛載兩張CA, 正式MySQL與Redis驗CA／主機名稱成功, MySQL cipher為TLS_AES_256_GCM_SHA384；錯CA均拒絕, Redis錯主機名拒絕。從自動停止狀態經HTTP喚醒約3.32秒, 喚醒後上述連線仍成功, 這是單次驗收而非延遲p95
+
+受控故障只在Fly診斷CLI建立loopback listener, 不修改OCI服務／防火牆或正式連線。Redis接上但不回PONG約3.03秒拒絕；MySQL接上但不送握手時, PDO ATTR_TIMEOUT=3未涵蓋讀取, 原測試直到8秒listener關閉才結束, 不能宣稱原版已有三秒完整超時
+
+正式php.ini補mysqlnd.net_read_timeout=3, 在Fly獨立CLI以相同設定實測MySQL握手停滯約3.01秒、Redis讀取停滯約3.01秒拒絕, 兩者仍可重新連回真正OCI。listener及child由診斷程序回收
+
+依Josh要求, 這個php.ini修正等整批tag一起發布, 沒有逐卡替換線上映像。TT-159先待驗收, 最後發布後須再次核對正式FPM載入值及故障行為；目前不能說線上FPM讀取超時已修好。來源收斂仍由TT-327處理, 不因TLS通過就說3306／6379已對外關閉

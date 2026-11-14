@@ -11,3 +11,11 @@
 - 原生實測追加確認MySQL及Redis明文連線均被拒絕, TLS正確CA成功、錯CA／錯主機名拒絕；未在遠端seed／壓測／FLUSH
 - TLS設定方式已同步TT-321並修正該卡過期的Redis明文與密碼輪替描述；CA掛載與未驗收項目見docs/oci-service-tls-2026-11-13.md
 - 本階段準備提交, 整卡仍須Fly App建立後的端到端／故障恢復驗證；防火牆另在TT-327待處理, 不以局部完成結案
+
+## 2026-11-14 續驗
+
+- Fly自動停止→HTTP喚醒200約3323ms, 隨後MySQL TLS讀取與Redis驗證PING成功
+- 錯CA、Redis錯名稱拒絕；僅用自有loopback停滯服務驗超時, 不停OCI、不改防火牆
+- 發現PDO連線上限未涵蓋mysqlnd握手讀取, 原版等到測試listener八秒關閉, 不能按三秒PASS
+- php.ini補mysqlnd.net_read_timeout=3, Fly獨立CLI同設定實測MySQL3005ms、Redis3014ms拒絕並可重連OCI
+- 等最後一次tag部署後再驗正式FPM, 先review保留驗收項；來源限制TT-327維持待辦
