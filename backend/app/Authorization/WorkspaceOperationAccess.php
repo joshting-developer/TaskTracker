@@ -39,7 +39,7 @@ class WorkspaceOperationAccess
         if ($operation === 'getWorkspace') {
             return;
         }
-        if (in_array($operation, ['createProject', 'loadDemo'], true)) {
+        if ($operation === 'createProject') {
             Permissions::authorize($this->workspaceSession, 'project.create');
 
             return;

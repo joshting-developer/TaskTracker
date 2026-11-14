@@ -485,7 +485,7 @@ class WorkspaceApiTest extends TestCase
     }
 
     /**
-     * 驗證JSON輸入邊界、示範專案載入及未知角色拒絕，不接受前端自稱身分。
+     * 驗證JSON輸入邊界、示範HTTP入口退役及未知角色拒絕，不接受前端自稱身分。
      *
      * @return void
      */
@@ -495,15 +495,8 @@ class WorkspaceApiTest extends TestCase
         $this->withHeader('Origin', 'https://evil.test')->rpc('getWorkspace')->assertStatus(403);
         $this->flushHeaders();
         $this->rpc('unknown')->assertStatus(404);
-        $this->rpc('loadDemo')->assertOk();
-        $this->rpc('getWorkspace')->assertJsonCount(9, 'data.issues');
-        $this->rpc('loadDemo')->assertStatus(409);
-        app()->instance('env', 'production');
-        $this->withSession(['_token' => 'environment-test-token'])->withHeader('X-CSRF-TOKEN', 'environment-test-token');
-        $this->rpc('loadDemo')->assertStatus(403);
-        app()->instance('env', 'testing');
-        $this->flushHeaders();
-        $this->rpc('getWorkspace')->assertJsonCount(9, 'data.issues');
+        $this->rpc('loadDemo')->assertStatus(404)->assertJsonPath('error.code', 'NOT_FOUND');
+        $this->rpc('getWorkspace')->assertJsonCount(0, 'data.issues')->assertJsonCount(0, 'data.projects');
         $this->assertSame([], WorkspacePermissions::resolve('unknown'));
         $tenant = (new RecordStore)->forWorkspace($context['workspace']['id']);
         $member = $tenant->require('members', $context['user']['id']);

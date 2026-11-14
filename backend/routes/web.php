@@ -62,7 +62,6 @@ foreach (AccountSettings::OPERATIONS as $operation) {
 
 Route::post('/api/rpc/getWorkspace', [WorkspaceController::class, 'show'])->name('rpc.getWorkspace');
 Route::post('/api/rpc/inviteMember', [WorkspaceController::class, 'invite'])->name('rpc.inviteMember')->middleware($authThrottle(10));
-Route::post('/api/rpc/loadDemo', [WorkspaceController::class, 'demo'])->name('rpc.loadDemo');
 
 Route::post('/api/rpc/createProject', [ProjectController::class, 'store'])->name('rpc.createProject');
 Route::post('/api/rpc/updateProject', [ProjectController::class, 'update'])->name('rpc.updateProject');

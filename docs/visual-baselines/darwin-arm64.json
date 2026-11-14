@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "eb1f2954e108a4f139d09b35672eff4c8ec5e5a14ee437c1790b24a666ea5a39",
+  "harnessSha256": "bf419b3893aedb3b594b78337bb3f3f750d475939c892754faa4e1e6b38c6eaa",
   "profile": "darwin-arm64",
-  "reviewer": "Josh standing authorization / TT-328",
-  "note": "Inspected same Chrome 157 captures at 1440/768/390. Nine new recovery screens and nine login/validation entry changes expected. Other 95 match; tablet editor has 131 pixels of unchanged image-toolbar text rasterization, inspected. Comparator unchanged.",
-  "manifestSha256": "a1f1c9489434ea4b5d294dff39e55be3806543ca04d65a1a6b32000527f85fc0",
+  "reviewer": "Josh standing authorization / TT-356",
+  "note": "Inspected 3-width empty-project and connection-error screens. 110 existing captures match; 3 project-error screens lose demo action, 3 empty-project captures are new. Existing tablet editor image-toolbar text repaint inspected; comparator unchanged.",
+  "manifestSha256": "9159887c479ee1aa59551f552ddbd3f1f5dfd83ca311f6dc2f442f7b479e228f",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

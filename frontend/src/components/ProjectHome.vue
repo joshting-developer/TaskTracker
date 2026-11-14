@@ -2,8 +2,8 @@
 import { computed, ref, watch } from 'vue';
 import Icon from './Icon.vue';
 
-const props = defineProps({ remote: Boolean, total: Number, projects: Array, members: Array, canCreate: { type: Boolean, default: true }, loading: Boolean, error: String, demoLoading: Boolean });
-const emit=defineEmits(['create', 'edit', 'open', 'demo', 'retry', 'search']);
+const props = defineProps({ remote: Boolean, total: Number, projects: Array, members: Array, canCreate: { type: Boolean, default: true }, loading: Boolean, error: String });
+const emit=defineEmits(['create', 'edit', 'open', 'retry', 'search']);
 const search = ref('');
 watch(search, value=>{if(props.remote)emit('search',value);});
 const cards = computed(() => props.remote ? props.projects : props.projects.filter(project => [project.name, project.code, project.description].some(value => (value || '').toLocaleLowerCase().includes(search.value.trim().toLocaleLowerCase()))));
@@ -22,7 +22,7 @@ function leadName(project) {
 
       <h2>{{ canCreate ? '尚無專案' : '尚未加入任何專案' }}</h2>
 
-      <div class="empty-actions"><button v-if="canCreate" class="button primary" @click="$emit('create')"><Icon name="plus" :size="17" />建立第一個專案</button><button v-if="canCreate" class="button secondary" :disabled="demoLoading" @click="$emit('demo')">{{ demoLoading ? '準備中…' : '載入示範專案' }}<Icon name="arrow" :size="16" /></button></div>
+      <div class="empty-actions"><button v-if="canCreate" class="button primary" @click="$emit('create')"><Icon name="plus" :size="17" />建立第一個專案</button></div>
 
     </div>
     <template v-else>

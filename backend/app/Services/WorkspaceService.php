@@ -6,7 +6,6 @@ use App\Data\Writes\WriteResults;
 use App\Domain\DomainError;
 use App\Factories\WorkspaceOperationServices;
 use App\Factories\WorkspaceServicesFactory;
-use Database\Seeders\DemoSeeder;
 
 /**
  * 維持既有操作契約，協調逐筆授權、重試與各領域寫入。
@@ -18,9 +17,8 @@ class WorkspaceService
      *
      * @param  WorkspaceServicesFactory  $services  依可信Session建立單次操作的服務組
      * @param  RequestReplay  $replay  防重複提交與原結果重播
-     * @param  DemoSeeder  $demo  示範專案載入（只限local／testing）
      */
-    public function __construct(private WorkspaceServicesFactory $services, private RequestReplay $replay, private DemoSeeder $demo) {}
+    public function __construct(private WorkspaceServicesFactory $services, private RequestReplay $replay) {}
 
     /**
      * 授權後執行RPC操作：讀取直接回傳，寫入經RequestReplay保存原結果，並在commit後送出Project變更訊號。
@@ -34,9 +32,6 @@ class WorkspaceService
      */
     public function execute(array $workspaceSession, string $operation, array $input): array
     {
-        if ($operation === 'loadDemo') {
-            $this->demo->assertEnvironment();
-        }
         $services = $this->services->forSession($workspaceSession);
         $services->operationAccess()->authorize($operation, $input);
         if ($operation === 'getTimeReport') {
@@ -146,7 +141,6 @@ class WorkspaceService
             'restoreBoard' => $services->boards()->restore($input),
             'setProjectMember' => $services->members()->change($input, false),
             'removeProjectMember' => $services->members()->change($input, true),
-            'loadDemo' => $this->demo->loadProject($services->workspaceSession),
             default => DomainError::fail('NOT_FOUND', '找不到這個操作'),
         };
         // 專案／看板／卡片／工時寫入只回有界結果（同時是receipt保存的內容），最新內容由GET按需讀取。

@@ -2,8 +2,8 @@
 import { onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import ProjectHome from './ProjectHome.vue';
-const props = defineProps({ workspaceId: String, canCreate: Boolean, demoLoading: Boolean });
-const emit = defineEmits(['create', 'edit', 'open', 'demo', 'access']);
+const props = defineProps({ workspaceId: String, canCreate: Boolean });
+const emit = defineEmits(['create', 'edit', 'open', 'access']);
 const page = ref(1), search = ref(''), result = shallowRef(null), loading = ref(false), error = ref('');
 let generation = 0, request, debounce;
 async function refresh() {
@@ -40,7 +40,7 @@ defineExpose({ refresh });
 </script>
 <template>
   <section>
-    <ProjectHome remote :total="result?.total" :projects="result?.items || []" :members="[]" :can-create="canCreate" :loading="loading" :error="error" :demo-loading="demoLoading" @search="search=$event" @create="emit('create')" @edit="emit('edit',$event)" @open="emit('open',$event)" @demo="emit('demo')" @retry="refresh" />
+    <ProjectHome remote :total="result?.total" :projects="result?.items || []" :members="[]" :can-create="canCreate" :loading="loading" :error="error" @search="search=$event" @create="emit('create')" @edit="emit('edit',$event)" @open="emit('open',$event)" @retry="refresh" />
     <div v-if="result?.lastPage>1" class="pagination" aria-label="專案分頁"><button class="text-button" :disabled="loading||page<=1" @click="page--">上一頁</button><span>{{ page }} / {{ result.lastPage }}</span><button class="text-button" :disabled="loading||page>=result.lastPage" @click="page++">下一頁</button></div>
   </section>
 </template>

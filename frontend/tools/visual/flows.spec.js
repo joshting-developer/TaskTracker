@@ -52,6 +52,9 @@ async function shot(page, name) {
 async function fixture(page, browser) {
   const email = `visual-${crypto.randomUUID()}@example.test`;
   const identity = await call(page.request, 'register', { name: '視覺驗收者', email, password, workspaceName: '產品工作區' }, 'auth');
+  await page.goto('/app/#/projects');
+  await page.getByRole('heading', { name: '尚無專案', exact: true }).waitFor();
+  await shot(page, '39-empty-projects');
   const project = await call(page.request, 'createProject', { name: '產品開發', code: 'VRT', description: '協作任務與發佈追蹤', leadId: identity.user.id });
   const epic = await call(page.request, 'createIssue', { projectId: project.id, title: '會員功能', type: 'epic', state: 'open', assignee: identity.user.id });
   const tasks = [];
@@ -157,7 +160,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   await shot(page, '18-activation');
   await page.goto('/login');
   const data = await fixture(page, browser);
-  await page.reload();
+  await page.goto('/app/#/');
   await page.locator('.app-shell').waitFor();
   await shot(page, '24-home-empty');
   await navigation(page); await page.getByRole('link', { name: '紙條', exact: true }).click();

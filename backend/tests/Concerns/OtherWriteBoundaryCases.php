@@ -4,6 +4,7 @@ namespace Tests\Concerns;
 
 use App\Http\Requests\Writes\ProjectWriteRequest;
 use App\Models\WorkspaceMember;
+use App\Services\RequestReplay;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -47,7 +48,7 @@ trait OtherWriteBoundaryCases
             'Board' => ['createBoard', 'updateBoard', 'archiveBoard', 'restoreBoard'],
             'Todo' => ['createTodo', 'updateTodo', 'completeTodo', 'reopenTodo', 'returnTodo', 'cancelTodo', 'convertTodo', 'readTodoNotification'],
             'ProjectMember' => ['setProjectMember', 'removeProjectMember'],
-            'Workspace' => ['inviteMember', 'loadDemo'],
+            'Workspace' => ['inviteMember'],
             'Settings' => ['getProfile', 'updateProfile', 'updateWorkspace', 'setWorkspaceMemberRole'],
             'Account' => ['register', 'login', 'workspaces', 'switchWorkspace', 'acceptWorkspaceInvite', 'invitation'],
         ];
@@ -64,6 +65,24 @@ trait OtherWriteBoundaryCases
             $this->rpc($operation, $input)->assertStatus(400)->assertJsonPath('error.code', 'INVALID_INPUT');
         }
         $this->postJson('/api/auth/login', ['email' => [], 'password' => 'test-local-password'])->assertStatus(400)->assertJsonPath('error.code', 'INVALID_INPUT');
+    }
+
+    /**
+     * 已退役示範操作在本地或正式模式都不會寫資料或重播舊receipt
+     *
+     * @return void
+     */
+    public function test_retired_demo_operation_never_writes_or_replays(): void
+    {
+        $this->actor();
+        $this->mock(RequestReplay::class)->shouldNotReceive('execute');
+        foreach (['testing', 'production'] as $environment) {
+            app()->instance('env', $environment);
+            $this->withSession(['_token' => 'isolated-retired-demo'])->withHeader('X-CSRF-TOKEN', 'isolated-retired-demo');
+            $this->rpc('loadDemo', [])->assertStatus(404)->assertJsonPath('error.code', 'NOT_FOUND');
+            $this->getJson('/api/v1/projects')->assertOk()->assertJsonPath('data.total', 0);
+        }
+        app()->instance('env', 'testing');
     }
 
     /**
@@ -126,7 +145,7 @@ trait OtherWriteBoundaryCases
         $this->getJson('/api/v1/projects/'.$id)->assertOk()->assertJsonPath('data.name', 'Name 8');
         $archived = $this->rpc('archiveBoard', ['id' => $board['id'], 'expectedRevision' => 1])->assertOk()->json('data');
         $this->assertSame(2, $archived['revision']);
-        WorkspaceMember::where('user_id',$actor['user']['id'])->update(['role' => 'user']);
-        $this->rpc('createProject',$create)->assertStatus(403)->assertJsonPath('error.code','FORBIDDEN');
+        WorkspaceMember::where('user_id', $actor['user']['id'])->update(['role' => 'user']);
+        $this->rpc('createProject', $create)->assertStatus(403)->assertJsonPath('error.code', 'FORBIDDEN');
     }
 }

@@ -68,7 +68,6 @@ const creatingProject = shallowRef(false);
 const editingProject = shallowRef(null);
 const sidebarOpen = shallowRef(false);
 const { toast, notify } = useToast();
-const demoLoading = shallowRef(false);
 const refresh = useRefreshQueue({
   scope: () => `${refreshScope}:${authenticated.value}:${switchingWorkspace.value}:${workspace.value.meta.workspace?.id || ''}:${projectId.value}:${view.value}:${section.value}`,
   load: refreshWorkspace,
@@ -78,7 +77,6 @@ const personalSync=usePersonalSync({active:computed(()=>authenticated.value&&!sw
 const today = useWorkspaceClock({ active: computed(() => authenticated.value && !switchingWorkspace.value && !isScopedRoute.value), refresh: () => refresh({ join: true }) });
 let refreshGeneration = 0, refreshScope = 0;
 let opener;
-const demoRequestId = crypto.randomUUID();
 
 const projects = computed(() => workspace.value.projects);
 const selectedProject = computed(() => projects.value.find((item) => item.id === projectId.value));
@@ -391,18 +389,6 @@ async function createdProject(project, name) {
   await projectDirectoryTool.value?.refresh();
   notify(wasEditing ? '專案設定已儲存' : `已建立「${name}」`);
 }
-async function loadDemo() {
-  if (demoLoading.value) return;
-  demoLoading.value = true;
-  try {
-    await api.loadDemo({ requestId: demoRequestId });
-    await refresh();
-    goProjects();
-    await nextTick(); await projectDirectoryTool.value?.refresh();
-    notify('已載入示範專案');
-  } catch (failure) { error.value = failure.message; }
-  finally { demoLoading.value = false; }
-}
 function beforeUnload(event) { if (leaveGuards.dirty({ unload: true })) { event.preventDefault(); event.returnValue = ''; } }
 function keydown(event) {
   if (event.key === 'Escape') sidebarOpen.value = false;
@@ -421,7 +407,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
 <template>
   <v-app>
   <AuthGate :key="authPageKey" v-if="!authenticated && !loading && !error" :pending="pendingVerification" @authenticated="authenticatedSession" />
-  <div v-else-if="!authenticated" class="empty-state"><span class="loader"></span><h2>正在連線工作空間</h2><p v-if="error" role="alert">{{ error }}</p><button v-if="error" class="button secondary" @click="refresh({ join: true })">重試</button></div>
+  <div v-else-if="!authenticated" class="empty-state"><span v-if="loading" class="loader"></span><h2>{{ loading ? '正在連線工作空間' : '無法載入工作空間' }}</h2><p v-if="error" role="alert">{{ error }}</p><button v-if="error" class="button secondary" @click="refresh({ join: true })">重試</button></div>
   <div v-else class="app-shell">
     <button v-if="sidebarOpen" class="sidebar-scrim" aria-label="收起導覽" @click="sidebarOpen = false"></button>
     <aside class="sidebar" :class="{ open: sidebarOpen }">
@@ -466,7 +452,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
         <div v-if="!selectedProject && ['home', 'notes', 'projects'].includes(landing)" :key="workspace.meta.workspace?.id" :class="landing === 'home' ? 'home-layout' : 'project-list-page'">
         <h1 v-if="landing === 'home'" class="sr-only">首頁</h1>
         <div v-if="landing === 'home' && error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="refresh({ join: true })">重新載入</button></div>
-        <ProjectDirectory v-if="landing === 'projects'" ref="projectDirectoryTool" :workspace-id="workspace.meta.workspace?.id" :can-create="workspace.meta.permissions?.includes('project.create')" :demo-loading="demoLoading" @create="creatingProject = true" @edit="editingProject = $event" @open="id => navigate('all', id)" @demo="loadDemo" />
+        <ProjectDirectory v-if="landing === 'projects'" ref="projectDirectoryTool" :workspace-id="workspace.meta.workspace?.id" :can-create="workspace.meta.permissions?.includes('project.create')" @create="creatingProject = true" @edit="editingProject = $event" @open="id => navigate('all', id)" />
         <PersonalWorkspace v-if="landing === 'notes' && workspace.meta.permissions?.includes('todo.read')" ref="todoTool" :workspace-id="workspace.meta.workspace.id" :permissions="workspace.meta.permissions" :versions="personalSync.versions.value" :resumed="personalSync.resumed.value" :user-id="currentUserId"     @convert="convertTodo" @open-issue="openTodoIssue"  @access="refresh({join:true})"/>
         </div>
         <ProjectTasksWorkspace v-else-if="isTaskRoute && selectedProject" ref="projectTasksTool" :key="`${workspace.meta.workspace?.id}:${projectId}`" :project="selectedProject" :mode="view" :scope="scope" :board-id="boardId" :issue-id="selectedId" :detail-page="detailPage" :user-id="currentUserId" :workspace-id="workspace.meta.workspace.id" :today="today" @board="openBoard" @list="navigate('all', projectId, 'boards')" @issue="openIssue" @close-issue="closeIssue" @issue-missing="issueMissing" @board-missing="notify('看板不存在或已移除'); navigate('all', projectId, 'boards')" @notify="notify" @access="refresh({ join: true })" @project="project => { workspace = { ...workspace, projects: [project] }; }" />

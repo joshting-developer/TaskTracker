@@ -46,18 +46,4 @@ class WorkspaceController extends Controller
 
         return new ApiResponse($result);
     }
-
-    /**
-     * 驗證JSON後載入示範專案，回傳既有API格式。
-     *
-     * @param  WorkspaceWriteRequest  $request  目前HTTP請求與Session
-     * @return ApiResponse
-     */
-    public function demo(WorkspaceWriteRequest $request): ApiResponse
-    {
-        $input = $request->toDto();
-        $result = $this->rpc->executeData($request, $input);
-
-        return new ApiResponse($result);
-    }
 }

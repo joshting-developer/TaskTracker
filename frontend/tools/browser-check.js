@@ -1095,12 +1095,26 @@ try {
   assert.equal(await page.getByRole('link', { name: '任務看板', exact: true }).count(), 0);
   assert.equal(await page.getByRole('button', { name: /新增任務/ }).count(), 0);
   assert.equal(await page.getByRole('navigation', { name: '專案任務' }).count(), 0);
-  await page.getByRole('button', { name: '載入示範專案' }).click();
+  assert.equal(await page.getByRole('button', { name: '載入示範專案' }).count(), 0);
+  // Synthetic fixture uses normal API operations, never a product demo endpoint.
+  await page.evaluate(async () => {
+    const { api } = await import('/src/api/index.js');
+    const owner = (await api.current()).user.id;
+    const project = await api.createProject({ requestId: crypto.randomUUID(), name: '產品第一版 · 驗收', code: 'DEMO' });
+    const rows = [
+      ['整理第一版需求與使用流程', 'closed', 'high', 'task'], ['建立專案與任務資料結構', 'closed', 'normal', 'task'],
+      ['設計任務清單的搜尋與篩選', 'inprogress', 'high', 'task'], ['讓看板拖曳與任務狀態同步', 'inprogress', 'normal', 'task'],
+      ['手機上的表單需要更好操作', 'open', 'high', 'bug'], ['補上任務留言與異動紀錄', 'open', 'normal', 'task'],
+      ['確認 Laravel API 部署方式', 'open', 'normal', 'task'], ['討論下一次迭代範圍', 'open', 'low', 'task'], ['研究適合團隊的登入流程', 'open', 'normal', 'task'],
+    ];
+    for (const [index, [title, state, priority, type]] of rows.entries()) await api.createIssue({ requestId: crypto.randomUUID(), projectId: project.id, title, state, priority, type, assignee: [4, 6, 7, 8].includes(index) ? '' : owner });
+  });
+  await page.reload();
   await openProjectList(page);
-  await page.getByRole('button', { name: '進入專案：產品第一版 · 示範', exact: true }).waitFor();
+  await page.getByRole('button', { name: '進入專案：產品第一版 · 驗收', exact: true }).waitFor();
   assert.equal(await page.getByRole('link', { name: '任務看板', exact: true }).count(), 0);
   await openProjectList(page);
-  await page.getByRole('button', { name: '進入專案：產品第一版 · 示範', exact: true }).click();
+  await page.getByRole('button', { name: '進入專案：產品第一版 · 驗收', exact: true }).click();
   await page.locator('tbody tr').nth(8).waitFor();
   await expectRows(page, 9);
   await checkReadableWorkspace(page);
@@ -1264,14 +1278,14 @@ try {
   await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).waitFor();
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await openProjectList(page);
-  await page.getByRole('button', { name: '進入專案：產品第一版 · 示範', exact: true }).click();
+  await page.getByRole('button', { name: '進入專案：產品第一版 · 驗收', exact: true }).click();
   await expectRows(page, 9, '.issue-card, tbody tr');
   assert.equal(await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).count(), 0);
   await openQuickIssue(page, '搜尋流程已完成');
   const issueUrl = page.url();
   await page.reload();
   await page.getByRole('dialog', { name: '任務詳細內容' }).waitFor();
-  assert.equal(await page.getByRole('dialog').getByLabel('專案', { exact: true }).locator('option').textContent(), '產品第一版 · 示範');
+  assert.equal(await page.getByRole('dialog').getByLabel('專案', { exact: true }).locator('option').textContent(), '產品第一版 · 驗收');
   await page.getByRole('button', { name: '關閉任務', exact: true }).click();
   const legacyId = issueUrl.split('/issues/')[1];
   await page.goto(`${baseURL}/app/#/issue/${legacyId}`);
