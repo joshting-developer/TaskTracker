@@ -11,3 +11,9 @@ TT-326目前已由Codex領取, 預估90分鐘, 後續實作及測試記錄在pla
 正式工具恢復後先讀目前身分、紙條／通知及卡片revision, 再補留言、正式實際工時與最終狀態。未恢復前不宣稱已回填卡片或填工時, 不另寫舊本地業務庫
 
 修復完成需從原Python工具直接讀公開規格、驗本人PAT身分, 再以正常流程更新卡片；不用放寬整站防護或停用Laravel權限。此文件只是交接, 尚未建立對應正式卡片
+
+## 已恢復
+
+Josh停用該DNS紀錄的Cloudflare proxy後, 公開DNS先更新為Fly正式IP, macOS系統解析短暫保留舊Cloudflare IP。等待正常DNS快取更新後, 原Python工具以原網址、原User-Agent及原Codex PAT直接驗身分成功, 沒有指定替代IP或換帳號
+
+已重新讀取紙條與通知, 補登TT-326實作／測試留言、18分鐘本人實際工時與review待驗收。這次停用proxy由Josh操作, 沒有另外修改Cloudflare或主機防火牆規則
