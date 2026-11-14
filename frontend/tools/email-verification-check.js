@@ -1,10 +1,14 @@
+import { requireIsolatedApi } from './fixtures/isolated-api.js';
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-if (process.env.E2E_ISOLATED !== '1' || process.env.E2E_API_URL !== 'http://127.0.0.1:13199') throw Error('Owned isolated backend required');
-const port = Number(process.env.E2E_FRONTEND_PORT || 5199), base = `http://127.0.0.1:${port}`, artifacts = new URL('../../artifacts/tt338/', import.meta.url);
+const api = requireIsolatedApi({ requireIsolatedFlag: true });
+// TT-336：讀測試庫啟用token要進自己的隔離後端容器, 依後端埠對應Compose專案, 也可用E2E_COMPOSE_PROJECT指定
+const composeProject = process.env.E2E_COMPOSE_PROJECT || { 'http://127.0.0.1:13198': 'tasktracker-claude-test', 'http://127.0.0.1:13199': 'tasktracker-codex-test' }[api];
+if (!composeProject) throw new Error('請用E2E_COMPOSE_PROJECT指定隔離後端的Compose專案');
+const port = Number(process.env.E2E_FRONTEND_PORT || 5175), base = `http://127.0.0.1:${port}`, artifacts = new URL('../../artifacts/tt338/', import.meta.url);
 mkdirSync(artifacts, { recursive: true });
 let server, browser;
 try {
@@ -26,10 +30,10 @@ try {
   for (const width of [1440, 768, 390]) { await page.setViewportSize({ width, height: 1000 }); assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)); await page.screenshot({ path: new URL(`verification-${width}.png`, artifacts).pathname }); }
   // Only read this synthetic fixture from the owned test schema; keep the secret in process memory.
   const program = `if(getenv('APP_ENV')!=='testing'||getenv('TASKTRACKER_MYSQL_TEST')!=='1'||getenv('DB_DATABASE')!=='tasktracker_test')exit(3);require 'vendor/autoload.php';$app=require 'bootstrap/app.php';$app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap();$user=App\\Models\\User::where('email',getenv('VERIFY_FIXTURE_EMAIL'))->firstOrFail();$row=App\\Models\\MailDelivery::where('user_id',$user->id)->where('kind','verification')->firstOrFail();preg_match('~/activate/([a-f0-9]{64})~',$row->payload['body'],$m);echo json_encode(['token'=>$m[1]]);`;
-  const args = ['compose','-p','tasktracker-codex-test','-f','docker-compose.mysql-test.yml','-f','/tmp/tt318-test.yml','exec','-T','-e',`VERIFY_FIXTURE_EMAIL=${email}`,'backend','php','-r',program];
+  const args = ['exec','-e',`VERIFY_FIXTURE_EMAIL=${email}`,`${composeProject}-backend-1`,'php','-r',program];
   const fixtureToken = fixtureEmail => {
     const fixtureArgs = args.map(value => value.startsWith('VERIFY_FIXTURE_EMAIL=') ? `VERIFY_FIXTURE_EMAIL=${fixtureEmail}` : value);
-    return JSON.parse(execFileSync('docker', fixtureArgs, { cwd: new URL('../..', import.meta.url).pathname, env: { ...process.env, TASKTRACKER_TEST_PORT: '13199', TASKTRACKER_TEST_IMAGE: 'tasktracker-codex-tt318' }, encoding: 'utf8' })).token;
+    return JSON.parse(execFileSync('docker', fixtureArgs, { encoding: 'utf8' })).token;
   };
   const token = fixtureToken(email);
   const activation = await context.newPage();

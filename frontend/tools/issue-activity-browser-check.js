@@ -1,9 +1,10 @@
+import { requireIsolatedApi } from './fixtures/isolated-api.js';
 import { fixtureResponse } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
-if (process.env.E2E_ISOLATED !== '1' || process.env.E2E_API_URL !== 'http://127.0.0.1:13089') throw Error('Owned isolated backend required');
+requireIsolatedApi({ requireIsolatedFlag: true }); // TT-336
 const port = Number(process.env.E2E_FRONTEND_PORT || 5291), base = `http://127.0.0.1:${port}`;
 const artifacts = new URL('../../artifacts/tt317/', import.meta.url); mkdirSync(artifacts, { recursive: true });
 let server, browser;

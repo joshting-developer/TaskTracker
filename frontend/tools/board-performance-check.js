@@ -1,3 +1,4 @@
+import { requireIsolatedApi } from './fixtures/isolated-api.js';
 import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { preview } from 'vite';
@@ -5,7 +6,7 @@ import { chromium } from 'playwright';
 import { moveBoardCard } from './board-actions.js';
 const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 
-if (process.env.E2E_API_URL !== 'http://127.0.0.1:13029') throw new Error('500卡fixture只允許獨立MySQL測試服務13029，禁止指向業務服務');
+requireIsolatedApi(); // TT-336：500卡fixture只打隔離MySQL測試後端
 const root = new URL('..', import.meta.url).pathname;
 const artifacts = new URL('../artifacts/board-performance/', import.meta.url); mkdirSync(artifacts, { recursive: true });
 const fixturePath = new URL('fixture.json', artifacts);

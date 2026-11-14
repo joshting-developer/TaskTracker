@@ -43,9 +43,9 @@ try {
   await page.getByRole('heading', { name: '成員投入' }).first().waitFor().catch(() => {});
   await settle();
   const members = take();
-  assert.equal(members.filter(path => path.endsWith('/getTimeReport')).length, 1, `成員投入只讀一次報表：${members}`);
+  assert.equal(members.filter(path => path.endsWith('/api/v1/time-report')).length, 1, `成員投入只讀一次報表：${members}`);
   await go('#/time-analysis/projects');
-  assert.equal(take().filter(path => path.endsWith('/getTimeReport')).length, 1, '專案投入只讀一次報表');
+  assert.equal(take().filter(path => path.endsWith('/api/v1/time-report')).length, 1, '專案投入只讀一次報表');
 
   // 2. 看板寫入：只重讀目前Project／看板，不讀其他Project、報表、通知或整包資料。
   await go(`#/projects/${project.id}/board`);
@@ -56,7 +56,7 @@ try {
   assert.ok(moved.includes('/api/rpc/updateIssue'), '送出移動');
   assert.ok(moved.some(path => path.startsWith(`${p}/boards/default/issues`)), '重讀目前看板卡片');
   assert.deepEqual(outside(moved), [], '不讀其他Project');
-  assert.deepEqual(moved.filter(path => /getTimeReport|getWorkspace|getTodos|notifications|time-calendar|status-usage/.test(path)), [], `不讀無關頁面資料：${moved}`);
+  assert.deepEqual(moved.filter(path => /time-report|getWorkspace|\/todos|notifications|time-calendar|status-usage/.test(path)), [], `不讀無關頁面資料：${moved}`);
 
   // 3. 狀態設定：只重讀目前Project與狀態使用摘要。
   await go(`#/projects/${project.id}/settings`);
@@ -68,7 +68,7 @@ try {
   const saved = take();
   assert.ok(saved.includes('/api/rpc/updateStatuses'));
   assert.deepEqual(outside(saved), [], '不讀其他Project');
-  assert.deepEqual(saved.filter(path => /issues|boards|getTimeReport|getWorkspace|getTodos|time-calendar/.test(path)), [], `狀態設定不讀卡片或其他頁：${saved}`);
+  assert.deepEqual(saved.filter(path => /issues|boards|time-report|getWorkspace|\/todos|time-calendar/.test(path)), [], `狀態設定不讀卡片或其他頁：${saved}`);
 
   assert.deepEqual(errors, []);
   console.log('refresh scope PASS', JSON.stringify({ analysisReads: 1, boardWrite: moved.length, statusWrite: saved.length }));

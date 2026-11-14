@@ -1,14 +1,16 @@
+import { requireIsolatedApi } from './fixtures/isolated-api.js';
 import { fixtureResponse } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import { mkdirSync, writeFileSync } from 'node:fs';
-if (process.env.E2E_ISOLATED !== '1' || process.env.E2E_API_URL !== 'http://127.0.0.1:13089') throw Error('Owned isolated backend required');
-const base = 'http://127.0.0.1:5291', artifacts = new URL('../../artifacts/tt293/', import.meta.url);
+requireIsolatedApi({ requireIsolatedFlag: true }); // TT-336
+const port = Number(process.env.E2E_FRONTEND_PORT || 5291), base = `http://127.0.0.1:${port}`, // TT-336：跟其他附件檢查一樣讀自己的前端埠
+  artifacts = new URL('../../artifacts/tt293/', import.meta.url);
 mkdirSync(artifacts, { recursive: true });
 let server, browser;
 try {
-  server = await createServer({ root: new URL('../', import.meta.url).pathname, server: { host: '127.0.0.1', port: 5291, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } }); await server.listen();
+  server = await createServer({ root: new URL('../', import.meta.url).pathname, server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } }); await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
   const context = await browser.newContext({ permissions: ['clipboard-read', 'clipboard-write'], viewport: { width: 1440, height: 1050 } });
   const page = await context.newPage(), errors = []; page.setDefaultTimeout(15000); page.on('pageerror', e => errors.push(e.message));

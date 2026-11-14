@@ -74,7 +74,9 @@ try {
   await dialog.getByLabel('看板名稱', { exact: true }).fill('Selected Across Pages');
   const saved = page.waitForResponse(response => response.url().endsWith('/createBoard') && response.status() === 200);
   await dialog.getByRole('button', { name: '儲存看板', exact: true }).click();
-  const board = (await (await saved).json()).data;
+  const summary = (await (await saved).json()).data;
+  // TT-336：建立回應只給看板摘要, 收錄清單要另讀看板詳情
+  const board = await page.evaluate(async ({ project, id }) => (await (await fetch(`/api/v1/projects/${project}/boards/${id}`)).json()).data, { project: project.id, id: summary.id });
   assert.deepEqual([...board.selectedIssueIds].sort(), [parent.id, epic.id].sort());
   const artifacts = new URL('../artifacts/lookup-options/', import.meta.url); mkdirSync(artifacts, { recursive: true });
   for (const width of [1440, 768, 390]) {

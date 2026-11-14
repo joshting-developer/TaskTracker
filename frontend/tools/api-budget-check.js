@@ -11,9 +11,11 @@ const CARDS = Number(process.env.BUDGET_CARDS || 500);
 const BUDGETS = {
   home: { requests: 8, bytes: 4000, allow: [/^\/api\/auth\/current$/, /\/personal-version$/, /\/todo-notifications\/unread$/, /\/todos$/, /\/todos\/counts$/, /\/todo-notifications$/, /\/todo-assignees$/, /\/project-options$/] },
   list: { requests: 4, bytes: 15000, allow: [/^\/api\/auth\/current$/, /\/projects\/[^/]+$/, /\/projects\/[^/]+\/issues$/, /\/member-options$/, /\/issue-options$/] },
-  detail: { requests: 5, bytes: 10000, allow: [/^\/api\/auth\/current$/, /\/projects\/[^/]+$/, /\/issues\/[^/]+$/, /\/issues\/[^/]+\/comments$/, /\/member-options$/, /\/issue-options$/] },
+  // TT-336：留言框的圖片按鈕要先知道附件上限才啟用（TT-293）, 每個專案讀一次；請求數與bytes上限不變
+  detail: { requests: 5, bytes: 10000, allow: [/^\/api\/auth\/current$/, /\/projects\/[^/]+$/, /\/issues\/[^/]+$/, /\/issues\/[^/]+\/comments$/, /\/member-options$/, /\/issue-options$/, /\/projects\/[^/]+\/attachments\/limits$/] },
   board: { requests: 4 + Math.ceil(CARDS / 100), bytes: 700 * CARDS + 10000, allow: [/^\/api\/auth\/current$/, /\/projects\/[^/]+$/, /\/boards\/[^/]+$/, /\/boards\/[^/]+\/issues$/, /\/boards\/[^/]+\/version$/, /\/realtime\/config$/] },
-  report: { requests: 2, bytes: 3000, allow: [/^\/api\/auth\/current$/, /\/getTimeReport$/] },
+  // TT-336：TT-277把舊getTimeReport拆成摘要＋專案／成員選項三個GET, 進頁各讀一次；同樣資料拆開所以請求數2→3, bytes上限不變
+  report: { requests: 3, bytes: 3000, allow: [/^\/api\/auth\/current$/, /\/api\/v1\/time-report$/, /\/api\/v1\/time-report\/options\/(projects|members)$/] },
 };
 const MEASURE = process.env.BUDGET_MEASURE === '1';
 const FORBIDDEN = /\/api\/rpc\/(getWorkspace|getTodos)$/;

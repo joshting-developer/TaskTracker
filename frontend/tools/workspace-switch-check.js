@@ -67,9 +67,15 @@ try {
   await first.getByRole('tab', { name: '建立', exact: true }).click(); await first.getByLabel('紙條內容', { exact: true }).fill('A未送出草稿'); await openPicker();
   first.once('dialog', d => d.dismiss()); await picker.getByRole('button', { name: '選擇工作空間 第二工作區', exact: true }).click(); assert.equal(await picker.isVisible(), true); assert.equal(await first.getByLabel('紙條內容', { exact: true }).inputValue(), 'A未送出草稿');
   first.once('dialog', d => d.accept()); await picker.getByRole('button', { name: '選擇工作空間 第二工作區', exact: true }).click(); await picker.waitFor({ state: 'hidden' }); await first.goto(`http://127.0.0.1:${e2ePort}/app/#/notes`); await first.getByRole('tab', { name: '建立', exact: true }).click(); assert.equal(await first.getByLabel('紙條內容', { exact: true }).inputValue(), '');
-  await stale.getByRole('tab', { name: '建立', exact: true }).click(); await stale.getByLabel('紙條內容', { exact: true }).fill('舊分頁不能錯寫');
-  const [rejected] = await Promise.all([stale.waitForResponse(response => response.url().endsWith('/api/rpc/createTodo')), stale.getByRole('button', { name: '建立紙條', exact: true }).click()]);
-  assert.equal(rejected.status(), 409); assert.equal((await rejected.json()).error.code, 'WORKSPACE_CHANGED');
+  // TT-336：TT-339後建立表單一打開就讀承辦人選項, 舊分頁通常在這裡就收到409並同步到新工作區, 不一定走到送出；兩種路徑都必須是WORKSPACE_CHANGED, 而且A工作區不能被寫入
+  const createdInStale = [];
+  stale.on('response', response => { if (response.url().endsWith('/api/rpc/createTodo') && response.status() === 200) createdInStale.push(response.url()); });
+  const rejection = stale.waitForResponse(response => /\/api\/(rpc\/createTodo|v1\/todo-assignees)$/.test(new URL(response.url()).pathname) && response.status() === 409);
+  await stale.getByRole('tab', { name: '建立', exact: true }).click();
+  const content = stale.getByLabel('紙條內容', { exact: true });
+  const submitted = content.fill('舊分頁不能錯寫', { timeout: 3000 }).then(() => stale.getByRole('button', { name: '建立紙條', exact: true }).click({ timeout: 3000 })).catch(() => {});
+  const rejected = await rejection; await submitted;
+  assert.equal(rejected.status(), 409); assert.equal((await rejected.json()).error.code, 'WORKSPACE_CHANGED'); assert.deepEqual(createdInStale, [], '舊分頁不能建立成功');
   const todos = await call(first, 'getTodos'); assert.equal(todos.todos.some(todo => todo.title === '舊分頁不能錯寫'), false); await stale.getByText('A工作區速記', { exact: true }).first().waitFor({ state: 'hidden' });
   console.log('PASS: Owner側欄設定、身份隔離、既有登入邀請、兩個工作區切換、私有專案與待辦隔離、草稿取消／確認、另一分頁舊請求409與重讀、三尺寸');
   const c = await call(second, 'inviteMember', { email: `ws-new-${token}@example.test` });

@@ -8,6 +8,8 @@ const api = process.env.E2E_API_URL || '';
 if (!/^http:\/\/127\.0\.0\.1:13\d{3}$/.test(api)) throw new Error('請設定隔離E2E_API_URL（127.0.0.1:13xxx），不可使用業務資料庫');
 const built = process.env.E2E_PREVIEW === '1', folder = `artifacts/guest-pages${built ? '-build' : ''}`, port = Number(process.env.E2E_FRONTEND_PORT || 5175), origin = `http://127.0.0.1:${port}`;
 mkdirSync(folder, { recursive: true });
+// TT-336：開發模式沒設VITE_SITE_ORIGIN時用目前測試埠, 分享metadata才會產生；E2E_PREVIEW驗正式build不補, 照build結果判斷
+if (!built && !process.env.VITE_SITE_ORIGIN) process.env.VITE_SITE_ORIGIN = origin;
 let server, browser;
 const errors = [], measurements = [];
 const viewports = [[1440, 900], [768, 1024], [390, 844]];

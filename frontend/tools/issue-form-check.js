@@ -57,12 +57,13 @@ try {
   page.once('dialog', dialog => dialog.dismiss()); await editor.getByRole('button', { name: '關閉任務', exact: true }).click(); await editor.waitFor(); assert.equal(await description().inputValue(), '衝突後仍保留的內容');
   page.once('dialog', dialog => dialog.accept()); await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
   const other = await call('createProject', { name: '其他專案', code: 'OTHER' });
-  await call('createTodo', { content: '專案切換草稿', assigneeId: identity.user.id }); await page.goto(`${base}/app/`);
-  const row = page.locator('.todo-row').filter({ hasText: '專案切換草稿' }); await row.getByRole('button', { name: '轉為卡片', exact: true }).click();
+  // TT-336：TT-331後紙條移到獨立頁, 從列的「更多」開抽屜再轉卡
+  const todo = await call('createTodo', { content: '專案切換草稿', assigneeId: identity.user.id }); await page.goto(`${base}/app/#/notes`); await page.getByRole('heading', { name: '紙條', exact: true }).waitFor();
+  await page.locator(`[data-todo-id="${todo.id}"]`).getByRole('button', { name: /^更多：/ }).click(); await page.getByRole('dialog', { name: '紙條', exact: true }).getByRole('button', { name: '轉為卡片', exact: true }).click();
   const conversion = page.getByRole('dialog', { name: '轉成正式卡片', exact: true }); const projectSelect = conversion.getByLabel('專案', { exact: true }); await projectSelect.selectOption(project.id);
   await page.waitForFunction(() => document.querySelector('button[aria-label="選擇描述圖片"]:not(:disabled)'));
   const scratch = await context.newPage(); await scratch.setViewportSize({ width: 320, height: 180 }); await scratch.setContent('<p>隔離圖片草稿</p>'); const png = await scratch.screenshot(); await scratch.close();
-  await conversion.getByLabel('上傳描述圖片').setInputFiles({ name: 'scope.png', mimeType: 'image/png', buffer: png }); await conversion.getByText('已加入描述', { exact: true }).waitFor();
+  await conversion.getByLabel('上傳描述圖片').setInputFiles({ name: 'scope.png', mimeType: 'image/png', buffer: png }); await conversion.getByText('已加入內容', { exact: true }).waitFor();
   const draft = await conversion.getByLabel('描述', { exact: true }).inputValue();
   await projectSelect.selectOption(other.id); await conversion.getByText('描述仍有圖片或未完成上傳, 請先處理圖片再切換專案').waitFor();
   assert.equal(await projectSelect.inputValue(), project.id); assert.equal(await conversion.getByLabel('描述', { exact: true }).inputValue(), draft);

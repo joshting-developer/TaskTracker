@@ -1,8 +1,10 @@
+import { requireIsolatedApi } from './fixtures/isolated-api.js';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
 const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
-if (process.env.E2E_API_URL !== 'http://127.0.0.1:13029') throw new Error('只允許隔離PAT測試API');
+requireIsolatedApi(); // TT-336：PAT測試只打隔離後端
 let server, browser;
 try {
   server = await preview({ preview: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
@@ -22,7 +24,10 @@ try {
   const csrfMissing = await page.request.post(`http://127.0.0.1:${e2ePort}/api/v1/personal-tokens`, { data: {}, headers: { Accept: 'application/json' } });
   assert.equal(csrfMissing.status(), 419);
   const spec = await page.evaluate(async () => (await (await fetch('/api/public/openapi.json')).json()));
-  assert.equal(spec.openapi, '3.1.0'); assert.equal(Object.keys(spec.paths).length, 11);
+  assert.equal(spec.openapi, '3.1.0');
+  // TT-336：公開規格要跟repo的正式OpenAPI一致, 不寫死路徑數（API擴充後原本的11已過時）
+  const source = JSON.parse(readFileSync(new URL('../../backend/resources/openapi.json', import.meta.url), 'utf8'));
+  assert.deepEqual(Object.keys(spec.paths).sort(), Object.keys(source.paths).sort());
   await page.reload();
   async function open() {
     await page.getByRole('button', { name: '帳號選單', exact: true }).click();

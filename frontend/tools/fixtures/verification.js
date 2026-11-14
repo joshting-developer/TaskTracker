@@ -35,6 +35,8 @@ export async function verifyFixtureInBrowser(page) {
     response = await send();
   }
   assert.equal(response.status, 200, 'Isolated fixture verification failed');
+  // TT-336：照AuthGate驗證成功後的導向, 邀請網址回首頁, 其他網址保留；否則重新整理後會再跳出已接受的邀請對話框
+  await page.evaluate(() => { if (location.hash.startsWith('#/invite?')) history.replaceState(null, '', '/app/#/'); });
   await page.reload();
   await page.locator('.app-shell').waitFor();
 }

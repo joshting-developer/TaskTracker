@@ -6,7 +6,6 @@ import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { createServer as createViteServer } from 'vite';
 import { chromium } from 'playwright';
-import { checkTodoWorkflow } from './todo-checks.js';
 import { dateInTaipei } from '../src/domain/model.js';
 
 // 由呼叫端啟動隔離 Laravel API, 不使用 Node mock 後端
@@ -318,7 +317,9 @@ async function checkProjectAcl(page, browser, failures) {
   await detail.getByRole('heading', { name: '受保護的閱讀卡片', exact: true }).waitFor();
   assert.equal(await detail.getByRole('button', { name: '編輯任務', exact: true }).count(), 0);
   assert.equal(await detail.getByLabel('新增留言', { exact: true }).count(), 0);
-  assert.equal(await detail.getByRole('tab', { name: /^工時/ }).count(), 0);
+  // TT-336：TT-317確認reader可讀卡片工時, 只驗不能填報
+  await detail.getByRole('tab', { name: /^工時/ }).click();
+  assert.equal(await detail.getByRole('button', { name: '填報工時', exact: true }).count(), 0);
   assert.equal(await detail.getByRole('group', { name: '任務狀態' }).getByRole('combobox').count(), 0);
   await detail.getByRole('group', { name: '任務狀態' }).getByText('唯讀', { exact: true }).waitFor();
   await teammate.getByRole('button', { name: '返回任務列表', exact: true }).click();
@@ -1308,7 +1309,7 @@ try {
   await checkIssueDetailPage(page);
   await checkProjectAcl(page, browser, failures);
   await checkSeedAccounts(browser, failures);
-  await checkTodoWorkflow(browser, failures, baseURL);
+  // TT-336：小待辦流程自TT-331改由notes-page／markdown／todo-collaboration三支專門檢查負責, 完整回歸會各自跑
   assert.deepEqual(failures, []);
   console.log('PASS: project-first home/create, scoped tasks and creation, project switching, hash links/reload/back/legacy links, search/filter, board dropdown/drag, edits, comments/history, unsaved protection, safe text, mobile navigation/layout');
   console.log('Screenshots: artifacts/desktop-list.png, desktop-board.png, issue-detail.png, mobile-list.png, mobile-editor.png');

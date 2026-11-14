@@ -157,9 +157,13 @@ try {
   await call(page, 'setProjectMember', { projectId: project.id, userId: memberIdentity.user.id, roleId: 'reader', expectedRevision: acl.revision });
   await member.getByRole('button', { name: '重新整理工作空間', exact: true }).evaluate(button => button.click());
   await member.locator('.time-entry-drawer').waitFor({ state: 'detached' });
-  assert.equal(await member.getByRole('tab', { name: /^工時/ }).count(), 0);
+  // TT-336：TT-317確認有issue.read就能讀卡片工時, reader看得到工時分頁, 但不能填報或修改
+  await member.getByRole('tab', { name: /^工時/ }).click();
+  await member.locator('.issue-detail-work').filter({ hasText: '同事的工時' }).waitFor();
+  assert.equal(await member.getByRole('button', { name: '填報工時', exact: true }).count(), 0, 'reader不能填報工時');
+  assert.equal(await member.getByRole('button', { name: /^修改工時 / }).count(), 0, 'reader不能修改工時');
   assert.equal((await request(member, 'logTime', { issueId: task.id, workDate: dateInTaipei(), minutes: 5 })).status, 403);
-  console.log('PASS: 管理者不可修改別人工時、developer可填報、降為reader後清除表單並拒絕寫入');
+  console.log('PASS: 管理者不可修改別人工時、developer可填報、降為reader後清除表單、仍可讀卡片工時並拒絕寫入');
   mkdirSync('artifacts/issue-time', { recursive: true });
   for (const width of [1440, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });

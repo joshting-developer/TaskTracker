@@ -1,8 +1,9 @@
+import { requireIsolatedApi } from './fixtures/isolated-api.js';
 import assert from 'node:assert/strict';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
-if (!['http://127.0.0.1:13029', 'http://127.0.0.1:13049'].includes(process.env.E2E_API_URL)) throw new Error('只允許隔離文件測試API');
-const docsPort = Number(process.env.E2E_DOCS_PORT || 5175);
+requireIsolatedApi(); // TT-336
+const docsPort = Number(process.env.E2E_DOCS_PORT || process.env.E2E_FRONTEND_PORT || 5175); // TT-336：沒另外指定時跟著自己的前端埠
 if (![5175, 5185, 5198, 5199].includes(docsPort)) throw new Error('只允許隔離文件測試埠');
 let server, browser;
 try {
