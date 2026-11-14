@@ -27,7 +27,12 @@ final readonly class AttachmentUploadData
     {
         $path = $file->getRealPath();
         $bytes = $file->getSize();
-        $mime = $path ? (new \finfo(FILEINFO_MIME_TYPE))->file($path) : false;
+        // Reject invalid or oversized uploads before MIME probing allocates its working buffer.
+        if (! $file->isValid() || ! $path || $bytes < 1
+            || $bytes > max(config('attachments.max_bytes'), config('attachments.general_max_bytes'))) {
+            DomainError::fail('INVALID_INPUT', '附件格式或大小不符合限制');
+        }
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($path);
         $extensions = ['image/png' => ['png'], 'image/jpeg' => ['jpg', 'jpeg'], 'image/webp' => ['webp'], 'application/pdf' => ['pdf'], 'application/zip' => ['zip']];
         $isImage = is_string($mime) && str_starts_with($mime, 'image/');
         $limit = config($isImage ? 'attachments.max_bytes' : 'attachments.general_max_bytes');

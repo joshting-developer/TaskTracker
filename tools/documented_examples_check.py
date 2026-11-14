@@ -32,9 +32,13 @@ def main():
         return body.get('data', body)
 
     csrf = call('/api/csrf-cookie')['csrfToken']
-    call('/api/auth/register', {
+    registration = call('/api/auth/register', {
         'email': str(uuid.uuid4()) + '@example.test', 'name': 'Contract fixture',
         'password': str(uuid.uuid4()), 'workspaceName': 'Isolated contracts'})
+    if registration.get('verificationRequired'):
+        if os.environ.get('E2E_ISOLATED') != '1':
+            raise RuntimeError('Explicit isolated fixture activation required')
+        call('/api/auth/verify-email', {'code': 'local666'})
     token = None
     try:
         project = call('/api/rpc/createProject', {

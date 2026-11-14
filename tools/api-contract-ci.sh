@@ -5,6 +5,7 @@ cd "$(dirname "$0")/.."
 export TASKTRACKER_TEST_PORT=13049
 export E2E_DOCS_PORT=5185
 export E2E_API_URL=http://127.0.0.1:13049
+export E2E_ISOLATED=1
 compose() { docker compose -p tasktracker-contract-ci -f docker-compose.mysql-test.yml "$@"; }
 cleanup() { compose down --volumes --remove-orphans; }
 trap cleanup EXIT
@@ -29,8 +30,9 @@ else:
 HEALTH
 "${OPENAPI_PYTHON:-.local/openapi-validation/bin/python}" tools/check_openapi.py
 "${OPENAPI_PYTHON:-.local/openapi-validation/bin/python}" tools/check_openapi_test.py
-compose exec -T -e TASKTRACKER_MYSQL_TEST=0 backend php artisan test --do-not-cache-result
-compose exec -T backend php artisan test --filter='MySqlIssueChangesTest|MySqlPublicQueriesTest|MySqlPublicWritesTest|MySqlTokenRevocationRaceTest' --do-not-cache-result
+# Full-suite fixtures retain more memory than a single HTTP request; keep this limit test-only.
+compose exec -T -e TASKTRACKER_MYSQL_TEST=0 backend php -d memory_limit=512M vendor/bin/phpunit --do-not-cache-result
+compose exec -T backend php -d memory_limit=512M vendor/bin/phpunit --filter='MySqlIssueChangesTest|MySqlPublicQueriesTest|MySqlPublicWritesTest|MySqlTokenRevocationRaceTest' --do-not-cache-result
 python3 tools/documented_examples_check.py
 E2E_ISOLATED=1 python3 tools/public_attachment_acceptance.py
 python3 tools/public_client_acceptance.py

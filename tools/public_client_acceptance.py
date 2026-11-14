@@ -39,6 +39,13 @@ class FixtureSession:
             'email': 'contract-client-' + str(uuid.uuid4()) + '@example.test',
             'name': 'Independent client actor', 'password': str(uuid.uuid4()),
             'workspaceName': 'Client acceptance'})
+        if self.identity.get('verificationRequired'):
+            if os.environ.get('E2E_ISOLATED') != '1' or self.base not in {
+                'http://127.0.0.1:13029', 'http://127.0.0.1:13049',
+                'http://127.0.0.1:13089', 'http://127.0.0.1:13198', 'http://127.0.0.1:13199',
+            }:
+                raise RuntimeError('Explicit isolated fixture activation required')
+            self.identity = self.call('/api/auth/verify-email', {'code': 'local666'})
 
     def project(self, code):
         return self.call('/api/rpc/createProject', {
