@@ -11,3 +11,9 @@
 - Redis第一輪因Secrets未引用導致特殊字元解析異常, 改成引用編碼後同映像重新套用通過, 未換服務密碼
 - 隔離全套測試預設128MB兩次不足, 只提高Codex測試容器至512MB並清掉自身累積fixture後, 429項／18155斷言通過、1項既有skip；正式runtime記憶體設定未改
 - 發版基本驗證完成後卡片改review, Codex轉TT-341執行Josh當次已授權的停寫／備份／逐表核對搬移；不宣稱自訂網域DNS已完成
+
+## DNS完成後續
+
+- Josh紙條確認DNS已設, 已讀TT-323留言；Fly憑證Issued、DNS A紀錄與正式網域HTTPS health均通過
+- 本卡從review回open再claim, 只處理網域切換；正式庫部署前另存私有SQL備份, 不再搬一次資料
+- APP_URL切正式網域, 同一既有digest重新套用設定, 保留Fly網址作相容入口, 之後核對Session／PAT與私有工具baseUrl
