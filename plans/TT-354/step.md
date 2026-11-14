@@ -9,3 +9,5 @@
 - 真瀏覽器已驗3筆通知只送1次POST, 面板改已讀、未讀數歸零與按鈕停用；三尺寸候選待精確比較
 - 三尺寸精確比較通過, 未讀徽章已直接驗DOM歸零；smoke/build通過
 - 相關API文件已同步, 未新增migration或正式資料操作；待統一tag後確認線上功能
+- 整批435案例抓到新增Controller在建構時注入RecordStore會執行Schema檢查, 已改用既有RecordStoreFactory於交易內組裝
+- 容器解析零SQL與通知雙引擎合計6案例203斷言通過, 不改其他讀取端建構成本

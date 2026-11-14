@@ -6,7 +6,7 @@ use App\Authorization\WorkspacePermissions;
 use App\Data\PersonalReadContext;
 use App\Data\WorkspaceContext;
 use App\Domain\DomainError;
-use App\Repositories\RecordStore;
+use App\Factories\RecordStoreFactory;
 use App\Repositories\TodoReadRepository;
 
 /** 通知已讀用例, 由HTTP交易鎖與當次資格限制寫入範圍 */
@@ -14,10 +14,10 @@ class TodoNotificationService
 {
     /** 注入資料入口與既有防重播協作者
      * @param  TodoReadRepository  $todos  個人可見通知範圍
-     * @param  RecordStore  $records  receipt資料入口
+     * @param  RecordStoreFactory  $records  交易內組裝receipt資料入口
      * @param  RequestReplay  $replay  已授權請求的防重播
      */
-    public function __construct(private TodoReadRepository $todos, private RecordStore $records, private RequestReplay $replay) {}
+    public function __construct(private TodoReadRepository $todos, private RecordStoreFactory $records, private RequestReplay $replay) {}
 
     /** 將目前仍可讀的本人通知一次標為已讀, 重試不影響後來的新通知
      * @param  WorkspaceContext  $context  交易內重驗的身分與工作區
