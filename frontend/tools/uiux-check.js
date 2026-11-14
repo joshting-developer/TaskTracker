@@ -207,8 +207,8 @@ try {
   await readerTodos.locator('.notes-list li').first().waitFor();
   assert.equal(await readerTodos.locator('.notes-list li').count(), 5);
   assert.equal(await readerTodos.locator(`[data-todo-id="${assigned[0].id}"]`).count(), 1);
-  await reader.getByRole('button', { name: /紙條通知/ }).click();
-  await reader.getByRole('dialog', { name: '紙條通知', exact: true }).getByRole('button').filter({ hasText: '通知定位 1' }).click();
+  await reader.getByRole('button', { name: /通知/ }).click();
+  await reader.getByRole('dialog', { name: '通知', exact: true }).getByRole('button').filter({ hasText: '通知定位 1' }).click();
   const focusedTodo = reader.getByRole('dialog', { name: '紙條', exact: true });
   await focusedTodo.getByText('通知定位 1', { exact: true }).waitFor();
   assert.equal(await focusedTodo.evaluate(el => el.contains(document.activeElement)), true, '通知定位開啟紙條抽屜並保留焦點');

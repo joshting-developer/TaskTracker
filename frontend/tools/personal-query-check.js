@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { mkdirSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 if(!process.env.E2E_API_URL)throw new Error('必須指定隔離E2E_API_URL');
@@ -53,7 +54,18 @@ try {
   // 先裝假時鐘再載入，背景計時器才會受fastForward控制；時間仍自然流動。
   await receiver.clock.install();
   await receiver.reload();
-  await receiver.getByRole('button',{name:/紙條通知（1 則未讀）/}).click();
+  await receiver.getByRole('button',{name:/通知（1 則未讀）/}).click();
+  await receiver.getByRole('dialog', { name: '通知', exact: true }).waitFor();
+  assert.equal(await receiver.getByRole('button', { name: '關閉通知', exact: true }).count(), 1);
+  mkdirSync('../artifacts/tt337/screens', { recursive: true });
+  for (const [width, height] of [[1440, 900], [768, 1024], [390, 844]]) {
+    await receiver.setViewportSize({ width, height });
+    const panel = receiver.getByRole('dialog', { name: '通知', exact: true });
+    assert.equal(await panel.evaluate(el => el.scrollWidth <= el.clientWidth), true);
+    assert.equal(await receiver.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await receiver.screenshot({ path: `../artifacts/tt337/screens/notification-${width}.png` });
+  }
+
   await receiver.locator('.todo-notification-list button').first().click();
   await receiver.getByRole('dialog', { name: '紙條', exact: true }).getByText('Receiver private detail', { exact: true }).waitFor();
   assert.equal(inboxRequests.filter(path=>/\/(getWorkspace|getTodos)$/.test(path)).length,0);

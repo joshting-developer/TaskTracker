@@ -2,9 +2,9 @@
   "approved": true,
   "harnessSha256": "1382e9d461f0d7750ab421e949b68129e1f6dec6e8548c4fed6644a1a29395e5",
   "profile": "darwin-arm64",
-  "reviewer": "Josh standing authorization / TT-333",
-  "note": "最終焦點循環版本, 已檢閱三尺寸列表／選單／確認, 既有品牌與比較參數保留",
-  "manifestSha256": "22be186778635877577b16db9b78fa33b7311bf71d7387b5cf54ae8bd151026a",
+  "reviewer": "Josh standing authorization / TT-337",
+  "note": "檢閱通知入口改名與三尺寸通知抽屜, 僅文案縮短, 沿用原比較門檻",
+  "manifestSha256": "390d36cdc6060d3f8b8145245eb842b305af99827318204179e2bac5a153b890",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",
