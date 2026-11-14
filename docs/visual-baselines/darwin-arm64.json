@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "7369c2ed08fdfc4d873c0282b0e71f9edbaefe1910cf798f3a00da09669bfa19",
+  "harnessSha256": "b1439f7caf15c70ae1f39a2f105803b36eb00493cf0e0b2c9ed1e0a303f449ef",
   "profile": "darwin-arm64",
-  "reviewer": "Josh standing authorization / TT-334",
-  "note": "通知預覽SMTP狀態13px, 三尺寸已檢視並補入正式基準, 比較門檻維持",
-  "manifestSha256": "ecdc9e6c09f6640d727f04121b88996d2445112dfef885c92d291f949bebf96a",
+  "reviewer": "Josh standing authorization / TT-355",
+  "note": "依Josh持續授權保存本次候選, 已檢視首頁與四個新功能頁的1440／768／390合成畫面, 補入12張分頁基準；保留原比較器與門檻, 舊基準完整留artifacts/tt355/approved-before",
+  "manifestSha256": "4095aac635934868c9ed2e10530fa7091e08ad791b840ce249e2da06dbfada8f",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

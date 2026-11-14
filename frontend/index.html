@@ -3,146 +3,40 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#202127" />
-    <title>TaskTracker｜小團隊的任務看板、紙條與工時</title>
-    <meta name="description" content="TaskTracker 讓小團隊在同一個工作空間管理專案任務、Epic 看板、紙條與交辦, 並記錄每日工時與專案投入；權限依專案設定, 也提供個人 API Token 與公開 REST API" />
+    <meta name="theme-color" content="#292631" />
+    <title>專案管理平台｜TaskTracker</title>
+    <meta name="description" content="TaskTracker 是專案管理平台, 提供任務列表、主題看板、團隊交辦與工時分析, 透過專案權限與個人 API Token 讓成員和外部工具協作" />
     <meta name="robots" content="index, follow" />
-    <!-- TT-208：下列需要絕對網址的標籤由建置時VITE_SITE_ORIGIN填入；未設定時建置會移除。 -->
     <link rel="canonical" href="__SITE_ORIGIN__/" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="zh_TW" />
     <meta property="og:site_name" content="TaskTracker" />
-    <meta property="og:title" content="TaskTracker｜小團隊的任務看板、紙條與工時" />
-    <meta property="og:description" content="專案任務、Epic 看板、紙條與每日工時放在同一個工作空間, 權限依專案設定" />
+    <meta property="og:title" content="專案管理平台｜TaskTracker" />
+    <meta property="og:description" content="TaskTracker 是專案管理平台, 提供任務列表、主題看板、團隊交辦與工時分析, 透過專案權限與個人 API Token 讓成員和外部工具協作" />
     <meta property="og:url" content="__SITE_ORIGIN__/" />
     <meta property="og:image" content="__SITE_ORIGIN__/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="TaskTracker 看板示意：待規劃、進行中、已關閉三欄卡片" />
+    <meta property="og:image:alt" content="TaskTracker 任務看板示意" />
     <meta name="twitter:card" content="summary_large_image" />
     <!-- TT-297：舊的/#/…深層連結（任務分享、邀請信）在顯示首頁前轉到/app/；曾登入的瀏覽器直接進工作空間（只是提示，/app/仍會驗證，未登入會回/login）。
          有JS時先隱藏訪客TopBar待確認登入狀態；無JS時不加class，TopBar照常顯示。 -->
     <script>(function () { var hint = false; try { hint = localStorage.getItem('tasktracker:signed-in') === '1'; } catch (e) {} var intro = /(?:^|[?&])intro=1(?:&|$)/.test(location.search.slice(1)); if (location.hash.indexOf('#/') === 0 || (hint && !intro)) { window.__tasktrackerRedirecting = true; location.replace('/app/' + location.hash); return; } document.documentElement.classList.add('auth-pending'); setTimeout(function () { document.documentElement.classList.remove('auth-pending'); }, 3000); })();</script>
-    <link rel="stylesheet" href="./landing/landing.css" />
-    <script type="module" src="./landing/landing.js"></script>
+
+    <link rel="stylesheet" href="/landing/landing.css" />
+    <script type="module" src="/landing/landing.js"></script>
   </head>
   <body>
+    <a class="skip-link" href="#main">跳到主要內容</a>
     <header class="guest-topbar">
-      <a class="guest-brand" href="/" aria-label="TaskTracker 首頁"><span class="guest-brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>TaskTracker</a>
-      <nav class="guest-nav" aria-label="訪客導覽">
-        <a class="guest-cta" href="/login" data-guest>登入</a>
-        <a class="guest-cta" href="/app/" data-member hidden>回到工作區</a>
-      </nav>
+      <a class="guest-brand" href="/?intro=1" aria-label="TaskTracker 首頁"><span class="guest-brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>TaskTracker</a>
+      <nav class="product-nav" aria-label="功能介紹"><a href="/features/tasks/">任務與看板</a><a href="/features/collaboration/">團隊協作</a><a href="/features/time/">工時分析</a><a href="/features/integrations/">API 與權限</a></nav>
+      <nav class="guest-nav" aria-label="訪客導覽"><a class="guest-cta" href="/login" data-guest>登入</a><a class="guest-cta" href="/app/" data-member hidden>回到工作區</a></nav>
     </header>
-    <main>
-      <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-copy">
-          <h1 id="hero-title">小團隊的任務與工時管理</h1>
-          <p class="lead">隨手記下的小事可以直接轉成專案任務，在看板上推進，花了多少時間也記在同一張卡上。不用再在待辦清單、看板和工時表之間來回對照。</p>
-          <div class="cta-row">
-            <a class="cta primary" href="/login" data-guest>登入 TaskTracker</a>
-            <a class="cta primary" href="/app/" data-member hidden>回到工作區</a>
-            <a class="cta secondary" href="#flow">看看怎麼運作</a>
-          </div>
-        </div>
-        <figure class="hero-figure">
-          <div class="mock-board" role="img" aria-label="看板示意：待規劃、進行中、已關閉三欄，進行中的卡片顯示已填 1.5 小時">
-            <div class="mock-board-head"><strong>會員功能</strong><span>4 張・已完成 1</span></div>
-            <div class="mock-progress" aria-hidden="true"><i style="width: 25%"></i></div>
-            <div class="mock-columns" aria-hidden="true">
-              <div class="mock-column">
-                <h4><i class="dot open"></i>待規劃</h4>
-                <div class="mock-card"><small>TT-12・Task</small><b>註冊驗證信</b></div>
-                <div class="mock-card"><small class="bug">TT-15・Bug</small><b>密碼欄位提示</b></div>
-              </div>
-              <div class="mock-column">
-                <h4><i class="dot doing"></i>進行中</h4>
-                <div class="mock-card active"><small>TT-10・Task</small><b>登入頁與重設密碼</b><span class="mock-meta"><em>1.5 h</em>王小明</span></div>
-              </div>
-              <div class="mock-column">
-                <h4><i class="dot done"></i>已關閉</h4>
-                <div class="mock-card done"><small>TT-8・Task</small><b>會員資料表</b></div>
-              </div>
-            </div>
-          </div>
-          <figcaption>示意畫面：看板顯示卡片總數與已完成數，卡片上直接看到負責人和已填工時。</figcaption>
-        </figure>
-      </section>
-
-      <section class="flow" id="flow" aria-labelledby="flow-title">
-        <h2 id="flow-title">從一件小事到完成</h2>
-        <p class="section-lead">TaskTracker 的日常大概是這樣走的。</p>
-        <ol class="flow-steps">
-          <li class="flow-step">
-            <div class="flow-text">
-              <span class="flow-no">1</span>
-              <h3>先記下來</h3>
-              <p>紙條支援 Markdown, 可以記給自己或交給同事, 並查看回覆與交接歷程</p>
-            </div>
-            <div class="mock-panel" aria-hidden="true">
-              <div class="mock-todo"><i></i>問設計那邊登入頁的錯誤文案</div>
-              <div class="mock-todo"><i></i>重設密碼信的連結要幾小時失效？</div>
-              <div class="mock-todo checked"><i></i>整理上週會議紀錄</div>
-            </div>
-          </li>
-          <li class="flow-step">
-            <div class="flow-text">
-              <span class="flow-no">2</span>
-              <h3>需要排進專案時，轉成任務</h3>
-              <p>紙條變成正式工作時, 直接轉成專案任務, 原本寫的內容會一起帶過去, 之後也看得到它從哪裡來</p>
-            </div>
-            <div class="mock-panel mock-convert" aria-hidden="true">
-              <div class="mock-todo"><i></i>重設密碼信的連結要幾小時失效？</div>
-              <span class="mock-arrow">轉成任務</span>
-              <div class="mock-card"><small>TT-16・Task</small><b>重設密碼信的連結要幾小時失效？</b></div>
-            </div>
-          </li>
-          <li class="flow-step">
-            <div class="flow-text">
-              <span class="flow-no">3</span>
-              <h3>在看板上推進</h3>
-              <p>拖曳卡片就能換狀態。每個專案可以有好幾個看板，收錄一個 Epic 時，它底下的卡片會自動一起出現。</p>
-            </div>
-            <div class="mock-panel mock-mini-board" aria-hidden="true">
-              <div><h4><i class="dot open"></i>待規劃</h4><div class="mock-card"><small>TT-16・Task</small><b>重設密碼信的連結要幾小時失效？</b></div></div>
-              <div><h4><i class="dot doing"></i>進行中</h4><div class="mock-card active"><small>TT-10・Task</small><b>登入頁與重設密碼</b></div></div>
-            </div>
-          </li>
-          <li class="flow-step">
-            <div class="flow-text">
-              <span class="flow-no">4</span>
-              <h3>記下花了多少時間</h3>
-              <p>在任務上填每天的工時，專案月曆、每個成員的投入和趨勢都看得到，不用另外開一份工時表。</p>
-            </div>
-            <div class="mock-panel" aria-hidden="true">
-              <div class="mock-time"><span>11/12（三）</span><b>TT-10 登入頁與重設密碼</b><em>1.0 h</em></div>
-              <div class="mock-time"><span>11/13（四）</span><b>TT-10 登入頁與重設密碼</b><em>0.5 h</em></div>
-              <div class="mock-time total"><span>本週</span><b>王小明・會員功能</b><em>6.5 h</em></div>
-            </div>
-          </li>
-        </ol>
-      </section>
-
-      <section class="more" aria-labelledby="more-title">
-        <h2 id="more-title">其他也做得到</h2>
-        <dl class="more-list">
-          <div><dt>專案權限</dt><dd>依專案成員的角色決定可讀、可寫或可管理，私人專案的任務不會出現在其他人的畫面。</dd></div>
-          <div><dt>任務列表與篩選</dt><dd>依狀態、類型、負責人、到期日篩選與排序，任務頁可以留言、查看異動紀錄。</dd></div>
-          <div><dt>工時分析</dt><dd>看專案月曆、成員投入與趨勢，也能點進去看每張卡花了多少時間。</dd></div>
-          <div><dt>API 與整合</dt><dd>建立個人 API Token，透過公開 REST API 查詢、建立與更新任務，附 OpenAPI 文件。</dd></div>
-        </dl>
-      </section>
-
-      <section class="start" aria-labelledby="start-title">
-        <h2 id="start-title">三步開始</h2>
-        <ol class="start-steps">
-          <li><b>接受工作空間邀請</b>收到邀請後, 使用 Email 註冊並驗證信箱。</li>
-          <li><b>建立專案和看板</b>設定專案代碼、狀態，以及要追蹤的 Epic。</li>
-          <li><b>邀請成員</b>產生邀請連結給同事，依專案指派角色後就能一起用。</li>
-        </ol>
-        <p class="start-cta"><a class="cta primary" href="/login" data-guest>登入 TaskTracker</a><a class="cta primary" href="/app/" data-member hidden>回到工作區</a></p>
-      </section>
-    </main>
-    <footer class="site-footer"><span>TaskTracker</span><a href="/api/public/docs">開發者文件</a></footer>
+    <main id="main"><section class="hero chapter"><div class="wrap"><div class="hero-copy"><h1>專案管理平台</h1><p class="lead">從任務規劃、團隊交辦到工時紀錄,<br class="desktop-break"> 在同一個工作空間追蹤每個專案</p><div class="cta-row"><a class="cta primary" href="/login?mode=register" data-guest>建立工作空間</a><a class="cta primary" href="/app/" data-member hidden>回到工作區</a><a class="text-link" href="#features">探索功能</a></div></div><div class="hero-preview"><span class="folder-tab">專案 / 網站改版</span><div class="product-board" data-ui aria-label="任務看板示意"><div class="board-heading"><strong>網站改版</strong><span>任務看板</span></div><div class="board-columns"><div><h3>待規劃 <span>1</span></h3><article class="issue"><small>WEB-12 · Task</small><h4>整理使用者回饋</h4><span class="person">林怡君</span></article></div><div><h3>進行中 <span>1</span></h3><article class="issue selected"><small>WEB-14 · Task</small><h4>調整手機版導覽</h4><p>工時 1.5 h</p><span class="person">陳柏宇</span></article></div><div><h3>已關閉 <span>1</span></h3><article class="issue"><small>WEB-11 · Bug</small><h4>修正登入錯誤提示</h4><span class="person">林怡君</span></article></div></div></div><p class="preview-caption">功能示意 · 合成資料</p></div></div></section>
+<section class="feature-section chapter" id="features"><div class="wrap"><h2>專案裡的工作, 放在一起</h2><div class="aspects"><article class="aspect"><h3><a href="/features/tasks/">任務與看板</a></h3><ul><li>任務列表與條件篩選</li><li>自訂狀態與主題看板</li><li>Epic、子任務與關聯</li></ul><a class="aspect-link" href="/features/tasks/" aria-label="了解任務與看板">了解功能 <span aria-hidden="true">↗</span></a></article><article class="aspect"><h3><a href="/features/collaboration/">團隊協作</a></h3><ul><li>個人速記與同事交辦</li><li>留言、回覆與通知</li><li>紙條轉成正式任務</li></ul><a class="aspect-link" href="/features/collaboration/" aria-label="了解團隊協作">了解功能 <span aria-hidden="true">↗</span></a></article><article class="aspect"><h3><a href="/features/time/">工時分析</a></h3><ul><li>任務工時與每日紀錄</li><li>專案、成員、趨勢分析</li><li>按日期查看投入明細</li></ul><a class="aspect-link" href="/features/time/" aria-label="了解工時分析">了解功能 <span aria-hidden="true">↗</span></a></article><article class="aspect"><h3><a href="/features/integrations/">API 與權限</a></h3><ul><li>個人 API Token</li><li>REST API 與 OpenAPI</li><li>工作空間與專案授權</li></ul><a class="aspect-link" href="/features/integrations/" aria-label="了解API 與權限">了解功能 <span aria-hidden="true">↗</span></a></article></div></div></section>
+<section class="scenario-section chapter" aria-labelledby="scenario-title"><div class="wrap"><div class="section-heading"><h2 id="scenario-title">從實際工作出發</h2><div class="carousel-controls" hidden><button type="button" data-prev aria-label="上一個情境">←</button><span data-counter aria-live="polite" aria-atomic="true">1 / 3</span><button type="button" data-next aria-label="下一個情境">→</button></div></div><div class="scenarios" role="region" aria-label="功能情境" tabindex="0"><article class="scenario" data-slide aria-label="1 / 3"><div class="scenario-copy"><h3>這次上線, 還缺哪一件？</h3><p>用主題看板收錄這次要交付的任務, 狀態、負責人與卡片內容放在一起看</p><a class="text-link" href="/features/tasks/">查看任務與看板</a></div><figure><div class="product-board" data-ui aria-label="任務看板示意"><div class="board-heading"><strong>網站改版</strong><span>任務看板</span></div><div class="board-columns"><div><h3>待規劃 <span>1</span></h3><article class="issue"><small>WEB-12 · Task</small><h4>整理使用者回饋</h4><span class="person">林怡君</span></article></div><div><h3>進行中 <span>1</span></h3><article class="issue selected"><small>WEB-14 · Task</small><h4>調整手機版導覽</h4><p>工時 1.5 h</p><span class="person">陳柏宇</span></article></div><div><h3>已關閉 <span>1</span></h3><article class="issue"><small>WEB-11 · Bug</small><h4>修正登入錯誤提示</h4><span class="person">林怡君</span></article></div></div></div><figcaption>功能示意 · 合成資料</figcaption></figure></article><article class="scenario" data-slide aria-label="2 / 3"><div class="scenario-copy"><h3>今天的時間花在哪裡？</h3><p>先在任務填工時, 再從成員分析查看每天做了什麼、各張卡投入多少時間</p><a class="text-link" href="/features/time/">查看工時分析</a></div><figure><div class="time-demo" data-ui><div class="board-heading"><strong>成員投入明細</strong><span>示範工作日</span></div><table><caption>陳柏宇的工時紀錄</caption><thead><tr><th>任務</th><th>投入</th></tr></thead><tbody><tr><td><small>WEB-14</small>調整手機版導覽</td><td>1.5 h</td></tr><tr><td><small>WEB-16</small>確認上線項目</td><td>0.5 h</td></tr></tbody><tfoot><tr><th>當日合計</th><td>2 h</td></tr></tfoot></table></div><figcaption>功能示意 · 合成資料</figcaption></figure></article><article class="scenario" data-slide aria-label="3 / 3"><div class="scenario-copy"><h3>一句交代, 後來變成正式工作</h3><p>先用紙條記下交辦與回覆, 需要排進專案時再轉成任務, 不必重新整理內容</p><a class="text-link" href="/features/collaboration/">查看團隊協作</a></div><figure><div class="paper-demo" data-ui><div class="board-heading"><strong>確認上線項目</strong><span>交辦紀錄</span></div><ol><li><b>林怡君交給陳柏宇</b><p>請確認手機版導覽, 補上測試結果</p></li><li><b>陳柏宇回覆</b><p>測試項目已整理, 需要排入本次改版</p></li><li><b>轉為任務 WEB-16</b><p>保留原內容與交辦來源</p></li></ol></div><figcaption>功能示意 · 合成資料</figcaption></figure></article></div></div></section>
+<section class="start-section chapter"><div class="wrap start-content"><h2>建立你的工作空間</h2><p>註冊並驗證信箱後建立專案, 邀請成員加入</p><a class="cta primary" href="/login?mode=register" data-guest>建立工作空間</a><a class="cta primary" href="/app/" data-member hidden>回到工作區</a></div></section></main>
+    <footer class="site-footer"><a class="footer-brand" href="/?intro=1">TaskTracker</a><nav aria-label="頁尾導覽"><a href="/api/public/docs">開發者文件</a><a href="/login">登入工作區</a></nav></footer>
   </body>
 </html>

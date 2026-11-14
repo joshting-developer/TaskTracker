@@ -18,7 +18,7 @@ CANDIDATE = ARTIFACTS / 'candidate'
 PROFILE = sys.platform + '-' + platform.machine()
 APPROVED = ARTIFACTS / ('approved-' + PROFILE)
 APPROVAL = ROOT / 'docs/visual-baselines' / (PROFILE + '.json')
-SOURCE_ROOTS = ['frontend/landing', 'frontend/src', 'backend/app', 'backend/routes', 'backend/config', 'frontend/tools/visual']
+SOURCE_ROOTS = ['frontend/features', 'frontend/landing', 'frontend/src', 'backend/app', 'backend/routes', 'backend/config', 'frontend/tools/visual']
 
 
 def digest(path):
@@ -29,7 +29,7 @@ def source_rows():
     paths = []
     for folder in SOURCE_ROOTS:
         paths += [p for p in (ROOT / folder).rglob('*') if p.is_file()]
-    paths += [ROOT / name for name in ['backend/composer.json', 'backend/composer.lock', 'docker-compose.mysql-test.yml', 'frontend/index.html', 'frontend/package.json', 'frontend/package-lock.json', 'frontend/playwright.visual.config.js', 'backend/tools/visual-fixture-clock.php', 'tools/visual-baseline.py', 'tools/visual-check.sh', 'frontend/tools/navigation.js', 'frontend/tools/board-actions.js']]
+    paths += [ROOT / name for name in ['backend/composer.json', 'backend/composer.lock', 'docker-compose.mysql-test.yml', 'frontend/index.html', 'frontend/vite.config.js', 'frontend/package.json', 'frontend/package-lock.json', 'frontend/playwright.visual.config.js', 'backend/tools/visual-fixture-clock.php', 'tools/visual-baseline.py', 'tools/visual-check.sh', 'frontend/tools/navigation.js', 'frontend/tools/board-actions.js']]
     return [{'path': str(p.relative_to(ROOT)), 'sha256': digest(p)} for p in sorted(paths)]
 
 

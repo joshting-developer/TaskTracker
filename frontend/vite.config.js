@@ -7,14 +7,16 @@ import { fileURLToPath } from 'node:url';
 // TT-207／208：公開頁需要絕對網址的canonical／og標籤由建置時VITE_SITE_ORIGIN填入；未設定時移除這些標籤，不寫死網域。
 const siteOrigin = (process.env.VITE_SITE_ORIGIN || '').replace(/\/+$/, '');
 if (siteOrigin && !/^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(siteOrigin)) throw new Error('VITE_SITE_ORIGIN必須是不含路徑的origin，例如https://tasks.example.com');
+const featureSlugs = ['tasks', 'collaboration', 'time', 'integrations'];
+const publicPaths = ['/', ...featureSlugs.map(slug => `/features/${slug}/`)];
 const publicOrigin = {
   name: 'tasktracker-public-origin',
   transformIndexHtml: html => siteOrigin ? html.replaceAll('__SITE_ORIGIN__', siteOrigin) : html.replace(/^[ \t]*<(?:link|meta)\b[^>]*__SITE_ORIGIN__[^>]*>\r?\n/gm, ''),
-  // robots放行公開首頁、排除API與工作空間；sitemap僅列可索引的首頁/，需絕對網址所以未設定origin時不產生。
+  // sitemap包含首頁與四個公開功能頁, 不收錄登入及工作區。
   generateBundle() {
     this.emitFile({ type: 'asset', fileName: 'og-image.png', source: readFileSync(fileURLToPath(new URL('./public-assets/og-image.png', import.meta.url))) });
     this.emitFile({ type: 'asset', fileName: 'robots.txt', source: `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /app/\n${siteOrigin ? `Sitemap: ${siteOrigin}/sitemap.xml\n` : ''}` });
-    if (siteOrigin) this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${siteOrigin}/</loc></url>\n</urlset>\n` });
+    if (siteOrigin) this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${publicPaths.map(path => `  <url><loc>${siteOrigin}${path}</loc></url>`).join('\n')}\n</urlset>\n` });
   },
 };
 
@@ -50,6 +52,6 @@ export default defineConfig({
     // 兩個HTML入口會讓polyfill成為共用chunk而多一個請求；支援的瀏覽器皆原生支援modulepreload。
     modulePreload: { polyfill: false },
     // TT-297：首頁/是靜態產品介紹；/app/（亦服務/login）是工作空間SPA殼層；同一映像，不另做SSR。
-    rollupOptions: { input: { landing: fileURLToPath(new URL('./index.html', import.meta.url)), app: fileURLToPath(new URL('./app/index.html', import.meta.url)) } },
+    rollupOptions: { input: { landing: fileURLToPath(new URL('./index.html', import.meta.url)), app: fileURLToPath(new URL('./app/index.html', import.meta.url)), ...Object.fromEntries(featureSlugs.map(slug => [slug, fileURLToPath(new URL(`./features/${slug}/index.html`, import.meta.url))])) } },
   },
 });

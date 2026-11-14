@@ -82,6 +82,14 @@ test('representative workspace flows', async ({ page, browser }) => {
   await page.getByRole('heading', { level: 1 }).waitFor();
   await page.waitForFunction(() => !document.documentElement.classList.contains('auth-pending'));
   await shot(page, '21-public-entry');
+  await page.goto('/features/tasks/');
+  await shot(page, '32-public-tasks');
+  await page.goto('/features/collaboration/');
+  await shot(page, '33-public-collaboration');
+  await page.goto('/features/time/');
+  await shot(page, '34-public-time');
+  await page.goto('/features/integrations/');
+  await shot(page, '35-public-integrations');
   await page.goto('/login');
   await page.getByRole('button', { name: '登入', exact: true }).waitFor();
   await shot(page, '01-login');

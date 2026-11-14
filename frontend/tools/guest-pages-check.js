@@ -145,7 +145,7 @@ try {
     const robots = await (await fetch(`${origin}/robots.txt`)).text();
     assert.match(robots, /Allow: \/\n/); assert.match(robots, /Disallow: \/api\//); assert.match(robots, /Disallow: \/app\//);
     const sitemap = await (await fetch(`${origin}/sitemap.xml`)).text();
-    assert.deepEqual([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]), [`${origin}/`], 'sitemap只列首頁');
+    assert.deepEqual([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]), ['/', '/features/tasks/', '/features/collaboration/', '/features/time/', '/features/integrations/'].map(path => origin + path), 'sitemap列首頁與四個公開功能頁');
     assert.match(raw, new RegExp(`<link rel="canonical" href="${origin}/" />`));
     const image = await fetch(raw.match(/og:image" content="([^"]+)"/)[1]);
     assert.equal(image.headers.get('content-type'), 'image/png');

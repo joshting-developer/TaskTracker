@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#292631" />
+    <title>API 與權限｜TaskTracker</title>
+    <meta name="description" content="TaskTracker API 與權限：使用個人 Token 和公開 REST API, 依同一套專案權限查詢與更新資料。設定授權範圍與到期日, 不再使用時可以撤銷, 不必把登入密碼交給外部工具" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="__SITE_ORIGIN__/features/integrations/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="zh_TW" />
+    <meta property="og:site_name" content="TaskTracker" />
+    <meta property="og:title" content="API 與權限｜TaskTracker" />
+    <meta property="og:description" content="TaskTracker API 與權限：使用個人 Token 和公開 REST API, 依同一套專案權限查詢與更新資料。設定授權範圍與到期日, 不再使用時可以撤銷, 不必把登入密碼交給外部工具" />
+    <meta property="og:url" content="__SITE_ORIGIN__/features/integrations/" />
+    <meta property="og:image" content="__SITE_ORIGIN__/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="TaskTracker 任務看板示意" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="stylesheet" href="/landing/landing.css" />
+    <script type="module" src="/landing/landing.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到主要內容</a>
+    <header class="guest-topbar">
+      <a class="guest-brand" href="/?intro=1" aria-label="TaskTracker 首頁"><span class="guest-brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>TaskTracker</a>
+      <nav class="product-nav" aria-label="功能介紹"><a href="/features/tasks/">任務與看板</a><a href="/features/collaboration/">團隊協作</a><a href="/features/time/">工時分析</a><a href="/features/integrations/">API 與權限</a></nav>
+      <nav class="guest-nav" aria-label="訪客導覽"><a class="guest-cta" href="/login" data-guest>登入</a><a class="guest-cta" href="/app/" data-member hidden>回到工作區</a></nav>
+    </header>
+    <main id="main"><section class="detail-hero chapter"><div class="wrap"><a class="back-link" href="/?intro=1#features">功能總覽</a><p class="feature-name">API 與權限</p><h1>讓外部工具操作任務</h1><p class="lead">使用個人 Token 和公開 REST API, 依同一套專案權限查詢與更新資料</p></div></section><section class="detail-section chapter"><div class="wrap detail-layout"><figure><div class="api-demo" data-ui><div class="board-heading"><strong>公開 REST API</strong><span>請求示意</span></div><pre><code>GET /api/public/v1/projects/{project}/issues
+Authorization: Bearer &lt;個人 Token&gt;</code></pre><dl><div><dt>使用者權限</dt><dd>目前可存取的專案</dd></div><div><dt>Token 範圍</dt><dd>允許讀取或修改的操作</dd></div><div><dt>實際可操作範圍</dt><dd>兩者的交集</dd></div></dl></div><figcaption>功能示意 · 合成資料</figcaption></figure><div class="detail-points"><article><h2>每個人管理自己的 Token</h2><p>設定授權範圍與到期日, 不再使用時可以撤銷, 不必把登入密碼交給外部工具</p></article><article><h2>權限持續生效</h2><p>Token 能做的操作仍受本人目前權限限制, 移出專案後也無法繼續存取</p></article><article><h2>提供標準介面</h2><p>OpenAPI 與開發者文件說明查詢、寫入、分頁及版本衝突, 讓自己的程式或 AI 工具依契約串接</p></article></div></div></section><section class="related-section chapter"><div class="wrap"><h2>繼續了解</h2><nav aria-label="其他功能"><a href="/features/tasks/">任務與看板</a><a href="/features/collaboration/">團隊協作</a><a href="/features/time/">工時分析</a></nav><a class="text-link" href="/api/public/docs">開發者文件</a></div></section></main>
+    <footer class="site-footer"><a class="footer-brand" href="/?intro=1">TaskTracker</a><nav aria-label="頁尾導覽"><a href="/api/public/docs">開發者文件</a><a href="/login">登入工作區</a></nav></footer>
+  </body>
+</html>
