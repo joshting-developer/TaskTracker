@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "b1439f7caf15c70ae1f39a2f105803b36eb00493cf0e0b2c9ed1e0a303f449ef",
+  "harnessSha256": "5234ce5c99eab000c83edd3e9b4e56e5dbb755007ab62f07fa55d321233e827b",
   "profile": "darwin-arm64",
-  "reviewer": "Josh standing authorization / TT-355",
-  "note": "依Josh持續授權保存本次候選, 已檢視首頁與四個新功能頁的1440／768／390合成畫面, 補入12張分頁基準；保留原比較器與門檻, 舊基準完整留artifacts/tt355/approved-before",
-  "manifestSha256": "4095aac635934868c9ed2e10530fa7091e08ad791b840ce249e2da06dbfada8f",
+  "reviewer": "Josh standing authorization / TT-345",
+  "note": "Laravel13.40.0修補重跑105張候選, 無版面變更, 原始差異僅11～148個邊緣像素；依持續授權綁定新版依賴harness, 保留原比較器與舊基準於artifacts/tt345/approved-before",
+  "manifestSha256": "83b82aed4b49854474f6e2d728f6836f168cd4455fa01f550de39e2947daf8b0",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",
