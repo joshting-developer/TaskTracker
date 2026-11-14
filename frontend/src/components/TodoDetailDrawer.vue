@@ -10,7 +10,8 @@ import { todoSource } from '../domain/todoContent.js';
 const props = defineProps({ item: Object, busy: Boolean, error: String, workspaceId: String, loadMembers: Function, perform: Function, canConvert: Boolean });
 const emit = defineEmits(['close', 'convert', 'open-issue']);
 const dialog = ref(null), id = useId();
-const reply = shallowRef(''), recipient = shallowRef(''), revision = shallowRef(props.item.revision), editing = shallowRef(false), content = shallowRef('');
+const defaultRecipient = () => props.item.capabilities.return ? '__previous__' : '';
+const reply = shallowRef(''), recipient = shallowRef(defaultRecipient()), revision = shallowRef(props.item.revision), editing = shallowRef(false), content = shallowRef('');
 const dirty = computed(() => Boolean(reply.value.trim() || editing.value));
 const stale = computed(() => revision.value !== props.item.revision);
 const labels = { open: '待處理', done: '已完成', canceled: '已取消', converted: '已轉卡' };
@@ -30,7 +31,7 @@ async function send(operation) {
   }
   if (operation === 'updateTodo') fields.content = content.value;
   else if (reply.value.trim()) fields.reply = reply.value;
-  if (await props.perform(operation, fields)) { reply.value = ''; recipient.value = ''; editing.value = false; await nextTick(); latest(); }
+  if (await props.perform(operation, fields)) { reply.value = ''; editing.value = false; await nextTick(); recipient.value = defaultRecipient(); latest(); }
 }
 function edit() { content.value = todoSource(props.item); editing.value = true; latest(); }
 async function cancel() { if (window.confirm('取消這張紙條？')) await send('cancelTodo'); }
@@ -56,7 +57,7 @@ onBeforeUnmount(() => { dialog.value?.close(); if (opener?.isConnected) opener.f
     </div>
     <form v-if="item.capabilities.forward && !editing" class="note-transfer" @submit.prevent="send('forwardTodo')">
       <label :for="`${id}-reply`">回覆內容</label><textarea :id="`${id}-reply`" v-model="reply" rows="3" maxlength="2000" :disabled="busy" placeholder="輸入回覆…" />
-      <div class="note-transfer-actions"><PagedSelect v-model="recipient" label="要傳給誰" :context="workspaceId" :load="loadMembers" :fixed-options="[...(item.capabilities.return ? [{ id: '__previous__', name: '回覆上一手' }] : []), { id: item.createdBy, name: item.creatorName }, { id: item.initialAssigneeId, name: item.initialAssigneeName || item.assigneeName }]" :disabled="busy" autoload required empty-label="選擇承辦人" /><button class="button primary" :disabled="busy || stale || !recipient || recipient === item.assigneeId || (recipient === '__previous__' && (!item.capabilities.return || !reply.trim()))">{{ recipient === '__previous__' ? '回覆上一手' : '傳遞' }}</button></div>
+      <div class="note-transfer-actions"><PagedSelect v-model="recipient" label="要傳給誰" :context="workspaceId" :load="loadMembers" :fixed-options="[...(item.capabilities.return ? [{ id: '__previous__', name: '回覆上一手' }] : []), { id: item.createdBy, name: item.creatorName }, { id: item.initialAssigneeId, name: item.initialAssigneeName || item.assigneeName }]" :disabled="busy" autoload required empty-label="選擇承辦人" /><button class="button primary" :disabled="busy || stale || !recipient || recipient === item.assigneeId || (recipient === '__previous__' && (!item.capabilities.return || !reply.trim()))">傳遞</button></div>
     </form>
   </dialog>
 </template>

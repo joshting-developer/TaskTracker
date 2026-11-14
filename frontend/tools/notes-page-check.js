@@ -63,10 +63,10 @@ try {
   assert.equal(await drawer(josh).getByLabel('要傳給誰', { exact: true }).count(), 0);
   await drawer(josh).getByRole('button', { name: '關閉紙條', exact: true }).click();
   await openNotes(codex); await more(codex).click();
-  await drawer(codex).getByLabel('要傳給誰', { exact: true }).selectOption('__previous__');
-  assert.equal(await drawer(codex).getByRole('button', { name: '回覆上一手', exact: true }).isDisabled(), true);
+  assert.equal(await drawer(codex).getByLabel('要傳給誰', { exact: true }).inputValue(), '__previous__');
+  assert.equal(await drawer(codex).getByRole('button', { name: '傳遞', exact: true }).isDisabled(), true);
   await drawer(codex).getByLabel('回覆內容', { exact: true }).fill('先請Josh確認卡號連結');
-  await drawer(codex).getByRole('button', { name: '回覆上一手', exact: true }).click();
+  await drawer(codex).getByRole('button', { name: '傳遞', exact: true }).click();
   await drawer(codex).getByText('先請Josh確認卡號連結', { exact: true }).waitFor();
   const returned = (await (await owner.request.get(`http://127.0.0.1:${port}/api/v1/todos/${todo.id}`)).json()).data;
   assert.equal(returned.assigneeId, people.Josh.id, 'Reply returns to actual path handler, rather than note creator');
@@ -84,6 +84,7 @@ try {
   await owner.reload(); await owner.getByRole('tab', { name: '我交辦的', exact: true }).click(); await more(owner, self.id).waitFor();
   await owner.getByRole('tab', { name: '待處理', exact: true }).click(); await more(owner, self.id).click();
   assert.equal(await drawer(owner).getByLabel('要傳給誰', { exact: true }).locator('option[value="__previous__"]').count(), 0);
+  assert.equal(await drawer(owner).getByLabel('要傳給誰', { exact: true }).inputValue(), '');
   await drawer(owner).getByLabel('回覆內容', { exact: true }).fill('版本衝突保留的內容'); await drawer(owner).getByLabel('要傳給誰', { exact: true }).selectOption(people.Josh.id);
   await call(owner, 'commentTodo', { id: self.id, expectedRevision: self.revision, content: '模擬另一分頁更新' });
   await drawer(owner).getByRole('button', { name: '傳遞', exact: true }).click();

@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "ee0870342d607578b198621d5fa7b04a1400d793dbcd0746948bc3a401003107",
+  "harnessSha256": "8fab7716d708c192d8c233ea4d8801ee2893b4ca88c5ff883f4fb10ab1100fa1",
   "profile": "darwin-arm64",
-  "reviewer": "Josh standing authorization / TT-340",
-  "note": "Reviewed 87 screenshots with deterministic synthetic note ordering, member emails and expiry; pending invitation UI and disabled state retained; no tolerance changes",
-  "manifestSha256": "f74aa6b5547f32bb2e97e7a701e855db07769887978942d1779c5395f836cb0d",
+  "reviewer": "Josh standing authorization / TT-339",
+  "note": "固定傳遞按鈕並預設回覆上一手, 三尺寸已檢視, 比較門檻不變",
+  "manifestSha256": "f3e7148f6ed640afc89cfe92bcba3376710e57f567b6f3acf7899dc79f1482aa",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

@@ -243,9 +243,9 @@ test('representative workspace flows', async ({ page, browser }) => {
     await page.goto('/app/#/notes');
     await page.locator(`[data-todo-id="${replyNote.id}"]`).getByRole('button', { name: /^更多：/ }).click();
     const replyDrawer = page.getByRole('dialog', { name: '紙條', exact: true });
-    await replyDrawer.getByLabel('要傳給誰', { exact: true }).selectOption('__previous__');
+    await expect(replyDrawer.getByLabel('要傳給誰', { exact: true })).toHaveValue('__previous__');
     await replyDrawer.getByLabel('回覆內容', { exact: true }).fill('已確認, 請接著處理');
-    await expect(replyDrawer.getByRole('button', { name: '回覆上一手', exact: true })).toBeEnabled();
+    await expect(replyDrawer.getByRole('button', { name: '傳遞', exact: true })).toBeEnabled();
     await shot(page, '28-note-reply-previous');
   await replyDrawer.getByLabel('回覆內容', { exact: true }).fill('');
   await replyDrawer.getByRole('button', { name: '關閉紙條', exact: true }).click();
