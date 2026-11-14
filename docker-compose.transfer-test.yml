@@ -1,0 +1,28 @@
+# TT-341 synthetic migration rehearsal only; no host ports or live volumes.
+services:
+  source:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${TT_TRANSFER_TEST_PASSWORD:?Set a generated isolated test password}
+      MYSQL_DATABASE: tasktracker_transfer_source
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_bin"]
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysql -h127.0.0.1 -uroot -e 'SELECT 1' >/dev/null 2>&1"]
+      interval: 2s
+      timeout: 3s
+      retries: 45
+  target:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${TT_TRANSFER_TEST_PASSWORD:?Set a generated isolated test password}
+      MYSQL_DATABASE: tasktracker_transfer_target
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_bin"]
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysql -h127.0.0.1 -uroot -e 'SELECT 1' >/dev/null 2>&1"]
+      interval: 2s
+      timeout: 3s
+      retries: 45

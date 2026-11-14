@@ -222,6 +222,10 @@ docker compose exec backend php artisan tasktracker:import-legacy /legacy/tasktr
 
 若舊資料位於 Docker `tasktracker-data` volume, 請先停寫並備份／複製到根 `data/` 後匯入, 不直接讓兩個版本共用可寫 SQLite
 
+## MySQL搬遷準備
+
+MySQL到MySQL的私有備份、空庫匯入、逐表核對、重跑與回退見[搬遷操作](docs/mysql-transfer-runbook.md)。工具已提供隔離演練入口；正式搬移仍需部署完成與當次授權, 不以本地演練當作正式驗收
+
 ## 不使用 Docker 的開發方式
 
 需要符合 `backend/composer.lock` 的 PHP 及 Composer；目前lockfile的最低需求為PHP8.4.1, Composer宣告已對齊, Docker維持PHP8.5.12。前端使用 Node 22.18 以上的 22.x 或 Node 24.12 以上
