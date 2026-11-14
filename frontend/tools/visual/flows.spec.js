@@ -247,6 +247,15 @@ test('representative workspace flows', async ({ page, browser }) => {
     await replyDrawer.getByLabel('回覆內容', { exact: true }).fill('已確認, 請接著處理');
     await expect(replyDrawer.getByRole('button', { name: '回覆上一手', exact: true })).toBeEnabled();
     await shot(page, '28-note-reply-previous');
+  await replyDrawer.getByLabel('回覆內容', { exact: true }).fill('');
+  await replyDrawer.getByRole('button', { name: '關閉紙條', exact: true }).click();
   } finally { await replyContext.close(); }
+  await page.goto('/app/#/workspace/settings/members');
+  await page.getByRole('region', { name: '待接受邀請', exact: true }).waitFor();
+  await call(page.request, 'inviteMember', { email: 'pending-visual@example.test' });
+  execFileSync('docker', ['compose', '-p', 'tasktracker-codex-visual', '-f', resolve(import.meta.dirname, '../../../docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', 'tools/visual-fixture-clock.php'], { cwd: resolve(import.meta.dirname, '../../..'), input: JSON.stringify({ userId: data.identity.user.id, workspaceId: data.identity.workspace.id, projectId: data.project.id, emptyId: data.empty.id, normalizeInvitations: true, profile: test.info().project.name }), stdio: ['pipe', 'pipe', 'pipe'] });
+  await page.reload();
+  await page.getByRole('region', { name: '待接受邀請', exact: true }).getByText('pending-visual@example.test', { exact: true }).waitFor();
+  await shot(page, '29-workspace-pending-invitations');
   expect(errors).toEqual([]);
 });

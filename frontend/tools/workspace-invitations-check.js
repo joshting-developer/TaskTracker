@@ -1,0 +1,83 @@
+import assert from 'node:assert/strict';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { createServer } from 'vite';
+import { chromium } from 'playwright';
+import { fixtureResponse } from './fixtures/verification.js';
+const port = Number(process.env.E2E_FRONTEND_PORT || 5199), api = process.env.E2E_API_URL;
+if (process.env.E2E_ISOLATED !== '1' || api !== 'http://127.0.0.1:13199') throw Error('Owned Codex isolated invitations API required');
+mkdirSync('../artifacts/tt340', { recursive: true });
+let server, browser;
+try {
+  server = await createServer({ server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': api } } }); await server.listen();
+  browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
+  const owner = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage(), guest = await (await browser.newContext()).newPage();
+  const base = `http://127.0.0.1:${port}`, errors = [], reads = [];
+  for (const page of [owner, guest]) { page.setDefaultTimeout(12000); page.on('pageerror', error => errors.push(error.message)); await page.goto(`${base}/login`); }
+  async function call(page, operation, input = {}, group = 'auth') {
+    const csrf = await (await page.request.get(`${base}/api/csrf-cookie`)).json();
+    const response = await page.request.post(`${base}/api/${group}/${operation}`, { data: { requestId: crypto.randomUUID(), ...input }, headers: { 'X-CSRF-TOKEN': csrf.csrfToken } });
+    assert.equal(response.status(), 200, 'Fixture HTTP response'); return (await fixtureResponse(page.request, response)).data;
+  }
+  const password = 'isolated-invitation-password', ownerEmail = `owner-${crypto.randomUUID()}@example.test`, guestEmail = `existing-${crypto.randomUUID()}@example.test`;
+  await call(owner, 'register', { name: '邀請管理者', email: ownerEmail, password, workspaceName: '邀請測試' });
+  const b = await call(guest, 'register', { name: '既有成員', email: guestEmail, password, workspaceName: '原有工作區' });
+  owner.on('request', request => { if (request.method() === 'GET' && request.url().includes('/api/v1/')) reads.push(new URL(request.url()).pathname); });
+  await owner.goto(`${base}/app/#/workspace/settings`);
+  await owner.getByLabel('工作空間名稱', { exact: true }).waitFor();
+  assert.equal(reads.some(path => path.endsWith('/workspace/invitations')), false, 'General settings do not load invitations');
+  await owner.getByRole('tab', { name: '成員與權限', exact: true }).click();
+  const invites = owner.getByRole('region', { name: '工作空間邀請', exact: true }), pending = owner.getByRole('region', { name: '待接受邀請', exact: true });
+  await pending.getByText('沒有待接受邀請', { exact: true }).waitFor();
+  await invites.getByLabel('受邀者 Email', { exact: true }).fill(guestEmail);
+  await invites.getByRole('button', { name: '邀請成員', exact: true }).click();
+  await invites.getByText('邀請已建立', { exact: true }).waitFor();
+  await pending.getByText(guestEmail, { exact: true }).waitFor();
+  const raw = await invites.getByLabel('邀請連結', { exact: true }).inputValue(), token = new URL(raw).hash.split('token=')[1];
+  const directory = (await (await owner.request.get(`${base}/api/v1/workspace/members?search=${encodeURIComponent(guestEmail)}`)).json()).data;
+  assert.equal(directory.total, 0, 'Invitation does not create active membership');
+  const listing = (await (await owner.request.get(`${base}/api/v1/workspace/invitations`)).json()).data;
+  assert.equal(listing.total, 1); assert.deepEqual(Object.keys(listing.items[0]), ['id', 'email', 'role', 'createdAt', 'expiresAt', 'deliveryStatus']);
+  for (const width of [1440, 768, 390]) { await owner.setViewportSize({ width, height: 1000 }); assert.equal(await owner.evaluate(() => document.documentElement.scrollWidth > innerWidth), false); await owner.screenshot({ path: `../artifacts/tt340/invitations-${width}.png`, fullPage: true }); }
+  await guest.goto(`${base}/app/#/invite?token=${token}`);
+  const dialog = guest.getByRole('dialog', { name: '工作空間邀請', exact: true });
+  await dialog.getByRole('button', { name: '接受邀請並進入', exact: true }).click();
+  await dialog.waitFor({ state: 'hidden' });
+  assert.equal((await call(guest, 'current')).user.id, b.user.id);
+  const spaces = await call(guest, 'workspaces'); assert.equal(spaces.workspaces.length, 2);
+  assert.equal((await guest.request.get(`${base}/api/v1/workspace/invitations`)).status(), 403);
+  await owner.setViewportSize({ width: 1440, height: 1000 });
+  await owner.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
+  await pending.getByText('沒有待接受邀請', { exact: true }).waitFor();
+  await owner.getByText('既有成員', { exact: true }).waitFor();
+  let heldRole;
+  await owner.route('**/api/rpc/setWorkspaceMemberRole', route => { heldRole = route; });
+  owner.once('dialog', dialog => dialog.accept());
+  await owner.getByLabel('工作空間身份 既有成員', { exact: true }).selectOption('manager');
+  await owner.waitForFunction(() => document.querySelector('[aria-label="工作空間身份 既有成員"]')?.disabled);
+  assert.equal(await invites.getByLabel('受邀者 Email', { exact: true }).isDisabled(), true, 'Role writes disable the invitation form');
+  assert.equal(await invites.getByRole('button', { name: '邀請成員', exact: true }).isDisabled(), true);
+  assert.ok(heldRole); await heldRole.continue(); await owner.unroute('**/api/rpc/setWorkspaceMemberRole');
+  await owner.getByText('工作空間角色已儲存', { exact: true }).waitFor();
+  const retryEmail = `retry-${crypto.randomUUID()}@example.test`, keys = []; let firstToken;
+  await owner.route('**/api/rpc/inviteMember', async route => {
+    keys.push(route.request().postDataJSON().requestId);
+    const response = await route.fetch(); firstToken = (await response.json()).data.token;
+    await route.abort('failed');
+  }, { times: 1 });
+  await invites.getByLabel('受邀者 Email', { exact: true }).fill(retryEmail);
+  await invites.getByRole('button', { name: '邀請成員', exact: true }).click();
+  await invites.getByRole('alert').waitFor();
+  owner.once('dialog', event => event.dismiss());
+  await owner.getByRole('tab', { name: '一般設定', exact: true }).click();
+  assert.equal(await owner.getByRole('tab', { name: '成員與權限', exact: true }).getAttribute('aria-selected'), 'true');
+  const request = owner.waitForRequest(value => value.url().endsWith('/api/rpc/inviteMember'));
+  await invites.getByRole('button', { name: '邀請成員', exact: true }).click();
+  keys.push((await request).postDataJSON().requestId);
+  await invites.getByText('邀請已建立', { exact: true }).waitFor();
+  assert.equal(keys[0], keys[1]); assert.equal((await invites.getByLabel('邀請連結', { exact: true }).inputValue()).includes(firstToken), true);
+  await pending.getByText(retryEmail, { exact: true }).waitFor();
+  assert.equal((await (await owner.request.get(`${base}/api/v1/workspace/invitations`)).json()).data.total, 1);
+  assert.equal(reads.some(path => /getWorkspace|getTodos/.test(path)), false); assert.deepEqual(errors, []);
+  writeFileSync('../artifacts/tt340/browser-result.json', JSON.stringify({ passed: true, widths: [1440, 768, 390], checks: ['lazy general settings', 'pending invitation immediate', 'no premature membership', 'existing account accept', 'accepted disappears and member appears', 'member cannot list invitations', 'same requestId retry after lost response', 'draft guard', 'role write disables invite form', 'three widths without overflow'] }, null, 2));
+  console.log('PASS: lazy invitation settings, pending/accepted membership, safe listing, lost-response idempotency, draft guard and three widths');
+} finally { await browser?.close(); await server?.close(); }

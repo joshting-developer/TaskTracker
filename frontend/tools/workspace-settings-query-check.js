@@ -75,7 +75,7 @@ try {
   await settings.getByLabel('搜尋工作空間成員', { exact: true }).fill('Person 020');
   await owner.waitForFunction(() => document.querySelectorAll('.member-list li').length === 1);
   await settings.getByLabel('受邀者 Email', { exact: true }).fill(`new-${crypto.randomUUID()}@example.test`);
-  await settings.getByRole('button', { name: '建立邀請連結', exact: true }).click();
+  await settings.getByRole('button', { name: '邀請成員', exact: true }).click();
   await settings.getByLabel('邀請連結', { exact: true }).waitFor();
   assert.equal(requests.filter(path => /\/(getWorkspace|getWorkspaceSettings|getTodos)$/.test(path)).length, 0);
   mkdirSync(new URL('../artifacts/workspace-query', import.meta.url), { recursive: true });

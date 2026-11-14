@@ -57,7 +57,7 @@ foreach (AccountSettings::OPERATIONS as $operation) {
 }
 
 Route::post('/api/rpc/getWorkspace', [WorkspaceController::class, 'show'])->name('rpc.getWorkspace');
-Route::post('/api/rpc/inviteMember', [WorkspaceController::class, 'invite'])->name('rpc.inviteMember');
+Route::post('/api/rpc/inviteMember', [WorkspaceController::class, 'invite'])->name('rpc.inviteMember')->middleware($authThrottle(10));
 Route::post('/api/rpc/loadDemo', [WorkspaceController::class, 'demo'])->name('rpc.loadDemo');
 
 Route::post('/api/rpc/createProject', [ProjectController::class, 'store'])->name('rpc.createProject');
@@ -106,6 +106,7 @@ Route::prefix('/api/v1')->group(function () {
     Route::get('/time-report/details', [TimeReportsController::class, 'details'])->name('v1.time-report.details');
     Route::get('/time-report/options/{kind}', [TimeReportsController::class, 'options'])->whereIn('kind', ['projects', 'members'])->name('v1.time-report.options');
     Route::get('/workspace/settings', [WorkspaceSettingsController::class, 'show'])->name('v1.workspace.settings');
+    Route::get('/workspace/invitations', [WorkspaceSettingsController::class, 'invitations'])->name('v1.workspace.invitations');
     Route::get('/workspace/members', [WorkspaceSettingsController::class, 'members'])->name('v1.workspace.members');
     Route::get('/operation-logs', [OperationLogsController::class, 'index'])->name('v1.operation-logs');
     Route::get('/workspace/member-roles', [WorkspaceSettingsController::class, 'roles'])->name('v1.workspace.member-roles');

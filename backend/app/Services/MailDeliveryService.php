@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Authorization\WorkspacePermissions;
 use App\Data\MailDeliveryData;
 use App\Domain\DomainError;
 use App\Jobs\SendTransactionalMail;
@@ -11,6 +12,7 @@ use App\Models\User;
 use App\Repositories\MailDeliveryRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Mail\Factory;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -32,19 +34,31 @@ class MailDeliveryService
      */
     public function enqueue(MailDeliveryData $data): MailDelivery
     {
-        if (! in_array($data->kind, ['diagnostic', 'verification'], true) || $data->eventKey === '' || strlen($data->eventKey) > 200 || mb_strlen($data->subject) > 200 || preg_match('/[\r\n]/', $data->subject) || mb_strlen($data->body) > 10000) {
+        if (! in_array($data->kind, ['diagnostic', 'verification', 'invitation'], true) || $data->eventKey === '' || strlen($data->eventKey) > 200 || mb_strlen($data->subject) > 200 || preg_match('/[\r\n]/', $data->subject) || mb_strlen($data->body) > 10000) {
             DomainError::fail('INVALID_INPUT', '信件範本不符合限制');
+        }
+
+        if (($data->kind === 'invitation') !== ($data->invitationId !== null)) {
+            DomainError::fail('INVALID_INPUT', '信件邀請指標不符');
         }
 
         return DB::transaction(function () use ($data) {
             $user = $this->deliveries->user($data->userId) ?? DomainError::fail('NOT_FOUND', '找不到收件帳號');
+            $recipient = $user->email;
+            if ($data->kind === 'invitation') {
+                $invite = $this->deliveries->invitation($data->invitationId);
+                if (! $invite || $invite->consumed_at || ! Carbon::parse($invite->expires_at)->isFuture() || ! in_array('workspace.invite', WorkspacePermissions::resolve($this->deliveries->inviterRole($invite->workspace_id, $user->id) ?? ''), true)) {
+                    DomainError::fail('FORBIDDEN', '邀請已失效或無法寄送');
+                }
+                $recipient = $invite->email;
+            }
             $key = hash('sha256', $data->userId.'|'.$data->eventKey);
             $existing = $this->deliveries->event($key);
             if ($existing) {
                 return $existing;
             }
             $row = $this->deliveries->create(['id' => (string) Str::uuid(), 'user_id' => $user->id, 'event_key' => $key, 'kind' => $data->kind,
-                'verification_id' => $data->verificationId, 'recipient' => $user->email, 'payload' => ['subject' => $data->subject, 'body' => $data->body], 'status' => 'pending', 'next_attempt_at' => now(), 'expires_at' => $data->expiresAt]);
+                'verification_id' => $data->verificationId, ...($data->invitationId !== null ? ['invitation_id' => $data->invitationId] : []), 'recipient' => $recipient, 'payload' => ['subject' => $data->subject, 'body' => $data->body], 'status' => 'pending', 'next_attempt_at' => now(), 'expires_at' => $data->expiresAt]);
             DB::afterCommit(fn () => $this->dispatch($row->id));
 
             return $row;
@@ -189,6 +203,14 @@ class MailDeliveryService
      */
     private function eligible(MailDelivery $row, ?User $user): bool
     {
+        if ($row->kind === 'invitation') {
+            $invite = $this->deliveries->invitation($row->invitation_id);
+
+            return $user && $row->payload !== null && $row->expires_at->isFuture() && $invite && ! $invite->consumed_at
+                && Carbon::parse($invite->expires_at)->isFuture() && $invite->email === $row->recipient
+                && in_array('workspace.invite', WorkspacePermissions::resolve($this->deliveries->inviterRole($invite->workspace_id, $user->id) ?? ''), true);
+        }
+
         return $user && $row->payload !== null && $row->expires_at->isFuture() && $user->email === $row->recipient && $this->deliveries->hasMembership($user->id)
             && ($row->kind !== 'verification' || ($user->email_verified_at === null && (! $row->verification_id || $this->deliveries->verificationValid($user->id, $row->verification_id))));
     }

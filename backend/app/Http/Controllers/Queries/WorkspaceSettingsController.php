@@ -9,6 +9,7 @@ use App\Http\Resources\ApiResponse;
 use App\Http\Resources\Queries\PageResource;
 use App\Http\Resources\Queries\WorkspaceMemberResource;
 use App\Http\WorkspaceTransaction;
+use App\Services\WorkspaceInvitationService;
 use App\Services\WorkspaceSettingsReadService;
 use Illuminate\Http\Request;
 
@@ -20,8 +21,9 @@ class WorkspaceSettingsController extends Controller
      *
      * @param  WorkspaceTransaction  $workspace  此Controller的穩定協作者
      * @param  WorkspaceSettingsReadService  $settings  此Controller的穩定協作者
+     * @param  WorkspaceInvitationService  $invitations  有界待接受邀請
      */
-    public function __construct(private WorkspaceTransaction $workspace, private WorkspaceSettingsReadService $settings) {}
+    public function __construct(private WorkspaceTransaction $workspace, private WorkspaceSettingsReadService $settings, private WorkspaceInvitationService $invitations) {}
 
     /**
      * 一般設定不讀成員目錄。
@@ -45,6 +47,19 @@ class WorkspaceSettingsController extends Controller
         $data = $this->workspace->read($request, fn (WorkspaceContext $context) => ['page' => $this->settings->members($context, $request->pagination())]);
 
         return new ApiResponse(PageResource::wrap($data['page'], WorkspaceMemberResource::collection($data['page']->items())->resolve()));
+    }
+
+    /**
+     * 只回傳目前工作區待接受邀請的當頁安全狀態
+     *
+     * @param  PageQueryRequest  $request  有界分頁與地址搜尋
+     * @return ApiResponse 當頁待接受邀請, 不含token
+     */
+    public function invitations(PageQueryRequest $request): ApiResponse
+    {
+        $page = $this->workspace->read($request, fn (WorkspaceContext $context) => $this->invitations->pending($context, $request->pagination()));
+
+        return new ApiResponse(PageResource::wrap($page, $page->items()));
     }
 
     /**

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker Session Authentication",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "description": "Session and CSRF only; not the PAT API. Legacy accounts keep their existing eligibility. New registration requires verification. Activation GET only renders the page, with token in URL fragment."
   },
   "paths": {
@@ -416,6 +416,247 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/rpc/inviteMember": {
+      "post": {
+        "summary": "Invite an address by transactional email; no membership before acceptance",
+        "description": "Session + CSRF, workspace.invite required before replay. Same requestId and exact payload replays the original result without another invitation/email. Different payload is 409. New request for the same email expires the previous link. Token-containing receipt is encrypted. 10/minute in local/production. Expires in 7 days. Legacy missing requestId remains one-shot. No automatic resend after uncertain delivery.",
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 254
+                  },
+                  "requestId": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON response, no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "token",
+                        "email",
+                        "expiresAt"
+                      ],
+                      "properties": {
+                        "token": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input, unauthorized, forbidden, stale workspace or request conflict"
+          },
+          "401": {
+            "description": "Invalid input, unauthorized, forbidden, stale workspace or request conflict"
+          },
+          "403": {
+            "description": "Invalid input, unauthorized, forbidden, stale workspace or request conflict"
+          },
+          "409": {
+            "description": "Invalid input, unauthorized, forbidden, stale workspace or request conflict"
+          },
+          "429": {
+            "description": "Invalid input, unauthorized, forbidden, stale workspace or request conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/invitations": {
+      "get": {
+        "summary": "Read this workspace pending, unexpired invitations only",
+        "description": "Session-only, workspace.invite required. SQL pagination, stable expiresAt DESC and internal id DESC; no token, mail body, receipt or workspace snapshot. Accepted/expired invitations disappear. Member directory is separate.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON response, no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "items",
+                        "page",
+                        "perPage",
+                        "total",
+                        "lastPage"
+                      ],
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "maxItems": 100,
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "id",
+                              "email",
+                              "role",
+                              "createdAt",
+                              "expiresAt",
+                              "deliveryStatus"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "description": "Opaque invitation identifier, never the secret token"
+                              },
+                              "email": {
+                                "type": "string",
+                                "format": "email"
+                              },
+                              "role": {
+                                "const": "user"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "expiresAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "deliveryStatus": {
+                                "enum": [
+                                  "pending",
+                                  "sending",
+                                  "sent",
+                                  "failed",
+                                  "uncertain",
+                                  "skipped",
+                                  "unavailable"
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        "page": {
+                          "type": "integer"
+                        },
+                        "perPage": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "lastPage": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input, unauthorized, forbidden, stale workspace or request conflict"
+          },
+          "401": {
+            "description": "Invalid input, unauthorized, forbidden, stale workspace or request conflict"
+          },
+          "403": {
+            "description": "Invalid input, unauthorized, forbidden, stale workspace or request conflict"
+          },
+          "409": {
+            "description": "Invalid input, unauthorized, forbidden, stale workspace or request conflict"
           }
         }
       }

@@ -26,11 +26,25 @@ $workspace = Workspace::where('public_id', $input['workspaceId'])->where('name',
 WorkspaceMember::where('workspace_id', $workspace->id)->where('user_id', $user->id)->whereNull('disabled_at')->sole();
 $project = Project::where('workspace_id', $workspace->id)->where('public_id', $input['projectId'])->where('code', 'VRT')->sole();
 $empty = Project::where('workspace_id', $workspace->id)->where('public_id', $input['emptyId'])->where('code', 'EMPTY')->sole();
-DB::transaction(function () use ($project, $empty) {
-    DB::table('todos')->where('workspace_id', $project->workspace_id)->update(['created_at' => '2026-11-13 03:00:00', 'updated_at' => '2026-11-13 03:00:00']);
+DB::transaction(function () use ($project, $empty, $input) {
+    $notes = DB::table('todos')->where('workspace_id', $project->workspace_id)->orderBy('id')->limit(100)->pluck('id');
+    foreach ($notes as $index => $noteId) {
+        $at = (new DateTimeImmutable('2026-11-13 03:00:00'))->modify('+'.$index.' seconds')->format('Y-m-d H:i:s');
+        DB::table('todos')->where('id', $noteId)->update(['created_at' => $at, 'updated_at' => $at]);
+    }
     DB::table('todo_comments')->where('workspace_id', $project->workspace_id)->update(['created_at' => '2026-11-13 04:00:00']);
     $project->update(['created_at' => '2026-11-13 03:00:00', 'updated_at' => '2026-11-13 04:00:00']);
     $empty->update(['created_at' => '2026-11-13 02:00:00', 'updated_at' => '2026-11-13 03:00:00']);
+    if (! empty($input['normalizeInvitations'])) {
+        if (! in_array($input['profile'] ?? '', ['desktop', 'tablet', 'mobile'], true)) throw new RuntimeException('Invalid synthetic visual profile');
+        // Only this guarded synthetic workspace is normalized; no business or global account changes.
+        $users = DB::table('workspace_members as m')->join('users as u', 'u.id', '=', 'm.user_id')->where('m.workspace_id', $project->workspace_id)->select('u.id', 'u.name')->get();
+        foreach ($users as $member) {
+            $label = $member->name === '視覺驗收者' ? 'owner' : 'collaborator';
+            DB::table('users')->where('id', $member->id)->update(['email' => 'visual-'.$label.'-'.$input['profile'].'@example.test']);
+        }
+        DB::table('workspace_invitations')->where('workspace_id', $project->workspace_id)->where('email', 'pending-visual@example.test')->whereNull('consumed_at')->update(['expires_at' => '2030-11-20 04:00:00']);
+    }
     // TT-302：詳細頁會顯示建立時間與最後異動時間；固定成同一分鐘內、照原本先後各差一秒, 不改任何排序。
     $issues = DB::table('issues')->where('workspace_id', $project->workspace_id)->where('project_id', $project->id)->orderBy('created_at')->orderBy('id')->pluck('id');
     foreach ($issues as $index => $id) {

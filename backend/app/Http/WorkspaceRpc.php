@@ -10,10 +10,10 @@ use App\Domain\DomainError;
 use App\Factories\AccountSettingsFactory;
 use App\Factories\TodosFactory;
 use App\Factories\WorkspaceServicesFactory;
-use App\Services\AccountService;
 use App\Services\AccountSettings;
 use App\Services\SmtpService;
 use App\Services\Todos;
+use App\Services\WorkspaceInvitationService;
 use App\Services\WorkspaceService;
 use Illuminate\Http\Request;
 
@@ -37,14 +37,14 @@ class WorkspaceRpc
      * 注入交易邊界與各RPC用例。
      *
      * @param  WorkspaceTransaction  $transaction  交易內重驗身分與租戶
-     * @param  AccountService  $accounts  成員邀請
+     * @param  WorkspaceInvitationService  $invitations  工作區邀請及提交後寄信
      * @param  SmtpService  $smtp  SMTP狀態與驗證
      * @param  AccountSettingsFactory  $settings  依操作者建立設定用例
      * @param  TodosFactory  $todos  依操作者建立待辦用例
      * @param  WorkspaceService  $workspaces  Project／卡片／工時／看板／成員RPC
      * @param  WorkspaceServicesFactory  $services  單次操作服務組
      */
-    public function __construct(private WorkspaceTransaction $transaction, private AccountService $accounts, private SmtpService $smtp, private AccountSettingsFactory $settings, private TodosFactory $todos, private WorkspaceService $workspaces, private WorkspaceServicesFactory $services) {}
+    public function __construct(private WorkspaceTransaction $transaction, private WorkspaceInvitationService $invitations, private SmtpService $smtp, private AccountSettingsFactory $settings, private TodosFactory $todos, private WorkspaceService $workspaces, private WorkspaceServicesFactory $services) {}
 
     /**
      * 接收各領域Request建立的型別資料，沿用原交易與業務入口。
@@ -81,7 +81,7 @@ class WorkspaceRpc
                 return $this->todos->forSession($session)->execute($operation, $input);
             }
             if ($operation === 'inviteMember') {
-                return $this->accounts->invite($session, $input);
+                return $this->invitations->create($context, $input);
             }
             if (in_array($operation, ['smtpStatus', 'verifySmtp'], true)) {
                 WorkspacePermissions::authorize($session, 'smtp.verify');

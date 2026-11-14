@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "961ac8e29f175bb767f06d878c69149454dc094bd8611154822b2c9bc3d3431f",
+  "harnessSha256": "ee0870342d607578b198621d5fa7b04a1400d793dbcd0746948bc3a401003107",
   "profile": "darwin-arm64",
-  "reviewer": "Josh standing authorization / TT-339",
-  "note": "Reviewed safe card links and previous-handler reply at three widths including new screenshot28; comparator and tolerances unchanged",
-  "manifestSha256": "3229f6dc372879f3191e551f77f186c68f94fd2bdbf676bff044611fcf933c96",
+  "reviewer": "Josh standing authorization / TT-340",
+  "note": "Reviewed 87 screenshots with deterministic synthetic note ordering, member emails and expiry; pending invitation UI and disabled state retained; no tolerance changes",
+  "manifestSha256": "f74aa6b5547f32bb2e97e7a701e855db07769887978942d1779c5395f836cb0d",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

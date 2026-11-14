@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\EmailVerification;
 use App\Models\MailDelivery;
 use App\Models\User;
+use App\Models\WorkspaceInvitation;
 use App\Models\WorkspaceMember;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,6 +29,29 @@ class MailDeliveryRepository
     public function hasMembership(string $id): bool
     {
         return WorkspaceMember::where('user_id', $id)->whereNull('disabled_at')->exists();
+    }
+
+    /**
+     * 取得指定邀請的寄送資格欄位, 不載入token或其他邀請
+     *
+     * @param  ?int  $id  信件保存的邀請內部鍵
+     * @return ?WorkspaceInvitation 當次邀請或null
+     */
+    public function invitation(?int $id): ?WorkspaceInvitation
+    {
+        return $id ? WorkspaceInvitation::whereKey($id)->first(['id', 'workspace_id', 'email', 'expires_at', 'consumed_at']) : null;
+    }
+
+    /**
+     * 只取得邀請者在該空間仍有效的角色, permission由Service判斷
+     *
+     * @param  int  $workspaceId  邀請所屬空間內部鍵
+     * @param  string  $userId  信件所記邀請者
+     * @return ?string 有效角色或null
+     */
+    public function inviterRole(int $workspaceId, string $userId): ?string
+    {
+        return WorkspaceMember::where('workspace_id', $workspaceId)->where('user_id', $userId)->whereNull('disabled_at')->value('role');
     }
 
     /** 找既有事件, 呼叫前已持有帳號鎖

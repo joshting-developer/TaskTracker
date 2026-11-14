@@ -54,6 +54,7 @@ export const api = {
   authorizeRealtime: input => callApi('authorize', input, 'realtime'),
   getProfile: () => callApi('getProfile'),
   updateProfile: input => callApi('updateProfile', input),
+  workspaceInvitations: (filters, options) => queryApi('workspace/invitations', filters, options),
   workspaceSettings: options => queryApi('workspace/settings', {}, options),
   workspaceMembers: (filters, options) => queryApi('workspace/members', filters, options),
   workspaceMemberRoles: options => queryApi('workspace/member-roles', {}, options),

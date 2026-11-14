@@ -856,7 +856,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.getByRole('link', { name: '工作空間設定', exact: true }).click();
   await page.getByRole('tab', { name: '成員與權限', exact: true }).click();
   await page.getByLabel('受邀者 Email', { exact: true }).fill(memberEmail);
-  await page.getByRole('button', { name: '建立邀請連結' }).click();
+  await page.getByRole('button', { name: '邀請成員' }).click();
   await page.getByLabel('邀請連結', { exact: true }).waitFor();
   const inviteUrl = await page.getByLabel('邀請連結', { exact: true }).inputValue();
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();

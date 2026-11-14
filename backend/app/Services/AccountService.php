@@ -209,40 +209,6 @@ class AccountService
     }
 
     /**
-     * 確認邀請權限後建立具有期限的單次邀請。
-     *
-     * @param  array  $context  此步驟使用的context資料
-     * @param  array  $input  此次操作的原始輸入欄位
-     * @return array
-     */
-    public function invite(array $context, array $input): array
-    {
-        WorkspacePermissions::authorize($context, 'workspace.invite');
-        $email = $this->email($input['email'] ?? null);
-        $existing = $this->accounts->byEmail($email);
-        if ($existing && $this->stores->forWorkspace($context['workspace']['id'])->get('members', $existing->id)) {
-            DomainError::fail('CONFLICT', '此帳號已是工作空間成員');
-        }
-        $token = bin2hex(random_bytes(32));
-        $id = hash('sha256', $token);
-        $invite = [
-            'id' => $id,
-            'workspaceId' => $context['workspace']['id'],
-            'email' => $email,
-            'expiresAt' => now()->addDays(7)->utc()->toISOString(),
-            'consumedAt' => null,
-            'createdAt' => now()->utc()->toISOString(),
-        ];
-        $this->stores->global()->put('invites', $id, $invite);
-
-        return [
-            'token' => $token,
-            'email' => $email,
-            'expiresAt' => $invite['expiresAt'],
-        ];
-    }
-
-    /**
      * 驗證並正規化帳號Email。
      *
      * @param  mixed  $value  待驗證或正規化的值

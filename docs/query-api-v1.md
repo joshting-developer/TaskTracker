@@ -152,3 +152,5 @@ TT-319起新註冊先回pending驗證資料, 不建立工作區登入資格。�
 公開路徑`/api/public/v1/projects/{project}/boards`沿用BoardReadService與既有SQL分頁, 與網頁同一授權和Epic展開規則。列表只取摘要, 單板才讀明確收錄ID, 卡片另走公開摘要投影；不讓外部工具呼叫getWorkspace
 
 寫入沿用ProjectBoards, 由Bearer writeOnce擁有User→Workspace鎖與交易。公開PATCH只接受部分欄位和有界加入／移除差量, 不使用網頁相容RPC的整包覆蓋。建卡boardIds與編號、Issue和所有收錄同交易；失敗不保留部分成果。重播前仍重驗本人permission及Token能力
+
+- `GET /api/v1/workspace/invitations`（TT-340）：Session的workspace.invite限定, 當工作區未接受且未到期邀請, 預設20／上限100筆, expiresAt與內部id遞減穩定排序；只回id、email、role、createdAt、expiresAt、deliveryStatus, 不回token或信件內容。一般設定不載入此清單；正式契約與寄送寫入見backend/resources/auth-session-openapi.json, 不是PAT公開端點
