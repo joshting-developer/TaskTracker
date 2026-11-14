@@ -6,7 +6,7 @@
 
 ## 2026-11-14 線上入口
 
-主服務為https://tasktracker-josh.fly.dev, 兩個Agent的私有Session／PAT設定已切到這個baseUrl, 帳密／PAT不變。原本本地3002／5174寫入服務停止, 原MySQL唯讀保留, 不把舊資料再寫回正式庫。舊outbox保留原baseUrl與requestId, 不能改憑證或盲目換key重送, 先在線上核對receipt／業務結果
+主服務為https://task-tracker.josh-ting.com（Fly網址保留相容入口）, 兩個Agent的私有Session／PAT設定已切到這個baseUrl, 帳密／PAT不變。原本本地3002／5174寫入服務停止, 原MySQL唯讀保留, 不把舊資料再寫回正式庫。舊outbox保留原baseUrl與requestId, 不能改憑證或盲目換key重送, 先在線上核對receipt／業務結果
 
 部署與回復見[Fly部署](fly-deployment.md), 卡片以線上最新狀態為準。以下帳號ID與私有檔案位置沿用, 歷史本機環境敘述不代表目前主服務
 

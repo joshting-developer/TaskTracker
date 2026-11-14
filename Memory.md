@@ -7,7 +7,7 @@
 - Skill／AGENTS記憶分工、前端按階段驗證與本機三尺寸基準：docs/structure-optimization-acceptance-2026-11-13.md、docs/visual-regression.md；長期規範仍在Side Project共用庫。核准影像不入Git，跨平台／遠端啟用不可沿用本機圖。
 
 - Skill已統一到 `/Users/josh/workspace/side-project/skills`；原專案路徑為連結，不再維護副本。舊project-only決策已被取代，見docs/shared-skills-migration-2026-11-12.md。
-- 2026-11-14主服務已搬到Fly：https://tasktracker-josh.fly.dev, 正式MySQL為外部task_tracker、Redis為既有TLS端點；44表已完整比對搬移。原本本機MySQL保留且super_read_only=ON, 本機寫入服務停止, 不直接重啟舊庫造成資料分岔。登入／PAT不變, Agent私有工具端點已切線上。自訂網域DNS待設定, 入口／回復與限制見docs/fly-deployment.md；下方本機現況及外部庫歷史敘述已由這次正式搬移取代
+- 2026-11-14主服務已搬到Fly：https://task-tracker.josh-ting.com（Fly網址保留相容入口）, 正式MySQL為外部task_tracker、Redis為既有TLS端點；44表已完整比對搬移。原本本機MySQL保留且super_read_only=ON, 本機寫入服務停止, 不直接重啟舊庫造成資料分岔。登入／PAT不變, Agent私有工具端點已切線上。自訂網域DNS／TLS已驗證, 入口／回復與限制見docs/fly-deployment.md；下方本機現況及外部庫歷史敘述已由這次正式搬移取代
 - 工程產品綁定見docs/project-engineering-bindings.md；資料表見docs/database-design.md；分責查詢見docs/query-api-v1.md。
 - 自我追蹤：SideProject工作區TaskTracker專案，Project ID `5a451d5c-2fff-4110-aa49-4998ec9dbff2`；Codex／Claude分別使用忽略的`.local/tasktracker-codex.json`／`.local/tasktracker-claude.json`。私有PAT與使用方法由共用task-tracker-usage規定；不記秘密原文。
 - 後端嚴格分層、其他寫入DTO、PHPDoc已分別由TT-262／246／261交付；歷史「尚待／暫停」文字只反映當時狀態，詳見對應交付文件與最新卡片。

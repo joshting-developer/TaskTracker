@@ -4,7 +4,7 @@
 
 - App：tasktracker-josh, 本人joshting.1999@gmail.com帳號的personal組織, 東京nrt, 1 shared CPU／512MB
 - 使用者指定的josh-90在建立App時回不存在, 依本次「決策先採建議方案」授權使用同帳號唯一可見組織, 差異已發Josh紙條, 不另建組織
-- 暫用入口：https://tasktracker-josh.fly.dev；目標網域task-tracker.josh-ting.com仍待DNS, Fly憑證要求的A／AAAA已發Josh紙條
+- 正式入口：https://task-tracker.josh-ting.com；Josh已設DNS, Fly憑證Issued且HTTPS正常。https://tasktracker-josh.fly.dev保留相容入口, 兩者共用同一正式資料庫
 - 首次映像：registry.fly.io/tasktracker-josh:git-0f1f1b4, digest sha256:6d8d17c91e5c2c6e98842249c0747ab808778ab7108b9ea888938624f7b5fca7
 - 首次以Fly remote build發布, 沒有push／Git tag／GHCR發布；TT-320的CI仍未完成, 不將本次視為CI驗收
 
@@ -32,7 +32,7 @@ Fly release migration成功；HTTPS health、實際Machine MySQL TLS／Redis TLS
 
 回退映像不還原資料, 必須相容目前schema；正式恢復寫入後不能直接覆蓋本地舊快照。若需回原庫, 先停寫／備份新資料並處理差異, 不直接重啟本機舊服務讓兩邊各寫各的
 
-DNS生效後用fly certs check驗憑證, 再把APP_URL切回目標網域並驗登入／邀請連結。ALLOWED_ORIGINS只保留實際使用的origin；不因DNS缺資格嘗試用R2憑證修改DNS
+DNS已生效並經fly certs check驗憑證, APP_URL已切正式網域且驗登入。ALLOWED_ORIGINS只保留實際使用的origin；不因DNS缺資格嘗試用R2憑證修改DNS
 
 ## 線上與本地的分工
 

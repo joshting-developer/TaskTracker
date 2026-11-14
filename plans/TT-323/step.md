@@ -17,3 +17,6 @@
 - Josh紙條確認DNS已設, 已讀TT-323留言；Fly憑證Issued、DNS A紀錄與正式網域HTTPS health均通過
 - 本卡從review回open再claim, 只處理網域切換；正式庫部署前另存私有SQL備份, 不再搬一次資料
 - APP_URL切正式網域, 同一既有digest重新套用設定, 保留Fly網址作相容入口, 之後核對Session／PAT與私有工具baseUrl
+- 正式網域部署341de3f完成, 同一映像／同一資料庫, 沒有再次資料同步
+- 正式網域Codex本人PAT與登入、列表／看板／三尺寸詳細頁、無舊bulk API／pageerror通過；Machine APP_URL讀回正式網域, TLS／Redis／secure Cookie設定維持
+- 私有Session／PAT端點切正式網域並保留前設定副本；Memory／README／自我追蹤／部署文件同步, AGENTS與共用Skill已依Josh要求重新閱讀
