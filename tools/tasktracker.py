@@ -15,6 +15,7 @@ import uuid
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CREDENTIALS = ROOT / '.local/tasktracker-codex.json'
 MANIFEST = ROOT / 'docs/planning/tasktracker-backlog.json'
+USER_AGENT = 'tasktracker-agent-cli/1.0'
 
 
 class ApiError(RuntimeError):
@@ -35,7 +36,8 @@ class Client:
     def call(self, path, payload=None):
         if not self.csrf and payload is not None:
             self.csrf = self.call('/api/csrf-cookie')['csrfToken']
-        headers = {'Accept': 'application/json', 'Origin': self.base}
+        # TT-360：Cloudflare對Python預設User-Agent的Session路徑回1010, 改帶固定識別
+        headers = {'Accept': 'application/json', 'Origin': self.base, 'User-Agent': USER_AGENT}
         if payload is not None:
             headers.update({'Content-Type': 'application/json', 'X-CSRF-TOKEN': self.csrf})
         if self.workspace_id and path.startswith(('/api/rpc/', '/api/v1/')):
