@@ -1,5 +1,7 @@
 # TaskTracker
 
+工作進度、紙條與工時使用[線上TaskTracker](https://tasktracker-josh.fly.dev), 原帳號照用。本地程式碼供開發與隔離測試；原本機主庫是唯讀備份, 不直接重啟或重設。以下啟動範例供新環境使用, 既有工作目錄請先讀[環境分工](docs/fly-deployment.md#線上與本地的分工)與[測試Skill](.agents/skills/tasktracker-test-environments/SKILL.md)
+
 ## 開發規範與前端驗證
 
 先讀[AGENTS](AGENTS.md)，專案現況按需查[Memory](Memory.md)。所有side project的Skill規則集中於 `/Users/josh/workspace/side-project/skills`；本專案只保留入口，不另維護前端審查規則副本。每次前端新增／修改依共用Skill審查及按影響範圍驗證，頻率以共用verification為準。

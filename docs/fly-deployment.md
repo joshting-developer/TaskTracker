@@ -33,3 +33,11 @@ Fly release migration成功；HTTPS health、實際Machine MySQL TLS／Redis TLS
 回退映像不還原資料, 必須相容目前schema；正式恢復寫入後不能直接覆蓋本地舊快照。若需回原庫, 先停寫／備份新資料並處理差異, 不直接重啟本機舊服務讓兩邊各寫各的
 
 DNS生效後用fly certs check驗憑證, 再把APP_URL切回目標網域並驗登入／邀請連結。ALLOWED_ORIGINS只保留實際使用的origin；不因DNS缺資格嘗試用R2憑證修改DNS
+
+## 線上與本地的分工
+
+- 日常工作：線上TaskTracker是唯一進度來源, 包含卡片、紙條、留言、指派與正式工時；Codex／Claude工具使用各自私有設定的線上baseUrl
+- 本地開發／測試：程式碼在本地修改, 用各Agent隔離Compose、MySQL及合成資料驗證, 不把測試資料同步回正式庫, 不使用正式帳號／PAT跑fixture或回歸
+- 保留的原本機MySQL：這是搬移前的唯讀備份, 不是可以seed／reset的測試庫；不解除super_read_only來方便測試。要另開本地開發服務先配置獨立新庫, 不直接重新啟動舊Compose
+
+線上暫時不可用時先保留工作草稿, 不回舊庫記另一份進度；恢復後讀最新revision再補登。具體隔離埠及測試命令以專案tasktracker-test-environments Skill為準

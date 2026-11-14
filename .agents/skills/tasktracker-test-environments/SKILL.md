@@ -14,13 +14,15 @@ description: TaskTracker專案專用的測試環境與驗收分層約定：Claud
 
 | 用途 | 前端埠 | 隔離後端埠 | Compose專案名稱 |
 | --- | --- | --- | --- |
-| 正式開發環境（Josh在用的主服務） | 5174 | 3002 | tasktracker |
+| 本機開發預留（舊主服務已停用） | 5174 | 3002 | tasktracker |
 | Claude的瀏覽器檢查 | 5198 | 13198 | tasktracker-claude-test |
 | Codex的瀏覽器檢查 | 5199 | 13199 | tasktracker-codex-test |
 | CI和沒有指定時的預設 | 5175 | 13029 | 依CI設定 |
 | 截圖比對（共用一套） | 5195 | 13079 | tasktracker-codex-visual |
 
-- 5174／3002是主服務, 只能拿來看畫面, 不能拿來跑會建帳號、改資料的檢查
+- 真實卡片、紙條、留言與工時使用線上主服務, 目前入口查Memory.md與docs/fly-deployment.md；共用TaskTracker工具的私有baseUrl不因本地測試而改動
+- 5174／3002只是本機開發預留埠, 不再是工作進度來源。原tasktracker MySQL是搬移後的唯讀備份, 不直接開回寫入、不seed／RefreshDatabase, 也不拿線上task_tracker當測試庫
+- 要測目前程式使用下方Codex／Claude隔離Compose與合成資料；若另外重建5174／3002開發服務, 必須先配置獨立新資料庫與測試憑證, 不可直接重啟原Compose寫回備份來源
 - 瀏覽器檢查一律讀 `E2E_FRONTEND_PORT`（前端埠）和 `E2E_API_URL`（隔離後端）, 沒設定時才用5175。Claude跑之前設 `E2E_FRONTEND_PORT=5198`, Codex設5199
 - 隔離後端用專案的 `docker-compose.mysql-test.yml`, 換自己的埠和專案名稱就好, 它已經允許5175、5198、5199三個來源
 
