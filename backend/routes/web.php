@@ -23,6 +23,7 @@ use App\Http\Controllers\SmtpController;
 use App\Http\Controllers\SystemController;
 use App\Http\Controllers\TimeEntryController;
 use App\Http\Controllers\TodoController;
+use App\Http\Controllers\TodoNotificationsController;
 use App\Http\Controllers\WorkspaceController;
 use App\Http\Middleware\RecordHttpOperation;
 use App\Services\AccountSettings;
@@ -118,6 +119,7 @@ Route::prefix('/api/v1')->group(function () {
     Route::get('/todos/{todo}', [TodosController::class, 'show'])->name('v1.todos.show');
     Route::get('/todos/{todo}/history', [TodosController::class, 'history'])->name('v1.todos.history');
     Route::get('/todo-assignees', [TodosController::class, 'assignees'])->name('v1.todo-assignees');
+    Route::post('/todo-notifications/read-all', [TodoNotificationsController::class, 'readAll'])->name('v1.todo-notifications.read-all');
     Route::get('/todo-notifications/unread', [TodosController::class, 'unread'])->name('v1.todo-notifications.unread');
     Route::get('/todo-notifications', [TodosController::class, 'notifications'])->name('v1.todo-notifications');
     Route::get('/projects/{project}/boards', [BoardsController::class, 'index'])->name('v1.projects.boards');

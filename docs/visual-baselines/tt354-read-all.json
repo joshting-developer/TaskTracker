@@ -1,0 +1,9 @@
+{
+  "approved": true,
+  "reviewer": "Josh",
+  "authorization": "Standing authorization for UI candidates with actual browser and comparison required",
+  "manifestFile": "docs/evidence/tt354-visual-manifest.json",
+  "manifestSha256": "acfaaa79eb3de879b9cf6554307dd6dc6d7d030bd916e2b98270453d02221284",
+  "harnessSha256": "c69422d40b4d73e2f6fbcfe52ccb2949615b9162fc7aa9eef58f8b37f48b1940",
+  "images": 3
+}

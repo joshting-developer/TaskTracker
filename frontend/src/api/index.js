@@ -70,6 +70,7 @@ export const api = {
   todoCounts: options => queryApi('todos/counts', {}, options),
   todoHistory: (id, filters, options) => queryApi(`todos/${encodeURIComponent(id)}/history`, filters, options),
   todoAssignees: (filters, options) => queryApi('todo-assignees', filters, options),
+  readAllTodoNotifications: input => requestJson('/api/v1/todo-notifications/read-all', { method: 'POST', input }),
   todoUnread: options => queryApi('todo-notifications/unread', {}, options),
   todoNotificationPage: (filters, options) => queryApi('todo-notifications', filters, options),
   getTodos: () => callApi('getTodos'),

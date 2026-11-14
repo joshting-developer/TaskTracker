@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Data\PageQueryData;
 use App\Data\PersonalReadContext;
 use App\Data\TodoQueryData;
+use App\Database\DatabaseTimes;
 use App\Models\Issue;
 use App\Models\Todo;
 use App\Models\WorkspaceMember;
@@ -194,6 +195,16 @@ class TodoReadRepository
     public function unread(PersonalReadContext $context): int
     {
         return $this->notifications($context)->whereNull('n.read_at')->count();
+    }
+
+    /** 單次SQL更新本人仍可讀通知, 不讀取通知全集也不覆寫既有已讀時間
+     * @param  PersonalReadContext  $context  當次工作區、收件人及參與範圍
+     * @param  string  $at  UTC已讀時間
+     * @return int 變更筆數
+     */
+    public function markNotificationsRead(PersonalReadContext $context, string $at): int
+    {
+        return $this->notifications($context)->whereNull('n.read_at')->update(['n.read_at' => DatabaseTimes::store($at)]);
     }
 
     /**

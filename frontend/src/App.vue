@@ -482,7 +482,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
     </main>
     <WorkspaceInvitation v-if="workspaceInviteToken" :key="workspaceInviteToken" :token="workspaceInviteToken" :email="workspace.members.find(member => member.id === currentUserId)?.email" :accept="token => changeWorkspace('', token)" @close="closeInvitation" @logout="loginForInvitation" />
     <TodoConversion v-if="convertingTodo" :key="`convert:${convertingTodo.id}`" :todo="convertingTodo" :user="workspace.members.find(member=>member.id===currentUserId)" @close="convertingTodo=null" @converted="convertedTodo" @reload="reloadConversion" @open="jumpFromConversion" />
-    <PersonalNotifications v-if="todoNotificationsOpen" :workspace-id="workspace.meta.workspace.id" :version="`${personalSync.versions.value?.notifications}:${personalSync.versions.value?.todos}`" @close="todoNotificationsOpen=false" @open="openTodoNotification" />
+    <PersonalNotifications v-if="todoNotificationsOpen" :unread="todoUnread" @read="personalSync.refresh" :workspace-id="workspace.meta.workspace.id" :version="`${personalSync.versions.value?.notifications}:${personalSync.versions.value?.todos}`" @close="todoNotificationsOpen=false" @open="openTodoNotification" />
 
     <PersonalTokensDialog v-if="tokensOpen" :key="workspace.meta.workspace?.id" :workspace-name="workspace.meta.workspace?.name" @close="tokensOpen = false" />
     <ProfileDialog v-if="profileOpen" @close="closeSettings('profile')" @saved="savedProfile" />

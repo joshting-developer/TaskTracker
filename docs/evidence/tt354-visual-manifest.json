@@ -1,0 +1,31 @@
+{
+  "images": [
+    {
+      "name": "before-1440.png",
+      "sha256": "884ff9a8a1a4d90663cc10d9bd84ebb37e23099e5663a48123c92c385e5cc010"
+    },
+    {
+      "name": "before-768.png",
+      "sha256": "e0cd21227062d2660e7294cf41ba8e5433281d60edf46bea75429379281c62fe"
+    },
+    {
+      "name": "before-390.png",
+      "sha256": "744eee0ca6c940fa3776d2ada45a6930d6a4fd32a9cd4d55c844cd43ebc44a66"
+    },
+    {
+      "name": "after-1440.png",
+      "sha256": "d447313c044f15add9a4830c1f7630eb7b508dd4b770b60428a60c868e3d7b4e"
+    },
+    {
+      "name": "after-768.png",
+      "sha256": "fb636378e4e6a89709488bded0b41b87eb7df2e67533ee7ba097949a184df3bd"
+    },
+    {
+      "name": "after-390.png",
+      "sha256": "3d79fc0650fb6c43dc825ea31367d3aec2f8767059ab0f0ba412e0b55ad14ff5"
+    }
+  ],
+  "synthetic": true,
+  "mask": "time labels only",
+  "beforeSource": "b005dc5:frontend/src/{App.vue,components/PersonalNotifications.vue,components/TodoNotifications.vue}"
+}

@@ -68,6 +68,7 @@ ProjectTasksWorkspace與useProjectTaskQueries已取代原BoardWorkspace／useBoa
 - `GET /api/v1/todos/counts`：四項scope與狀態數量。
 - `GET /api/v1/todos/{todo}`與`/{todo}/history`：本人參與的原稿及獨立歷史分頁。
 - `GET /api/v1/todo-notifications/unread`與`/todo-notifications`：本人有效未讀數與收件匣分頁。
+- `POST /api/v1/todo-notifications/read-all`：Session／CSRF寫入, JSON只需UUID `requestId`, 回`{updated: number}`；交易內重驗工作區與todo.read, 以單次SQL只更新本人仍可讀且未讀的通知, 不載入通知全集。相同requestId重播首次結果, 不把後來的新通知一起讀掉；已讀時間不覆寫, 無未讀回0。此端點沒有公開給PAT, 公開通知API仍是只讀。
 - `GET /api/v1/personal-version`：本人Todo及通知兩個無內容指紋；包含資格版本，不是完整bootstrap。
 - `GET /api/v1/todo-assignees`：有效承辦候選；`/project-options`：可寫卡片Project候選；`/project-lead-options?project=<optional>`：建立／編輯用途的有效負責人候選。
 
