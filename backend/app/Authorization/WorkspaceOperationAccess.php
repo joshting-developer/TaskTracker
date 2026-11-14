@@ -67,7 +67,7 @@ class WorkspaceOperationAccess
         if ($kind === 'timeEntries' && $resource['userId'] !== $this->workspaceSession['user']['id']) {
             DomainError::fail('FORBIDDEN', '只能修改自己的工時');
         }
-        if ($operation === 'createIssue' && ! empty($input['boardId']) && $input['boardId'] !== 'default') {
+        if ($operation === 'createIssue' && ((! empty($input['boardId']) && $input['boardId'] !== 'default') || ! empty($input['boardIds']))) {
             $this->access->require($projectId, 'board.manage');
         }
         // 同一 requestId 的快取也必須在當次資源授權後才讀取

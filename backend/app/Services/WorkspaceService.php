@@ -73,6 +73,51 @@ class WorkspaceService
     }
 
     /**
+     * 建卡附帶收錄時, 在讀取receipt前重驗看板管理資格
+     *
+     * @param  array  $identity  鎖後重驗的身分
+     * @param  array  $input  建卡資料與路徑Project
+     * @return void
+     */
+    public function authorizePublicIssueCreate(array $identity, array $input): void
+    {
+        $this->services->forSession($identity)->operationAccess()->authorize('createIssue', $input);
+    }
+
+    /**
+     * 公開看板寫入在receipt前核對資源所屬, 不讓路徑與payload換Project
+     *
+     * @param  array  $identity  鎖後重驗的身分
+     * @param  array  $input  伺服器路徑Project與可選看板ID
+     * @return void
+     */
+    public function authorizePublicBoard(array $identity, array $input): void
+    {
+        $services = $this->services->forSession($identity);
+        $services->operationAccess()->authorize(isset($input['id']) ? 'updateBoard' : 'createBoard', $input);
+        if (isset($input['id']) && $services->store->require('boards', $input['id'])['projectId'] !== $input['projectId']) {
+            DomainError::fail('NOT_FOUND', '找不到這個專案的看板');
+        }
+    }
+
+    /**
+     * 公開看板建立或部分更新, 共用既有看板服務且由Bearer邊界擁有交易和receipt
+     *
+     * @param  array  $identity  當次可信資格
+     * @param  array  $input  有界建立或差量欄位
+     * @return array{id:string,projectId:string,revision:int} 不包含收錄清單
+     */
+    public function executePublicBoard(array $identity, array $input): array
+    {
+        $this->authorizePublicBoard($identity, $input);
+        $services = $this->services->forSession($identity);
+        $board = isset($input['id']) ? $services->boards()->patch($input) : $services->boards()->create($input);
+        $services->signals()->changed($board['projectId']);
+
+        return WriteResults::board($board);
+    }
+
+    /**
      * 依操作只取得需要的領域服務並寫入，完成後依結果決定要通知的Project。
      *
      * @param  WorkspaceOperationServices  $services  本次操作的服務組

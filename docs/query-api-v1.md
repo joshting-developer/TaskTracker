@@ -146,3 +146,9 @@ Issue詳細新增createdBy／createdByName／lastChange（actor、at）, 最後�
 ## 註冊驗證的Session邊界
 
 TT-319起新註冊先回pending驗證資料, 不建立工作區登入資格。既有帳號不用補驗證, Email仍不可重複註冊。Session機器契約見[auth-session-openapi.json](../backend/resources/auth-session-openapi.json), 行為見[信箱驗證](email-verification.md)；PAT業務API不使用這些端點
+
+## 公開PAT看板入口（TT-332）
+
+公開路徑`/api/public/v1/projects/{project}/boards`沿用BoardReadService與既有SQL分頁, 與網頁同一授權和Epic展開規則。列表只取摘要, 單板才讀明確收錄ID, 卡片另走公開摘要投影；不讓外部工具呼叫getWorkspace
+
+寫入沿用ProjectBoards, 由Bearer writeOnce擁有User→Workspace鎖與交易。公開PATCH只接受部分欄位和有界加入／移除差量, 不使用網頁相容RPC的整包覆蓋。建卡boardIds與編號、Issue和所有收錄同交易；失敗不保留部分成果。重播前仍重驗本人permission及Token能力

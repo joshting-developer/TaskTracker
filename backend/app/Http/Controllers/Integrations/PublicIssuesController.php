@@ -42,8 +42,10 @@ class PublicIssuesController extends Controller
         $input = [...$request->validated(), 'projectId' => $project, ...($issue ? ['id' => $issue] : [])];
 
         return new ApiResponse($this->tokens->writeOnce($request, 'public.v1.'.$operation, $input,
-            function (TokenContext $token) use ($project, $issue, $operation) {
+            function (TokenContext $token) use ($project, $issue, $operation, $input) {
                 if (! $issue) {
+                    $this->workspaces->authorizePublicIssueCreate($token->workspace->legacyIdentity(), $input);
+
                     return;
                 }
                 try {

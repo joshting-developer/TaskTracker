@@ -149,6 +149,44 @@ class ProjectBoards
     }
 
     /**
+     * 公開API只套用名稱／簡述與收錄差量, 不讓呼叫端覆蓋完整收錄清單
+     *
+     * @param  array  $input  路徑ID、版本及已驗證的部分欄位
+     * @return array 更新後看板
+     */
+    public function patch(array $input): array
+    {
+        $board = $this->current($input);
+        $add = $input['addIssueIds'] ?? [];
+        $remove = $input['removeIssueIds'] ?? [];
+        foreach ([$add, $remove] as $ids) {
+            if (! is_array($ids) || ! array_is_list($ids) || count($ids) > 200) {
+                DomainError::fail('INVALID_INPUT', '每次最多加入或移除200個明確收錄項目');
+            }
+            foreach ($ids as $id) {
+                Fields::text($id, '收錄項目', 100, true);
+            }
+        }
+        if (array_intersect($add, $remove)) {
+            DomainError::fail('INVALID_INPUT', '同一項目不可同時加入與移除');
+        }
+        // 移除不存在的收錄也需驗證目標同Project, 不把跨專案ID當成成功
+        $projects = $this->store->issueProjects([...$add, ...$remove]);
+        foreach ([...$add, ...$remove] as $id) {
+            if (($projects[$id] ?? null) !== $board['projectId']) {
+                DomainError::fail('INVALID_INPUT', '只能調整目前專案的明確收錄');
+            }
+        }
+        $selected = array_values(array_unique([...array_diff($board['selectedIssueIds'], $remove), ...$add]));
+
+        return $this->update([
+            ...$input,
+            'name' => $input['name'] ?? $board['name'],
+            'selectedIssueIds' => $selected,
+        ]);
+    }
+
+    /**
      * 標記看板移除並保留卡片資料。
      *
      * @param  array  $input  此次操作的原始輸入欄位

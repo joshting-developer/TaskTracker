@@ -36,7 +36,7 @@ class PublicIssueWriteRequest extends JsonOperationRequest
         }
         $create = $this->routeIs('public.issues.create');
 
-        return [...$base, ...($create ? [] : ['expectedRevision' => ['required', 'integer:strict', 'min:1']]), ...self::issueFields($create)];
+        return [...$base, ...($create ? [] : ['expectedRevision' => ['required', 'integer:strict', 'min:1']]), ...self::issueFields($create), 'boardIds' => $create ? ['sometimes', 'array', 'list', 'max:20'] : ['prohibited'], 'boardIds.*' => ['required', 'string', 'max:100', 'distinct']];
     }
 
     /**

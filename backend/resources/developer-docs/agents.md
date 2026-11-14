@@ -108,3 +108,15 @@ Issue詳細新增activityCounts.comments／history／time, 為SQL總數, 不附�
 新增留言POST `/todos/{todo}/comments`, 帶content、expectedRevision、requestId。轉交POST `/todos/{todo}/forward`, 帶有效同空間assigneeId及可選reply。完成POST `/todos/{todo}/complete`也可帶reply, 留下已做、實測與限制；回覆和完成同交易, 失敗不會只留下一半
 
 轉發後原經手者仍可讀／留言及看到最後結果, 但不能代目前承辦人完成。無關成員含Owner不能看；失去工作區資格後不可繼續讀取或重播。退回走上一手, 首次承辦退回才會回建立人；上一手已停用時請轉發給另一位有效成員
+
+## 把卡片收進主題看板（OpenAPI 0.21.0）
+
+先用`GET /api/public/v1/projects/{project}/boards`分頁讀名稱和簡述, 判斷收錄範圍；名稱不足以代替分類依據。封存看板以`archived=1`另查, 不繼續放新卡
+
+建卡可帶`boardIds: ["看板公開ID"]`, 最多20板, 需要write與當下board.manage；任一板不存在、不同Project或已封存時整筆失敗, 不會留下未分類的新卡。Default自動包含全部卡片, 不要把default放進boardIds
+
+既有卡片先GET單板讀revision, 再PATCH單板, 例如`{"expectedRevision": 7, "addIssueIds": ["卡片公開ID"], "requestId": "新的UUID"}`。移除用removeIssueIds, 不使用整包selectedIssueIds。單次加入或移除各最多200個項目；同一ID不可同時加入與移除
+
+409後先重讀, 確認別人的收錄與自己的目標, 再用新revision和新requestId重送差量。逾時則保留原payload與requestId核對, 不盲重建。讀回單板及`.../boards/{board}/issues`確認結果；Epic下卡片是動態收錄, 移除明確ID不會覆蓋Epic帶入的結果
+
+可POST建立自訂看板, PATCH名稱與簡述；Default不可寫, 已封存只讀, 封存和還原仍用網頁

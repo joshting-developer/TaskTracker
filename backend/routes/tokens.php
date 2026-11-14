@@ -4,6 +4,7 @@ use App\Http\Controllers\Integrations\ApiSpecificationController;
 use App\Http\Controllers\Integrations\DeveloperDocumentationController;
 use App\Http\Controllers\Integrations\PersonalTokensController;
 use App\Http\Controllers\Integrations\PublicAttachmentsController;
+use App\Http\Controllers\Integrations\PublicBoardsController;
 use App\Http\Controllers\Integrations\PublicIssueChangesController;
 use App\Http\Controllers\Integrations\PublicIssueExternalController;
 use App\Http\Controllers\Integrations\PublicIssuesController;
@@ -102,4 +103,14 @@ Route::prefix('/api/public/docs')->withoutMiddleware([
     Route::get('/assets/styles.css', [$docs, 'styles'])->name('public.docs.styles');
     Route::get('/examples.{language}', [$docs, 'example'])->where('language', 'py|sh')->name('public.docs.example');
     Route::get('/{page?}', [$docs, 'show'])->name('public.docs.page');
+});
+
+Route::prefix('/api/public/v1/projects/{project}/boards')->middleware('throttle:public-api-v1')->withoutMiddleware([
+    StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class,
+])->group(function () {
+    Route::get('/', [PublicBoardsController::class, 'index'])->name('public.v1.boards');
+    Route::post('/', [PublicBoardsController::class, 'write'])->name('public.boards.create');
+    Route::patch('/{board}', [PublicBoardsController::class, 'write'])->name('public.boards.update');
+    Route::get('/{board}', [PublicBoardsController::class, 'show'])->name('public.v1.boards.show');
+    Route::get('/{board}/issues', [PublicBoardsController::class, 'issues'])->name('public.v1.boards.issues');
 });

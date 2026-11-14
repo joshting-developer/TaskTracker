@@ -253,3 +253,14 @@ PDF／ZIP與圖片共用既有附件路由及授權, 但一般附件只能下載
 - 只有目前承辦人能完成、轉發或退回, 轉發另需todo.assign；退回沿目前交接路徑回上一手, 不抹除完整歷史。上一手停用時回400, 改選有效對象轉發
 - summary不帶留言／交接正文, 新增initialAssigneeName及comment／forward能力。read Token的所有寫入能力為false, write Token仍受當次permission限制
 - 相同requestId與payload重送回首次結果, 不重複留言或交接；重播仍先驗有效工作區、參與資格與permission。409時保留草稿, 讀最新revision後由操作者確認再送
+
+## 看板（OpenAPI 0.21.0）
+
+- `GET /api/public/v1/projects/{project}/boards`：摘要分頁, 預設20最多100, 搜尋及封存條件在SQL執行；`archived=1`只列已封存看板, `defaultBoard`獨立回傳且不占分頁
+- `GET .../boards/{board}`：看板屬性與最多1000個明確收錄ID；`GET .../boards/{board}/issues`：卡片摘要分頁, 動態包含所收錄Epic底下的卡片並去重, 不含全文、留言、歷史或工時
+- `POST .../boards`：name、選填description與requestId建立空的自訂看板；`PATCH .../boards/{board}`：expectedRevision、requestId與要改的name／description／addIssueIds／removeIssueIds, 加入與移除各最多200個不同ID, 同一ID不可同時加入與移除
+- 讀取需要read及本人issue.read；寫入需要write及本人board.manage, 不是看身分名稱放行。資料限定PAT工作空間與路徑Project, 更新仍須目前有權限才能讀receipt
+- Default是虛擬全收看板, 不可修改。封存看板仍可唯讀查閱, 不可寫入；這批不公開封存或還原API
+- 差量只調整明確收錄, 移除一張仍由Epic動態收錄的卡片不會讓它消失。需排除它時先重新考慮Epic收錄, 沒有隱藏的排除清單
+- 兩個呼叫端拿相同revision修改時只有第一個成功, 另一個回409；重讀後保留原意並使用新requestId套用差量, 不送完整selectedIssueIds蓋掉別人的收錄
+- `POST .../issues`可帶boardIds, 最多20個不同且使用中的同Project自訂看板, 另需board.manage。任何一個不合法都回滾卡片、編號及所有收錄；Default自動全收不用指定。只有單筆建卡支援, PATCH／upsert／batch不提供這個欄位

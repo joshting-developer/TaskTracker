@@ -85,8 +85,22 @@ class IssueService
         $this->store->put('issues', $issue['id'], $issue);
         $this->attachments->bindMarkdownReferences(new WorkspaceContext($this->workspaceSession), $project['id'], $issue['id'], $issue['description']);
         $this->syncRelations($issue, []);
+        $boardIds = $input['boardIds'] ?? [];
+        if (! is_array($boardIds) || ! array_is_list($boardIds) || count($boardIds) > 20) {
+            DomainError::fail('INVALID_INPUT', '建卡最多同時收錄到20個看板');
+        }
+        $boardIds = array_map(fn ($id) => Fields::text($id, '看板', 100, true), $boardIds);
+        if (count(array_unique($boardIds)) !== count($boardIds)) {
+            DomainError::fail('INVALID_INPUT', '看板不可重複');
+        }
         if (! empty($input['boardId']) && $input['boardId'] !== 'default') {
-            ($this->boards)()->includeCreatedIssue(Fields::text($input['boardId'], '看板', 100, true), $issue);
+            $boardIds[] = Fields::text($input['boardId'], '看板', 100, true);
+        }
+        foreach (array_unique($boardIds) as $boardId) {
+            if ($boardId === 'default') {
+                DomainError::fail('INVALID_INPUT', 'Default自動包含所有卡片, 不需明確收錄');
+            }
+            ($this->boards)()->includeCreatedIssue($boardId, $issue);
         }
         $this->notify($issue, '指派任務', $this->workspaceSession['user']['name'].' 將任務指派給你', $issue['assignee'], 'assigned');
 
