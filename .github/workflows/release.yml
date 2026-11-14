@@ -2,6 +2,12 @@ name: Tagged release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing immutable version to resume
+        required: true
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -10,127 +16,108 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      sha: ${{ steps.version.outputs.sha }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Require an immutable version on main
+      - name: Verify immutable version belongs to main
+        id: version
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+          EVENT: ${{ github.event_name }}
         run: |
           python3 - <<'PY'
           import os,re,subprocess
           tag=os.environ['RELEASE_TAG']
-          if not re.fullmatch(r'v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?',tag):
-              raise SystemExit('Release tag must be a version such as v0.3.0')
-          head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
-          main=subprocess.check_output(['git','rev-parse','origin/main'],text=True).strip()
-          if head != main: raise SystemExit('Tag must point at current main HEAD')
+          if not re.fullmatch(r'v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?',tag): raise SystemExit('Invalid version')
+          sha=subprocess.check_output(['git','rev-parse',tag+'^{commit}'],text=True).strip()
+          subprocess.run(['git','merge-base','--is-ancestor',sha,'origin/main'],check=True)
+          if os.environ['EVENT']=='push' and sha!=subprocess.check_output(['git','rev-parse','origin/main'],text=True).strip(): raise SystemExit('New tag must point to main HEAD')
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f: f.write('tag='+tag+'\nsha='+sha+'\n')
           PY
   source:
     needs: validate
     runs-on: ubuntu-24.04
-    permissions:
-      contents: read
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
+          ref: ${{ needs.validate.outputs.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Scan committed history for credentials
+      - name: Scan release history for credentials
         run: sh tools/release-source-check.sh
   contract:
     needs: validate
     uses: ./.github/workflows/api-contract.yml
+    with:
+      ref: ${{ needs.validate.outputs.sha }}
     permissions:
       contents: read
   image:
-    needs: [source, contract]
+    needs: [validate, source, contract]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    permissions:
-      contents: read
-      packages: write
     outputs:
-      image: ${{ steps.publish.outputs.image }}
-      digest: ${{ steps.publish.outputs.digest }}
+      archive_sha: ${{ steps.export.outputs.archive_sha }}
+      image_id: ${{ steps.export.outputs.image_id }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
+          ref: ${{ needs.validate.outputs.sha }}
           persist-credentials: false
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-      - name: Build and test the exact linux image
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+      - name: Build and test exact release source without production secrets
         env:
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ needs.validate.outputs.tag }}
+          SOURCE_SHA: ${{ needs.validate.outputs.sha }}
         run: |
           docker buildx build --platform linux/amd64 --load \
             --build-arg VITE_SITE_ORIGIN=https://task-tracker.josh-ting.com \
-            --label org.opencontainers.image.revision="$GITHUB_SHA" \
+            --label org.opencontainers.image.revision="$SOURCE_SHA" \
             --label org.opencontainers.image.version="$VERSION" \
-            --label org.opencontainers.image.source="https://github.com/$GITHUB_REPOSITORY" \
             -f docker/production/Dockerfile -t tasktracker-release:candidate .
           sh tools/release-image-smoke.sh tasktracker-release:candidate
-      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish fixed version and commit tags
-        id: publish
-        env:
-          VERSION: ${{ github.ref_name }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Export tested image with content hashes
+        id: export
         run: |
-          image="ghcr.io/${GITHUB_REPOSITORY,,}"
-          short="${GITHUB_SHA:0:12}"
-          package="/users/$GITHUB_REPOSITORY_OWNER/packages/container/tasktracker"
-          if gh api "$package" > "$RUNNER_TEMP/package.json" 2> "$RUNNER_TEMP/package-error.txt"; then
-            test "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["visibility"])' "$RUNNER_TEMP/package.json")" = private
-            gh api "$package/versions" --paginate --jq '.[].metadata.container.tags[]' > "$RUNNER_TEMP/existing-tags.txt"
-            if grep -Fxq "$VERSION" "$RUNNER_TEMP/existing-tags.txt"; then
-              echo 'A published version cannot be overwritten' >&2
-              exit 1
-            fi
-          else
-            grep -q 'HTTP 404' "$RUNNER_TEMP/package-error.txt"
-          fi
-          docker tag tasktracker-release:candidate "$image:$VERSION"
-          docker tag tasktracker-release:candidate "$image:git-$short"
-          docker push "$image:$VERSION"
-          docker push "$image:git-$short"
-          visibility=$(gh api "/users/$GITHUB_REPOSITORY_OWNER/packages/container/tasktracker" --jq .visibility)
-          test "$visibility" = private
-          digest=$(docker inspect --format '{{index .RepoDigests 0}}' "$image:$VERSION")
-          digest="${digest#*@}"
-          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
-          echo "image=$image" >> "$GITHUB_OUTPUT"
-          echo "digest=$digest" >> "$GITHUB_OUTPUT"
-          printf 'Version: `%s`\nCommit: `%s`\nImage: `%s@%s`\n' "$VERSION" "$GITHUB_SHA" "$image" "$digest" >> "$GITHUB_STEP_SUMMARY"
+          docker save tasktracker-release:candidate -o "$RUNNER_TEMP/release-image.tar"
+          echo "archive_sha=$(sha256sum "$RUNNER_TEMP/release-image.tar" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "image_id=$(docker inspect --format '{{.Id}}' tasktracker-release:candidate)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: verified-release-image
+          path: ${{ runner.temp }}/release-image.tar
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error
   deploy:
-    needs: image
+    needs: [validate, image]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: production
-    permissions:
-      contents: read
-      packages: read
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # Deployment orchestration is from main; the image is the verified immutable tag source.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
+          ref: main
           persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: verified-release-image
+          path: ${{ runner.temp }}/verified-release
       - uses: superfly/flyctl-actions/setup-flyctl@98172f70657cb3e15db199af139be99bd3e61200
         with:
           version: 0.5.10
-      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Verify schema compatibility, then deploy the verified digest
+      - name: Verify archive, schema and image before private Fly deployment
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-          RELEASE_IMAGE: ${{ needs.image.outputs.image }}
-          RELEASE_DIGEST: ${{ needs.image.outputs.digest }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_ARCHIVE: ${{ runner.temp }}/verified-release/release-image.tar
+          RELEASE_ARCHIVE_SHA: ${{ needs.image.outputs.archive_sha }}
+          RELEASE_IMAGE_ID: ${{ needs.image.outputs.image_id }}
+          RELEASE_SOURCE_SHA: ${{ needs.validate.outputs.sha }}
+          RELEASE_TAG: ${{ needs.validate.outputs.tag }}
         run: sh tools/fly-tagged-release.sh

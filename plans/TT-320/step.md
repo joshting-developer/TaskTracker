@@ -18,3 +18,7 @@
 - 正式DB已建立私有0600 single-transaction備份, 未還原或修改任何資料；App範圍deploy token可唯讀SSH, 30個migration均已套用, 本批schema不變
 - R2下一次發布先維持原來源, tag上線後同一映像短暫關閉HTTP服務、確認無上傳中引用, 補複製再還原HTTP與切目標, 避免複製期間有新寫入
 - 綜合browser修正登入欄位後整段通過；前端共64支通過, 5支專用拓樸未跑, 限制與後端／視覺結果已整理docs/batch-release-validation-2026-11-14.md
+
+- v0.3.0第一次CI的source／contract／Linux runtime smoke通過, GHCR推送後匿名manifest可讀, private條件失敗而deploy未執行；正式映像不變
+- 改用Actions artifact傳同一受測映像, 核對archive hash／image ID／source SHA／version後才推私有Fly registry；新增同tag手動續跑, 不改tag指向
+- archive驗證以5組案例驗正常與竄改失敗；actionlint與shell語法通過。清理workflow只允許精確首次失敗digest與標籤, 拒絕其他套件版本

@@ -4,15 +4,15 @@
 
 每張卡獨立commit與驗證, main push只跑契約CI。Josh在2026-11-14要求這批工作全部整理好後只打一個tag一起部署, 不按卡片逐一升版
 
-新增Tagged release workflow只收v開頭的版本tag, 版本格式例如v0.3.0, 必須指向當時main HEAD。先驗秘密掃描與完整契約CI, 再建linux/amd64正式映像, 用合成APP_KEY與隔離容器驗首頁、登入、SPA、health、匿名OpenAPI及註冊政策, 成功後才推GHCR
+新增Tagged release workflow只收v開頭的版本tag, 版本格式例如v0.3.0, 必須指向當時main HEAD。先驗秘密掃描與完整契約CI, 再建linux/amd64正式映像, 用合成APP_KEY與隔離容器驗首頁、登入、SPA、health、匿名OpenAPI及註冊政策, 成功後才匯出同一映像供部署工作使用
 
-映像同時標記版本與git短碼, 不用latest；已存在版本拒絕覆寫。新GHCR套件必須private, 發布後也核對visibility。Job summary留下完整commit與digest, 不含環境秘密
+映像標記版本與原始碼commit, 不用latest；已存在Fly版本拒絕覆寫。建置工作用docker save匯出已測映像, 以保留1天的Actions artifact傳遞, 同時核對archive SHA256、Docker image ID、commit與版本標籤。Job summary留下commit及映像識別, 不含環境秘密
 
 ## 權限
 
-驗證工作只讀程式碼；建置／發布工作另外有packages:write, 沒有正式Fly／資料庫／Redis／R2憑證。production環境的部署工作只用App範圍Fly deploy token, 加上短效GITHUB_TOKEN讀private映像；token不進build arg或映像
+驗證工作只讀程式碼；建置工作沒有packages:write或正式Fly／資料庫／Redis／R2憑證。production環境的部署工作只用App範圍Fly deploy token, 下載同次workflow產出的受驗證archive；token不進build arg或映像
 
-部署工作把同一個GHCR digest轉推Fly registry的固定版本標籤, 然後部署該映像, 不重新build。沒有讓Fly長期保存GitHub讀取Token, 也不把GHCR改公開來解決拉取
+部署工作核對archive及映像識別後轉推私有Fly registry固定版本標籤, 然後部署同一映像, 不重新build。映像不再推GHCR, Fly也不保存GitHub讀取Token
 
 ## 資料保護與失敗
 
@@ -28,6 +28,15 @@ release concurrency序列化且不中途取消前一個發布；任何驗證失�
 - migration guard：既有schema通過、新schema拒絕、空目錄或壞snapshot拒絕
 - 本機正式runtime合成容器smoke, 不使用正式帳密；本機架構與CI linux/amd64分開記錄
 - Gitleaks歷史掃描只忽略LegacyImportTest既有固定scrypt測試向量的精準fingerprint, 不排除整個tests資料夾
-- 最後整批tag實際執行後, 才能宣稱GHCR／Fly整條流程驗收完成；workflow檔與本機smoke不等於已發布
+- 最後整批tag實際執行後, 才能宣稱映像交付／Fly整條流程驗收完成；workflow檔與本機smoke不等於已發布
 
 目前仍需遠端main CI與最終tag驗收。現行Laravel低風險公告由TT-345另追, 秘密掃描通過不代表依賴完全沒有安全公告；首次部署到現在的回退與外部服務來源限制仍依各自卡片驗收
+
+
+## 首次發布失敗與同tag續跑
+
+v0.3.0第一次執行的秘密掃描、契約CI與Linux runtime smoke通過, 但GHCR推送後可匿名取得manifest, private檢查失敗, Fly部署被跳過。沒有正式Secrets進入映像, 來源repo也公開, 但私有映像條件仍未達成, 不把這次執行算成功
+
+修正後改用Actions artifact傳遞已驗證映像, 只在部署工作拿App範圍Fly token推私有registry。workflow_dispatch可指定既有版本續跑, 不移動或重打tag；所有用於build／契約測試的來源都解析到該tag固定SHA, 部署腳本則從main取得修正後的編排。新的tag仍須指向main HEAD
+
+清理工作只接受首次失敗產出的精確digest與兩個標籤, 若套件多了其他版本就拒絕刪除, 不廣泛清空帳號套件。實際清理與同tag續跑結果須另行確認

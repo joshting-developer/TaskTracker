@@ -1,0 +1,25 @@
+name: Remove accidental release package
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+jobs:
+  remove:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Remove only the package created by failed first release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          gh api "/users/$OWNER/packages/container/tasktracker/versions" > "$RUNNER_TEMP/versions.json"
+          python3 - "$RUNNER_TEMP/versions.json" <<'PY'
+          import json,sys
+          versions=json.load(open(sys.argv[1]))
+          assert len(versions)==1, 'Unexpected package versions; do not delete'
+          assert versions[0]['name']=='sha256:27f5630a3be837a76411bc12815e654df49c79f2cc3d90f2b88b5dcc32806720'
+          assert set(versions[0]['metadata']['container']['tags'])=={'v0.3.0','git-1b728db805c1'}
+          PY
+          gh api --method DELETE "/users/$OWNER/packages/container/tasktracker"
+          echo 'Removed only the exact accidental package from the failed release' >> "$GITHUB_STEP_SUMMARY"
