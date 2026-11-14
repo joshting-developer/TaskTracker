@@ -22,3 +22,5 @@
 - v0.3.0第一次CI的source／contract／Linux runtime smoke通過, GHCR推送後匿名manifest可讀, private條件失敗而deploy未執行；正式映像不變
 - 改用Actions artifact傳同一受測映像, 核對archive hash／image ID／source SHA／version後才推私有Fly registry；新增同tag手動續跑, 不改tag指向
 - archive驗證以5組案例驗正常與竄改失敗；actionlint與shell語法通過。清理workflow只允許精確首次失敗digest與標籤, 拒絕其他套件版本
+- 誤公開精確映像cleanup43592686697成功, 匿名manifest403；同tag續跑43592690092全流程成功, source1b728db, Fly digest f5824ccd684cbe53121e9bec09daccb25bd43c55852e58d9d9e538f1315ef8a3
+- 正式Codex登入、通知新按鈕、既有看板與三尺寸通過；TLS及FPM3秒執行期通過, R2同digest停寫切換完成, 無第二個tag

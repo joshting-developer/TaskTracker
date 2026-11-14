@@ -41,3 +41,15 @@ DNS已生效並經fly certs check驗憑證, APP_URL已切正式網域且驗登�
 - 保留的原本機MySQL：這是搬移前的唯讀備份, 不是可以seed／reset的測試庫；不解除super_read_only來方便測試。要另開本地開發服務先配置獨立新庫, 不直接重新啟動舊Compose
 
 線上暫時不可用時先保留工作草稿, 不回舊庫記另一份進度；恢復後讀最新revision再補登。具體隔離埠及測試命令以專案tasktracker-test-environments Skill為準
+
+## v0.3.0 整批發布（2026-11-14）
+
+本批只建立v0.3.0一個tag, 程式來源固定1b728db, 發布編排修正為604c76a。成功run為43592690092, 正式映像digest為sha256:f5824ccd684cbe53121e9bec09daccb25bd43c55852e58d9d9e538f1315ef8a3, 仍只有一台512MB Machine
+
+首次GHCR交付的private檢查失敗而沒有部署, 誤公開的精確映像已清除且匿名manifest回403。修正後透過Actions artifact傳同一個受測映像, 核對archive／image／source／version後推私有Fly registry；同tag續跑而非改寫tag, 流程見[tag發布文件](tagged-release.md)
+
+正式Codex登入、通知全部已讀入口、既有看板、三尺寸與HTTPS健康檢查通過；MySQL嚴格TLS有實際cipher、Redis TLS連線PING成功, 真正fpm-fcgi內部請求確認mysqlnd讀取逾時為3秒。沒有新增公開探針端點, 暫存探針檔已刪除
+
+R2以同一digest短暫停寫完成目標切換, 三個既有附件及新上傳探針下載雜湊與匿名拒絕通過, 來源保留。驗證範圍及5支專用拓樸未跑的限制見[整批驗證](batch-release-validation-2026-11-14.md)
+
+TT-159原先包含的OCI來源收斂／不公開資料埠、最低權限與輪替仍依TT-327／TT-330追蹤, 沒有因本次TLS與FPM驗證成功就宣稱那些條件已通過
