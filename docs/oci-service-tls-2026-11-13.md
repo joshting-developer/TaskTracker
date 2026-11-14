@@ -76,3 +76,9 @@ Fly已掛載兩張CA, 正式MySQL與Redis驗CA／主機名稱成功, MySQL ciphe
 正式php.ini補mysqlnd.net_read_timeout=3, 在Fly獨立CLI以相同設定實測MySQL握手停滯約3.01秒、Redis讀取停滯約3.01秒拒絕, 兩者仍可重新連回真正OCI。listener及child由診斷程序回收
 
 依Josh要求, 這個php.ini修正等整批tag一起發布, 沒有逐卡替換線上映像。TT-159先待驗收, 最後發布後須再次核對正式FPM載入值及故障行為；目前不能說線上FPM讀取超時已修好。來源收斂仍由TT-327處理, 不因TLS通過就說3306／6379已對外關閉
+
+## v0.3.0 正式執行期核對
+
+2026-11-14版本發布後, 正式MySQL連線有非空TLS cipher且伺服器憑證驗證開啟, Redis TLS連線PING成功。以只在Machine內部執行的FastCGI請求取得fpm-fcgi的mysqlnd.net_read_timeout=3, 不是只驗CLI設定；探針暫存檔已刪除, 沒有新增公開端點
+
+來源限制與最低權限／輪替仍另由TT-327、TT-330處理, 不把加密連線的局部驗證等同完整網路條件驗收
