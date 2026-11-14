@@ -9,6 +9,12 @@
 !frontend/vite.config.js
 !frontend/src/
 !frontend/src/**
+!frontend/app/
+!frontend/app/**
+!frontend/landing/
+!frontend/landing/**
+!frontend/public-assets/
+!frontend/public-assets/**
 !backend/
 !backend/composer.json
 !backend/composer.lock

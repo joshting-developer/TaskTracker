@@ -2,6 +2,8 @@
 # 啟動PHP-FPM與Nginx；收到SIGTERM時兩者都優雅結束（Nginx quit、FPM QUIT等待進行中請求）。
 # 不執行migration／seed；發布流程另以`php artisan migrate --force`控管。
 set -eu
+# 發布與維護指令直接執行, 不額外啟動HTTP程序。
+if [ "$#" -gt 0 ]; then exec "$@"; fi
 : "${APP_KEY:?必須以Secret提供APP_KEY}"
 sed "s/__PORT__/${PORT}/" /etc/nginx/nginx.conf > /tmp/nginx/nginx.conf
 php artisan config:cache --no-interaction >/dev/null

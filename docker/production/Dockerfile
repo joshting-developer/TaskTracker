@@ -32,6 +32,7 @@ COPY backend/config ./config
 COPY backend/database ./database
 COPY backend/public ./public
 COPY backend/routes ./routes
+COPY backend/resources ./resources
 RUN composer dump-autoload --optimize --classmap-authoritative --no-dev --no-interaction \
     && rm /usr/local/bin/composer \
     && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \

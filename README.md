@@ -222,6 +222,8 @@ docker compose exec backend php artisan tasktracker:import-legacy /legacy/tasktr
 
 若舊資料位於 Docker `tasktracker-data` volume, 請先停寫並備份／複製到根 `data/` 後匯入, 不直接讓兩個版本共用可寫 SQLite
 
+正式環境的公開設定與Secrets清單見[正式環境設定](docs/production-environment.md)
+
 ## MySQL搬遷準備
 
 MySQL到MySQL的私有備份、空庫匯入、逐表核對、重跑與回退見[搬遷操作](docs/mysql-transfer-runbook.md)。工具已提供隔離演練入口；正式搬移仍需部署完成與當次授權, 不以本地演練當作正式驗收
