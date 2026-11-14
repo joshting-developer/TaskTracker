@@ -22,7 +22,7 @@ target="registry.fly.io/tasktracker-josh:$RELEASE_TAG"
 docker tag "$RELEASE_IMAGE@$RELEASE_DIGEST" "$target"
 docker push "$target"
 # Only this image is deployed; no source build, seed, reset or skipped release command.
-flyctl deploy --app tasktracker-josh --config fly.toml --image "$target" --strategy rolling --wait-timeout 300
+flyctl deploy --app tasktracker-josh --config fly.toml --image "$target" --strategy rolling --wait-timeout 5m
 curl --fail --silent --show-error --retry 3 --retry-delay 2 --max-time 45 https://task-tracker.josh-ting.com/api/health >/dev/null
 python3 - <<'PY'
 import json,urllib.request

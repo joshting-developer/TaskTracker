@@ -8,3 +8,5 @@
 - production token不進build；新增migration未有私有備份方案就拒絕自動部署, guard兩測試通過
 - 官方actionlint1.7.12校驗碼驗證與workflow靜態檢查通過；本機候選runtime路由／秘密排除／mysqlnd三秒設定通過, 不當作CI amd64已驗
 - Gitleaks掃346commit／16.93MB無秘密, 精準忽略既有測試向量, 沒排整個test。GHCR與Fly實際發布尚未執行, 等最後整批唯一tag
+
+- 再核對CLI help：deploy wait-timeout為duration字串, 已改5m而非無單位300, 避免最後發布才遇參數錯誤
