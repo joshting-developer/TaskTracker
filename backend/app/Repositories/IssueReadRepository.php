@@ -323,17 +323,24 @@ class IssueReadRepository
     }
 
     /**
-     * 舊版無Project深連結只解析所屬Project公開ID，不讀卡片內容。
+     * 以公開ID或卡號定位單卡, 不讀內容且由呼叫端重驗Project權限
      *
      * @param  string  $workspaceId  可信Workspace公開ID
-     * @param  string  $id  Issue公開ID
-     * @return ?string 同Workspace內的Project公開ID
+     * @param  string  $id  Issue公開ID或identifier
+     * @return array{id:string,projectId:string}|null 同Workspace內的最小位置
      */
-    public function locate(string $workspaceId, string $id): ?string
+    public function locate(string $workspaceId, string $id): ?array
     {
-        return Issue::query()->join('projects as p', fn ($join) => $join->on('p.id', '=', 'issues.project_id')->on('p.workspace_id', '=', 'issues.workspace_id'))
-            ->join('workspaces as w', 'w.id', '=', 'issues.workspace_id')
-            ->where('w.public_id', $workspaceId)->where('issues.public_id', $id)->value('p.public_id');
+        $query = Issue::query()->join('projects as p', fn ($join) => $join->on('p.id', '=', 'issues.project_id')->on('p.workspace_id', '=', 'issues.workspace_id'))
+            ->join('workspaces as w', 'w.id', '=', 'issues.workspace_id')->where('w.public_id', $workspaceId);
+        if (preg_match('/^([A-Z][A-Z0-9]*)-([1-9][0-9]*)$/D', $id, $parts) && strlen($id) <= 64) {
+            $query->where('p.code', $parts[1])->where('issues.identifier', $id);
+        } else {
+            $query->where('issues.public_id', $id);
+        }
+        $row = $query->first(['issues.public_id as issue_public_id', 'p.public_id as project_public_id']);
+
+        return $row ? ['id' => $row->issue_public_id, 'projectId' => $row->project_public_id] : null;
     }
 
     /**

@@ -24,7 +24,10 @@ function latest() { revision.value = props.item.revision; }
 async function send(operation) {
   if (props.busy || stale.value) return;
   const fields = { id: props.item.id, expectedRevision: revision.value };
-  if (operation === 'forwardTodo') { if (!recipient.value || recipient.value === props.item.assigneeId) return; fields.assigneeId = recipient.value; }
+  if (operation === 'forwardTodo') {
+    if (recipient.value === '__previous__') { if (!props.item.capabilities.return || !reply.value.trim()) return; operation = 'returnTodo'; }
+    else { if (!recipient.value || recipient.value === props.item.assigneeId) return; fields.assigneeId = recipient.value; }
+  }
   if (operation === 'updateTodo') fields.content = content.value;
   else if (reply.value.trim()) fields.reply = reply.value;
   if (await props.perform(operation, fields)) { reply.value = ''; recipient.value = ''; editing.value = false; await nextTick(); latest(); }
@@ -47,13 +50,13 @@ onBeforeUnmount(() => { dialog.value?.close(); if (opener?.isConnected) opener.f
       <p v-if="error" class="error-box" role="alert">{{ error }}</p>
       <p v-if="stale" class="note-conflict" role="status">紙條已更新, 草稿已保留 <button class="text-button" :disabled="busy" @click="latest">使用最新版本繼續</button></p>
       <form v-if="editing" @submit.prevent="send('updateTodo')"><MarkdownEditor v-model="content" label="編輯紙條內容" :maxlength="6000" :rows="5" :disabled="busy" required /><button class="button primary" :disabled="busy || stale || !content.trim()">儲存修改</button><button type="button" class="text-button note-cancel-edit" :disabled="busy" @click="editing = false">取消修改</button></form>
-      <template v-else><MarkdownContent class="note-content" :source="todoSource(item)" /></template>
+      <template v-else><MarkdownContent issue-references class="note-content" :source="todoSource(item)" /></template>
       <button v-if="item.convertedIssue" class="text-button" @click="emit('open-issue', item.convertedIssue)">{{ item.convertedIssue.identifier }} ↗</button>
       <TodoConversation :item="item" />
     </div>
     <form v-if="item.capabilities.forward && !editing" class="note-transfer" @submit.prevent="send('forwardTodo')">
       <label :for="`${id}-reply`">回覆內容</label><textarea :id="`${id}-reply`" v-model="reply" rows="3" maxlength="2000" :disabled="busy" placeholder="輸入回覆…" />
-      <div class="note-transfer-actions"><PagedSelect v-model="recipient" label="要傳給誰" :context="workspaceId" :load="loadMembers" :fixed-options="[{ id: item.createdBy, name: item.creatorName }, { id: item.initialAssigneeId, name: item.initialAssigneeName || item.assigneeName }]" :disabled="busy" autoload required empty-label="選擇承辦人" /><button class="button primary" :disabled="busy || stale || !recipient || recipient === item.assigneeId">傳遞</button></div>
+      <div class="note-transfer-actions"><PagedSelect v-model="recipient" label="要傳給誰" :context="workspaceId" :load="loadMembers" :fixed-options="[...(item.capabilities.return ? [{ id: '__previous__', name: '回覆上一手' }] : []), { id: item.createdBy, name: item.creatorName }, { id: item.initialAssigneeId, name: item.initialAssigneeName || item.assigneeName }]" :disabled="busy" autoload required empty-label="選擇承辦人" /><button class="button primary" :disabled="busy || stale || !recipient || recipient === item.assigneeId || (recipient === '__previous__' && (!item.capabilities.return || !reply.trim()))">{{ recipient === '__previous__' ? '回覆上一手' : '傳遞' }}</button></div>
     </form>
   </dialog>
 </template>

@@ -136,7 +136,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   await page.getByText('確認下一次測試範圍', { exact: true }).first().waitFor();
   await shot(page, '03-notes-list');
   const todo = (await (await page.request.get('/api/v1/todos?scope=mine&state=open')).json()).data.items[0];
-  await call(page.request, 'commentTodo', { id: todo.id, expectedRevision: todo.revision, content: '已確認測試資料, 接著補上手機版驗證' });
+  await call(page.request, 'commentTodo', { id: todo.id, expectedRevision: todo.revision, content: '已確認測試資料, 接著補上手機版驗證\n\n請確認VRT-2與#VRT-2' });
   execFileSync('docker', ['compose', '-p', 'tasktracker-codex-visual', '-f', resolve(import.meta.dirname, '../../../docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', 'tools/visual-fixture-clock.php'], { cwd: resolve(import.meta.dirname, '../../..'), input: JSON.stringify({ userId: data.identity.user.id, workspaceId: data.identity.workspace.id, projectId: data.project.id, emptyId: data.empty.id }), stdio: ['pipe', 'pipe', 'pipe'] });
   await page.reload();
   await page.locator(`[data-todo-id="${todo.id}"]`).getByRole('button', { name: /^更多：/ }).click();
@@ -231,5 +231,22 @@ test('representative workspace flows', async ({ page, browser }) => {
   await page.getByRole('status').filter({ hasText: '專案存取權限已變更' }).waitFor();
   await expect(page.getByRole('button', { name: '新增任務', exact: true })).toHaveCount(0);
   await shot(page, '16-denied');
+  await call(page.request, 'switchWorkspace', { workspaceId: data.identity.workspace.id }, 'auth');
+  await page.goto('/login'); await page.locator('.app-shell').waitFor();
+  const replyContext = await browser.newContext({ baseURL: origin });
+  try {
+    const recipientEmail = `reply-${crypto.randomUUID()}@example.test`;
+    const invitation = await call(page.request, 'inviteMember', { email: recipientEmail });
+    await call(replyContext.request, 'register', { name: '協作成員', email: recipientEmail, password, inviteToken: invitation.token }, 'auth');
+    const replyNote = await call(replyContext.request, 'createTodo', { content: '回覆上一手驗收\n\n請確認VRT-2與#VRT-2', assigneeId: data.identity.user.id });
+    execFileSync('docker', ['compose', '-p', 'tasktracker-codex-visual', '-f', resolve(import.meta.dirname, '../../../docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', 'tools/visual-fixture-clock.php'], { cwd: resolve(import.meta.dirname, '../../..'), input: JSON.stringify({ userId: data.identity.user.id, workspaceId: data.identity.workspace.id, projectId: data.project.id, emptyId: data.empty.id }), stdio: ['pipe', 'pipe', 'pipe'] });
+    await page.goto('/app/#/notes');
+    await page.locator(`[data-todo-id="${replyNote.id}"]`).getByRole('button', { name: /^更多：/ }).click();
+    const replyDrawer = page.getByRole('dialog', { name: '紙條', exact: true });
+    await replyDrawer.getByLabel('要傳給誰', { exact: true }).selectOption('__previous__');
+    await replyDrawer.getByLabel('回覆內容', { exact: true }).fill('已確認, 請接著處理');
+    await expect(replyDrawer.getByRole('button', { name: '回覆上一手', exact: true })).toBeEnabled();
+    await shot(page, '28-note-reply-previous');
+  } finally { await replyContext.close(); }
   expect(errors).toEqual([]);
 });

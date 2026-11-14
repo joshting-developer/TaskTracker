@@ -74,22 +74,22 @@ class IssueReadService
     }
 
     /**
-     * 解析舊版深連結所屬Project；無權與不存在同樣回應找不到。
+     * 解析卡號或舊版深連結所屬Project；無權與不存在同樣回應找不到。
      *
      * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
-     * @param  string  $id  Issue公開ID
+     * @param  string  $id  Issue公開ID或identifier
      * @return array{id:string,projectId:string} 卡片位置
      */
     public function locate(WorkspaceContext $context, string $id): array
     {
-        $projectId = $this->issues->locate($context->workspaceId, $id) ?? DomainError::fail('NOT_FOUND', '找不到這個任務');
+        $location = $this->issues->locate($context->workspaceId, $id) ?? DomainError::fail('NOT_FOUND', '找不到這個任務');
         try {
-            $this->projects->authorized($context, $projectId, 'issue.read');
+            $this->projects->authorized($context, $location['projectId'], 'issue.read');
         } catch (DomainError $failure) {
             DomainError::fail('NOT_FOUND', '找不到這個任務');
         }
 
-        return ['id' => $id, 'projectId' => $projectId];
+        return $location;
     }
 
     /**

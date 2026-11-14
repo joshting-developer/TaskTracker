@@ -30,7 +30,7 @@ onBeforeUnmount(() => { generation++; controller?.abort(); });
       <h3>歷程</h3>
       <p v-if="loading" role="status">載入中…</p>
       <div v-if="error" role="alert">{{ error }} <button class="text-button" :disabled="loading" @click="history">重試</button></div>
-      <section v-if="comments"><h4>留言</h4><p v-if="!comments.total">尚無留言</p><ol><li v-for="entry in comments.items" :key="entry.id"><div>{{ entry.author }} <time>{{ stamp(entry.createdAt) }}</time></div><MarkdownContent :source="entry.content" /></li></ol><button v-if="comments.page < comments.lastPage" class="text-button" :disabled="loading" @click="load('comments', true)">載入更多留言</button></section>
+      <section v-if="comments"><h4>留言</h4><p v-if="!comments.total">尚無留言</p><ol><li v-for="entry in comments.items" :key="entry.id"><div>{{ entry.author }} <time>{{ stamp(entry.createdAt) }}</time></div><MarkdownContent issue-references :source="entry.content" /></li></ol><button v-if="comments.page < comments.lastPage" class="text-button" :disabled="loading" @click="load('comments', true)">載入更多留言</button></section>
       <section v-if="handoffs"><h4>交接紀錄</h4><p class="initial-handoff">{{ item.creatorName }} → {{ item.initialAssigneeName || item.assigneeName }} · 建立交辦</p><ol><li v-for="entry in handoffs.items" :key="entry.id">{{ entry.from }} → {{ entry.to }} · {{ entry.kind === 'returned' ? '退回' : '傳遞' }} <time>{{ stamp(entry.createdAt) }}</time></li></ol><button v-if="handoffs.page < handoffs.lastPage" class="text-button" :disabled="loading" @click="load('handoffs', true)">載入更多交接</button></section>
     </section>
   </div>

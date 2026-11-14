@@ -2,21 +2,22 @@
 import { computed, h } from 'vue';
 import { renderMarkdownDocument } from '../ui/markdown.js';
 import AttachmentImage from './AttachmentImage.vue';
-const props = defineProps({ source: { type: String, default: '' }, projectId: { type: String, default: '' } });
+import { issueReferenceParts } from '../domain/issueReferences.js';
+const props = defineProps({ source: { type: String, default: '' }, projectId: { type: String, default: '' }, issueReferences: Boolean });
 // Only sanitized DOM becomes Vue nodes. User HTML stays escaped by the Markdown renderer.
 const nodes = computed(() => {
   const document = renderMarkdownDocument(props.source, Boolean(props.projectId));
   const template = window.document.createElement('template');
   template.innerHTML = document.html;
-  function node(element) {
-    if (element.nodeType === Node.TEXT_NODE) return element.textContent;
+  function node(element, references = props.issueReferences) {
+    if (element.nodeType === Node.TEXT_NODE) return references ? issueReferenceParts(element.textContent).map(part => part.identifier ? h('a', { href: `/app/#/issue/${part.identifier}?detail=1`, target: '_blank', rel: 'noopener noreferrer' }, part.text) : part.text) : element.textContent;
     if (element.nodeType !== Node.ELEMENT_NODE) return null;
     const attachment = document.attachments[Number(element.getAttribute('data-attachment-slot'))];
     if (element.hasAttribute('data-attachment-slot') && attachment) return h(AttachmentImage, { key: `${props.projectId}:${attachment.id}:${element.getAttribute('data-attachment-slot')}`, projectId: props.projectId, attachmentId: attachment.id, label: attachment.label });
     const attrs = Object.fromEntries([...element.attributes].map(attr => [attr.name, ['checked', 'disabled'].includes(attr.name) ? true : attr.value]));
-    return h(element.tagName.toLowerCase(), attrs, [...element.childNodes].map(node));
+    return h(element.tagName.toLowerCase(), attrs, [...element.childNodes].map(child => node(child, references && !['A', 'CODE', 'PRE'].includes(element.tagName))));
   }
-  return [...template.content.childNodes].map(node);
+  return [...template.content.childNodes].map(element => node(element));
 });
 const Content = () => nodes.value;
 </script>
