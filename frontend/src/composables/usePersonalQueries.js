@@ -2,13 +2,13 @@ import { computed, nextTick, onScopeDispose, ref, shallowRef, watch } from 'vue'
 import { api } from '../api/index.js';
 /** 紙條頁只讀目前Todo分頁，原稿／歷史快取限50筆且不保存到storage。 */
 export function usePersonalQueries({ versions, resumed, draftId, onError, enabled = computed(() => true) }) {
-  const scope = ref('mine'), page = ref(1), closedPage = ref(1), showClosed = ref(false), pinnedId = ref('');
-  const open = shallowRef(null), closed = shallowRef(null), counts = shallowRef(null), details = shallowRef(new Map());
+  const scope = ref('mine'), page = ref(1), pinnedId = ref('');
+  const open = shallowRef(null), counts = shallowRef(null), details = shallowRef(new Map());
   const loading = ref(false), error = ref(''), canConvert = ref(false);
   let generation = 0, controller, disposed = false;
   const itemRequests = new Map();
   const data = computed(() => {
-    const rows = [...(open.value?.items || []), ...(showClosed.value ? closed.value?.items || [] : [])];
+    const rows = [...(open.value?.items || [])];
     for (const id of [draftId.value, pinnedId.value]) {
       const item = details.value.get(id);
       if (item && !rows.some(row => row.id === id))
@@ -46,8 +46,6 @@ export function usePersonalQueries({ versions, resumed, draftId, onError, enable
         details.value = next;
         if (open.value)
           open.value = { ...open.value, items: open.value.items.filter(item => item.id !== id) };
-        if (closed.value)
-          closed.value = { ...closed.value, items: closed.value.items.filter(item => item.id !== id) };
         onError?.(failure);
       }
       throw failure;
@@ -86,19 +84,15 @@ export function usePersonalQueries({ versions, resumed, draftId, onError, enable
     error.value = '';
     const options = { signal: controller.signal };
     try {
-      const result = await Promise.all([api.todos({ scope: scope.value, state: scope.value === 'mine' ? 'open' : 'all', page: page.value, perPage: 20 }, options), showClosed.value ? api.todos({ scope: scope.value, state: 'closed', page: closedPage.value, perPage: 20 }, options) : null]);
+      const result = await api.todos({ scope: scope.value, state: scope.value === 'mine' ? 'open' : 'all', page: page.value, perPage: 20 }, options);
       if (current !== generation)
         return;
-      [open.value, closed.value] = result;
+      open.value = result;
       if (page.value > open.value.lastPage) {
         page.value = open.value.lastPage;
         return;
       }
-      if (closed.value && closedPage.value > closed.value.lastPage) {
-        closedPage.value = closed.value.lastPage;
-        return;
-      }
-      const visible = [...open.value.items, ...(closed.value?.items || [])];
+      const visible = open.value.items;
       for (const row of visible)
         if ((row.id === draftId.value || row.id === pinnedId.value) && details.value.has(row.id) && details.value.get(row.id).revision !== row.revision)
           await loadItem(row.id, { history: Boolean(details.value.get(row.id).history) });
@@ -123,17 +117,17 @@ export function usePersonalQueries({ versions, resumed, draftId, onError, enable
   }
   async function focus(id, tool) {
     const item = await loadItem(id);
-    scope.value = item.assigneeId === tool.userId ? 'mine' : item.createdBy === tool.userId ? 'sent' : 'involved';
-    showClosed.value = item.state !== 'open';
+    scope.value = item.assigneeId === tool.userId && item.state === 'open' ? 'mine' : item.createdBy === tool.userId ? 'sent' : 'involved';
+    page.value = 1;
     await nextTick();
     pinnedId.value = id;
     await refresh();
     await nextTick();
     await tool.focus(id);
   }
-  watch(scope, () => { page.value = 1; closedPage.value = 1; pinnedId.value = ''; });
-  watch([() => versions.value?.todos, resumed, scope, page, closedPage, showClosed, enabled], refresh, { immediate: true });
+  watch(scope, () => { page.value = 1; pinnedId.value = ''; });
+  watch([() => versions.value?.todos, resumed, scope, page, enabled], refresh, { immediate: true });
   onScopeDispose(() => { disposed = true; generation++; controller?.abort(); for (const request of itemRequests.values())
     request.abort(); itemRequests.clear(); });
-  return { scope, page, closedPage, showClosed, open, closed, counts, loading, error, data, loadItem, moreHistory, canConvert, refresh, focus };
+  return { scope, page, open, counts, loading, error, data, loadItem, moreHistory, canConvert, refresh, focus };
 }

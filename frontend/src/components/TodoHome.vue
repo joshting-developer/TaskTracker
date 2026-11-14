@@ -6,8 +6,8 @@ import MarkdownEditor from './MarkdownEditor.vue';
 import TodoDetailDrawer from './TodoDetailDrawer.vue';
 import PagedSelect from './PagedSelect.vue';
 import { todoDate } from '../domain/todoContent.js';
-const props = defineProps({ remote: Boolean, counts: Object, moreHistory: Function, loadItem: Function, loadMembers: Function, workspaceId: String, data: Object, userId: String, canWrite: Boolean, canAssign: Boolean, canConvert: Boolean, refresh: Function });
-const emit = defineEmits(['convert', 'open-issue', 'scope', 'closed', 'tab']);
+const props = defineProps({ remote: Boolean, scope: String, counts: Object, moreHistory: Function, loadItem: Function, loadMembers: Function, workspaceId: String, data: Object, userId: String, canWrite: Boolean, canAssign: Boolean, canConvert: Boolean, refresh: Function });
+const emit = defineEmits(['convert', 'open-issue', 'scope', 'tab']);
 const content = shallowRef(''), assigneeId = shallowRef(props.userId), tab = shallowRef('mine');
 const busy = shallowRef(false), error = shallowRef(''), success = shallowRef(''), selected = shallowRef(null);
 const quickInput = ref(null), drawer = ref(null), tabId = useId();
@@ -21,8 +21,15 @@ watch(() => props.data.todos, rows => {
   const current = rows.find(item => item.id === selected.value.id);
   if (current && current.revision >= selected.value.revision && typeof current.content === 'string') selected.value = current;
 });
-function choose(id) { tab.value = id; emit('tab', id); if (id !== 'create') { emit('closed', false); emit('scope', id); } }
-async function focus(id) { const item = props.loadItem ? await props.loadItem(id) : props.data.todos.find(row => row.id === id); if (item) { selected.value = item; } }
+function choose(id) { success.value = ''; error.value = ''; tab.value = id; emit('tab', id); if (id !== 'create') emit('scope', id); }
+watch(() => props.scope, value => { if (value) { tab.value = value; emit('tab', value); } });
+async function focus(id) {
+  success.value = ''; error.value = '';
+  if (props.scope) { tab.value = props.scope; emit('tab', props.scope); }
+  const cached = props.data.todos.find(row => row.id === id);
+  const item = typeof cached?.content === 'string' ? cached : props.loadItem ? await props.loadItem(id) : cached;
+  if (item) selected.value = item;
+}
 async function focusQuickEntry() { choose('create'); await nextTick(); quickInput.value?.focus(); }
 defineExpose({ dirty, saving: computed(() => busy.value), draftId: computed(() => selected.value?.id), focus, focusQuickEntry });
 async function run(operation, payload) {
@@ -44,7 +51,7 @@ async function run(operation, payload) {
     return false;
   } finally { busy.value = false; }
 }
-async function create() { if (content.value.trim() && await run('createTodo', { content: content.value, assigneeId: assigneeId.value })) { content.value = ''; assigneeId.value = props.userId; choose('mine'); } }
+async function create() { if (content.value.trim() && await run('createTodo', { content: content.value, assigneeId: assigneeId.value })) { content.value = ''; assigneeId.value = props.userId; choose('mine'); success.value = '紙條已建立'; } }
 async function convert(item) { emit('convert', item); selected.value = null; }
 </script>
 <template>

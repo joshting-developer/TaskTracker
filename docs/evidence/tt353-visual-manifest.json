@@ -1,0 +1,33 @@
+{
+  "images": [
+    {
+      "name": "after-1440.png",
+      "sha256": "ccfdb02c9dce8349a45ff732731f33a7d21c24723d18dda8489335b9283ed91a"
+    },
+    {
+      "name": "after-768.png",
+      "sha256": "2ce406da3eabcd6318d11533bd23d6c7a23cda3c31d4529a7715ca20e0b479fe"
+    },
+    {
+      "name": "after-390.png",
+      "sha256": "423133a4431b1c5bee5cf7e28401c98b907d9767f44ccc185cd8517bdbb5616d"
+    }
+  ],
+  "before": [
+    {
+      "name": "before-1440.png",
+      "sha256": "a2d03f777b96eab3bf4b7706bf4f15718bd7239306ef8ae67ac7c86652436b9f"
+    },
+    {
+      "name": "before-390.png",
+      "sha256": "7b086ecddcc22259231abee5fe42b90dfebc470d618153a029ad1ad566948ccf"
+    },
+    {
+      "name": "before-768.png",
+      "sha256": "a8c02a21c380a285b5885dd5087809a5c4ed9962de6c00e096d746ab8b9fb800"
+    }
+  ],
+  "mask": "time labels only; pager, rows, tab and success messages visible",
+  "synthetic": true,
+  "fixture": "Each synthetic completion separated by 1050ms because persisted timestamps have second precision; UI labels and row ordering are not masked"
+}
