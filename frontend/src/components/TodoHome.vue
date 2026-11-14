@@ -23,11 +23,11 @@ watch(() => props.data.todos, rows => {
 });
 function choose(id) { success.value = ''; error.value = ''; tab.value = id; emit('tab', id); if (id !== 'create') emit('scope', id); }
 watch(() => props.scope, value => { if (value) { tab.value = value; emit('tab', value); } });
-async function focus(id) {
+async function focus(id, { loaded = false } = {}) {
   success.value = ''; error.value = '';
   if (props.scope) { tab.value = props.scope; emit('tab', props.scope); }
   const cached = props.data.todos.find(row => row.id === id);
-  const item = typeof cached?.content === 'string' ? cached : props.loadItem ? await props.loadItem(id) : cached;
+  const item = loaded && typeof cached?.content === 'string' ? cached : props.loadItem ? await props.loadItem(id) : cached;
   if (item) selected.value = item;
 }
 async function focusQuickEntry() { choose('create'); await nextTick(); quickInput.value?.focus(); }

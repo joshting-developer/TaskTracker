@@ -11,7 +11,7 @@ const query = usePersonalQueries({ enabled: active, versions: toRef(props, 'vers
     emit('access'); } });
 const { scope, page, open, counts, loading, error, data, canConvert } = query;
 async function refresh() { await query.refresh(); }
-async function focus(id) { await query.focus(id, { userId: props.userId, focus: async (id) => { await nextTick(); return tool.value?.focus(id); } }); }
+async function focus(id) { await query.focus(id, { userId: props.userId, focus: async (id) => { await nextTick(); return tool.value?.focus(id, { loaded: true }); } }); }
 useLeaveGuard({ dirty: () => Boolean(tool.value?.dirty), saving: () => Boolean(tool.value?.saving), unload: true });
 defineExpose({ focus, focusQuickEntry: () => tool.value?.focusQuickEntry(), refresh });
 </script>
