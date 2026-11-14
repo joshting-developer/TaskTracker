@@ -47,4 +47,4 @@ HTTP API、Repository、查詢、前端資料載入或輪詢異動，必讀共�
 - 直接在原repository操作，不在暫存目錄另建clone／worktree避限制；保護既有差異。
 - 每完成可獨立驗證階段立即本機commit，已持續授權；明確stage相關檔案，含plans/<卡號>/plan.md及step.md，檢查staged diff／空白。不套其他專案的plan排除流程。
 - TT卡片commit格式 `<卡號> <卡片標題>`；同卡多次提交沿用。無卡才用繁中Conventional Commits。不加AI署名，沿用Git作者設定。
-- 本機commit後可直接push到origin目前分支, 使用者2026-11-14已持續授權；push前確認只推本次commit, 遇衝突或被拒先停下回報, 不force-push。不自行amend／squash／重寫歷史。完成回報commit短碼、push結果、實測與限制；未提交或未push說明原因。
+- 本機commit後可直接push到origin目前分支, 使用者2026-11-14已持續授權；main目前不會自動部署, 所以一起推到另一個Agent已commit的本機commit也可以。push前先`git fetch`, origin有對方新推的commit就先`git pull --rebase`同步再push；rebase衝突、push被拒或需要force-push時先停下回報。除了這種push前同步, 不自行amend／squash／重寫歷史。完成回報commit短碼、push結果、實測與限制；未提交或未push說明原因。
