@@ -1,6 +1,6 @@
 # MySQL搬遷與回退
 
-本文件是TT-341的搬遷準備, 不代表資料已搬到正式環境。只在TT-323部署成功、Josh當次授權來源／目標與停寫時段後執行。這次沒有操作本地現用庫或正式庫
+本文件是TT-341搬遷工具與回退手冊。2026-11-14已依Josh當次授權完成44表本地到正式task_tracker搬移, 兩輪完整比對通過, 現況見[Fly部署](fly-deployment.md)。後續每次搬移仍須先確認部署成功、當次授權來源／目標與停寫時段
 
 ## 工具與限制
 
@@ -81,3 +81,11 @@ python3 tools/mysql-transfer.py rollback --config .local/mysql-transfer/config.j
 `python3 tools/mysql-transfer-check.py`建立並清理本次專用的兩套MySQL8.4, 無公開埠、無現用volume；使用隨機臨時憑證。來源schema只取Codex隔離測試庫的no-data DDL, 再自行建立合成帳號／資格／JSON／NULL／二進位及外鍵資料, 不搬任何現存帳號或任務
 
 需要先有`tasktracker-codex-test`隔離環境提供目前migration後schema。演練結果只輸出檢查項目與筆數, 原始備份與臨時憑證會清理, 不進Git。正式執行仍要另外授權
+
+## 本次切換後
+
+2026-11-14保留本地原庫、來源SQL、正式啟動庫SQL、完整manifest與storage app備份於忽略的.local/tt341-cutover（0700／0600）。原庫設定super_read_only=ON, 原本frontend／backend／queue／scheduler／websocket停止；正式已恢復寫入, 不再要求新舊庫雜湊持續相等
+
+若真的回退, 先備份正式新進度並處理差異, 經當次授權後才解除本地super_read_only。不得為了啟動開發環境直接把主庫改回舊來源；隔離測試繼續用各Agent的testing schema
+
+未來Fly停寫不能只依賴artisan down：它不會阻擋Nginx靜態頁, 也須考慮Machine重建後維護檔消失。先依當前CLI核對machine update --autostart=false與machine stop, 停掉所有寫入者並讀回Machine狀態, 避免自動喚醒在搬移期間重新開放API；恢復時再還原正常HTTP自動啟停。本次開放前已獨立核對44表完整內容一致, 不是以維護指令成功取代資料驗證

@@ -13,3 +13,15 @@
 - SQL產生的高精度JSON decimal可能被標準dump改變精度, 已實測偵測並拒絕／回退；正式遇到這種資料須另選無損搬運方式, 不放寬比對
 - 專案冒煙、Skill完整性與資料存取審查通過；沒有修改產品畫面或業務API, 沒有操作現用或正式資料庫
 - 工具準備階段完成；整卡仍等TT-323部署與Josh當次搬移授權, 不宣稱實際搬遷完成
+- Josh新增當次授權：第一版基本服務正常後同步本地資料；Fly HTTPS、三尺寸登入頁、Machine內MySQL TLS／Redis TLS與設定已通過, 開始正式搬移階段
+- 已通知Claude暫停本機追蹤寫入, 線上artisan down、本機frontend／backend／queue／scheduler／websocket停止；原MySQL／Redis保留
+- 正式新建schema啟動備份與本地storage app備份保存私有目錄, 後續先確認無業務資料才清除啟動schema
+- 來源44表完整快照完成：19帳號、6工作區、4專案、462卡片、449留言、254筆工時、75紙條及6個PAT一併保留
+- 目標初始固定transaction_guards(accounts)記錄曾觸發零業務檢查拒絕, 確認為migration建立的鎖記錄後, 先備份再清除啟動schema；原拒絕快照目錄保留, 實際使用source-bundle-v2
+- 正在以已演練工具匯入並做兩輪完整筆數／結構／內容核對, 完成前維持線上維護模式
+- apply與獨立verify全部44表筆數／結構／完整雜湊一致, 才切Agent私有端點並驗帳號／卡片／看板；正式已恢復寫入, 不再以新舊庫持續相同作驗收
+- Codex本人Session與PAT、三尺寸卡片詳細頁、專案列表／看板通過, 沒有舊整包API或pageerror；正式R2部署報告PDF上傳／綁卡／下載雜湊／匿名拒絕通過
+- 本地來源設super_read_only=ON, 原檔／SQL／憑證設定副本保留私有目錄；沒有清除共享Redis或來源資料
+- 補手冊說明Fly維護檔不能當成持久停寫保證, 未來須停Machine並防自動喚醒；本次以開放前完整比對一致作實際資料保存證據
+- Machine停機→HTTP自動喚醒5.43秒且原PAT讀卡正常, 確認資料與授權不依賴Machine暫存磁碟；這是一次恢復檢查, 不是p95
+- 領卡、進度與回填都切線上Codex本人, 已多次重讀紙條, 目前無新交辦；通知Claude及Josh後續使用線上入口

@@ -4,6 +4,12 @@
 
 2026-11-11後續更新：使用者已明確要求taskTrackerAI在TaskTracker專案改為**Maintainer**，Workspace仍為user，只能進入此專案；Owner僅本輪授權改資格後即登出。已建立四個主題看板，見[看板整理](topic-boards-2026-11-11.md)。下文初次Developer角色及驗證結果保留為交接快照，不代表目前角色。
 
+## 2026-11-14 線上入口
+
+主服務為https://tasktracker-josh.fly.dev, 兩個Agent的私有Session／PAT設定已切到這個baseUrl, 帳密／PAT不變。原本本地3002／5174寫入服務停止, 原MySQL唯讀保留, 不把舊資料再寫回正式庫。舊outbox保留原baseUrl與requestId, 不能改憑證或盲目換key重送, 先在線上核對receipt／業務結果
+
+部署與回復見[Fly部署](fly-deployment.md), 卡片以線上最新狀態為準。以下帳號ID與私有檔案位置沿用, 歷史本機環境敘述不代表目前主服務
+
 ## 2026-11-12 現行Agent帳號與領卡
 
 - Codex：`codex@example.test`，私有登入檔`.local/tasktracker-codex.json`。
