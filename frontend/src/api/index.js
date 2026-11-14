@@ -38,6 +38,7 @@ export const api = {
   boardIssues: (project, id, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/boards/${encodeURIComponent(id)}/issues`, filters, options),
   boardVersion: (project, id, options) => queryApi(`projects/${encodeURIComponent(project)}/boards/${encodeURIComponent(id)}/version`, {}, options),
   listWorkspaces: () => callApi('workspaces', {}, 'auth'),
+  createWorkspace: input => callApi('createWorkspace', input, 'auth'),
   switchWorkspace: input => callApi('switchWorkspace', input, 'auth'),
   acceptWorkspaceInvite: input => callApi('acceptWorkspaceInvite', input, 'auth'),
   invitation: input => callApi('invitation', input, 'auth'),

@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "bf419b3893aedb3b594b78337bb3f3f750d475939c892754faa4e1e6b38c6eaa",
+  "harnessSha256": "096895b413410c1184d544c1791bfc47bb999fbdf8473ffe42b2c4a0315678f5",
   "profile": "darwin-arm64",
-  "reviewer": "Josh standing authorization / TT-356",
-  "note": "Inspected 3-width empty-project and connection-error screens. 110 existing captures match; 3 project-error screens lose demo action, 3 empty-project captures are new. Existing tablet editor image-toolbar text repaint inspected; comparator unchanged.",
-  "manifestSha256": "9159887c479ee1aa59551f552ddbd3f1f5dfd83ca311f6dc2f442f7b479e228f",
+  "reviewer": "Josh standing authorization / TT-326",
+  "note": "Inspected creation dialog at 1440/768/390 and existing workspace picker entry. 114 existing captures match; 3 picker changes and 3 new creation form captures expected. Comparator unchanged.",
+  "manifestSha256": "e0bb9bfafb671cd8f7b583f7156e69994c3a8d79540efa5a7de01b296f4edaf0",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

@@ -50,7 +50,7 @@ trait OtherWriteBoundaryCases
             'ProjectMember' => ['setProjectMember', 'removeProjectMember'],
             'Workspace' => ['inviteMember'],
             'Settings' => ['getProfile', 'updateProfile', 'updateWorkspace', 'setWorkspaceMemberRole'],
-            'Account' => ['register', 'login', 'workspaces', 'switchWorkspace', 'acceptWorkspaceInvite', 'invitation'],
+            'Account' => ['register', 'login', 'workspaces', 'switchWorkspace', 'acceptWorkspaceInvite', 'invitation', 'createWorkspace'],
         ];
         foreach ($domains as $domain => $operations) {
             foreach ($operations as $operation) {

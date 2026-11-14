@@ -220,11 +220,11 @@ function resetWorkspaceUI() {
   projectId.value = ''; section.value = 'tasks'; view.value = 'list'; boardId.value = 'default';
   workspaceInviteToken.value = ''; history.replaceState(null, '', '#/'); readHash(true);
 }
-async function changeWorkspace(workspaceId, inviteToken = '') {
+async function changeWorkspace(workspaceId, inviteToken = '', creation = null) {
   if (!inviteToken && !canLeave()) return false;
   switchingWorkspace.value = true; ++refreshGeneration; ++refreshScope;
   try {
-    const session = inviteToken ? await api.acceptWorkspaceInvite({ inviteToken }) : await api.switchWorkspace({ workspaceId });
+    const session = creation ? await api.createWorkspace(creation) : inviteToken ? await api.acceptWorkspaceInvite({ inviteToken }) : await api.switchWorkspace({ workspaceId });
     resetWorkspaceUI();
     setWorkspaceContext(session.workspace.id);
     workspace.value = { projects: [], members: [], meta: { actor: session.user.name, userId: session.user.id, workspace: session.workspace, permissions: session.permissions } };
@@ -412,7 +412,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
     <button v-if="sidebarOpen" class="sidebar-scrim" aria-label="收起導覽" @click="sidebarOpen = false"></button>
     <aside class="sidebar" :class="{ open: sidebarOpen }">
       <a class="brand" href="#/" aria-label="TaskTracker 返回首頁" title="返回首頁" @click.prevent="goHome()"><span class="brand-mark"><span></span><span></span><span></span></span>TaskTracker<span class="brand-dot">.</span></a>
-      <WorkspaceSwitcher :workspace="workspace.meta.workspace" :switching="switchingWorkspace" :change="changeWorkspace" />
+      <WorkspaceSwitcher :workspace="workspace.meta.workspace" :switching="switchingWorkspace" :change="changeWorkspace" :create="input => changeWorkspace('', '', input)" />
       <template v-if="selectedProject">
         <div class="project-context" aria-label="目前專案">
           <span class="project-context-code" :style="{ color: selectedProject.color }">{{ selectedProject.code }}</span>

@@ -155,8 +155,8 @@ Route::prefix('/api/v1')->group(function () {
 // 相容舊客戶端的未知／已停用操作，維持身分驗證及JSON錯誤契約。
 Route::post('/api/rpc/{operation}', [ApiController::class, 'unknown'])->where('operation', '[A-Za-z]+')->name('rpc.unknown');
 
-foreach (['workspaces', 'switchWorkspace', 'acceptWorkspaceInvite', 'invitation'] as $operation) {
-    Route::post('/api/auth/'.$operation, [AuthController::class, 'workspace'])->defaults('operation', $operation)->name('auth.'.$operation)->middleware('throttle:60,1');
+foreach (['workspaces', 'switchWorkspace', 'acceptWorkspaceInvite', 'invitation', 'createWorkspace'] as $operation) {
+    Route::post('/api/auth/'.$operation, [AuthController::class, 'workspace'])->defaults('operation', $operation)->name('auth.'.$operation)->middleware($operation === 'createWorkspace' ? $authThrottle(5) : 'throttle:60,1');
 }
 
 // 同一Session切換與業務請求依序處理；MySQL由GuardedStartSession持有連線鎖至保存完成。

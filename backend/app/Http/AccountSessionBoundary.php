@@ -8,6 +8,7 @@ use App\Domain\DomainError;
 use App\Http\Session\SessionLeaseGuard;
 use App\Services\AccountService;
 use App\Services\EmailVerificationService;
+use App\Services\WorkspaceCreationService;
 use App\Services\WorkspaceMemberships;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,15 +27,16 @@ class AccountSessionBoundary
      * @param  WorkspaceSession  $session  由Laravel Session重驗可信資格
      * @param  WriteLocks  $locks  驗證流程的帳號鎖
      * @param  SessionLeaseGuard  $lease  Session租期檢查
+     * @param  WorkspaceCreationService  $creation  既有帳號建立空間
      * @param  EmailVerificationService  $verification  信箱驗證
      */
-    public function __construct(private AccountService $accounts, private WorkspaceMemberships $memberships, private WorkspaceSession $session, private WriteLocks $locks, private SessionLeaseGuard $lease, private EmailVerificationService $verification) {}
+    public function __construct(private AccountService $accounts, private WorkspaceMemberships $memberships, private WorkspaceSession $session, private WriteLocks $locks, private SessionLeaseGuard $lease, private EmailVerificationService $verification, private WorkspaceCreationService $creation) {}
 
     /**
      * 執行帳號／Session操作，回傳目前身分；登出回傳null。
      *
      * @param  Request  $request  目前HTTP請求與Session
-     * @param  string  $operation  register、login、current、logout、invitation、workspaces、switchWorkspace或acceptWorkspaceInvite
+     * @param  string  $operation  register、login、current、logout、invitation、workspaces、switchWorkspace、acceptWorkspaceInvite或createWorkspace
      * @param  array<string,mixed>  $input  此次操作的原始輸入欄位
      * @return array<string,mixed>|null 目前身分、工作區清單或邀請預覽；登出時為null
      *
@@ -46,6 +48,9 @@ class AccountSessionBoundary
 
         $authenticate = function () use ($request, $operation, $input, $userId) {
             $this->locks->authentication($operation, $input, $userId);
+            if ($operation === 'createWorkspace') {
+                $this->locks->account($userId);
+            }
             if ($operation === 'logout') {
                 Auth::logout();
                 $request->session()->invalidate();
@@ -56,7 +61,7 @@ class AccountSessionBoundary
             if ($operation === 'invitation') {
                 return $this->memberships->preview($input);
             }
-            if (in_array($operation, ['workspaces', 'switchWorkspace', 'acceptWorkspaceInvite'], true)) {
+            if (in_array($operation, ['workspaces', 'switchWorkspace', 'acceptWorkspaceInvite', 'createWorkspace'], true)) {
                 $user = $this->accounts->freshUser($request->user()?->getAuthIdentifier());
                 if (! $user) {
                     DomainError::fail('UNAUTHENTICATED', '請先登入');
@@ -65,7 +70,7 @@ class AccountSessionBoundary
                 if ($operation === 'workspaces') {
                     return ['workspaces' => $this->memberships->listing($user)];
                 }
-                $workspaceId = $operation === 'acceptWorkspaceInvite' ? $this->memberships->accept($user, $input) : $this->memberships->target($user, $input);
+                $workspaceId = $operation === 'createWorkspace' ? $this->creation->create($user, $input) : ($operation === 'acceptWorkspaceInvite' ? $this->memberships->accept($user, $input) : $this->memberships->target($user, $input));
                 $request->session()->put('workspace_id', $workspaceId);
 
                 return $this->session->context($request);

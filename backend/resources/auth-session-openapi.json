@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker Session Authentication",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "description": "Session and CSRF only; not the PAT API. Legacy accounts keep their existing eligibility. New public registration requires an activation link; valid invitations verify the exact invited email during new-account registration. Activation GET only renders the page, with token in URL fragment."
   },
   "paths": {
@@ -816,6 +816,69 @@
           },
           "400": {
             "description": "Invalid input or invalid/expired/consumed reset link"
+          },
+          "419": {
+            "description": "CSRF missing or expired"
+          },
+          "429": {
+            "description": "Rate limit; honor Retry-After"
+          }
+        }
+      }
+    },
+    "/api/auth/createWorkspace": {
+      "post": {
+        "summary": "Create a workspace for the current eligible account without registering a second user",
+        "description": "Session/CSRF only, 5 requests per minute. A current eligible member can create a workspace regardless of their role in other workspaces. The creator becomes owner and the session switches to the new workspace. User-scoped requestId replays the same creation; changed name conflicts. Replay requires active membership and never recreates a deleted workspace. Existing memberships are unchanged.",
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "workspaceName",
+                  "requestId"
+                ],
+                "properties": {
+                  "workspaceName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "requestId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authenticated user, new workspace and effective owner permissions"
+          },
+          "400": {
+            "description": "Invalid name or requestId"
+          },
+          "401": {
+            "description": "Missing or expired session"
+          },
+          "403": {
+            "description": "Account not eligible or replay membership revoked"
+          },
+          "404": {
+            "description": "Original workspace no longer exists"
+          },
+          "409": {
+            "description": "Request ID reused with a different name"
           },
           "419": {
             "description": "CSRF missing or expired"

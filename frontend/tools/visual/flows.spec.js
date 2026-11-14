@@ -250,6 +250,10 @@ test('representative workspace flows', async ({ page, browser }) => {
   const picker = page.getByRole('dialog', { name: '選擇工作空間', exact: true });
   await picker.getByRole('button', { name: '選擇工作空間 受邀工作區', exact: true }).waitFor();
   await shot(page, '14-workspace-picker');
+  await picker.getByRole('button', { name: '建立工作空間', exact: true }).click();
+  await picker.getByLabel('工作空間名稱', { exact: true }).fill('新的產品工作區');
+  await shot(page, '40-workspace-create');
+  await picker.getByRole('button', { name: '返回工作空間列表', exact: true }).click();
   await picker.getByRole('button', { name: '選擇工作空間 受邀工作區', exact: true }).click();
   await expect(picker).not.toBeVisible();
   await page.locator('.app-shell').waitFor();
