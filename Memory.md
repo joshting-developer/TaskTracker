@@ -369,3 +369,7 @@ Project／Board／Todo／ProjectMember／Workspace／Settings／Account已接專
 只有本地與線上兩種環境, 線上 `https://task-tracker.josh-ting.com` 就是正式站。Laravel `testing` 僅是本地自動化測試的隔離模式, 不代表有線上測試站；歷史遠端task_tracker_testing不是現用正式環境
 
 TT-356移除網頁示範專案入口與loadDemo HTTP操作。DemoSeeder只供本地CLI／隔離測試, 不能為了畫面403而放寬正式環境限制
+
+## 邀請確認與零工作空間帳號
+
+2026-11-15 Josh指定登入／受邀註冊後先到首頁確認邀請, 不自動加入。TT-358補零空間帳號, TT-340改open補新版邀請流程, TT-359補成員停用；[決策與順序](docs/invitation-account-workspace-lifecycle-plan-2026-11-15.md)。本輪只完成盤點建卡, 未實作
