@@ -305,7 +305,7 @@ async function checkProjectAcl(page, browser, failures) {
   teammate.setDefaultTimeout(15000);
   teammate.on('pageerror', error => failures.push(error.message));
   await teammate.goto(`${baseURL}/login`);
-  await teammate.getByLabel('Email', { exact: true }).fill(memberEmail);
+  await teammate.getByLabel('確認密碼', { exact: true }).fill('test-local-password');
   await teammate.getByLabel('密碼', { exact: true }).fill('test-local-password');
   await teammate.getByRole('button', { name: '登入', exact: true }).click();
   await openProjectList(teammate);
@@ -867,10 +867,10 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   teammate.on('pageerror', error => failures.push(error.message));
   await teammate.goto(inviteUrl);
   await teammate.getByLabel('你的名字').fill('Mei');
-  await teammate.getByLabel('Email', { exact: true }).fill(memberEmail);
+  await teammate.getByLabel('確認密碼', { exact: true }).fill('test-local-password');
   await teammate.getByLabel('密碼', { exact: true }).fill('test-local-password');
   await teammate.getByRole('button', { name: '加入工作空間', exact: true }).click();
-  await verifyFixtureInBrowser(teammate);
+  await teammate.locator('.app-shell').waitFor();
   await openProjectList(teammate);
   await teammate.getByRole('heading', { name: '尚未加入任何專案', exact: true }).waitFor();
   await openProjectList(teammate);

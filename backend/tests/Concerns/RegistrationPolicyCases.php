@@ -69,10 +69,10 @@ trait RegistrationPolicyCases
         $this->assertSame($counts, [User::count(), Workspace::count(), MailDelivery::count()]);
     }
 
-    /** 有效邀請仍須驗證信箱, 偽造邀請不能繞過或洩漏既有帳號
+    /** 有效邀請證明指定信箱, 偽造邀請不能繞過或洩漏既有帳號
      * @return void
      */
-    public function test_invitation_signup_remains_pending_when_public_registration_is_closed(): void
+    public function test_invitation_signup_verifies_email_when_public_registration_is_closed(): void
     {
         $users = User::count();
         $workspaces = Workspace::count();
@@ -83,11 +83,11 @@ trait RegistrationPolicyCases
         $this->postJson('/api/auth/logout')->assertOk();
         config(['tasktracker.registration.public' => false]);
         $this->rawRegistration = true;
-        $this->postJson('/api/auth/register', ['name' => 'Invitee', 'email' => $email, 'password' => 'isolated-policy-password', 'inviteToken' => $invite['token']])->assertOk()->assertJsonPath('data.verificationRequired', true)->assertJsonMissingPath('data.user');
-        $this->assertGuest();
+        $this->postJson('/api/auth/register', ['name' => 'Invitee', 'email' => $email, 'password' => 'isolated-policy-password', 'inviteToken' => $invite['token']])->assertOk()->assertJsonMissingPath('data.verificationRequired')->assertJsonPath('data.user.email', $email);
+        $this->assertAuthenticated();
         $this->assertSame($users + 2, User::count());
         $this->assertSame($workspaces + 1, Workspace::count());
-        $this->getJson('/api/v1/projects')->assertStatus(401);
+        $this->getJson('/api/v1/projects')->assertOk();
         $this->postJson('/api/auth/register', ['name' => 'Probe', 'email' => $owner['user']['email'], 'password' => 'isolated-policy-password', 'inviteToken' => 'invalid-token'])->assertStatus(400)->assertJsonPath('error.code', 'INVALID_INPUT');
         $this->assertSame($users + 2, User::count());
     }

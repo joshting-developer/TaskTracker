@@ -21,3 +21,13 @@
 - 最後冒煙與設定頁、邀請專項均通過, 邀請專項包含角色寫入時禁用表單；WorkspaceSettings手動載入確認捨棄後正確清空子元件草稿
 - 最終87張正式視覺比較通過, approved／environmentMatches均true, 已保存舊基準及中間候選, 比較器／容忍設定不變
 - 本人正式投入35分鐘已填, 不計中斷、無人等待或其他Agent投入；卡片待提交後轉review, 請Josh確認實際邀請流程
+
+- 依Josh退回續做：邀請連結直接驗證新帳號的指定信箱, 不寄第二封啟用信；前端鎖信箱及雙密碼。沿用90分鐘估時, 本階段另外填工時
+- 定向44項505斷言通過；完整430項18155斷言, 1項既有skip其餘通過。新帳號驗證時間透過既有Repository保存, 不加入User可由輸入填寫的欄位
+- 視覺新增邀請註冊畫面第一次因同一login路徑只換hash沒有重新建立AuthGate而失敗, 已改測試導覽成新的document, 不放寬斷言。失敗候選不核准, 正在重拍
+- 完整前端61支初輪51過, 7支環境前置不足, browser-check編輯器關閉攔截／workspace-switch舊邀請fixture／uiux 12px失敗；沒有宣稱全套通過
+- workspace-switch除了雙密碼需同步, 還有使用過邀請的既有成員登入重試, 已保留後端冪等路徑；該檔使用build預覽, 需先重新build再重跑, 不能拿舊dist判斷現碼
+- Python全域沒有jsonschema, 已找到專案私有openapi-validation環境完成Session OpenAPI1.4.0離線官方Schema驗證；沒有另裝套件
+
+- 最終workspace-switch、邀請新帳號／既有帳號／Email唯讀／密碼不符不送出／三尺寸Chrome及冒煙通過；rawRegistration定向44項505斷言通過。90張正式視覺比較通過, 門檻不變
+- 全批61支連同workspace-switch重跑後52過、7環境受阻、browser-check編輯器關閉與TT-334字級2項未解, 未宣稱全庫通過。日誌artifacts/tt340/followup-browser-suite；不新增SMTP診斷信或修改現存帳號

@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker Session Authentication",
-    "version": "1.3.0",
-    "description": "Session and CSRF only; not the PAT API. Legacy accounts keep their existing eligibility. New registration requires verification. Activation GET only renders the page, with token in URL fragment."
+    "version": "1.4.0",
+    "description": "Session and CSRF only; not the PAT API. Legacy accounts keep their existing eligibility. New public registration requires an activation link; valid invitations verify the exact invited email during new-account registration. Activation GET only renders the page, with token in URL fragment."
   },
   "paths": {
     "/api/auth/register": {
@@ -92,7 +92,7 @@
             "csrf": []
           }
         ],
-        "description": "Public signup is rejected with 403 when TASKTRACKER_PUBLIC_REGISTRATION is false. A valid, unconsumed, matching-email invitation remains allowed and new accounts still require email verification."
+        "description": "Public signup is rejected with 403 when TASKTRACKER_PUBLIC_REGISTRATION is false. A valid, unconsumed, matching-email invitation remains allowed and new invited accounts verify only the exact invited email using this single-use invitation; no second activation email. Public signup still requires a separate activation link."
       }
     },
     "/api/auth/login": {

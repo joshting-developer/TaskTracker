@@ -58,6 +58,33 @@ try {
   assert.equal(await invites.getByRole('button', { name: '邀請成員', exact: true }).isDisabled(), true);
   assert.ok(heldRole); await heldRole.continue(); await owner.unroute('**/api/rpc/setWorkspaceMemberRole');
   await owner.getByText('工作空間角色已儲存', { exact: true }).waitFor();
+  const freshEmail = `new-${crypto.randomUUID()}@example.test`;
+  const fresh = await call(owner, 'inviteMember', { email: freshEmail }, 'rpc');
+  const newcomer = await (await browser.newContext()).newPage(); newcomer.setDefaultTimeout(12000);
+  await newcomer.goto(`${base}/login#/invite?token=${fresh.token}`);
+  await newcomer.getByRole('heading', { name: '工作空間邀請', exact: true }).waitFor();
+  await newcomer.waitForFunction(() => document.querySelector('input[type="email"]')?.value.includes('new-'));
+  assert.equal(await newcomer.getByLabel('Email', { exact: true }).getAttribute('readonly'), '');
+  assert.equal(await newcomer.getByLabel('密碼', { exact: true }).getAttribute('type'), 'password');
+  assert.equal(await newcomer.getByLabel('確認密碼', { exact: true }).getAttribute('type'), 'password');
+  await newcomer.getByLabel('你的名字', { exact: true }).fill('受邀新成員');
+  await newcomer.getByLabel('密碼', { exact: true }).fill(password);
+  await newcomer.getByLabel('確認密碼', { exact: true }).fill('mismatched-password');
+  let signupCount = 0; newcomer.on('request', request => { if (request.url().endsWith('/api/auth/register')) signupCount++; });
+  await newcomer.getByRole('button', { name: '加入工作空間', exact: true }).click();
+  await newcomer.getByRole('alert').filter({ hasText: '兩次密碼不一致' }).waitFor(); assert.equal(signupCount, 0);
+  await newcomer.getByLabel('確認密碼', { exact: true }).fill(password);
+  for (const width of [1440, 768, 390]) {
+    await newcomer.setViewportSize({ width, height: 1000 });
+    assert.equal(await newcomer.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    await newcomer.screenshot({ path: `../artifacts/tt340/invited-signup-${width}.png`, fullPage: true });
+  }
+  await newcomer.getByRole('button', { name: '加入工作空間', exact: true }).click();
+  await newcomer.locator('.app-shell').waitFor();
+  assert.equal(await newcomer.getByRole('heading', { name: '驗證信箱', exact: true }).count(), 0);
+  await newcomer.reload(); await newcomer.locator('.app-shell').waitFor();
+  assert.equal((await call(newcomer, 'current')).user.email, freshEmail);
+  await newcomer.context().close();
   const retryEmail = `retry-${crypto.randomUUID()}@example.test`, keys = []; let firstToken;
   await owner.route('**/api/rpc/inviteMember', async route => {
     keys.push(route.request().postDataJSON().requestId);

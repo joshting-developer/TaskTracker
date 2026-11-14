@@ -104,6 +104,31 @@ trait WorkspaceInvitationCases
     }
 
     /**
+     * 有效邀請只驗證新帳號的指定信箱, 不再寄第二封啟用信
+     *
+     * @return void
+     */
+    public function test_invited_signup_verifies_bound_email_once_without_second_mail(): void
+    {
+        [$input, $invitation] = $this->invitationFixture();
+        $this->postJson('/api/auth/logout')->assertOk();
+        $this->rawRegistration = true;
+        $signup = ['name' => 'Invited', 'email' => $input['email'], 'password' => 'isolated-invite-password', 'inviteToken' => $invitation['token']];
+        $this->postJson('/api/auth/register', [...$signup, 'email' => 'changed@example.test'])->assertStatus(400);
+        $this->assertFalse(User::where('email', 'changed@example.test')->exists());
+        $result = $this->postJson('/api/auth/register', $signup)->assertOk()->assertJsonMissingPath('data.verificationRequired')->json('data');
+        $user = User::findOrFail($result['user']['id']);
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertTrue($user->email_verification_required);
+        $this->assertSame(0, MailDelivery::where('user_id', $user->id)->where('kind', 'verification')->count());
+        $this->postJson('/api/auth/current')->assertOk()->assertJsonPath('data.user.id', $user->id);
+        $this->postJson('/api/auth/logout')->assertOk();
+        $this->postJson('/api/auth/register', $signup)->assertStatus(400);
+        $this->assertSame(1, User::where('email', $input['email'])->count());
+        $this->postJson('/api/auth/login', ['email' => $input['email'], 'password' => 'isolated-invite-password'])->assertOk()->assertJsonPath('data.user.id', $user->id);
+    }
+
+    /**
      * 待接受列表在SQL限定工作區、期限及狀態, 有界穩定分頁且不讀秘密
      *
      * @return void

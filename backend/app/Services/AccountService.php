@@ -144,6 +144,10 @@ class AccountService
             'password' => Hash::make($password),
             'email_verification_required' => true,
         ]);
+        if ($invite !== null) {
+            // Only the validated invitation can establish this new account's email proof.
+            $this->accounts->update($user, ['email_verified_at' => now()]);
+        }
         $tenant = $store->forWorkspace($workspace['id']);
         $tenant->put('members', $user->id, [
             ...$this->publicUser($user),
@@ -161,7 +165,9 @@ class AccountService
             }
         }
 
-        $this->verification->begin($user, $workspace['id']);
+        if ($invite === null) {
+            $this->verification->begin($user, $workspace['id']);
+        }
 
         return new AuthenticatedAccountData($user, $workspace['id']);
     }

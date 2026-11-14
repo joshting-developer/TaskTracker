@@ -100,6 +100,16 @@ test('representative workspace flows', async ({ page, browser }) => {
   } finally { execFileSync('docker', [...compose, 'backend', 'php', 'artisan', 'config:clear'], { stdio: 'pipe' }); }
   await page.goto('/login');
 
+  const invitationOwner = await browser.newContext({ baseURL: origin });
+  try {
+    await call(invitationOwner.request, 'register', { name: '邀請建立者', email: `inviter-${crypto.randomUUID()}@example.test`, password, workspaceName: '協作工作區' }, 'auth');
+    const signupInvite = await call(invitationOwner.request, 'inviteMember', { email: 'invited@example.test' });
+    await page.goto('/login?invitation=1#/invite?token=' + signupInvite.token);
+    await expect(page.getByLabel('Email', { exact: true })).toHaveValue('invited@example.test');
+    await expect(page.getByRole('button', { name: '加入工作空間', exact: true })).toBeEnabled();
+    await shot(page, '30-invited-signup');
+    await page.goto('/login');
+  } finally { await invitationOwner.close(); }
   await call(page.request, 'register', { name: '驗證畫面測試', email: `visual-pending-${test.info().project.name}@example.test`, password, workspaceName: '驗證畫面' }, 'auth', false);
   // Visual fixture metadata uses the same fixed clock as the browser; real cooldown is covered by HTTP tests.
   let deliveryStatus = 'pending';

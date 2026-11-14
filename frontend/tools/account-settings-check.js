@@ -114,8 +114,8 @@ try {
   assert.equal(await settings.getByRole('combobox', { name: /^工作空間身份 / }).count(), 0, '擁有者資格不可由一般表單更動');
   await settings.getByLabel('受邀者 Email', { exact: true }).fill(`settings-member-${token}@example.test`); await settings.getByRole('button', { name: '邀請成員', exact: true }).click();
   const invite = await settings.getByLabel('邀請連結', { exact: true }).inputValue(); await owner.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
-  await member.goto(invite); await member.getByLabel('你的名字').fill('Member'); await member.getByLabel('Email', { exact: true }).fill(`settings-member-${token}@example.test`); await member.getByLabel('密碼', { exact: true }).fill('settings-ui-test-password'); await member.getByRole('button', { name: '加入工作空間', exact: true }).click();
-  await verifyFixtureInBrowser(member);
+  await member.goto(invite); await member.getByLabel('你的名字').fill('Member'); assert.equal(await member.getByLabel('Email', { exact: true }).getAttribute('readonly'), ''); await member.getByLabel('密碼', { exact: true }).fill('settings-ui-test-password'); await member.getByLabel('確認密碼', { exact: true }).fill('settings-ui-test-password'); await member.getByRole('button', { name: '加入工作空間', exact: true }).click();
+  await member.locator('.app-shell').waitFor();
   await call(owner, 'createProject', { name: '權限測試專案', code: 'ACCOUNT', requestId: crypto.randomUUID() });
   await choose('工作空間設定'); await settings.getByRole('tab', { name: '成員與權限', exact: true }).click();
   const memberRole = settings.getByLabel('工作空間身份 Member', { exact: true });

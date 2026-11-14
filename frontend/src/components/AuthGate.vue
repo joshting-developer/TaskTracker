@@ -49,15 +49,16 @@ const mode = ref(inviteToken || new URLSearchParams(location.search).get('mode')
 const form = reactive({ name: '', email: '', password: '', workspaceName: '', inviteToken });
 const busy = ref(false);
 const error = ref('');
-const invitedWorkspace = ref('');
+const invitedWorkspace = ref(''), invitationLoaded = ref(false), passwordConfirmation = ref('');
 onMounted(async () => {
   if (verification.value || activationToken) return;
   if (!inviteToken) { await loadRegistrationPolicy(); return; }
-  try { const invitation = await api.invitation({ inviteToken }); invitedWorkspace.value = invitation.workspaceName; if (!form.email) form.email = invitation.email; }
+  try { const invitation = await api.invitation({ inviteToken }); invitedWorkspace.value = invitation.workspaceName; form.email = invitation.email; invitationLoaded.value = true; }
   catch (failure) { error.value = failure.message; }
 });
 async function submit() {
-  if (busy.value) return;
+  if (busy.value || (inviteToken && !invitationLoaded.value)) return;
+  if (mode.value === 'register' && inviteToken && form.password !== passwordConfirmation.value) { error.value = '兩次密碼不一致'; return; }
   busy.value = true; error.value = '';
   try {
     const result = await api[mode.value]({ ...form });
@@ -124,10 +125,11 @@ async function backToLogin() {
       <v-alert v-if="error" type="error" variant="tonal" class="mb-5" role="alert">{{ error }}</v-alert>
       <form v-if="mode === 'login' || inviteToken || registration?.publicRegistration" @submit.prevent="submit">
         <v-text-field v-if="mode === 'register'" v-model="form.name" label="你的名字" autocomplete="name" maxlength="60" required :disabled="busy" />
-        <v-text-field v-model="form.email" label="Email" type="email" autocomplete="email" maxlength="254" required :disabled="busy" />
+        <v-text-field v-model="form.email" label="Email" type="email" autocomplete="email" maxlength="254" required :disabled="busy" :readonly="Boolean(inviteToken)" />
         <v-text-field v-model="form.password" label="密碼" aria-label="密碼" type="password" :autocomplete="mode === 'login' ? 'current-password' : 'new-password'" :minlength="mode === 'register' ? 10 : 1" maxlength="128" required :disabled="busy" :hint="mode === 'register' ? '至少 10 字' : ''" persistent-hint />
+        <v-text-field v-if="mode === 'register' && inviteToken" v-model="passwordConfirmation" label="確認密碼" type="password" autocomplete="new-password" minlength="10" maxlength="128" required :disabled="busy" />
         <v-text-field v-if="mode === 'register' && !inviteToken" v-model="form.workspaceName" label="工作空間名稱" placeholder="例如：產品團隊" maxlength="60" required :disabled="busy" />
-        <v-btn type="submit" color="primary" block size="large" :loading="busy" :disabled="busy">{{ mode === 'login' ? (inviteToken ? '登入並接受邀請' : '登入') : inviteToken ? '加入工作空間' : '建立工作空間' }}</v-btn>
+        <v-btn type="submit" color="primary" block size="large" :loading="busy" :disabled="busy || (Boolean(inviteToken) && !invitationLoaded)">{{ mode === 'login' ? (inviteToken ? '登入並接受邀請' : '登入') : inviteToken ? '加入工作空間' : '建立工作空間' }}</v-btn>
       </form>
       <button v-if="inviteToken || registration?.publicRegistration" class="text-button auth-toggle" :disabled="busy" @click="mode = mode === 'login' ? 'register' : 'login'; error = ''">{{ mode === 'login' ? (inviteToken ? '尚未有帳號？註冊加入' : '第一次使用？建立工作空間') : '已有帳號？登入' }}</button>
 

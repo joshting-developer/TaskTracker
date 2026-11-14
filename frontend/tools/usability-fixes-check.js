@@ -32,11 +32,12 @@ async function register(page, email, inviteToken = '') {
   await page.goto(`http://127.0.0.1:${e2ePort}/login${inviteToken ? `#/invite?token=${inviteToken}` : ''}`);
   if (!inviteToken) await page.getByRole('button', { name: '第一次使用？建立工作空間' }).click();
   await page.getByLabel('你的名字').fill(inviteToken ? 'Flow Member' : 'Flow Owner');
-  await page.getByLabel('Email', { exact: true }).fill(email);
+  if (!inviteToken) await page.getByLabel('Email', { exact: true }).fill(email);
+  else await page.getByLabel('確認密碼', { exact: true }).fill('flow-test-password');
   await page.getByLabel('密碼', { exact: true }).fill('flow-test-password');
   if (!inviteToken) await page.getByLabel('工作空間名稱', { exact: true }).fill('流程回驗空間');
   await page.getByRole('button', { name: inviteToken ? '加入工作空間' : '建立工作空間', exact: true }).click();
-  await verifyFixtureInBrowser(page);
+  if (!inviteToken) await verifyFixtureInBrowser(page);
   await page.locator('.app-shell').waitFor();
 }
 try {
