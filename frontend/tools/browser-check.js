@@ -305,7 +305,7 @@ async function checkProjectAcl(page, browser, failures) {
   teammate.setDefaultTimeout(15000);
   teammate.on('pageerror', error => failures.push(error.message));
   await teammate.goto(`${baseURL}/login`);
-  await teammate.getByLabel('確認密碼', { exact: true }).fill('test-local-password');
+  await teammate.getByLabel('Email', { exact: true }).fill(memberEmail);
   await teammate.getByLabel('密碼', { exact: true }).fill('test-local-password');
   await teammate.getByRole('button', { name: '登入', exact: true }).click();
   await openProjectList(teammate);
