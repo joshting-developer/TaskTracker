@@ -10,6 +10,7 @@ COPY frontend/index.html frontend/vite.config.js ./
 COPY frontend/src ./src
 COPY frontend/app ./app
 COPY frontend/landing ./landing
+COPY frontend/features ./features
 COPY frontend/public-assets ./public-assets
 # 公開頁canonical／Open Graph／sitemap的正式網址；未提供時建置會省略這些絕對網址標籤。
 ARG VITE_SITE_ORIGIN=""
@@ -33,6 +34,7 @@ COPY backend/database ./database
 COPY backend/public ./public
 COPY backend/routes ./routes
 COPY backend/resources ./resources
+COPY docker/production/migrate.php ./deploy/migrate.php
 RUN composer dump-autoload --optimize --classmap-authoritative --no-dev --no-interaction \
     && rm /usr/local/bin/composer \
     && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \

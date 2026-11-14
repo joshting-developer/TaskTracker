@@ -115,6 +115,8 @@ jobs:
       - name: Verify archive, schema and image before private Fly deployment
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          MIGRATION_DB_USERNAME: ${{ secrets.MIGRATION_DB_USERNAME }}
+          MIGRATION_DB_PASSWORD: ${{ secrets.MIGRATION_DB_PASSWORD }}
           RELEASE_ARCHIVE: ${{ runner.temp }}/verified-release/release-image.tar
           RELEASE_ARCHIVE_SHA: ${{ needs.image.outputs.archive_sha }}
           RELEASE_IMAGE_ID: ${{ needs.image.outputs.image_id }}

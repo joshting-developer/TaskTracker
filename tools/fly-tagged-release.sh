@@ -2,6 +2,8 @@
 # A deployment job only: production credentials never enter the build or test jobs.
 set -eu
 : "${FLY_API_TOKEN:?app-scoped deployment token required}"
+: "${MIGRATION_DB_USERNAME:?migration account required}"
+: "${MIGRATION_DB_PASSWORD:?migration password required}"
 : "${RELEASE_ARCHIVE:?verified image archive required}"
 : "${RELEASE_ARCHIVE_SHA:?verified archive hash required}"
 : "${RELEASE_IMAGE_ID:?verified image ID required}"
@@ -29,7 +31,9 @@ else
 fi
 docker tag tasktracker-release:candidate "$target"
 docker push "$target"
-# Only this image is deployed; no source build, seed, reset or skipped release command.
+# Migrate with the exact tested image in a service-free Machine, then deploy HTTP.
+python3 tools/fly-migrate.py --image "$target"
+# Only this image is deployed; no source build, seed or reset.
 flyctl deploy --app tasktracker-josh --config fly.toml --image "$target" --strategy rolling --wait-timeout 5m
 curl --fail --silent --show-error --retry 3 --retry-delay 2 --max-time 45 https://task-tracker.josh-ting.com/api/health >/dev/null
 python3 - <<'PY'

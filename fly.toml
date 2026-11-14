@@ -9,8 +9,8 @@ kill_timeout = "35s"
   [build.args]
     VITE_SITE_ORIGIN = "https://task-tracker.josh-ting.com"
 
-[deploy]
-  release_command = "php artisan migrate --force --no-interaction"
+# Migration runs in a disposable Machine before HTTP deployment (tools/fly-migrate.py).
+# Its credentials belong only to CI; App secrets contain the runtime DML account.
 
 [http_service]
   internal_port = 8080

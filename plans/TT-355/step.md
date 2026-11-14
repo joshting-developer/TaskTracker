@@ -21,3 +21,7 @@
 - 共用skill庫校驗通過, visual-baseline工具4項單元檢查通過
 - 呈現與功能整理見docs/product-landing-refresh-tt355.md, 圖片僅留本機artifacts
 - 尚未tag部署, 正式站維持原版本；待Josh確認這版介紹頁方向
+
+## 正式映像入口補查
+- TT-330檢查發布鏈時發現正式Dockerfile沒有COPY新features目錄, 本機Vite build通過仍不足以確認完整映像
+- 補上features的build素材複製, 隨後以正式Dockerfile重建與runtime smoke核對, 不宣稱先前已驗此項

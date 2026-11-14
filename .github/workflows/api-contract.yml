@@ -37,4 +37,6 @@ jobs:
           cd frontend
           npx playwright install --with-deps chromium
       - name: Verify schema, HTTP contracts, downloaded examples and documentation
-        run: sh tools/api-contract-ci.sh
+        run: |
+          python3 tools/test_fly_migrate.py
+          sh tools/api-contract-ci.sh
