@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /** 信件outbox；傳輸內容與收件地址加密, 不自動序列化內容 */
 #[Guarded([])]
-#[Hidden(['payload', 'recipient', 'event_key'])]
+#[Hidden(['payload', 'recipient', 'event_key', 'password_reset_hash'])]
 class MailDelivery extends Model
 {
     public $incrementing = false;

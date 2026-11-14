@@ -27,6 +27,7 @@ class EmailVerificationController extends Controller
         $input = $request->validated();
         $account = $this->verification->verify($request->session()->get('pending_user_id'), $input['code'] ?? '', $input['token'] ?? '');
         Auth::login($account->user);
+        $request->session()->put('session_epoch', (int) $account->user->session_epoch);
         $request->session()->regenerate();
         $request->session()->forget('pending_user_id');
         $request->session()->put('workspace_id', $account->workspaceId);

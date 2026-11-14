@@ -2,6 +2,12 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import GuestTopBar from './GuestTopBar.vue';
+import PasswordRecovery from './PasswordRecovery.vue';
+const resetMatch = /^#\/reset-password\/([a-f0-9]{64})(?:\?(.*))?$/.exec(location.hash);
+const recovery = ref(Boolean(resetMatch));
+const resetToken = ref(resetMatch?.[1] || '');
+const resetEmail = resetMatch ? new URLSearchParams(resetMatch[2] || '').get('email') || '' : '';
+
 
 const registration = shallowRef(null), policyError = shallowRef('');
 const policyRequest = new AbortController();
@@ -102,7 +108,8 @@ async function backToLogin() {
     <div class="auth-story"><h1>TaskTracker</h1></div>
     <v-card class="auth-card" elevation="0" rounded="0">
 
-      <template v-if="verification || activationToken">
+      <PasswordRecovery v-if="recovery" :token="resetToken" :email="resetEmail" @back="recovery = false; resetToken = ''; form.password = ''" />
+      <template v-else-if="verification || activationToken">
         <h2>驗證信箱</h2>
         <p v-if="verification" class="verification-recipient">{{ verification.deliveryStatus === 'sent' ? '啟用連結已寄到' : '驗證信箱' }} {{ verification.email }}</p>
         <v-alert v-if="verification && ['failed', 'uncertain', 'skipped'].includes(verification.deliveryStatus)" type="error" variant="tonal" role="alert">{{ verification.deliveryStatus === 'uncertain' ? '無法確認寄送結果, 請先查看信箱；未收到再重寄' : '驗證信未寄出, 請稍後按重寄啟用信' }}</v-alert>
@@ -131,6 +138,7 @@ async function backToLogin() {
         <v-text-field v-if="mode === 'register' && !inviteToken" v-model="form.workspaceName" label="工作空間名稱" placeholder="例如：產品團隊" maxlength="60" required :disabled="busy" />
         <v-btn type="submit" color="primary" block size="large" :loading="busy" :disabled="busy || (Boolean(inviteToken) && !invitationLoaded)">{{ mode === 'login' ? (inviteToken ? '登入並接受邀請' : '登入') : inviteToken ? '加入工作空間' : '建立工作空間' }}</v-btn>
       </form>
+      <button v-if="mode === 'login'" class="text-button auth-toggle" :disabled="busy" @click="recovery = true">忘記密碼</button>
       <button v-if="inviteToken || registration?.publicRegistration" class="text-button auth-toggle" :disabled="busy" @click="mode = mode === 'login' ? 'register' : 'login'; error = ''">{{ mode === 'login' ? (inviteToken ? '尚未有帳號？註冊加入' : '第一次使用？建立工作空間') : '已有帳號？登入' }}</button>
 
       </template>

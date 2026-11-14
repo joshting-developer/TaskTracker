@@ -128,7 +128,7 @@ async function refreshWorkspace() {
   error.value = '';
   try {
     // 所有頁面都只取身分＋目前Project；整包getWorkspace已退役，見docs/workspace-payload-retirement-2026-11-12.md。
-    if (/^#\/activate\/[a-f0-9]{64}$/.test(location.hash)) { authenticated.value = false; return; }
+    if (/^#\/(?:activate\/[a-f0-9]{64}$|reset-password\/[a-f0-9]{64}(?:\?|$))/.test(location.hash)) { authenticated.value = false; return; }
     const identity = await api.current();
     if (identity.verificationRequired) { pendingVerification.value = identity; authenticated.value = false; return; }
     pendingVerification.value = null;
@@ -328,7 +328,7 @@ function openIssue(issue, fullPage = detailPage.value, approved = false) {
   if (fullPage) nextTick(() => window.scrollTo(0, 0));
 }
 function readHash(skipGuard = false) {
-  authPageKey.value = /^#\/activate\/[a-f0-9]{64}$/.test(location.hash) ? location.hash : '';
+  authPageKey.value = /^#\/(?:activate\/[a-f0-9]{64}$|reset-password\/[a-f0-9]{64}(?:\?|$))/.test(location.hash) ? location.hash : '';
   if (authPageKey.value) { pendingVerification.value = null; authenticated.value = false; return; }
   const next = parseHash(location.hash);
   if (next.malformed) history.replaceState(null, '', '#/');

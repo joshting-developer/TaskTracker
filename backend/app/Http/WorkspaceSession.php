@@ -37,6 +37,9 @@ class WorkspaceSession
      */
     public function verified(Request $request): WorkspaceContext
     {
-        return $this->contexts->verify($this->accounts->freshUser($request->user()?->getAuthIdentifier()), $request->session()->get('workspace_id'));
+        $user = $this->accounts->freshUser($request->user()?->getAuthIdentifier());
+        $this->accounts->assertSessionVersion($user, (int) $request->session()->get('session_epoch', 0));
+
+        return $this->contexts->verify($user, $request->session()->get('workspace_id'));
     }
 }

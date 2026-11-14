@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker Session Authentication",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "description": "Session and CSRF only; not the PAT API. Legacy accounts keep their existing eligibility. New public registration requires an activation link; valid invitations verify the exact invited email during new-account registration. Activation GET only renders the page, with token in URL fragment."
   },
   "paths": {
@@ -657,6 +657,171 @@
           },
           "409": {
             "description": "Invalid input, unauthorized, forbidden, stale workspace or request conflict"
+          }
+        }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "summary": "Request password recovery without revealing account existence",
+        "description": "Session/CSRF boundary, no PAT. Fixed APP_URL, token in fragment. Recovery expires after 30 minutes; 60-second per-account resend cooldown; replacement invalidates previous links. No automatic login or email verification. Existing legacy sessions remain valid until that account resets its password.",
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 254
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generic accepted response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "accepted"
+                      ],
+                      "properties": {
+                        "accepted": {
+                          "const": true
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or invalid/expired/consumed reset link"
+          },
+          "419": {
+            "description": "CSRF missing or expired"
+          },
+          "429": {
+            "description": "Rate limit; honor Retry-After"
+          }
+        }
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "summary": "Consume single-use recovery credential and revoke old sessions and PATs",
+        "description": "Session/CSRF boundary, no PAT. Fixed APP_URL, token in fragment. Recovery expires after 30 minutes; 60-second per-account resend cooldown; replacement invalidates previous links. No automatic login or email verification. Existing legacy sessions remain valid until that account resets its password.",
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "token",
+                  "password",
+                  "password_confirmation"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 254
+                  },
+                  "token": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 128
+                  },
+                  "password_confirmation": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 128
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset; authenticate again",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "reset"
+                      ],
+                      "properties": {
+                        "reset": {
+                          "const": true
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or invalid/expired/consumed reset link"
+          },
+          "419": {
+            "description": "CSRF missing or expired"
+          },
+          "429": {
+            "description": "Rate limit; honor Retry-After"
           }
         }
       }

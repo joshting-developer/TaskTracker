@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BoardController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\IssueController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\Queries\BoardsController;
@@ -51,6 +52,8 @@ Route::get('/api/auth/registration-policy', [AuthController::class, 'registratio
 Route::post('/api/auth/register', [AuthController::class, 'register'])->name('auth.register')->middleware($authThrottle(20));
 Route::post('/api/auth/login', [AuthController::class, 'login'])->name('auth.login')->middleware($authThrottle(20));
 Route::post('/api/auth/current', [AuthController::class, 'current'])->name('auth.current');
+Route::post('/api/auth/forgot-password', [PasswordResetController::class, 'request'])->name('auth.forgot-password')->middleware($authThrottle(5));
+Route::post('/api/auth/reset-password', [PasswordResetController::class, 'reset'])->name('auth.reset-password')->middleware($authThrottle(10));
 Route::post('/api/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
 foreach (AccountSettings::OPERATIONS as $operation) {

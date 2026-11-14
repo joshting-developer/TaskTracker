@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "5234ce5c99eab000c83edd3e9b4e56e5dbb755007ab62f07fa55d321233e827b",
+  "harnessSha256": "eb1f2954e108a4f139d09b35672eff4c8ec5e5a14ee437c1790b24a666ea5a39",
   "profile": "darwin-arm64",
-  "reviewer": "Josh standing authorization / TT-345",
-  "note": "Laravel13.40.0修補重跑105張候選, 無版面變更, 原始差異僅11～148個邊緣像素；依持續授權綁定新版依賴harness, 保留原比較器與舊基準於artifacts/tt345/approved-before",
-  "manifestSha256": "83b82aed4b49854474f6e2d728f6836f168cd4455fa01f550de39e2947daf8b0",
+  "reviewer": "Josh standing authorization / TT-328",
+  "note": "Inspected same Chrome 157 captures at 1440/768/390. Nine new recovery screens and nine login/validation entry changes expected. Other 95 match; tablet editor has 131 pixels of unchanged image-toolbar text rasterization, inspected. Comparator unchanged.",
+  "manifestSha256": "a1f1c9489434ea4b5d294dff39e55be3806543ca04d65a1a6b32000527f85fc0",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

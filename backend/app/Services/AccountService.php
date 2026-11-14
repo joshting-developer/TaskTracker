@@ -39,6 +39,23 @@ class AccountService
     }
 
     /**
+     * 重驗Session版本, 拒絕帳號重設密碼前建立的登入
+     *
+     * @param  ?User  $user  當次新鮮帳號
+     * @param  int  $epoch  Session建立時的版本, 舊Session視為0
+     * @return void 重設後拒絕舊登入, 不改動現有帳號資格
+     */
+    public function assertSessionVersion(?User $user, int $epoch): void
+    {
+        if (! $user) {
+            DomainError::fail('UNAUTHENTICATED', '請先登入');
+        }
+        if ((int) $user->session_epoch !== $epoch) {
+            DomainError::fail('UNAUTHENTICATED', '登入已失效, 請重新登入');
+        }
+    }
+
+    /**
      * 回傳不含密碼及驗證秘密的帳號資訊。
      *
      * @param  User  $user  待輸出的帳號模型

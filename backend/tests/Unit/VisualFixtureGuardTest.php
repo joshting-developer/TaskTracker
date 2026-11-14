@@ -28,6 +28,20 @@ class VisualFixtureGuardTest extends TestCase
         $this->assertStringContainsString('Only isolated visual testing is allowed', $process->getErrorOutput().$process->getOutput());
     }
 
+    /** 恢復fixture在非隔離環境不能讀取token
+     *
+     * @return void 恢復fixture在非隔離環境不能讀取token */
+    public function test_recovery_fixture_rejects_non_test_database_before_bootstrap(): void
+    {
+        foreach ([['production', '1', 'tasktracker_test'], ['testing', '0', 'tasktracker_test'], ['testing', '1', 'task_tracker']] as [$environment, $flag, $database]) {
+            $process = new Process([PHP_BINARY, base_path('tools/password-recovery-fixture.php'), 'fixture@example.test'], base_path(), ['APP_ENV' => $environment, 'TASKTRACKER_MYSQL_TEST' => $flag, 'DB_DATABASE' => $database, 'DB_USERNAME' => 'tasktracker_test']);
+            $process->setTimeout(5);
+            $process->run();
+            $this->assertFalse($process->isSuccessful());
+            $this->assertStringContainsString('Only isolated recovery fixtures are allowed', $process->getErrorOutput());
+        }
+    }
+
     /**
      * 提供非testing環境及缺少專用旗標的拒絕案例。
      *

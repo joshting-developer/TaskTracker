@@ -61,6 +61,7 @@ class AccountSessionBoundary
                 if (! $user) {
                     DomainError::fail('UNAUTHENTICATED', '請先登入');
                 }
+                $this->accounts->assertSessionVersion($user, (int) $request->session()->get('session_epoch', 0));
                 if ($operation === 'workspaces') {
                     return ['workspaces' => $this->memberships->listing($user)];
                 }
@@ -136,6 +137,7 @@ class AccountSessionBoundary
         }
         $request->session()->forget('pending_user_id');
         Auth::login($account->user);
+        $request->session()->put('session_epoch', (int) $account->user->session_epoch);
         $request->session()->regenerate();
         $request->session()->put('workspace_id', $account->workspaceId);
 

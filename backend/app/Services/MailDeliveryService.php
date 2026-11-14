@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
 
+use function Illuminate\Support\defer;
+
 /** 交易式outbox與寄信狀態機, SMTP IO在資料庫交易外執行 */
 class MailDeliveryService
 {
@@ -34,12 +36,16 @@ class MailDeliveryService
      */
     public function enqueue(MailDeliveryData $data): MailDelivery
     {
-        if (! in_array($data->kind, ['diagnostic', 'verification', 'invitation'], true) || $data->eventKey === '' || strlen($data->eventKey) > 200 || mb_strlen($data->subject) > 200 || preg_match('/[\r\n]/', $data->subject) || mb_strlen($data->body) > 10000) {
+        if (! in_array($data->kind, ['diagnostic', 'verification', 'invitation', 'password_reset', 'password_changed'], true) || $data->eventKey === '' || strlen($data->eventKey) > 200 || mb_strlen($data->subject) > 200 || preg_match('/[\r\n]/', $data->subject) || mb_strlen($data->body) > 10000) {
             DomainError::fail('INVALID_INPUT', '信件範本不符合限制');
         }
 
         if (($data->kind === 'invitation') !== ($data->invitationId !== null)) {
             DomainError::fail('INVALID_INPUT', '信件邀請指標不符');
+        }
+
+        if (($data->kind === 'password_reset') !== ($data->passwordResetHash !== null) || ($data->passwordResetHash !== null && ! preg_match('/^[a-f0-9]{64}$/', $data->passwordResetHash))) {
+            DomainError::fail('INVALID_INPUT', '信件重設指標不符');
         }
 
         return DB::transaction(function () use ($data) {
@@ -58,8 +64,14 @@ class MailDeliveryService
                 return $existing;
             }
             $row = $this->deliveries->create(['id' => (string) Str::uuid(), 'user_id' => $user->id, 'event_key' => $key, 'kind' => $data->kind,
-                'verification_id' => $data->verificationId, ...($data->invitationId !== null ? ['invitation_id' => $data->invitationId] : []), 'recipient' => $recipient, 'payload' => ['subject' => $data->subject, 'body' => $data->body], 'status' => 'pending', 'next_attempt_at' => now(), 'expires_at' => $data->expiresAt]);
-            DB::afterCommit(fn () => $this->dispatch($row->id));
+                'password_reset_hash' => $data->passwordResetHash, 'verification_id' => $data->verificationId, ...($data->invitationId !== null ? ['invitation_id' => $data->invitationId] : []), 'recipient' => $recipient, 'payload' => ['subject' => $data->subject, 'body' => $data->body], 'status' => 'pending', 'next_attempt_at' => now(), 'expires_at' => $data->expiresAt]);
+            DB::afterCommit(function () use ($row, $data) {
+                if (in_array($data->kind, ['password_reset', 'password_changed'], true)) {
+                    defer(fn () => $this->dispatch($row->id));
+                } else {
+                    $this->dispatch($row->id);
+                }
+            });
 
             return $row;
         });
@@ -209,6 +221,11 @@ class MailDeliveryService
             return $user && $row->payload !== null && $row->expires_at->isFuture() && $invite && ! $invite->consumed_at
                 && Carbon::parse($invite->expires_at)->isFuture() && $invite->email === $row->recipient
                 && in_array('workspace.invite', WorkspacePermissions::resolve($this->deliveries->inviterRole($invite->workspace_id, $user->id) ?? ''), true);
+        }
+
+        if (in_array($row->kind, ['password_reset', 'password_changed'], true)) {
+            return $user && $row->payload !== null && $row->expires_at->isFuture() && $user->email === $row->recipient
+                && ($row->kind === 'password_changed' || $this->deliveries->passwordResetValid($user->email, $row->password_reset_hash ?? ''));
         }
 
         return $user && $row->payload !== null && $row->expires_at->isFuture() && $user->email === $row->recipient && $this->deliveries->hasMembership($user->id)

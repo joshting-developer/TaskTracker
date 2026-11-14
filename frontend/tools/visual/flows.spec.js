@@ -93,6 +93,16 @@ test('representative workspace flows', async ({ page, browser }) => {
   await page.goto('/login');
   await page.getByRole('button', { name: '登入', exact: true }).waitFor();
   await shot(page, '01-login');
+  await page.getByRole('button', { name: '忘記密碼', exact: true }).click();
+  await shot(page, '36-password-request');
+  await page.getByLabel('Email', { exact: true }).fill('recovery-visual@example.test');
+  await page.getByRole('button', { name: '寄送重設連結' }).click();
+  await page.getByRole('status').filter({ hasText: '如果這個信箱已註冊' }).waitFor();
+  await shot(page, '37-password-requested');
+  await page.goto('/login#/reset-password/' + 'a'.repeat(64) + '?email=recovery-visual%40example.test');
+  await page.getByRole('heading', { name: '設定新密碼' }).waitFor();
+  await shot(page, '38-password-reset');
+  await page.getByRole('button', { name: '返回登入', exact: true }).click();
   // Native validation is a real browser state, not a mocked product response.
   await page.getByLabel('Email', { exact: true }).fill('invalid');
   await page.getByRole('button', { name: '登入', exact: true }).click();

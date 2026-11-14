@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\EmailVerification;
 use App\Models\MailDelivery;
+use App\Models\PasswordReset;
 use App\Models\User;
 use App\Models\WorkspaceInvitation;
 use App\Models\WorkspaceMember;
@@ -139,6 +140,18 @@ class MailDeliveryRepository
     public function verificationValid(string $userId, string $id): bool
     {
         return EmailVerification::whereKey($id)->where('user_id', $userId)->whereNull('consumed_at')->where('expires_at', '>', now())->where('attempts', '<', 5)->exists();
+    }
+
+    /**
+     * 確認信件所指的重設憑證仍是該信箱目前有效的一筆
+     *
+     * @param  string  $email  當次收件信箱
+     * @param  string  $hash  該信件的重設雜湊
+     * @return bool 只驗該帳號目前有效的一筆重設
+     */
+    public function passwordResetValid(string $email, string $hash): bool
+    {
+        return PasswordReset::whereKey($email)->where('token', $hash)->where('created_at', '>', now()->subMinutes(30))->exists();
     }
 
     /** 排程只取到期pending, 不解密內容或讀全表到PHP
