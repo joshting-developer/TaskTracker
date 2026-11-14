@@ -71,7 +71,7 @@ try {
   await newcomer.getByLabel('密碼', { exact: true }).fill(password);
   await newcomer.getByLabel('確認密碼', { exact: true }).fill('mismatched-password');
   let signupCount = 0; newcomer.on('request', request => { if (request.url().endsWith('/api/auth/register')) signupCount++; });
-  await newcomer.getByRole('button', { name: '加入工作空間', exact: true }).click();
+  await newcomer.getByRole('button', { name: '建立帳號', exact: true }).click();
   await newcomer.getByRole('alert').filter({ hasText: '兩次密碼不一致' }).waitFor(); assert.equal(signupCount, 0);
   await newcomer.getByLabel('確認密碼', { exact: true }).fill(password);
   for (const width of [1440, 768, 390]) {
@@ -79,8 +79,9 @@ try {
     assert.equal(await newcomer.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await newcomer.screenshot({ path: `../artifacts/tt340/invited-signup-${width}.png`, fullPage: true });
   }
-  await newcomer.getByRole('button', { name: '加入工作空間', exact: true }).click();
+  await newcomer.getByRole('button', { name: '建立帳號', exact: true }).click();
   await newcomer.locator('.app-shell').waitFor();
+  await newcomer.getByRole('dialog', { name: '工作空間邀請', exact: true }).getByRole('button', { name: '接受邀請並進入', exact: true }).click();
   assert.equal(await newcomer.getByRole('heading', { name: '驗證信箱', exact: true }).count(), 0);
   await newcomer.reload(); await newcomer.locator('.app-shell').waitFor();
   assert.equal((await call(newcomer, 'current')).user.email, freshEmail);

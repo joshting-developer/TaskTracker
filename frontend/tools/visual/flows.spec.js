@@ -16,7 +16,7 @@ const password = 'synthetic-visual-test-only';
 async function call(request, operation, input = {}, group = 'rpc', verifiedFixture = true) {
   const csrf = await (await request.get('/api/csrf-cookie')).json();
   const response = await request.post(`/api/${group}/${operation}`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken, Origin: origin }, data: { requestId: crypto.randomUUID(), ...input } });
-  const result = verifiedFixture ? await fixtureResponse(request, response) : await response.json();
+  const result = verifiedFixture ? await fixtureResponse(request, response, input) : await response.json();
   expect(result.ok, `${operation}: ${JSON.stringify(result.error || '')}`).toBe(true);
   return result.data;
 }
@@ -127,8 +127,28 @@ test('representative workspace flows', async ({ page, browser }) => {
     const signupInvite = await call(invitationOwner.request, 'inviteMember', { email: 'invited@example.test' });
     await page.goto('/login?invitation=1#/invite?token=' + signupInvite.token);
     await expect(page.getByLabel('Email', { exact: true })).toHaveValue('invited@example.test');
-    await expect(page.getByRole('button', { name: '加入工作空間', exact: true })).toBeEnabled();
+    await expect(page.getByRole('button', { name: '建立帳號', exact: true })).toBeEnabled();
     await shot(page, '30-invited-signup');
+    const existingContext = await browser.newContext({ baseURL: origin });
+    try {
+      const existingEmail = `existing-${test.info().project.name}@example.test`;
+      await call(existingContext.request, 'register', { name: '既有成員', email: existingEmail, password, workspaceName: '原有空間' }, 'auth');
+      const existingInvite = await call(invitationOwner.request, 'inviteMember', { email: existingEmail });
+      await page.goto('/login#/invite?token=' + existingInvite.token);
+      await expect(page.getByRole('button', { name: '登入', exact: true })).toBeEnabled();
+      await expect(page.getByLabel('你的名字', { exact: true })).toHaveCount(0);
+      await shot(page, '44-invited-login');
+    } finally { await existingContext.close(); }
+    const decisionEmail = `decision-${test.info().project.name}@example.test`;
+    const decisionInvite = await call(invitationOwner.request, 'inviteMember', { email: decisionEmail });
+    await call(page.request, 'register', { name: '新受邀成員', email: decisionEmail, password, inviteToken: decisionInvite.token }, 'auth', false);
+    await page.goto('/app/#/invite?token=' + decisionInvite.token);
+    const confirmation = page.getByRole('dialog', { name: '工作空間邀請', exact: true });
+    await expect(confirmation.getByRole('button', { name: '拒絕邀請', exact: true })).toBeVisible();
+    await shot(page, '45-invitation-confirmation');
+    await confirmation.getByRole('button', { name: '拒絕邀請', exact: true }).click();
+    await expect(confirmation).not.toBeVisible();
+    await call(page.request, 'logout', {}, 'auth');
     await page.goto('/login');
   } finally { await invitationOwner.close(); }
   await call(page.request, 'register', { name: '驗證畫面測試', email: `visual-pending-${test.info().project.name}@example.test`, password, workspaceName: '驗證畫面' }, 'auth', false);

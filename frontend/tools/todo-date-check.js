@@ -1,3 +1,4 @@
+import { acceptInvitationFixture } from './fixtures/verification.js';
 // TT-313：小待辦日期規則（完成／退回／交辦／建立、台北時區、跨年）與首頁三種情況的實際顯示。只接受隔離API。
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
@@ -28,7 +29,7 @@ async function call(page, operation, input = {}, group = 'rpc') {
     const result = await (await fetch(`/api/${group}/${operation}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken }, body: JSON.stringify({ requestId: crypto.randomUUID(), ...input }) })).json();
     if (!result.ok) throw new Error(result.error?.message || operation);
     if (result.data?.verificationRequired) { const csrf = await (await fetch('/api/csrf-cookie')).json(); const verified = await fetch('/api/auth/verify-email', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.csrfToken }, body: JSON.stringify({ code: 'local666' }) }); if (!verified.ok) throw new Error('Fixture email verification failed'); result.data = (await verified.json()).data; } return result.data;
-  }, { operation, input, group });
+  }, { operation, input, group }).then(identity => acceptInvitationFixture(page.request, identity, input, operation, new URL(page.url()).origin));
 }
 const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei', month: 'numeric', day: 'numeric' }).formatToParts(new Date());
 const md = `${today.find(p => p.type === 'month').value}/${today.find(p => p.type === 'day').value}`;

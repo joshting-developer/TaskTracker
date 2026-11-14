@@ -25,8 +25,9 @@ try {
   await page.getByLabel('Email',{exact:true}).fill(email);await page.getByLabel('密碼',{exact:true}).fill(password);await page.getByRole('button',{name:'登入',exact:true}).click();await page.locator('.app-shell').waitFor();
   await page.evaluate(async()=>{await(await import('/src/api/index.js')).api.logout();});
   await page.goto(`http://127.0.0.1:5292/login#/invite?token=${invite.token}`);
-  assert.equal(await page.getByLabel('Email',{exact:true}).getAttribute('readonly'),'');await page.getByLabel('確認密碼',{exact:true}).fill(password);await page.getByLabel('你的名字',{exact:true}).fill('Invited Person');await page.getByLabel('密碼',{exact:true}).fill(password);await page.getByRole('button',{name:'加入工作空間',exact:true}).click();
+  assert.equal(await page.getByLabel('Email',{exact:true}).getAttribute('readonly'),'');await page.getByLabel('確認密碼',{exact:true}).fill(password);await page.getByLabel('你的名字',{exact:true}).fill('Invited Person');await page.getByLabel('密碼',{exact:true}).fill(password);await page.getByRole('button',{name:'建立帳號',exact:true}).click();
 await page.locator('.app-shell').waitFor();
+  await page.getByRole('dialog',{name:'工作空間邀請',exact:true}).getByRole('button',{name:'接受邀請並進入',exact:true}).click();
   // Policy failure cannot enable registration or prevent an existing account from seeing login.
   await page.evaluate(async()=>{await(await import('/src/api/index.js')).api.logout();});
   await page.route('**/api/auth/registration-policy',r=>r.abort());await page.goto('http://127.0.0.1:5292/login?mode=register');await page.getByRole('alert').filter({hasText:'無法讀取註冊設定'}).waitFor();

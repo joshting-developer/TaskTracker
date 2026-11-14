@@ -43,7 +43,7 @@ class WriteLocks
      */
     public function authentication(string $operation, array $input, ?string $userId): void
     {
-        if (DB::getDriverName() !== 'mysql' || ! in_array($operation, ['register', 'login', 'acceptWorkspaceInvite'], true)) {
+        if (DB::getDriverName() !== 'mysql' || ! in_array($operation, ['register', 'login', 'acceptWorkspaceInvite', 'declineWorkspaceInvite'], true)) {
             return;
         }
         DB::table('transaction_guards')->where('name', 'accounts')->lockForUpdate()->first();

@@ -1,3 +1,4 @@
+import { acceptInvitationFixture } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -21,7 +22,7 @@ try {
       const result = await r.json(); if (!result.ok) throw new Error(result.error.message);
       if (result.data?.verificationRequired) { const check = await fetch('/api/auth/verify-email',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrf.csrfToken},body:JSON.stringify({code:'local666'})}); const verified = await check.json(); if (!verified.ok) throw new Error(verified.error.message); return verified.data; }
       return result.data;
-    }, {operation, input, group});
+    }, { operation, input, group }).then(identity => acceptInvitationFixture(page.request, identity, input, operation, new URL(page.url()).origin));
   }
   const owner = await call(claude, 'register', {name:'Claude', email:`collab-${crypto.randomUUID()}@example.test`, password:'collaboration-test-password', workspaceName:'Collaboration Lab'}, 'auth');
   const people = {Claude:owner.user};

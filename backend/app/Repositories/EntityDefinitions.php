@@ -183,6 +183,8 @@ class EntityDefinitions
                 ['email', 'email', 'string', null, null],
                 ['expiresAt', 'expires_at', 'time', null, null],
                 ['consumedAt', 'consumed_at', 'time', null, null],
+                ['declinedAt', 'declined_at', 'time', null, null],
+                ['invitedBy', 'invited_by_id', 'string', null, null],
                 ['createdAt', 'created_at', 'time', null, null],
             ],
         ],

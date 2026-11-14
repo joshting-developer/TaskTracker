@@ -13,7 +13,7 @@ try {
   async function call(context, operation, input = {}, group = 'rpc') {
     const csrf = await (await context.request.get(base + '/api/csrf-cookie')).json();
     const response = await context.request.post(`${base}/api/${group}/${operation}`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, data: { requestId: crypto.randomUUID(), ...input } });
-    assert.equal(response.status(), 200); return (await fixtureResponse(context.request, response)).data;
+    assert.equal(response.status(), 200); return (await fixtureResponse(context.request, response, input)).data;
   }
   const email = `member-create-${crypto.randomUUID()}@example.test`;
   const old = await call(owner, 'register', { name: '原空間管理者', email: `owner-${crypto.randomUUID()}@example.test`, password: 'isolated-creation-only', workspaceName: '原工作空間' }, 'auth');

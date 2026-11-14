@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict';
 
 // Explicitly complete the local/testing verification step for existing synthetic fixtures.
-export async function fixtureResponse(request, response) {
+export async function fixtureResponse(request, response, input = {}) {
   const result = await response.json();
+  if (response.url().endsWith('/api/auth/register') && response.ok() && input.inviteToken) {
+    return { ...result, data: await acceptInvitationFixture(request, result.data, input, 'register', new URL(response.url()).origin) };
+  }
   if (!result.data?.verificationRequired) return result;
   const url = new URL('/api/auth/verify-email', response.url()).href;
   const csrf = await (await request.get(new URL('/api/csrf-cookie', url).href)).json();
@@ -39,4 +42,13 @@ export async function verifyFixtureInBrowser(page) {
   await page.evaluate(() => { if (location.hash.startsWith('#/invite?')) history.replaceState(null, '', '/app/#/'); });
   await page.reload();
   await page.locator('.app-shell').waitFor();
+}
+
+// Business setup explicitly accepts the invitation; product-flow tests deliberately do not use this helper.
+export async function acceptInvitationFixture(request, identity, input, operation, base) {
+  if (operation !== 'register' || !input.inviteToken) return identity;
+  assert.equal(process.env.E2E_ISOLATED, '1', 'Invitation fixtures require isolated testing');
+  const csrf = await (await request.get(base + '/api/csrf-cookie')).json();
+  const joined = await request.post(base + '/api/auth/acceptWorkspaceInvite', { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, data: { inviteToken: input.inviteToken } });
+  assert.equal(joined.status(), 200, await joined.text()); return (await joined.json()).data;
 }

@@ -23,6 +23,11 @@ trait RegistersVerifiedFixtures
             return parent::postJson('/api/auth/verify-email', ['code' => 'local666'], $headers, $options)->assertOk();
         }
 
+        if (! $this->rawRegistration && $uri === '/api/auth/register' && $response->status() === 200 && ! empty($data['inviteToken'])) {
+            // Business fixtures explicitly complete the new second step; invitation tests use rawRegistration.
+            return parent::postJson('/api/auth/acceptWorkspaceInvite', ['inviteToken' => $data['inviteToken']], $headers, $options)->assertOk();
+        }
+
         return $response;
     }
 }

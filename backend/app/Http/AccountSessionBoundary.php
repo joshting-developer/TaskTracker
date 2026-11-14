@@ -63,13 +63,16 @@ class AccountSessionBoundary
             if ($operation === 'invitation') {
                 return $this->memberships->preview($input);
             }
-            if (in_array($operation, ['workspaces', 'switchWorkspace', 'acceptWorkspaceInvite', 'createWorkspace', 'getProfile', 'updateProfile'], true)) {
+            if (in_array($operation, ['workspaces', 'switchWorkspace', 'acceptWorkspaceInvite', 'declineWorkspaceInvite', 'createWorkspace', 'getProfile', 'updateProfile'], true)) {
                 $user = $this->accounts->freshUser($request->user()?->getAuthIdentifier());
                 if (! $user) {
                     DomainError::fail('UNAUTHENTICATED', '請先登入');
                 }
                 $this->accounts->assertSessionVersion($user, (int) $request->session()->get('session_epoch', 0));
                 $this->accounts->requireEligible($user);
+                if ($operation === 'declineWorkspaceInvite') {
+                    return $this->memberships->decline($user, $input);
+                }
                 if ($operation === 'getProfile') {
                     return $this->profiles->show($user);
                 }

@@ -23,7 +23,7 @@ try {
  async function call(p,op,input={},group='rpc'){
   const {csrfToken}=await(await p.request.get(base+'/api/csrf-cookie')).json();
   const r=await p.request.post(base+'/api/'+group+'/'+op,{headers:{'X-CSRF-TOKEN':csrfToken},data:{requestId:crypto.randomUUID(),...input}});
-  assert.equal(r.status(),200,await r.text());return(await fixtureResponse(p.request,r)).data;
+  assert.equal(r.status(),200,await r.text());return(await fixtureResponse(p.request,r,input)).data;
  }
  const owner=await call(page,'register',{name:'交辦者',email:`owner-${crypto.randomUUID()}@example.test`,password:'isolated-notes-password',workspaceName:'紙條分頁驗收'},'auth');
  const email=`recipient-${crypto.randomUUID()}@example.test`;

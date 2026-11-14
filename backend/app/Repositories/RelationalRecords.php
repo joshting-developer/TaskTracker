@@ -448,7 +448,7 @@ class RelationalRecords
                 $value[$field] = $this->publicId('workspaces', $row->workspace_id);
             } elseif ($type === 'state') {
                 $value[$field] = $this->states[$raw];
-            } elseif ($type === 'time' && $raw === null && ! in_array($field, ['completedAt', 'returnedAt', 'removedAt', 'readAt', 'consumedAt'], true)) {
+            } elseif ($type === 'time' && $raw === null && ! in_array($field, ['completedAt', 'returnedAt', 'removedAt', 'readAt', 'consumedAt', 'declinedAt'], true)) {
                 continue;
             } elseif ($type === 'time') {
                 $value[$field] = DatabaseTimes::public($raw);

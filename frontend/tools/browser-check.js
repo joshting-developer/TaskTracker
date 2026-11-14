@@ -869,8 +869,9 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await teammate.getByLabel('你的名字').fill('Mei');
   await teammate.getByLabel('確認密碼', { exact: true }).fill('test-local-password');
   await teammate.getByLabel('密碼', { exact: true }).fill('test-local-password');
-  await teammate.getByRole('button', { name: '加入工作空間', exact: true }).click();
+  await teammate.getByRole('button', { name: '建立帳號', exact: true }).click();
   await teammate.locator('.app-shell').waitFor();
+  await teammate.getByRole('dialog', { name: '工作空間邀請', exact: true }).getByRole('button', { name: '接受邀請並進入', exact: true }).click();
   await openProjectList(teammate);
   await teammate.getByRole('heading', { name: '尚未加入任何專案', exact: true }).waitFor();
   await openProjectList(teammate);

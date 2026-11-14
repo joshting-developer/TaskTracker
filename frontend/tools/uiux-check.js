@@ -181,7 +181,8 @@ try {
   await reader.getByLabel('你的名字').fill('UI Reader');
   await reader.getByLabel('確認密碼', { exact: true }).fill('ui-local-test-password');
   await reader.getByLabel('密碼', { exact: true }).fill('ui-local-test-password');
-  await reader.getByRole('button', { name: '加入工作空間', exact: true }).click();
+  await reader.getByRole('button', { name: '建立帳號', exact: true }).click();
+  await reader.getByRole('dialog', { name: '工作空間邀請', exact: true }).getByRole('button', { name: '接受邀請並進入', exact: true }).click();
   await openProjectList(reader);
   await reader.getByRole('heading', { name: '尚未加入任何專案', exact: true }).waitFor();
   await page.evaluate(async ({ projectId, email }) => {

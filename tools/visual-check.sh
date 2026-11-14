@@ -16,6 +16,7 @@ export TASKTRACKER_TEST_IMAGE=tasktracker-codex-visual-backend
 export TASKTRACKER_TEST_PORT=13079
 export TASKTRACKER_VISUAL_ORIGIN=http://127.0.0.1:5195
 export E2E_API_URL=http://127.0.0.1:13079
+export E2E_ISOLATED=1
 compose() { docker compose -p tasktracker-codex-visual -f docker-compose.mysql-test.yml "$@"; }
 cleanup() {
   status=$?

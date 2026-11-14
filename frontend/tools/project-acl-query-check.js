@@ -1,3 +1,4 @@
+import { acceptInvitationFixture } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'vite';
@@ -31,7 +32,7 @@ try {
         }
         return { data: result.data };
       }, { operation, input, group });
-      if (!result.throttled) return result.data;
+      if (!result.throttled) return acceptInvitationFixture(target.request, result.data, input, operation, new URL(target.url()).origin);
       console.log('Fixture auth throttle: wait', result.retry);
       await target.waitForTimeout(Math.min(59000, result.retry * 1000 + 100));
     }

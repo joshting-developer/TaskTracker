@@ -119,7 +119,8 @@ class WorkspaceMembershipTest extends TestCase
             'email' => $first['user']['email'],
             'password' => 'multi-workspace-test',
             'inviteToken' => $invite['token'],
-        ])->assertOk()->assertJsonPath('data.workspace.id', $second['workspace']['id']);
+        ])->assertOk()->assertJsonPath('data.workspace.id', $first['workspace']['id']);
+        $this->postJson('/api/auth/acceptWorkspaceInvite', ['inviteToken' => $invite['token']])->assertOk()->assertJsonPath('data.workspace.id', $second['workspace']['id']);
         $this->postJson('/api/auth/workspaces', ['requestId' => 'membership-read'])->assertOk()->assertJsonCount(2, 'data.workspaces');
         $this->signIn($second);
         $this->postJson('/api/rpc/inviteMember', ['email' => $first['user']['email']])->assertStatus(409);

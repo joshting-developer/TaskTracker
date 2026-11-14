@@ -1,3 +1,4 @@
+import { acceptInvitationFixture } from './fixtures/verification.js';
 // TT-283：看板封存→已封存清單→唯讀查看→還原（看板頁與清單兩個入口）；三尺寸版面。只接受隔離API。
 import assert from 'node:assert/strict';
 import { app as inspectApp } from '../../.agents/skills/design-taste-frontend/scripts/lib/probe.mjs';
@@ -18,7 +19,7 @@ async function call(page, operation, input = {}, group = 'rpc') {
     const result = await (await fetch(`/api/${group}/${operation}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken }, body: JSON.stringify({ requestId: crypto.randomUUID(), ...input }) })).json();
     if (!result.ok) throw new Error(result.error?.message || operation);
     if (result.data?.verificationRequired) { const csrf = await (await fetch('/api/csrf-cookie')).json(); const verified = await fetch('/api/auth/verify-email', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.csrfToken }, body: JSON.stringify({ code: 'local666' }) }); if (!verified.ok) throw new Error('Fixture email verification failed'); result.data = (await verified.json()).data; } return result.data;
-  }, { operation, input, group });
+  }, { operation, input, group }).then(identity => acceptInvitationFixture(page.request, identity, input, operation, new URL(page.url()).origin));
 }
 try {
   server = await createServer({ server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': api } } });

@@ -129,22 +129,16 @@ class AccountService
         $role = 'owner';
         $invite = null;
         if (! empty($input['inviteToken'])) {
-            $token = Fields::text($input['inviteToken'], '邀請碼', 100, true);
-            $invite = $store->get('invites', hash('sha256', $token));
-            if (! $invite || ! empty($invite['consumedAt']) || $invite['expiresAt'] <= now()->utc()->toISOString() || $invite['email'] !== $email) {
-                DomainError::fail('INVALID_INPUT', '邀請已失效或 Email 不符');
+            $invite = $this->memberships->invitation($input);
+            if (! empty($invite['consumedAt']) || ! empty($invite['declinedAt']) || $invite['email'] !== $email) {
+                DomainError::fail('INVALID_INPUT', '邀請已失效或Email不符');
             }
         }
         if ($this->accounts->emailExists($email)) {
             DomainError::fail('CONFLICT', '此 Email 已註冊, 請登入');
         }
         if ($invite !== null) {
-            $workspace = $store->require('workspaces', $invite['workspaceId']);
-            $role = 'user';
-            $store->put('invites', $invite['id'], [
-                ...$invite,
-                'consumedAt' => now()->utc()->toISOString(),
-            ]);
+            $workspace = null;
         } else {
             $workspace = [
                 'id' => (string) Str::uuid(),
@@ -165,12 +159,14 @@ class AccountService
             // Only the validated invitation can establish this new account's email proof.
             $this->accounts->update($user, ['email_verified_at' => now()]);
         }
-        $tenant = $store->forWorkspace($workspace['id']);
-        $tenant->put('members', $user->id, [
-            ...$this->publicUser($user),
-            'role' => $role,
-            'joinedAt' => now()->utc()->toISOString(),
-        ]);
+        if ($workspace !== null) {
+            $tenant = $store->forWorkspace($workspace['id']);
+            $tenant->put('members', $user->id, [
+                ...$this->publicUser($user),
+                'role' => $role,
+                'joinedAt' => now()->utc()->toISOString(),
+            ]);
+        }
         if (! empty($first)) {
             foreach (['projects', 'issues'] as $kind) {
                 foreach ($store->all($kind) as $record) {
@@ -186,7 +182,7 @@ class AccountService
             $this->verification->begin($user, $workspace['id']);
         }
 
-        return new AuthenticatedAccountData($user, $workspace['id']);
+        return new AuthenticatedAccountData($user, $workspace['id'] ?? null);
     }
 
     /**
@@ -218,11 +214,7 @@ class AccountService
         if (! $valid) {
             DomainError::fail('UNAUTHENTICATED', 'Email 或密碼不正確');
         }
-        if (! empty($input['inviteToken'])) {
-            $workspaceId = $this->memberships->accept($user, $input);
-        } else {
-            $workspaceId = $this->accounts->firstWorkspace($user->id);
-        }
+        $workspaceId = $this->accounts->firstWorkspace($user->id);
 
         return new AuthenticatedAccountData($user, $workspaceId);
     }

@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker Session Authentication",
-    "version": "1.7.0",
-    "description": "Session and CSRF only; not the PAT API. Legacy accounts keep their existing eligibility. New public registration requires an activation link; valid invitations verify the exact invited email during new-account registration. Activation GET only renders the page, with token in URL fragment. A verified account may have no active workspace; workspace and role are then null and permissions is empty. Workspace APIs still require active membership."
+    "version": "1.8.0",
+    "description": "Session and CSRF only; not the PAT API. Legacy accounts keep their existing eligibility. New public registration requires an activation link; valid invitations verify the exact invited email during new-account registration. Activation GET only renders the page, with token in URL fragment. A verified account may have no active workspace; workspace and role are then null and permissions is empty. Workspace APIs still require active membership. Invitation login and registration never join implicitly; acceptance is a separate authenticated decision."
   },
   "paths": {
     "/api/auth/register": {
@@ -92,7 +92,7 @@
             "csrf": []
           }
         ],
-        "description": "Public signup is rejected with 403 when TASKTRACKER_PUBLIC_REGISTRATION is false. A valid, unconsumed, matching-email invitation remains allowed and new invited accounts verify only the exact invited email using this single-use invitation; no second activation email. Public signup still requires a separate activation link."
+        "description": "Public signup requires registration enabled and an activation link. A valid, unconsumed, not-declined invitation from a currently authorized inviter can prove the exact invited email for a new account. This creates only the account, returns workspace:null and empty permissions, and does not consume the invitation or create membership. The signed-in invitee must explicitly accept or decline. Existing accounts must log in."
       }
     },
     "/api/auth/login": {
@@ -174,7 +174,8 @@
             "sessionCookie": [],
             "csrf": []
           }
-        ]
+        ],
+        "description": "Authenticate the account only. inviteToken is not accepted as an instruction to join. Return the first active workspace or workspace:null; show the invitation decision separately after login."
       }
     },
     "/api/auth/current": {
@@ -518,7 +519,7 @@
     "/api/v1/workspace/invitations": {
       "get": {
         "summary": "Read this workspace pending, unexpired invitations only",
-        "description": "Session-only, workspace.invite required. SQL pagination, stable expiresAt DESC and internal id DESC; no token, mail body, receipt or workspace snapshot. Accepted/expired invitations disappear. Member directory is separate.",
+        "description": "Session-only, workspace.invite required. SQL pagination, stable expiresAt DESC and internal id DESC; no token, mail body, receipt or workspace snapshot. Accepted/expired invitations disappear. Member directory is separate. Declined invitations are excluded. Pending means not accepted, not declined and not expired.",
         "security": [
           {
             "sessionCookie": []
@@ -1064,6 +1065,260 @@
           },
           "419": {
             "description": "CSRF missing or expired"
+          }
+        }
+      }
+    },
+    "/api/auth/invitation": {
+      "post": {
+        "operationId": "invitationSession",
+        "summary": "Preview a token-scoped invitation",
+        "description": "CSRF required. Only valid high-entropy tokens are looked up. Current inviter permission is rechecked; unknown inviter, expiration or revoked permission fails. Preview discloses authMode only for an active invitation, never arbitrary email lookup. Acceptance/decline requires a current eligible account session and matching invited email. Accept is idempotent only while membership remains active. Decline is terminal for this token, closing the dialog is not decline. Registration/login do not accept. Invalidated legacy invitations with unknown sender must be reissued.",
+        "security": [
+          {
+            "csrf": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "inviteToken"
+                ],
+                "properties": {
+                  "inviteToken": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Safe result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "workspaceName",
+                        "email",
+                        "expiresAt",
+                        "consumed",
+                        "declined",
+                        "authMode"
+                      ],
+                      "properties": {
+                        "workspaceName": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "consumed": {
+                          "type": "boolean"
+                        },
+                        "declined": {
+                          "type": "boolean"
+                        },
+                        "authMode": {
+                          "enum": [
+                            "login",
+                            "register",
+                            null
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, expired, declined or revoked invitation"
+          },
+          "401": {
+            "description": "Missing or revoked account session"
+          },
+          "403": {
+            "description": "Wrong recipient or ineligible account/member"
+          },
+          "409": {
+            "description": "Already accepted invitation cannot be declined"
+          },
+          "419": {
+            "description": "Invalid CSRF"
+          }
+        }
+      }
+    },
+    "/api/auth/acceptWorkspaceInvite": {
+      "post": {
+        "operationId": "acceptWorkspaceInviteSession",
+        "summary": "Explicitly accept an invitation as its recipient",
+        "description": "CSRF required. Only valid high-entropy tokens are looked up. Current inviter permission is rechecked; unknown inviter, expiration or revoked permission fails. Preview discloses authMode only for an active invitation, never arbitrary email lookup. Acceptance/decline requires a current eligible account session and matching invited email. Accept is idempotent only while membership remains active. Decline is terminal for this token, closing the dialog is not decline. Registration/login do not accept. Invalidated legacy invitations with unknown sender must be reissued.",
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "inviteToken"
+                ],
+                "properties": {
+                  "inviteToken": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Safe result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SessionIdentity"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, expired, declined or revoked invitation"
+          },
+          "401": {
+            "description": "Missing or revoked account session"
+          },
+          "403": {
+            "description": "Wrong recipient or ineligible account/member"
+          },
+          "409": {
+            "description": "Already accepted invitation cannot be declined"
+          },
+          "419": {
+            "description": "Invalid CSRF"
+          }
+        }
+      }
+    },
+    "/api/auth/declineWorkspaceInvite": {
+      "post": {
+        "operationId": "declineWorkspaceInviteSession",
+        "summary": "Explicitly decline an invitation without deleting the account",
+        "description": "CSRF required. Only valid high-entropy tokens are looked up. Current inviter permission is rechecked; unknown inviter, expiration or revoked permission fails. Preview discloses authMode only for an active invitation, never arbitrary email lookup. Acceptance/decline requires a current eligible account session and matching invited email. Accept is idempotent only while membership remains active. Decline is terminal for this token, closing the dialog is not decline. Registration/login do not accept. Invalidated legacy invitations with unknown sender must be reissued.",
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "inviteToken"
+                ],
+                "properties": {
+                  "inviteToken": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Safe result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "declined"
+                      ],
+                      "properties": {
+                        "declined": {
+                          "const": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, expired, declined or revoked invitation"
+          },
+          "401": {
+            "description": "Missing or revoked account session"
+          },
+          "403": {
+            "description": "Wrong recipient or ineligible account/member"
+          },
+          "409": {
+            "description": "Already accepted invitation cannot be declined"
+          },
+          "419": {
+            "description": "Invalid CSRF"
           }
         }
       }

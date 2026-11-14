@@ -55,7 +55,7 @@ class WorkspaceInvitationService
             $token = bin2hex(random_bytes(32));
             $expires = now()->addDays(7);
             $this->invitations->expirePrevious($workspace, $email);
-            $invite = $this->invitations->create(['public_id' => hash('sha256', $token), 'workspace_id' => $workspace->id, 'email' => $email, 'created_at' => now(), 'expires_at' => $expires]);
+            $invite = $this->invitations->create(['public_id' => hash('sha256', $token), 'workspace_id' => $workspace->id, 'email' => $email, 'invited_by_id' => $context->userId, 'created_at' => now(), 'expires_at' => $expires]);
             $base = rtrim((string) config('app.url'), '/');
             if (! filter_var($base, FILTER_VALIDATE_URL) || (! in_array(config('app.env'), ['local', 'testing'], true) && ! str_starts_with($base, 'https://'))) {
                 DomainError::fail('INVALID_INPUT', '邀請連結網址尚未配置');

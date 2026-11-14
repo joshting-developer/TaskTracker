@@ -1,3 +1,4 @@
+import { acceptInvitationFixture } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { execFile } from 'node:child_process';
@@ -22,7 +23,7 @@ async function request(page, operation, input = {}, group = 'rpc') {
 }
 async function call(page, operation, input = {}, group = 'rpc') {
   const result = await request(page, operation, { requestId: crypto.randomUUID(), ...input }, group);
-  assert.equal(result.ok, true, JSON.stringify(result)); if (result.data?.verificationRequired) return call(page, 'verify-email', { code: 'local666' }, 'auth'); return result.data;
+  assert.equal(result.ok, true, JSON.stringify(result)); if (result.data?.verificationRequired) return call(page, 'verify-email', { code: 'local666' }, 'auth'); return acceptInvitationFixture(page.request, result.data, input, operation, new URL(page.url()).origin);
 }
 try {
   server = await preview({ preview: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL, '/reverb': { target: 'http://127.0.0.1:18080', ws: true, rewrite: path => path.replace(/^\/reverb/, '') } } } });

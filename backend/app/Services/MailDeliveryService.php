@@ -53,7 +53,7 @@ class MailDeliveryService
             $recipient = $user->email;
             if ($data->kind === 'invitation') {
                 $invite = $this->deliveries->invitation($data->invitationId);
-                if (! $invite || $invite->consumed_at || ! Carbon::parse($invite->expires_at)->isFuture() || ! in_array('workspace.invite', WorkspacePermissions::resolve($this->deliveries->inviterRole($invite->workspace_id, $user->id) ?? ''), true)) {
+                if (! $invite || $invite->consumed_at || $invite->declined_at || ! Carbon::parse($invite->expires_at)->isFuture() || ! in_array('workspace.invite', WorkspacePermissions::resolve($this->deliveries->inviterRole($invite->workspace_id, $user->id) ?? ''), true)) {
                     DomainError::fail('FORBIDDEN', '邀請已失效或無法寄送');
                 }
                 $recipient = $invite->email;
@@ -218,7 +218,7 @@ class MailDeliveryService
         if ($row->kind === 'invitation') {
             $invite = $this->deliveries->invitation($row->invitation_id);
 
-            return $user && $row->payload !== null && $row->expires_at->isFuture() && $invite && ! $invite->consumed_at
+            return $user && $row->payload !== null && $row->expires_at->isFuture() && $invite && ! $invite->consumed_at && ! $invite->declined_at
                 && Carbon::parse($invite->expires_at)->isFuture() && $invite->email === $row->recipient
                 && in_array('workspace.invite', WorkspacePermissions::resolve($this->deliveries->inviterRole($invite->workspace_id, $user->id) ?? ''), true);
         }

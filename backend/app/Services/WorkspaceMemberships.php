@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
+use App\Authorization\WorkspacePermissions;
 use App\Domain\DomainError;
 use App\Domain\Fields;
-use App\Models\User;
-use App\Repositories\MembershipRepository;
 use App\Factories\RecordStoreFactory;
+use App\Models\User;
+use App\Repositories\AccountRepository;
+use App\Repositories\MembershipRepository;
+use App\Repositories\WorkspaceInvitationRepository;
 
 /** 管理本人跨工作空間資格與單次邀請接受，不改動既有身份或專案ACL。 */
 class WorkspaceMemberships
@@ -16,8 +19,10 @@ class WorkspaceMemberships
      *
      * @param  MembershipRepository  $memberships  有效工作區資格查詢
      * @param  RecordStoreFactory  $stores  依範圍建立資料入口
+     * @param  WorkspaceInvitationRepository  $invitations  邀請者即時資格
+     * @param  AccountRepository  $accounts  只在有效token後查帳號存在
      */
-    public function __construct(private MembershipRepository $memberships, private RecordStoreFactory $stores) {}
+    public function __construct(private MembershipRepository $memberships, private RecordStoreFactory $stores, private WorkspaceInvitationRepository $invitations, private AccountRepository $accounts) {}
 
     /**
      * 回傳本人的有效工作空間，不包含未加入或停用空間。
@@ -47,6 +52,11 @@ class WorkspaceMemberships
             DomainError::fail('INVALID_INPUT', '邀請已失效，請向邀請者索取新連結');
         }
 
+        $role = $this->invitations->senderRole($invite['id']);
+        if (! $role || ! in_array('workspace.invite', WorkspacePermissions::resolve($role), true)) {
+            DomainError::fail('INVALID_INPUT', '邀請已失效, 請向邀請者索取新連結');
+        }
+
         return $invite;
     }
 
@@ -66,6 +76,8 @@ class WorkspaceMemberships
             'email' => $invite['email'],
             'expiresAt' => $invite['expiresAt'],
             'consumed' => ! empty($invite['consumedAt']),
+            'declined' => ! empty($invite['declinedAt']),
+            'authMode' => empty($invite['consumedAt']) && empty($invite['declinedAt']) ? ($this->accounts->emailExists($invite['email']) ? 'login' : 'register') : null,
         ];
     }
 
@@ -79,6 +91,9 @@ class WorkspaceMemberships
     public function accept(User $user, array $input): string
     {
         $invite = $this->invitation($input);
+        if (! empty($invite['declinedAt'])) {
+            DomainError::fail('INVALID_INPUT', '邀請已拒絕, 請向邀請者索取新連結');
+        }
         if (strtolower($user->email) !== $invite['email']) {
             DomainError::fail('FORBIDDEN', '請使用受邀的Email登入後再接受邀請');
         }
@@ -127,5 +142,26 @@ class WorkspaceMemberships
             }
         }
         DomainError::fail('NOT_FOUND', '找不到可切換的工作空間');
+    }
+
+    /** 受邀本人拒絕仍有效邀請, 不建立成員也不刪帳號
+     * @param  User  $user  已重驗Session的本人
+     * @param  array  $input  邀請token
+     * @return array{declined:bool} 拒絕結果
+     */
+    public function decline(User $user, array $input): array
+    {
+        $invite = $this->invitation($input);
+        if (strtolower($user->email) !== $invite['email']) {
+            DomainError::fail('FORBIDDEN', '請使用受邀的Email登入');
+        }
+        if (! empty($invite['consumedAt'])) {
+            DomainError::fail('CONFLICT', '邀請已接受, 無法拒絕');
+        }
+        if (empty($invite['declinedAt'])) {
+            $this->invitations->decline($invite['id']);
+        }
+
+        return ['declined' => true];
     }
 }

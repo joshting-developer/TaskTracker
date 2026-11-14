@@ -16,7 +16,7 @@ try {
   async function call(page, operation, input = {}, group = 'rpc') {
     const csrf = await (await page.request.get(`http://127.0.0.1:${port}/api/csrf-cookie`)).json();
     const response = await page.request.post(`http://127.0.0.1:${port}/api/${group}/${operation}`, { data: { requestId: crypto.randomUUID(), ...input }, headers: { 'X-CSRF-TOKEN': csrf.csrfToken } });
-    assert.equal(response.status(), 200, await response.text()); return (await fixtureResponse(page.request, response)).data;
+    assert.equal(response.status(), 200, await response.text()); return (await fixtureResponse(page.request, response, input)).data;
   }
   const people = {};
   people.Owner = (await call(owner, 'register', { name: 'Owner', email: `notes-${crypto.randomUUID()}@example.test`, password: 'notes-isolated-password', workspaceName: '紙條測試' }, 'auth')).user;

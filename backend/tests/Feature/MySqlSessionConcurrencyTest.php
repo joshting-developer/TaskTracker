@@ -52,6 +52,10 @@ class MySqlSessionConcurrencyTest extends MySqlTestCase
             return $this->api($client, '/api/auth/verify-email', ['code' => 'local666']);
         }
 
+        if ($path === '/api/auth/register' && ! empty($body['inviteToken']) && $status === 200) {
+            return $this->api($client, '/api/auth/acceptWorkspaceInvite', ['inviteToken' => $body['inviteToken']]);
+        }
+
         return $data['data'] ?? $data;
     }
 

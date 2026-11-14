@@ -41,6 +41,7 @@ export const api = {
   createWorkspace: input => callApi('createWorkspace', input, 'auth'),
   switchWorkspace: input => callApi('switchWorkspace', input, 'auth'),
   acceptWorkspaceInvite: input => callApi('acceptWorkspaceInvite', input, 'auth'),
+  declineWorkspaceInvite: input => callApi('declineWorkspaceInvite', input, 'auth'),
   invitation: input => callApi('invitation', input, 'auth'),
   verifyEmail: input => callApi('verify-email', input, 'auth'),
   resendVerification: input => callApi('resend-verification', input, 'auth'),

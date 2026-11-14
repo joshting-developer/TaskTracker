@@ -36,9 +36,10 @@ async function register(page, email, inviteToken = '') {
   else await page.getByLabel('確認密碼', { exact: true }).fill('flow-test-password');
   await page.getByLabel('密碼', { exact: true }).fill('flow-test-password');
   if (!inviteToken) await page.getByLabel('工作空間名稱', { exact: true }).fill('流程回驗空間');
-  await page.getByRole('button', { name: inviteToken ? '加入工作空間' : '建立工作空間', exact: true }).click();
+  await page.getByRole('button', { name: inviteToken ? '建立帳號' : '建立工作空間', exact: true }).click();
   if (!inviteToken) await verifyFixtureInBrowser(page);
   await page.locator('.app-shell').waitFor();
+  if (inviteToken) await page.getByRole('dialog', { name: '工作空間邀請', exact: true }).getByRole('button', { name: '接受邀請並進入', exact: true }).click();
 }
 try {
   vite = await createServer({ server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': apiTarget } } });

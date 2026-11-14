@@ -40,7 +40,7 @@ class MailDeliveryRepository
      */
     public function invitation(?int $id): ?WorkspaceInvitation
     {
-        return $id ? WorkspaceInvitation::whereKey($id)->first(['id', 'workspace_id', 'email', 'expires_at', 'consumed_at']) : null;
+        return $id ? WorkspaceInvitation::whereKey($id)->first(['id', 'workspace_id', 'email', 'expires_at', 'consumed_at', 'declined_at']) : null;
     }
 
     /**

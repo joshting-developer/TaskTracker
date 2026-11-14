@@ -72,7 +72,7 @@ class WorkspaceInvitationRepository
     public function pending(Workspace $workspace, PageQueryData $filters): LengthAwarePaginator
     {
         $query = WorkspaceInvitation::query()->leftJoin('mail_deliveries as m', 'm.invitation_id', '=', 'workspace_invitations.id')
-            ->where('workspace_invitations.workspace_id', $workspace->id)->whereNull('workspace_invitations.consumed_at')->where('workspace_invitations.expires_at', '>', DatabaseTimes::store(now()->toISOString()));
+            ->where('workspace_invitations.workspace_id', $workspace->id)->whereNull('workspace_invitations.consumed_at')->whereNull('workspace_invitations.declined_at')->where('workspace_invitations.expires_at', '>', DatabaseTimes::store(now()->toISOString()));
         if ($filters->search !== '') {
             $term = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($filters->search)).'%';
             $query->whereRaw("LOWER(workspace_invitations.email) LIKE ? ESCAPE '!'", [$term]);
@@ -80,5 +80,25 @@ class WorkspaceInvitationRepository
 
         return $query->orderByDesc('workspace_invitations.expires_at')->orderByDesc('workspace_invitations.id')->paginate($filters->perPage,
             ['workspace_invitations.id', 'workspace_invitations.public_id', 'workspace_invitations.email', 'workspace_invitations.created_at', 'workspace_invitations.expires_at', 'm.status as delivery_status'], 'page', $filters->page);
+    }
+
+    /** 取得發出此邀請者目前在同空間的有效角色
+     * @param  string  $id  邀請雜湊公開ID
+     * @return ?string 角色或缺少資格
+     */
+    public function senderRole(string $id): ?string
+    {
+        return WorkspaceInvitation::query()->join('workspace_members as m', function ($join) {
+            $join->on('m.workspace_id', '=', 'workspace_invitations.workspace_id')->on('m.user_id', '=', 'workspace_invitations.invited_by_id');
+        })->where('workspace_invitations.public_id', $id)->whereNull('m.disabled_at')->value('m.role');
+    }
+
+    /** 記錄指定邀請的首次拒絕, 不改已接受資料
+     * @param  string  $id  已驗證邀請的唯一公開ID
+     * @return void
+     */
+    public function decline(string $id): void
+    {
+        WorkspaceInvitation::where('public_id', $id)->whereNull('consumed_at')->whereNull('declined_at')->update(['declined_at' => DatabaseTimes::store(now()->toISOString())]);
     }
 }

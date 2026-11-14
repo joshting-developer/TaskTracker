@@ -123,9 +123,10 @@ trait WorkspaceInvitationCases
         $this->assertSame(0, MailDelivery::where('user_id', $user->id)->where('kind', 'verification')->count());
         $this->postJson('/api/auth/current')->assertOk()->assertJsonPath('data.user.id', $user->id);
         $this->postJson('/api/auth/logout')->assertOk();
-        $this->postJson('/api/auth/register', $signup)->assertStatus(400);
+        $this->postJson('/api/auth/register', $signup)->assertStatus(409);
         $this->assertSame(1, User::where('email', $input['email'])->count());
-        $this->postJson('/api/auth/login', ['email' => $input['email'], 'password' => 'isolated-invite-password'])->assertOk()->assertJsonPath('data.user.id', $user->id);
+        $this->postJson('/api/auth/login', ['email' => $input['email'], 'password' => 'isolated-invite-password'])->assertOk()->assertJsonPath('data.user.id', $user->id)->assertJsonPath('data.workspace', null);
+        $this->postJson('/api/auth/acceptWorkspaceInvite', ['inviteToken' => $invitation['token']])->assertOk();
     }
 
     /**

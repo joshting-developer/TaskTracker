@@ -87,6 +87,8 @@ trait RegistrationPolicyCases
         $this->assertAuthenticated();
         $this->assertSame($users + 2, User::count());
         $this->assertSame($workspaces + 1, Workspace::count());
+        $this->getJson('/api/v1/projects')->assertStatus(401);
+        $this->postJson('/api/auth/acceptWorkspaceInvite', ['inviteToken' => $invite['token']])->assertOk();
         $this->getJson('/api/v1/projects')->assertOk();
         $this->postJson('/api/auth/register', ['name' => 'Probe', 'email' => $owner['user']['email'], 'password' => 'isolated-policy-password', 'inviteToken' => 'invalid-token'])->assertStatus(400)->assertJsonPath('error.code', 'INVALID_INPUT');
         $this->assertSame($users + 2, User::count());
@@ -107,7 +109,8 @@ trait RegistrationPolicyCases
         $invite = $this->postJson('/api/rpc/inviteMember', ['email' => $email, 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
         $this->postJson('/api/auth/logout')->assertOk();
         config(['tasktracker.registration.public' => false]);
-        $this->postJson('/api/auth/login', ['email' => $email, 'password' => 'isolated-policy-password', 'inviteToken' => $invite['token']])->assertOk()->assertJsonPath('data.user.id', $account['user']['id'])->assertJsonPath('data.workspace.id', $other['workspace']['id']);
+        $this->postJson('/api/auth/login', ['email' => $email, 'password' => 'isolated-policy-password', 'inviteToken' => $invite['token']])->assertOk()->assertJsonPath('data.user.id', $account['user']['id'])->assertJsonPath('data.workspace.id', $account['workspace']['id']);
+        $this->postJson('/api/auth/acceptWorkspaceInvite', ['inviteToken' => $invite['token']])->assertOk()->assertJsonPath('data.workspace.id', $other['workspace']['id']);
         $this->assertSame($users + 2, User::count());
     }
 }
