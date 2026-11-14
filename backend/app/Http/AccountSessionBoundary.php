@@ -71,7 +71,7 @@ class AccountSessionBoundary
             }
 
             return match ($operation) {
-                'current' => $request->session()->has('pending_user_id') ? $this->verification->status($request->session()->get('pending_user_id')) : [...$this->session->context($request), 'features' => $this->features()],
+                'current' => $this->current($request),
                 'register' => $this->establishSession($request, $this->accounts->register($input)),
                 'login' => $this->establishSession($request, $this->accounts->login($input)),
                 default => DomainError::fail('NOT_FOUND', '找不到這個操作'),
@@ -82,6 +82,29 @@ class AccountSessionBoundary
 
         // afterCommit同步寄送完成後才取安全狀態, 不將SMTP IO放進帳號交易。
         return $operation === 'register' && ! empty($result['verificationRequired']) ? $this->verification->status($request->session()->get('pending_user_id')) : $result;
+    }
+
+    /**
+     * 重驗原pending帳號, 已在另一分頁完成連結啟用才建立登入
+     *
+     * @param  Request  $request  本次Session
+     * @return array<string,mixed> pending資訊或目前資格
+     *
+     * @throws DomainError 帳號、驗證或工作區資格失效
+     */
+    private function current(Request $request): array
+    {
+        $id = $request->session()->get('pending_user_id');
+        if (is_string($id)) {
+            $account = $this->verification->resumePending($id);
+            if ($account instanceof AuthenticatedAccountData) {
+                return [...$this->establishSession($request, $account), 'features' => $this->features()];
+            }
+
+            return $account;
+        }
+
+        return [...$this->session->context($request), 'features' => $this->features()];
     }
 
     /**

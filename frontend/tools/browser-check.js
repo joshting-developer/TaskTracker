@@ -1,3 +1,4 @@
+import { verifyFixtureInBrowser } from './fixtures/verification.js';
 import { expandIssueProperties } from './issue-form-actions.js';
 import { moveBoardCard, changeBoardCardStateInDetail } from './board-actions.js';
 import { openProjectList } from './navigation.js';
@@ -868,8 +869,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await teammate.getByLabel('Email', { exact: true }).fill(memberEmail);
   await teammate.getByLabel('密碼', { exact: true }).fill('test-local-password');
   await teammate.getByRole('button', { name: '加入工作空間', exact: true }).click();
-  await teammate.getByLabel('驗證碼', { exact: true }).fill('local666');
-  await teammate.getByRole('button', { name: '驗證並登入', exact: true }).click();
+  await verifyFixtureInBrowser(teammate);
   await openProjectList(teammate);
   await teammate.getByRole('heading', { name: '尚未加入任何專案', exact: true }).waitFor();
   await openProjectList(teammate);
@@ -1087,8 +1087,7 @@ try {
   await page.getByLabel('密碼', { exact: true }).fill('test-local-password');
   await page.getByLabel('工作空間名稱', { exact: true }).fill('產品團隊');
   await page.getByRole('button', { name: '建立工作空間', exact: true }).click();
-  await page.getByLabel('驗證碼', { exact: true }).fill('local666');
-  await page.getByRole('button', { name: '驗證並登入', exact: true }).click();
+  await verifyFixtureInBrowser(page);
   await openProjectList(page);
   await page.getByRole('heading', { name: '尚無專案' }).waitFor();
   const ownerId = await page.evaluate(async () => (await (await import('/src/api/index.js')).api.getWorkspace()).meta.userId);

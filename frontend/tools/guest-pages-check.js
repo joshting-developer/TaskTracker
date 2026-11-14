@@ -1,3 +1,4 @@
+import { verifyFixtureInBrowser } from './fixtures/verification.js';
 // TT-206～208、297、298：首頁產品介紹、/login、/app/入口、舊hash相容、訪客TopBar與SEO metadata；只接受隔離API。E2E_PREVIEW=1驗正式build。
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -57,8 +58,7 @@ try {
   await page.getByLabel('密碼').fill('guest-pages-password');
   await page.getByLabel('工作空間名稱').fill('訪客驗收');
   await page.getByRole('button', { name: '建立工作空間' }).click();
-  await page.getByLabel('驗證碼', { exact: true }).fill('local666');
-  await page.getByRole('button', { name: '驗證並登入', exact: true }).click();
+  await verifyFixtureInBrowser(page);
   await page.locator('.app-shell').waitFor();
   assert.equal(await page.locator('.guest-topbar').count(), 0, '登入後App不顯示訪客TopBar');
   assert.equal(pathOf(page), '/app/#/projects', '登入後在/app/保留原深層連結');

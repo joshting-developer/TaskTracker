@@ -1,3 +1,4 @@
+import { verifyFixtureInBrowser } from './fixtures/verification.js';
 // TT-329：側邊欄改成連結。一般點擊在目前分頁切換且不整頁重載；Ctrl／Cmd點擊交給瀏覽器開新分頁, 新分頁直接到該頁（我的任務靠?scope=mine）；未儲存草稿時一般點擊照樣先確認。
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
@@ -20,10 +21,7 @@ try {
   await page.getByLabel('密碼', { exact: true }).fill('sidebar-test-only-password');
   await page.getByLabel('工作空間名稱', { exact: true }).fill('側邊欄檢查');
   await page.getByRole('button', { name: '建立工作空間', exact: true }).click();
-  // TT-319註冊驗證：local／testing可用local666
-  const code = page.getByLabel('驗證碼', { exact: true });
-  await Promise.race([code.waitFor(), page.getByRole('link', { name: '專案列表', exact: true }).waitFor()]);
-  if (await code.isVisible()) { await code.fill('local666'); await page.getByRole('button', { name: '驗證並登入', exact: true }).click(); }
+  await verifyFixtureInBrowser(page);
   await openProjectList(page);
   await page.getByRole('button', { name: '建立專案', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: '建立專案', exact: true });

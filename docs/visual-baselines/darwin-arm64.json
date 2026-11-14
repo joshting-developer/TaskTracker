@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "1382e9d461f0d7750ab421e949b68129e1f6dec6e8548c4fed6644a1a29395e5",
+  "harnessSha256": "91a052a34e511ed53b9ff553ddf64b7b2835e4c20946761bad7997e73f44fb03",
   "profile": "darwin-arm64",
-  "reviewer": "Josh standing authorization / TT-337",
-  "note": "檢閱通知入口改名與三尺寸通知抽屜, 僅文案縮短, 沿用原比較門檻",
-  "manifestSha256": "390d36cdc6060d3f8b8145245eb842b305af99827318204179e2bac5a153b890",
+  "reviewer": "Josh standing authorization / TT-338",
+  "note": "Reviewed link-only signup waiting and mail failure screens at three widths; existing tolerances retained",
+  "manifestSha256": "eeaf359a8dc33bd431de3a3d2bc4fae3016c9efd7b7fd6ade6dcab31fb44e82e",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

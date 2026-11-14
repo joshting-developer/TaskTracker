@@ -246,37 +246,22 @@
     },
     "/api/auth/verify-email": {
       "post": {
-        "summary": "Consume a code or activation token by explicit POST",
+        "summary": "Consume a single-use activation token by explicit POST",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "oneOf": [
-                  {
-                    "type": "object",
-                    "properties": {
-                      "code": {
-                        "type": "string",
-                        "maxLength": 20
-                      }
-                    },
-                    "required": [
-                      "code"
-                    ]
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "token": {
-                        "type": "string",
-                        "pattern": "^[a-f0-9]{64}$"
-                      }
-                    },
-                    "required": [
-                      "token"
-                    ]
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
                   }
+                },
+                "required": [
+                  "token"
                 ]
               }
             }

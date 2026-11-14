@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium, request } from 'playwright';
-import { fixtureResponse } from './fixtures/verification.js';
+import { fixtureResponse, verifyFixtureInBrowser } from './fixtures/verification.js';
 if(process.env.E2E_ISOLATED!=='1'||!process.env.E2E_API_URL||!process.env.E2E_SETUP_API_URL)throw new Error('Isolated open and invitation-only APIs required');
 let server,browser,setup;
 try {
@@ -27,7 +27,7 @@ try {
   await page.goto(`http://127.0.0.1:5292/login#/invite?token=${invite.token}`);
   await page.getByLabel('Email',{exact:true}).fill(invite.email);await page.getByLabel('你的名字',{exact:true}).fill('Invited Person');await page.getByLabel('密碼',{exact:true}).fill(password);await page.getByRole('button',{name:'加入工作空間',exact:true}).click();
   await page.getByRole('heading',{name:'驗證信箱',exact:true}).waitFor();
-  await page.getByLabel('驗證碼',{exact:true}).fill('local666');await page.getByRole('button',{name:'驗證並登入',exact:true}).click();await page.locator('.app-shell').waitFor();
+  await verifyFixtureInBrowser(page);await page.locator('.app-shell').waitFor();
   // Policy failure cannot enable registration or prevent an existing account from seeing login.
   await page.evaluate(async()=>{await(await import('/src/api/index.js')).api.logout();});
   await page.route('**/api/auth/registration-policy',r=>r.abort());await page.goto('http://127.0.0.1:5292/login?mode=register');await page.getByRole('alert').filter({hasText:'無法讀取註冊設定'}).waitFor();

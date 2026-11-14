@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
 trait EmailVerificationCases
 {
     /** 建立隔離待驗證帳號, 只在測試記憶體讀取驗證資訊
-     * @return array{string,string,string} 帳號ID、驗證碼與連結token */
+     * @return array{string,string,string} 帳號ID、已退役碼測試值與連結token */
     private function pendingAccount(): array
     {
         $this->rawRegistration = true;
@@ -28,17 +28,17 @@ trait EmailVerificationCases
         $this->postJson('/api/auth/register', ['name' => 'Verify', 'email' => $email, 'password' => 'isolated-verification', 'workspaceName' => 'Verify'])->assertOk()->assertJsonPath('data.verificationRequired', true)->assertJsonMissingPath('data.user');
         $user = User::where('email', $email)->firstOrFail();
         $mail = MailDelivery::where('user_id', $user->id)->where('kind', 'verification')->firstOrFail();
-        preg_match('/驗證碼：([A-Z2-9]{7})/', $mail->payload['body'], $code);
+        $this->assertStringNotContainsString('驗證碼', $mail->payload['body']);
         preg_match('~/activate/([a-f0-9]{64})~', $mail->payload['body'], $token);
 
-        return [$user->id, $code[1], $token[1]];
+        return [$user->id, 'RETIRED', $token[1]];
     }
 
-    /** test pending registration has no workspace access and verifies case insensitive
+    /** Pending registration has no workspace access and requires an activation link
      * @return void */
-    public function test_pending_registration_has_no_workspace_access_and_verifies_case_insensitive(): void
+    public function test_pending_registration_requires_single_use_activation_link(): void
     {
-        [$id,$code] = $this->pendingAccount();
+        [$id,$code,$token] = $this->pendingAccount();
         $this->assertGuest();
         $pending = $this->postJson('/api/auth/current')->assertJsonPath('data.verificationRequired', true)->json('data');
         $spec = json_decode(file_get_contents(resource_path('auth-session-openapi.json')), true, flags: JSON_THROW_ON_ERROR);
@@ -52,10 +52,50 @@ trait EmailVerificationCases
         $this->getJson('/api/v1/projects')->assertStatus(401);
         $row = EmailVerification::where('user_id', $id)->firstOrFail();
         $this->assertNotSame($code, $row->code_hash);
-        $this->assertDoesNotMatchRegularExpression('/[01OIL]/', $code);
-        $this->postJson('/api/auth/verify-email', ['code' => strtolower($code)])->assertOk()->assertJsonPath('data.user.id', $id);
+        $this->postJson('/api/auth/verify-email', ['code' => strtolower($code)])->assertStatus(400);
+        $this->postJson('/api/auth/verify-email', ['token' => $token])->assertOk()->assertJsonPath('data.user.id', $id);
         $this->assertNotNull(User::findOrFail($id)->email_verified_at);
         $this->postJson('/api/auth/verify-email', ['code' => $code])->assertStatus(400);
+    }
+
+    /**
+     * 原pending Session在另一分頁啟用後可重驗恢復, 過期不恢復
+     *
+     * @return void
+     */
+    public function test_pending_session_recovers_only_its_activated_unexpired_account(): void
+    {
+        [$id, , $token] = $this->pendingAccount();
+        $this->postJson('/api/auth/verify-email', ['token' => $token])->assertOk();
+        $this->postJson('/api/auth/logout')->assertOk();
+        Auth::forgetGuards();
+        $this->withSession(['pending_user_id' => $id]);
+        $this->postJson('/api/auth/current')->assertOk()->assertJsonPath('data.user.id', $id)->assertJsonMissingPath('data.verificationRequired');
+        $this->postJson('/api/auth/logout')->assertOk();
+        $this->postJson('/api/auth/current')->assertStatus(401);
+        $this->travel(31)->minutes();
+        $this->withSession(['pending_user_id' => $id]);
+        $this->postJson('/api/auth/current')->assertOk()->assertJsonPath('data.verificationRequired', true);
+        $this->assertGuest();
+    }
+
+    /**
+     * 啟用別人的連結不會提升原本未啟用的Session
+     *
+     * @return void
+     */
+    public function test_pending_session_cannot_recover_another_activated_user(): void
+    {
+        [$first] = $this->pendingAccount();
+        $this->postJson('/api/auth/logout')->assertOk();
+        [$second, , $token] = $this->pendingAccount();
+        $this->postJson('/api/auth/verify-email', ['token' => $token])->assertOk()->assertJsonPath('data.user.id', $second);
+        $this->postJson('/api/auth/logout')->assertOk();
+        Auth::forgetGuards();
+        $this->withSession(['pending_user_id' => $first]);
+        $this->postJson('/api/auth/current')->assertOk()->assertJsonPath('data.verificationRequired', true)->assertJsonMissingPath('data.user');
+        $this->assertGuest();
+        $this->assertNull(User::findOrFail($first)->email_verified_at);
     }
 
     /** test link get has no side effect and post consumes both credentials
@@ -71,18 +111,18 @@ trait EmailVerificationCases
         $this->assertNull(MailDelivery::where('user_id', $id)->first()->payload);
     }
 
-    /** test wrong attempts commit and limit applies to code and link
+    /** Retired codes cannot consume or invalidate a valid activation link
      * @return void */
-    public function test_wrong_attempts_commit_and_limit_applies_to_code_and_link(): void
+    public function test_retired_codes_do_not_consume_activation_link(): void
     {
         [$id,$code,$token] = $this->pendingAccount();
         for ($i = 0; $i < 5; $i++) {
             $this->postJson('/api/auth/verify-email', ['code' => 'WRONGXX'])->assertStatus(400);
         }
-        $this->assertSame(5, EmailVerification::where('user_id', $id)->first()->attempts);
+        $this->assertSame(0, EmailVerification::where('user_id', $id)->first()->attempts);
         $this->postJson('/api/auth/verify-email', ['code' => $code])->assertStatus(400);
-        $this->postJson('/api/auth/verify-email', ['token' => $token])->assertStatus(400);
-        $this->assertNull(User::findOrFail($id)->email_verified_at);
+        $this->postJson('/api/auth/verify-email', ['token' => $token])->assertOk();
+        $this->assertNotNull(User::findOrFail($id)->email_verified_at);
     }
 
     /** test expiry rejects real code link and local shortcut

@@ -13,15 +13,35 @@ async function loadRegistrationPolicy() {
   } catch (failure) { if (failure.code !== 'ABORTED') { policyError.value = '無法讀取註冊設定, 請重試'; if (!inviteToken) mode.value = 'login'; } }
 }
 const props = defineProps({ pending: Object });
-const verification = ref(props.pending), code = ref(''), changingEmail = ref(false), newEmail = ref(''), now = ref(Date.now());
+const verification = ref(props.pending), changingEmail = ref(false), newEmail = ref(''), now = ref(Date.now());
 const activationToken = /^#\/activate\/([a-f0-9]{64})$/.exec(location.hash)?.[1] || '';
 const resendDeadline = ref(0);
 watch(verification, value => { resendDeadline.value = Date.now() + (value?.resendAfterSeconds || 0) * 1000; }, { immediate: true });
 const remaining = computed(() => Math.max(0, Math.ceil((resendDeadline.value - now.value) / 1000)));
 let clock;
 watch(() => props.pending, value => { verification.value = value; });
-onMounted(() => { clock = setInterval(() => { now.value = Date.now(); }, 1000); });
-onBeforeUnmount(() => { clearInterval(clock); policyRequest.abort(); });
+let checking = false;
+async function checkActivation() {
+  if (!verification.value || activationToken || busy.value || checking || document.hidden) return;
+  checking = true;
+  try {
+    const current = await api.current();
+    if (!current.verificationRequired && current.user) {
+      verification.value = null;
+      history.replaceState(null, '', `/app/${location.hash.startsWith('#/') ? location.hash : '#/'}`);
+      emit('authenticated');
+    }
+  } catch { /* A failed recheck never grants access; keep the pending screen and resend option. */ }
+  finally { checking = false; }
+}
+function activationSignal(event) { if (event.key === 'tasktracker:auth-updated') checkActivation(); }
+onMounted(() => {
+  clock = setInterval(() => { now.value = Date.now(); }, 1000);
+  window.addEventListener('focus', checkActivation);
+  window.addEventListener('storage', activationSignal);
+  document.addEventListener('visibilitychange', checkActivation);
+});
+onBeforeUnmount(() => { clearInterval(clock); policyRequest.abort(); window.removeEventListener('focus', checkActivation); window.removeEventListener('storage', activationSignal); document.removeEventListener('visibilitychange', checkActivation); });
 const emit = defineEmits(['authenticated']);
 const inviteToken = new URLSearchParams(location.hash.startsWith('#/invite?') ? location.hash.slice(9) : '').get('token') || '';
 // TT-298：首頁與TopBar的「建立工作空間」帶?mode=register, 直接打開建立表單
@@ -51,7 +71,9 @@ async function verify() {
   if (busy.value) return;
   busy.value = true; error.value = '';
   try {
-    await api.verifyEmail(activationToken ? { token: activationToken } : { code: code.value });
+    if (!activationToken) return;
+    await api.verifyEmail({ token: activationToken });
+    try { localStorage.setItem('tasktracker:auth-updated', String(Date.now())); } catch { /* Focus also rechecks when storage is unavailable. */ }
     verification.value = null;
     const destination = !inviteToken && !activationToken && location.hash.startsWith('#/') ? location.hash : '#/';
     history.replaceState(null, '', `/app/${destination}`); emit('authenticated');
@@ -61,7 +83,7 @@ async function verify() {
 async function resend() {
   if (busy.value || remaining.value) return;
   busy.value = true; error.value = '';
-  try { verification.value = await api.resendVerification(changingEmail.value ? { email: newEmail.value } : {}); code.value = ''; changingEmail.value = false; now.value = Date.now(); }
+  try { verification.value = await api.resendVerification(changingEmail.value ? { email: newEmail.value } : {}); changingEmail.value = false; now.value = Date.now(); }
   catch (failure) { error.value = failure.message; }
   finally { busy.value = false; }
 }
@@ -81,15 +103,15 @@ async function backToLogin() {
 
       <template v-if="verification || activationToken">
         <h2>驗證信箱</h2>
-        <p v-if="verification" class="verification-recipient">{{ verification.deliveryStatus === 'sent' ? '驗證碼已寄到' : '驗證信箱' }} {{ verification.email }}</p>
-        <v-alert v-if="verification && ['failed', 'uncertain', 'skipped'].includes(verification.deliveryStatus)" type="error" variant="tonal" role="alert">{{ verification.deliveryStatus === 'uncertain' ? '無法確認寄送結果, 請先查看信箱；未收到再重寄' : '驗證信未寄出, 請稍後按重寄驗證碼' }}</v-alert>
+        <p v-if="verification" class="verification-recipient">{{ verification.deliveryStatus === 'sent' ? '啟用連結已寄到' : '驗證信箱' }} {{ verification.email }}</p>
+        <v-alert v-if="verification && ['failed', 'uncertain', 'skipped'].includes(verification.deliveryStatus)" type="error" variant="tonal" role="alert">{{ verification.deliveryStatus === 'uncertain' ? '無法確認寄送結果, 請先查看信箱；未收到再重寄' : '驗證信未寄出, 請稍後按重寄啟用信' }}</v-alert>
         <v-alert v-if="error" type="error" variant="tonal" class="mb-5" role="alert">{{ error }}</v-alert>
-        <form @submit.prevent="verify">
-          <v-text-field v-if="!activationToken" v-model="code" label="驗證碼" autocomplete="one-time-code" autocapitalize="characters" :spellcheck="false" maxlength="8" required :disabled="busy" />
-          <v-btn type="submit" color="primary" block size="large" :loading="busy" :disabled="busy">{{ activationToken ? '啟用帳號' : '驗證並登入' }}</v-btn>
+        <form v-if="activationToken" @submit.prevent="verify">
+          <v-btn type="submit" color="primary" block size="large" :loading="busy" :disabled="busy">啟用帳號</v-btn>
         </form>
+        <p v-else class="verification-recipient">請點擊信件中的啟用連結</p>
         <template v-if="verification && !activationToken">
-          <div class="verification-actions"><button class="text-button" :disabled="busy || remaining > 0" @click="resend">{{ remaining ? `重寄驗證碼（${remaining}秒）` : '重寄驗證碼' }}</button><button class="text-button" :disabled="busy" @click="changingEmail = !changingEmail; newEmail = verification.email">修改Email</button></div>
+          <div class="verification-actions"><button class="text-button" :disabled="busy || remaining > 0" @click="resend">{{ remaining ? `重寄啟用信（${remaining}秒）` : '重寄啟用信' }}</button><button class="text-button" :disabled="busy" @click="changingEmail = !changingEmail; newEmail = verification.email">修改Email</button></div>
           <form v-if="changingEmail" @submit.prevent="resend"><v-text-field v-model="newEmail" label="新的Email" type="email" autocomplete="email" maxlength="254" required :disabled="busy" /><v-btn type="submit" variant="outlined" :disabled="busy || remaining > 0">修改並重寄</v-btn></form>
         </template>
         <button class="text-button auth-toggle" :disabled="busy" @click="backToLogin">返回登入</button>

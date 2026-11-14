@@ -121,7 +121,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   await shot(page, '23-verification-mail-failed');
   await page.unroute('**/api/auth/current');
   await page.reload();
-  await page.getByLabel('驗證碼', { exact: true }).waitFor();
+  await page.getByText('請點擊信件中的啟用連結', { exact: true }).waitFor();
 
   await call(page.request, 'logout', {}, 'auth');
   await page.goto('/login#/activate/' + 'a'.repeat(64));

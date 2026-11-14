@@ -18,24 +18,23 @@ export async function fixtureResponse(request, response) {
   return verified.json();
 }
 
-// Use the visible form so browser fixtures also cover the pending-account boundary.
+// Business fixtures use the isolated shortcut; email-verification-check covers real activation links.
 export async function verifyFixtureInBrowser(page) {
   assert.equal(process.env.E2E_ISOLATED, '1', 'Browser verification requires explicit isolated fixtures');
-  await page.getByLabel('驗證碼', { exact: true }).fill('local666');
-  const submit = async () => {
-    const [response] = await Promise.all([
-      page.waitForResponse(value => value.url().endsWith('/api/auth/verify-email') && value.request().method() === 'POST'),
-      page.getByRole('button', { name: '驗證並登入', exact: true }).click(),
-    ]);
-    return response;
-  };
-  let response = await submit();
-  if (response.status() === 429) {
-    const seconds = Number(response.headers()['retry-after']);
-    assert.ok(Number.isFinite(seconds) && seconds >= 0 && seconds <= 60, 'Bounded Retry-After required');
-    await page.waitForTimeout(seconds * 1000 + 250);
-    response = await submit();
+  await page.getByRole('heading', { name: '驗證信箱', exact: true }).waitFor();
+  const send = () => page.evaluate(async () => {
+    const csrf = await (await fetch('/api/csrf-cookie')).json();
+    const result = await fetch('/api/auth/verify-email', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.csrfToken }, body: JSON.stringify({ code: 'local666' }) });
+    return { status: result.status, retryAfter: result.headers.get('Retry-After') };
+  });
+  let response = await send();
+  if (response.status === 429) {
+    const seconds = Number(response.retryAfter);
+    assert.ok(response.retryAfter !== null && Number.isFinite(seconds) && seconds >= 0 && seconds <= 60, 'Bounded Retry-After required');
+    await new Promise(resolve => setTimeout(resolve, seconds * 1000 + 250));
+    response = await send();
   }
-  assert.equal(response.status(), 200, await response.text());
+  assert.equal(response.status, 200, 'Isolated fixture verification failed');
+  await page.reload();
   await page.locator('.app-shell').waitFor();
 }

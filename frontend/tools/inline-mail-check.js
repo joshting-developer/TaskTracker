@@ -1,3 +1,4 @@
+import { verifyFixtureInBrowser } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
@@ -21,17 +22,16 @@ try {
   assert.equal((await response.json()).data.deliveryStatus, 'failed', 'MAIL_MAILER=log must never be reported as actual SMTP sent');
   const failure = page.getByRole('alert').filter({ hasText: '驗證信未寄出' });
   await failure.waitFor();
-  assert.equal(await page.getByRole('button', { name: /^重寄驗證碼/ }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: /^重寄啟用信/ }).isDisabled(), true);
   await page.reload(); await failure.waitFor();
-  assert.equal(await page.getByLabel('驗證碼', { exact: true }).isVisible(), true, 'Committed account remains pending after reload');
+  assert.equal(await page.getByText('請點擊信件中的啟用連結', { exact: true }).isVisible(), true, 'Committed account remains pending after reload');
   mkdirSync('../artifacts/tt162', { recursive: true });
   for (const width of [1440, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await page.screenshot({ path: `../artifacts/tt162/inline-failed-${width}.png` });
   }
-  await page.getByLabel('驗證碼', { exact: true }).fill('local666');
-  await page.getByRole('button', { name: '驗證並登入', exact: true }).click();
+  await verifyFixtureInBrowser(page);
   await page.locator('.app-shell').waitFor();
   assert.deepEqual(errors, []);
   console.log('PASS: real inline HTTP failure preserves pending session, exposes safe status, allows local verification, cooldown and three widths; no SMTP sent');
