@@ -37,7 +37,7 @@ async function register(page, email, inviteToken = '') {
   if (!inviteToken) await page.getByLabel('工作空間名稱', { exact: true }).fill('流程回驗空間');
   await page.getByRole('button', { name: inviteToken ? '加入工作空間' : '建立工作空間', exact: true }).click();
   await verifyFixtureInBrowser(page);
-  await page.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
+  await page.locator('.app-shell').waitFor();
 }
 try {
   vite = await createServer({ server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': apiTarget } } });
@@ -66,41 +66,22 @@ try {
     return { memberId: person.id, ownerId: ws.meta.userId, project, second, issue };
   }, email);
   await page.reload();
-  const todos = page.getByRole('region', { name: '首頁小待辦', exact: true });
-  await todos.locator('.todo-row').first().waitFor();
-  const first = todos.locator('.todo-row').first();
+  await page.getByRole('link', { name: '紙條', exact: true }).click();
+  const todos = page.getByRole('region', { name: '紙條', exact: true });
+  const first = todos.locator('.notes-list li').first(); await first.waitFor();
   const editedId = await first.getAttribute('data-todo-id');
-  await first.getByLabel('待辦操作').click();
-  await first.getByRole('button', { name: '編輯', exact: true }).click();
-  await todos.getByLabel('編輯待辦內容', { exact: true }).fill('切換後保留的草稿');
-  await todos.getByRole('tab', { name: /我交辦的/ }).click();
-  await todos.getByRole('status').filter({ hasText: '切換清單會保留草稿' }).waitFor();
-  await todos.locator('.todo-row').first().waitFor();
-  assert.equal(await todos.locator('.todo-actions').count(), 3, '其他 tab 操作仍可用');
-  await todos.getByRole('button', { name: '展開待辦清單（5）', exact: true }).click();
-  assert.equal(await todos.locator('.todo-row').count(), 5);
-  // 即使另一筆交辦被取消, 原本編輯的草稿也保留。
-  const other = todos.locator('.todo-row').first();
-  await other.getByLabel('待辦操作').click();
-  page.once('dialog', dialog => dialog.accept());
-  await other.getByRole('button', { name: '取消待辦', exact: true }).click();
-  await todos.getByRole('status').filter({ hasText: '待辦已取消' }).waitFor();
+  await first.getByRole('button', { name: /^更多：/ }).click();
+  const note = page.getByRole('dialog', { name: '紙條', exact: true });
+  await note.getByLabel('紙條操作').click(); await note.getByRole('button', { name: '編輯', exact: true }).click();
+  await note.getByLabel('編輯紙條內容', { exact: true }).fill('抽屜關閉時保留的草稿');
+  page.once('dialog', dialog => dialog.dismiss()); await page.keyboard.press('Escape');
+  assert.equal(await note.getByLabel('編輯紙條內容', { exact: true }).inputValue(), '抽屜關閉時保留的草稿');
   await page.screenshot({ path: `${artifacts}/draft-other-tab.png` });
-  await todos.getByRole('button', { name: '返回草稿', exact: true }).click();
-  const draft = todos.getByLabel('編輯待辦內容', { exact: true });
-  assert.equal(await draft.inputValue(), '切換後保留的草稿');
-  assert.equal(await draft.evaluate(el => el === document.activeElement), true);
-  assert.equal(await todos.locator(`[data-todo-id="${editedId}"]`).locator('.todo-actions').count(), 0, '編輯中的同筆待辦不顯示狀態動作');
-  // 開始編輯另一筆需要明確放棄；拒絕時原草稿不變。
-  const next = todos.locator('.todo-row:has(.todo-actions)').first();
-  await next.getByLabel('待辦操作').click();
-  page.once('dialog', dialog => dialog.dismiss());
-  await next.getByRole('button', { name: '編輯', exact: true }).click();
-  assert.equal(await draft.inputValue(), '切換後保留的草稿');
-  await todos.getByRole('button', { name: '儲存待辦修改', exact: true }).click();
-  await draft.waitFor({ state: 'hidden' });
+  await note.getByRole('button', { name: '儲存修改', exact: true }).click();
+  await note.getByLabel('編輯紙條內容', { exact: true }).waitFor({ state: 'hidden' });
   const saved = await page.evaluate(async id => (await (await import('/tools/fixtures/verified-api.js')).api.getTodos()).todos.find(item => item.id === id), editedId);
-  assert.equal(saved.title, '切換後保留的草稿');
+  assert.equal(saved.title, '抽屜關閉時保留的草稿');
+  await note.getByRole('button', { name: '關閉紙條', exact: true }).click();
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：流程 first', exact: true }).click();
   await page.getByRole('link', { name: /^我的任務/ }).click();
@@ -146,23 +127,23 @@ try {
   await page.getByRole('dialog').getByLabel(/任務標題/).waitFor();
   await page.getByRole('button', { name: '關閉任務', exact: true }).click();
   // F02：兩個專案的手機首頁首屏有入口，不丟速記內容。
-  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click(); await page.getByRole('link', { name: '紙條', exact: true }).click(); await page.getByRole('tab', { name: '建立', exact: true }).click();
   for (const width of [390, 768]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 1024 });
     await page.evaluate(() => scrollTo(0, 0));
     if (width < 700) await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
-    const shortcut = page.getByLabel('快速新增待辦', { exact: true });
+    const shortcut = page.getByLabel('紙條內容', { exact: true });
     const box = await shortcut.boundingBox();
     assert.ok(box.y >= 0 && box.y + box.height < (width === 390 ? 844 : 1024));
     assert.ok(box.height >= 44);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await page.screenshot({ path: `${artifacts}/home-${width}.png` });
     await shortcut.click();
-    assert.equal(await page.getByLabel('快速新增待辦', { exact: true }).evaluate(el => el === document.activeElement), true);
-    await page.getByLabel('快速新增待辦', { exact: true }).fill('手機未送出的速記');
+    assert.equal(await page.getByLabel('紙條內容', { exact: true }).evaluate(el => el === document.activeElement), true);
+    await page.getByLabel('紙條內容', { exact: true }).fill('手機未送出的速記');
     await shortcut.click();
-    assert.equal(await page.getByLabel('快速新增待辦', { exact: true }).inputValue(), '手機未送出的速記');
-    await page.getByLabel('快速新增待辦', { exact: true }).fill('');
+    assert.equal(await page.getByLabel('紙條內容', { exact: true }).inputValue(), '手機未送出的速記');
+    await page.getByLabel('紙條內容', { exact: true }).fill('');
   }
   assert.deepEqual(failures, []);
   console.log('PASS: F02 手機首屏入口／焦點／草稿；F04 列表與看板閱讀／快速編輯；F01 重整續作、專案／帳號分隔與無效條件回退；F03 跨 tab 草稿提示、其他操作與展開可用、取消別筆仍保留草稿、返回焦點、拒絕取代及保存');

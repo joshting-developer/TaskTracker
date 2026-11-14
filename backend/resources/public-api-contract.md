@@ -30,7 +30,7 @@ Base URL是你實際部署TaskTracker的origin。公開Bearer前綴為`/api/publ
 
 匿名發現入口`GET /api/public/openapi.json`回傳OpenAPI物件，`GET /api/public/contract.md`回傳本文Markdown；它們沒有業務envelope、不建立Session、不讀業務資料。其他操作預設回JSON。
 
-## 小待辦（TT-311）
+## 紙條（TT-311）
 
 工作空間層級, 不在Project底下：
 
@@ -39,7 +39,7 @@ Base URL是你實際部署TaskTracker的origin。公開Bearer前綴為`/api/publ
 | `GET /api/public/v1/todos` | read | `scope=mine`（交辦給我, 預設）、`sent`（我交辦出去）或 `involved`（我經手的）, `state=open／closed`, 分頁最多100 |
 | `GET /api/public/v1/todos/{todo}` | read | 單筆含完整內容；建立人、目前承辦人與曾經手者可讀；非經手者回404 |
 | `GET /api/public/v1/todo-assignees` | read | 可交辦對象, 只回 `id`、`name` |
-| `POST /api/public/v1/todos` | write | 建立；`title` 或 `content` 擇一, `assigneeId` 省略時是自己的待辦 |
+| `POST /api/public/v1/todos` | write | 建立；`title` 或 `content` 擇一, `assigneeId` 省略時是自己的紙條 |
 | `PATCH /api/public/v1/todos/{todo}` | write | 交辦人修改內容 |
 | `POST /api/public/v1/todos/{todo}/complete`、`/reopen`、`/return` | write | 承辦人完成、重開已完成的、退回上一手（可附 `reply`, 舊 `note` 仍可用） |
 
@@ -53,7 +53,7 @@ Base URL是你實際部署TaskTracker的origin。公開Bearer前綴為`/api/publ
 | --- | --- | --- |
 | `GET /api/public/v1/notifications` | read | 依產生順序遞增；`limit` 1–100（預設50）, `after` 帶上次的 `nextAfter`；回 `{items, nextAfter, hasMore}` |
 
-每筆是 `id`、`kind`、`subject`、`projectId`、`issueId`、`identifier`、`createdAt`, 不帶正文和收件Email。`kind` 有 general、assigned、epic、comment、status、status_important（改成已關閉或待驗收）。本人現在不能讀該專案（issue.read）的通知會跳過, 所以一次可能少於 `limit` 筆, 但 `nextAfter` 照樣往前。網頁目前沒有任務通知的已讀狀態, 所以這裡沒有未讀篩選或標記已讀；交辦給自己的小待辦請讀 `/todos?scope=mine`。錯誤代碼：400 INVALID_INPUT、401 UNAUTHENTICATED、403 FORBIDDEN、429 RATE_LIMIT
+每筆是 `id`、`kind`、`subject`、`projectId`、`issueId`、`identifier`、`createdAt`, 不帶正文和收件Email。`kind` 有 general、assigned、epic、comment、status、status_important（改成已關閉或待驗收）。本人現在不能讀該專案（issue.read）的通知會跳過, 所以一次可能少於 `limit` 筆, 但 `nextAfter` 照樣往前。網頁目前沒有任務通知的已讀狀態, 所以這裡沒有未讀篩選或標記已讀；交辦給自己的紙條請讀 `/todos?scope=mine`。錯誤代碼：400 INVALID_INPUT、401 UNAUTHENTICATED、403 FORBIDDEN、429 RATE_LIMIT
 
 ## 認證、Scope與工作區
 
@@ -243,7 +243,7 @@ Issue詳細多了 `createdBy`（建卡者的使用者ID）、`createdByName` 和
 PDF／ZIP與圖片共用既有附件路由及授權, 但一般附件只能下載, 不接受Markdown圖片引用；下載一律attachment、nosniff與no-store。limits.general提供獨立大小／配額與download-only-structural政策, 原mimeTypes仍只列圖片。格式／ZIP目錄檢查不代表防毒掃描, 詳見consumer的docs/general-attachments.md
 
 
-## 小待辦留言與轉發（OpenAPI 0.19.0）
+## 紙條留言與轉發（OpenAPI 0.19.0）
 
 - `GET /api/public/v1/todos/{todo}/comments`、`/handoffs` 按需讀留言及完整交接紀錄, 使用page／perPage, 上限100, 依createdAt與內部ID穩定正序
 - `POST /api/public/v1/todos/{todo}/comments` 帶content（1～2000字）、expectedRevision、requestId新增留言

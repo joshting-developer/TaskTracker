@@ -4,7 +4,7 @@
  * 解析 `location.hash`。
  *
  * @param {string} hash 例如 `#/projects/<id>/board/<boardId>/issues/<issueId>?detail=1`
- * @returns {{ project: string, issue: string, board: string, mode: 'list'|'board'|'boards', section: string, detail: boolean, landing: 'home'|'projects'|'settings'|'analysis', teamTab: 'general'|'members', analysis: 'index'|'members'|'projects'|'trend', invite: string, scope: ''|'mine', retiredEpics: boolean, retiredView: boolean, malformed: boolean }}
+ * @returns {{ project: string, issue: string, board: string, mode: 'list'|'board'|'boards', section: string, detail: boolean, landing: 'home'|'projects'|'notes'|'settings'|'analysis', teamTab: 'general'|'members', analysis: 'index'|'members'|'projects'|'trend', invite: string, scope: ''|'mine', retiredEpics: boolean, retiredView: boolean, malformed: boolean }}
  */
 export function parseHash(hash) {
   const [path, query = ''] = hash.split('?');
@@ -29,7 +29,7 @@ export function parseHash(hash) {
     mode: route?.[2] || 'list',
     section: retiredEpics ? 'tasks' : featureRoute?.[2] || 'tasks',
     detail: Boolean(issue && params.get('detail') === '1'),
-    landing: settingsRoute ? 'settings' : analysisRoute ? 'analysis' : path === '#/projects' || path === '#/projects/' ? 'projects' : 'home',
+    landing: path === '#/notes' || path === '#/notes/' ? 'notes' : settingsRoute ? 'settings' : analysisRoute ? 'analysis' : path === '#/projects' || path === '#/projects/' ? 'projects' : 'home',
     teamTab: settingsRoute?.[1] || 'general',
     analysis: analysisRoute?.[1] || 'index',
     invite: path === '#/invite' ? params.get('token') || '' : '',
@@ -52,6 +52,7 @@ export function buildHash({ project = '', issue = '', mode = 'list', board = 'de
     const feature = target !== 'tasks' ? `/${target}` : mode === 'boards' ? '/boards' : mode === 'board' ? `/board${board === 'default' ? '' : `/${encodeURIComponent(board)}`}` : '';
     return `#/projects/${encodeURIComponent(project)}${feature}${issue ? `/issues/${encodeURIComponent(issue)}${detail ? '?detail=1' : ''}` : ''}`;
   }
+  if (landing === 'notes') return '#/notes';
   if (landing === 'analysis') return `#/time-analysis${analysis === 'index' ? '' : `/${analysis}`}`;
   if (landing === 'settings') return settingsHash(teamTab);
   return landing === 'projects' ? '#/projects' : '#/';

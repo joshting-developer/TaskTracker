@@ -127,7 +127,7 @@ def claim_issue(client, issue):
     if issue['state'] == 'inprogress' and issue.get('assignee') == actor:
         return issue
     if issue['state'] != 'open':
-        raise RuntimeError('只能領取open待辦；其他狀態請先確認實際進度')
+        raise RuntimeError('只能領取open卡片；其他狀態請先確認實際進度')
     if issue.get('assignee') != actor:
         issue = client.rpc('updateIssue', id=issue['id'], assignee=actor,
                            expectedRevision=issue['revision'], requestId=str(uuid.uuid4()))
@@ -150,7 +150,7 @@ def import_cards(client, manifest):
 
 
 def handle_todo(client, args):
-    """TT-312：小待辦；接任務前先 `todos` 看有沒有被交代事情, 用 `todo-create` 交辦給別人。"""
+    """TT-312：紙條；接任務前先 `todos` 看有沒有被交代事情, 用 `todo-create` 交辦給別人。"""
     todo_path = '/api/v1/todos/'
     if args.command == 'todos':
         query = urllib.parse.urlencode({'scope': args.scope, 'perPage': 100, **({'state': args.state} if args.state else {'state': 'open'})})
@@ -171,7 +171,7 @@ def handle_todo(client, args):
         print('created', result['id'])
         return
     if not args.identifier:
-        raise RuntimeError('需要待辦ID')
+        raise RuntimeError('需要紙條ID')
     todo = client.call(todo_path + urllib.parse.quote(args.identifier, safe=''))
     if args.command == 'todo-get':
         print(json.dumps(todo, ensure_ascii=False, indent=2))
@@ -182,7 +182,7 @@ def handle_todo(client, args):
         return
     operation, capability = {'todo-complete': ('completeTodo', 'complete'), 'todo-return': ('returnTodo', 'return'), 'todo-comment': ('commentTodo', 'comment'), 'todo-forward': ('forwardTodo', 'forward')}[args.command]
     if not todo['capabilities'].get(capability):
-        raise RuntimeError('目前不能對這筆待辦做這個動作')
+        raise RuntimeError('目前不能對這筆紙條做這個動作')
     if args.command in ('todo-comment', 'todo-forward') and args.expected_revision is None:
         raise RuntimeError('留言／轉發需--expected-revision, 先讀最新內容與留言')
     extra = {'reply': args.body_file.read_text()} if args.body_file else {}

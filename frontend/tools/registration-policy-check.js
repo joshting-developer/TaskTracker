@@ -22,12 +22,12 @@ try {
   const blocked=await page.evaluate(async()=>{const csrf=await(await fetch('/api/csrf-cookie')).json();const result=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':csrf.csrfToken},body:JSON.stringify({name:'Denied',email:`denied-${crypto.randomUUID()}@example.test`,password:'isolated-policy-password',workspaceName:'Denied'})});return result.status;});assert.equal(blocked,403);
   const folder=new URL('../../artifacts/tt185/',import.meta.url).pathname;mkdirSync(folder,{recursive:true});
   for(const width of [1440,768,390]){await page.setViewportSize({width,height:1000});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:`${folder}/invitation-only-${width}.png`});}
-  await page.getByLabel('Email',{exact:true}).fill(email);await page.getByLabel('密碼',{exact:true}).fill(password);await page.getByRole('button',{name:'登入',exact:true}).click();await page.getByRole('heading',{name:'小待辦',exact:true}).waitFor();
+  await page.getByLabel('Email',{exact:true}).fill(email);await page.getByLabel('密碼',{exact:true}).fill(password);await page.getByRole('button',{name:'登入',exact:true}).click();await page.locator('.app-shell').waitFor();
   await page.evaluate(async()=>{await(await import('/src/api/index.js')).api.logout();});
   await page.goto(`http://127.0.0.1:5292/login#/invite?token=${invite.token}`);
   await page.getByLabel('Email',{exact:true}).fill(invite.email);await page.getByLabel('你的名字',{exact:true}).fill('Invited Person');await page.getByLabel('密碼',{exact:true}).fill(password);await page.getByRole('button',{name:'加入工作空間',exact:true}).click();
   await page.getByRole('heading',{name:'驗證信箱',exact:true}).waitFor();
-  await page.getByLabel('驗證碼',{exact:true}).fill('local666');await page.getByRole('button',{name:'驗證並登入',exact:true}).click();await page.getByRole('heading',{name:'小待辦',exact:true}).waitFor();
+  await page.getByLabel('驗證碼',{exact:true}).fill('local666');await page.getByRole('button',{name:'驗證並登入',exact:true}).click();await page.locator('.app-shell').waitFor();
   // Policy failure cannot enable registration or prevent an existing account from seeing login.
   await page.evaluate(async()=>{await(await import('/src/api/index.js')).api.logout();});
   await page.route('**/api/auth/registration-policy',r=>r.abort());await page.goto('http://127.0.0.1:5292/login?mode=register');await page.getByRole('alert').filter({hasText:'無法讀取註冊設定'}).waitFor();

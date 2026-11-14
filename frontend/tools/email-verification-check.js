@@ -32,7 +32,7 @@ try {
   const other = await browser.newContext(), activation = await other.newPage();
   await activation.goto(`${base}/app/#/activate/${token}`); await activation.getByRole('button', { name: '啟用帳號', exact: true }).waitFor();
   assert.equal(authRequests.filter(r => r.path.endsWith('/verify-email')).length, 1, 'Link GET sends no activation POST');
-  await activation.getByRole('button', { name: '啟用帳號', exact: true }).click(); await activation.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
+  await activation.getByRole('button', { name: '啟用帳號', exact: true }).click(); await activation.locator('.app-shell').waitFor();
   // Original code and local shortcut cannot reuse a consumed challenge.
   const csrf = await (await context.request.get(`${base}/api/csrf-cookie`)).json();
   assert.equal((await context.request.post(`${base}/api/auth/verify-email`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, data: { code: 'local666' } })).status(), 400);

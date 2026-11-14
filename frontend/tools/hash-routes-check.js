@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { buildHash, parseHash, settingsHash } from '../src/ui/hashRoutes.js';
 
 const roundTrips = [
-  '#/', '#/projects', '#/time-analysis', '#/time-analysis/members', '#/workspace/settings', '#/workspace/settings/members',
+  '#/', '#/notes', '#/projects', '#/time-analysis', '#/time-analysis/members', '#/workspace/settings', '#/workspace/settings/members',
   '#/projects/p1', '#/projects/p1/boards', '#/projects/p1/board', '#/projects/p1/board/b%2F1',
   '#/projects/p1/issues/i1', '#/projects/p1/issues/i1?detail=1', '#/projects/p1/board/b1/issues/i1?detail=1',
   '#/projects/p1/time', '#/projects/p1/settings', '#/projects/p1/members', '#/projects/p1/notifications',

@@ -129,22 +129,24 @@ test('representative workspace flows', async ({ page, browser }) => {
   await page.goto('/login');
   const data = await fixture(page, browser);
   await page.reload();
-  await page.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
+  await page.locator('.app-shell').waitFor();
+  await shot(page, '24-home-empty');
+  await navigation(page); await page.getByRole('link', { name: '紙條', exact: true }).click();
   await page.getByText('確認下一次測試範圍', { exact: true }).first().waitFor();
-  await shot(page, '03-home-todos');
+  await shot(page, '03-notes-list');
   const todo = (await (await page.request.get('/api/v1/todos?scope=mine&state=open')).json()).data.items[0];
   await call(page.request, 'commentTodo', { id: todo.id, expectedRevision: todo.revision, content: '已確認測試資料, 接著補上手機版驗證' });
   execFileSync('docker', ['compose', '-p', 'tasktracker-codex-visual', '-f', resolve(import.meta.dirname, '../../../docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', 'tools/visual-fixture-clock.php'], { cwd: resolve(import.meta.dirname, '../../..'), input: JSON.stringify({ userId: data.identity.user.id, workspaceId: data.identity.workspace.id, projectId: data.project.id, emptyId: data.empty.id }), stdio: ['pipe', 'pipe', 'pipe'] });
   await page.reload();
-  const conversation = page.locator(`[data-todo-id="${todo.id}"]`);
-  await conversation.locator('.conversation-history > summary').click();
+  await page.locator(`[data-todo-id="${todo.id}"]`).getByRole('button', { name: /^更多：/ }).click();
+  const conversation = page.getByRole('dialog', { name: '紙條', exact: true });
   await conversation.getByText('已確認測試資料, 接著補上手機版驗證', { exact: true }).waitFor();
-  await conversation.scrollIntoViewIfNeeded();
   await shot(page, '19-todo-conversation');
-  await conversation.getByRole('button', { name: '轉發', exact: true }).click();
-  await conversation.getByLabel('轉發給誰', { exact: true }).waitFor();
-  await conversation.locator('.todo-forward').scrollIntoViewIfNeeded();
+  await conversation.getByLabel('回覆內容', { exact: true }).fill('確認後交給下一位處理');
+  await conversation.getByLabel('要傳給誰', { exact: true }).waitFor();
   await shot(page, '20-todo-forward');
+  await conversation.getByLabel('回覆內容', { exact: true }).fill('');
+  await conversation.getByRole('button', { name: '關閉紙條', exact: true }).click();
 
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：產品開發', exact: true }).waitFor();
@@ -208,7 +210,8 @@ test('representative workspace flows', async ({ page, browser }) => {
   await shot(page, '14-workspace-picker');
   await picker.getByRole('button', { name: '選擇工作空間 受邀工作區', exact: true }).click();
   await expect(picker).not.toBeVisible();
-  await page.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
+  await page.locator('.app-shell').waitFor();
+
   await expect(page.getByRole('link', { name: '工作空間設定', exact: true })).toHaveCount(0);
   await openProjectList(page);
   await page.getByRole('heading', { name: '尚未加入任何專案', exact: true }).waitFor();

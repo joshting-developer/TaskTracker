@@ -10,7 +10,7 @@ readonly class TodoQueryData
      *
      * @param  PageQueryData  $pagination  有界分頁與搜尋
      * @param  string  $scope  mine／sent／involved
-     * @param  string  $state  open／closed
+     * @param  string  $state  open／closed／all
      */
     public function __construct(public PageQueryData $pagination, public string $scope = 'mine', public string $state = 'open') {}
 }

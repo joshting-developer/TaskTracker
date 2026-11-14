@@ -27,6 +27,7 @@ WorkspaceMember::where('workspace_id', $workspace->id)->where('user_id', $user->
 $project = Project::where('workspace_id', $workspace->id)->where('public_id', $input['projectId'])->where('code', 'VRT')->sole();
 $empty = Project::where('workspace_id', $workspace->id)->where('public_id', $input['emptyId'])->where('code', 'EMPTY')->sole();
 DB::transaction(function () use ($project, $empty) {
+    DB::table('todos')->where('workspace_id', $project->workspace_id)->update(['created_at' => '2026-11-13 03:00:00', 'updated_at' => '2026-11-13 03:00:00']);
     DB::table('todo_comments')->where('workspace_id', $project->workspace_id)->update(['created_at' => '2026-11-13 04:00:00']);
     $project->update(['created_at' => '2026-11-13 03:00:00', 'updated_at' => '2026-11-13 04:00:00']);
     $empty->update(['created_at' => '2026-11-13 02:00:00', 'updated_at' => '2026-11-13 03:00:00']);

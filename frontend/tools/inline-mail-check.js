@@ -32,7 +32,7 @@ try {
   }
   await page.getByLabel('驗證碼', { exact: true }).fill('local666');
   await page.getByRole('button', { name: '驗證並登入', exact: true }).click();
-  await page.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
+  await page.locator('.app-shell').waitFor();
   assert.deepEqual(errors, []);
   console.log('PASS: real inline HTTP failure preserves pending session, exposes safe status, allows local verification, cooldown and three widths; no SMTP sent');
 } finally {

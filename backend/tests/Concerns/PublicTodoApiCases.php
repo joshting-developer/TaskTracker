@@ -68,6 +68,8 @@ trait PublicTodoApiCases
         $this->json('POST', '/api/public/v1/todos/'.$created['id'].'/complete', ['expectedRevision' => 9, 'requestId' => (string) Str::uuid()], $as($agentToken))->assertStatus(409);
         $done = $this->json('POST', '/api/public/v1/todos/'.$created['id'].'/complete', ['expectedRevision' => 1, 'requestId' => (string) Str::uuid()], $as($agentToken))->assertOk()->json('data');
         $this->assertSame(2, $done['revision']);
+        $this->getJson('/api/public/v1/todos?scope=sent&state=all&perPage=1', $as($ownerRead))->assertOk()->assertJsonPath('data.total', 1)->assertJsonPath('data.items.0.state', 'done')->assertJsonMissingPath('data.items.0.content');
+        $this->getJson('/api/public/v1/todos?scope=mine&state=all', $as($agentToken))->assertOk()->assertJsonPath('data.items.0.id', $created['id']);
         $this->assertSame('done', $this->getJson('/api/public/v1/todos/'.$created['id'], $as($agentToken))->json('data.state'));
         $this->json('POST', '/api/public/v1/todos/'.$created['id'].'/reopen', ['expectedRevision' => 2, 'requestId' => (string) Str::uuid()], $as($agentToken))->assertOk()->assertJsonPath('data.revision', 3);
     }

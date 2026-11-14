@@ -20,19 +20,19 @@
 7. `POST .../{issue}/comments` 用最新 expectedRevision、新 requestId 及 content 留言；作者由 PAT 決定，不自稱其他人。
 8. GET 詳細／留言確認實際結果；依授權改 closed／其他狀態。永久刪除用 OpenAPI 的 deletePublicIssue（需本人有 issue.delete，通常是專案管理者），不可恢復也沒有封存；一般結案請改 closed，不要用刪除代替。
 
-## 小待辦：接任務前先看、用它交辦
+## 紙條：接任務前先看、用它交辦
 
-小待辦適合「一句話講得完的交代」, 例如請另一個Agent跑某個檢查、請人複查或做決定。
+紙條適合「一句話講得完的交代」, 例如請另一個Agent跑某個檢查、請人複查或做決定。
 
 1. 開始任何工作前先 `GET /todos?scope=mine&state=open`, 看有沒有人交代事情；有的話先處理, 先讀單筆留言與交接, 做不到就退回並在reply寫原因。
 2. 要請別人做事時, 用 `GET /todo-assignees` 找對象, `POST /todos` 帶 `assigneeId` 交辦。內容寫清楚要做什麼、怎樣算完成、相關卡號。
-3. 一個待辦不要太大, 一件事拆成多個小待辦比較好追；需要規劃、驗收和工時的工作開卡片, 待辦裡附卡號就好。
+3. 一個紙條不要太大, 一件事拆成多個紙條比較好追；需要規劃、驗收和工時的工作開卡片, 紙條裡附卡號就好。
 4. 做完用 `POST /todos/{todo}/complete` 完成；不要放著不處理。完成、重開、退回都要帶最新revision和新的requestId, 重送規則跟卡片一樣。
 5. 自己交辦出去的用 `GET /todos?scope=sent` 追蹤, 曾經手的用 `scope=involved`；退回上一手, 完整交接歷史保留。
 
 ## 我的通知：開工前也看一下
 
-1. 開工前除了小待辦, 也用 `GET /notifications` 看寄給自己的任務通知, 例如被指派、自己負責的卡有新留言、卡的狀態被改。第一次不帶 `after` 會從最早的讀起
+1. 開工前除了紙條, 也用 `GET /notifications` 看寄給自己的任務通知, 例如被指派、自己負責的卡有新留言、卡的狀態被改。第一次不帶 `after` 會從最早的讀起
 2. 把回傳的 `nextAfter` 存起來, 下次帶 `after=<nextAfter>` 接著讀；`hasMore` 是true就馬上再讀一次, 不要每次從頭讀
 3. 通知只有摘要, 要看內容用 `issueId` 讀那張卡或它的留言；`kind` 是 `status_important` 代表狀態改成已關閉或待驗收, 通常要回頭確認
 4. 沒有未讀篩選和標記已讀, 自己存的 `nextAfter` 就是讀到哪裡；已經不能讀那個專案時, 那個專案的通知會跳過
@@ -103,7 +103,7 @@ Issue詳細新增activityCounts.comments／history／time, 為SQL總數, 不附�
 
 ### 留言、轉發與完成回覆
 
-接手待辦先GET `/todos/{todo}`、`/comments?page=1&perPage=20`及`/handoffs?page=1&perPage=20`, 回應lastPage大於目前頁時再往後讀。列表不含這些正文
+接手紙條先GET `/todos/{todo}`、`/comments?page=1&perPage=20`及`/handoffs?page=1&perPage=20`, 回應lastPage大於目前頁時再往後讀。列表不含這些正文
 
 新增留言POST `/todos/{todo}/comments`, 帶content、expectedRevision、requestId。轉交POST `/todos/{todo}/forward`, 帶有效同空間assigneeId及可選reply。完成POST `/todos/{todo}/complete`也可帶reply, 留下已做、實測與限制；回覆和完成同交易, 失敗不會只留下一半
 

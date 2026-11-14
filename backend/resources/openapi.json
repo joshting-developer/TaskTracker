@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker API",
-    "version": "0.19.0",
-    "description": "公開Bearer v1讀取及Issue建立／PATCH／留言及外部識別查詢／upsert／批次；小待辦讀取、交辦、完成與退回；讀取寄給自己的任務通知；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。 支援受PAT與即時專案權限限制的私有附件上傳／metadata／內容／綁定。"
+    "version": "0.20.0",
+    "description": "公開Bearer v1讀取及Issue建立／PATCH／留言及外部識別查詢／upsert／批次；紙條讀取、交辦、完成與退回；讀取寄給自己的任務通知；Session個人憑證管理仍獨立。無刪除／封存。[HTTP契約](/api/public/contract.md)。 支援受PAT與即時專案權限限制的私有附件上傳／metadata／內容／綁定。"
   },
   "servers": [
     {
@@ -4257,7 +4257,7 @@
             }
           }
         },
-        "description": "純Bearer write與本人在該Project的issue.delete交集（預設僅專案管理者／負責人；開發者不可刪）；User→Workspace鎖後重驗。刪除是永久的、不能還原，沒有封存。有任何工時（含作廢）、仍有Epic所屬卡或子任務時409 CONFLICT且不改資料；成功時留言、歷史、外部識別一併刪除，雙向關聯另一端與收錄看板revision+1，轉換來源待辦保留但解除連結，Project留下刪除墓碑（識別碼／標題／操作者／時間）。expectedRevision必填，衝突409後重讀；requestId同內容回原有界結果（卡片已刪除後重播亦同），異內容409。回應revision為刪除前版本＋1。",
+        "description": "純Bearer write與本人在該Project的issue.delete交集（預設僅專案管理者／負責人；開發者不可刪）；User→Workspace鎖後重驗。刪除是永久的、不能還原，沒有封存。有任何工時（含作廢）、仍有Epic所屬卡或子任務時409 CONFLICT且不改資料；成功時留言、歷史、外部識別一併刪除，雙向關聯另一端與收錄看板revision+1，轉換來源紙條保留但解除連結，Project留下刪除墓碑（識別碼／標題／操作者／時間）。expectedRevision必填，衝突409後重讀；requestId同內容回原有界結果（卡片已刪除後重播亦同），異內容409。回應revision為刪除前版本＋1。",
         "deprecated": false,
         "x-tasktracker-context": "token-workspace",
         "x-rate-limit": {
@@ -6688,8 +6688,8 @@
           "sharedWithOtherOperations": true
         },
         "operationId": "listPublicTodos",
-        "summary": "列出交辦給我或我交辦出去的待辦",
-        "description": "scope=mine（交辦給我, 預設）或sent（我交辦出去）；state=open（未完成）或closed。SQL分頁, 最多100筆, 穩定排序。只看得到自己是交辦人或承辦人的待辦。",
+        "summary": "列出交辦給我或我交辦出去的紙條",
+        "description": "scope=mine（交辦給我, 預設）、sent（我建立的, 包含交給自己）或involved（我經手的）；state=open（待處理, 預設）、closed或all。SQL分頁, 最多100筆, 穩定排序；只讀本人參與的紙條摘要, 原稿與歷程按需讀取",
         "parameters": [
           {
             "in": "query",
@@ -6729,7 +6729,8 @@
             "schema": {
               "enum": [
                 "open",
-                "closed"
+                "closed",
+                "all"
               ]
             }
           },
@@ -7002,8 +7003,8 @@
           "sharedWithOtherOperations": true
         },
         "operationId": "createPublicTodo",
-        "summary": "建立待辦或交辦給同工作空間的人",
-        "description": "title或content擇一；assigneeId省略時是自己的待辦。同requestId重送回原結果, 不會建第二筆。",
+        "summary": "建立紙條或交辦給同工作空間的人",
+        "description": "title或content擇一；assigneeId省略時是自己的紙條。同requestId重送回原結果, 不會建第二筆。",
         "parameters": [],
         "x-required-permission": "todo.writeOwn",
         "x-required-token-ability": "write",
@@ -7284,7 +7285,7 @@
           "sharedWithOtherOperations": true
         },
         "operationId": "getPublicTodo",
-        "summary": "讀單筆待辦（含完整內容）",
+        "summary": "讀單筆紙條（含完整內容）",
         "description": "只有交辦人或承辦人讀得到, 其他人回404。",
         "parameters": [
           {
@@ -7294,7 +7295,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "待辦公開ID"
+            "description": "紙條公開ID"
           }
         ],
         "x-required-permission": "todo.read",
@@ -7551,8 +7552,8 @@
           "sharedWithOtherOperations": true
         },
         "operationId": "patchPublicTodo",
-        "summary": "修改待辦內容（只有交辦人）",
-        "description": "未完成的待辦才能改；需要最新revision。",
+        "summary": "修改紙條內容（只有交辦人）",
+        "description": "未完成的紙條才能改；需要最新revision。",
         "parameters": [
           {
             "in": "path",
@@ -7561,7 +7562,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "待辦公開ID"
+            "description": "紙條公開ID"
           }
         ],
         "x-required-permission": "todo.writeOwn",
@@ -7843,8 +7844,8 @@
           "sharedWithOtherOperations": true
         },
         "operationId": "completePublicTodo",
-        "summary": "完成待辦（只有承辦人）",
-        "description": "未完成的待辦才能完成。",
+        "summary": "完成紙條（只有承辦人）",
+        "description": "未完成的紙條才能完成。",
         "parameters": [
           {
             "in": "path",
@@ -7853,7 +7854,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "待辦公開ID"
+            "description": "紙條公開ID"
           }
         ],
         "x-required-permission": "todo.writeOwn",
@@ -8134,8 +8135,8 @@
           "sharedWithOtherOperations": true
         },
         "operationId": "reopenPublicTodo",
-        "summary": "重開已完成的待辦（只有承辦人）",
-        "description": "只能重開已完成的待辦。",
+        "summary": "重開已完成的紙條（只有承辦人）",
+        "description": "只能重開已完成的紙條。",
         "parameters": [
           {
             "in": "path",
@@ -8144,7 +8145,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "待辦公開ID"
+            "description": "紙條公開ID"
           }
         ],
         "x-required-permission": "todo.writeOwn",
@@ -8435,7 +8436,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "待辦公開ID"
+            "description": "紙條公開ID"
           }
         ],
         "x-required-permission": "todo.writeOwn",
@@ -11011,7 +11012,7 @@
             }
           }
         },
-        "description": "需read。只回寄給Token本人的任務通知（被指派、自己負責的卡有新留言、狀態調整、Epic需要重新確認）, 不含其他人的通知。依產生順序遞增, limit 1–100（預設50）, after帶上次回傳的nextAfter；請保存nextAfter, 下次從那裡接著讀, 新通知會接在後面。hasMore為true代表還有, 請馬上用nextAfter再讀一次。本人現在已不能讀該專案（issue.read）的通知會跳過, 所以items可能少於limit, 但nextAfter照樣往前。kind：general、assigned、epic、comment、status、status_important（狀態改成已關閉或待驗收）。只回摘要, 要看內容請讀issueId那張卡或它的留言。網頁目前沒有任務通知的已讀狀態, 所以這裡不提供未讀篩選或標記已讀；交辦給自己的小待辦請讀/todos?scope=mine。",
+        "description": "需read。只回寄給Token本人的任務通知（被指派、自己負責的卡有新留言、狀態調整、Epic需要重新確認）, 不含其他人的通知。依產生順序遞增, limit 1–100（預設50）, after帶上次回傳的nextAfter；請保存nextAfter, 下次從那裡接著讀, 新通知會接在後面。hasMore為true代表還有, 請馬上用nextAfter再讀一次。本人現在已不能讀該專案（issue.read）的通知會跳過, 所以items可能少於limit, 但nextAfter照樣往前。kind：general、assigned、epic、comment、status、status_important（狀態改成已關閉或待驗收）。只回摘要, 要看內容請讀issueId那張卡或它的留言。網頁目前沒有任務通知的已讀狀態, 所以這裡不提供未讀篩選或標記已讀；交辦給自己的紙條請讀/todos?scope=mine。",
         "deprecated": false,
         "x-tasktracker-context": "token-workspace",
         "x-rate-limit": {
@@ -11067,7 +11068,7 @@
           "sharedWithOtherOperations": true
         },
         "operationId": "commentPublicTodo",
-        "summary": "對經手的待辦留言",
+        "summary": "對經手的紙條留言",
         "description": "目前及曾經手者仍需有效工作區資格；新操作使用最新revision, 同requestId補送不重複留言或通知",
         "parameters": [
           {
@@ -11077,7 +11078,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "待辦公開ID"
+            "description": "紙條公開ID"
           }
         ],
         "x-required-permission": "todo.writeOwn",
@@ -11357,7 +11358,7 @@
           "sharedWithOtherOperations": true
         },
         "operationId": "getPublicTodoComments",
-        "summary": "讀取單筆待辦留言",
+        "summary": "讀取單筆紙條留言",
         "description": "只限有效的經手者, 按createdAt與ID穩定分頁, 不隨列表預載",
         "parameters": [
           {
@@ -11367,7 +11368,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "待辦公開ID"
+            "description": "紙條公開ID"
           },
           {
             "in": "query",
@@ -11623,7 +11624,7 @@
           "sharedWithOtherOperations": true
         },
         "operationId": "forwardPublicTodo",
-        "summary": "目前承辦人轉發待辦",
+        "summary": "目前承辦人轉發紙條",
         "description": "目前及曾經手者仍需有效工作區資格；新操作使用最新revision, 同requestId補送不重複留言或通知",
         "parameters": [
           {
@@ -11633,7 +11634,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "待辦公開ID"
+            "description": "紙條公開ID"
           }
         ],
         "x-required-permission": "todo.assign",
@@ -11916,7 +11917,7 @@
           "sharedWithOtherOperations": true
         },
         "operationId": "getPublicTodoHandoffs",
-        "summary": "讀取單筆待辦經手紀錄",
+        "summary": "讀取單筆紙條經手紀錄",
         "description": "只限有效的經手者, 按createdAt與ID穩定分頁, 不隨列表預載",
         "parameters": [
           {
@@ -11926,7 +11927,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "待辦公開ID"
+            "description": "紙條公開ID"
           },
           {
             "in": "query",
@@ -13730,7 +13731,7 @@
             "type": "boolean"
           }
         },
-        "description": "目前Token本人能對這筆待辦做的事；仍以寫入時的伺服器判斷為準"
+        "description": "目前Token本人能對這筆紙條做的事；仍以寫入時的伺服器判斷為準"
       },
       "TodoSummary": {
         "type": "object",
@@ -13981,7 +13982,7 @@
           "assigneeId": {
             "type": "string",
             "maxLength": 100,
-            "description": "交辦對象User ID（從/todo-assignees取得）；省略時是自己的待辦"
+            "description": "交辦對象User ID（從/todo-assignees取得）；省略時是自己的紙條"
           },
           "requestId": {
             "type": "string",
@@ -14648,7 +14649,7 @@
     },
     {
       "name": "Todos",
-      "description": "小待辦：讀交辦給自己的事、交辦、完成或退回；工作空間層級, 不屬於Project"
+      "description": "紙條：讀交辦給自己的事、交辦、完成或退回；工作空間層級, 不屬於Project"
     },
     {
       "name": "Notifications",

@@ -37,5 +37,5 @@ export async function verifyFixtureInBrowser(page) {
     response = await submit();
   }
   assert.equal(response.status(), 200, await response.text());
-  await page.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
+  await page.locator('.app-shell').waitFor();
 }

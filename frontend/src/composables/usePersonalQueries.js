@@ -1,7 +1,7 @@
 import { computed, nextTick, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
-/** 首頁只讀目前Todo分頁，原稿／歷史快取限50筆且不保存到storage。 */
-export function usePersonalQueries({ versions, resumed, draftId, onError }) {
+/** 紙條頁只讀目前Todo分頁，原稿／歷史快取限50筆且不保存到storage。 */
+export function usePersonalQueries({ versions, resumed, draftId, onError, enabled = computed(() => true) }) {
   const scope = ref('mine'), page = ref(1), closedPage = ref(1), showClosed = ref(false), pinnedId = ref('');
   const open = shallowRef(null), closed = shallowRef(null), counts = shallowRef(null), details = shallowRef(new Map());
   const loading = ref(false), error = ref(''), canConvert = ref(false);
@@ -22,6 +22,7 @@ export function usePersonalQueries({ versions, resumed, draftId, onError }) {
     itemRequests.set(id, request);
     try {
       const todo = await api.todo(id, { signal: request.signal });
+      canConvert.value = todo.capabilities.convert && (await api.projectOptions({ perPage: 1 }, { signal: request.signal })).total > 0;
       let events;
       if (history)
         events = await api.todoHistory(id, { page: 1, perPage: 20 }, { signal: request.signal });
@@ -77,8 +78,7 @@ export function usePersonalQueries({ versions, resumed, draftId, onError }) {
     }
   }
   async function refresh() {
-    if (!versions.value)
-      return;
+    if (!versions.value || !enabled.value) { generation++; controller?.abort(); loading.value = false; return; }
     const current = ++generation;
     controller?.abort();
     controller = new AbortController();
@@ -86,11 +86,10 @@ export function usePersonalQueries({ versions, resumed, draftId, onError }) {
     error.value = '';
     const options = { signal: controller.signal };
     try {
-      const result = await Promise.all([api.todos({ scope: scope.value, state: 'open', page: page.value, perPage: 20 }, options), showClosed.value ? api.todos({ scope: scope.value, state: 'closed', page: closedPage.value, perPage: 20 }, options) : null, api.todoCounts(options), api.projectOptions({ perPage: 1 }, options)]);
+      const result = await Promise.all([api.todos({ scope: scope.value, state: scope.value === 'mine' ? 'open' : 'all', page: page.value, perPage: 20 }, options), showClosed.value ? api.todos({ scope: scope.value, state: 'closed', page: closedPage.value, perPage: 20 }, options) : null]);
       if (current !== generation)
         return;
-      [open.value, closed.value, counts.value] = result;
-      canConvert.value = result[3].total > 0;
+      [open.value, closed.value] = result;
       if (page.value > open.value.lastPage) {
         page.value = open.value.lastPage;
         return;
@@ -101,7 +100,7 @@ export function usePersonalQueries({ versions, resumed, draftId, onError }) {
       }
       const visible = [...open.value.items, ...(closed.value?.items || [])];
       for (const row of visible)
-        if (details.value.has(row.id) && details.value.get(row.id).revision !== row.revision)
+        if ((row.id === draftId.value || row.id === pinnedId.value) && details.value.has(row.id) && details.value.get(row.id).revision !== row.revision)
           await loadItem(row.id, { history: Boolean(details.value.get(row.id).history) });
       if (draftId.value && !visible.some(row => row.id === draftId.value))
         await loadItem(draftId.value);
@@ -133,7 +132,7 @@ export function usePersonalQueries({ versions, resumed, draftId, onError }) {
     await tool.focus(id);
   }
   watch(scope, () => { page.value = 1; closedPage.value = 1; pinnedId.value = ''; });
-  watch([() => versions.value?.todos, resumed, scope, page, closedPage, showClosed], refresh, { immediate: true });
+  watch([() => versions.value?.todos, resumed, scope, page, closedPage, showClosed, enabled], refresh, { immediate: true });
   onScopeDispose(() => { disposed = true; generation++; controller?.abort(); for (const request of itemRequests.values())
     request.abort(); itemRequests.clear(); });
   return { scope, page, closedPage, showClosed, open, closed, counts, loading, error, data, loadItem, moreHistory, canConvert, refresh, focus };

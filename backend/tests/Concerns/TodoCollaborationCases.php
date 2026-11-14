@@ -70,6 +70,29 @@ trait TodoCollaborationCases
         $this->postJson('/api/rpc/commentTodo', ['id' => $todo['id'], 'content' => 'Unauthorized', 'expectedRevision' => 4, 'requestId' => (string) Str::uuid()])->assertStatus(404);
     }
 
+    /** 紙條四分頁使用同一SQL分頁, sent包含自己建立的紙條而all仍限定參與範圍
+     * @return void
+     */
+    public function test_note_list_all_states_is_bounded_and_sent_includes_self(): void
+    {
+        [$owner, $store, $people] = $this->collaborationFixture();
+        $mine = $this->postJson('/api/rpc/createTodo', ['content' => "自己的紙條\n\n不應出現在列表的原稿", 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $this->postJson('/api/rpc/completeTodo', ['id' => $mine['id'], 'expectedRevision' => $mine['revision'], 'requestId' => (string) Str::uuid()])->assertOk();
+        $other = $this->postJson('/api/rpc/createTodo', ['content' => '交辦紙條', 'assigneeId' => $people['Josh']['id'], 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $first = $this->getJson('/api/v1/todos?scope=sent&state=all&perPage=1')->assertOk()->assertJsonPath('data.total', 2)->assertJsonCount(1, 'data.items')->json('data.items.0');
+        $second = $this->getJson('/api/v1/todos?scope=sent&state=all&perPage=1&page=2')->assertOk()->assertJsonCount(1, 'data.items')->json('data.items.0');
+        $this->assertEqualsCanonicalizing([$mine['id'], $other['id']], [$first['id'], $second['id']]);
+        foreach ([$first, $second] as $row) {
+            foreach (['content', 'note', 'history', 'comments', 'handoffs'] as $field) {
+                $this->assertArrayNotHasKey($field, $row);
+            }
+        }
+        $this->getJson('/api/v1/todos?scope=mine&state=open')->assertOk()->assertJsonPath('data.total', 0);
+        $this->getJson('/api/v1/todos/counts')->assertOk()->assertJsonPath('data.sentOpen', 1)->assertJsonPath('data.sentClosed', 1);
+        $this->collaborationLogin($people['Stranger']);
+        $this->getJson('/api/v1/todos?scope=involved&state=all')->assertOk()->assertJsonPath('data.total', 0);
+    }
+
     /** 退回沿目前路徑逐層返回, 不回到已停用的上一手
      * @return void
      */

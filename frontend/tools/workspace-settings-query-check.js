@@ -84,7 +84,7 @@ try {
   await call(owner, 'acceptWorkspaceInvite', { inviteToken: otherInvite.token }, 'auth');
   await settings.getByLabel('搜尋工作空間成員', { exact: true }).fill('Owner');
   await owner.waitForFunction(() => !document.querySelector('.workspace-settings-page'));
-  await owner.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
+  await owner.locator('.app-shell').waitFor();
   assert.deepEqual(errors, []);
   console.log('PASS TT-241: general no directory/roles, 22 members20+2, rename/role/invite scoped refresh, role409, search, ownership, cross-workspace clear, 3 widths, bulkReads=0');
 } finally { await browser?.close(); await server?.close(); }

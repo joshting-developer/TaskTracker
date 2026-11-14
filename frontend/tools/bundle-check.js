@@ -43,19 +43,21 @@ try {
   await call('register', { name: 'Bundle', email: `bundle-${crypto.randomUUID()}@example.test`, password: 'bundle-test-password', workspaceName: 'Bundle' }, 'auth');
   const project = await call('createProject', { name: 'Bundle Project', code: 'BUNDLE' });
   await page.reload();
-  await page.getByRole('region', { name: '首頁小待辦', exact: true }).waitFor();
+  await page.locator('.app-shell').waitFor();
   const home = await measure();
   if (!before) {
-    assert(home.some(entry => /MarkdownEditor-.*js$/.test(entry.name)), '進入首頁才載入Markdown編輯器');
-    const homeRegion = page.getByRole('region', { name: '首頁小待辦', exact: true });
-    const quick = homeRegion.getByRole('group', { name: '快速新增待辦編輯器', exact: true });
-    await quick.getByLabel('快速新增待辦', { exact: true }).fill('**延遲載入驗證**\n\n- [ ] 保留 Markdown');
+    assert(!home.some(entry => /MarkdownEditor-.*js$/.test(entry.name)), '空首頁不載入Markdown編輯器');
+    await page.getByRole('link', { name: '紙條', exact: true }).click();
+    await page.getByRole('tab', { name: '建立', exact: true }).click();
+    const homeRegion = page.getByRole('region', { name: '紙條', exact: true });
+    const quick = homeRegion.getByRole('group', { name: '紙條內容編輯器', exact: true });
+    await quick.getByLabel('紙條內容', { exact: true }).fill('**延遲載入驗證**\n\n- [ ] 保留 Markdown');
     await quick.getByRole('tab', { name: '預覽', exact: true }).click();
     await quick.locator('strong').getByText('延遲載入驗證', { exact: true }).waitFor();
     assert.equal(await quick.locator('input[type=checkbox]:disabled').count(), 1);
     await quick.getByRole('tab', { name: '編輯', exact: true }).click();
-    await homeRegion.getByRole('button', { name: '加入待辦', exact: true }).click();
-    await homeRegion.locator('.todo-row').filter({ hasText: '延遲載入驗證' }).waitFor();
+    await homeRegion.getByRole('button', { name: '建立紙條', exact: true }).click();
+    await homeRegion.locator('.notes-list li').filter({ hasText: '延遲載入驗證' }).waitFor();
   }
   await page.goto(`${base}/#/projects/${project.id}/boards`);
   await page.getByRole('heading', { name: '看板列表', exact: true }).waitFor();

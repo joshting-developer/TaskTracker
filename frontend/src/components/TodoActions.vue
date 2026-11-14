@@ -39,7 +39,7 @@ onBeforeUnmount(() => {
 </script>
 <template>
   <details ref="root" class="todo-actions" @toggle="positionMenu" @keydown="keydown">
-    <summary aria-label="待辦操作" :aria-controls="id">更多</summary>
+    <summary aria-label="紙條操作" :aria-controls="id">更多</summary>
     <div :id="id" ref="options" class="todo-options" :style="position" @click="select"><slot /></div>
   </details>
 </template>

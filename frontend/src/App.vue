@@ -35,6 +35,7 @@ const WorkspaceInvitation = lazyFeature(() => import('./components/WorkspaceInvi
 const leaveGuards = provideLeaveGuards();
 const workspace = shallowRef({ projects: [], members: [], meta: {} });
 const authenticated = shallowRef(false), pendingVerification = shallowRef(null), authPageKey = shallowRef('');
+const pendingTodoId = shallowRef('');
 const todoTool = useTemplateRef('todoTool'), convertingTodo = shallowRef(null), todoNotificationsOpen = shallowRef(false);
 const todoUnread = computed(() => personalSync.unread.value);
 const switchingWorkspace = shallowRef(false), workspaceInviteToken = shallowRef('');
@@ -72,7 +73,7 @@ const refresh = useRefreshQueue({
   scope: () => `${refreshScope}:${authenticated.value}:${switchingWorkspace.value}:${workspace.value.meta.workspace?.id || ''}:${projectId.value}:${view.value}:${section.value}`,
   load: refreshWorkspace,
 });
-const isScopedRoute=computed(()=>isTaskRoute.value || (projectId.value && ['settings','notifications','time','members'].includes(section.value)) || (!projectId.value && ['home','projects','settings','analysis'].includes(landing.value)));
+const isScopedRoute=computed(()=>isTaskRoute.value || (projectId.value && ['settings','notifications','time','members'].includes(section.value)) || (!projectId.value && ['home','notes','projects','settings','analysis'].includes(landing.value)));
 const personalSync=usePersonalSync({active:computed(()=>authenticated.value&&!switchingWorkspace.value&&workspace.value.meta.permissions?.includes('todo.read')),context:computed(()=>`${workspace.value.meta.userId}:${workspace.value.meta.workspace?.id}`),onError:failure=>{if(['UNAUTHENTICATED','FORBIDDEN','WORKSPACE_CHANGED'].includes(failure.code))refresh({join:true});}});
 const today = useWorkspaceClock({ active: computed(() => authenticated.value && !switchingWorkspace.value && !isScopedRoute.value), refresh: () => refresh({ join: true }) });
 let refreshGeneration = 0, refreshScope = 0;
@@ -158,7 +159,7 @@ async function refreshWorkspace() {
       } catch (failure) { if (failure.code !== 'NOT_FOUND') throw failure; notify('找不到這個任務'); goHome(true); }
     }
     await nextTick();
-  } catch (failure) { if (generation === refreshGeneration) { if (failure.code === 'UNAUTHENTICATED') { authenticated.value = false; convertingTodo.value = null; todoNotificationsOpen.value = false; profileOpen.value = false; tokensOpen.value = false; creatingProject.value = false; editingProject.value = null; selectedId.value = ''; detailPage.value = false; workspace.value = { projects: [], members: [], meta: {} }; } else if (isScopedRoute.value && ['FORBIDDEN', 'NOT_FOUND', 'WORKSPACE_CHANGED'].includes(failure.code)) {
+  } catch (failure) { if (generation === refreshGeneration) { if (failure.code === 'UNAUTHENTICATED') { authenticated.value = false; convertingTodo.value = null; pendingTodoId.value = ''; todoNotificationsOpen.value = false; profileOpen.value = false; tokensOpen.value = false; creatingProject.value = false; editingProject.value = null; selectedId.value = ''; detailPage.value = false; workspace.value = { projects: [], members: [], meta: {} }; } else if (isScopedRoute.value && ['FORBIDDEN', 'NOT_FOUND', 'WORKSPACE_CHANGED'].includes(failure.code)) {
       workspace.value = { ...workspace.value, projects: [] };
       selectedId.value = '';
       goHome(true); notify('專案存取權限已變更');
@@ -213,11 +214,11 @@ async function closeSettings(kind) {
   else accountMenu.value?.focus();
 }
 async function savedProfile() { await refresh(); await closeSettings('profile'); notify('個人資料已儲存'); }
-async function logout() { if (!canLeave()) return; try { await api.logout(); setWorkspaceContext(''); ++refreshGeneration; ++refreshScope; authenticated.value = false; tokensOpen.value = false; convertingTodo.value = null; todoNotificationsOpen.value = false; workspace.value = { projects: [], members: [], meta: {} }; history.replaceState(null, '', '/login'); readHash(true); } catch (failure) { notify(failure.message); } }
+async function logout() { if (!canLeave()) return; try { await api.logout(); setWorkspaceContext(''); ++refreshGeneration; ++refreshScope; authenticated.value = false; tokensOpen.value = false; convertingTodo.value = null; pendingTodoId.value = ''; todoNotificationsOpen.value = false; workspace.value = { projects: [], members: [], meta: {} }; history.replaceState(null, '', '/login'); readHash(true); } catch (failure) { notify(failure.message); } }
 function resetWorkspaceUI() {
   selectedId.value = ''; detailPage.value = false;
   profileOpen.value = false; tokensOpen.value = false; creatingProject.value = false; editingProject.value = null;
-  convertingTodo.value = null; todoNotificationsOpen.value = false; issueReturn = null;
+  convertingTodo.value = null; pendingTodoId.value = ''; todoNotificationsOpen.value = false; issueReturn = null;
   projectId.value = ''; section.value = 'tasks'; view.value = 'list'; boardId.value = 'default';
   workspaceInviteToken.value = ''; history.replaceState(null, '', '#/'); readHash(true);
 }
@@ -273,10 +274,18 @@ async function openTodoNotification(item) {
     await api.readTodoNotification({ id: item.id, requestId: crypto.randomUUID() });
     todoNotificationsOpen.value = false;
     await personalSync.refresh();
-    history.pushState(null, '', '#/'); readHash(true);
-    await nextTick(); await todoTool.value?.focus(item.todoId);
+    history.pushState(null, '', '#/notes'); readHash(true);
+    pendingTodoId.value = item.todoId;
   } catch (failure) { notify(failure.message); await refresh(); }
 }
+// The notes page is lazy loaded; opening a notification must wait for its mounted tool.
+watch([todoTool, pendingTodoId], async ([tool, id]) => {
+  if (!tool || !id) return;
+  const workspaceId = workspace.value.meta.workspace?.id;
+  pendingTodoId.value = '';
+  try { await tool.focus(id); }
+  catch (failure) { if (workspaceId === workspace.value.meta.workspace?.id && !['ABORTED', 'STALE_RESPONSE'].includes(failure.code)) notify(failure.message); }
+}, { flush: 'post' });
 async function toolUpdated(message) { await refresh(); if (!error.value) notify(message); }
 function navigate(nextScope, id = projectId.value, mode = 'list') {
   if (!canLeave()) return;
@@ -296,7 +305,7 @@ function openBoard(id) {
 function goLanding(page, replace = false) {
   if (!replace && !projectId.value && landing.value === page) { sidebarOpen.value = false; return; }
   if (!replace && !canLeave()) { sidebarOpen.value = false; return; }
-  history[replace ? 'replaceState' : 'pushState'](null, '', page === 'projects' ? '#/projects' : '#/');
+  history[replace ? 'replaceState' : 'pushState'](null, '', buildHash({ landing: page }));
   readHash(true);
   sidebarOpen.value = false;
 }
@@ -439,6 +448,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
         <p class="nav-label">工作空間</p>
         <nav aria-label="工作空間">
           <a :href="'#/'" class="nav-item" :class="{ active: landing === 'home' }" :aria-current="landing === 'home' ? 'page' : undefined" @click="follow($event, () => goHome())"><Icon name="grid" :size="18" />首頁</a>
+          <a v-if="workspace.meta.permissions?.includes('todo.read')" href="#/notes" class="nav-item" :class="{ active: landing === 'notes' }" :aria-current="landing === 'notes' ? 'page' : undefined" @click="follow($event, () => goLanding('notes'))"><Icon name="message" :size="18" />紙條</a>
           <a :href="'#/projects'" class="nav-item" :class="{ active: landing === 'projects' }" :aria-current="landing === 'projects' ? 'page' : undefined" aria-label="專案列表" @click="follow($event, () => goProjects())"><Icon name="folder" :size="18" />專案列表<span v-if="!isScopedRoute" class="nav-count">{{ projects.length }}</span></a>
         </nav>
       </template>
@@ -447,17 +457,17 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
     </aside>
 
     <main class="main">
-      <header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" aria-label="開啟導覽" :aria-expanded="sidebarOpen" @click="sidebarOpen = !sidebarOpen"><Icon name="menu" /></button><Icon name="folder" :size="17" /><button class="breadcrumb-home" @click="selectedProject ? goProjects() : goHome()">{{ selectedProject ? '專案' : '工作空間' }}</button><Icon name="chevron" :size="13" /><strong :class="{ 'has-mobile-context': selectedProject }"><span class="project-breadcrumb">{{ selectedProject?.code || (landing === 'settings' ? '工作空間設定' : landing === 'analysis' ? '工時分析' : landing === 'projects' ? '專案列表' : '首頁') }}</span><span v-if="selectedProject" class="mobile-feature-context">{{ currentFeature }}</span></strong></div><div class="topbar-end"><button v-if="workspace.meta.permissions?.includes('todo.read')" class="button secondary todo-notification-toggle" :aria-label="`待辦通知${todoUnread ? `（${todoUnread} 則未讀）` : ''}`" @click="openTodoInbox"><Icon name="bell" :size="17" /><span>待辦通知</span><b v-if="todoUnread">{{ todoUnread }}</b></button><button class="icon-button" aria-label="重新整理工作空間" :disabled="loading" @click="refreshCurrent"><Icon name="refresh" :size="18" /></button><AccountMenu ref="accountMenu" :name="workspace.meta.actor" :email="workspace.members.find(member => member.id === currentUserId)?.email" :workspace-name="workspace.meta.workspace?.name" @profile="openProfile" @tokens="tokensOpen = true" @logout="logout" /></div></header>
+      <header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" aria-label="開啟導覽" :aria-expanded="sidebarOpen" @click="sidebarOpen = !sidebarOpen"><Icon name="menu" /></button><Icon name="folder" :size="17" /><button class="breadcrumb-home" @click="selectedProject ? goProjects() : goHome()">{{ selectedProject ? '專案' : '工作空間' }}</button><Icon name="chevron" :size="13" /><strong :class="{ 'has-mobile-context': selectedProject }"><span class="project-breadcrumb">{{ selectedProject?.code || (landing === 'settings' ? '工作空間設定' : landing === 'analysis' ? '工時分析' : landing === 'projects' ? '專案列表' : landing === 'notes' ? '紙條' : '首頁') }}</span><span v-if="selectedProject" class="mobile-feature-context">{{ currentFeature }}</span></strong></div><div class="topbar-end"><button v-if="workspace.meta.permissions?.includes('todo.read')" class="button secondary todo-notification-toggle" :aria-label="`紙條通知${todoUnread ? `（${todoUnread} 則未讀）` : ''}`" @click="openTodoInbox"><Icon name="bell" :size="17" /><span>紙條通知</span><b v-if="todoUnread">{{ todoUnread }}</b></button><button class="icon-button" aria-label="重新整理工作空間" :disabled="loading" @click="refreshCurrent"><Icon name="refresh" :size="18" /></button><AccountMenu ref="accountMenu" :name="workspace.meta.actor" :email="workspace.members.find(member => member.id === currentUserId)?.email" :workspace-name="workspace.meta.workspace?.name" @profile="openProfile" @tokens="tokensOpen = true" @logout="logout" /></div></header>
       <div class="workspace-content" :class="{ 'board-workspace': section === 'tasks' && view === 'board', 'data-workspace': selectedProject && section === 'tasks', 'detail-workspace': isTaskRoute && selectedId && detailPage }">
         <button v-if="selectedProject && section !== 'tasks'" class="navigation-back back-to-projects" @click="goProjects()"><Icon name="chevron" :size="14" />返回專案列表</button>
         <WorkspaceSettings v-if="!selectedProject && landing === 'settings' && canManageWorkspace" :key="workspace.meta.workspace?.id" ref="teamTool" :active-tab="teamTab" :meta="workspace.meta" @navigate="openWorkspaceSettings" @saved="refresh" @access="refresh" />
         <TimeAnalysis :key="workspace.meta.workspace?.id" v-if="!selectedProject && landing === 'analysis' && canAnalyze" :mode="analysisMode" :workspace-version="analysisVersion" @navigate="goAnalysis" />
         <div v-if="!(isTaskRoute && selectedId) && (selectedProject || landing === 'projects')" class="page-heading"><div><h1>{{ title }}</h1><p v-if="selectedProject && section !== 'tasks' && selectedProject.description">{{ selectedProject.description }}</p></div><div class="heading-actions"><button v-if="showNewIssueAction" class="button primary" :disabled="loading || (isTaskRoute && !projectTasksTool)" @click="newIssue"><Icon name="plus" :size="18" />新增任務</button><button v-else-if="!selectedProject && workspace.meta.permissions?.includes('project.create')" class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div></div>
-        <div v-if="!selectedProject && ['home', 'projects'].includes(landing)" :key="workspace.meta.workspace?.id" :class="landing === 'home' ? 'home-layout' : 'project-list-page'">
+        <div v-if="!selectedProject && ['home', 'notes', 'projects'].includes(landing)" :key="workspace.meta.workspace?.id" :class="landing === 'home' ? 'home-layout' : 'project-list-page'">
         <h1 v-if="landing === 'home'" class="sr-only">首頁</h1>
         <div v-if="landing === 'home' && error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="refresh({ join: true })">重新載入</button></div>
         <ProjectDirectory v-if="landing === 'projects'" ref="projectDirectoryTool" :workspace-id="workspace.meta.workspace?.id" :can-create="workspace.meta.permissions?.includes('project.create')" :demo-loading="demoLoading" @create="creatingProject = true" @edit="editingProject = $event" @open="id => navigate('all', id)" @demo="loadDemo" />
-        <PersonalWorkspace v-if="landing === 'home' && workspace.meta.permissions?.includes('todo.read')" ref="todoTool" :workspace-id="workspace.meta.workspace.id" :permissions="workspace.meta.permissions" :versions="personalSync.versions.value" :resumed="personalSync.resumed.value" :user-id="currentUserId"     @convert="convertTodo" @open-issue="openTodoIssue"  @access="refresh({join:true})"/>
+        <PersonalWorkspace v-if="landing === 'notes' && workspace.meta.permissions?.includes('todo.read')" ref="todoTool" :workspace-id="workspace.meta.workspace.id" :permissions="workspace.meta.permissions" :versions="personalSync.versions.value" :resumed="personalSync.resumed.value" :user-id="currentUserId"     @convert="convertTodo" @open-issue="openTodoIssue"  @access="refresh({join:true})"/>
         </div>
         <ProjectTasksWorkspace v-else-if="isTaskRoute && selectedProject" ref="projectTasksTool" :key="`${workspace.meta.workspace?.id}:${projectId}`" :project="selectedProject" :mode="view" :scope="scope" :board-id="boardId" :issue-id="selectedId" :detail-page="detailPage" :user-id="currentUserId" :workspace-id="workspace.meta.workspace.id" :today="today" @board="openBoard" @list="navigate('all', projectId, 'boards')" @issue="openIssue" @close-issue="closeIssue" @issue-missing="issueMissing" @board-missing="notify('看板不存在或已移除'); navigate('all', projectId, 'boards')" @notify="notify" @access="refresh({ join: true })" @project="project => { workspace = { ...workspace, projects: [project] }; }" />
         <template v-else-if="selectedProject">

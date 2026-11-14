@@ -46,22 +46,22 @@ try {
   await call(owner, 'createTodo', { title: '自己的待辦' });
   await call(owner, 'createTodo', { title: '交辦出去的待辦', assigneeId: assignees.find(m => m.name === '承辦人').id });
 
-  await owner.goto(`http://127.0.0.1:${e2ePort}/app/#/`);
-  const home = owner.getByRole('region', { name: '首頁小待辦', exact: true });
-  await home.locator('.todo-row').filter({ hasText: '自己的待辦' }).locator('.todo-date').filter({ hasText: `${md} 建立` }).waitFor();
+  await owner.goto(`http://127.0.0.1:${e2ePort}/app/#/notes`);
+  const home = owner.getByRole('region', { name: '紙條', exact: true });
+  await home.locator('.notes-list li').filter({ hasText: '自己的待辦' }).locator('time').filter({ hasText: `${md} 建立` }).waitFor();
   await home.getByRole('tab', { name: /我交辦的/ }).click();
-  const sent = home.locator('.todo-row').filter({ hasText: '交辦出去的待辦' });
-  await sent.getByText(`交給 承辦人 · `).waitFor();
-  await sent.locator('.todo-date').filter({ hasText: `${md} 交辦` }).waitFor();
-  assert.match(await sent.locator('.todo-date').getAttribute('title'), /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/, '滑鼠提示是完整日期時間');
+  const sent = home.locator('.notes-list li').filter({ hasText: '交辦出去的待辦' });
+  await sent.getByText('來自 交辦人', { exact: false }).waitFor();
+  await sent.locator('time').filter({ hasText: `${md} 交辦` }).waitFor();
+  assert.match(await sent.locator('time').getAttribute('title'), /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/, '滑鼠提示是完整日期時間');
 
-  await member.goto(`http://127.0.0.1:${e2ePort}/app/#/`);
-  const inbox = member.getByRole('region', { name: '首頁小待辦', exact: true }).locator('.todo-row').filter({ hasText: '交辦出去的待辦' });
-  await inbox.getByText('來自 交辦人 · ').waitFor();
-  await inbox.locator('.todo-date').filter({ hasText: `${md} 交辦` }).waitFor();
+  await member.goto(`http://127.0.0.1:${e2ePort}/app/#/notes`);
+  const inbox = member.getByRole('region', { name: '紙條', exact: true }).locator('.notes-list li').filter({ hasText: '交辦出去的待辦' });
+  await inbox.getByText('來自 交辦人', { exact: false }).waitFor();
+  await inbox.locator('time').filter({ hasText: `${md} 交辦` }).waitFor();
   for (const [width, height] of [[1440, 900], [768, 1024], [390, 844]]) {
     await member.setViewportSize({ width, height }); await member.waitForTimeout(100);
-    const row = await inbox.locator('.todo-meta').evaluate(el => ({ lines: Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight)), overflow: document.documentElement.scrollWidth > innerWidth }));
+    const row = await inbox.locator('.notes-row-content p').evaluate(el => ({ lines: Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight)), overflow: document.documentElement.scrollWidth > innerWidth }));
     assert.equal(row.overflow, false, `${width} 無橫向溢出`);
     assert.ok(row.lines <= 2, `${width} 日期資訊最多兩行`);
     await member.screenshot({ path: `${folder}/${width}-home.png`, animations: 'disabled', caret: 'hide' });

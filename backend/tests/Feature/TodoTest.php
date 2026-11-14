@@ -353,7 +353,7 @@ class TodoTest extends TestCase
         }
         $next = $this->getJson('/api/v1/todos?page=2')->assertOk()->assertJsonCount(5, 'data.items')->json('data.items');
         $this->assertSame([], array_intersect(array_column($page['items'], 'id'), array_column($next, 'id')));
-        $this->getJson('/api/v1/todos/counts')->assertOk()->assertJsonPath('data.mineOpen', 25)->assertJsonPath('data.sentOpen', 0);
+        $this->getJson('/api/v1/todos/counts')->assertOk()->assertJsonPath('data.mineOpen', 25)->assertJsonPath('data.sentOpen', 25);
         $version = $this->getJson('/api/v1/personal-version')->assertOk()->json('data');
         $this->assertSame($version, $this->getJson('/api/v1/personal-version')->assertOk()->json('data'));
         $this->rpc('updateTodo', ['id' => $ids[0], 'expectedRevision' => 1, 'content' => 'Edited content'])->assertOk();

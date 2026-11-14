@@ -27,7 +27,7 @@ try {
   await page.getByLabel('工作空間名稱', { exact: true }).fill('狀態篩選回驗');
   await page.getByRole('button', { name: '建立工作空間', exact: true }).click();
   await verifyFixtureInBrowser(page);
-  await page.getByRole('heading', { name: '小待辦', exact: true }).waitFor();
+  await page.locator('.app-shell').waitFor();
   await page.evaluate(async () => {
     const { api } = await import('/src/api/index.js');
     const ws = await api.getWorkspace();

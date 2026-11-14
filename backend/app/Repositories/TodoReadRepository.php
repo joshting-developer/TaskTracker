@@ -53,11 +53,11 @@ class TodoReadRepository
         if ($filters->scope === 'mine') {
             $q->where('assignee_id', $context->memberId);
         } elseif ($filters->scope === 'sent') {
-            $q->where('created_by_id', $context->memberId)->where('initial_assignee_id', '!=', $context->memberId);
+            $q->where('created_by_id', $context->memberId);
         }
         if ($filters->state === 'open') {
             $q->where('state', 'open');
-        } else {
+        } elseif ($filters->state === 'closed') {
             $q->where('state', '!=', 'open');
         }
         if ($filters->pagination->search !== '') {
@@ -100,7 +100,7 @@ class TodoReadRepository
      */
     public function counts(PersonalReadContext $context): array
     {
-        $row = $this->query($context)->selectRaw('COALESCE(SUM(CASE WHEN assignee_id = ? AND state = ? THEN 1 ELSE 0 END),0) AS mine_open, COALESCE(SUM(CASE WHEN assignee_id = ? AND state != ? THEN 1 ELSE 0 END),0) AS mine_closed, COALESCE(SUM(CASE WHEN created_by_id = ? AND initial_assignee_id != ? AND state = ? THEN 1 ELSE 0 END),0) AS sent_open, COALESCE(SUM(CASE WHEN created_by_id = ? AND initial_assignee_id != ? AND state != ? THEN 1 ELSE 0 END),0) AS sent_closed, COALESCE(SUM(CASE WHEN state = ? THEN 1 ELSE 0 END),0) AS involved_open, COALESCE(SUM(CASE WHEN state != ? THEN 1 ELSE 0 END),0) AS involved_closed', [$context->memberId, 'open', $context->memberId, 'open', $context->memberId, $context->memberId, 'open', $context->memberId, $context->memberId, 'open', 'open', 'open'])->first();
+        $row = $this->query($context)->selectRaw('COALESCE(SUM(CASE WHEN assignee_id = ? AND state = ? THEN 1 ELSE 0 END),0) AS mine_open, COALESCE(SUM(CASE WHEN assignee_id = ? AND state != ? THEN 1 ELSE 0 END),0) AS mine_closed, COALESCE(SUM(CASE WHEN created_by_id = ? AND state = ? THEN 1 ELSE 0 END),0) AS sent_open, COALESCE(SUM(CASE WHEN created_by_id = ? AND state != ? THEN 1 ELSE 0 END),0) AS sent_closed, COALESCE(SUM(CASE WHEN state = ? THEN 1 ELSE 0 END),0) AS involved_open, COALESCE(SUM(CASE WHEN state != ? THEN 1 ELSE 0 END),0) AS involved_closed', [$context->memberId, 'open', $context->memberId, 'open', $context->memberId, 'open', $context->memberId, 'open', 'open', 'open'])->first();
 
         return ['mineOpen' => (int) $row->mine_open, 'mineClosed' => (int) $row->mine_closed, 'sentOpen' => (int) $row->sent_open, 'sentClosed' => (int) $row->sent_closed, 'involvedOpen' => (int) $row->involved_open, 'involvedClosed' => (int) $row->involved_closed];
     }
