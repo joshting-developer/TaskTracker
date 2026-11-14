@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "0426e1980416a50adc6531560cf267bebedad9e1bd7371905473a81cc45b5aaa",
+  "harnessSha256": "1382e9d461f0d7750ab421e949b68129e1f6dec6e8548c4fed6644a1a29395e5",
   "profile": "darwin-arm64",
-  "reviewer": "Josh standing authorization / TT-331",
-  "note": "紙條獨立頁最終三尺寸, 含44px控制、通知定位及公開頁用語同步, 沿用品牌與像素門檻",
-  "manifestSha256": "2d026989280d389eed2531aad93224850514d16443e4cd503390d226429eee01",
+  "reviewer": "Josh standing authorization / TT-333",
+  "note": "最終焦點循環版本, 已檢閱三尺寸列表／選單／確認, 既有品牌與比較參數保留",
+  "manifestSha256": "22be186778635877577b16db9b78fa33b7311bf71d7387b5cf54ae8bd151026a",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

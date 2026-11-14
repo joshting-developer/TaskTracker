@@ -1,12 +1,14 @@
 // TT-283：看板封存→已封存清單→唯讀查看→還原（看板頁與清單兩個入口）；三尺寸版面。只接受隔離API。
 import assert from 'node:assert/strict';
+import { app as inspectApp } from '../../.agents/skills/design-taste-frontend/scripts/lib/probe.mjs';
+import { judgeApp } from '../../.agents/skills/design-taste-frontend/scripts/lib/rules.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 const api = process.env.E2E_API_URL || '';
 if (!/^http:\/\/127\.0\.0\.1:13\d{3}$/.test(api)) throw new Error('請設定隔離E2E_API_URL（127.0.0.1:13xxx），不可使用業務資料庫');
-const folder = 'artifacts/tt283';
+const folder = 'artifacts/tt333';
 mkdirSync(folder, { recursive: true });
 let server, browser;
 const errors = [], measurements = [];
@@ -35,8 +37,9 @@ try {
   // 從看板頁封存：文案是「封存」, 確認後回清單。
   await page.goto(`${root}/board/${board.id}`);
   await page.getByRole('heading', { name: '第一階段' }).waitFor();
-  page.once('dialog', dialog => { assert.match(dialog.message(), /封存看板「第一階段」.*保留/); dialog.accept(); });
+  await page.evaluate(() => { window.confirm = () => { throw new Error('Native confirm must not run'); }; });
   await page.getByRole('button', { name: '封存看板', exact: true }).click();
+  await page.getByRole('dialog', { name: '封存看板「第一階段」？' }).getByRole('button', { name: '封存看板', exact: true }).click();
   const list = page.getByRole('region', { name: '看板列表' });
   await list.waitFor();
   assert.equal(await list.getByRole('button', { name: '開啟看板 第一階段' }).count(), 0, '使用中清單不再顯示');
@@ -74,18 +77,74 @@ try {
 
   // 從看板頁還原：提示消失, 恢復編輯收錄與封存。
   await note.getByRole('button', { name: '還原看板' }).click();
+  await page.getByRole('dialog', { name: '還原看板「第一階段」？' }).getByRole('button', { name: '還原看板', exact: true }).click();
   await page.getByRole('button', { name: '封存看板', exact: true }).waitFor();
   assert.equal(await note.count(), 0);
 
   // 再封存一次, 改從清單還原, 回到使用中。
-  page.once('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: '封存看板', exact: true }).click();
+  await page.getByRole('dialog', { name: '封存看板「第一階段」？' }).getByRole('button', { name: '封存看板', exact: true }).click();
   await list.waitFor();
   await list.getByRole('button', { name: '已封存', exact: true }).click();
-  await list.getByRole('button', { name: '還原看板 第一階段' }).click();
+  await list.getByRole('button', { name: '看板操作 第一階段' }).click();
+  await page.getByRole('menuitem', { name: '還原看板 第一階段' }).click();
+  await page.getByRole('dialog', { name: '還原看板「第一階段」？' }).getByRole('button', { name: '還原看板', exact: true }).click();
   await list.getByText('目前沒有封存的看板').waitFor();
   await list.getByRole('button', { name: '使用中', exact: true }).click();
   await list.getByRole('button', { name: '開啟看板 第一階段' }).waitFor();
+  assert.equal(await list.locator('[data-board-actions="default"]').count(), 0);
+  for (const [width, height] of [[1440, 900], [768, 1024], [390, 844]]) {
+    await page.setViewportSize({ width, height });
+    await list.getByRole('button', { name: '看板操作 第一階段' }).click();
+    const menu = page.getByRole('menu', { name: '看板操作選項' });
+    await menu.waitFor();
+    await page.waitForFunction(() => { const box = document.querySelector('[aria-label="看板操作選項"]')?.getBoundingClientRect(); return box && box.x >= 0 && box.right <= innerWidth; });
+    const menuBox = await menu.boundingBox();
+    assert.ok(menuBox.x >= 0 && menuBox.x + menuBox.width <= width, '操作選單不超出畫面');
+    await page.screenshot({ path: `${folder}/${width}-board-menu.png`, animations: 'disabled' });
+    await page.getByRole('menuitem', { name: '封存看板 第一階段' }).click();
+    await page.getByRole('dialog', { name: '封存看板「第一階段」？' }).waitFor();
+    await page.getByRole('menu', { name: '看板操作選項' }).waitFor({ state: 'hidden' });
+    assert.equal(await page.getByRole('menu', { name: '看板操作選項' }).count(), 0, '確認視窗出現後選單已關閉');
+    const design = await page.evaluate(inspectApp);
+    measurements.push({ view: 'design-review', width, findings: judgeApp(design) });
+    const confirm = page.getByRole('dialog', { name: '封存看板「第一階段」？' });
+    await confirm.waitFor();
+    await page.screenshot({ path: `${folder}/${width}-archive-confirm.png`, animations: 'disabled' });
+    assert.match(await confirm.innerText(), /卡片、留言和工時都會保留/);
+    assert.equal(await confirm.getByRole('button', { name: '取消', exact: true }).evaluate(element => element === document.activeElement), true, '預設焦點放取消');
+    await page.keyboard.press('Shift+Tab');
+    assert.equal(await confirm.evaluate(element => element.contains(document.activeElement)), true, '模態限制鍵盤焦點');
+    for (const button of await confirm.getByRole('button').all()) assert.ok((await button.boundingBox()).height >= 44);
+    await page.keyboard.press('Escape');
+    await confirm.waitFor({ state: 'detached' });
+    assert.equal(await list.getByRole('button', { name: '開啟看板 第一階段' }).count(), 1, '取消不封存');
+  }
+  await list.getByRole('button', { name: '看板操作 第一階段' }).click();
+  await page.getByRole('menuitem', { name: '封存看板 第一階段' }).click();
+  const staleDialog = page.getByRole('dialog', { name: '封存看板「第一階段」？' });
+  const latest = await page.evaluate(async ({ project, board }) => (await (await fetch(`/api/v1/projects/${project}/boards/${board}`)).json()).data, { project: project.id, board: board.id });
+  await call(page, 'updateBoard', { id: latest.id, name: latest.name, description: '另一個呼叫端更新', selectedIssueIds: latest.selectedIssueIds, expectedRevision: latest.revision });
+  await staleDialog.getByRole('button', { name: '封存看板', exact: true }).click();
+  await staleDialog.getByRole('alert').waitFor();
+  assert.equal(await staleDialog.getByRole('button', { name: '封存看板', exact: true }).isDisabled(), true, '版本衝突不能盲目換版本');
+  await staleDialog.getByRole('button', { name: '重新載入', exact: true }).click();
+  await staleDialog.getByRole('button', { name: '封存看板', exact: true }).click();
+  await list.getByRole('button', { name: '已封存', exact: true }).click();
+  await list.getByRole('button', { name: '開啟看板 第一階段' }).waitFor();
+  const otherContext = await browser.newContext();
+  try {
+    const reader = await otherContext.newPage();
+    await reader.goto(`http://127.0.0.1:${e2ePort}/login`);
+    const email = `tt333-reader-${crypto.randomUUID()}@example.test`;
+    const invite = await call(page, 'inviteMember', { email });
+    const member = await call(reader, 'register', { name: 'Reader', email, password: 'tt333-reader-password', inviteToken: invite.token }, 'auth');
+    await call(page, 'setProjectMember', { projectId: project.id, userId: member.user.id, roleId: 'reader', expectedRevision: 0 });
+    await reader.goto(`${root}/boards`);
+    const readerList = reader.getByRole('region', { name: '看板列表' });
+    await readerList.getByRole('button', { name: '開啟看板 Default' }).waitFor();
+    assert.equal(await readerList.locator('[data-board-actions]').count(), 0, '沒有board.manage不顯示操作');
+  } finally { await otherContext.close(); }
   assert.deepEqual(errors, []);
   writeFileSync(`${folder}/measurements.json`, JSON.stringify(measurements, null, 2));
   console.log('PASS: archive copy, archived list with date, read-only archived board, restore from board and from list, 3 viewports');

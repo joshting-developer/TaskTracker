@@ -55,7 +55,7 @@ try {
     assert.equal(await card('Default').getByRole('button', { name: /^編輯看板/ }).count(), 0, 'Default沒有編輯收錄');
     assert.ok(!requests.some(path => path.endsWith('/getWorkspace')), `看板列表不讀整包Workspace: ${requests.join(',')}`);
     await page.keyboard.press('Tab');
-    const edit = card('會員功能看板').getByRole('button', { name: '編輯看板 會員功能看板', exact: true });
+    const edit = card('會員功能看板').getByRole('button', { name: '看板操作 會員功能看板', exact: true });
     await edit.focus();
     assert.equal(await edit.evaluate(element => element === document.activeElement), true);
   }
@@ -63,7 +63,7 @@ try {
     await page.setViewportSize({ width, height });
     await page.waitForTimeout(100);
     const row = await page.evaluate(() => {
-      const button = document.querySelector('.board-summary-card .board-summary-edit, .board-summary-card .text-button');
+      const button = document.querySelector('.board-summary-card .board-action-trigger');
       const box = button?.getBoundingClientRect();
       return { width: innerWidth, overflow: document.documentElement.scrollWidth > innerWidth, edit: box && { height: box.height, width: box.width }, cards: document.querySelectorAll('.board-summary-card').length };
     });
@@ -76,7 +76,8 @@ try {
   }
   if (!before) {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await card('會員功能看板').getByRole('button', { name: '編輯看板 會員功能看板', exact: true }).click();
+    await card('會員功能看板').getByRole('button', { name: '看板操作 會員功能看板', exact: true }).click();
+    await page.getByRole('menuitem', { name: '編輯看板 會員功能看板', exact: true }).click();
     await page.getByRole('dialog').waitFor();
   }
   assert.deepEqual(errors, []);

@@ -1,12 +1,14 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import Icon from './Icon.vue';
+import { VMenu, VList, VListItem } from 'vuetify/components';
 import { boardClosedCount, boardCount } from '../domain/boards.js';
 const props = defineProps({ remote: Boolean, boards: Array, issues: Array, canManage: Boolean, loading: Boolean, archived: Boolean });
-const emit = defineEmits(['open', 'create', 'edit', 'search', 'archived', 'restore']);
+const emit = defineEmits(['open', 'create', 'edit', 'search', 'archived', 'restore', 'archive']);
 // TT-283：已封存看板顯示封存日期；日期用本地時間的年月日。
 const archivedDate = value => value ? new Date(value).toLocaleDateString('zh-TW', { year: 'numeric', month: 'numeric', day: 'numeric' }) : '';
-const search = ref('');
+const search = ref(''), menuBoard = ref(null);
+function choose(board, action) { menuBoard.value = null; emit(action, board); }
 watch(search, value => { if (props.remote) emit('search', value); });
 const visible = computed(() => {
   const term = search.value.trim().toLowerCase();
@@ -33,10 +35,21 @@ const visible = computed(() => {
         <span class="progress-track board-summary-progress" aria-hidden="true"><span :style="{ width: `${percent}%` }" /></span>
       </button>
       <footer v-if="!board.isDefault && canManage" class="board-summary-actions">
-        <button v-if="board.archivedAt" class="button secondary board-summary-edit" :aria-label="`還原看板 ${board.name}`" :disabled="loading" @click="$emit('restore', board)"><Icon name="refresh" :size="15" />還原</button>
-        <button v-else class="button secondary board-summary-edit" :aria-label="`編輯看板 ${board.name}`" @click="$emit('edit', board)"><Icon name="edit" :size="15" />編輯</button>
+        <VMenu location="bottom end" :transition="false" :model-value="menuBoard === board.id" :disabled="loading" @update:model-value="value => { menuBoard = value ? board.id : null; }">
+          <template #activator="{ props: menuProps }"><button v-bind="menuProps" type="button" class="button secondary board-action-trigger" :aria-label="`看板操作 ${board.name}`" :data-board-actions="board.id" :disabled="loading">更多<span aria-hidden="true">⋯</span></button></template>
+          <VList role="menu" class="board-action-menu" aria-label="看板操作選項" density="comfortable">
+            <VListItem tag="button" type="button" role="menuitem" v-if="board.archivedAt" :aria-label="`還原看板 ${board.name}`" @click="choose(board, 'restore')">還原</VListItem>
+            <template v-else><VListItem tag="button" type="button" role="menuitem" :aria-label="`編輯看板 ${board.name}`" @click="choose(board, 'edit')">編輯</VListItem><VListItem tag="button" type="button" role="menuitem" :aria-label="`封存看板 ${board.name}`" @click="choose(board, 'archive')">封存</VListItem></template>
+          </VList>
+        </VMenu>
       </footer>
     </article></div>
     <p v-if="!visible.length && !loading" class="subtle">{{ archived ? (search.trim() ? '沒有符合名稱的封存看板' : '目前沒有封存的看板') : '沒有符合名稱的看板' }}</p>
   </section>
 </template>
+
+<style scoped>
+.board-action-trigger { min-height: 44px; gap: 10px; padding: 8px 12px; font-size: 14px; }
+.board-action-menu { min-width: 180px; border: 1px solid var(--border); border-radius: 6px; }
+.board-action-menu :deep(.v-list-item) { min-height: 44px; font-size: 14px; width: 100%; display: flex; justify-content: flex-start; text-align: left; }
+</style>

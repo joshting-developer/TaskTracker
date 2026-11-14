@@ -56,6 +56,7 @@ async function fixture(page, browser) {
   const epic = await call(page.request, 'createIssue', { projectId: project.id, title: '會員功能', type: 'epic', state: 'open', assignee: identity.user.id });
   const tasks = [];
   for (let index = 0; index < 8; index++) tasks.push(await call(page.request, 'createIssue', { projectId: project.id, title: ['建立登入畫面', '驗證錯誤提示', '調整手機版導覽', '整理操作說明', '完成帳號設定', '測試資料隔離', '準備上線檢查', '確認郵件通知'][index], type: index === 1 ? 'bug' : 'task', state: index % 3 === 1 ? 'inprogress' : index % 3 === 2 ? 'closed' : 'open', description: '## 交付條件\n\n- 保留既有操作流程\n- 驗證桌面與手機版', assignee: identity.user.id, epicId: epic.id, priority: index === 1 ? 'high' : 'normal', estimateMinutes: 90, dueDate: '2026-11-30' }));
+  const board = await call(page.request, 'createBoard', { projectId: project.id, name: 'API整合', description: '公開介面與外部工具', selectedIssueIds: [epic.id] });
   const empty = await call(page.request, 'createProject', { name: '空白專案', code: 'EMPTY', description: '尚未建立卡片' });
   await call(page.request, 'createTodo', { title: '確認下一次測試範圍', content: '確認下一次測試範圍\n\n- [ ] 確認測試資料\n- [ ] 補齊操作紀錄' });
   const otherContext = await browser.newContext({ baseURL: origin });
@@ -66,7 +67,7 @@ async function fixture(page, browser) {
     await call(page.request, 'acceptWorkspaceInvite', { inviteToken: invite.token }, 'auth');
     await call(page.request, 'switchWorkspace', { workspaceId: identity.workspace.id }, 'auth');
     execFileSync('docker', ['compose', '-p', 'tasktracker-codex-visual', '-f', resolve(import.meta.dirname, '../../../docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', 'tools/visual-fixture-clock.php'], { cwd: resolve(import.meta.dirname, '../../..'), input: JSON.stringify({ userId: identity.user.id, workspaceId: identity.workspace.id, projectId: project.id, emptyId: empty.id }), stdio: ['pipe', 'pipe', 'pipe'] });
-    return { identity, project, empty, tasks, other, privateProject };
+    return { identity, project, empty, tasks, board, other, privateProject };
   } finally { await otherContext.close(); }
 }
 
@@ -175,6 +176,16 @@ test('representative workspace flows', async ({ page, browser }) => {
   await expect(editor).not.toBeVisible();
   await navigation(page);
   await page.getByRole('link', { name: '任務看板', exact: true }).click();
+  await page.getByRole('button', { name: '看板操作 API整合', exact: true }).waitFor();
+  await shot(page, '25-board-list');
+  await page.getByRole('button', { name: '看板操作 API整合', exact: true }).click();
+  await page.getByRole('menuitem', { name: '封存看板 API整合', exact: true }).waitFor();
+  await shot(page, '26-board-menu');
+  await page.getByRole('menuitem', { name: '封存看板 API整合', exact: true }).click();
+  const archiveConfirm = page.getByRole('dialog', { name: '封存看板「API整合」？', exact: true });
+  await archiveConfirm.waitFor();
+  await shot(page, '27-board-archive-confirm');
+  await archiveConfirm.getByRole('button', { name: '取消', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await page.locator('.issue-card').first().waitFor();
   await shot(page, '09-board');

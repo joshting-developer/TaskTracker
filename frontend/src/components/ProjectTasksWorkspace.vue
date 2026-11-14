@@ -14,6 +14,7 @@ import IssueList from './IssueList.vue';
 
 const BoardList = lazyFeature(() => import('./BoardList.vue'));
 const BoardDialog = lazyFeature(() => import('./BoardDialog.vue'));
+const BoardLifecycleDialog = lazyFeature(() => import('./BoardLifecycleDialog.vue'));
 const ProjectBoard = lazyFeature(() => import('./ProjectBoard.vue'));
 const IssuePanel = lazyFeature(() => import('./IssuePanel.vue'));
 const IssueDetail = lazyFeature(() => import('./IssueDetail.vue'));
@@ -27,7 +28,7 @@ const canWrite = computed(() => props.project.permissions.includes('issue.write'
 const canManage = computed(() => props.project.permissions.includes('board.manage'));
 const canDelete = computed(() => props.project.permissions.includes('issue.delete'));
 const scopeKey = computed(() => `${props.workspaceId}:${props.project.id}:${props.mode}:${props.boardId}:${props.scope}:${props.detailPage ? props.issueId : 'browse'}`);
-const archiving = ref(false), archiveRequests = new Map();
+const archiving = ref(false), archiveRequests = new Map(), boardAction = shallowRef(null), boardActionError = ref('');
 const deleting = ref(false), deleteRequests = new Map();
 const busy = computed(() => Boolean(archiving.value || deleting.value || issueTool.value?.saving || detailTool.value?.saving || boardTool.value?.saving));
 const dirty = computed(() => Boolean(issueTool.value?.dirty || detailTool.value?.dirty || boardTool.value?.dirty));
@@ -59,7 +60,7 @@ watch(issuePage, value => { if (value && filters.page.value > accessibleIssuePag
 const transition = useIssueTransitions({ canWrite, contextKey: scopeKey, saved: async () => { await reload(); if (detail.value) await loadDetail(); }, refresh: async () => { await reload(); if (detail.value) await loadDetail(); }, onError: value => { error.value = value; }, apply: applyMove });
 const moving = transition.moving;
 watch([dragging, moving], () => { holdBackground.value = dragging.value || Boolean(moving.value); }, { flush: 'sync' });
-watch(scopeKey, () => { dragging.value = false; });
+watch(scopeKey, () => { dragging.value = false; boardAction.value = null; });
 /** 拖曳放下即先移動卡片；失敗時若列仍是本次套用的版本才還原，避免覆蓋之後的伺服器資料。 */
 function applyMove(issue, fields) {
   const original = rows.value.find(row => row.id === issue.id);
@@ -84,7 +85,7 @@ function handleFailure(failure) {
 }
 
 watch(canWrite, allowed => { if (!allowed) editor.value = null; });
-watch(canManage, allowed => { if (!allowed) boardEditor.value = null; });
+watch(canManage, allowed => { if (!allowed) { boardEditor.value = null; boardAction.value = null; } });
 function lookup(kind, filters, options) {
   return kind === 'member' ? api.members(props.project.id, filters, options) : api.issueOptions(props.project.id, {...filters, kind, exclude: props.issueId || ''}, options);
 }
@@ -153,31 +154,44 @@ async function savedIssue(result, isNew = false) {
 }
 
 function closeEditor() { editor.value = null; if (!props.detailPage && props.issueId) emit('close-issue'); else nextTick(() => detailTool.value?.focus()); }
-async function archive() {
-  if (archiving.value || !window.confirm(`封存看板「${board.value.name}」？卡片、留言和工時都會保留，之後可以在「已封存」裡查看或還原。`)) return;
-  const key = `${board.value.id}:${board.value.revision}`;
+function askBoardAction(target, action) {
+  if (!target || target.isDefault || !canManage.value || archiving.value) return;
+  boardActionError.value = '';
+  boardAction.value = { target: { ...target }, action, context: scopeKey.value };
+}
+function closeBoardAction() {
+  if (archiving.value) return;
+  const id = boardAction.value?.target.id;
+  boardAction.value = null;
+  nextTick(() => document.querySelector(`[data-board-actions="${CSS.escape(id || '')}"]`)?.focus());
+}
+async function reloadBoardAction() {
+  const intent = boardAction.value;
+  if (!intent || archiving.value) return;
+  try {
+    const fresh = await api.board(props.project.id, intent.target.id);
+    if (boardAction.value !== intent) return;
+    if (Boolean(fresh.archivedAt) !== (intent.action === 'restore')) { closeBoardAction(); await reload(); return; }
+    boardAction.value = { ...intent, target: fresh }; boardActionError.value = '';
+  } catch (failure) { boardActionError.value = failure.message; }
+}
+async function confirmBoardAction() {
+  const intent = boardAction.value;
+  if (!intent || archiving.value || !canManage.value || intent.context !== scopeKey.value) return;
+  const { target, action } = intent, key = `${action}:${target.id}:${target.revision}`;
   if (!archiveRequests.has(key)) archiveRequests.set(key, crypto.randomUUID());
   archiving.value = true;
   try {
-    await api.archiveBoard({ id: board.value.id, expectedRevision: board.value.revision, requestId: archiveRequests.get(key) });
-    archiveRequests.delete(key); archiving.value = false; emit('list');
-  } catch (failure) { handleFailure(failure); }
-  finally { archiving.value = false; }
-}
-
-// TT-283：還原封存的看板；同一版本重試沿用requestId。從看板頁還原就留在原頁, 從清單還原就重新整理清單。
-const restoreRequests = new Map();
-async function restoreBoard(target) {
-  if (archiving.value || !canManage.value) return;
-  const key = `${target.id}:${target.revision}`;
-  if (!restoreRequests.has(key)) restoreRequests.set(key, crypto.randomUUID());
-  archiving.value = true;
-  try {
-    await api.restoreBoard({ id: target.id, expectedRevision: target.revision, requestId: restoreRequests.get(key) });
-    restoreRequests.delete(key); archiving.value = false;
-    emit('notify', `已還原看板「${target.name}」`); await reload();
-  } catch (failure) { handleFailure(failure); }
-  finally { archiving.value = false; }
+    const send = action === 'archive' ? api.archiveBoard : api.restoreBoard;
+    await send({ id: target.id, expectedRevision: target.revision, requestId: archiveRequests.get(key) });
+    archiveRequests.delete(key); archiving.value = false; closeBoardAction();
+    emit('notify', `已${action === 'archive' ? '封存' : '還原'}看板「${target.name}」`);
+    if (action === 'archive' && props.mode === 'board') emit('list');
+    else await reload();
+  } catch (failure) {
+    boardActionError.value = failure.message;
+    if (['UNAUTHENTICATED', 'FORBIDDEN', 'WORKSPACE_CHANGED'].includes(failure.code)) { boardAction.value = null; handleFailure(failure); }
+  } finally { archiving.value = false; }
 }
 
 // 永久刪除：確認後以目前revision送出，同一版本重試沿用requestId；成功回上一層，409（工時／子卡／版本）顯示原因。
@@ -216,17 +230,18 @@ onBeforeUnmount(() => { alive = false; optionGeneration++; optionRequest?.abort(
         <footer v-if="issuePage" class="table-footer"><span role="status">{{ issuePage.total }} 筆結果<span v-if="accessibleIssuePage < issuePage.lastPage"> · 請縮小篩選範圍以查看其餘結果</span></span><div v-if="accessibleIssuePage > 1" class="pagination"><button class="icon-button previous" aria-label="上一頁" :disabled="filters.page.value <= 1 || loading" @click="filters.page.value--"><Icon name="chevron" :size="15" /></button><span>{{ issuePage.page }} / {{ accessibleIssuePage }}</span><button class="icon-button" aria-label="下一頁" :disabled="filters.page.value >= accessibleIssuePage || loading" @click="filters.page.value++"><Icon name="chevron" :size="15" /></button></div></footer>
       </section>
       <template v-if="mode === 'boards' && boardPage">
-        <BoardList :boards="listArchived ? boardPage.items : [boardPage.defaultBoard, ...boardPage.items]" :issues="[]" :remote="true" :archived="listArchived" :can-manage="canManage" :loading="loading || archiving" @search="value => { listPage = 1; listSearch = value; }" @archived="value => { listArchived = value; }" @open="id => emit('board', id)" @create="editBoard()" @edit="editBoard" @restore="restoreBoard" />
+        <BoardList :boards="listArchived ? boardPage.items : [boardPage.defaultBoard, ...boardPage.items]" :issues="[]" :remote="true" :archived="listArchived" :can-manage="canManage" :loading="loading || archiving" @search="value => { listPage = 1; listSearch = value; }" @archived="value => { listArchived = value; }" @open="id => emit('board', id)" @create="editBoard()" @edit="editBoard" @restore="target => askBoardAction(target, 'restore')" @archive="target => askBoardAction(target, 'archive')" />
         <div v-if="boardPage.lastPage > 1" class="pagination"><button class="button secondary" :disabled="listPage <= 1" @click="listPage--">上一頁</button><span>{{ listPage }} / {{ boardPage.lastPage }}</span><button class="button secondary" :disabled="listPage >= boardPage.lastPage" @click="listPage++">下一頁</button></div>
       </template>
       <section v-if="mode === 'board' && board" class="task-workspace">
-        <header class="selected-board-heading"><div class="selected-board-identity"><button class="navigation-back" @click="emit('list')"><Icon name="chevron" :size="16" />返回看板列表</button><div class="selected-board-title"><h3>{{ board.name }}</h3><p v-if="board.description" class="selected-board-description">{{ board.description }}</p></div></div><div v-if="!board.isDefault && canManage && !board.archivedAt" class="selected-board-actions"><button class="button secondary" aria-label="編輯看板" @click="editBoard(board)">編輯</button><button class="text-button danger-text" @click="archive">封存看板</button></div></header>
-        <div v-if="board.archivedAt" class="board-archived-note" role="status"><span>這個看板已封存，只能查看；卡片本身沒有被封存，還是可以在任務列表裡編輯。</span><button v-if="canManage" class="button secondary" :disabled="archiving" @click="restoreBoard(board)">還原看板</button></div>
+        <header class="selected-board-heading"><div class="selected-board-identity"><button class="navigation-back" @click="emit('list')"><Icon name="chevron" :size="16" />返回看板列表</button><div class="selected-board-title"><h3>{{ board.name }}</h3><p v-if="board.description" class="selected-board-description">{{ board.description }}</p></div></div><div v-if="!board.isDefault && canManage && !board.archivedAt" class="selected-board-actions"><button class="button secondary" aria-label="編輯看板" @click="editBoard(board)">編輯</button><button class="text-button danger-text" @click="askBoardAction(board, 'archive')">封存看板</button></div></header>
+        <div v-if="board.archivedAt" class="board-archived-note" role="status"><span>這個看板已封存，只能查看；卡片本身沒有被封存，還是可以在任務列表裡編輯。</span><button v-if="canManage" class="button secondary" :disabled="archiving" @click="askBoardAction(board, 'restore')">還原看板</button></div>
         <IssueFilters v-model:expanded="filtersExpanded" :lookup="lookup" :lookup-context="project.id" @option="rememberOption" v-model="filterInput" :states="filters.projectStates.value" :members="memberNames" :issues="contextRows" :active-filter-chips="filters.activeFilterChips.value" :filter-warnings="[]" @remove="filters.removeFilter" @clear="filters.clearFilters" />
         <p v-if="loadingCards" role="status">載入卡片中…</p>
         <ProjectBoard v-if="!loadingCards || rows.length" :project="project" :issues="contextRows" :visible-issues="filters.visibleIssues.value" :entries="[]" :members="memberNames" :user-id="userId" :today="today" :board-key="boardId" :sync-state="realtime" :can-write="canWrite && !board.archivedAt" :can-create="canWrite && !board.archivedAt && (board.isDefault || canManage)" :moving="moving" @open="(issue, full) => emit('issue', issue, full)" @drag="value => { dragging = value; }" @move="transition.moveIssue" @create="defaults => prepareEditor(null, defaults)" />
       </section>
     </template>
+    <BoardLifecycleDialog v-if="boardAction" :board="boardAction.target" :action="boardAction.action" :busy="archiving" :error="boardActionError" @confirm="confirmBoardAction" @close="closeBoardAction" @reload="reloadBoardAction" />
     <BoardDialog v-if="boardEditor" ref="boardTool" :project="project" :issues="[]" :board="boardEditor.board" :remote="true" @close="boardEditor = null" @saved="savedBoard" @reload="reload" />
     <IssuePanel :inline="Boolean(detailPage && detail)" :lookup="lookup" v-if="editor && canWrite" ref="issueTool" :key="editor.issue?.id || 'create'" :issue="editor.issue" :projects="[project]" :default-project="project.id" :default-type="editor.type || 'task'" :default-state="editor.state || project.statuses[0].id" :default-epic-id="editor.epicId || ''" :default-board-id="boardId" :members="memberNames" :issues="detailRows" :entries="[]" :activity-loader="loadActivity" :can-expand="true" @expand="emit('issue', detail, true)" @close="closeEditor" @open="(issue, full = false) => emit('issue', issue, full)" @saved="savedIssue" @reload="reloadEditor" />
   </div>

@@ -628,7 +628,8 @@ async function checkCustomBoards(page) {
   assert.equal(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth), true);
   await page.screenshot({ path: 'artifacts/board-picker-mobile.png', fullPage: true });
   await dialog.getByRole('button', { name: '關閉看板設定', exact: true }).click();
-  page.once('dialog', event => event.accept()); await page.getByRole('button', { name: '封存看板', exact: true }).click();
+  await page.getByRole('button', { name: '封存看板', exact: true }).click();
+  await page.getByRole('dialog').filter({ hasText: '卡片、留言和工時都會保留' }).getByRole('button', { name: '封存看板', exact: true }).click();
   await page.getByRole('button', { name: '開啟看板 Default', exact: true }).click();
   await page.getByRole('button', { name: '由自訂看板建立', exact: true }).waitFor();
   assert.equal(await page.locator('.issue-card').count(), 7, '封存看板保留所有卡片與Epic');
