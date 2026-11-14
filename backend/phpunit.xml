@@ -32,5 +32,8 @@
         <env force="true" name="PULSE_ENABLED" value="false"/>
         <env force="true" name="TELESCOPE_ENABLED" value="false"/>
         <env force="true" name="NIGHTWATCH_ENABLED" value="false"/>
+        <!-- TT-335：隔離Compose給瀏覽器測試設了倍數50, PHPUnit要驗原本的限流次數, 固定為1；Laravel先讀$_SERVER, 所以兩邊都要蓋 -->
+        <env force="true" name="TASKTRACKER_AUTH_THROTTLE_SCALE" value="1"/>
+        <server force="true" name="TASKTRACKER_AUTH_THROTTLE_SCALE" value="1"/>
     </php>
 </phpunit>
