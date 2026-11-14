@@ -32,7 +32,8 @@ try {
     const { api } = await import('/src/api/index.js');
     let project = await api.createProject({ name: 'UI 驗證專案', code: 'UX', requestId: crypto.randomUUID() });
     project = await api.project(project.id);
-    const issue = await api.createIssue({ projectId: project.id, title: '閱讀詳細需求', description: '第一段背景與驗收條件\n確認日期、權限與畫面流程', requestId: crypto.randomUUID() });
+    let issue = await api.createIssue({ projectId: project.id, title: '閱讀詳細需求', description: '第一段背景與驗收條件\n確認日期、權限與畫面流程', requestId: crypto.randomUUID() });
+    issue = await api.issue(project.id, issue.id);
     return { project, issue };
   });
   await page.evaluate(async () => {
@@ -82,17 +83,22 @@ try {
   assert.equal(saved[0].minutes, 30);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByRole('link', { name: '通知預覽', exact: true }).click();
-  const readable = await page.locator('.smtp-card p').evaluate(el => {
-    const style = getComputedStyle(el), parent = getComputedStyle(el.closest('.smtp-card'));
-    const luminance = rgb => {
-      const parts = rgb.match(/[\d.]+/g).slice(0, 3).map(Number).map(v => v / 255).map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
-      return parts[0] * 0.2126 + parts[1] * 0.7152 + parts[2] * 0.0722;
-    };
-    const a = luminance(style.color), b = luminance(parent.backgroundColor);
-    return { size: parseFloat(style.fontSize), contrast: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) };
-  });
-  assert.ok(readable.size >= 13 && readable.contrast >= 4.5, JSON.stringify(readable));
-  await page.screenshot({ path: `${artifacts}/notifications-1440.png` });
+  const readability = [];
+  for (const width of [1440, 768, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    const readable = await page.locator('.smtp-card p').evaluate(el => {
+      const style = getComputedStyle(el), parent = getComputedStyle(el.closest('.smtp-card'));
+      const luminance = rgb => {
+        const parts = rgb.match(/[\d.]+/g).slice(0, 3).map(Number).map(v => v / 255).map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+        return parts[0] * 0.2126 + parts[1] * 0.7152 + parts[2] * 0.0722;
+      };
+      const a = luminance(style.color), b = luminance(parent.backgroundColor);
+      return { size: parseFloat(style.fontSize), contrast: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) };
+    });
+    readability.push({ width, ...readable });
+    assert.ok(readable.size >= 13 && readable.contrast >= 4.5, JSON.stringify(readable));
+    await page.screenshot({ path: `${artifacts}/notifications-${width}.png` });
+  }
   await page.goto(`${baseURL}/app/#/projects/${fixture.project.id}/issues/${fixture.issue.id}?detail=1`);
   const detail = page.getByRole('region', { name: '任務完整頁', exact: true });
   await detail.getByRole('heading', { name: fixture.issue.title, exact: true }).waitFor();
@@ -163,6 +169,7 @@ try {
   page.once('dialog', dialog => dialog.accept());
   await drawer.getByRole('button', { name: '關閉工時面板', exact: true }).click();
   // 從工時卡片進任務, 返回仍回原功能與 URL。
+  await page.getByRole('button', { name: `查看 ${dateInTaipei()} 工時明細`, exact: true }).click();
   await page.locator('.time-issue-link').first().click();
   await page.getByRole('dialog').getByRole('button', { name: '關閉任務', exact: true }).click();
   assert.equal(page.url(), `${projectUrl}/time`);
@@ -172,7 +179,7 @@ try {
   reader.on('pageerror', error => failures.push(error.message));
   await reader.goto(`${baseURL}/app/#/invite?token=${invite.token}`);
   await reader.getByLabel('你的名字').fill('UI Reader');
-  await reader.getByLabel('Email', { exact: true }).fill(invite.email);
+  await reader.getByLabel('確認密碼', { exact: true }).fill('ui-local-test-password');
   await reader.getByLabel('密碼', { exact: true }).fill('ui-local-test-password');
   await reader.getByRole('button', { name: '加入工作空間', exact: true }).click();
   await openProjectList(reader);
@@ -207,7 +214,7 @@ try {
   await readerTodos.locator('.notes-list li').first().waitFor();
   assert.equal(await readerTodos.locator('.notes-list li').count(), 5);
   assert.equal(await readerTodos.locator(`[data-todo-id="${assigned[0].id}"]`).count(), 1);
-  await reader.getByRole('button', { name: /通知/ }).click();
+  await reader.getByRole('button', { name: /^通知（/ }).click();
   await reader.getByRole('dialog', { name: '通知', exact: true }).getByRole('button').filter({ hasText: '通知定位 1' }).click();
   const focusedTodo = reader.getByRole('dialog', { name: '紙條', exact: true });
   await focusedTodo.getByText('通知定位 1', { exact: true }).waitFor();
@@ -216,7 +223,7 @@ try {
   assert.deepEqual(failures, []);
   console.log('PASS: U03 五種功能重整／深連結、瀏覽器前後、草稿阻擋、Issue 返回原功能、reader 權限回退');
   console.log('PASS: U02 紙條列表與建立分頁首屏；U04 三處 tab 鍵盤；U06 手機閱讀／展開屬性；U07 平板工具列；U08 44px 觸控目標');
-  console.log('PASS: U01 文字對比與字級；U05 整數分鐘提示、欄位關聯／焦點／草稿及有效工時保存', readable);
+  console.log('PASS: U01 文字對比與字級；U05 整數分鐘提示、欄位關聯／焦點／草稿及有效工時保存', readability);
 } finally {
   await browser?.close();
   await vite?.close();

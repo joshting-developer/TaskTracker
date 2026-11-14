@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "516fd9b3ea6b8403d211e62e27db7da9427e2beab0c11e66a50dcc55114ef84d",
+  "harnessSha256": "7369c2ed08fdfc4d873c0282b0e71f9edbaefe1910cf798f3a00da09669bfa19",
   "profile": "darwin-arm64",
-  "reviewer": "Josh standing authorization / TT-340",
-  "note": "受邀信箱唯讀、雙遮罩密碼, 三尺寸已檢視, 保留既有門檻",
-  "manifestSha256": "332d15dbfa2acfa86a331f9e801a94bae5f62da766decb0138c689758239a159",
+  "reviewer": "Josh standing authorization / TT-334",
+  "note": "通知預覽SMTP狀態13px, 三尺寸已檢視並補入正式基準, 比較門檻維持",
+  "manifestSha256": "ecdc9e6c09f6640d727f04121b88996d2445112dfef885c92d291f949bebf96a",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

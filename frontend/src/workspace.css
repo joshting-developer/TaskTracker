@@ -119,7 +119,7 @@
 .report-row, .report-epic > span,
 .status-order, .preview-pill,
 .report-row > div:first-child, .notification-card .type-tag { color: var(--text-secondary); }
-.notification-meta, .smtp-card small, .report-epic > span,
+.notification-meta, .smtp-card small, .smtp-card p, .report-epic > span,
 .preview-pill { font-size: 13px; }
 .settings-explanation p { font-size: 14px; }
 .notification-card .type-tag { font-size: 12px; }

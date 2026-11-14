@@ -267,5 +267,9 @@ test('representative workspace flows', async ({ page, browser }) => {
   await page.reload();
   await page.getByRole('region', { name: '待接受邀請', exact: true }).getByText('pending-visual@example.test', { exact: true }).waitFor();
   await shot(page, '29-workspace-pending-invitations');
+  await page.goto(`/app/#/projects/${data.empty.id}/notifications`);
+  await expect(page.locator('.smtp-card p')).toHaveText('尚未設定 SMTP');
+  await page.getByRole('heading', { name: '目前還沒有通知', exact: true }).waitFor();
+  await shot(page, '31-smtp-preview');
   expect(errors).toEqual([]);
 });
