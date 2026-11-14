@@ -18,3 +18,9 @@
 - 全量59支已結束：29支首次通過、5支修正fixture／設定後重跑通過、17支環境受阻、8支仍失敗；完整清單與失敗位置見docs/tt162-browser-regression-2026-11-14.md, 不宣稱全量通過
 - 後續查重後建TT-336並確認收錄結構優化, 交辦Claude 444a850a；已存在字級問題仍由TT-334追蹤, 不降安全／可讀性／請求預算門檻
 - 本次只補4支測試caller, 5支真Chrome重跑均通過, 產品來源未再修改；69張正式視覺證據仍對應程式階段
+
+## 紙條重新分析
+
+- 已完整讀Josh退回紙條, 核對routes/console.php、MaintenanceService、AttachmentCleanupService、AttachmentService及HttpOperationLog
+- 正式mail inline／queue sync／broadcast null已由TT-323實測, 無寄信背景排程需求；保留附件與過期紀錄清理CLI, 初期建議人工按需執行, 不新增每小時喚醒
+- 補文件區分API立即拒絕過期附件與實體回收, 沒有自動清理便不承諾到期即刪或自動失敗通知；這次沒有對正式庫清理／刪檔
