@@ -2,7 +2,7 @@
 
 唯一正文來源為 `/Users/josh/workspace/side-project/skills`（換機可用 `SIDE_PROJECT_SKILLS_ROOT` 配置）。
 
-先讀該庫README、PROJECT-BASELINE與registry.json，再依任務載入Skill。分類：01-common共通／任務追蹤／Ponytail，02-backend Laravel，03-frontend Vue，04-design UI／UX，05-performance效能。
+先讀該庫README、PROJECT-BASELINE與registry.json，再依任務載入Skill。分類：01-common共通／任務追蹤／Ponytail，02-backend Laravel，03-frontend Vue，04-design UI／UX，05-performance效能, 06-deploy部署（目前Fly.io）。
 
 本目錄僅保留相容索引／來源與連結，不另存Skill副本；`.agents/skills`為自動發現入口。TaskTracker特定框架、時區、權限、API契約及隔離測試見根AGENTS與docs/project-engineering-bindings.md。
 
