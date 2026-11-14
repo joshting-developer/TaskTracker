@@ -14,7 +14,7 @@
 
 fly.toml包含正式一般設定、CA的files掛載、HTTPS、自動停啟及release command。Secrets只以私有0600檔案stdin匯入；特殊字元須依dotenv語法引用, 第一輪未引用造成Redis認證失敗, 引用後同映像重新套用已通過, 未修改Redis原密碼
 
-正式MySQL為task_tracker, Redis命名空間tasktracker:production:, 兩者驗CA與主機名稱。Session為database／secure／host-only, 公開註冊關閉, mail inline／queue sync／broadcast null, 附件r2-attachments。TT-162重新分析後建議初期只在有需要時人工維護, 不定時喚醒Fly；沒有自動清理期限保證, 不宣稱已有外部觸發／常駐worker或Reverb
+正式MySQL為task_tracker, Redis命名空間tasktracker:production:, 兩者驗CA與主機名稱。Session為database／secure／host-only, 公開註冊依TT-347改為開放並保留信箱啟用, mail inline／queue sync／broadcast null, 附件r2-attachments。TT-162重新分析後建議初期只在有需要時人工維護, 不定時喚醒Fly；沒有自動清理期限保證, 不宣稱已有外部觸發／常駐worker或Reverb
 
 ## 驗證
 

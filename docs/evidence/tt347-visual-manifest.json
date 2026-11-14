@@ -1,0 +1,44 @@
+{
+  "images": [
+    {
+      "name": "after-login-1440.png",
+      "sha256": "ec6f89aa1709fdc3abf9d283bd51c81499427bec5363d7ce2d623aeca5f6ccc5"
+    },
+    {
+      "name": "after-login-390.png",
+      "sha256": "ab511633945ed3da61695ffbf400e297e99ce251cfd922bcd9eed55938883b30"
+    },
+    {
+      "name": "after-login-768.png",
+      "sha256": "53894ac8e37d342d7dfa44a8f495bbe85f2e4233c1499d229adf00126b8ffda3"
+    },
+    {
+      "name": "after-register-1440.png",
+      "sha256": "5b44cabcffcf7b41cf72eeff3469c9702e79ba537f6c8affac2bf620ce2e6af8"
+    },
+    {
+      "name": "after-register-390.png",
+      "sha256": "85bfab6cefaa0514aac882109a84660e9fc834c9af9b4d416a4c834ebe854d9d"
+    },
+    {
+      "name": "after-register-768.png",
+      "sha256": "4f372a2c9eb14118b38f0eca24add559953bb100a038b861731467c53f36230b"
+    }
+  ],
+  "origin": "https://task-tracker.josh-ting.com",
+  "scope": "anonymous login and registration form only; no signup submitted",
+  "beforeImages": [
+    {
+      "name": "before-login-1440.png",
+      "sha256": "a48e5995affdb30770089804939fab39034e2080613d3ed8ae6ab0ff7a9dd0d0"
+    },
+    {
+      "name": "before-login-390.png",
+      "sha256": "794f4de5d1c85a7c9886785f310b1042b4a17502e237bc0af09d26c62954a8f8"
+    },
+    {
+      "name": "before-login-768.png",
+      "sha256": "f44b9d8e11185794e43a60983dd395c2159e09b61e74be83a2f03c2431ebeb79"
+    }
+  ]
+}

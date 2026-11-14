@@ -1,0 +1,10 @@
+{
+  "approved": true,
+  "reviewer": "Josh",
+  "authorization": "Standing authorization to save UI candidates directly; real browser checks and comparisons still required",
+  "manifestFile": "docs/evidence/tt347-visual-manifest.json",
+  "manifestSha256": "9182f2b0ffb4084080330f11bb29476d77e072a002894c3f07d8ea9f69e0e0ce",
+  "harnessSha256": "4d3d2d407c973a9cbb791a71e310d56bd7c4e01eba8a4a8aaa9f520eb1806bbd",
+  "images": 6,
+  "comparison": "exact pixels, no threshold relaxation"
+}
