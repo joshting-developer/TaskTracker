@@ -1,0 +1,95 @@
+# App creation must use the organization confirmed by Josh.
+app = "tasktracker-josh"
+primary_region = "nrt"
+kill_signal = "SIGTERM"
+kill_timeout = "35s"
+
+[build]
+  dockerfile = "docker/production/Dockerfile"
+  [build.args]
+    VITE_SITE_ORIGIN = "https://task-tracker.josh-ting.com"
+
+[deploy]
+  release_command = "php artisan migrate --force --no-interaction"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 12
+    hard_limit = 20
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval = "30s"
+    method = "GET"
+    path = "/api/health"
+    timeout = "5s"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "512mb"
+
+[[files]]
+  guest_path = "/run/secrets/tasktracker/mysql-ca.pem"
+  secret_name = "MYSQL_CA_BASE64"
+
+[[files]]
+  guest_path = "/run/secrets/tasktracker/redis-ca.pem"
+  secret_name = "REDIS_CA_BASE64"
+
+[env]
+  APP_NAME = "TaskTracker"
+  APP_ENV = "production"
+  APP_DEBUG = "false"
+  APP_URL = "https://tasktracker-josh.fly.dev"
+  ALLOWED_ORIGINS = "https://tasktracker-josh.fly.dev,https://task-tracker.josh-ting.com"
+  LOG_CHANNEL = "stderr"
+  LOG_LEVEL = "warning"
+  PORT = "8080"
+  PHP_FPM_MAX_CHILDREN = "4"
+  TASKTRACKER_PUBLIC_REGISTRATION = "false"
+  DB_CONNECTION = "mysql"
+  DB_HOST = "129.203.169.36"
+  DB_PORT = "3306"
+  DB_DATABASE = "task_tracker"
+  DB_COLLATION = "utf8mb4_bin"
+  DB_CONNECT_TIMEOUT = "3"
+  MYSQL_SSL_ENABLED = "true"
+  MYSQL_SSL_VERIFY_SERVER_CERT = "true"
+  MYSQL_ATTR_SSL_CA = "/run/secrets/tasktracker/mysql-ca.pem"
+  SESSION_DRIVER = "database"
+  SESSION_COOKIE = "tasktracker_production_session"
+  SESSION_PATH = "/"
+  SESSION_SECURE_COOKIE = "true"
+  SESSION_HTTP_ONLY = "true"
+  SESSION_SAME_SITE = "lax"
+  SESSION_LIFETIME = "480"
+  CACHE_STORE = "redis"
+  CACHE_PREFIX = "cache:"
+  REDIS_CLIENT = "predis"
+  REDIS_HOST = "129.203.136.170"
+  REDIS_PORT = "6379"
+  REDIS_SCHEME = "tls"
+  REDIS_SSL_CA = "/run/secrets/tasktracker/redis-ca.pem"
+  REDIS_CONNECT_TIMEOUT = "3"
+  REDIS_READ_TIMEOUT = "3"
+  REDIS_PREFIX = "tasktracker:production:"
+  REDIS_DB = "0"
+  REDIS_CACHE_DB = "0"
+  QUEUE_CONNECTION = "sync"
+  BROADCAST_CONNECTION = "null"
+  MAIL_DELIVERY_MODE = "inline"
+  MAIL_MAILER = "smtp"
+  MAIL_SCHEME = "smtp"
+  MAIL_PORT = "587"
+  MAIL_FROM_NAME = "TaskTracker"
+  ATTACHMENTS_DISK = "r2-attachments"
+  R2_REGION = "auto"
+  R2_CONNECT_TIMEOUT = "3"
+  R2_TIMEOUT = "15"
