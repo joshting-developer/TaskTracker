@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Domain\DomainError;
+use App\Http\AccountSessionBoundary;
 use App\Http\Requests\EmailVerificationRequest;
 use App\Http\Resources\ApiResponse;
-use App\Http\WorkspaceSession;
 use App\Services\EmailVerificationService;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,9 +14,9 @@ class EmailVerificationController extends Controller
 {
     /** 注入驗證用例與HTTP工作區資格邊界
      * @param  EmailVerificationService  $verification  驗證用例
-     * @param  WorkspaceSession  $session  已驗證後的工作區資格
+     * @param  AccountSessionBoundary  $session  啟用後的帳號身分, 工作區可為空
      */
-    public function __construct(private EmailVerificationService $verification, private WorkspaceSession $session) {}
+    public function __construct(private EmailVerificationService $verification, private AccountSessionBoundary $session) {}
 
     /** 驗證一次性憑證並建立已驗證資格
      * @param  EmailVerificationRequest  $request  CSRF保護的驗證輸入
@@ -32,7 +32,7 @@ class EmailVerificationController extends Controller
         $request->session()->forget('pending_user_id');
         $request->session()->put('workspace_id', $account->workspaceId);
 
-        return new ApiResponse($this->session->context($request), true);
+        return new ApiResponse($this->session->handle($request, 'current'), true);
     }
 
     /** 重驗冷卻與地址後撤銷舊事件並重寄

@@ -218,17 +218,45 @@ class AccountService
         if (! $valid) {
             DomainError::fail('UNAUTHENTICATED', 'Email 或密碼不正確');
         }
-        $memberships = $this->memberships;
         if (! empty($input['inviteToken'])) {
-            $workspaceId = $memberships->accept($user, $input);
+            $workspaceId = $this->memberships->accept($user, $input);
         } else {
-            $workspaceId = $memberships->listing($user)[0]['id'] ?? null;
-        }
-        if (! $workspaceId) {
-            DomainError::fail('UNAUTHENTICATED', '找不到工作空間資格');
+            $workspaceId = $this->accounts->firstWorkspace($user->id);
         }
 
         return new AuthenticatedAccountData($user, $workspaceId);
+    }
+
+    /**
+     * 驗證帳號本身的啟用資格, 不要求擁有任何工作空間
+     *
+     * @param  User  $user  本次新鮮帳號
+     * @return void
+     */
+    public function requireEligible(User $user): void
+    {
+        if ($user->email_verification_required && ! $user->email_verified_at) {
+            DomainError::fail('FORBIDDEN', '請先完成信箱驗證');
+        }
+    }
+
+    /**
+     * 取得安全帳號身分, 沒有目前空間時不授予任何Workspace權限
+     *
+     * @param  User  $user  已驗登入版本的新鮮帳號
+     * @param  mixed  $workspaceId  伺服器Session目前空間
+     * @return array<string,mixed> workspace可為null的帳號身分
+     */
+    public function sessionIdentity(User $user, mixed $workspaceId): array
+    {
+        $this->requireEligible($user);
+        $workspace = is_string($workspaceId) ? $this->accounts->workspace($workspaceId) : null;
+        $member = $workspace ? $this->accounts->membership($workspace->id, $user->id) : null;
+        if (! $member) {
+            return ['user' => $this->publicUser($user), 'workspace' => null, 'role' => null, 'permissions' => []];
+        }
+
+        return ['user' => $this->publicUser($user), 'workspace' => ['id' => $workspaceId, 'name' => $workspace->name], 'role' => $member->role, 'permissions' => WorkspacePermissions::resolve($member->role)];
     }
 
     /**

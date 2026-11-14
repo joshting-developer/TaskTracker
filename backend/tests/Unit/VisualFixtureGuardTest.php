@@ -42,6 +42,21 @@ class VisualFixtureGuardTest extends TestCase
         }
     }
 
+    /** 防止零工作區fixture接觸正式資料
+     *
+     * @return void
+     */
+    public function test_detached_fixture_rejects_non_test_database_before_bootstrap(): void
+    {
+        foreach ([['production', '1', 'tasktracker_test'], ['testing', '0', 'tasktracker_test'], ['testing', '1', 'task_tracker']] as [$environment, $flag, $database]) {
+            $process = new Process([PHP_BINARY, base_path('tools/detach-workspace-fixture.php'), 'fixture@example.test'], base_path(), ['APP_ENV' => $environment, 'TASKTRACKER_MYSQL_TEST' => $flag, 'DB_DATABASE' => $database, 'DB_USERNAME' => 'tasktracker_test']);
+            $process->setTimeout(5);
+            $process->run();
+            $this->assertFalse($process->isSuccessful());
+            $this->assertStringContainsString('Only isolated detached fixtures are allowed', $process->getErrorOutput());
+        }
+    }
+
     /**
      * 提供非testing環境及缺少專用旗標的拒絕案例。
      *

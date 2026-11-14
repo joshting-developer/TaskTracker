@@ -95,4 +95,15 @@ class AccountRepository
     {
         return WorkspaceMember::where('workspace_id', $workspaceId)->where('user_id', $userId)->whereNull('disabled_at')->first(['role']);
     }
+
+    /**
+     * 登入只選第一個有效空間, 不載入完整成員資格清單
+     *
+     * @param  string  $userId  本人帳號
+     * @return ?string 第一個有效空間公開ID
+     */
+    public function firstWorkspace(string $userId): ?string
+    {
+        return WorkspaceMember::query()->join('workspaces as w', 'w.id', '=', 'workspace_members.workspace_id')->where('workspace_members.user_id', $userId)->whereNull('workspace_members.disabled_at')->orderBy('workspace_members.id')->value('w.public_id');
+    }
 }

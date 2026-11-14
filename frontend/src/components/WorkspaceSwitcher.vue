@@ -5,19 +5,20 @@ import Icon from './Icon.vue';
 const props = defineProps({ workspace: Object, switching: Boolean, change: Function, create: Function });
 const dialog = ref(null), trigger = ref(null), choices = ref([]), loading = ref(false), error = ref('');
 const creating = ref(false), name = ref(''), nameInput = ref(null);
-let creationRequestId = crypto.randomUUID();
+let creationRequestId = crypto.randomUUID(), opener;
+function restoreFocus() { const target = opener?.isConnected && opener.getBoundingClientRect().width ? opener : trigger.value; target?.focus(); }
 watch(name, () => { creationRequestId = crypto.randomUUID(); });
 async function beginCreate() { creating.value = true; error.value = ''; name.value = ''; await nextTick(); nameInput.value?.focus(); }
 async function submitCreation() {
   if (props.switching || !name.value.trim()) return;
   error.value = '';
   try {
-    if (await props.create({ workspaceName: name.value.trim(), requestId: creationRequestId })) { dialog.value?.close(); creating.value = false; await nextTick(); trigger.value?.focus(); }
+    if (await props.create({ workspaceName: name.value.trim(), requestId: creationRequestId })) { dialog.value?.close(); creating.value = false; await nextTick(); restoreFocus(); }
   } catch (failure) { error.value = failure.message; }
 }
-function close() { if (!props.switching) { dialog.value.close(); trigger.value?.focus(); } }
+function close() { if (!props.switching) { dialog.value.close(); restoreFocus(); } }
 async function open() {
-  dialog.value.showModal(); creating.value = false; loading.value = true; error.value = ''; choices.value = [];
+  opener = document.activeElement; dialog.value.showModal(); creating.value = false; loading.value = true; error.value = ''; choices.value = [];
   try { choices.value = (await api.listWorkspaces()).workspaces; }
   catch (failure) { error.value = failure.message; }
   finally { loading.value = false; }
@@ -25,13 +26,14 @@ async function open() {
 async function select(workspace) {
   if (workspace.id === props.workspace?.id) { close(); return; }
   error.value = '';
-  try { if (await props.change(workspace.id)) { dialog.value?.close(); await nextTick(); trigger.value?.focus(); } }
+  try { if (await props.change(workspace.id)) { dialog.value?.close(); await nextTick(); restoreFocus(); } }
   catch (failure) { error.value = failure.message; }
 }
+defineExpose({ open });
 onBeforeUnmount(() => dialog.value?.close());
 </script>
 <template>
-  <button ref="trigger" class="workspace-switch" aria-label="切換工作空間" aria-haspopup="dialog" :disabled="switching" @click="open"><span class="workspace-avatar">{{ workspace?.name.slice(0, 1) }}</span><span class="switcher-current"><strong>{{ workspace?.name }}</strong><span>切換工作空間</span></span><span class="workspace-chevron">⌄</span></button>
+  <button ref="trigger" class="workspace-switch" aria-label="切換工作空間" aria-haspopup="dialog" :disabled="switching" @click="open"><span class="workspace-avatar">{{ workspace?.name?.slice(0, 1) || '—' }}</span><span class="switcher-current"><strong>{{ workspace?.name || '無隸屬工作區' }}</strong><span>切換工作空間</span></span><span class="workspace-chevron">⌄</span></button>
   <dialog ref="dialog" class="workspace-picker" aria-labelledby="workspace-picker-title" @cancel.prevent="close">
     <header><h2 id="workspace-picker-title">選擇工作空間</h2><button class="icon-button" aria-label="關閉工作空間選擇" :disabled="switching" @click="close"><Icon name="close" /></button></header>
     <p v-if="loading || switching" role="status">{{ switching ? '正在切換工作空間…' : '正在載入工作空間…' }}</p>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountProfileController;
 use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\AuthController;
@@ -55,6 +56,10 @@ Route::post('/api/auth/current', [AuthController::class, 'current'])->name('auth
 Route::post('/api/auth/forgot-password', [PasswordResetController::class, 'request'])->name('auth.forgot-password')->middleware($authThrottle(5));
 Route::post('/api/auth/reset-password', [PasswordResetController::class, 'reset'])->name('auth.reset-password')->middleware($authThrottle(10));
 Route::post('/api/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
+
+foreach (['getProfile', 'updateProfile'] as $operation) {
+    Route::post('/api/auth/'.$operation, [AccountProfileController::class, 'execute'])->defaults('operation', $operation)->name('auth.'.$operation);
+}
 
 foreach (AccountSettings::OPERATIONS as $operation) {
     Route::post('/api/rpc/'.$operation, [AccountSettingsController::class, 'execute'])->defaults('operation', $operation)->name('rpc.'.$operation);

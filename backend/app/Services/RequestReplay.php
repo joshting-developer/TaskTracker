@@ -34,7 +34,7 @@ class RequestReplay
     {
         $requestId = Fields::text($input['requestId'] ?? null, '操作識別碼', 100, true);
         $key = $userId.':'.$requestId;
-        $signature = hash('sha256', $this->canonical([$operation, $input]));
+        $signature = $this->signature($operation, $input);
         $previous = $store->get($kind, $key);
         if ($previous) {
             if ($previous['signature'] !== $signature) {
@@ -52,6 +52,18 @@ class RequestReplay
         ]);
 
         return $result;
+    }
+
+    /**
+     * 對任意順序的JSON欄位產生一致簽章, 帳號與工作區重試共用
+     *
+     * @param  string  $operation  固定操作名稱
+     * @param  array<string,mixed>  $input  原始請求欄位
+     * @return string SHA256操作簽章
+     */
+    public function signature(string $operation, array $input): string
+    {
+        return hash('sha256', $this->canonical([$operation, $input]));
     }
 
     /**

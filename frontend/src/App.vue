@@ -33,6 +33,7 @@ const NotificationPreview = lazyFeature(() => import('./components/NotificationP
 const WorkspaceInvitation = lazyFeature(() => import('./components/WorkspaceInvitation.vue'));
 
 const leaveGuards = provideLeaveGuards();
+const workspaceSwitcher = useTemplateRef('workspaceSwitcher');
 const workspace = shallowRef({ projects: [], members: [], meta: {} });
 const authenticated = shallowRef(false), pendingVerification = shallowRef(null), authPageKey = shallowRef('');
 const pendingTodoId = shallowRef('');
@@ -74,7 +75,7 @@ const refresh = useRefreshQueue({
 });
 const isScopedRoute=computed(()=>isTaskRoute.value || (projectId.value && ['settings','notifications','time','members'].includes(section.value)) || (!projectId.value && ['home','notes','projects','settings','analysis'].includes(landing.value)));
 const personalSync=usePersonalSync({active:computed(()=>authenticated.value&&!switchingWorkspace.value&&workspace.value.meta.permissions?.includes('todo.read')),context:computed(()=>`${workspace.value.meta.userId}:${workspace.value.meta.workspace?.id}`),onError:failure=>{if(['UNAUTHENTICATED','FORBIDDEN','WORKSPACE_CHANGED'].includes(failure.code))refresh({join:true});}});
-const today = useWorkspaceClock({ active: computed(() => authenticated.value && !switchingWorkspace.value && !isScopedRoute.value), refresh: () => refresh({ join: true }) });
+const today = useWorkspaceClock({ active: computed(() => authenticated.value && !switchingWorkspace.value && Boolean(workspace.value.meta.workspace) && !isScopedRoute.value), refresh: () => refresh({ join: true }) });
 let refreshGeneration = 0, refreshScope = 0;
 let opener;
 
@@ -132,6 +133,18 @@ async function refreshWorkspace() {
     pendingVerification.value = null;
     if (generation !== refreshGeneration) return;
     notificationPreviewEnabled.value = identity.features?.notificationPreview === true;
+    if (!identity.workspace) {
+      const pendingInvite = workspaceInviteToken.value;
+      const dropScope = Boolean(workspace.value.meta.workspace || projectId.value || selectedId.value || landing.value !== 'home');
+      setWorkspaceContext('');
+      workspace.value = { projects: [], members: [identity.user], meta: { actor: identity.user.name, userId: identity.user.id, workspace: null, permissions: [] } };
+      if (dropScope) {
+        resetWorkspaceUI();
+        if (pendingInvite) { history.replaceState(null, '', '#/invite?token=' + encodeURIComponent(pendingInvite)); readHash(true); }
+      }
+      authenticated.value = true;
+      return;
+    }
     const previousWorkspace=workspace.value.meta.workspace?.id;
     if(previousWorkspace&&previousWorkspace!==identity.workspace.id){
       setWorkspaceContext(identity.workspace.id);
@@ -412,7 +425,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
     <button v-if="sidebarOpen" class="sidebar-scrim" aria-label="收起導覽" @click="sidebarOpen = false"></button>
     <aside class="sidebar" :class="{ open: sidebarOpen }">
       <a class="brand" href="#/" aria-label="TaskTracker 返回首頁" title="返回首頁" @click.prevent="goHome()"><span class="brand-mark"><span></span><span></span><span></span></span>TaskTracker<span class="brand-dot">.</span></a>
-      <WorkspaceSwitcher :workspace="workspace.meta.workspace" :switching="switchingWorkspace" :change="changeWorkspace" :create="input => changeWorkspace('', '', input)" />
+      <WorkspaceSwitcher ref="workspaceSwitcher" :workspace="workspace.meta.workspace" :switching="switchingWorkspace" :change="changeWorkspace" :create="input => changeWorkspace('', '', input)" />
       <template v-if="selectedProject">
         <div class="project-context" aria-label="目前專案">
           <span class="project-context-code" :style="{ color: selectedProject.color }">{{ selectedProject.code }}</span>
@@ -435,7 +448,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
         <nav aria-label="工作空間">
           <a :href="'#/'" class="nav-item" :class="{ active: landing === 'home' }" :aria-current="landing === 'home' ? 'page' : undefined" @click="follow($event, () => goHome())"><Icon name="grid" :size="18" />首頁</a>
           <a v-if="workspace.meta.permissions?.includes('todo.read')" href="#/notes" class="nav-item" :class="{ active: landing === 'notes' }" :aria-current="landing === 'notes' ? 'page' : undefined" @click="follow($event, () => goLanding('notes'))"><Icon name="message" :size="18" />紙條</a>
-          <a :href="'#/projects'" class="nav-item" :class="{ active: landing === 'projects' }" :aria-current="landing === 'projects' ? 'page' : undefined" aria-label="專案列表" @click="follow($event, () => goProjects())"><Icon name="folder" :size="18" />專案列表<span v-if="!isScopedRoute" class="nav-count">{{ projects.length }}</span></a>
+          <a v-if="workspace.meta.workspace" :href="'#/projects'" class="nav-item" :class="{ active: landing === 'projects' }" :aria-current="landing === 'projects' ? 'page' : undefined" aria-label="專案列表" @click="follow($event, () => goProjects())"><Icon name="folder" :size="18" />專案列表<span v-if="!isScopedRoute" class="nav-count">{{ projects.length }}</span></a>
         </nav>
       </template>
       <nav v-if="workspace.meta.permissions?.includes('workspace.ownership')" aria-label="工作空間管理"><a :href="'#/workspace/settings'" class="nav-item" :class="{ active: landing === 'settings' && !selectedProject }" :aria-current="landing === 'settings' && !selectedProject ? 'page' : undefined" @click="follow($event, () => openWorkspaceSettings())"><Icon name="settings" :size="18" />工作空間設定</a></nav>
@@ -443,7 +456,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
     </aside>
 
     <main class="main">
-      <header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" aria-label="開啟導覽" :aria-expanded="sidebarOpen" @click="sidebarOpen = !sidebarOpen"><Icon name="menu" /></button><Icon name="folder" :size="17" /><button class="breadcrumb-home" @click="selectedProject ? goProjects() : goHome()">{{ selectedProject ? '專案' : '工作空間' }}</button><Icon name="chevron" :size="13" /><strong :class="{ 'has-mobile-context': selectedProject }"><span class="project-breadcrumb">{{ selectedProject?.code || (landing === 'settings' ? '工作空間設定' : landing === 'analysis' ? '工時分析' : landing === 'projects' ? '專案列表' : landing === 'notes' ? '紙條' : '首頁') }}</span><span v-if="selectedProject" class="mobile-feature-context">{{ currentFeature }}</span></strong></div><div class="topbar-end"><button v-if="workspace.meta.permissions?.includes('todo.read')" class="button secondary todo-notification-toggle" :aria-label="`通知${todoUnread ? `（${todoUnread} 則未讀）` : ''}`" @click="openTodoInbox"><Icon name="bell" :size="17" /><span>通知</span><b v-if="todoUnread">{{ todoUnread }}</b></button><button class="icon-button" aria-label="重新整理工作空間" :disabled="loading" @click="refreshCurrent"><Icon name="refresh" :size="18" /></button><AccountMenu ref="accountMenu" :name="workspace.meta.actor" :email="workspace.members.find(member => member.id === currentUserId)?.email" :workspace-name="workspace.meta.workspace?.name" @profile="openProfile" @tokens="tokensOpen = true" @logout="logout" /></div></header>
+      <header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" aria-label="開啟導覽" :aria-expanded="sidebarOpen" @click="sidebarOpen = !sidebarOpen"><Icon name="menu" /></button><Icon name="folder" :size="17" /><button class="breadcrumb-home" @click="selectedProject ? goProjects() : goHome()">{{ selectedProject ? '專案' : '工作空間' }}</button><Icon name="chevron" :size="13" /><strong :class="{ 'has-mobile-context': selectedProject }"><span class="project-breadcrumb">{{ selectedProject?.code || (landing === 'settings' ? '工作空間設定' : landing === 'analysis' ? '工時分析' : landing === 'projects' ? '專案列表' : landing === 'notes' ? '紙條' : '首頁') }}</span><span v-if="selectedProject" class="mobile-feature-context">{{ currentFeature }}</span></strong></div><div class="topbar-end"><button v-if="workspace.meta.permissions?.includes('todo.read')" class="button secondary todo-notification-toggle" :aria-label="`通知${todoUnread ? `（${todoUnread} 則未讀）` : ''}`" @click="openTodoInbox"><Icon name="bell" :size="17" /><span>通知</span><b v-if="todoUnread">{{ todoUnread }}</b></button><button class="icon-button" aria-label="重新整理工作空間" :disabled="loading" @click="refreshCurrent"><Icon name="refresh" :size="18" /></button><AccountMenu ref="accountMenu" :name="workspace.meta.actor" :email="workspace.members.find(member => member.id === currentUserId)?.email" :workspace-name="workspace.meta.workspace?.name || '無隸屬工作區'" :tokens-enabled="Boolean(workspace.meta.workspace)" @profile="openProfile" @tokens="tokensOpen = true" @logout="logout" /></div></header>
       <div class="workspace-content" :class="{ 'board-workspace': section === 'tasks' && view === 'board', 'data-workspace': selectedProject && section === 'tasks', 'detail-workspace': isTaskRoute && selectedId && detailPage }">
         <button v-if="selectedProject && section !== 'tasks'" class="navigation-back back-to-projects" @click="goProjects()"><Icon name="chevron" :size="14" />返回專案列表</button>
         <WorkspaceSettings v-if="!selectedProject && landing === 'settings' && canManageWorkspace" :key="workspace.meta.workspace?.id" ref="teamTool" :active-tab="teamTab" :meta="workspace.meta" @navigate="openWorkspaceSettings" @saved="refresh" @access="refresh" />
@@ -451,6 +464,10 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
         <div v-if="!(isTaskRoute && selectedId) && (selectedProject || landing === 'projects')" class="page-heading"><div><h1>{{ title }}</h1><p v-if="selectedProject && section !== 'tasks' && selectedProject.description">{{ selectedProject.description }}</p></div><div class="heading-actions"><button v-if="showNewIssueAction" class="button primary" :disabled="loading || (isTaskRoute && !projectTasksTool)" @click="newIssue"><Icon name="plus" :size="18" />新增任務</button><button v-else-if="!selectedProject && workspace.meta.permissions?.includes('project.create')" class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div></div>
         <div v-if="!selectedProject && ['home', 'notes', 'projects'].includes(landing)" :key="workspace.meta.workspace?.id" :class="landing === 'home' ? 'home-layout' : 'project-list-page'">
         <h1 v-if="landing === 'home'" class="sr-only">首頁</h1>
+        <section v-if="landing === 'home' && !workspace.meta.workspace" class="empty-state" aria-label="無隸屬工作區首頁">
+          <h2>無隸屬工作區</h2>
+          <button class="button primary" @click="workspaceSwitcher?.open()"><Icon name="plus" :size="18" />建立工作區</button>
+        </section>
         <div v-if="landing === 'home' && error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="refresh({ join: true })">重新載入</button></div>
         <ProjectDirectory v-if="landing === 'projects'" ref="projectDirectoryTool" :workspace-id="workspace.meta.workspace?.id" :can-create="workspace.meta.permissions?.includes('project.create')" @create="creatingProject = true" @edit="editingProject = $event" @open="id => navigate('all', id)" />
         <PersonalWorkspace v-if="landing === 'notes' && workspace.meta.permissions?.includes('todo.read')" ref="todoTool" :workspace-id="workspace.meta.workspace.id" :permissions="workspace.meta.permissions" :versions="personalSync.versions.value" :resumed="personalSync.resumed.value" :user-id="currentUserId"     @convert="convertTodo" @open-issue="openTodoIssue"  @access="refresh({join:true})"/>
