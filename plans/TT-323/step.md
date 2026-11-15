@@ -20,3 +20,11 @@
 - 正式網域部署341de3f完成, 同一映像／同一資料庫, 沒有再次資料同步
 - 正式網域Codex本人PAT與登入、列表／看板／三尺寸詳細頁、無舊bulk API／pageerror通過；Machine APP_URL讀回正式網域, TLS／Redis／secure Cookie設定維持
 - 私有Session／PAT端點切正式網域並保留前設定副本；Memory／README／自我追蹤／部署文件同步, AGENTS與共用Skill已依Josh要求重新閱讀
+
+## 部署準備清單複核（2026-11-15）
+
+- 已讀Claude轉交紙條與Josh「好像都好了, 你點一下」的回覆
+- Fly登入帳號正確, 既有App及自訂網域正常；GitHub production環境有Fly deploy與migration帳密Secrets, 不讀取原值
+- Fly有R2專用Secrets及TLS CA, 本次本人Session已從正式私有R2讀回Josh指定附件, PNG可開啟；沒有新增物件或改桶
+- 正式Laravel的mailer=smtp, host／username／password／from均已配置, require_tls=true；只驗布林值, 不輸出秘密、不寄真信。原TT-189已有Josh確認收件紀錄, 本次不冒稱重寄測試
+- 準備清單項目已到位, 原紙條可完成；不將這份設定複核等同新批次已部署, TT-323原回退／入口等驗收仍分開追蹤
