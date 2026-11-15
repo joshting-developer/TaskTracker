@@ -147,16 +147,21 @@ try {
         }
     }
     // Repoint structured references, not arbitrary user-authored prose or opaque receipt signatures.
-    $rewrite = function ($value) use (&$rewrite, $uuidMap, $nameMap) {
+    $rewrite = function ($value, ?string $field = null) use (&$rewrite, $uuidMap, $nameMap) {
         if (is_array($value)) {
             foreach ($value as $k => $v) {
-                $value[$k] = $rewrite($v);
+                $value[$k] = $rewrite($v, (string) $k);
             }
 
-return $value;
+            return $value;
         }
 
-        return is_string($value) ? ($uuidMap[$value] ?? $nameMap[$value] ?? $value) : $value;
+        if (! is_string($value)) {
+            return $value;
+        }
+        $identityNameFields = ['actor', 'author', 'actorName', 'authorName', 'creatorName', 'createdByName', 'assigneeName', 'initialAssigneeName', 'fromName', 'toName', 'memberName', 'userName', 'leadName', 'uploadedByName'];
+
+        return $uuidMap[$value] ?? (in_array($field, $identityNameFields, true) ? ($nameMap[$value] ?? $value) : $value);
     };
     foreach ($columns as $table => $fields) {
         if (! isset($fields['workspace_id']) || ! isset($fields['id'])) {
