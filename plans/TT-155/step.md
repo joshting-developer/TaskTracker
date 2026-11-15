@@ -10,3 +10,6 @@
 - 首次release run 43693179529在部署後Python匿名registration-policy驗證收到403, 實際HTTPS健康及正式瀏覽器登入／雙語／偏好保存／1440、768、390寬度均已通過。不能把這次CI宣稱成功
 - 以具名TaskTrackerRelease/1.0客戶端請求政策端點實測200。修正驗證標頭, 同tag重試只允許image ID與已驗證artifact完全相同, 不覆寫既有版本；不同映像或registry拒絕立即停止
 - 12項發布／migration／archive測試通過, 包含同版本續跑、不同image拒絕及registry拒絕不當缺版處理。待push後重跑失敗deploy job, 不移動tag或新建版本
+- ff26ad6已push, 同run第二次deploy成功, validate／source／contract／image／deploy全success, 原tag未變
+- 正式瀏覽器本人登入、雙語切換與保存、三寬度、Secure／HttpOnly、私有API及靜態快取通過；另驗404、OG圖200、login／app noindex
+- TT-155仍有LINE實際貼文預覽及本次冷啟動未驗, 改review明列, 不宣稱所有AC完成。部署與多語系已完成, 交接到TT-348
