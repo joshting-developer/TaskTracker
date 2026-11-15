@@ -11,3 +11,5 @@
 ## 正確帳號重新發布
 
 Josh於2026-11-15確認現在登入的joshting.1999為目標帳號。舊Site在目前帳號not found且owner清單空, 不刪舊服務。此份來源依明確重建要求解除舊project_id, 下一次create回傳立即原樣保存新ID, 不重複建立。舊ID仍留docs/chatgpt-bridge-deployment.md沿革
+
+新帳號owner-only已讀回, 私人版本1發布成功, Plugin已安裝但當前對話尚無工具。32項Adapter測試通過, 匿名HTTP401。沒有TASKTRACKER_PAT, 真實唯讀E2E及撤銷驗收仍受阻；發紙條給Josh後回TT-364

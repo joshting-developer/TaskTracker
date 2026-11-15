@@ -23,4 +23,6 @@ Sites來源helper會初始化另一個Git；依本專案只用原repository的�
 
 Josh確認目前登入的joshting.1999為正式擁有者。舊服務在此帳號not found, 不移轉或刪除舊站；新建Site appgprj_6af99efb261c8191941e0e30391c219f, 平台讀回Josh為owner, 唯一allowlist使用者的可信信箱為joshting.1999@gmail.com, 無群組／編輯者／外部訪客。來源manifest改綁新ID, 舊ID只保留此文件沿革
 
-新站預期網址https://tasktracker-joshting-bridge.joshting-1999.chatgpt.site, 尚待私人發布確認。只配置owner及工作區Secret, 沒有複用或搬移舊PAT。真實唯讀資料仍待專用Token與可呼叫工具驗收
+新站https://tasktracker-joshting-bridge.joshting-1999.chatgpt.site 已私人發布版本1, deployment appgdep_6af99f747228819192a2fa18717d572f成功, has_mcp=true, environment revision1。來源子樹03021bf87af41267045c0988e9cc76c1df6485c2, 對應main 8f745a0。只配置owner及工作區Secret, 沒有複用或搬移舊PAT。真實唯讀資料仍待專用Token與可呼叫工具驗收
+
+新Plugin ID為plugin_asdk_app_sites_4d376bf34c9881919b81325cef3f3c8c, 原生安裝查詢回Already installed。發布後讀回owner-only無變更。帶一般識別User-Agent的匿名GET /health及/mcp實測401；Python預設User-Agent被邊緣403, 不將該403當作應用認證結果。當前對話未出現8個工具, 沒有執行真人查卡／撤銷驗證
