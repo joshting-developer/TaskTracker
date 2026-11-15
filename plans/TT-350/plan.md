@@ -1,6 +1,6 @@
 # TT-350 私人發布與連線驗收
 
-沿用既有估時, TT-349 1f0799d已交付32項合成／契約測試。只沿用appgprj_6af96cb351908191bd4a4a964f52d51f, 不重建Site或變公開
+沿用既有估時, TT-349 1f0799d已交付32項合成／契約測試。原階段沿用舊Site。2026-11-15 Josh明確要求換正確帳號重建, 已由新帳號新建appgprj_6af99efb261c8191941e0e30391c219f, 舊站保留, 不改公開
 
 1. 核對owner-only政策與正式OpenAPI, 以原repository的Adapter子樹保存Sites來源, 不push整個TaskTracker或任何秘密
 2. 打包已驗證Worker, 私人發布並核對MCP Plugin工具、匿名拒絕與owner身分

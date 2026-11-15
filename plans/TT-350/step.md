@@ -7,3 +7,7 @@
 - 私人網址https://tasktracker-private-bridge.consideratecheetah3.chatgpt.site, has_mcp=true, 讀回policy仍僅owner一人／無群組／無外部訪客, 匿名health與mcp實際401
 - 原生回傳Plugin ID plugin_asdk_app_sites_0844809a2eac8191b56b64b3bab240ad, 安裝工具回Already installed；目前對話工具表尚無8個新tool, 不能宣稱已呼叫
 - 只配置owner email（Secret）及SideProject workspace ID, 沒有TASKTRACKER_PAT。真實唯讀E2E、執行時Secret／出站、撤銷驗證仍受阻, 不重用Agent PAT或假裝已連線。需Josh安全設定專用短效唯讀Token及新聊天呼叫, 發紙條後繼續獨立任務
+
+## 正確帳號重新發布
+
+Josh於2026-11-15確認現在登入的joshting.1999為目標帳號。舊Site在目前帳號not found且owner清單空, 不刪舊服務。此份來源依明確重建要求解除舊project_id, 下一次create回傳立即原樣保存新ID, 不重複建立。舊ID仍留docs/chatgpt-bridge-deployment.md沿革
