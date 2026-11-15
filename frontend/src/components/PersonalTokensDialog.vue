@@ -1,4 +1,5 @@
 <script setup>
+import { locale, t } from '../i18n/index.js';
 import { computed, onBeforeUnmount, onMounted, shallowRef } from 'vue';
 import { api } from '../api/index.js';
 import { useLeaveGuard } from '../ui/leaveGuard.js';
@@ -17,7 +18,7 @@ onBeforeUnmount(() => { secret.value = ''; opener?.focus?.(); });
 let requestId;
 const dirty = computed(() => Boolean(name.value || expiresAt.value));
 useLeaveGuard({ dirty: () => Boolean(dirty.value), saving: () => Boolean(busy.value) });
-function close() { if (!busy.value && (!dirty.value || window.confirm('還有未送出的Token設定，確定要關閉嗎？'))) { secret.value = ''; emit('close'); } }
+function close() { if (!busy.value && (!dirty.value || window.confirm(t('還有未送出的Token設定，確定要關閉嗎？')))) { secret.value = ''; emit('close'); } }
 async function load(next = 1) {
   busy.value = true; error.value = '';
   try { const data = await api.personalTokens({ page: next }); rows.value = data.items; page.value = data.page; last.value = data.lastPage; }
@@ -34,35 +35,35 @@ async function create() {
   finally { busy.value = false; }
 }
 async function revoke(row) {
-  if (busy.value || !window.confirm(`撤銷「${row.name}」？`)) return;
+  if (busy.value || !window.confirm(t('撤銷「{0}」？', [row.name]))) return;
   busy.value = true; error.value = '';
   try { await api.revokePersonalToken(row.id); secret.value = ''; await load(page.value); }
   catch (failure) { error.value = failure.message; }
   finally { busy.value = false; }
 }
-const status = value => ({ active: '有效', expired: '已過期', revoked: '已撤銷' }[value]);
+const status = value => ({ active: t('有效'), expired: t('已過期'), revoked: t('已撤銷') }[value]);
 onMounted(() => { root.value.focus(); load(); });
 </script>
 <template>
   <div class="modal-backdrop" @click.self="close">
     <section ref="root" class="token-dialog" role="dialog" aria-modal="true" aria-labelledby="token-title" tabindex="-1" @keydown.esc.stop="close" @keydown="trap">
-      <header><h2 id="token-title">個人 API Token</h2><button type="button" class="button secondary" :disabled="busy" @click="close">關閉</button></header>
-      <p>工作空間：{{ props.workspaceName }}</p>
-      <p v-if="error" role="alert">{{ error }}</p>
-      <section v-if="secret" class="token-secret" aria-label="新建Token">
-        <strong>原文僅顯示這一次，關閉後無法再次取得。</strong>
+      <header><h2 id="token-title">{{ t('個人 API Token') }}</h2><button type="button" class="button secondary" :disabled="busy" @click="close">{{ t('關閉') }}</button></header>
+      <p>{{ t('工作空間：') }}{{ props.workspaceName }}</p>
+      <p v-if="error" role="alert">{{ t(error) }}</p>
+      <section v-if="secret" class="token-secret" :aria-label="t('新建Token')">
+        <strong>{{ t('原文僅顯示這一次，關閉後無法再次取得。') }}</strong>
         <label>Token<textarea readonly :value="secret" rows="3" spellcheck="false" /></label>
-        <button type="button" class="button secondary" @click="secret = ''">我已保存，隱藏原文</button>
+        <button type="button" class="button secondary" @click="secret = ''">{{ t('我已保存，隱藏原文') }}</button>
       </section>
       <form v-else @submit.prevent="create">
-        <label>名稱<input v-model="name" maxlength="60" required :disabled="busy" /></label>
-        <label>Scope<select aria-label="Scope" v-model="scope" :disabled="busy"><option value="read">read — 讀取</option><option value="write">write — 讀取與寫入</option></select></label>
-        <label>到期日<input aria-label="到期日" v-model="expiresAt" type="date" :disabled="busy" /><span>預設一個月，最長兩年；到期日台北時間 00:00 失效。</span></label>
-        <button type="submit" class="button primary" :disabled="busy">建立 Token</button>
+        <label>{{ t('名稱') }}<input v-model="name" maxlength="60" required :disabled="busy" /></label>
+        <label>Scope<select aria-label="Scope" v-model="scope" :disabled="busy"><option value="read">{{ t('read — 讀取') }}</option><option value="write">{{ t('write — 讀取與寫入') }}</option></select></label>
+        <label>{{ t('到期日') }}<input :aria-label="t('到期日')" v-model="expiresAt" type="date" :disabled="busy" /><span>{{ t('預設一個月，最長兩年；到期日台北時間 00:00 失效。') }}</span></label>
+        <button type="submit" class="button primary" :disabled="busy">{{ t('建立 Token') }}</button>
       </form>
-      <ul aria-label="Token清單"><li v-for="row in rows" :key="row.id"><div><strong>{{ row.name }}</strong><span>{{ row.abilities.join(', ') }} · {{ status(row.status) }} · {{ new Date(row.expiresAt).toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei' }) }}</span></div><button v-if="row.status !== 'revoked'" class="button secondary" :disabled="busy" @click="revoke(row)">撤銷</button></li></ul>
-      <p v-if="!rows.length && !busy">尚無 Token</p>
-      <footer><button class="button secondary" :disabled="busy || page <= 1" @click="load(page - 1)">上一頁</button><span>{{ page }} / {{ last }}</span><button class="button secondary" :disabled="busy || page >= last" @click="load(page + 1)">下一頁</button></footer>
+      <ul :aria-label="t('Token清單')"><li v-for="row in rows" :key="row.id"><div><strong>{{ row.name }}</strong><span>{{ row.abilities.join(', ') }} · {{ t(status(row.status)) }} · {{ new Date(row.expiresAt).toLocaleDateString(locale, { timeZone: 'Asia/Taipei' }) }}</span></div><button v-if="row.status !== 'revoked'" class="button secondary" :disabled="busy" @click="revoke(row)">{{ t('撤銷') }}</button></li></ul>
+      <p v-if="!rows.length && !busy">{{ t('尚無 Token') }}</p>
+      <footer><button class="button secondary" :disabled="busy || page <= 1" @click="load(page - 1)">{{ t('上一頁') }}</button><span>{{ page }} / {{ last }}</span><button class="button secondary" :disabled="busy || page >= last" @click="load(page + 1)">{{ t('下一頁') }}</button></footer>
     </section>
   </div>
 </template>

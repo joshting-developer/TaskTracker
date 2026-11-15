@@ -10,7 +10,7 @@ try {
   server = await createServer({ root: new URL('..', import.meta.url).pathname, server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const page = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } });
   const errors = [], requests = [];
   page.on('pageerror', failure => errors.push(failure.message));
   page.on('request', request => { const path = new URL(request.url()).pathname; if (path.startsWith('/api/')) requests.push(path); });
@@ -41,7 +41,7 @@ try {
   const ownerEmail = `acl-owner-${crypto.randomUUID()}@example.test`;
   await call(page, 'register', { name: 'Owner', email: ownerEmail, password: 'test-local-password', workspaceName: 'ACL Read' }, 'auth');
   const project = await call(page, 'createProject', { name: 'ACL Read', code: 'ACL' });
-  const guest = await (await browser.newContext()).newPage();
+  const guest = await (await browser.newContext({ locale: 'zh-TW' })).newPage();
   await guest.goto(`http://127.0.0.1:${e2ePort}/login`);
   const users = [];
   let revision = 0;

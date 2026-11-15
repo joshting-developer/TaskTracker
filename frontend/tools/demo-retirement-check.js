@@ -11,7 +11,7 @@ let vite, browser;
 try {
   vite = await createServer({ server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } }); await vite.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const page = await browser.newPage({ reducedMotion: 'reduce' });
+  const page = await browser.newPage({ locale: 'zh-TW', reducedMotion: 'reduce' });
   const demoCalls = [], errors = [];
   page.on('request', r => { if (r.url().includes('/loadDemo')) demoCalls.push(r.url()); });
   page.on('pageerror', e => errors.push(e.message));

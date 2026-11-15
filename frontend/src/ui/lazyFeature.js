@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import { defineAsyncComponent, defineComponent, h, shallowRef } from 'vue';
 
 // 讓Vue原生async wrapper繼續轉送ref、props與事件，草稿與saving仍由實際功能持有。
@@ -7,15 +8,15 @@ export function lazyFeature(loader) {
   const loadingComponent = defineComponent({
     setup() {
       function reload() {
-        if (window.confirm('重新載入會放棄未儲存的內容，確定嗎？')) location.reload();
+        if (window.confirm(t('重新載入會放棄未儲存的內容，確定嗎？'))) location.reload();
       }
       return () => failure.value
         ? h('section', { class: 'feature-load-state', role: 'alert' }, [
-          h('p', '無法載入此功能'),
-          h('button', { type: 'button', class: 'button secondary', onClick: failure.value.retry }, '重試載入'),
-          h('button', { type: 'button', class: 'text-button', onClick: reload }, '重新載入頁面'),
+          h('p', t('無法載入此功能')),
+          h('button', { type: 'button', class: 'button secondary', onClick: failure.value.retry }, t('重試載入')),
+          h('button', { type: 'button', class: 'text-button', onClick: reload }, t('重新載入頁面')),
         ])
-        : h('p', { class: 'feature-load-state', role: 'status' }, '載入中…');
+        : h('p', { class: 'feature-load-state', role: 'status' }, t('載入中…'));
     },
   });
   return defineAsyncComponent({

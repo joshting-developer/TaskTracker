@@ -24,7 +24,7 @@ try {
   server = await createServer({ root: new URL('..', import.meta.url).pathname, server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } }), errors = [];
+  const page = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } }), errors = [];
   let log = [];
   page.setDefaultTimeout(20000);
   page.on('pageerror', error => errors.push(error.message));

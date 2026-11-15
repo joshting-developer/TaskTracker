@@ -150,12 +150,12 @@ try {
     const image = await fetch(raw.match(/og:image" content="([^"]+)"/)[1]);
     assert.equal(image.headers.get('content-type'), 'image/png');
   }
-  const noJs = await browser.newPage({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
+  const noJs = await browser.newPage({ locale: 'zh-TW', javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
   await noJs.goto(`${origin}/`);
   assert.ok(await noJs.locator('.guest-topbar').isVisible(), '無JS仍可看到訪客導覽');
   assert.ok((await noJs.locator('main').innerText()).length > 200, '無JS仍可讀正文');
   await noJs.close();
-  const guest = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+  const guest = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
   guest.on('pageerror', error => errors.push(error.message));
   await guest.goto(`${origin}/`);
   await guest.waitForFunction(() => !document.documentElement.classList.contains('auth-pending'));

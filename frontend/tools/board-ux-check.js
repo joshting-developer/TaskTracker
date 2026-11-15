@@ -22,7 +22,7 @@ try {
   server = built ? await preview({ preview: config }) : await createServer({ server: config });
   if (!built) await server.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const page = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } });
   page.setDefaultTimeout(15000); const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto(`${base}/login`);
   const identity = await call(page, 'register', { name: '看板試用者', email: `board-ux-${crypto.randomUUID()}@example.test`, password: 'board-ux-test-password', workspaceName: '看板協作' }, 'auth');

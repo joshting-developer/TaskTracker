@@ -133,7 +133,7 @@ try {
   await staleDialog.getByRole('button', { name: '封存看板', exact: true }).click();
   await list.getByRole('button', { name: '已封存', exact: true }).click();
   await list.getByRole('button', { name: '開啟看板 第一階段' }).waitFor();
-  const otherContext = await browser.newContext();
+  const otherContext = await browser.newContext({ locale: 'zh-TW' });
   try {
     const reader = await otherContext.newPage();
     await reader.goto(`http://127.0.0.1:${e2ePort}/login`);

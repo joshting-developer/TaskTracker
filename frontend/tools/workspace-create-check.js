@@ -10,7 +10,7 @@ let server, browser;
 try {
   server = await createServer({ server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } }); await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const owner = await browser.newContext(), member = await browser.newContext();
+  const owner = await browser.newContext({ locale: 'zh-TW' }), member = await browser.newContext({ locale: 'zh-TW' });
   async function call(context, operation, input = {}, group = 'rpc') {
     const csrf = await (await context.request.get(base + '/api/csrf-cookie')).json();
     const response = await context.request.post(`${base}/api/${group}/${operation}`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, data: { requestId: crypto.randomUUID(), ...input } });

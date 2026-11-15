@@ -1,4 +1,5 @@
 <script setup>
+import { locale, t } from '../i18n/index.js';
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, useId, watch } from 'vue';
 import { toRef } from 'vue';
 import { useIssueActivity } from '../composables/useIssueActivity.js';
@@ -58,7 +59,7 @@ function resetForm() {
 }
 const projectModel = computed({ get: () => form.projectId, set: value => {
   if (value === form.projectId) return;
-  if (descriptionEditor.value?.attachmentDirty || /attachment:[a-f0-9-]+/i.test(form.description || '')) { conflict.value = false; error.value = '描述仍有圖片或未完成上傳, 請先處理圖片再切換專案'; nextTick(() => saveError.value?.focus()); return; }
+  if (descriptionEditor.value?.attachmentDirty || /attachment:[a-f0-9-]+/i.test(form.description || '')) { conflict.value = false; error.value = t('描述仍有圖片或未完成上傳, 請先處理圖片再切換專案'); nextTick(() => saveError.value?.focus()); return; }
   form.projectId = value; error.value = '';
 } });
 const availableProjects = computed(() => [...new Map([...props.projects, ...pickedProjects.value].map(project=>[project.id,project])).values()]);
@@ -67,7 +68,7 @@ watch(() => form.projectId, async id => {
   if (!props.projectLoader) return;
   const current=++projectGeneration; projectRequest?.abort();projectRequest=new AbortController();hydratedProject.value=null;
   if(!id){projectLoading.value=false;return;} projectLoading.value=true;
-  try {const project=await props.projectLoader(id,{signal:projectRequest.signal});if(current!==projectGeneration)return;if(!project.permissions.includes('issue.write'))throw new Error('沒有這個專案的任務編輯權限');hydratedProject.value=project;form.state=project.statuses.find(state=>state.id==='open')?.id||project.statuses[0].id;}
+  try {const project=await props.projectLoader(id,{signal:projectRequest.signal});if(current!==projectGeneration)return;if(!project.permissions.includes('issue.write'))throw new Error(t('沒有這個專案的任務編輯權限'));hydratedProject.value=project;form.state=project.statuses.find(state=>state.id==='open')?.id||project.statuses[0].id;}
   catch(failure){if(current===projectGeneration&&!['ABORTED','STALE_RESPONSE'].includes(failure.code))error.value=failure.message;}
   finally{if(current===projectGeneration)projectLoading.value=false;}
 });
@@ -90,18 +91,18 @@ const spent = computed(() => props.issue?.spentMinutes ?? props.entries.filter((
 const propertySummary = computed(() => [
   TYPES.find(item => item.id === form.type)?.label || form.type,
   states.value.find(item => item.id === form.state)?.label,
-  availableMembers.value.find(item => item.id === form.assignee)?.name || (form.assignee ? '已指派' : '未指派'),
+  availableMembers.value.find(item => item.id === form.assignee)?.name || (form.assignee ? t('已指派') : t('未指派')),
 ].filter(Boolean).join(' · '));
 const saveStatus = computed(() => {
-  if (saving.value) return '儲存中…';
-  if (descriptionEditor.value?.uploadBusy) return '圖片上傳中…';
-  if (error.value) return '操作未完成, 修改已保留';
-  if (descriptionEditor.value?.attachmentBlocked) return '請重試或取消未完成的圖片';
-  if (dirty.value) return '尚未儲存';
-  return props.issue ? `版本 ${baseRevision.value} · 已儲存` : '尚未建立';
+  if (saving.value) return t('儲存中…');
+  if (descriptionEditor.value?.uploadBusy) return t('圖片上傳中…');
+  if (error.value) return t('操作未完成, 修改已保留');
+  if (descriptionEditor.value?.attachmentBlocked) return t('請重試或取消未完成的圖片');
+  if (dirty.value) return t('尚未儲存');
+  return props.issue ? t('版本 {0} · 已儲存', [baseRevision.value]) : t('尚未建立');
 });
 function invalidField(event) {
-  if (event.target.name === 'title') { titleError.value = '請輸入任務標題'; return; }
+  if (event.target.name === 'title') { titleError.value = t('請輸入任務標題'); return; }
   if (!propertiesOpen.value) {
     event.preventDefault(); error.value = event.target.validationMessage; propertiesOpen.value = true;
     nextTick(() => event.target.focus());
@@ -114,11 +115,11 @@ defineExpose({ dirty: computed(() => dirty.value || Boolean(comment.value.trim()
 watch(() => props.issue, () => { if (!dirty.value) resetForm(); });
 function close() {
   if (inputDisabled.value) return;
-  if ((dirty.value || comment.value.trim() || commentEditor.value?.attachmentDirty || relationsTool.value?.dirty) && !window.confirm('還有未儲存的內容, 確定要關閉嗎？')) return;
+  if ((dirty.value || comment.value.trim() || commentEditor.value?.attachmentDirty || relationsTool.value?.dirty) && !window.confirm(t('還有未儲存的內容, 確定要關閉嗎？'))) return;
   emit('close');
 }
 function jump(issue) {
-  if (saving.value || ((dirty.value || comment.value.trim() || commentEditor.value?.attachmentDirty || relationsTool.value?.dirty) && !window.confirm('還有未儲存的內容, 確定要切換任務嗎？'))) return;
+  if (saving.value || ((dirty.value || comment.value.trim() || commentEditor.value?.attachmentDirty || relationsTool.value?.dirty) && !window.confirm(t('還有未儲存的內容, 確定要切換任務嗎？')))) return;
   emit('open', issue);
 }
 function beforeUnload(event) {
@@ -135,8 +136,8 @@ onBeforeUnmount(() => { projectGeneration++;projectRequest?.abort();window.remov
 
 async function save() {
   if (inputDisabled.value || descriptionEditor.value?.attachmentBlocked) return;
-  if (!form.title?.trim()) { titleError.value = '請輸入任務標題'; await nextTick(); dialog.value.querySelector('[name=title]')?.focus(); return; }
-  if (props.projectLoader && !hydratedProject.value?.permissions.includes('issue.write')) { error.value='請先選擇可編輯的專案'; return; }
+  if (!form.title?.trim()) { titleError.value = t('請輸入任務標題'); await nextTick(); dialog.value.querySelector('[name=title]')?.focus(); return; }
+  if (props.projectLoader && !hydratedProject.value?.permissions.includes('issue.write')) { error.value=t('請先選擇可編輯的專案'); return; }
   saving.value = true;
   error.value = '';
   const fields = { ...values(), ...(props.issue ? { id: props.issue.id, expectedRevision: baseRevision.value } : { boardId: props.defaultBoardId || 'default' }) };
@@ -157,7 +158,7 @@ async function save() {
 }
 async function createChild(title) {
   if (saving.value || !title.trim()) return;
-  if (dirty.value) { error.value = '請先儲存目前任務的修改, 再建立子任務'; return; }
+  if (dirty.value) { error.value = t('請先儲存目前任務的修改, 再建立子任務'); return; }
   saving.value = true;
   error.value = '';
   const payload = { projectId: form.projectId, title, parentIssueId: props.issue.id, state: states.value.find(state => state.id === 'open')?.id || states.value[0].id };
@@ -190,82 +191,82 @@ async function sendComment() {
 }
 function reload() {
   if (inputDisabled.value) return;
-  if (dirty.value && !window.confirm('重新載入會捨棄表單修改, 要繼續嗎？')) return;
+  if (dirty.value && !window.confirm(t('重新載入會捨棄表單修改, 要繼續嗎？'))) return;
   saving.value = true;
   emit('reload', () => resetForm(), () => { saving.value = false; });
 }
 function display(field, value) {
-  if (field === 'relatedIssueIds' || field === 'blockedBy') return (value || []).map((id) => props.issues.find((issue) => issue.id === id)?.identifier || id).join('、') || '無';
+  if (field === 'relatedIssueIds' || field === 'blockedBy') return (value || []).map((id) => props.issues.find((issue) => issue.id === id)?.identifier || id).join('、') || t('無');
   const options = { state: states.value, priority: PRIORITIES, type: TYPES }[field];
-  if (field === 'assignee') return props.members.find((member) => member.id === value)?.name || value || '未指派';
-  if (field === 'epicId' || field === 'parentIssueId') return props.issues.find((issue) => issue.id === value)?.identifier || value || '未連結';
-  return options?.find((item) => item.id === value)?.label || value || '未設定';
+  if (field === 'assignee') return props.members.find((member) => member.id === value)?.name || value || t('未指派');
+  if (field === 'epicId' || field === 'parentIssueId') return props.issues.find((issue) => issue.id === value)?.identifier || value || t('未連結');
+  return options?.find((item) => item.id === value)?.label || value || t('未設定');
 }
 function timestamp(value) {
-  return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+  return new Intl.DateTimeFormat(locale.value, { timeZone: 'Asia/Taipei', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 }
 </script>
 
 <template>
-  <component :is="inline ? 'section' : 'dialog'" ref="dialog" class="issue-dialog" :class="{ 'issue-editor-inline': inline }" :aria-label="inline ? '編輯任務完整頁' : undefined" :aria-labelledby="inline ? undefined : 'issue-heading'" @cancel.prevent="close" @click="event => { if (!inline && event.target === dialog) close(); }">
+  <component :is="inline ? 'section' : 'dialog'" ref="dialog" class="issue-dialog" :class="{ 'issue-editor-inline': inline }" :aria-label="inline ? t('編輯任務完整頁') : undefined" :aria-labelledby="inline ? undefined : 'issue-heading'" @cancel.prevent="close" @click="event => { if (!inline && event.target === dialog) close(); }">
     <div class="panel-shell">
       <header class="panel-header">
-        <div class="panel-identity"><span>{{ issue?.identifier || selectedProject?.code }}</span><component :is="inline ? 'h1' : 'h2'" id="issue-heading">{{ inline ? '編輯任務' : todo ? '轉成正式卡片' : issue ? '任務詳細內容' : '新增一個任務' }}</component></div>
-        <button v-if="issue && canExpand && !inline" type="button" class="button secondary issue-expand" :disabled="inputDisabled" @click="emit('expand')"><Icon name="arrow" :size="16" />開啟完整頁</button>
-        <button v-if="inline" type="button" class="button secondary" :disabled="inputDisabled" @click="close">取消</button>
-        <button v-else type="button" class="icon-button" aria-label="關閉任務" :disabled="inputDisabled" @click="close"><Icon name="close" /></button>
+        <div class="panel-identity"><span>{{ issue?.identifier || selectedProject?.code }}</span><component :is="inline ? 'h1' : 'h2'" id="issue-heading">{{ inline ? t('編輯任務') : todo ? t('轉成正式卡片') : issue ? t('任務詳細內容') : t('新增一個任務') }}</component></div>
+        <button v-if="issue && canExpand && !inline" type="button" class="button secondary issue-expand" :disabled="inputDisabled" @click="emit('expand')"><Icon name="arrow" :size="16" />{{ t('開啟完整頁') }}</button>
+        <button v-if="inline" type="button" class="button secondary" :disabled="inputDisabled" @click="close">{{ t('取消') }}</button>
+        <button v-else type="button" class="icon-button" :aria-label="t('關閉任務')" :disabled="inputDisabled" @click="close"><Icon name="close" /></button>
       </header>
       <div class="panel-content">
 
-        <div v-if="error" ref="saveError" class="error-box" role="alert" tabindex="-1">{{ error }}<p v-if="conflict">目前修改仍保留, 重新載入會捨棄這份修改</p> <button v-if="conflict" type="button" class="text-button" :disabled="inputDisabled" @click="reload">重新載入最新版本</button></div>
+        <div v-if="error" ref="saveError" class="error-box" role="alert" tabindex="-1">{{ t(error) }}<p v-if="conflict">{{ t('目前修改仍保留, 重新載入會捨棄這份修改') }}</p> <button v-if="conflict" type="button" class="text-button" :disabled="inputDisabled" @click="reload">{{ t('重新載入最新版本') }}</button></div>
         <form id="issue-form" @submit.prevent="save" @invalid.capture="invalidField" :aria-busy="saving">
-          <label class="field">任務標題 <span class="required">*</span><input v-model="form.title" name="title" placeholder="輸入任務標題…" maxlength="180" required :disabled="inputDisabled" :aria-invalid="Boolean(titleError)" :aria-describedby="titleError ? `${formId}-title-error` : undefined" /><span v-if="titleError" :id="`${formId}-title-error`" class="issue-field-error" role="alert">{{ titleError }}</span></label>
-          <div v-if="todo" class="issue-conversion-project"><PagedSelect autoload v-if="projectOptionsLoader" v-model="projectModel" label="專案" :options="availableProjects" :context="todo?.id || 'new'" :load="projectOptionsLoader" :disabled="inputDisabled || !todo" empty-label="選擇所屬專案" required @choose="item => { pickedProjects = [...pickedProjects.filter(project=>project.id!==item.id),item]; }" /><label v-else class="field">專案<select v-model="projectModel" aria-label="專案" :disabled="!todo || saving" required><option v-if="todo" value="" disabled>選擇所屬專案</option><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option></select></label></div>
-          <MarkdownEditor ref="descriptionEditor" spacious allow-attachments v-model="form.description" :project-id="form.projectId" label="描述" name="description" placeholder="輸入描述…" :rows="5" :maxlength="6000" :disabled="inputDisabled" />
-          <details class="issue-properties" :open="propertiesOpen" @toggle="propertiesOpen = $event.target.open"><summary><span>任務屬性</span><span>{{ propertySummary }}</span></summary>
+          <label class="field">{{ t('任務標題') }} <span class="required">*</span><input v-model="form.title" name="title" :placeholder="t('輸入任務標題…')" maxlength="180" required :disabled="inputDisabled" :aria-invalid="Boolean(titleError)" :aria-describedby="titleError ? `${formId}-title-error` : undefined" /><span v-if="titleError" :id="`${formId}-title-error`" class="issue-field-error" role="alert">{{ titleError }}</span></label>
+          <div v-if="todo" class="issue-conversion-project"><PagedSelect autoload v-if="projectOptionsLoader" v-model="projectModel" :label="t('專案')" :options="availableProjects" :context="todo?.id || 'new'" :load="projectOptionsLoader" :disabled="inputDisabled || !todo" :empty-label="t('選擇所屬專案')" required @choose="item => { pickedProjects = [...pickedProjects.filter(project=>project.id!==item.id),item]; }" /><label v-else class="field">{{ t('專案') }}<select v-model="projectModel" :aria-label="t('專案')" :disabled="!todo || saving" required><option v-if="todo" value="" disabled>{{ t('選擇所屬專案') }}</option><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option></select></label></div>
+          <MarkdownEditor ref="descriptionEditor" spacious allow-attachments v-model="form.description" :project-id="form.projectId" :label="t('描述')" name="description" :placeholder="t('輸入描述…')" :rows="5" :maxlength="6000" :disabled="inputDisabled" />
+          <details class="issue-properties" :open="propertiesOpen" @toggle="propertiesOpen = $event.target.open"><summary><span>{{ t('任務屬性') }}</span><span>{{ propertySummary }}</span></summary>
           <div class="form-grid">
-            <div v-if="!todo"><PagedSelect autoload v-if="projectOptionsLoader" v-model="projectModel" label="專案" :options="availableProjects" :context="todo?.id || 'new'" :load="projectOptionsLoader" :disabled="inputDisabled || !todo" empty-label="選擇所屬專案" required @choose="item => { pickedProjects = [...pickedProjects.filter(project=>project.id!==item.id),item]; }" /><label v-else class="field">專案<select v-model="projectModel" aria-label="專案" :disabled="!todo || saving" required><option v-if="todo" value="" disabled>選擇所屬專案</option><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option></select></label></div>
+            <div v-if="!todo"><PagedSelect autoload v-if="projectOptionsLoader" v-model="projectModel" :label="t('專案')" :options="availableProjects" :context="todo?.id || 'new'" :load="projectOptionsLoader" :disabled="inputDisabled || !todo" :empty-label="t('選擇所屬專案')" required @choose="item => { pickedProjects = [...pickedProjects.filter(project=>project.id!==item.id),item]; }" /><label v-else class="field">{{ t('專案') }}<select v-model="projectModel" :aria-label="t('專案')" :disabled="!todo || saving" required><option v-if="todo" value="" disabled>{{ t('選擇所屬專案') }}</option><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option></select></label></div>
 
-            <label class="field">狀態<select v-model="form.state" aria-label="狀態" :disabled="inputDisabled"><option v-for="state in states" :key="state.id" :value="state.id">{{ state.label }}</option></select></label>
-            <label class="field">類型<select v-model="form.type" aria-label="類型" :disabled="inputDisabled"><option v-for="type in TYPES" :key="type.id" :value="type.id">{{ type.label }}</option></select></label>
-            <label class="field">優先級<select v-model="form.priority" aria-label="優先級" :disabled="inputDisabled"><option v-for="priority in PRIORITIES" :key="priority.id" :value="priority.id">{{ priority.label }}</option></select></label>
-            <PagedSelect v-if="lookup" v-model="form.assignee" label="負責人" :options="availableMembers" :context="form.projectId" :load="(filters, options) => lookupForProject('member', filters, options)" :disabled="inputDisabled" empty-label="未指派" @choose="item => { pickedMembers = [...pickedMembers.filter(row => row.id !== item.id), item]; }" /><label v-else class="field">負責人<select v-model="form.assignee" aria-label="負責人" :disabled="inputDisabled"><option value="">未指派</option><option v-for="member in availableMembers" :key="member.id" :value="member.id">{{ member.name }}</option><option v-if="form.assignee && !availableMembers.some(member => member.id === form.assignee)" :value="form.assignee">{{ form.assignee }}（舊紀錄）</option></select></label>
-            <label class="field">到期日<input v-model="form.dueDate" type="date" :disabled="inputDisabled" /></label>
-            <PagedSelect v-if="lookup && form.type !== 'epic'" v-model="form.epicId" label="所屬 Epic" :options="epics" :context="form.projectId" :load="(filters, options) => lookupForProject('epic', filters, options)" :disabled="inputDisabled || Boolean(form.parentIssueId)" empty-label="不屬於 Epic" @choose="remember" /><label v-else-if="form.type !== 'epic'" class="field">所屬 Epic<select v-model="form.epicId" aria-label="所屬 Epic" :disabled="inputDisabled || Boolean(form.parentIssueId)"><option value="">不屬於 Epic</option><option v-for="epic in epics" :key="epic.id" :value="epic.id">{{ epic.identifier }} · {{ epic.title }}</option></select></label>
-            <label v-if="form.type !== 'epic'" class="field">預估小時<input v-model="estimateHours" type="number" min="0" max="8760" step="any" :disabled="inputDisabled" /></label>
+            <label class="field">{{ t('狀態') }}<select v-model="form.state" :aria-label="t('狀態')" :disabled="inputDisabled"><option v-for="state in states" :key="state.id" :value="state.id">{{ state.label }}</option></select></label>
+            <label class="field">{{ t('類型') }}<select v-model="form.type" :aria-label="t('類型')" :disabled="inputDisabled"><option v-for="type in TYPES" :key="type.id" :value="type.id">{{ t(type.label) }}</option></select></label>
+            <label class="field">{{ t('優先級') }}<select v-model="form.priority" :aria-label="t('優先級')" :disabled="inputDisabled"><option v-for="priority in PRIORITIES" :key="priority.id" :value="priority.id">{{ t(priority.label) }}</option></select></label>
+            <PagedSelect v-if="lookup" v-model="form.assignee" :label="t('負責人')" :options="availableMembers" :context="form.projectId" :load="(filters, options) => lookupForProject('member', filters, options)" :disabled="inputDisabled" :empty-label="t('未指派')" @choose="item => { pickedMembers = [...pickedMembers.filter(row => row.id !== item.id), item]; }" /><label v-else class="field">{{ t('負責人') }}<select v-model="form.assignee" :aria-label="t('負責人')" :disabled="inputDisabled"><option value="">{{ t('未指派') }}</option><option v-for="member in availableMembers" :key="member.id" :value="member.id">{{ member.name }}</option><option v-if="form.assignee && !availableMembers.some(member => member.id === form.assignee)" :value="form.assignee">{{ form.assignee }}{{ t('（舊紀錄）') }}</option></select></label>
+            <label class="field">{{ t('到期日') }}<input v-model="form.dueDate" type="date" :disabled="inputDisabled" /></label>
+            <PagedSelect v-if="lookup && form.type !== 'epic'" v-model="form.epicId" :label="t('所屬 Epic')" :options="epics" :context="form.projectId" :load="(filters, options) => lookupForProject('epic', filters, options)" :disabled="inputDisabled || Boolean(form.parentIssueId)" :empty-label="t('不屬於 Epic')" @choose="remember" /><label v-else-if="form.type !== 'epic'" class="field">{{ t('所屬 Epic') }}<select v-model="form.epicId" :aria-label="t('所屬 Epic')" :disabled="inputDisabled || Boolean(form.parentIssueId)"><option value="">{{ t('不屬於 Epic') }}</option><option v-for="epic in epics" :key="epic.id" :value="epic.id">{{ epic.identifier }} · {{ epic.title }}</option></select></label>
+            <label v-if="form.type !== 'epic'" class="field">{{ t('預估小時') }}<input v-model="estimateHours" type="number" min="0" max="8760" step="any" :disabled="inputDisabled" /></label>
           </div></details>
         </form>
         <IssueRelations v-if="selectedProject" ref="relationsTool" :lookup="lookup ? lookupForProject : undefined" :activity-loader="activityLoader" :issue="issue" :issues="availableIssues" :project="selectedProject" :type="form.type" :parent-id="form.parentIssueId" :related-ids="form.relatedIssueIds" :saving="inputDisabled" @candidate="remember" @parent="form.parentIssueId = $event" @related="form.relatedIssueIds = $event" @open="jump" @create-child="createChild" />
-        <p v-if="issue && form.type !== 'epic'" class="detail-spent"><Icon name="clock" :size="14" />已投入 {{ hours(spent) }} / {{ form.estimateMinutes ? `預估 ${hours(form.estimateMinutes)}` : '尚未估時' }}</p>
+        <p v-if="issue && form.type !== 'epic'" class="detail-spent"><Icon name="clock" :size="14" />{{ t('已投入') }} {{ hours(spent) }} / {{ form.estimateMinutes ? t('預估 {0}', [hours(form.estimateMinutes)]) : t('尚未估時') }}</p>
         <section v-if="issue && !inline" class="discussion">
-          <div class="discussion-tabs" role="tablist" aria-label="任務紀錄" @keydown="onTabKeydown">
-            <button :class="{ active: tab === 'comments' }" :id="`${tabId}-comments-tab`" role="tab" :aria-controls="`${tabId}-activity`" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" @click="tab = 'comments'">留言 <span v-if="activityCounts.comments !== null">{{ activityCounts.comments }}</span></button>
-            <button :class="{ active: tab === 'history' }" :id="`${tabId}-history-tab`" role="tab" :aria-controls="`${tabId}-activity`" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" @click="tab = 'history'">異動紀錄 <span v-if="activityCounts.history !== null">{{ activityCounts.history }}</span></button>
+          <div class="discussion-tabs" role="tablist" :aria-label="t('任務紀錄')" @keydown="onTabKeydown">
+            <button :class="{ active: tab === 'comments' }" :id="`${tabId}-comments-tab`" role="tab" :aria-controls="`${tabId}-activity`" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" @click="tab = 'comments'">{{ t('留言') }} <span v-if="activityCounts.comments !== null">{{ activityCounts.comments }}</span></button>
+            <button :class="{ active: tab === 'history' }" :id="`${tabId}-history-tab`" role="tab" :aria-controls="`${tabId}-activity`" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" @click="tab = 'history'">{{ t('異動紀錄') }} <span v-if="activityCounts.history !== null">{{ activityCounts.history }}</span></button>
           </div>
           <div :id="`${tabId}-activity`" role="tabpanel" :aria-labelledby="`${tabId}-${tab}-tab`" tabindex="0">
           <div v-if="tab === 'comments'" class="comments">
-            <p v-if="!activityComments.length" class="quiet-message">尚無留言</p>
+            <p v-if="!activityComments.length" class="quiet-message">{{ t('尚無留言') }}</p>
             <article v-for="entry in activityComments" :key="entry.id" class="comment">
               <div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><MarkdownContent :source="entry.content" :project-id="issue.projectId" /></div>
             </article>
             <form @submit.prevent="sendComment" class="comment-form">
-              <MarkdownEditor ref="commentEditor" :key="commentEditorKey" allow-attachments :project-id="issue.projectId" v-model="comment" label="新增留言" placeholder="輸入留言…" :maxlength="2000" :rows="3" :disabled="inputDisabled" />
-              <button class="button secondary" :disabled="inputDisabled || commentEditor?.attachmentBlocked || !comment.trim()">送出留言 <Icon name="arrow" :size="16" /></button>
+              <MarkdownEditor ref="commentEditor" :key="commentEditorKey" allow-attachments :project-id="issue.projectId" v-model="comment" :label="t('新增留言')" :placeholder="t('輸入留言…')" :maxlength="2000" :rows="3" :disabled="inputDisabled" />
+              <button class="button secondary" :disabled="inputDisabled || commentEditor?.attachmentBlocked || !comment.trim()">{{ t('送出留言') }} <Icon name="arrow" :size="16" /></button>
             </form>
           </div>
           <div v-else class="history-list">
             <article v-for="entry in activityHistory" :key="entry.id" class="history-entry">
-              <span class="history-dot"></span><div><p><strong>{{ entry.actor }}</strong> {{ entry.kind === 'created' ? '建立了任務' : '更新了任務' }} <time>{{ timestamp(entry.at) }}</time></p><p v-for="change in entry.changes" :key="change.field" class="history-change">{{ FIELD_LABELS[change.field] || change.field }}：{{ display(change.field, change.before) }} → {{ display(change.field, change.after) }}</p></div>
+              <span class="history-dot"></span><div><p><strong>{{ entry.actor }}</strong> {{ entry.kind === 'created' ? t('建立了任務') : t('更新了任務') }} <time>{{ timestamp(entry.at) }}</time></p><p v-for="change in entry.changes" :key="change.field" class="history-change">{{ t(FIELD_LABELS[change.field] || change.field) }}：{{ display(change.field, change.before) }} → {{ display(change.field, change.after) }}</p></div>
             </article>
           </div>
           </div>
         </section>
       </div>
-      <footer class="panel-footer"><span class="subtle" role="status">{{ saveStatus }}</span><button type="submit" form="issue-form" class="button primary" :disabled="inputDisabled || descriptionEditor?.attachmentBlocked || (Boolean(issue) && !dirty) || (Boolean(todo) && !form.projectId)"><Icon :name="saving ? 'clock' : 'check'" :size="17" />{{ saving ? '儲存中…' : todo ? '建立卡片並完成轉換' : issue ? '儲存修改' : '建立任務' }}</button></footer>
+      <footer class="panel-footer"><span class="subtle" role="status">{{ saveStatus }}</span><button type="submit" form="issue-form" class="button primary" :disabled="inputDisabled || descriptionEditor?.attachmentBlocked || (Boolean(issue) && !dirty) || (Boolean(todo) && !form.projectId)"><Icon :name="saving ? 'clock' : 'check'" :size="17" />{{ saving ? t('儲存中…') : todo ? t('建立卡片並完成轉換') : issue ? t('儲存修改') : t('建立任務') }}</button></footer>
     </div>
     <div v-if="!inline && activityLoader && ['comments','history'].includes(tab)" class="activity-pagination">
     <p v-if="activity.error.value" class="error-box" role="alert">{{ activity.error.value }}</p>
-    <button v-if="activity.more.value" class="button secondary" :disabled="activity.loading.value" @click="activity.fetchPage(true)">載入更多</button>
+    <button v-if="activity.more.value" class="button secondary" :disabled="activity.loading.value" @click="activity.fetchPage(true)">{{ t('載入更多') }}</button>
   </div>
 
   </component>

@@ -66,7 +66,7 @@ try {
   const first = ownerWorkspace.projects.find(project => project.code === 'FIRST');
   assert.ok(first, 'FIRST seed專案存在');
   for (let run = 0; run < (phase === 'cards' ? 3 : 5); run++) {
-    const context = await browser.newContext({ storageState: ownerState, viewport: { width: 1440, height: 1000 } });
+    const context = await browser.newContext({ locale: 'zh-TW', storageState: ownerState, viewport: { width: 1440, height: 1000 } });
     const page = await context.newPage();
     page.setDefaultTimeout(20000);
     const calls = [], errors = [];

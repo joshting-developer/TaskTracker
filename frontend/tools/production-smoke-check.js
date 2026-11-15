@@ -8,7 +8,7 @@ assert.equal(base, process.env.E2E_API_URL);
 let browser;
 try {
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } }), errors = [], bulk = [];
+  const page = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } }), errors = [], bulk = [];
   page.setDefaultTimeout(15000);
   page.on('pageerror', error => errors.push(error.message));
   page.on('request', request => { if (/\/api\/rpc\/(getWorkspace|getTodos)$/.test(new URL(request.url()).pathname)) bulk.push(request.url()); });

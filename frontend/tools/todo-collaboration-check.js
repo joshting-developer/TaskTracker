@@ -12,7 +12,7 @@ mkdirSync(dir, { recursive: true });
 try {
   server = await createServer({ root: new URL('..', import.meta.url).pathname, server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } }); await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const pages = await Promise.all(['Claude', 'Josh', 'Codex'].map(async () => (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage()));
+  const pages = await Promise.all(['Claude', 'Josh', 'Codex'].map(async () => (await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } })).newPage()));
   const [claude, josh, codex] = pages, errors = [], network = [];
   for (const page of pages) { page.setDefaultTimeout(12000); page.on('pageerror', e => errors.push(e.message)); await page.goto(`http://127.0.0.1:${port}/login`); }
   async function call(page, operation, input = {}, group = 'rpc') {

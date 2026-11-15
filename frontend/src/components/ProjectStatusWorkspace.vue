@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { useLeaveGuard } from '../ui/leaveGuard.js';
@@ -32,8 +33,8 @@ defineExpose({ refresh });
 </script>
 <template>
   <div>
-    <p v-if="loading" role="status">載入狀態用量中…</p>
-    <div v-if="error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="refresh">重試</button></div>
+    <p v-if="loading" role="status">{{ t('載入狀態用量中…') }}</p>
+    <div v-if="error" class="error-box" role="alert">{{ t(error) }}<button class="text-button" @click="refresh">{{ t('重試') }}</button></div>
     <ProjectSettings ref="tool" :project="project" :usage="usage" :issues="[]" :permissions="project.permissions || []" @updated="emit('updated', $event)" />
   </div>
 </template>

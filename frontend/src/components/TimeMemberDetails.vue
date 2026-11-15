@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { nextTick, onBeforeUnmount, shallowRef, useTemplateRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { hours } from '../domain/model.js';
@@ -56,37 +57,37 @@ onBeforeUnmount(() => { generation++; });
 </script>
 
 <template>
-  <section class="member-details" aria-label="成員工時明細" :aria-busy="loading">
-    <button class="text-button member-back" @click="emit('back')">返回成員分析</button>
-    <h1 ref="heading" class="member-heading" tabindex="-1">{{ member.name }} · 工時明細</h1>
+  <section class="member-details" :aria-label="t('成員工時明細')" :aria-busy="loading">
+    <button class="text-button member-back" @click="emit('back')">{{ t('返回成員分析') }}</button>
+    <h1 ref="heading" class="member-heading" tabindex="-1">{{ member.name }} {{ t('· 工時明細') }}</h1>
     <p class="member-period">{{ member.range.startDate }} — {{ member.range.endDate }}<template v-if="member.projectName"> · {{ member.projectName }}</template></p>
-    <div class="member-grouping" role="group" aria-label="明細整理方式">
-      <button class="button secondary" :aria-pressed="group === 'dates'" :disabled="loading" @click="changeGroup('dates')">依日期</button>
-      <button class="button secondary" :aria-pressed="group === 'issues'" :disabled="loading" @click="changeGroup('issues')">依卡片</button>
+    <div class="member-grouping" role="group" :aria-label="t('明細整理方式')">
+      <button class="button secondary" :aria-pressed="group === 'dates'" :disabled="loading" @click="changeGroup('dates')">{{ t('依日期') }}</button>
+      <button class="button secondary" :aria-pressed="group === 'issues'" :disabled="loading" @click="changeGroup('issues')">{{ t('依卡片') }}</button>
     </div>
-    <p v-if="loading" role="status">正在載入工時明細…</p>
-    <div v-if="error" class="error-box" role="alert">{{ error }} <button class="text-button" @click="load()">重試</button></div>
+    <p v-if="loading" role="status">{{ t('正在載入工時明細…') }}</p>
+    <div v-if="error" class="error-box" role="alert">{{ t(error) }} <button class="text-button" @click="load()">{{ t('重試') }}</button></div>
     <template v-else-if="report">
-      <p class="member-summary"><strong>{{ hours(report.summary.totalMinutes) }}</strong><span>{{ report.summary.entryCount }} 筆</span><span>{{ report.summary.activeDays }} 天</span></p>
-      <p v-if="!report.details.total" role="status">尚無符合條件的工時紀錄</p>
+      <p class="member-summary"><strong>{{ hours(report.summary.totalMinutes) }}</strong><span>{{ report.summary.entryCount }} {{ t('筆') }}</span><span>{{ report.summary.activeDays }} {{ t('天') }}</span></p>
+      <p v-if="!report.details.total" role="status">{{ t('尚無符合條件的工時紀錄') }}</p>
       <div v-else class="member-groups">
         <article v-for="(row, index) in report.details.rows" :key="row.key" class="member-row">
-          <div v-if="group === 'dates' && (index === 0 || report.details.rows[index - 1].date !== row.date)" class="member-day"><strong>{{ row.date }}</strong><span>當日合計 {{ hours(row.dayMinutes) }}</span></div>
+          <div v-if="group === 'dates' && (index === 0 || report.details.rows[index - 1].date !== row.date)" class="member-day"><strong>{{ row.date }}</strong><span>{{ t('當日合計') }} {{ hours(row.dayMinutes) }}</span></div>
           <div class="member-card">
             <div class="member-card-name"><span class="member-code">{{ row.identifier }} · {{ row.projectName }}</span><h2 class="member-card-title">{{ row.title }}</h2></div>
             <strong class="member-hours">{{ hours(row.minutes) }}</strong>
-            <button class="text-button member-expand" :disabled="loading" :aria-expanded="report.details.expanded?.key === row.key" :aria-label="`${report.details.expanded?.key === row.key ? '收合' : '展開'} ${row.identifier} 工時紀錄`" @click="expand(row.key)">{{ report.details.expanded?.key === row.key ? '收合紀錄' : '查看紀錄' }}（{{ row.entryCount }}）</button>
+            <button class="text-button member-expand" :disabled="loading" :aria-expanded="report.details.expanded?.key === row.key" :aria-label="t('{0} {1} 工時紀錄', [report.details.expanded?.key === row.key ? t('收合') : t('展開'), row.identifier])" @click="expand(row.key)">{{ report.details.expanded?.key === row.key ? t('收合紀錄') : t('查看紀錄') }}（{{ row.entryCount }}）</button>
           </div>
-          <div v-if="report.details.expanded?.key === row.key" class="member-entries" :aria-label="`${row.identifier} 填報紀錄`" role="region">
+          <div v-if="report.details.expanded?.key === row.key" class="member-entries" :aria-label="t('{0} 填報紀錄', [row.identifier])" role="region">
             <div v-for="entry in report.details.expanded.rows" :key="entry.id" class="member-entry">
               <div class="member-entry-meta"><time>{{ entry.workDate }}</time><strong>{{ hours(entry.minutes) }}</strong></div>
-              <p class="member-note">{{ entry.note || '未填寫說明' }}</p>
+              <p class="member-note">{{ entry.note || t('未填寫說明') }}</p>
             </div>
-            <ReportPagination :pagination="report.details.expanded" label="填報紀錄分頁" :disabled="loading" @change="changeEntryPage" />
+            <ReportPagination :pagination="report.details.expanded" :label="t('填報紀錄分頁')" :disabled="loading" @change="changeEntryPage" />
           </div>
         </article>
       </div>
-      <ReportPagination :pagination="report.details" label="成員明細分頁" :disabled="loading" @change="changePage" />
+      <ReportPagination :pagination="report.details" :label="t('成員明細分頁')" :disabled="loading" @change="changePage" />
     </template>
   </section>
 </template>

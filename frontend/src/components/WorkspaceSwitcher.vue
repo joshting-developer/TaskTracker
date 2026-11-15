@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { api } from '../api/index.js';
 import Icon from './Icon.vue';
@@ -33,20 +34,20 @@ defineExpose({ open });
 onBeforeUnmount(() => dialog.value?.close());
 </script>
 <template>
-  <button ref="trigger" class="workspace-switch" aria-label="切換工作空間" aria-haspopup="dialog" :disabled="switching" @click="open"><span class="workspace-avatar">{{ workspace?.name?.slice(0, 1) || '—' }}</span><span class="switcher-current"><strong>{{ workspace?.name || (hasWorkspaces ? '選擇工作區' : '無隸屬工作區') }}</strong><span>切換工作空間</span></span><span class="workspace-chevron">⌄</span></button>
+  <button ref="trigger" class="workspace-switch" :aria-label="t('切換工作空間')" aria-haspopup="dialog" :disabled="switching" @click="open"><span class="workspace-avatar">{{ workspace?.name?.slice(0, 1) || '—' }}</span><span class="switcher-current"><strong>{{ workspace?.name || (hasWorkspaces ? t('選擇工作區') : t('無隸屬工作區')) }}</strong><span>{{ t('切換工作空間') }}</span></span><span class="workspace-chevron">⌄</span></button>
   <dialog ref="dialog" class="workspace-picker" aria-labelledby="workspace-picker-title" @cancel.prevent="close">
-    <header><h2 id="workspace-picker-title">選擇工作空間</h2><button class="icon-button" aria-label="關閉工作空間選擇" :disabled="switching" @click="close"><Icon name="close" /></button></header>
-    <p v-if="loading || switching" role="status">{{ switching ? '正在切換工作空間…' : '正在載入工作空間…' }}</p>
+    <header><h2 id="workspace-picker-title">{{ t('選擇工作空間') }}</h2><button class="icon-button" :aria-label="t('關閉工作空間選擇')" :disabled="switching" @click="close"><Icon name="close" /></button></header>
+    <p v-if="loading || switching" role="status">{{ switching ? t('正在切換工作空間…') : t('正在載入工作空間…') }}</p>
     <form v-if="creating" class="workspace-create" @submit.prevent="submitCreation">
-      <label for="new-workspace-name">工作空間名稱</label>
+      <label for="new-workspace-name">{{ t('工作空間名稱') }}</label>
       <input id="new-workspace-name" ref="nameInput" v-model="name" name="workspaceName" maxlength="60" required :disabled="switching" autocomplete="organization" />
-      <p v-if="error" class="error-box" role="alert">{{ error }}</p>
-      <div class="workspace-create-actions"><button type="button" class="button secondary" :disabled="switching" @click="creating = false; error = ''">返回工作空間列表</button><button type="submit" class="button primary" :disabled="switching || !name.trim()">{{ switching ? '建立中…' : '建立工作空間' }}</button></div>
+      <p v-if="error" class="error-box" role="alert">{{ t(error) }}</p>
+      <div class="workspace-create-actions"><button type="button" class="button secondary" :disabled="switching" @click="creating = false; error = ''">{{ t('返回工作空間列表') }}</button><button type="submit" class="button primary" :disabled="switching || !name.trim()">{{ switching ? t('建立中…') : t('建立工作空間') }}</button></div>
     </form>
     <template v-else>
-      <div v-if="error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="open">重新載入</button></div>
-      <ul v-else-if="!loading && !switching" class="workspace-options"><li v-for="choice in choices" :key="choice.id"><button :aria-label="`選擇工作空間 ${choice.name}`" :disabled="switching" @click="select(choice)"><span>{{ choice.name }}</span><span v-if="choice.id === workspace?.id" class="current-badge">目前工作空間</span><Icon v-else name="chevron" :size="18" /></button></li></ul>
-      <button v-if="create" type="button" class="button secondary workspace-create-entry" :disabled="loading || switching" @click="beginCreate"><Icon name="plus" :size="18" />建立工作空間</button>
+      <div v-if="error" class="error-box" role="alert">{{ t(error) }}<button class="text-button" @click="open">{{ t('重新載入') }}</button></div>
+      <ul v-else-if="!loading && !switching" class="workspace-options"><li v-for="choice in choices" :key="choice.id"><button :aria-label="t('選擇工作空間 {0}', [choice.name])" :disabled="switching" @click="select(choice)"><span>{{ choice.name }}</span><span v-if="choice.id === workspace?.id" class="current-badge">{{ t('目前工作空間') }}</span><Icon v-else name="chevron" :size="18" /></button></li></ul>
+      <button v-if="create" type="button" class="button secondary workspace-create-entry" :disabled="loading || switching" @click="beginCreate"><Icon name="plus" :size="18" />{{ t('建立工作空間') }}</button>
     </template>
 
   </dialog>

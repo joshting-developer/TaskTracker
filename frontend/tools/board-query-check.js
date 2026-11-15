@@ -8,7 +8,7 @@ try {
   server = await createServer({ root: new URL('..', import.meta.url).pathname, server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const page = await browser.newPage();
+  const page = await browser.newPage({ locale: 'zh-TW' });
   const errors = [], requests = [];
   page.on('pageerror', error => { errors.push(error.message); console.log('PAGEERROR',error.stack); });
   page.on('response', response => { if (new URL(response.url()).pathname.startsWith('/api/')) { requests.push({ url: response.url(), status: response.status() }); if (response.status() >= 400) console.log('HTTP', response.status(), new URL(response.url()).pathname); } });

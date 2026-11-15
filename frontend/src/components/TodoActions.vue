@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { onBeforeUnmount, onMounted, ref, useId } from 'vue';
 const root = ref(null), options = ref(null), position = ref({ visibility: 'hidden' }), id = useId();
 function close(restoreFocus = false) {
@@ -39,7 +40,7 @@ onBeforeUnmount(() => {
 </script>
 <template>
   <details ref="root" class="todo-actions" @toggle="positionMenu" @keydown="keydown">
-    <summary aria-label="紙條操作" :aria-controls="id">更多</summary>
+    <summary :aria-label="t('紙條操作')" :aria-controls="id">{{ t('更多') }}</summary>
     <div :id="id" ref="options" class="todo-options" :style="position" @click="select"><slot /></div>
   </details>
 </template>

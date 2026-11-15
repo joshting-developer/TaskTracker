@@ -9,7 +9,7 @@ let server, browser;
 try {
   server = await preview({ preview: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': apiUrl } } });
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } }), errors = [], reads = [];
+  const page = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 900 } }), errors = [], reads = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.goto(`http://127.0.0.1:${port}/login?mode=register`);
   await page.getByLabel('你的名字').fill('首頁測試'); await page.getByLabel('Email', { exact: true }).fill(`home-${crypto.randomUUID()}@example.test`);

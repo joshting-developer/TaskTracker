@@ -22,8 +22,8 @@ try {
   vite = built ? await preview({ preview: server }) : await createServer({ server });
   if (!built) await vite.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const owner = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
-  const member = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const owner = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } });
+  const member = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } });
   const errors = [];
   for (const page of [owner, member]) { page.setDefaultTimeout(15000); page.on('pageerror', error => errors.push(error.message)); }
   const token = crypto.randomUUID();
@@ -58,6 +58,8 @@ try {
   await owner.keyboard.press('ArrowDown'); assert.equal(await menu.getByRole('menuitem', { name: '個人 API Token', exact: true }).evaluate(el => el === document.activeElement), true);
   // TT-304：Token和登出之間多了「產品介紹」
   await owner.keyboard.press('ArrowDown'); assert.equal(await menu.getByRole('menuitem', { name: '產品介紹', exact: true }).evaluate(el => el === document.activeElement), true);
+  await owner.keyboard.press('ArrowDown'); assert.equal(await menu.getByRole('menuitemradio', { name: '繁體中文', exact: true }).evaluate(el => el === document.activeElement), true);
+  await owner.keyboard.press('ArrowDown'); assert.equal(await menu.getByRole('menuitemradio', { name: 'English', exact: true }).evaluate(el => el === document.activeElement), true);
   await owner.keyboard.press('ArrowDown'); assert.equal(await menu.getByRole('menuitem', { name: '登出', exact: true }).evaluate(el => el === document.activeElement), true);
   await screenshots('menu', menu);
   await owner.keyboard.press('Escape'); await menu.waitFor({ state: 'hidden' }); assert.equal(await avatar.evaluate(el => el === document.activeElement), true);

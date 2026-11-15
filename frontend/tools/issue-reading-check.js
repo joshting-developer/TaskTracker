@@ -11,7 +11,7 @@ let vite, browser;
 try {
   vite = await createServer({ root: new URL('../', import.meta.url).pathname, plugins: [{ name: 'tt289-before-source', load(id) { if (phase === 'before' && id.endsWith('/src/components/IssueDetail.vue')) return execFileSync('git', ['show', '038f9e4:frontend/src/components/IssueDetail.vue'], { encoding: 'utf8', cwd: new URL('../../', import.meta.url).pathname }); } }], server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } }); await vite.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } }), page = await context.newPage(), errors = [], requests = [], external = []; page.setDefaultTimeout(15000);
+  const context = await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } }), page = await context.newPage(), errors = [], requests = [], external = []; page.setDefaultTimeout(15000);
   page.on('pageerror', e => errors.push(e.message)); page.on('request', r => { const url = r.url(); requests.push(url); if (url.includes('reading-test.invalid')) external.push(url); });
   async function call(operation, input) {
     const csrf = await (await context.request.get(`${base}/api/csrf-cookie`)).json();

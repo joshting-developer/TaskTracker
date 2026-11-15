@@ -11,7 +11,7 @@ let server, browser;
 try {
   server = await createServer({ server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': api } } }); await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const owner = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage(), guest = await (await browser.newContext()).newPage();
+  const owner = await (await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } })).newPage(), guest = await (await browser.newContext({ locale: 'zh-TW' })).newPage();
   const base = `http://127.0.0.1:${port}`, errors = [], reads = [];
   for (const page of [owner, guest]) { page.setDefaultTimeout(12000); page.on('pageerror', error => errors.push(error.message)); await page.goto(`${base}/login`); }
   async function call(page, operation, input = {}, group = 'auth') {
@@ -61,7 +61,7 @@ try {
   await owner.getByText('工作空間角色已儲存', { exact: true }).waitFor();
   const freshEmail = `new-${crypto.randomUUID()}@example.test`;
   const fresh = await call(owner, 'inviteMember', { email: freshEmail }, 'rpc');
-  const newcomer = await (await browser.newContext()).newPage(); newcomer.setDefaultTimeout(12000);
+  const newcomer = await (await browser.newContext({ locale: 'zh-TW' })).newPage(); newcomer.setDefaultTimeout(12000);
   await newcomer.goto(`${base}/login#/invite?token=${fresh.token}`);
   await newcomer.getByRole('heading', { name: '工作空間邀請', exact: true }).waitFor();
   await newcomer.waitForFunction(() => document.querySelector('input[type="email"]')?.value.includes('new-'));

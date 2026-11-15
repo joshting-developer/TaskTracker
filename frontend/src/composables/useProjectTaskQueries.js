@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import { onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { usePolling } from './usePolling.js';
@@ -52,10 +53,10 @@ export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId
           if (current !== generation) return;
           data.items.forEach(item => collected.set(item.id, item));
           if (page === 1) last = data.lastPage;
-          if (data.total !== meta.issueCount) throw Object.assign(new Error('看板資料已變更，請重新整理'), { code: 'DATA_CHANGED' });
+          if (data.total !== meta.issueCount) throw Object.assign(new Error(t('看板資料已變更，請重新整理')), { code: 'DATA_CHANGED' });
           page++;
         } while (page <= last);
-        if (collected.size !== meta.issueCount) throw Object.assign(new Error('看板資料已變更，請重新整理'), { code: 'DATA_CHANGED' });
+        if (collected.size !== meta.issueCount) throw Object.assign(new Error(t('看板資料已變更，請重新整理')), { code: 'DATA_CHANGED' });
         rows.value = [...collected.values()];
         knownVersion = version;
       }

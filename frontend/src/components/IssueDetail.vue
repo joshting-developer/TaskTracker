@@ -1,4 +1,5 @@
 <script setup>
+import { locale, t } from '../i18n/index.js';
 import { computed, ref, watch } from 'vue';
 import { toRef } from 'vue';
 import { useIssueActivity } from '../composables/useIssueActivity.js';
@@ -33,7 +34,7 @@ const isSaving = computed(() => Boolean(attachments.value?.saving) || saving.val
 defineExpose({ dirty, saving: isSaving, focus: () => heading.value?.focus() });
 const states = computed(() => statusesFor(props.project));
 const state = issue => states.value.find(item => item.id === issue.state);
-const memberName = id => props.members.find(member => member.id === id)?.name || id || '未指派';
+const memberName = id => props.members.find(member => member.id === id)?.name || id || t('未指派');
 const relations = useIssueActivity({issue: toRef(props, 'issue'), tab: computed(() => sidebarTab.value === 'relations' ? 'children' : ''), load: toRef(props, 'activityLoader')});
 const children = computed(() => props.activityLoader ? relations.children.value : props.issues.filter(issue => props.issue.type === 'epic' ? issue.epicId === props.issue.id : issue.parentIssueId === props.issue.id));
 const timeIssues = computed(() => [...new Map([props.issue, ...children.value, ...activity.time.value.map(entry => entry.issue).filter(Boolean)].map(issue => [issue.id, issue])).values()]);
@@ -41,22 +42,26 @@ const related = computed(() => (props.issue.relatedIssueIds || []).map(id => pro
 const epic = computed(() => props.issues.find(issue => issue.id === props.issue.epicId));
 const parent = computed(() => props.issues.find(issue => issue.id === props.issue.parentIssueId));
 const relationGroups = computed(() => [
-  { key: 'epic', label: '所屬 Epic', items: epic.value ? [epic.value] : [] },
-  { key: 'parent', label: '父任務', items: parent.value ? [parent.value] : [] },
-  { key: 'children', label: props.issue.type === 'epic' ? 'Epic 所屬卡片' : '子任務', items: children.value },
-  { key: 'related', label: '關聯任務', items: related.value },
+  { key: 'epic', label: t('所屬 Epic'), items: epic.value ? [epic.value] : [] },
+  { key: 'parent', label: t('父任務'), items: parent.value ? [parent.value] : [] },
+  { key: 'children', label: props.issue.type === 'epic' ? t('Epic 所屬卡片') : t('子任務'), items: children.value },
+  { key: 'related', label: t('關聯任務'), items: related.value },
 ].filter(group => group.items.length));
 const work = computed(() => (props.activityLoader ? activity.time.value : props.entries).filter(entry => !entry.voidedAt && (props.activityLoader || entry.issueId === props.issue.id || (props.issue.type === 'epic' && children.value.some(issue => issue.id === entry.issueId)))).sort((a, b) => b.workDate.localeCompare(a.workDate)));
 const spent = computed(() => props.issue.spentMinutes ?? work.value.reduce((sum, entry) => sum + entry.minutes, 0));
 const estimate = computed(() => props.activityLoader ? props.issue.estimateMinutes : props.issue.type === 'epic' ? children.value.reduce((sum, issue) => sum + (issue.estimateMinutes || 0), 0) : props.issue.estimateMinutes);
 function timestamp(value) {
-  return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+  return new Intl.DateTimeFormat(locale.value, { timeZone: 'Asia/Taipei', year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 }
 function display(field, value) {
-  if (field === 'relatedIssueIds' || field === 'blockedBy') return (value || []).map(id => props.issues.find(issue => issue.id === id)?.identifier || id).join('、') || '無';
+  if (field === 'relatedIssueIds' || field === 'blockedBy') return (value || []).map(id => props.issues.find(issue => issue.id === id)?.identifier || id).join('、') || t('無');
   if (field === 'assignee') return memberName(value);
-  if (field === 'epicId' || field === 'parentIssueId') return props.issues.find(issue => issue.id === value)?.identifier || value || '未連結';
-  return ({ state: states.value, priority: PRIORITIES, type: TYPES }[field])?.find(item => item.id === value)?.label || value || '未設定';
+  if (field === 'epicId' || field === 'parentIssueId') return props.issues.find(issue => issue.id === value)?.identifier || value || t('未連結');
+  return ({ state: states.value, priority: PRIORITIES, type: TYPES }[field])?.find(item => item.id === value)?.label || value || t('未設定');
+}
+function sidebarKeydown(event) {
+  onTabKeydown(event);
+  if (event.defaultPrevented) event.currentTarget.querySelector('[role=tab]:focus')?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' });
 }
 function changeState(event) {
   const nextState = event.target.value;
@@ -84,101 +89,101 @@ function reloadTime() { activity.refresh(); emit('reload'); }
 function timeSaved() {
   timeOpen.value = false; editingTime.value = null;
   activity.refresh();
-  emit('time-updated', '工時已儲存');
+  emit('time-updated', t('工時已儲存'));
 }
 </script>
 
 <template>
-  <section class="issue-detail-page" aria-label="任務完整頁">
+  <section class="issue-detail-page" :aria-label="t('任務完整頁')">
     <header class="issue-detail-toolbar">
-      <button class="button secondary" :disabled="saving || busy" @click="emit('close')"><Icon name="chevron" :size="16" class="back-icon" />{{ returnLabel }}</button>
+      <button class="button secondary" :disabled="saving || busy" @click="emit('close')"><Icon name="chevron" :size="16" class="back-icon" />{{ t(returnLabel) }}</button>
       <span class="identifier">{{ issue.identifier }}</span>
       <span class="issue-detail-actions">
-        <button v-if="canDelete" class="button secondary danger-text" :disabled="saving || busy || deleting" :aria-busy="deleting" @click="emit('delete')"><Icon name="close" :size="15" />{{ deleting ? '刪除中…' : '刪除卡片' }}</button>
-        <button v-if="canWrite" class="button primary" :disabled="saving || busy || deleting" @click="emit('edit')">編輯任務</button>
+        <button v-if="canDelete" class="button secondary danger-text" :disabled="saving || busy || deleting" :aria-busy="deleting" @click="emit('delete')"><Icon name="close" :size="15" />{{ deleting ? t('刪除中…') : t('刪除卡片') }}</button>
+        <button v-if="canWrite" class="button primary" :disabled="saving || busy || deleting" @click="emit('edit')">{{ t('編輯任務') }}</button>
       </span>
     </header>
     <div class="issue-detail-layout">
       <div class="issue-detail-heading">
       <h1 ref="heading" tabindex="-1">{{ issue.title }}</h1>
-    <div class="issue-state-control" role="group" aria-label="任務狀態" :aria-busy="busy">
-      <span class="state-label">目前狀態</span>
+    <div class="issue-state-control" role="group" :aria-label="t('任務狀態')" :aria-busy="busy">
+      <span class="state-label">{{ t('目前狀態') }}</span>
       <span class="status-badge" :style="{ '--status-color': state(issue)?.color }" aria-live="polite" aria-atomic="true"><i aria-hidden="true"></i>{{ state(issue)?.label || issue.state }}</span>
       <label v-if="canWrite" class="state-action">
-        <span class="sr-only">變更狀態</span>
+        <span class="sr-only">{{ t('變更狀態') }}</span>
         <select :disabled="saving || busy" @change="changeState">
-          <option value="">變更狀態…</option>
-          <option v-for="item in states" :key="item.id" :value="item.id" :disabled="issue.state === item.id">{{ item.label }}{{ issue.state === item.id ? '（目前）' : '' }}</option>
+          <option value="">{{ t('變更狀態…') }}</option>
+          <option v-for="item in states" :key="item.id" :value="item.id" :disabled="issue.state === item.id">{{ item.label }}{{ issue.state === item.id ? t('（目前）') : '' }}</option>
         </select>
       </label>
-      <span v-else class="subtle">唯讀</span>
-      <span v-if="busy" class="subtle" role="status">更新中…</span>
+      <span v-else class="subtle">{{ t('唯讀') }}</span>
+      <span v-if="busy" class="subtle" role="status">{{ t('更新中…') }}</span>
     </div>
       </div>
       <div class="issue-detail-body">
-        <section class="issue-detail-description" aria-label="任務描述"><h2>描述</h2><MarkdownContent v-if="issue.description" :source="issue.description" :project-id="project.id" /><p v-else class="quiet-message">尚未填寫描述</p></section>
-        <section class="issue-detail-activity" aria-label="任務活動">
-          <div class="discussion-tabs" role="tablist" aria-label="任務紀錄" @keydown="onTabKeydown">
-            <button id="detail-comments-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" :class="{ active: tab === 'comments' }" @click="tab = 'comments'">留言 <span v-if="activityCounts.comments !== null">{{ activityCounts.comments }}</span></button>
-            <button id="detail-history-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" :class="{ active: tab === 'history' }" @click="tab = 'history'">異動紀錄 <span v-if="activityCounts.history !== null">{{ activityCounts.history }}</span></button>
-            <button v-if="canReadTime || canLogTime" id="detail-time-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'time' ? 0 : -1" :aria-selected="tab === 'time'" :class="{ active: tab === 'time' }" @click="tab = 'time'">工時 <span v-if="canReadTime && (!activityLoader || activityCounts.time !== null)">{{ activityCounts.time ?? work.length }}</span></button>
+        <section class="issue-detail-description" :aria-label="t('任務描述')"><h2>{{ t('描述') }}</h2><MarkdownContent v-if="issue.description" :source="issue.description" :project-id="project.id" /><p v-else class="quiet-message">{{ t('尚未填寫描述') }}</p></section>
+        <section class="issue-detail-activity" :aria-label="t('任務活動')">
+          <div class="discussion-tabs" role="tablist" :aria-label="t('任務紀錄')" @keydown="onTabKeydown">
+            <button id="detail-comments-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'comments' ? 0 : -1" :aria-selected="tab === 'comments'" :class="{ active: tab === 'comments' }" @click="tab = 'comments'">{{ t('留言') }} <span v-if="activityCounts.comments !== null">{{ activityCounts.comments }}</span></button>
+            <button id="detail-history-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'history' ? 0 : -1" :aria-selected="tab === 'history'" :class="{ active: tab === 'history' }" @click="tab = 'history'">{{ t('異動紀錄') }} <span v-if="activityCounts.history !== null">{{ activityCounts.history }}</span></button>
+            <button v-if="canReadTime || canLogTime" id="detail-time-tab" role="tab" aria-controls="detail-activity" :tabindex="tab === 'time' ? 0 : -1" :aria-selected="tab === 'time'" :class="{ active: tab === 'time' }" @click="tab = 'time'">{{ t('工時') }} <span v-if="canReadTime && (!activityLoader || activityCounts.time !== null)">{{ activityCounts.time ?? work.length }}</span></button>
           </div>
           <div id="detail-activity" role="tabpanel" tabindex="0" :aria-busy="activity.loading.value" :aria-labelledby="`detail-${tab}-tab`">
-            <p v-if="activity.loading.value" class="quiet-message" role="status">載入紀錄中…</p>
-            <div v-if="activity.error.value" class="error-box" role="alert">{{ activity.error.value }} <button class="text-button" :disabled="activity.loading.value" @click="activity.fetchPage()">重試載入紀錄</button></div>
+            <p v-if="activity.loading.value" class="quiet-message" role="status">{{ t('載入紀錄中…') }}</p>
+            <div v-if="activity.error.value" class="error-box" role="alert">{{ activity.error.value }} <button class="text-button" :disabled="activity.loading.value" @click="activity.fetchPage()">{{ t('重試載入紀錄') }}</button></div>
             <template v-if="tab === 'comments'">
-              <p v-if="!activityComments.length && !activity.loading.value && !activity.error.value" class="quiet-message">尚無留言</p>
+              <p v-if="!activityComments.length && !activity.loading.value && !activity.error.value" class="quiet-message">{{ t('尚無留言') }}</p>
               <article v-for="entry in activityComments" :key="entry.id" class="comment"><div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><MarkdownContent :source="entry.content" :project-id="issue.projectId" /></div></article>
             </template>
             <template v-else-if="tab === 'history'">
-              <article v-for="entry in activityHistory" :key="entry.id" class="history-entry"><span class="history-dot"></span><div><p><strong>{{ entry.actor }}</strong> {{ entry.kind === 'created' ? '建立了任務' : '更新了任務' }} <time>{{ timestamp(entry.at) }}</time></p><p v-for="change in entry.changes" :key="change.field" class="history-change">{{ FIELD_LABELS[change.field] || change.field }}：{{ display(change.field, change.before) }} → {{ display(change.field, change.after) }}</p></div></article>
+              <article v-for="entry in activityHistory" :key="entry.id" class="history-entry"><span class="history-dot"></span><div><p><strong>{{ entry.actor }}</strong> {{ entry.kind === 'created' ? t('建立了任務') : t('更新了任務') }} <time>{{ timestamp(entry.at) }}</time></p><p v-for="change in entry.changes" :key="change.field" class="history-change">{{ t(FIELD_LABELS[change.field] || change.field) }}：{{ display(change.field, change.before) }} → {{ display(change.field, change.after) }}</p></div></article>
             </template>
             <template v-else>
-              <div v-if="canLogTime" class="issue-time-toolbar"><button class="button secondary" :disabled="busy || saving || !timeIssues.length" @click="openTime()"><Icon name="plus" :size="16" />填報工時</button></div>
+              <div v-if="canLogTime" class="issue-time-toolbar"><button class="button secondary" :disabled="busy || saving || !timeIssues.length" @click="openTime()"><Icon name="plus" :size="16" />{{ t('填報工時') }}</button></div>
               <template v-if="canReadTime">
-                <p v-if="!work.length && !activity.loading.value && !activity.error.value" class="quiet-message">尚無工時紀錄</p>
-                <article v-for="entry in work" :key="entry.id" class="issue-detail-work"><div><strong>{{ entry.workDate }} · {{ entry.userName || memberName(entry.userId) }}</strong><p>{{ entry.note || '未填說明' }}</p></div><div class="issue-work-actions"><span>{{ hours(entry.minutes) }}</span><button v-if="canLogTime && entry.userId === userId" class="text-button" :disabled="busy || saving" :aria-label="`修改工時 ${entry.id}`" @click="openTime(entry)">修改</button></div></article>
+                <p v-if="!work.length && !activity.loading.value && !activity.error.value" class="quiet-message">{{ t('尚無工時紀錄') }}</p>
+                <article v-for="entry in work" :key="entry.id" class="issue-detail-work"><div><strong>{{ entry.workDate }} · {{ entry.userName || memberName(entry.userId) }}</strong><p>{{ entry.note || t('未填說明') }}</p></div><div class="issue-work-actions"><span>{{ hours(entry.minutes) }}</span><button v-if="canLogTime && entry.userId === userId" class="text-button" :disabled="busy || saving" :aria-label="t('修改工時 {0}', [entry.id])" @click="openTime(entry)">{{ t('修改') }}</button></div></article>
               </template>
             </template>
-            <button v-if="activity.more.value" class="button secondary activity-more" :disabled="activity.loading.value" @click="activity.fetchPage(true)">載入更多</button>
+            <button v-if="activity.more.value" class="button secondary activity-more" :disabled="activity.loading.value" @click="activity.fetchPage(true)">{{ t('載入更多') }}</button>
           </div>
           <form v-if="canWrite" v-show="tab === 'comments'" class="comment-form" @submit.prevent="sendComment">
-            <div v-if="error" class="error-box" role="alert">{{ error }}<button v-if="conflict" class="text-button" type="button" :disabled="saving || busy" @click="emit('reload')">更新任務資料（保留留言）</button></div>
-            <MarkdownEditor ref="commentEditor" :key="commentEditorKey" allow-attachments :project-id="issue.projectId" v-model="comment" label="新增留言" :rows="3" :maxlength="2000" placeholder="輸入留言…" :disabled="saving || busy" />
-            <button class="button secondary" :disabled="saving || busy || commentEditor?.attachmentBlocked || !commentDirty">{{ saving ? '送出中…' : '送出留言' }}</button>
+            <div v-if="error" class="error-box" role="alert">{{ t(error) }}<button v-if="conflict" class="text-button" type="button" :disabled="saving || busy" @click="emit('reload')">{{ t('更新任務資料（保留留言）') }}</button></div>
+            <MarkdownEditor ref="commentEditor" :key="commentEditorKey" allow-attachments :project-id="issue.projectId" v-model="comment" :label="t('新增留言')" :rows="3" :maxlength="2000" :placeholder="t('輸入留言…')" :disabled="saving || busy" />
+            <button class="button secondary" :disabled="saving || busy || commentEditor?.attachmentBlocked || !commentDirty">{{ saving ? t('送出中…') : t('送出留言') }}</button>
           </form>
         </section>
       </div>
-      <aside class="issue-detail-sidebar" aria-label="任務資訊">
-        <button class="mobile-properties-toggle" :aria-expanded="propertiesExpanded" aria-controls="detail-sidebar-content" aria-label="任務資訊" @click="propertiesExpanded = !propertiesExpanded">
-          任務資訊 <span>{{ propertiesExpanded ? '收起' : '展開' }}</span>
+      <aside class="issue-detail-sidebar" :aria-label="t('任務資訊')">
+        <button class="mobile-properties-toggle" :aria-expanded="propertiesExpanded" aria-controls="detail-sidebar-content" :aria-label="t('任務資訊')" @click="propertiesExpanded = !propertiesExpanded">
+          {{ t('任務資訊') }} <span>{{ propertiesExpanded ? t('收起') : t('展開') }}</span>
         </button>
         <div id="detail-sidebar-content" class="sidebar-content" :class="{ expanded: propertiesExpanded }">
-          <div class="sidebar-tabs" role="tablist" aria-label="任務側欄" @keydown="onTabKeydown">
-            <button id="detail-properties-tab" role="tab" aria-controls="detail-properties" :tabindex="sidebarTab === 'properties' ? 0 : -1" :aria-selected="sidebarTab === 'properties'" :class="{ active: sidebarTab === 'properties' }" @click="sidebarTab = 'properties'">屬性</button>
-            <button id="detail-relations-tab" role="tab" aria-controls="detail-relations" :tabindex="sidebarTab === 'relations' ? 0 : -1" :aria-selected="sidebarTab === 'relations'" :class="{ active: sidebarTab === 'relations' }" @click="sidebarTab = 'relations'">關聯</button>
-            <button id="detail-attachments-tab" role="tab" aria-controls="detail-attachments" :tabindex="sidebarTab === 'attachments' ? 0 : -1" :aria-selected="sidebarTab === 'attachments'" :class="{ active: sidebarTab === 'attachments' }" @click="attachmentsOpened = true; sidebarTab = 'attachments'">附件</button>
+          <div class="sidebar-tabs" role="tablist" :aria-label="t('任務側欄')" @keydown="sidebarKeydown">
+            <button id="detail-properties-tab" role="tab" aria-controls="detail-properties" :tabindex="sidebarTab === 'properties' ? 0 : -1" :aria-selected="sidebarTab === 'properties'" :class="{ active: sidebarTab === 'properties' }" @click="sidebarTab = 'properties'">{{ t('屬性') }}</button>
+            <button id="detail-relations-tab" role="tab" aria-controls="detail-relations" :tabindex="sidebarTab === 'relations' ? 0 : -1" :aria-selected="sidebarTab === 'relations'" :class="{ active: sidebarTab === 'relations' }" @click="sidebarTab = 'relations'">{{ t('關聯') }}</button>
+            <button id="detail-attachments-tab" role="tab" aria-controls="detail-attachments" :tabindex="sidebarTab === 'attachments' ? 0 : -1" :aria-selected="sidebarTab === 'attachments'" :class="{ active: sidebarTab === 'attachments' }" @click="attachmentsOpened = true; sidebarTab = 'attachments'">{{ t('附件') }}</button>
           </div>
           <div v-if="attachmentsOpened" v-show="sidebarTab === 'attachments'" id="detail-attachments" class="sidebar-panel" role="tabpanel" tabindex="0" aria-labelledby="detail-attachments-tab"><AttachmentFiles ref="attachments" :issue="issue" :can-write="canWrite" @changed="emit('reload')" /></div>
           <div v-show="sidebarTab === 'properties'" id="detail-properties" class="sidebar-panel property-fields" role="tabpanel" tabindex="0" aria-labelledby="detail-properties-tab">
             <dl>
-              <div><dt>類型</dt><dd>{{ TYPES.find(item => item.id === issue.type)?.label || issue.type }}</dd></div>
-              <div><dt>優先級</dt><dd>{{ PRIORITIES.find(item => item.id === issue.priority)?.label || issue.priority }}</dd></div>
-              <div><dt>負責人</dt><dd>{{ memberName(issue.assignee) }}</dd></div>
-              <div><dt>到期日</dt><dd>{{ issue.dueDate || '未設定' }}</dd></div>
-              <div><dt>預估工時</dt><dd>{{ estimate ? hours(estimate) : '尚未估時' }}</dd></div>
-              <div v-if="canReadTime"><dt>已投入工時</dt><dd>{{ hours(spent) }}{{ issue.type === 'epic' ? '（含所屬卡片）' : '' }}</dd></div>
+              <div><dt>{{ t('類型') }}</dt><dd>{{ TYPES.find(item => item.id === issue.type)?.label || issue.type }}</dd></div>
+              <div><dt>{{ t('優先級') }}</dt><dd>{{ t(PRIORITIES.find(item => item.id === issue.priority)?.label || issue.priority) }}</dd></div>
+              <div><dt>{{ t('負責人') }}</dt><dd>{{ memberName(issue.assignee) }}</dd></div>
+              <div><dt>{{ t('到期日') }}</dt><dd>{{ issue.dueDate || t('未設定') }}</dd></div>
+              <div><dt>{{ t('預估工時') }}</dt><dd>{{ estimate ? hours(estimate) : t('尚未估時') }}</dd></div>
+              <div v-if="canReadTime"><dt>{{ t('已投入工時') }}</dt><dd>{{ hours(spent) }}{{ issue.type === 'epic' ? t('（含所屬卡片）') : '' }}</dd></div>
               <!-- TT-302：不用翻異動紀錄就看得到誰建的、最後誰改的 -->
-              <div v-if="issue.createdAt"><dt>建立</dt><dd>{{ issue.createdByName || '不明' }}<time class="property-time">{{ timestamp(issue.createdAt) }}</time></dd></div>
-              <div v-if="issue.lastChange"><dt>最後異動</dt><dd>{{ issue.lastChange.actor }}<time class="property-time">{{ timestamp(issue.lastChange.at) }}</time></dd></div>
+              <div v-if="issue.createdAt"><dt>{{ t('建立') }}</dt><dd>{{ issue.createdByName || t('不明') }}<time class="property-time">{{ timestamp(issue.createdAt) }}</time></dd></div>
+              <div v-if="issue.lastChange"><dt>{{ t('最後異動') }}</dt><dd>{{ issue.lastChange.actor }}<time class="property-time">{{ timestamp(issue.lastChange.at) }}</time></dd></div>
             </dl>
-            <p class="subtle">版本 {{ issue.revision }} · 已儲存</p>
+            <p class="subtle">{{ t('版本') }} {{ issue.revision }} {{ t('· 已儲存') }}</p>
           </div>
           <div v-show="sidebarTab === 'relations'" id="detail-relations" class="sidebar-panel" role="tabpanel" tabindex="0" aria-labelledby="detail-relations-tab">
-            <p v-if="relations.loading.value" role="status">載入中…</p>
+            <p v-if="relations.loading.value" role="status">{{ t('載入中…') }}</p>
             <p v-if="relations.error.value" class="error-box" role="alert">{{ relations.error.value }}</p>
-            <button v-if="relations.more.value" class="button secondary" :disabled="relations.loading.value" @click="relations.fetchPage(true)">載入更多子卡</button>
-            <p v-if="!relationGroups.length && !relations.loading.value" class="subtle">尚無關聯卡片</p>
+            <button v-if="relations.more.value" class="button secondary" :disabled="relations.loading.value" @click="relations.fetchPage(true)">{{ t('載入更多子卡') }}</button>
+            <p v-if="!relationGroups.length && !relations.loading.value" class="subtle">{{ t('尚無關聯卡片') }}</p>
             <section v-for="group in relationGroups" :key="group.key" class="relation-group" :aria-label="group.label">
               <h2>{{ group.label }} <span>{{ group.items.length }}</span></h2>
               <div v-for="item in group.items" :key="item.id" class="relation-item">
@@ -224,8 +229,8 @@ h2 span { color: #5f6673; font-weight: 400; margin-left: 8px; }
 .issue-detail-description p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.9; }
 .issue-detail-activity { margin-top: 28px; border-top: 1px solid #daddE5; padding-top: 18px; }
 .issue-detail-sidebar { grid-column: 2; grid-row: 1 / span 2; padding: 18px 20px 24px; border-left: 1px solid #e6e8ee; background: #fff; min-width: 0; }
-.sidebar-tabs { display: flex; gap: 20px; border-bottom: 1px solid #daddE5; margin-bottom: 20px; }
-.sidebar-tabs button { min-height: 44px; padding: 10px 4px; border-bottom: 2px solid transparent; color: #5f6673; font-size: 14px; }
+.sidebar-tabs { display: flex; gap: 20px; overflow-x: auto; border-bottom: 1px solid #daddE5; margin-bottom: 20px; }
+.sidebar-tabs button { flex: none; min-height: 44px; padding: 10px 4px; border-bottom: 2px solid transparent; color: #5f6673; font-size: 14px; }
 .sidebar-tabs button.active { border-bottom-color: #6653bd; color: #5844a0; font-weight: 600; }
 .sidebar-tabs button:hover { color: #5844a0; }
 .sidebar-panel { max-height: max(220px, calc(100dvh - 320px)); overflow-y: auto; scrollbar-gutter: stable; padding: 2px 4px 4px 0; overflow-wrap: anywhere; }

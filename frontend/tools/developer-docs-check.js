@@ -9,7 +9,7 @@ let server, browser;
 try {
   server = await preview({ preview: { host: '127.0.0.1', port: docsPort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const context = await browser.newContext();
+  const context = await browser.newContext({ locale: 'zh-TW' });
   const page = await context.newPage();
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   for (const width of [1440, 768, 390]) {

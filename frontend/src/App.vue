@@ -1,4 +1,5 @@
 <script setup>
+import { setLocaleAccount, t } from './i18n/index.js';
 import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from 'vue';
 import Icon from './components/Icon.vue';
 import { lazyFeature } from './ui/lazyFeature.js';
@@ -88,6 +89,10 @@ const creationBoardId = computed(() => section.value === 'tasks' && view.value =
 const canCreateIssue = computed(() => canWrite.value && (creationBoardId.value === 'default' || can('board.manage')));
 const showNewIssueAction = computed(() => selectedProject.value && section.value === 'tasks' && view.value === 'list' && scope.value === 'all' && canCreateIssue.value);
 const currentUserId = computed(() => workspace.value.meta.userId);
+watch([authenticated, currentUserId], ([signedIn, id]) => {
+  if (signedIn && id) setLocaleAccount(id);
+  else if (!signedIn && !loading.value) setLocaleAccount('');
+}, { immediate: true });
 const workContextKey = computed(() => contextKey(currentUserId.value, workspace.value.meta.workspace?.id, selectedProject.value?.id));
 let requestedScope = '';
 function restoreTaskScope() {
@@ -106,10 +111,10 @@ watch(workContextKey, restoreTaskScope, { flush: 'sync' });
 // 報表只在工作區、操作者、有效權限改變或手動重新整理時重查；一般導覽刷新換掉workspace物件不觸發重讀。
 const manualRefresh = shallowRef(0);
 const analysisVersion = computed(() => [workspace.value.meta.workspace?.id || '', workspace.value.meta.userId || '', (workspace.value.meta.permissions || []).join(','), manualRefresh.value].join('|'));
-const title = computed(() => selectedProject.value?.name || '專案列表');
+const title = computed(() => selectedProject.value?.name || t('專案列表'));
 const currentFeature = computed(() => section.value === 'tasks'
-  ? view.value === 'boards' ? '看板列表' : view.value === 'board' ? '任務看板' : scope.value === 'mine' ? '我的任務' : '任務列表'
-  : { time: '工時月曆', settings: '狀態設定', members: '專案成員', notifications: '通知預覽' }[section.value]);
+  ? view.value === 'boards' ? t('看板列表') : view.value === 'board' ? t('任務看板') : scope.value === 'mine' ? t('我的任務') : t('任務列表')
+  : { time: t('工時月曆'), settings: t('狀態設定'), members: t('專案成員'), notifications: t('通知預覽') }[section.value]);
 async function refreshCurrent() {
   manualRefresh.value++;
   await refresh({ join: true });
@@ -149,7 +154,7 @@ async function refreshWorkspace() {
     if(previousWorkspace&&previousWorkspace!==identity.workspace.id){
       setWorkspaceContext(identity.workspace.id);
       workspace.value={projects:[],members:[identity.user],meta:{actor:identity.user.name,userId:identity.user.id,workspace:identity.workspace,permissions:identity.permissions}};
-      resetWorkspaceUI();notify('工作空間已在其他分頁切換');
+      resetWorkspaceUI();notify(t('工作空間已在其他分頁切換'));
     }
     setWorkspaceContext(identity.workspace.id);
     const project = projectId.value ? await api.project(projectId.value) : null;
@@ -158,8 +163,8 @@ async function refreshWorkspace() {
       meta: { actor: identity.user.name, userId: identity.user.id, workspace: identity.workspace, permissions: identity.permissions } };
     authenticated.value = true;
     if(editingProject.value){
-      try{const current=await api.project(editingProject.value.id);if(!current.permissions.includes('project.update')){editingProject.value=null;notify('專案編輯資格已變更');}}
-      catch(failure){if(['NOT_FOUND','FORBIDDEN'].includes(failure.code)){editingProject.value=null;notify('專案編輯資格已變更');}else throw failure;}
+      try{const current=await api.project(editingProject.value.id);if(!current.permissions.includes('project.update')){editingProject.value=null;notify(t('專案編輯資格已變更'));}}
+      catch(failure){if(['NOT_FOUND','FORBIDDEN'].includes(failure.code)){editingProject.value=null;notify(t('專案編輯資格已變更'));}else throw failure;}
     }
     ensureSectionAccess();
     if (selectedId.value && !projectId.value) {
@@ -167,39 +172,39 @@ async function refreshWorkspace() {
         const found = await api.issueLocation(selectedId.value);
         if (generation !== refreshGeneration) return;
         history.replaceState(null, '', projectHash(found.projectId, found.id)); readHash(true);
-      } catch (failure) { if (failure.code !== 'NOT_FOUND') throw failure; notify('找不到這個任務'); goHome(true); }
+      } catch (failure) { if (failure.code !== 'NOT_FOUND') throw failure; notify(t('找不到這個任務')); goHome(true); }
     }
     await nextTick();
   } catch (failure) { if (generation === refreshGeneration) { if (failure.code === 'UNAUTHENTICATED') { authenticated.value = false; convertingTodo.value = null; pendingTodoId.value = ''; todoNotificationsOpen.value = false; profileOpen.value = false; tokensOpen.value = false; creatingProject.value = false; editingProject.value = null; selectedId.value = ''; detailPage.value = false; workspace.value = { projects: [], members: [], meta: {} }; } else if (isScopedRoute.value && ['FORBIDDEN', 'NOT_FOUND', 'WORKSPACE_CHANGED'].includes(failure.code)) {
       workspace.value = { ...workspace.value, projects: [] };
       selectedId.value = '';
-      goHome(true); notify('專案存取權限已變更');
+      goHome(true); notify(t('專案存取權限已變更'));
     } else error.value = failure.message; } }
   finally { if (generation === refreshGeneration) loading.value = false; }
 }
 function projectHash(id, issueId = '', mode = view.value, selectedBoardId = boardId.value, fullPage = detailPage.value, targetSection = section.value) {
   return buildHash({ project: id, issue: issueId, mode, board: selectedBoardId, detail: fullPage, section: targetSection, landing: landing.value, analysis: analysisMode.value, teamTab: teamTab.value });
 }
-function issueMissing() { notify('找不到這個專案內的任務'); history.replaceState(null, '', projectHash(projectId.value)); readHash(true); }
+function issueMissing() { notify(t('找不到這個專案內的任務')); history.replaceState(null, '', projectHash(projectId.value)); readHash(true); }
 function ensureSectionAccess() {
   if (landing.value === 'settings' && !canManageWorkspace.value) {
-    history.replaceState(null, '', '#/'); readHash(true); notify('你沒有工作空間設定的存取權限');
+    history.replaceState(null, '', '#/'); readHash(true); notify(t('你沒有工作空間設定的存取權限'));
   }
   if (landing.value === 'analysis' && !canAnalyze.value) {
     history.replaceState(null, '', '#/'); readHash(true);
-    notify('你沒有工時分析的存取權限');
+    notify(t('你沒有工時分析的存取權限'));
   }
   const permission = sectionPermissions[section.value];
   if (selectedProject.value && ((permission && !can(permission)) || (section.value === 'notifications' && !notificationPreviewEnabled.value))) {
     section.value = 'tasks'; view.value = 'list'; boardId.value = 'default';
     history.replaceState(null, '', projectHash(projectId.value));
-    notify('你沒有此功能的存取權限, 已返回任務列表');
+    notify(t('你沒有此功能的存取權限, 已返回任務列表'));
   }
 }
 function canLeave() {
   // 各草稿owner自己登記（ui/leaveGuard.js）；儲存中一律不離開, 有未儲存內容先確認。
   if (switchingWorkspace.value || leaveGuards.saving()) return false;
-  return !leaveGuards.dirty() || window.confirm('還有未儲存的內容, 確定要離開嗎？');
+  return !leaveGuards.dirty() || window.confirm(t('還有未儲存的內容, 確定要離開嗎？'));
 }
 function changeSection(value) {
   if ((value !== section.value || selectedId.value) && canLeave()) {
@@ -224,7 +229,7 @@ async function closeSettings(kind) {
   if (!hiddenSidebar && settingsOpener?.isConnected && box?.width && box.right > 0 && box.left < innerWidth) settingsOpener.focus();
   else accountMenu.value?.focus();
 }
-async function savedProfile() { await refresh(); await closeSettings('profile'); notify('個人資料已儲存'); }
+async function savedProfile() { await refresh(); await closeSettings('profile'); notify(t('個人資料已儲存')); }
 async function logout() { if (!canLeave()) return; try { await api.logout(); setWorkspaceContext(''); ++refreshGeneration; ++refreshScope; authenticated.value = false; tokensOpen.value = false; convertingTodo.value = null; pendingTodoId.value = ''; todoNotificationsOpen.value = false; workspace.value = { projects: [], members: [], meta: {} }; history.replaceState(null, '', '/login'); readHash(true); } catch (failure) { notify(failure.message); } }
 function resetWorkspaceUI() {
   selectedId.value = ''; detailPage.value = false;
@@ -241,7 +246,7 @@ async function changeWorkspace(workspaceId, inviteToken = '', creation = null) {
     resetWorkspaceUI();
     setWorkspaceContext(session.workspace.id);
     workspace.value = { projects: [], members: [], meta: { actor: session.user.name, userId: session.user.id, workspace: session.workspace, permissions: session.permissions } };
-    await refresh(); notify(`已進入 ${session.workspace.name}`);
+    await refresh(); notify(t('已進入 {0}', [session.workspace.name]));
     return true;
   } finally { switchingWorkspace.value = false; }
 }
@@ -264,14 +269,14 @@ function convertTodo(item) {
 async function reloadConversion(callback, settled = () => {}) {
   try {
     const current=await api.todo(convertingTodo.value.id);
-    if(!current.capabilities.convert){convertingTodo.value=null;notify('待辦已無法轉卡');return;}
+    if(!current.capabilities.convert){convertingTodo.value=null;notify(t('待辦已無法轉卡'));return;}
     convertingTodo.value=current; await nextTick();callback();
   } catch(failure){notify(failure.message);} finally {settled();}
 }
 async function convertedTodo(result) {
   const item=await api.todo(result.id);
   convertingTodo.value=null;await nextTick();await todoTool.value?.refresh();await personalSync.refresh();
-  notify('已轉成正式卡片');if(item.convertedIssue)openTodoIssue(item.convertedIssue);
+  notify(t('已轉成正式卡片'));if(item.convertedIssue)openTodoIssue(item.convertedIssue);
 }
 function openTodoIssue(link) { openIssue(link,true); }
 
@@ -372,7 +377,7 @@ function readHash(skipGuard = false) {
   if (retiredEpics) history.replaceState(null, '', projectHash(nextProject));
   if (retiredView) {
     history.replaceState(null, '', projectHash(nextProject, nextIssue, nextMode, nextBoard));
-    notify('視圖功能已移除, 已開啟原專案頁面');
+    notify(t('視圖功能已移除, 已開啟原專案頁面'));
   }
   sidebarOpen.value = false;
   if (authenticated.value && (projectChanged || modeChanged || boardChanged || sectionChanged || issueChanged || landingChanged)) refresh();
@@ -400,7 +405,7 @@ async function createdProject(project, name) {
   goProjects();
   await refresh();
   await projectDirectoryTool.value?.refresh();
-  notify(wasEditing ? '專案設定已儲存' : `已建立「${name}」`);
+  notify(wasEditing ? t('專案設定已儲存') : t('已建立「{0}」', [name]));
 }
 function beforeUnload(event) { if (leaveGuards.dirty({ unload: true })) { event.preventDefault(); event.returnValue = ''; } }
 function keydown(event) {
@@ -420,61 +425,61 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
 <template>
   <v-app>
   <AuthGate :key="authPageKey" v-if="!authenticated && !loading && !error" :pending="pendingVerification" @authenticated="authenticatedSession" />
-  <div v-else-if="!authenticated" class="empty-state"><span v-if="loading" class="loader"></span><h2>{{ loading ? '正在連線工作空間' : '無法載入工作空間' }}</h2><p v-if="error" role="alert">{{ error }}</p><button v-if="error" class="button secondary" @click="refresh({ join: true })">重試</button></div>
+  <div v-else-if="!authenticated" class="empty-state"><span v-if="loading" class="loader"></span><h2>{{ loading ? t('正在連線工作空間') : t('無法載入工作空間') }}</h2><p v-if="error" role="alert">{{ t(error) }}</p><button v-if="error" class="button secondary" @click="refresh({ join: true })">{{ t('重試') }}</button></div>
   <div v-else class="app-shell">
-    <button v-if="sidebarOpen" class="sidebar-scrim" aria-label="收起導覽" @click="sidebarOpen = false"></button>
+    <button v-if="sidebarOpen" class="sidebar-scrim" :aria-label="t('收起導覽')" @click="sidebarOpen = false"></button>
     <aside class="sidebar" :class="{ open: sidebarOpen }">
-      <a class="brand" href="#/" aria-label="TaskTracker 返回首頁" title="返回首頁" @click.prevent="goHome()"><span class="brand-mark"><span></span><span></span><span></span></span>TaskTracker<span class="brand-dot">.</span></a>
+      <a class="brand" href="#/" :aria-label="t('TaskTracker 返回首頁')" :title="t('返回首頁')" @click.prevent="goHome()"><span class="brand-mark"><span></span><span></span><span></span></span>TaskTracker<span class="brand-dot">.</span></a>
       <WorkspaceSwitcher ref="workspaceSwitcher" :workspace="workspace.meta.workspace" :has-workspaces="workspace.meta.hasWorkspaces" :switching="switchingWorkspace" :change="changeWorkspace" :create="input => changeWorkspace('', '', input)" />
       <template v-if="selectedProject">
-        <div class="project-context" aria-label="目前專案">
+        <div class="project-context" :aria-label="t('目前專案')">
           <span class="project-context-code" :style="{ color: selectedProject.color }">{{ selectedProject.code }}</span>
           <strong>{{ selectedProject.name }}</strong>
           <span class="project-context-workspace">{{ workspace.meta.workspace?.name }}</span>
         </div>
-        <p class="nav-label">專案功能</p>
-        <nav aria-label="專案任務">
-          <a :href="sectionHref('tasks')" class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'all' }" :aria-current="section === 'tasks' && view === 'list' && scope === 'all' ? 'page' : undefined" aria-label="任務列表" @click="follow($event, () => navigate('all'))"><Icon name="list" :size="18" />任務列表</a>
-          <a :href="sectionHref('boards')" class="nav-item" :class="{ active: section === 'tasks' && (view === 'board' || view === 'boards') }" :aria-current="section === 'tasks' && (view === 'board' || view === 'boards') ? 'page' : undefined" aria-label="任務看板" @click="follow($event, () => navigate('all', projectId, 'boards'))"><Icon name="board" :size="18" />任務看板</a>
-          <a :href="sectionHref('mine')" class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'mine' }" @click="follow($event, () => navigate('mine'))"><Icon name="user" :size="18" />我的任務</a>
-          <a :href="sectionHref('time')" v-if="can('timeEntry.readOwn')" class="nav-item" :class="{ active: section === 'time' }" :aria-current="section === 'time' ? 'page' : undefined" @click="follow($event, () => changeSection('time'))"><Icon name="clock" :size="18" />工時月曆</a>
-          <a :href="sectionHref('settings')" v-if="can('project.statuses.update')" class="nav-item" :class="{ active: section === 'settings' }" :aria-current="section === 'settings' ? 'page' : undefined" @click="follow($event, () => changeSection('settings'))"><Icon name="filter" :size="18" />狀態設定</a>
-          <a :href="sectionHref('members')" v-if="can('project.members.manage')" class="nav-item" :class="{ active: section === 'members' }" :aria-current="section === 'members' ? 'page' : undefined" aria-label="專案成員與權限" @click="follow($event, () => changeSection('members'))"><Icon name="user" :size="18" />成員與權限</a>
-          <a :href="sectionHref('notifications')" v-if="notificationPreviewEnabled" class="nav-item" :class="{ active: section === 'notifications' }" :aria-current="section === 'notifications' ? 'page' : undefined" @click="follow($event, () => changeSection('notifications'))"><Icon name="message" :size="18" />通知預覽</a>
+        <p class="nav-label">{{ t('專案功能') }}</p>
+        <nav :aria-label="t('專案任務')">
+          <a :href="sectionHref('tasks')" class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'all' }" :aria-current="section === 'tasks' && view === 'list' && scope === 'all' ? 'page' : undefined" :aria-label="t('任務列表')" @click="follow($event, () => navigate('all'))"><Icon name="list" :size="18" />{{ t('任務列表') }}</a>
+          <a :href="sectionHref('boards')" class="nav-item" :class="{ active: section === 'tasks' && (view === 'board' || view === 'boards') }" :aria-current="section === 'tasks' && (view === 'board' || view === 'boards') ? 'page' : undefined" :aria-label="t('任務看板')" @click="follow($event, () => navigate('all', projectId, 'boards'))"><Icon name="board" :size="18" />{{ t('任務看板') }}</a>
+          <a :href="sectionHref('mine')" class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'mine' }" @click="follow($event, () => navigate('mine'))"><Icon name="user" :size="18" />{{ t('我的任務') }}</a>
+          <a :href="sectionHref('time')" v-if="can('timeEntry.readOwn')" class="nav-item" :class="{ active: section === 'time' }" :aria-current="section === 'time' ? 'page' : undefined" @click="follow($event, () => changeSection('time'))"><Icon name="clock" :size="18" />{{ t('工時月曆') }}</a>
+          <a :href="sectionHref('settings')" v-if="can('project.statuses.update')" class="nav-item" :class="{ active: section === 'settings' }" :aria-current="section === 'settings' ? 'page' : undefined" @click="follow($event, () => changeSection('settings'))"><Icon name="filter" :size="18" />{{ t('狀態設定') }}</a>
+          <a :href="sectionHref('members')" v-if="can('project.members.manage')" class="nav-item" :class="{ active: section === 'members' }" :aria-current="section === 'members' ? 'page' : undefined" :aria-label="t('專案成員與權限')" @click="follow($event, () => changeSection('members'))"><Icon name="user" :size="18" />{{ t('成員與權限') }}</a>
+          <a :href="sectionHref('notifications')" v-if="notificationPreviewEnabled" class="nav-item" :class="{ active: section === 'notifications' }" :aria-current="section === 'notifications' ? 'page' : undefined" @click="follow($event, () => changeSection('notifications'))"><Icon name="message" :size="18" />{{ t('通知預覽') }}</a>
         </nav>
       </template>
       <template v-else>
-        <p class="nav-label">工作空間</p>
-        <nav aria-label="工作空間">
-          <a :href="'#/'" class="nav-item" :class="{ active: landing === 'home' }" :aria-current="landing === 'home' ? 'page' : undefined" @click="follow($event, () => goHome())"><Icon name="grid" :size="18" />首頁</a>
-          <a v-if="workspace.meta.permissions?.includes('todo.read')" href="#/notes" class="nav-item" :class="{ active: landing === 'notes' }" :aria-current="landing === 'notes' ? 'page' : undefined" @click="follow($event, () => goLanding('notes'))"><Icon name="message" :size="18" />紙條</a>
-          <a v-if="workspace.meta.workspace" :href="'#/projects'" class="nav-item" :class="{ active: landing === 'projects' }" :aria-current="landing === 'projects' ? 'page' : undefined" aria-label="專案列表" @click="follow($event, () => goProjects())"><Icon name="folder" :size="18" />專案列表<span v-if="!isScopedRoute" class="nav-count">{{ projects.length }}</span></a>
+        <p class="nav-label">{{ t('工作空間') }}</p>
+        <nav :aria-label="t('工作空間')">
+          <a :href="'#/'" class="nav-item" :class="{ active: landing === 'home' }" :aria-current="landing === 'home' ? 'page' : undefined" @click="follow($event, () => goHome())"><Icon name="grid" :size="18" />{{ t('首頁') }}</a>
+          <a v-if="workspace.meta.permissions?.includes('todo.read')" href="#/notes" class="nav-item" :class="{ active: landing === 'notes' }" :aria-current="landing === 'notes' ? 'page' : undefined" @click="follow($event, () => goLanding('notes'))"><Icon name="message" :size="18" />{{ t('紙條') }}</a>
+          <a v-if="workspace.meta.workspace" :href="'#/projects'" class="nav-item" :class="{ active: landing === 'projects' }" :aria-current="landing === 'projects' ? 'page' : undefined" :aria-label="t('專案列表')" @click="follow($event, () => goProjects())"><Icon name="folder" :size="18" />{{ t('專案列表') }}<span v-if="!isScopedRoute" class="nav-count">{{ projects.length }}</span></a>
         </nav>
       </template>
-      <nav v-if="workspace.meta.permissions?.includes('workspace.ownership')" aria-label="工作空間管理"><a :href="'#/workspace/settings'" class="nav-item" :class="{ active: landing === 'settings' && !selectedProject }" :aria-current="landing === 'settings' && !selectedProject ? 'page' : undefined" @click="follow($event, () => openWorkspaceSettings())"><Icon name="settings" :size="18" />工作空間設定</a></nav>
-      <nav v-if="canAnalyze" aria-label="工作空間分析"><a :href="'#/time-analysis'" class="nav-item" :class="{ active: landing === 'analysis' && !selectedProject }" :aria-current="landing === 'analysis' && !selectedProject ? 'page' : undefined" @click="follow($event, () => goAnalysis())"><Icon name="clock" :size="18" />工時分析</a></nav>
+      <nav v-if="workspace.meta.permissions?.includes('workspace.ownership')" :aria-label="t('工作空間管理')"><a :href="'#/workspace/settings'" class="nav-item" :class="{ active: landing === 'settings' && !selectedProject }" :aria-current="landing === 'settings' && !selectedProject ? 'page' : undefined" @click="follow($event, () => openWorkspaceSettings())"><Icon name="settings" :size="18" />{{ t('工作空間設定') }}</a></nav>
+      <nav v-if="canAnalyze" :aria-label="t('工作空間分析')"><a :href="'#/time-analysis'" class="nav-item" :class="{ active: landing === 'analysis' && !selectedProject }" :aria-current="landing === 'analysis' && !selectedProject ? 'page' : undefined" @click="follow($event, () => goAnalysis())"><Icon name="clock" :size="18" />{{ t('工時分析') }}</a></nav>
     </aside>
 
     <main class="main">
-      <header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" aria-label="開啟導覽" :aria-expanded="sidebarOpen" @click="sidebarOpen = !sidebarOpen"><Icon name="menu" /></button><Icon name="folder" :size="17" /><button class="breadcrumb-home" @click="selectedProject ? goProjects() : goHome()">{{ selectedProject ? '專案' : '工作空間' }}</button><Icon name="chevron" :size="13" /><strong :class="{ 'has-mobile-context': selectedProject }"><span class="project-breadcrumb">{{ selectedProject?.code || (landing === 'settings' ? '工作空間設定' : landing === 'analysis' ? '工時分析' : landing === 'projects' ? '專案列表' : landing === 'notes' ? '紙條' : '首頁') }}</span><span v-if="selectedProject" class="mobile-feature-context">{{ currentFeature }}</span></strong></div><div class="topbar-end"><button v-if="workspace.meta.permissions?.includes('todo.read')" class="button secondary todo-notification-toggle" :aria-label="`通知${todoUnread ? `（${todoUnread} 則未讀）` : ''}`" @click="openTodoInbox"><Icon name="bell" :size="17" /><span>通知</span><b v-if="todoUnread">{{ todoUnread }}</b></button><button class="icon-button" aria-label="重新整理工作空間" :disabled="loading" @click="refreshCurrent"><Icon name="refresh" :size="18" /></button><AccountMenu ref="accountMenu" :name="workspace.meta.actor" :email="workspace.members.find(member => member.id === currentUserId)?.email" :workspace-name="workspace.meta.workspace?.name || (workspace.meta.hasWorkspaces ? '未選擇工作區' : '無隸屬工作區')" :tokens-enabled="Boolean(workspace.meta.workspace)" @profile="openProfile" @tokens="tokensOpen = true" @logout="logout" /></div></header>
+      <header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" :aria-label="t('開啟導覽')" :aria-expanded="sidebarOpen" @click="sidebarOpen = !sidebarOpen"><Icon name="menu" /></button><Icon name="folder" :size="17" /><button class="breadcrumb-home" @click="selectedProject ? goProjects() : goHome()">{{ selectedProject ? t('專案') : t('工作空間') }}</button><Icon name="chevron" :size="13" /><strong :class="{ 'has-mobile-context': selectedProject }"><span class="project-breadcrumb">{{ selectedProject?.code || (landing === 'settings' ? t('工作空間設定') : landing === 'analysis' ? t('工時分析') : landing === 'projects' ? t('專案列表') : landing === 'notes' ? t('紙條') : t('首頁')) }}</span><span v-if="selectedProject" class="mobile-feature-context">{{ currentFeature }}</span></strong></div><div class="topbar-end"><button v-if="workspace.meta.permissions?.includes('todo.read')" class="button secondary todo-notification-toggle" :aria-label="t('通知{0}', [todoUnread ? t('（{0} 則未讀）', [todoUnread]) : ''])" @click="openTodoInbox"><Icon name="bell" :size="17" /><span>{{ t('通知') }}</span><b v-if="todoUnread">{{ todoUnread }}</b></button><button class="icon-button" :aria-label="t('重新整理工作空間')" :disabled="loading" @click="refreshCurrent"><Icon name="refresh" :size="18" /></button><AccountMenu ref="accountMenu" :name="workspace.meta.actor" :email="workspace.members.find(member => member.id === currentUserId)?.email" :workspace-name="workspace.meta.workspace?.name || (workspace.meta.hasWorkspaces ? t('未選擇工作區') : t('無隸屬工作區'))" :tokens-enabled="Boolean(workspace.meta.workspace)" @profile="openProfile" @tokens="tokensOpen = true" @logout="logout" /></div></header>
       <div class="workspace-content" :class="{ 'board-workspace': section === 'tasks' && view === 'board', 'data-workspace': selectedProject && section === 'tasks', 'detail-workspace': isTaskRoute && selectedId && detailPage }">
-        <button v-if="selectedProject && section !== 'tasks'" class="navigation-back back-to-projects" @click="goProjects()"><Icon name="chevron" :size="14" />返回專案列表</button>
+        <button v-if="selectedProject && section !== 'tasks'" class="navigation-back back-to-projects" @click="goProjects()"><Icon name="chevron" :size="14" />{{ t('返回專案列表') }}</button>
         <WorkspaceSettings v-if="!selectedProject && landing === 'settings' && canManageWorkspace" :key="workspace.meta.workspace?.id" ref="teamTool" :active-tab="teamTab" :meta="workspace.meta" @navigate="openWorkspaceSettings" @saved="refresh" @access="refresh" />
         <TimeAnalysis :key="workspace.meta.workspace?.id" v-if="!selectedProject && landing === 'analysis' && canAnalyze" :mode="analysisMode" :workspace-version="analysisVersion" @navigate="goAnalysis" />
-        <div v-if="!(isTaskRoute && selectedId) && (selectedProject || landing === 'projects')" class="page-heading"><div><h1>{{ title }}</h1><p v-if="selectedProject && section !== 'tasks' && selectedProject.description">{{ selectedProject.description }}</p></div><div class="heading-actions"><button v-if="showNewIssueAction" class="button primary" :disabled="loading || (isTaskRoute && !projectTasksTool)" @click="newIssue"><Icon name="plus" :size="18" />新增任務</button><button v-else-if="!selectedProject && workspace.meta.permissions?.includes('project.create')" class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />建立專案</button></div></div>
+        <div v-if="!(isTaskRoute && selectedId) && (selectedProject || landing === 'projects')" class="page-heading"><div><h1>{{ title }}</h1><p v-if="selectedProject && section !== 'tasks' && selectedProject.description">{{ selectedProject.description }}</p></div><div class="heading-actions"><button v-if="showNewIssueAction" class="button primary" :disabled="loading || (isTaskRoute && !projectTasksTool)" @click="newIssue"><Icon name="plus" :size="18" />{{ t('新增任務') }}</button><button v-else-if="!selectedProject && workspace.meta.permissions?.includes('project.create')" class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />{{ t('建立專案') }}</button></div></div>
         <div v-if="!selectedProject && ['home', 'notes', 'projects'].includes(landing)" :key="workspace.meta.workspace?.id" :class="landing === 'home' ? 'home-layout' : 'project-list-page'">
-        <h1 v-if="landing === 'home'" class="sr-only">首頁</h1>
-        <section v-if="landing === 'home' && !workspace.meta.workspace" class="empty-state" aria-label="無隸屬工作區首頁">
-          <h2>{{ workspace.meta.hasWorkspaces ? '選擇工作區' : '無隸屬工作區' }}</h2>
-          <button class="button primary" @click="workspaceSwitcher?.open()"><Icon :name="workspace.meta.hasWorkspaces ? 'folder' : 'plus'" :size="18" />{{ workspace.meta.hasWorkspaces ? '選擇工作區' : '建立工作區' }}</button>
+        <h1 v-if="landing === 'home'" class="sr-only">{{ t('首頁') }}</h1>
+        <section v-if="landing === 'home' && !workspace.meta.workspace" class="empty-state" :aria-label="t('無隸屬工作區首頁')">
+          <h2>{{ workspace.meta.hasWorkspaces ? t('選擇工作區') : t('無隸屬工作區') }}</h2>
+          <button class="button primary" @click="workspaceSwitcher?.open()"><Icon :name="workspace.meta.hasWorkspaces ? 'folder' : 'plus'" :size="18" />{{ workspace.meta.hasWorkspaces ? t('選擇工作區') : t('建立工作區') }}</button>
         </section>
-        <div v-if="landing === 'home' && error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="refresh({ join: true })">重新載入</button></div>
+        <div v-if="landing === 'home' && error" class="error-box" role="alert">{{ t(error) }}<button class="text-button" @click="refresh({ join: true })">{{ t('重新載入') }}</button></div>
         <ProjectDirectory v-if="landing === 'projects'" ref="projectDirectoryTool" :workspace-id="workspace.meta.workspace?.id" :can-create="workspace.meta.permissions?.includes('project.create')" @create="creatingProject = true" @edit="editingProject = $event" @open="id => navigate('all', id)" />
         <PersonalWorkspace v-if="landing === 'notes' && workspace.meta.permissions?.includes('todo.read')" ref="todoTool" :workspace-id="workspace.meta.workspace.id" :permissions="workspace.meta.permissions" :versions="personalSync.versions.value" :resumed="personalSync.resumed.value" :user-id="currentUserId"     @convert="convertTodo" @open-issue="openTodoIssue"  @access="refresh({join:true})"/>
         </div>
-        <ProjectTasksWorkspace v-else-if="isTaskRoute && selectedProject" ref="projectTasksTool" :key="`${workspace.meta.workspace?.id}:${projectId}`" :project="selectedProject" :mode="view" :scope="scope" :board-id="boardId" :issue-id="selectedId" :detail-page="detailPage" :user-id="currentUserId" :workspace-id="workspace.meta.workspace.id" :today="today" @board="openBoard" @list="navigate('all', projectId, 'boards')" @issue="openIssue" @close-issue="closeIssue" @issue-missing="issueMissing" @board-missing="notify('看板不存在或已移除'); navigate('all', projectId, 'boards')" @notify="notify" @access="refresh({ join: true })" @project="project => { workspace = { ...workspace, projects: [project] }; }" />
+        <ProjectTasksWorkspace v-else-if="isTaskRoute && selectedProject" ref="projectTasksTool" :key="`${workspace.meta.workspace?.id}:${projectId}`" :project="selectedProject" :mode="view" :scope="scope" :board-id="boardId" :issue-id="selectedId" :detail-page="detailPage" :user-id="currentUserId" :workspace-id="workspace.meta.workspace.id" :today="today" @board="openBoard" @list="navigate('all', projectId, 'boards')" @issue="openIssue" @close-issue="closeIssue" @issue-missing="issueMissing" @board-missing="notify(t('看板不存在或已移除')); navigate('all', projectId, 'boards')" @notify="notify" @access="refresh({ join: true })" @project="project => { workspace = { ...workspace, projects: [project] }; }" />
         <template v-else-if="selectedProject">
-        <div v-if="error && section !== 'tasks'" class="error-box" role="alert">{{ error }}</div>
+        <div v-if="error && section !== 'tasks'" class="error-box" role="alert">{{ t(error) }}</div>
         <TimeCalendar :can-write="can('timeEntry.writeOwn')" v-if="section === 'time' && can('timeEntry.readOwn')" ref="workspaceTool" :key="workContextKey" :context-key="workContextKey" :project="selectedProject" :can-read-team="can('timeEntry.readTeam')" :user-id="currentUserId" @updated="toolUpdated" @open="openIssue" @access="refresh" />
         <ProjectStatusWorkspace v-if="section === 'settings' && can('project.statuses.update')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" @access="refresh" />
         <ProjectMembers @access="refresh" v-if="section === 'members' && can('project.members.manage')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" />
@@ -490,7 +495,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
     <PersonalTokensDialog v-if="tokensOpen" :key="workspace.meta.workspace?.id" :workspace-name="workspace.meta.workspace?.name" @close="tokensOpen = false" />
     <ProfileDialog v-if="profileOpen" @close="closeSettings('profile')" @saved="savedProfile" />
     <ProjectDialog :lookup="(filters,options)=>api.projectLeads({...filters,project:editingProject?.id},options)" v-if="creatingProject || editingProject" :project="editingProject" :members="workspace.members" :user-id="currentUserId" @close="creatingProject = false; editingProject = null" @created="createdProject" />
-    <Transition name="toast"><div v-if="toast" class="toast-message" role="status"><span><Icon name="check" :size="16" /></span>{{ toast }}</div></Transition>
+    <Transition name="toast"><div v-if="toast" class="toast-message" role="status"><span><Icon name="check" :size="16" /></span>{{ t(toast) }}</div></Transition>
   </div>
   </v-app>
 </template>

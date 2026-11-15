@@ -10,7 +10,7 @@ try {
   server = await createServer({ root: new URL('..', import.meta.url).pathname, server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const owner = await browser.newPage({ viewport: { width: 1440, height: 1000 } }), guest = await (await browser.newContext()).newPage();
+  const owner = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } }), guest = await (await browser.newContext({ locale: 'zh-TW' })).newPage();
   const requests = [], errors = [];
   owner.on('request', request => { const path = new URL(request.url()).pathname; if (path.startsWith('/api/')) requests.push(path); });
   owner.on('pageerror', failure => errors.push(failure.message));

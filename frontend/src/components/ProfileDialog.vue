@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { api } from '../api/index.js';
 import { useLeaveGuard } from '../ui/leaveGuard.js';
@@ -8,10 +9,10 @@ const dialog = ref(null), profile = ref(null), name = ref(''), loading = ref(tru
 const dirty = computed(() => Boolean(profile.value && name.value !== profile.value.name));
 useLeaveGuard({ dirty: () => Boolean(dirty.value), saving: () => Boolean(saving.value), unload: true });
 let pending;
-function close() { if (!saving.value && (!dirty.value || window.confirm('還有未儲存的個人資料，確定要關閉嗎？'))) emit('close'); }
+function close() { if (!saving.value && (!dirty.value || window.confirm(t('還有未儲存的個人資料，確定要關閉嗎？')))) emit('close'); }
 function beforeUnload(event) { if (dirty.value) { event.preventDefault(); event.returnValue = ''; } }
 async function load(confirm = false) {
-  if (confirm && dirty.value && !window.confirm('重新載入會捨棄目前修改，要繼續嗎？')) return;
+  if (confirm && dirty.value && !window.confirm(t('重新載入會捨棄目前修改，要繼續嗎？'))) return;
   loading.value = true; error.value = ''; conflict.value = false;
   try { profile.value = await api.getProfile(); name.value = profile.value.name; pending = null; }
   catch (failure) { error.value = failure.message; }
@@ -32,14 +33,14 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload));
 </script>
 <template>
   <dialog ref="dialog" class="profile-dialog" aria-labelledby="profile-heading" @cancel.prevent="close">
-    <header class="section-title"><h2 id="profile-heading">個人資料</h2><button class="icon-button" aria-label="關閉個人資料" :disabled="saving" @click="close"><Icon name="close" /></button></header>
-    <p v-if="loading" role="status">正在載入個人資料…</p>
-    <div v-if="error" class="error-box" role="alert">{{ error }}<button v-if="!saving" class="text-button" @click="load(true)">{{ conflict ? '重新載入個人資料' : '重試載入' }}</button></div>
+    <header class="section-title"><h2 id="profile-heading">{{ t('個人資料') }}</h2><button class="icon-button" :aria-label="t('關閉個人資料')" :disabled="saving" @click="close"><Icon name="close" /></button></header>
+    <p v-if="loading" role="status">{{ t('正在載入個人資料…') }}</p>
+    <div v-if="error" class="error-box" role="alert">{{ t(error) }}<button v-if="!saving" class="text-button" @click="load(true)">{{ conflict ? t('重新載入個人資料') : t('重試載入') }}</button></div>
     <form v-if="profile" @submit.prevent="save">
-      <label class="field">顯示名稱<input v-model="name" maxlength="60" required :disabled="saving || loading" autocomplete="name" /></label>
+      <label class="field">{{ t('顯示名稱') }}<input v-model="name" maxlength="60" required :disabled="saving || loading" autocomplete="name" /></label>
       <label class="field">Email<input :value="profile.email" type="email" readonly /></label>
 
-      <button class="button primary" :disabled="saving || loading || !dirty || !name.trim()">{{ saving ? '儲存中…' : '儲存個人資料' }}</button>
+      <button class="button primary" :disabled="saving || loading || !dirty || !name.trim()">{{ saving ? t('儲存中…') : t('儲存個人資料') }}</button>
     </form>
   </dialog>
 </template>

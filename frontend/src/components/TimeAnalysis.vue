@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { computed, onBeforeUnmount, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { dateInTaipei, hours } from '../domain/model.js';
@@ -11,9 +12,9 @@ import PagedSelect from './PagedSelect.vue';
 const props = defineProps({ mode: { type: String, default: 'index' }, workspaceVersion: { type: String, default: '' } });
 const emit = defineEmits(['navigate']);
 const analyses = [
-  { id: 'members', title: '成員投入' },
-  { id: 'projects', title: '專案投入' },
-  { id: 'trend', title: '時間趨勢' },
+  { id: 'members', title: t('成員投入') },
+  { id: 'projects', title: t('專案投入') },
+  { id: 'trend', title: t('時間趨勢') },
 ];
 const selected = computed(() => analyses.find(item => item.id === props.mode));
 const today = dateInTaipei();
@@ -55,7 +56,7 @@ async function drill(id, selectedProjectId = '') {
     const range = { ...report.value.range, projectId: selectedProjectId || report.value.range.projectId };
     memberDetail.value = {
       id, range,
-      name: report.value.members.find(member => member.id === id)?.name || '歷史成員',
+      name: report.value.members.find(member => member.id === id)?.name || t('歷史成員'),
       projectName: report.value.projects.find(project => project.id === range.projectId)?.name || '',
     };
     return;
@@ -86,9 +87,9 @@ watch(() => [props.mode, props.workspaceVersion], () => {
 onBeforeUnmount(() => { generation++; });
 </script>
 <template>
-  <section class="time-analysis" aria-label="工時分析">
+  <section class="time-analysis" :aria-label="t('工時分析')">
     <template v-if="!selected">
-      <header class="analysis-heading index-heading"><h1>工時分析</h1></header>
+      <header class="analysis-heading index-heading"><h1>{{ t('工時分析') }}</h1></header>
       <div class="analysis-index">
         <button v-for="(analysis, index) in analyses" :key="analysis.id" class="analysis-choice" @click="emit('navigate', analysis.id)">
           <span class="choice-top" aria-hidden="true"><span class="choice-number">0{{ index + 1 }}</span><Icon name="arrow" :size="18" /></span>
@@ -106,42 +107,42 @@ onBeforeUnmount(() => { generation++; });
               <polyline points="8,66 42,48 74,58 108,24 140,40 172,16 202,32 232,12" class="preview-line" />
             </template>
           </svg>
-          <span class="choice-title">{{ analysis.title }}<Icon name="chevron" :size="17" /></span>
+          <span class="choice-title">{{ t(analysis.title) }}<Icon name="chevron" :size="17" /></span>
         </button>
       </div>
     </template>
     <TimeMemberDetails v-else-if="memberDetail" :member="memberDetail" :workspace-version="workspaceVersion" @back="backFromMember" />
     <template v-else>
-      <button class="navigation-back analysis-back" @click="emit('navigate', 'index')"><Icon name="chevron" :size="15" />返回工時分析</button>
+      <button class="navigation-back analysis-back" @click="emit('navigate', 'index')"><Icon name="chevron" :size="15" />{{ t('返回工時分析') }}</button>
       <header class="analysis-heading">
-        <h1>{{ selected.title }}</h1>
-        <div class="analysis-presets"><button class="button secondary" :disabled="loading" @click="preset()">本月</button><button class="button secondary" :disabled="loading" @click="preset(true)">近 28 天</button></div>
+        <h1>{{ t(selected.title) }}</h1>
+        <div class="analysis-presets"><button class="button secondary" :disabled="loading" @click="preset()">{{ t('本月') }}</button><button class="button secondary" :disabled="loading" @click="preset(true)">{{ t('近 28 天') }}</button></div>
       </header>
-      <nav class="analysis-modes" aria-label="分析方式"><button v-for="analysis in analyses" :key="analysis.id" :aria-current="mode === analysis.id ? 'page' : undefined" :disabled="loading" @click="analysis.id !== mode && emit('navigate', analysis.id)">{{ analysis.title }}</button></nav>
+      <nav class="analysis-modes" :aria-label="t('分析方式')"><button v-for="analysis in analyses" :key="analysis.id" :aria-current="mode === analysis.id ? 'page' : undefined" :disabled="loading" @click="analysis.id !== mode && emit('navigate', analysis.id)">{{ t(analysis.title) }}</button></nav>
       <form class="analysis-filters" @submit.prevent="load">
-        <label class="field range-start">開始日期<input v-model="startDate" aria-label="分析開始日期" type="date" min="1000-01-01" max="9999-12-31" required /></label>
+        <label class="field range-start">{{ t('開始日期') }}<input v-model="startDate" :aria-label="t('分析開始日期')" type="date" min="1000-01-01" max="9999-12-31" required /></label>
         <span class="range-divider" aria-hidden="true">—</span>
-        <label class="field range-end">結束日期<input v-model="endDate" aria-label="分析結束日期" type="date" :min="startDate" max="9999-12-31" required /></label>
-        <PagedSelect class="report-project-filter" v-model="projectId" label="分析專案" empty-label="所有專案" :context="workspaceVersion" :options="selectedProjectOptions" :load="(filters, options) => api.timeReportOptions('projects', filters, options)" autoload />
-        <PagedSelect class="report-member-filter" v-model="userId" label="分析成員" empty-label="所有成員" :context="workspaceVersion" :options="selectedMemberOptions" :load="(filters, options) => api.timeReportOptions('members', filters, options)" autoload />
-        <button class="button primary" :disabled="loading">{{ loading ? '分析中…' : '套用範圍' }}</button>
+        <label class="field range-end">{{ t('結束日期') }}<input v-model="endDate" :aria-label="t('分析結束日期')" type="date" :min="startDate" max="9999-12-31" required /></label>
+        <PagedSelect class="report-project-filter" v-model="projectId" :label="t('分析專案')" :empty-label="t('所有專案')" :context="workspaceVersion" :options="selectedProjectOptions" :load="(filters, options) => api.timeReportOptions('projects', filters, options)" autoload />
+        <PagedSelect class="report-member-filter" v-model="userId" :label="t('分析成員')" :empty-label="t('所有成員')" :context="workspaceVersion" :options="selectedMemberOptions" :load="(filters, options) => api.timeReportOptions('members', filters, options)" autoload />
+        <button class="button primary" :disabled="loading">{{ loading ? t('分析中…') : t('套用範圍') }}</button>
       </form>
-      <p v-if="loading" class="analysis-loading" role="status">正在整理工時…</p>
-      <div v-else-if="error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="load()">重試</button></div>
+      <p v-if="loading" class="analysis-loading" role="status">{{ t('正在整理工時…') }}</p>
+      <div v-else-if="error" class="error-box" role="alert">{{ t(error) }}<button class="text-button" @click="load()">{{ t('重試') }}</button></div>
       <template v-else-if="report">
-        <p v-if="pendingFilters" class="analysis-pending" role="status">篩選已調整，請按「套用範圍」更新報表。</p>
+        <p v-if="pendingFilters" class="analysis-pending" role="status">{{ t('篩選已調整，請按「套用範圍」更新報表。') }}</p>
         <div class="analysis-report-heading"><p class="analysis-period">{{ report.range.startDate }} — {{ report.range.endDate }}</p></div>
-        <dl class="analysis-totals"><div><dt>實際投入</dt><dd>{{ hours(total) }}</dd></div><div><dt>工時紀錄</dt><dd>{{ report.summary.entryCount }} <small>筆</small></dd></div><div><dt>填報天數</dt><dd>{{ report.summary.activeDays }} <small>天</small></dd></div></dl>
-        <p v-if="!report.summary.entryCount" class="analysis-empty" role="status">尚無符合條件的工時紀錄</p>
+        <dl class="analysis-totals"><div><dt>{{ t('實際投入') }}</dt><dd>{{ hours(total) }}</dd></div><div><dt>{{ t('工時紀錄') }}</dt><dd>{{ report.summary.entryCount }} <small>{{ t('筆') }}</small></dd></div><div><dt>{{ t('填報天數') }}</dt><dd>{{ report.summary.activeDays }} <small>{{ t('天') }}</small></dd></div></dl>
+        <p v-if="!report.summary.entryCount" class="analysis-empty" role="status">{{ t('尚無符合條件的工時紀錄') }}</p>
         <template v-else>
           <div class="analysis-chart-panel">
             <TimeTrendChart v-if="mode === 'trend'" :days="report.days" />
             <TimeDistributionChart v-else :mode="mode" :rows="rows" :allocations="report.allocations || []" :total="total" @select="drill" />
           </div>
-          <div class="analysis-table-scroll" tabindex="0" role="region" aria-label="工時明細，可左右捲動">
+          <div class="analysis-table-scroll" tabindex="0" role="region" :aria-label="t('工時明細，可左右捲動')">
             <table class="analysis-table">
-              <caption>{{ mode === 'trend' ? '每日工時明細' : `${selected.title}明細` }}</caption>
-              <thead><tr><th scope="col">{{ mode === 'members' ? '成員' : mode === 'projects' ? '專案' : '工作日期' }}</th><th scope="col">實際投入</th><th scope="col">紀錄數</th><th v-if="mode !== 'trend'" scope="col">{{ mode === 'members' ? '參與專案' : '投入成員' }}</th><th v-if="mode !== 'trend'" scope="col">投入占比</th></tr></thead>
+              <caption>{{ mode === 'trend' ? t('每日工時明細') : t('{0}明細', [selected.title]) }}</caption>
+              <thead><tr><th scope="col">{{ mode === 'members' ? t('成員') : mode === 'projects' ? t('專案') : t('工作日期') }}</th><th scope="col">{{ t('實際投入') }}</th><th scope="col">{{ t('紀錄數') }}</th><th v-if="mode !== 'trend'" scope="col">{{ mode === 'members' ? t('參與專案') : t('投入成員') }}</th><th v-if="mode !== 'trend'" scope="col">{{ t('投入占比') }}</th></tr></thead>
               <tbody>
                 <tr v-for="row in tableRows" :key="row.id || row.date">
                   <th scope="row"><button v-if="mode !== 'trend'" class="text-button" @click="drill(row.id)">{{ row.name }}</button><template v-else>{{ row.date }}</template><span v-if="row.code" class="analysis-code">{{ row.code }}</span></th>
@@ -149,10 +150,10 @@ onBeforeUnmount(() => { generation++; });
                   <td v-if="mode !== 'trend'" class="analysis-share"><span>{{ share(row.minutes) }}</span><span class="analysis-bar"><i :style="{ width: `${total ? row.minutes / total * 100 : 0}%` }"></i></span></td>
                 </tr>
               </tbody>
-              <tfoot><tr><th scope="row">總計</th><td>{{ hours(total) }}</td><td>{{ report.summary.entryCount }}</td><td v-if="mode !== 'trend'"></td><td v-if="mode !== 'trend'">100%</td></tr></tfoot>
+              <tfoot><tr><th scope="row">{{ t('總計') }}</th><td>{{ hours(total) }}</td><td>{{ report.summary.entryCount }}</td><td v-if="mode !== 'trend'"></td><td v-if="mode !== 'trend'">100%</td></tr></tfoot>
             </table>
           </div>
-          <ReportPagination :pagination="tablePagination" label="分析明細分頁" :disabled="loading" @change="tablePage = $event" />
+          <ReportPagination :pagination="tablePagination" :label="t('分析明細分頁')" :disabled="loading" @change="tablePage = $event" />
         </template>
       </template>
     </template>

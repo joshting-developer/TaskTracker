@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { computed } from 'vue';
 import Icon from './Icon.vue';
 import { isClosed, PRIORITIES, TYPES } from '../domain/model.js';
@@ -16,7 +17,7 @@ const rows = computed(() => {
   const states = new Map(props.states.map(state => [state.id, state]));
   return props.issues.map(issue => ({
     issue,
-    type: TYPES.find(type => type.id === issue.type)?.label || '未知類型',
+    type: TYPES.find(type => type.id === issue.type)?.label || t('未知類型'),
     state: states.get(issue.state),
     priority: PRIORITIES.find(priority => priority.id === issue.priority),
     member: members.get(issue.assignee) || issue.assignee || '',
@@ -30,7 +31,7 @@ const rows = computed(() => {
   <div class="table-scroll">
     <table class="issue-table">
       <thead>
-        <tr><th class="type-column" scope="col">類型</th><th>任務</th><th>狀態</th><th>優先級</th><th>負責人</th><th>到期日</th><th class="end-column"></th></tr>
+        <tr><th class="type-column" scope="col">{{ t('類型') }}</th><th>{{ t('任務') }}</th><th>{{ t('狀態') }}</th><th>{{ t('優先級') }}</th><th>{{ t('負責人') }}</th><th>{{ t('到期日') }}</th><th class="end-column"></th></tr>
       </thead>
       <tbody>
         <!-- TT-281：焦點在這列時按F2快速編輯；只是捷徑, 鉛筆按鈕仍是主要入口 -->
@@ -43,17 +44,17 @@ const rows = computed(() => {
           <td><span class="status-badge" :class="row.issue.state" :style="{ '--status-color': row.state?.color }"><i></i>{{ row.state?.label }}</span></td>
           <td>
             <span class="priority-label" :style="{ '--priority-color': row.priority?.color }">
-              <span class="priority-bars" :class="row.issue.priority"><i></i><i></i><i></i></span>{{ row.priority?.label }}
+              <span class="priority-bars" :class="row.issue.priority"><i></i><i></i><i></i></span>{{ t(row.priority?.label) }}
             </span>
           </td>
           <td>
             <span v-if="row.issue.assignee" class="assignee"><span class="avatar small">{{ row.member.slice(0, 1) }}</span>{{ row.member }}</span>
-            <span v-else class="unassigned">未指派</span>
+            <span v-else class="unassigned">{{ t('未指派') }}</span>
           </td>
-          <td><span :class="['due-date', { overdue: row.overdue }]">{{ row.dueDate }}<span v-if="row.overdue" class="overdue-dot" title="已過期"></span></span></td>
+          <td><span :class="['due-date', { overdue: row.overdue }]">{{ row.dueDate }}<span v-if="row.overdue" class="overdue-dot" :title="t('已過期')"></span></span></td>
           <td class="issue-row-actions">
-            <button v-if="canWrite" class="icon-button row-action row-edit" :aria-label="`快速編輯 ${row.issue.identifier}`" title="快速編輯（F2）" aria-keyshortcuts="F2" @click="emit('open', row.issue, false)"><Icon name="edit" :size="16" /></button>
-            <button class="icon-button row-action row-open" :aria-label="`開啟完整頁 ${row.issue.identifier}`" title="開啟完整頁" @click="emit('open', row.issue, true)"><Icon name="chevron" :size="17" /></button>
+            <button v-if="canWrite" class="icon-button row-action row-edit" :aria-label="t('快速編輯 {0}', [row.issue.identifier])" :title="t('快速編輯（F2）')" aria-keyshortcuts="F2" @click="emit('open', row.issue, false)"><Icon name="edit" :size="16" /></button>
+            <button class="icon-button row-action row-open" :aria-label="t('開啟完整頁 {0}', [row.issue.identifier])" :title="t('開啟完整頁')" @click="emit('open', row.issue, true)"><Icon name="chevron" :size="17" /></button>
           </td>
         </tr>
       </tbody>

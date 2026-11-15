@@ -53,7 +53,7 @@ async function setStatusPickerOpen(page, open) {
 async function checkSeedAccounts(browser, failures) {
   if (!process.env.E2E_SEED_PASSWORD) return;
   for (const role of ['owner', 'manager', 'maintainer', 'developer']) {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
+    const context = await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1050 } });
     const page = await context.newPage();
     page.setDefaultTimeout(15000);
     page.on('pageerror', error => failures.push(error.message));
@@ -302,7 +302,7 @@ async function checkProjectAcl(page, browser, failures) {
   await page.screenshot({ path: 'artifacts/mobile-project-members-acl.png', fullPage: true });
   await page.setViewportSize({ width: 1440, height: 1050 });
 
-  const teammate = await browser.newPage({ viewport: { width: 1440, height: 1050 } });
+  const teammate = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 1050 } });
   teammate.setDefaultTimeout(15000);
   teammate.on('pageerror', error => failures.push(error.message));
   await teammate.goto(`${baseURL}/login`);
@@ -441,7 +441,7 @@ async function checkProjectDetails(page, browser) {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   await page.screenshot({ path: 'artifacts/mobile-project-details.png', fullPage: true });
   await page.getByRole('button', { name: '關閉專案表單', exact: true }).click();
-  const lead = await browser.newPage({ viewport: { width: 1440, height: 1050 } });
+  const lead = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 1050 } });
   await lead.goto(`${baseURL}/login`);
   await lead.getByLabel('Email', { exact: true }).fill(memberEmail);
   await lead.getByLabel('密碼', { exact: true }).fill('test-local-password');
@@ -863,7 +863,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).click();
-  const teammate = await browser.newPage({ viewport: { width: 1440, height: 1050 } });
+  const teammate = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 1050 } });
   teammate.setDefaultTimeout(15000);
   teammate.on('pageerror', error => failures.push(error.message));
   await teammate.goto(inviteUrl);
@@ -1078,7 +1078,7 @@ try {
   vite = await createViteServer({ server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': apiTarget } } });
   await vite.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const ownerContext = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
+  const ownerContext = await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1050 } });
   const page = await ownerContext.newPage();
   page.setDefaultTimeout(15000);
   const failures = [];

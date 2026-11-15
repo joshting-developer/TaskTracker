@@ -81,6 +81,19 @@ class VisualBaselineTest(unittest.TestCase):
                 (approved / 'snapshots/desktop/example.png').write_bytes(b'tampered')
                 with self.assertRaises(ValueError): visual.approval_preflight()
 
+    def test_calibration_reset_rejects_wrong_environment_before_bootstrap(self):
+        import os
+        import shutil
+        import subprocess
+        php = shutil.which('php')
+        if not php or subprocess.run([php, '-v'], capture_output=True).returncode != 0:
+            self.skipTest('Host PHP unavailable; isolated visual runner executes the guard')
+        for environment, flag in [('production', '1'), ('local', '1'), ('testing', '0')]:
+            result = subprocess.run([php, '-r', visual.CALIBRATION_RESET_GUARD], cwd='/tmp', env={**os.environ, 'APP_ENV': environment, 'TASKTRACKER_MYSQL_TEST': flag}, capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('Isolated visual testing required', result.stdout + result.stderr)
+            self.assertNotIn('vendor/autoload', result.stdout + result.stderr)
+
 
 if __name__ == '__main__':
     unittest.main()

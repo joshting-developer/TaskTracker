@@ -12,7 +12,7 @@ try {
   // 用正式build（先npm run build）＋preview, 跟上線的入口一致。
   server = await preview({ preview: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const context = await browser.newContext(), page = await context.newPage(), errors = [];
+  const context = await browser.newContext({ locale: 'zh-TW' }), page = await context.newPage(), errors = [];
   page.setDefaultTimeout(30000); page.on('pageerror', error => errors.push(error.message));
   // 先從畫面建立工作空間登入, 測試資料再從同一個頁面送RPC, 跟真的使用者同一個Session。
   async function call(operation, input) {

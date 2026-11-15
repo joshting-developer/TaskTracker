@@ -9,7 +9,7 @@ try {
   server = await createServer({ root: new URL('..', import.meta.url).pathname, server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } }), errors = [], requests = [];
+  const page = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } }), errors = [], requests = [];
   page.setDefaultTimeout(10000);
   page.on('pageerror', error => errors.push(error.message));
   page.on('response', async response => { const url = new URL(response.url()); if (!url.pathname.startsWith('/api/')) return; const item = { path: url.pathname, bytes: 0 }; requests.push(item); try { item.bytes = (await response.body()).length; } catch { /* 導覽後body不可取 */ } });
@@ -26,7 +26,7 @@ try {
   const project = await call(page, 'createProject', { name: 'Utility', code: 'UTIL' });
   const other = await call(page, 'createProject', { name: 'Other', code: 'OTHR' });
   const invite = await call(page, 'inviteMember', { email: `receiver-${crypto.randomUUID()}@example.test` });
-  const receiver = await (await browser.newContext()).newPage();
+  const receiver = await (await browser.newContext({ locale: 'zh-TW' })).newPage();
   await receiver.goto(`http://127.0.0.1:${e2ePort}/login`);
   const identity = await call(receiver, 'register', { name: 'Receiver', email: invite.email, password: 'isolated-test-password', inviteToken: invite.token }, 'auth');
   await call(page, 'setProjectMember', { projectId: project.id, userId: identity.user.id, roleId: 'developer', expectedRevision: 0 });

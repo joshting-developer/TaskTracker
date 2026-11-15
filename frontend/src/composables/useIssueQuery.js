@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import { computed, ref, shallowRef, watch, toValue } from 'vue';
 import { PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 import { CONDITIONS, filterIssues, missingFilters } from '../domain/filters.js';
@@ -40,12 +41,12 @@ export function useIssueQuery({ project, issues, boardIssues, members, userId, t
     },
   });
   const activeFilterChips = computed(() => [
-    { key: 'state', label: '狀態', value: stateFilter.value.length, name: stateFilter.value.map(id => projectStates.value.find(item => item.id === id)?.label || '已移除').join('、') },
-    { key: 'priority', label: '優先級', value: priorityFilter.value, name: PRIORITIES.find(item => item.id === priorityFilter.value)?.label },
-    { key: 'assignee', label: '負責人', value: assigneeFilter.value, name: members.value.find(item => item.id === assigneeFilter.value)?.name || '已移除' },
-    { key: 'epicId', label: 'Epic', value: epicFilter.value, name: epicFilter.value === 'unlinked' ? '尚未掛入 Epic' : issues.value.find(item => item.id === epicFilter.value)?.title || '已移除' },
-    { key: 'type', label: '類型', value: typeFilter.value, name: TYPES.find(item => item.id === typeFilter.value)?.label },
-    { key: 'condition', label: '情況', value: conditionFilter.value, name: CONDITIONS.find(item => item.id === conditionFilter.value)?.label || '已停用' },
+    { key: 'state', label: t('狀態'), value: stateFilter.value.length, name: stateFilter.value.map(id => projectStates.value.find(item => item.id === id)?.label || t('已移除')).join('、') },
+    { key: 'priority', label: t('優先級'), value: priorityFilter.value, name: PRIORITIES.find(item => item.id === priorityFilter.value)?.label },
+    { key: 'assignee', label: t('負責人'), value: assigneeFilter.value, name: members.value.find(item => item.id === assigneeFilter.value)?.name || t('已移除') },
+    { key: 'epicId', label: 'Epic', value: epicFilter.value, name: epicFilter.value === 'unlinked' ? t('尚未掛入 Epic') : issues.value.find(item => item.id === epicFilter.value)?.title || t('已移除') },
+    { key: 'type', label: t('類型'), value: typeFilter.value, name: TYPES.find(item => item.id === typeFilter.value)?.label },
+    { key: 'condition', label: t('情況'), value: conditionFilter.value, name: CONDITIONS.find(item => item.id === conditionFilter.value)?.label || t('已停用') },
   ].filter(item => item.value));
 
   function removeFilter(key) {

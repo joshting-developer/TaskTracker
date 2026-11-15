@@ -1,8 +1,9 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { loadAttachmentImage } from '../api/attachments.js';
 
-const props = defineProps({ projectId: { type: String, required: true }, attachmentId: { type: String, required: true }, label: { type: String, default: '圖片' } });
+const props = defineProps({ projectId: { type: String, required: true }, attachmentId: { type: String, required: true }, label: { type: String, default: t('圖片') } });
 const root = ref(null), dialog = ref(null), trigger = ref(null), image = ref(null), error = ref(''), busy = ref(false), dimensions = ref('');
 let observer, controller, url = '', alive = true;
 function release() {
@@ -25,7 +26,7 @@ async function load() {
     return true;
   } catch (failure) {
     if (!alive || current.signal.aborted) return false;
-    release(); error.value = '圖片無法載入或已無存取權限';
+    release(); error.value = t('圖片無法載入或已無存取權限');
     return false;
   } finally { if (current === controller) busy.value = false; }
 }
@@ -39,7 +40,7 @@ async function download() {
   const link = document.createElement('a');
   link.href = url; link.download = image.value.name; link.click();
 }
-function accessChanged() { release(); error.value = '圖片存取權限已變更'; busy.value = false; }
+function accessChanged() { release(); error.value = t('圖片存取權限已變更'); busy.value = false; }
 function decoded(event) { dimensions.value = `${event.target.naturalWidth} × ${event.target.naturalHeight}`; }
 onMounted(() => {
   observer = new IntersectionObserver(entries => { if (entries.some(entry => entry.isIntersecting)) { observer.disconnect(); load(); } }, { rootMargin: '160px' });
@@ -56,16 +57,16 @@ onBeforeUnmount(() => {
 
 <template>
   <span ref="root" class="attachment-image">
-    <button v-if="image" ref="trigger" type="button" class="image-preview" :aria-label="`放大圖片：${label}`" :disabled="busy" @click="expand">
+    <button v-if="image" ref="trigger" type="button" class="image-preview" :aria-label="t('放大圖片：{0}', [label])" :disabled="busy" @click="expand">
       <img :src="image.url" :alt="label" loading="lazy" decoding="async" @load="decoded" @error="accessChanged" />
     </button>
-    <span v-else class="image-placeholder" role="status">{{ error || (busy ? '圖片載入中…' : label) }}</span>
-    <span class="image-caption"><span>{{ image?.name || label }}</span><span v-if="image">{{ (image.bytes / 1024).toFixed(1) }} KB<span v-if="dimensions"> · {{ dimensions }}</span></span><button v-if="error" type="button" :disabled="busy" @click="load">重試</button></span>
+    <span v-else class="image-placeholder" role="status">{{ error || (busy ? t('圖片載入中…') : label) }}</span>
+    <span class="image-caption"><span>{{ image?.name || label }}</span><span v-if="image">{{ (image.bytes / 1024).toFixed(1) }} KB<span v-if="dimensions"> · {{ dimensions }}</span></span><button v-if="error" type="button" :disabled="busy" @click="load">{{ t('重試') }}</button></span>
     <Teleport to="body">
-      <dialog ref="dialog" class="attachment-lightbox" :aria-label="`圖片：${label}`" @cancel.prevent="close" @click="event => event.target === dialog && close()">
-        <header><strong>{{ image?.name || label }}</strong><span><button type="button" :disabled="busy" @click="download">下載圖片</button><button type="button" aria-label="關閉圖片" @click="close">關閉</button></span></header>
+      <dialog ref="dialog" class="attachment-lightbox" :aria-label="t('圖片：{0}', [label])" @cancel.prevent="close" @click="event => event.target === dialog && close()">
+        <header><strong>{{ image?.name || label }}</strong><span><button type="button" :disabled="busy" @click="download">{{ t('下載圖片') }}</button><button type="button" :aria-label="t('關閉圖片')" @click="close">{{ t('關閉') }}</button></span></header>
         <img v-if="image" :src="image.url" :alt="label" />
-        <p v-if="error" role="alert">{{ error }}</p>
+        <p v-if="error" role="alert">{{ t(error) }}</p>
       </dialog>
     </Teleport>
   </span>

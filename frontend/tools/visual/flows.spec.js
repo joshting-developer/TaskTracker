@@ -45,7 +45,7 @@ async function shot(page, name) {
     injected = await page.addStyleTag({ content: css });
   }
   try {
-    await expect(page).toHaveScreenshot(`${name}.png`, { fullPage: false });
+    await expect(page).toHaveScreenshot(`${name}.png`, { fullPage: false, ...(name === '50-language-menu-en' ? { mask: [page.locator('.account-summary span').first()], maskColor: '#e9e7ef' } : {}) });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   } finally { await injected?.evaluate(element => element.remove()); }
 }
@@ -62,7 +62,7 @@ async function fixture(page, browser) {
   const board = await call(page.request, 'createBoard', { projectId: project.id, name: 'API整合', description: '公開介面與外部工具', selectedIssueIds: [epic.id] });
   const empty = await call(page.request, 'createProject', { name: '空白專案', code: 'EMPTY', description: '尚未建立卡片' });
   await call(page.request, 'createTodo', { title: '確認下一次測試範圍', content: '確認下一次測試範圍\n\n- [ ] 確認測試資料\n- [ ] 補齊操作紀錄' });
-  const otherContext = await browser.newContext({ baseURL: origin });
+  const otherContext = await browser.newContext({ locale: 'zh-TW', baseURL: origin });
   try {
     const other = await call(otherContext.request, 'register', { name: '另一位管理者', email: `visual-other-${crypto.randomUUID()}@example.test`, password, workspaceName: '受邀工作區' }, 'auth');
     const privateProject = await call(otherContext.request, 'createProject', { name: '未授權專案', code: 'SECRET' });
@@ -121,7 +121,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   } finally { execFileSync('docker', [...compose, 'backend', 'php', 'artisan', 'config:clear'], { stdio: 'pipe' }); }
   await page.goto('/login');
 
-  const invitationOwner = await browser.newContext({ baseURL: origin });
+  const invitationOwner = await browser.newContext({ locale: 'zh-TW', baseURL: origin });
   try {
     await call(invitationOwner.request, 'register', { name: '邀請建立者', email: `inviter-${crypto.randomUUID()}@example.test`, password, workspaceName: '協作工作區' }, 'auth');
     const signupInvite = await call(invitationOwner.request, 'inviteMember', { email: 'invited@example.test' });
@@ -129,7 +129,7 @@ test('representative workspace flows', async ({ page, browser }) => {
     await expect(page.getByLabel('Email', { exact: true })).toHaveValue('invited@example.test');
     await expect(page.getByRole('button', { name: '建立帳號', exact: true })).toBeEnabled();
     await shot(page, '30-invited-signup');
-    const existingContext = await browser.newContext({ baseURL: origin });
+    const existingContext = await browser.newContext({ locale: 'zh-TW', baseURL: origin });
     try {
       const existingEmail = `existing-${test.info().project.name}@example.test`;
       await call(existingContext.request, 'register', { name: '既有成員', email: existingEmail, password, workspaceName: '原有空間' }, 'auth');
@@ -288,7 +288,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   await shot(page, '16-denied');
   await call(page.request, 'switchWorkspace', { workspaceId: data.identity.workspace.id }, 'auth');
   await page.goto('/login'); await page.locator('.app-shell').waitFor();
-  const replyContext = await browser.newContext({ baseURL: origin });
+  const replyContext = await browser.newContext({ locale: 'zh-TW', baseURL: origin });
   try {
     const recipientEmail = `reply-${crypto.randomUUID()}@example.test`;
     const invitation = await call(page.request, 'inviteMember', { email: recipientEmail });
@@ -333,7 +333,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   await picker.getByRole('button', { name: '關閉工作空間選擇', exact: true }).click();
   await call(page.request, 'logout', {}, 'auth');
   await call(page.request, 'register', { name: '工作區擁有者', email: `status-owner-${crypto.randomUUID()}@example.test`, password, workspaceName: '協作空間' }, 'auth');
-  const statusContext = await browser.newContext({ baseURL: origin });
+  const statusContext = await browser.newContext({ locale: 'zh-TW', baseURL: origin });
   try {
     const statusEmail = `status-member-${test.info().project.name}@example.test`;
     const statusInvite = await call(page.request, 'inviteMember', { email: statusEmail });
@@ -357,4 +357,40 @@ test('representative workspace flows', async ({ page, browser }) => {
     await shot(page, '47-disabled-assignee');
   } finally { await statusContext.close(); }
   expect(errors).toEqual([]);
+});
+
+// Bilingual screens retain Chinese user content and custom state labels.
+test('English workspace and account language', async ({ page, browser }) => {
+  page.setDefaultTimeout(15000);
+  await page.clock.setFixedTime(fixedTime);
+  await page.goto('/login');
+  await page.getByLabel('選擇語言', { exact: true }).selectOption('en');
+  await page.getByRole('button', { name: 'Sign in', exact: true }).waitFor();
+  await shot(page, '48-login-en');
+  await page.getByLabel('Select language', { exact: true }).selectOption('zh-TW');
+  const data = await fixture(page, browser), project = data.project, issue = data.tasks[0];
+  await page.getByRole('button', { name: '帳號選單', exact: true }).click();
+  await page.getByRole('menuitemradio', { name: 'English', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await page.goto('/app/#/'); await page.locator('.app-shell').waitFor();
+  await shot(page, '49-home-en');
+  await page.getByRole('button', { name: 'Account menu', exact: true }).click();
+  await page.getByRole('menuitemradio', { name: 'English', exact: true }).waitFor();
+  await shot(page, '50-language-menu-en');
+  await page.keyboard.press('Escape');
+  await page.goto(`/app/#/projects/${project.id}`);
+  await page.getByRole('button', { name: '建立登入畫面', exact: true }).waitFor();
+  await shot(page, '51-issues-en');
+  await page.goto(`/app/#/projects/${project.id}/issues/${issue.id}?detail=1`);
+  await page.getByRole('heading', { name: '建立登入畫面', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Edit issue', exact: true }).waitFor();
+  await page.waitForLoadState('networkidle');
+  await shot(page, '52-detail-en');
+  await page.goto(`/app/#/projects/${project.id}/board`);
+  await page.locator('.visual-board').waitFor();
+  await page.getByRole('button', { name: '建立登入畫面', exact: true }).waitFor();
+  await shot(page, '53-board-en');
+  await page.goto('/app/#/workspace/settings');
+  await page.getByLabel('Workspace name', { exact: true }).waitFor();
+  await shot(page, '54-settings-en');
 });

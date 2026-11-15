@@ -16,3 +16,6 @@
 @media (max-width: 480px) { .guest-topbar { padding: 0 16px; } .guest-brand { font-size: 17px; } .guest-nav a { padding: 0 10px; font-size: 14px; } }
 /* 手機寬度只留「建立工作空間」, 避免TopBar擠出橫向捲動 */
 @media (max-width: 420px) { .guest-cta-extra { display: none; } .guest-topbar { gap: 8px; } .guest-brand { gap: 7px; font-size: 16px; } .guest-nav { gap: 0; } .guest-nav a { padding: 0 8px; } .guest-nav a.guest-cta { margin-left: 4px; } }
+
+.guest-cta-short { display: none; }
+@media (max-width: 420px) { html[lang="en"] .guest-cta-full { display: none; } html[lang="en"] .guest-cta-short { display: inline; } }

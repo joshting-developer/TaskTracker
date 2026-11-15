@@ -11,7 +11,7 @@ let server, browser;
 try {
   server = await preview({ preview: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const context = await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } });
   const page = await context.newPage(), errors = [];
   page.on('pageerror', error => errors.push(error.message)); page.setDefaultTimeout(10000);
   await page.goto(`http://127.0.0.1:${e2ePort}/login`);

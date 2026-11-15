@@ -91,7 +91,7 @@ if (process.env.LOAD_COLD_RESTART_CMD) {
 
 // 4. 弱網頁面：Chrome Slow 4G（RTT 150 ms、1.6 Mbps下行），冷快取與暖快取到500卡全部出現。
 const browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+const context = await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } });
 const page = await context.newPage();
 await page.goto(new URL('/login', base).href);
 await page.evaluate(async ({ email, password }) => {

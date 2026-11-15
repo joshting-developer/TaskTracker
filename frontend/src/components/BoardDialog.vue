@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { usePagedLookup } from '../composables/usePagedLookup.js';
 import Icon from './Icon.vue';
@@ -24,7 +25,7 @@ onMounted(() => { if (props.remote) optionsQuery.open(); });
 const candidates = computed(() => props.remote ? optionsQuery.result.value?.items || [] : props.issues.filter(issue => [issue.title, issue.identifier, TYPES.find(type => type.id === issue.type)?.label].join(' ').toLowerCase().includes(search.value.trim().toLowerCase())));
 const preview = computed(() => includedIssues({ ...form, projectId: props.project.id }, props.issues));
 let pending;
-function close() { if (!busy.value && (!dirty.value || window.confirm('捨棄尚未儲存的看板設定？'))) emit('close'); }
+function close() { if (!busy.value && (!dirty.value || window.confirm(t('捨棄尚未儲存的看板設定？')))) emit('close'); }
 function beforeUnload(event) { if (dirty.value) { event.preventDefault(); event.returnValue = ''; } }
 onMounted(() => { dialog.value.showModal(); window.addEventListener('beforeunload', beforeUnload); });
 onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload));
@@ -41,24 +42,24 @@ async function save() {
 </script>
 <template>
   <dialog ref="dialog" class="board-dialog" aria-labelledby="board-dialog-title" @cancel.prevent="close" @click="event => { if (event.target === dialog) close(); }">
-    <header class="board-dialog-heading"><h2 id="board-dialog-title">{{ board ? '編輯看板' : '新增看板' }}</h2><button class="icon-button" aria-label="關閉看板設定" :disabled="busy" @click="close"><Icon name="close" /></button></header>
+    <header class="board-dialog-heading"><h2 id="board-dialog-title">{{ board ? t('編輯看板') : t('新增看板') }}</h2><button class="icon-button" :aria-label="t('關閉看板設定')" :disabled="busy" @click="close"><Icon name="close" /></button></header>
 
-    <div v-if="error" class="error-box" role="alert">{{ error }}</div>
+    <div v-if="error" class="error-box" role="alert">{{ t(error) }}</div>
     <form @submit.prevent="save">
-      <label class="field">看板名稱<input v-model="form.name" maxlength="60" required autofocus :disabled="busy" placeholder="例如：本次交付" /></label>
+      <label class="field">{{ t('看板名稱') }}<input v-model="form.name" maxlength="60" required autofocus :disabled="busy" :placeholder="t('例如：本次交付')" /></label>
       <!-- TT-309：簡述寫清楚這個看板收哪類卡片, 之後分類照這段判斷 -->
-      <label class="field">簡述<textarea v-model="form.description" maxlength="300" rows="3" :disabled="busy" placeholder="這個看板收哪類卡片，例如：只收量測過的效能改善" aria-describedby="board-description-hint"></textarea><span id="board-description-hint" class="field-hint">寫清楚收什麼、不收什麼，最多 300 字（{{ form.description.length }} / 300）</span></label>
-      <label class="search-field"><Icon name="search" :size="17" /><input v-model="search" aria-label="搜尋收錄項目" placeholder="搜尋 Epic、卡片編號或標題…" /></label>
-      <div class="board-picker" role="group" aria-label="收錄項目">
-        <label v-for="issue in candidates" :key="issue.id" class="board-picker-item"><input v-model="form.selectedIssueIds" type="checkbox" :value="issue.id" :aria-label="`收錄 ${issue.identifier}`" :disabled="busy" /><span><strong>{{ issue.identifier }} · {{ issue.title }}</strong><small>{{ TYPES.find(type => type.id === issue.type)?.label }}</small></span></label>
-        <p v-if="!candidates.length && !optionsLoading" class="subtle">沒有符合條件的項目</p>
+      <label class="field">{{ t('簡述') }}<textarea v-model="form.description" maxlength="300" rows="3" :disabled="busy" :placeholder="t('這個看板收哪類卡片，例如：只收量測過的效能改善')" aria-describedby="board-description-hint"></textarea><span id="board-description-hint" class="field-hint">{{ t('寫清楚收什麼、不收什麼，最多 300 字（') }}{{ form.description.length }} / 300）</span></label>
+      <label class="search-field"><Icon name="search" :size="17" /><input v-model="search" :aria-label="t('搜尋收錄項目')" :placeholder="t('搜尋 Epic、卡片編號或標題…')" /></label>
+      <div class="board-picker" role="group" :aria-label="t('收錄項目')">
+        <label v-for="issue in candidates" :key="issue.id" class="board-picker-item"><input v-model="form.selectedIssueIds" type="checkbox" :value="issue.id" :aria-label="t('收錄 {0}', [issue.identifier])" :disabled="busy" /><span><strong>{{ issue.identifier }} · {{ issue.title }}</strong><small>{{ TYPES.find(type => type.id === issue.type)?.label }}</small></span></label>
+        <p v-if="!candidates.length && !optionsLoading" class="subtle">{{ t('沒有符合條件的項目') }}</p>
       </div>
-      <p v-if="optionsLoading" role="status">載入選項中…</p>
-      <p v-if="optionsError" class="error-box" role="alert">{{ optionsError }}<button type="button" class="text-button" @click="optionsQuery.reload">重試</button></p>
-      <div v-if="remote && lastPage > 1" class="pagination"><button type="button" :disabled="optionsLoading || page === 1" @click="page--">上一頁</button><span>{{ page }} / {{ lastPage }}</span><button type="button" :disabled="optionsLoading || page === lastPage" @click="page++">下一頁</button></div>
-      <p class="board-preview" role="status">已選 {{ form.selectedIssueIds.length }} 個項目<span v-if="!remote"> · 目前包含 {{ preview.length }} 張卡片（含 Epic）</span></p>
+      <p v-if="optionsLoading" role="status">{{ t('載入選項中…') }}</p>
+      <p v-if="optionsError" class="error-box" role="alert">{{ optionsError }}<button type="button" class="text-button" @click="optionsQuery.reload">{{ t('重試') }}</button></p>
+      <div v-if="remote && lastPage > 1" class="pagination"><button type="button" :disabled="optionsLoading || page === 1" @click="page--">{{ t('上一頁') }}</button><span>{{ page }} / {{ lastPage }}</span><button type="button" :disabled="optionsLoading || page === lastPage" @click="page++">{{ t('下一頁') }}</button></div>
+      <p class="board-preview" role="status">{{ t('已選') }} {{ form.selectedIssueIds.length }} {{ t('個項目') }}<span v-if="!remote"> {{ t('· 目前包含') }} {{ preview.length }} {{ t('張卡片（含 Epic）') }}</span></p>
 
-      <button class="button primary" :disabled="busy">{{ busy ? '儲存中…' : '儲存看板' }}</button>
+      <button class="button primary" :disabled="busy">{{ busy ? t('儲存中…') : t('儲存看板') }}</button>
     </form>
   </dialog>
 </template>

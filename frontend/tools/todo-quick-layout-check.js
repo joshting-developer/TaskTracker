@@ -13,7 +13,7 @@ mkdirSync('../artifacts/tt331/layout', { recursive: true });
 try {
   server = await createServer({ server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': target } } }); await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const page = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 900 } });
   const origin = `http://127.0.0.1:${port}`; await page.goto(origin + '/login');
   const csrf = await (await page.request.get(origin + '/api/csrf-cookie')).json();
   const result = await page.request.post(origin + '/api/auth/register', { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, data: { name: '紙條排版測試', email: `layout-${crypto.randomUUID()}@example.test`, password: 'isolated-notes-layout', workspaceName: '排版測試' } });

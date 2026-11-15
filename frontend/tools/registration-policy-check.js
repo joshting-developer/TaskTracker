@@ -16,7 +16,7 @@ try {
   const email=`policy-owner-${crypto.randomUUID()}@example.test`,password='isolated-policy-password';
   await call('register',{name:'Policy Owner',email,password,workspaceName:'Policy Lab'},'auth');
   const invite=await call('inviteMember',{email:`invite-${crypto.randomUUID()}@example.test`});
-  const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  const page=await browser.newPage({ locale: 'zh-TW',viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(`${base}/login?mode=register`);
   await page.getByText('目前僅接受邀請註冊',{exact:true}).waitFor();
   assert.equal(await page.getByLabel('你的名字',{exact:true}).count(),0);

@@ -12,7 +12,7 @@ let server, browser;
 try {
   server = await createServer({ server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': api } } }); await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const page = await browser.newPage({ reducedMotion: 'reduce' });
+  const page = await browser.newPage({ locale: 'zh-TW', reducedMotion: 'reduce' });
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto(origin + '/login?mode=register');
   const email = `recover-${crypto.randomUUID()}@example.test`;

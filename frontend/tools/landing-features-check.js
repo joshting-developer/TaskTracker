@@ -13,7 +13,7 @@ const results = [];
 try {
   server = await preview({ root: new URL('..', import.meta.url).pathname, preview: { host: '127.0.0.1', port, strictPort: true } });
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const page = await browser.newPage({ reducedMotion: 'reduce' });
+  const page = await browser.newPage({ locale: 'zh-TW', reducedMotion: 'reduce' });
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   // Guest auth failure must never hide public content or interfere with navigation.
@@ -55,7 +55,7 @@ try {
   await page.keyboard.press('ArrowRight');
   assert.equal(await counter.innerText(), '1 / 3');
   for (const link of await page.locator('.aspects a').all()) assert.equal((await fetch(origin + await link.getAttribute('href'))).status, 200);
-  const noJs = await browser.newPage({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
+  const noJs = await browser.newPage({ locale: 'zh-TW', javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
   await noJs.goto(origin + '/');
   assert.equal(await noJs.locator('[data-slide]:visible').count(), 3);
   assert.equal(await noJs.locator('.carousel-controls').isVisible(), false);

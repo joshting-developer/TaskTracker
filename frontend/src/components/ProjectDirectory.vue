@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import ProjectHome from './ProjectHome.vue';
@@ -41,6 +42,6 @@ defineExpose({ refresh });
 <template>
   <section>
     <ProjectHome remote :total="result?.total" :projects="result?.items || []" :members="[]" :can-create="canCreate" :loading="loading" :error="error" @search="search=$event" @create="emit('create')" @edit="emit('edit',$event)" @open="emit('open',$event)" @retry="refresh" />
-    <div v-if="result?.lastPage>1" class="pagination" aria-label="專案分頁"><button class="text-button" :disabled="loading||page<=1" @click="page--">上一頁</button><span>{{ page }} / {{ result.lastPage }}</span><button class="text-button" :disabled="loading||page>=result.lastPage" @click="page++">下一頁</button></div>
+    <div v-if="result?.lastPage>1" class="pagination" :aria-label="t('專案分頁')"><button class="text-button" :disabled="loading||page<=1" @click="page--">{{ t('上一頁') }}</button><span>{{ page }} / {{ result.lastPage }}</span><button class="text-button" :disabled="loading||page>=result.lastPage" @click="page++">{{ t('下一頁') }}</button></div>
   </section>
 </template>

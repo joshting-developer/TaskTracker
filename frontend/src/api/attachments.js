@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import { requestImage } from './http.js';
 
 let running = 0;
@@ -14,7 +15,7 @@ function drain() {
 /** At most two image streams across previews and descriptions, no cross-session cache. */
 export function loadAttachmentImage(projectId, attachmentId, signal) {
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuid.test(projectId) || !uuid.test(attachmentId)) return Promise.reject(new Error('圖片參照不正確'));
+  if (!uuid.test(projectId) || !uuid.test(attachmentId)) return Promise.reject(new Error(t('圖片參照不正確')));
   return new Promise((resolve, reject) => {
     queue.push({ path: `/api/v1/projects/${projectId}/attachments/${attachmentId}/content`, signal, resolve, reject });
     drain();

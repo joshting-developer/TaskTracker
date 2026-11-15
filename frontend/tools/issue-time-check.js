@@ -20,7 +20,7 @@ async function call(page, operation, input = {}, group = 'rpc') {
 try {
   server = await preview({ preview: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } }), page = await context.newPage(), errors = [];
+  const context = await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } }), page = await context.newPage(), errors = [];
   page.setDefaultTimeout(10000); page.on('pageerror', error => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${e2ePort}/login`);
   const token = crypto.randomUUID(), password = 'issue-time-test-only-password';
@@ -144,7 +144,7 @@ try {
   console.log('PASS: 每日上限、遺失回應重試不重複、Epic詳細頁與月曆直接填報、本人修改、子卡不改掛、總覽／加總去重／作廢排除');
 
   const invite = await call(page, 'inviteMember', { email: `time-member-${token}@example.test` });
-  const member = await (await browser.newContext()).newPage(); member.on('pageerror', error => errors.push(error.message)); await member.goto(`http://127.0.0.1:${e2ePort}/login`);
+  const member = await (await browser.newContext({ locale: 'zh-TW' })).newPage(); member.on('pageerror', error => errors.push(error.message)); await member.goto(`http://127.0.0.1:${e2ePort}/login`);
   const memberIdentity = await call(member, 'register', { name: '工時成員', email: invite.email, password, inviteToken: invite.token }, 'auth');
   let acl = await call(page, 'getProjectMembers', { projectId: project.id });
   await call(page, 'setProjectMember', { projectId: project.id, userId: memberIdentity.user.id, roleId: 'developer', expectedRevision: acl.revision });

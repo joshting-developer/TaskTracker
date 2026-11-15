@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { queryApi, requestAttachment, requestJson, requestUpload } from '../api/http.js';
 
@@ -22,7 +23,7 @@ async function load(next = 1) {
 function choose(event) {
   const file = event.target.files?.[0]; event.target.value = '';
   if (!file || saving.value || !props.canWrite) return;
-  if (!limits.value?.general?.mimeTypes.includes(file.type) || file.size > limits.value.general.maxBytes) { error.value = '請選擇限制大小內的PDF或ZIP'; return; }
+  if (!limits.value?.general?.mimeTypes.includes(file.type) || file.size > limits.value.general.maxBytes) { error.value = t('請選擇限制大小內的PDF或ZIP'); return; }
   draft.value = { file, requestId: crypto.randomUUID(), upload: null, bind: null, issueRevision: props.issue.revision };
   save();
 }
@@ -56,7 +57,7 @@ async function download(row) {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   } catch (failure) { if (alive) error.value = failure.message; }
 }
-function accessChanged() { controller.abort(); rows.value = []; draft.value = null; error.value = '附件存取權限已變更'; }
+function accessChanged() { controller.abort(); rows.value = []; draft.value = null; error.value = t('附件存取權限已變更'); }
 window.addEventListener('tasktracker:access-changed', accessChanged);
 window.addEventListener('tasktracker:workspace-changed', accessChanged);
 onBeforeUnmount(() => { alive = false; controller.abort(); window.removeEventListener('tasktracker:access-changed', accessChanged); window.removeEventListener('tasktracker:workspace-changed', accessChanged); });
@@ -64,34 +65,34 @@ load();
 </script>
 
 <template>
-  <section class="attachment-files" aria-label="任務附件">
-    <button v-if="canWrite" class="button secondary" type="button" :disabled="saving || loading || !limits || Boolean(draft)" @click="fileInput.click()">加入檔案</button>
-    <input ref="fileInput" type="file" accept=".pdf,.zip,application/pdf,application/zip" hidden aria-label="上傳任務附件" :disabled="!canWrite || saving" @change="choose" />
-    <p v-if="error" class="error-box" role="alert">{{ error }}</p>
+  <section class="attachment-files" :aria-label="t('任務附件')">
+    <button v-if="canWrite" class="button secondary" type="button" :disabled="saving || loading || !limits || Boolean(draft)" @click="fileInput.click()">{{ t('加入檔案') }}</button>
+    <input ref="fileInput" type="file" accept=".pdf,.zip,application/pdf,application/zip" hidden :aria-label="t('上傳任務附件')" :disabled="!canWrite || saving" @change="choose" />
+    <p v-if="error" class="error-box" role="alert">{{ t(error) }}</p>
     <div v-if="draft" class="file-draft">
       <span>{{ draft.file.name }}</span>
-      <progress v-if="saving" :value="progress" max="100" aria-label="附件上傳進度"></progress>
+      <progress v-if="saving" :value="progress" max="100" :aria-label="t('附件上傳進度')"></progress>
       <template v-else>
-        <button class="text-button" type="button" @click="save">重試</button>
-        <button v-if="draft.upload" class="text-button" type="button" @click="emit('changed')">更新任務版本</button>
-        <button v-if="draft.issueRevision !== issue.revision" class="text-button" type="button" @click="rebase">依目前任務版本重試</button>
-        <button class="text-button" type="button" @click="draft = null; error = ''">取消</button>
+        <button class="text-button" type="button" @click="save">{{ t('重試') }}</button>
+        <button v-if="draft.upload" class="text-button" type="button" @click="emit('changed')">{{ t('更新任務版本') }}</button>
+        <button v-if="draft.issueRevision !== issue.revision" class="text-button" type="button" @click="rebase">{{ t('依目前任務版本重試') }}</button>
+        <button class="text-button" type="button" @click="draft = null; error = ''">{{ t('取消') }}</button>
       </template>
     </div>
-    <p v-if="loading" role="status">載入中…</p>
-    <p v-else-if="!rows.length" class="subtle">尚無附件</p>
+    <p v-if="loading" role="status">{{ t('載入中…') }}</p>
+    <p v-else-if="!rows.length" class="subtle">{{ t('尚無附件') }}</p>
     <ul v-else class="file-list">
       <li v-for="row in rows" :key="row.id">
-        <span class="file-info"><strong>{{ row.name }}</strong><span>{{ row.mime === 'application/pdf' ? 'PDF' : row.mime === 'application/zip' ? 'ZIP' : '圖片' }} · {{ (row.bytes / 1024).toFixed(1) }} KB</span></span>
-        <button class="text-button" type="button" :aria-label="`下載${row.name}`" @click="download(row)">下載</button>
+        <span class="file-info"><strong>{{ row.name }}</strong><span>{{ row.mime === 'application/pdf' ? 'PDF' : row.mime === 'application/zip' ? 'ZIP' : t('圖片') }} · {{ (row.bytes / 1024).toFixed(1) }} KB</span></span>
+        <button class="text-button" type="button" :aria-label="t('下載{0}', [row.name])" @click="download(row)">{{ t('下載') }}</button>
       </li>
     </ul>
-    <nav v-if="lastPage > 1" class="file-pages" aria-label="附件分頁">
-      <button class="text-button" type="button" :disabled="loading || page <= 1" @click="load(page - 1)">上一頁</button>
+    <nav v-if="lastPage > 1" class="file-pages" :aria-label="t('附件分頁')">
+      <button class="text-button" type="button" :disabled="loading || page <= 1" @click="load(page - 1)">{{ t('上一頁') }}</button>
       <span>{{ page }} / {{ lastPage }}</span>
-      <button class="text-button" type="button" :disabled="loading || page >= lastPage" @click="load(page + 1)">下一頁</button>
+      <button class="text-button" type="button" :disabled="loading || page >= lastPage" @click="load(page + 1)">{{ t('下一頁') }}</button>
     </nav>
-    <button v-if="error && !draft" class="text-button" type="button" :disabled="loading" @click="load(page)">重新載入</button>
+    <button v-if="error && !draft" class="text-button" type="button" :disabled="loading" @click="load(page)">{{ t('重新載入') }}</button>
   </section>
 </template>
 

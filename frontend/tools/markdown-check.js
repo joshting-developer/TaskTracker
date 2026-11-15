@@ -12,7 +12,7 @@ try {
   vite = await createServer({ server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   await vite.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const page = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } });
   page.setDefaultTimeout(15000);
   const failures = [], unwantedRequests = [];
   page.on('pageerror', error => failures.push(error.message));

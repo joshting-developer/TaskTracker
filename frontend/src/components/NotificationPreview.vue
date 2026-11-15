@@ -1,4 +1,5 @@
 <script setup>
+import { locale, t } from '../i18n/index.js';
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { usePolling } from '../composables/usePolling.js';
@@ -73,7 +74,7 @@ async function verify() {
   finally { busy.value = false; }
 }
 function timestamp(value) {
-  return new Intl.DateTimeFormat('zh-TW', { timeZone: 'Asia/Taipei', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+  return new Intl.DateTimeFormat(locale.value, { timeZone: 'Asia/Taipei', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 }
 // 背景更新交由共用輪詢生命週期；隱藏／離線時只中止請求，讓finally收回loading。
 const poller = usePolling({
@@ -88,21 +89,21 @@ onScopeDispose(() => { disposed = true; generation++; controller?.abort(); bodyC
 defineExpose({ refresh });
 </script>
 <template>
-  <section class="notification-workspace" aria-label="通知預覽">
-    <header class="section-title"><h2>通知預覽</h2><button class="button secondary" :disabled="loading" @click="refresh">重新整理</button></header>
-    <div v-if="permissions.includes('smtp.verify')" class="smtp-card"><div><h3>SMTP 連線</h3><p>{{ status?.configured ? '已設定 SMTP' : '尚未設定 SMTP' }}</p></div><button class="button secondary" :disabled="busy || !status?.configured" @click="verify">{{ busy ? '檢查中…' : '檢查 SMTP 連線' }}</button></div>
+  <section class="notification-workspace" :aria-label="t('通知預覽')">
+    <header class="section-title"><h2>{{ t('通知預覽') }}</h2><button class="button secondary" :disabled="loading" @click="refresh">{{ t('重新整理') }}</button></header>
+    <div v-if="permissions.includes('smtp.verify')" class="smtp-card"><div><h3>{{ t('SMTP 連線') }}</h3><p>{{ status?.configured ? t('已設定 SMTP') : t('尚未設定 SMTP') }}</p></div><button class="button secondary" :disabled="busy || !status?.configured" @click="verify">{{ busy ? t('檢查中…') : t('檢查 SMTP 連線') }}</button></div>
     <div v-if="message" class="success-box" role="status">{{ message }}</div>
-    <div v-if="error" class="error-box" role="alert">{{ error }}</div>
-    <p v-if="loading" role="status">載入通知中…</p>
-    <div v-if="result && !entries.length" class="empty-state"><h2>目前還沒有通知</h2></div>
+    <div v-if="error" class="error-box" role="alert">{{ t(error) }}</div>
+    <p v-if="loading" role="status">{{ t('載入通知中…') }}</p>
+    <div v-if="result && !entries.length" class="empty-state"><h2>{{ t('目前還沒有通知') }}</h2></div>
     <!-- TT-314：改成「已關閉」「待驗收」的狀態通知要一眼看出來 -->
     <article v-for="entry in entries" :key="entry.id" class="notification-card" :class="{ important: entry.kind === 'status_important' }">
-      <header><strong>{{ entry.subject }}</strong><span class="notification-tags"><span v-if="entry.kind === 'status_important'" class="important-tag">重要狀態</span><span class="type-tag">待寄預覽</span></span></header>
-      <div class="notification-meta"><span>收件人 {{ entry.email }}</span><time>{{ timestamp(entry.createdAt) }}</time></div>
-      <button class="text-button" :aria-expanded="expanded?.id === entry.id" @click="openBody(entry)">{{ expanded?.id === entry.id ? '收起內容' : '查看內容' }}</button>
-      <div v-if="expanded?.id === entry.id"><p v-if="bodyLoading" role="status">載入內容中…</p><p v-else>{{ expanded.body }}</p></div>
+      <header><strong>{{ entry.subject }}</strong><span class="notification-tags"><span v-if="entry.kind === 'status_important'" class="important-tag">{{ t('重要狀態') }}</span><span class="type-tag">{{ t('待寄預覽') }}</span></span></header>
+      <div class="notification-meta"><span>{{ t('收件人') }} {{ entry.email }}</span><time>{{ timestamp(entry.createdAt) }}</time></div>
+      <button class="text-button" :aria-expanded="expanded?.id === entry.id" @click="openBody(entry)">{{ expanded?.id === entry.id ? t('收起內容') : t('查看內容') }}</button>
+      <div v-if="expanded?.id === entry.id"><p v-if="bodyLoading" role="status">{{ t('載入內容中…') }}</p><p v-else>{{ expanded.body }}</p></div>
       <button class="text-button" @click="emit('open', { id: entry.issueId, projectId: project.id }, true)">{{ entry.identifier }} →</button>
     </article>
-    <div v-if="result?.lastPage > 1" class="pagination" aria-label="通知預覽分頁"><button class="text-button" :disabled="loading || page <= 1" @click="page--">上一頁</button><span>{{ page }} / {{ result.lastPage }}</span><button class="text-button" :disabled="loading || page >= result.lastPage" @click="page++">下一頁</button></div>
+    <div v-if="result?.lastPage > 1" class="pagination" :aria-label="t('通知預覽分頁')"><button class="text-button" :disabled="loading || page <= 1" @click="page--">{{ t('上一頁') }}</button><span>{{ page }} / {{ result.lastPage }}</span><button class="text-button" :disabled="loading || page >= result.lastPage" @click="page++">{{ t('下一頁') }}</button></div>
   </section>
 </template>

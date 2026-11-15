@@ -16,7 +16,7 @@ try {
   vite = await createServer({ server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': apiTarget } } });
   await vite.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const page = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 900 } });
   page.setDefaultTimeout(12000);
   page.on('pageerror', error => failures.push(error.message));
   await page.goto(`${baseURL}/login`);
@@ -175,7 +175,7 @@ try {
   assert.equal(page.url(), `${projectUrl}/time`);
   await page.getByRole('region', { name: '工時月曆', exact: true }).waitFor();
   const invite = await page.evaluate(async () => (await import('/src/api/index.js')).api.inviteMember({ email: `reader-${crypto.randomUUID()}@example.test` }));
-  const reader = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const reader = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 900 } });
   reader.on('pageerror', error => failures.push(error.message));
   await reader.goto(`${baseURL}/app/#/invite?token=${invite.token}`);
   await reader.getByLabel('你的名字').fill('UI Reader');

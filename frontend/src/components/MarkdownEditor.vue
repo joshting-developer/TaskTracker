@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import { useAttachmentUpload } from '../composables/useAttachmentUpload.js';
 import { onTabKeydown } from '../ui/tabs.js';
@@ -10,12 +11,12 @@ const fileInput = ref(null);
 const id = useId(), input = ref(null), mode = ref('write'), composing = ref(false), message = ref('');
 const model = computed({ get: () => props.modelValue, set: value => { message.value = ''; emit('update:modelValue', value); } });
 const formats = [
-  { id: 'bold', label: '粗體', before: '**', after: '**', sample: '粗體文字' },
-  { id: 'italic', label: '斜體', before: '*', after: '*', sample: '斜體文字' },
-  { id: 'list', label: '清單', prefix: '- ', sample: '清單項目' },
-  { id: 'checklist', label: '待辦', prefix: '- [ ] ', sample: '待辦項目' },
-  { id: 'link', label: '連結', before: '[', after: '](https://example.com)', sample: '連結文字' },
-  { id: 'code', label: '程式碼', before: '```\n', after: '\n```', sample: '程式碼' },
+  { id: 'bold', label: t('粗體'), before: '**', after: '**', sample: t('粗體文字') },
+  { id: 'italic', label: t('斜體'), before: '*', after: '*', sample: t('斜體文字') },
+  { id: 'list', label: t('清單'), prefix: '- ', sample: t('清單項目') },
+  { id: 'checklist', label: t('待辦'), prefix: '- [ ] ', sample: t('待辦項目') },
+  { id: 'link', label: t('連結'), before: '[', after: '](https://example.com)', sample: t('連結文字') },
+  { id: 'code', label: t('程式碼'), before: '```\n', after: '\n```', sample: t('程式碼') },
 ];
 let undoFormat = null, redoFormat = null;
 let largestHeight = 0, resizeObserver;
@@ -76,14 +77,14 @@ function format(item) {
   if (props.disabled || composing.value) return;
   const element = input.value, source = props.modelValue;
   const start = element.selectionStart, end = element.selectionEnd;
-  const selected = source.slice(start, end) || item.sample;
+  const selected = source.slice(start, end) || t(item.sample);
   let from = start, to = end, inserted, selectionStart, selectionEnd;
   if (item.prefix) {
     from = start === 0 ? 0 : source.lastIndexOf('\n', start - 1) + 1;
     const lastSelected = end > start && source[end - 1] === '\n' ? end - 1 : end;
     const lineEnd = source.indexOf('\n', lastSelected);
     to = lineEnd < 0 ? source.length : lineEnd;
-    const lines = source.slice(from, to) || item.sample;
+    const lines = source.slice(from, to) || t(item.sample);
     inserted = lines.split('\n').map(line => `${item.prefix}${line}`).join('\n');
     selectionStart = from; selectionEnd = from + inserted.length;
   } else {
@@ -91,7 +92,7 @@ function format(item) {
     selectionStart = from + item.before.length; selectionEnd = selectionStart + selected.length;
   }
   const next = source.slice(0, from) + inserted + source.slice(to);
-  if (next.length > props.maxlength) { message.value = `加入格式後會超過 ${props.maxlength} 字，請先縮短內容`; return; }
+  if (next.length > props.maxlength) { message.value = t('加入格式後會超過 {0} 字，請先縮短內容', [props.maxlength]); return; }
   undoFormat = { before: source, after: next, beforeStart: start, beforeEnd: end, afterStart: selectionStart, afterEnd: selectionEnd };
   redoFormat = null;
   replace(next, selectionStart, selectionEnd);
@@ -111,33 +112,33 @@ function onKeydown(event) {
 </script>
 
 <template>
-  <div class="markdown-editor" :class="{ spacious }" role="group" :aria-label="`${label}編輯器`">
+  <div class="markdown-editor" :class="{ spacious }" role="group" :aria-label="t('{0}編輯器', [label])">
     <div class="editor-heading">
       <label :for="`${id}-input`">{{ label }}<span v-if="required" aria-hidden="true"> *</span></label>
-      <div class="editor-modes" role="tablist" :aria-label="`${label}模式`" @keydown="onTabKeydown">
-        <button :id="`${id}-write`" type="button" role="tab" :aria-selected="mode === 'write'" :aria-controls="`${id}-writing`" :tabindex="mode === 'write' ? 0 : -1" :disabled="disabled" @click="mode = 'write'">編輯</button>
-        <button :id="`${id}-preview`" type="button" role="tab" :aria-selected="mode === 'preview'" :aria-controls="`${id}-reading`" :tabindex="mode === 'preview' ? 0 : -1" :disabled="disabled" @click="mode = 'preview'">預覽</button>
+      <div class="editor-modes" role="tablist" :aria-label="t('{0}模式', [label])" @keydown="onTabKeydown">
+        <button :id="`${id}-write`" type="button" role="tab" :aria-selected="mode === 'write'" :aria-controls="`${id}-writing`" :tabindex="mode === 'write' ? 0 : -1" :disabled="disabled" @click="mode = 'write'">{{ t('編輯') }}</button>
+        <button :id="`${id}-preview`" type="button" role="tab" :aria-selected="mode === 'preview'" :aria-controls="`${id}-reading`" :tabindex="mode === 'preview' ? 0 : -1" :disabled="disabled" @click="mode = 'preview'">{{ t('預覽') }}</button>
       </div>
     </div>
     <div v-show="mode === 'write'" @dragover="event => allowAttachments && event.dataTransfer?.types.includes('Files') && event.preventDefault()" @drop="dropImage" :id="`${id}-writing`" role="tabpanel" :aria-labelledby="`${id}-write`">
-      <div class="editor-tools" role="group" :aria-label="`${label}格式`">
-        <button v-for="item in formats" :key="item.id" type="button" :disabled="disabled || composing" :aria-label="`${label}：${item.id === 'checklist' ? '待辦清單' : item.label}`" :title="item.label" @mousedown.prevent @click="format(item)">{{ item.label }}</button>
-        <button v-if="allowAttachments" type="button" :disabled="disabled || !uploadLimits" :aria-label="`選擇${label}圖片`" @click="fileInput.click()">圖片</button>
-        <input v-if="allowAttachments" ref="fileInput" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden :aria-label="`上傳${label}圖片`" @change="event => { addImages(event.target.files); event.target.value = ''; }" />
+      <div class="editor-tools" role="group" :aria-label="t('{0}格式', [label])">
+        <button v-for="item in formats" :key="item.id" type="button" :disabled="disabled || composing" :aria-label="`${label}：${item.id === 'checklist' ? t('待辦清單') : t(item.label)}`" :title="t(item.label)" @mousedown.prevent @click="format(item)">{{ t(item.label) }}</button>
+        <button v-if="allowAttachments" type="button" :disabled="disabled || !uploadLimits" :aria-label="t('選擇{0}圖片', [label])" @click="fileInput.click()">{{ t('圖片') }}</button>
+        <input v-if="allowAttachments" ref="fileInput" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden :aria-label="t('上傳{0}圖片', [label])" @change="event => { addImages(event.target.files); event.target.value = ''; }" />
       </div>
       <textarea :id="`${id}-input`" ref="input" v-model="model" :name="name" :aria-label="label" :aria-describedby="`${id}-help${allowAttachments && uploadError ? ` ${id}-upload-error` : ''}`" :placeholder="placeholder" :maxlength="maxlength" :rows="rows" :disabled="disabled" :required="required" @paste="pasteImage" @keydown="onKeydown" @compositionstart="composing = true" @compositionend="composing = false"></textarea>
     </div>
     <div v-show="mode === 'preview'" :id="`${id}-reading`" class="editor-preview" role="tabpanel" tabindex="0" :aria-labelledby="`${id}-preview`">
       <MarkdownContent v-if="mode === 'preview' && modelValue.trim()" :source="modelValue" :project-id="projectId" />
-      <p v-else class="editor-empty">尚無內容</p>
+      <p v-else class="editor-empty">{{ t('尚無內容') }}</p>
     </div>
-    <ul v-if="allowAttachments && uploadRows.some(row => row.state !== 'canceled')" class="attachment-uploads" aria-label="圖片上傳狀態">
+    <ul v-if="allowAttachments && uploadRows.some(row => row.state !== 'canceled')" class="attachment-uploads" :aria-label="t('圖片上傳狀態')">
       <li v-for="row in uploadRows.filter(item => item.state !== 'canceled')" :key="row.id">
-        <span>{{ row.file.name || '圖片' }}</span>
-        <progress v-if="row.state === 'uploading'" :value="row.progress" max="100" :aria-label="`${row.file.name}上傳進度`"></progress>
-        <span :role="row.state === 'failed' ? 'alert' : 'status'">{{ row.state === 'done' ? '已加入內容' : row.state === 'queued' ? '等待上傳' : row.state === 'failed' ? row.error : `${row.progress}%` }}</span>
-        <button v-if="row.state === 'failed'" type="button" @click="uploads.retry(row)">重試</button>
-        <button v-if="row.state !== 'done'" type="button" @click="uploads.cancel(row)">取消</button>
+        <span>{{ row.file.name || t('圖片') }}</span>
+        <progress v-if="row.state === 'uploading'" :value="row.progress" max="100" :aria-label="t('{0}上傳進度', [row.file.name])"></progress>
+        <span :role="row.state === 'failed' ? 'alert' : 'status'">{{ row.state === 'done' ? t('已加入內容') : row.state === 'queued' ? t('等待上傳') : row.state === 'failed' ? row.error : `${row.progress}%` }}</span>
+        <button v-if="row.state === 'failed'" type="button" @click="uploads.retry(row)">{{ t('重試') }}</button>
+        <button v-if="row.state !== 'done'" type="button" @click="uploads.cancel(row)">{{ t('取消') }}</button>
       </li>
     </ul>
     <p v-if="allowAttachments && uploadError" :id="`${id}-upload-error`" class="attachment-error" role="alert">{{ uploadError }}</p>

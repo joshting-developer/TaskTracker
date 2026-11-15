@@ -9,7 +9,7 @@ const port=Number(process.env.E2E_FRONTEND_PORT||5175),baseURL=`http://127.0.0.1
 try {
   server=await createServer({root:new URL('..',import.meta.url).pathname,server:{host:'127.0.0.1',port,strictPort:true,proxy:{'/api':process.env.E2E_API_URL}}});await server.listen();
   browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH});
-  const page=await browser.newPage(),errors=[],requests=[];
+  const page=await browser.newPage({ locale: 'zh-TW' }),errors=[],requests=[];
   page.on('pageerror',e=>{errors.push(e.message);console.log('PAGEERROR',e.stack);});
   page.on('response',r=>{const url=new URL(r.url());if(url.pathname.startsWith('/api/')){requests.push(url.pathname);if(r.status()>=400)console.log('HTTP',r.status(),url.pathname);}});
   await page.goto(`${baseURL}/login`);
@@ -25,7 +25,7 @@ try {
   let latest;
   for(let i=0;i<25;i++)latest=await call(page,'createTodo',{content:`Note ${i}\n\nHidden source ${i}`});
   const invite=await call(page,'inviteMember',{email:`receiver-${crypto.randomUUID()}@example.test`});
-  const receiver=await(await browser.newContext()).newPage();await receiver.goto(`${baseURL}/login`);
+  const receiver=await(await browser.newContext({ locale: 'zh-TW' })).newPage();await receiver.goto(`${baseURL}/login`);
   const identity=await call(receiver,'register',{name:'Receiver',email:invite.email,password:'isolated-test-password',inviteToken:invite.token},'auth');
   const assigned=await call(page,'createTodo',{content:'Assigned note\n\nReceiver private detail',assigneeId:identity.user.id});
   requests.length=0;await page.goto(`${baseURL}/app/#/notes`); await page.reload();

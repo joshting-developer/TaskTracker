@@ -29,7 +29,8 @@
     "test:docs": "node tools/developer-docs-check.js",
     "test:visual": "cd .. && sh tools/visual-check.sh compare",
     "test:visual:candidate": "cd .. && sh tools/visual-check.sh candidate",
-    "test:visual:prove": "cd .. && sh tools/visual-check.sh prove"
+    "test:visual:prove": "cd .. && sh tools/visual-check.sh prove",
+    "test:i18n": "node tools/i18n-check.js && node tools/i18n-browser-check.js"
   },
   "dependencies": {
     "dompurify": "3.4.17",

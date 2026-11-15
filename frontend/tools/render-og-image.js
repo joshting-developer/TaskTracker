@@ -7,7 +7,7 @@ const html = `<!doctype html><html lang="zh-Hant"><body style="margin:0;width:12
 <div style="width:420px;height:400px;background:#fff;border-radius:18px;padding:24px;box-sizing:border-box;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;color:#4e485c;font-size:16px">
 ${['待規劃','進行中','已關閉'].map((name, column) => `<div style="background:#f3f1f9;border-radius:12px;padding:12px"><b>${name}</b>${Array.from({ length: [2, 1, 1][column] }, () => `<div style="height:74px;background:#fff;border:1px solid #e3def0;border-radius:10px;margin-top:12px"></div>`).join('')}</div>`).join('')}</div></body></html>`;
 const browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
+const page = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1200, height: 630 } });
 await page.setContent(html);
 await page.screenshot({ path: 'public-assets/og-image.png' });
 await browser.close();

@@ -9,7 +9,7 @@ try {
   server = await createServer({ root: new URL('..', import.meta.url).pathname, server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } }), errors = [], requests = [];
+  const page = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } }), errors = [], requests = [];
   page.setDefaultTimeout(10000);
   page.on('pageerror', error => errors.push(error.message));
   page.on('response', async response => {
@@ -32,7 +32,7 @@ try {
   const project = await call(page, 'createProject', { name: 'Calendar', code: 'CAL' });
   const other = await call(page, 'createProject', { name: 'Other', code: 'OTH' });
   const invite = await call(page, 'inviteMember', { email: `member-${crypto.randomUUID()}@example.test` });
-  const memberPage = await (await browser.newContext()).newPage();
+  const memberPage = await (await browser.newContext({ locale: 'zh-TW' })).newPage();
   await memberPage.goto(`http://127.0.0.1:${e2ePort}/login`);
   const member = await call(memberPage, 'register', { name: 'Calendar Member', email: invite.email, password: 'isolated-test-password', inviteToken: invite.token }, 'auth');
   await call(page, 'setProjectMember', { projectId: project.id, userId: member.user.id, roleId: 'developer', expectedRevision: 0 });

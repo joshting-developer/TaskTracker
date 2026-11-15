@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { computed, ref, toRef } from 'vue';
 import { useIssueActivity } from '../composables/useIssueActivity.js';
 import { isClosed, statusesFor } from '../domain/model.js';
@@ -33,25 +34,25 @@ defineExpose({ dirty: computed(() => Boolean(childTitle.value.trim())), resetChi
 const state = item => statusesFor(props.project).find(status => status.id === item.state)?.label || item.state;
 </script>
 <template>
-  <section class="issue-relations" aria-label="任務關係">
+  <section class="issue-relations" :aria-label="t('任務關係')">
     <div v-if="type !== 'epic' && (parentId || !children.length)" class="relation-parent">
-      <template v-if="parentId"><span>父任務</span><button v-if="parent" class="relation-link" :aria-label="`開啟父任務 ${parent.identifier}`" :disabled="saving" @click="emit('open', parent)">{{ parent.identifier }} · {{ parent.title }}</button><span v-else>任務已無法存取</span><button class="text-button" :disabled="saving" @click="emit('parent', '')">解除父任務</button></template>
-      <button v-else class="text-button" :aria-expanded="picker === 'parent'" :disabled="saving" @click="openPicker('parent')">設定父任務</button>
+      <template v-if="parentId"><span>{{ t('父任務') }}</span><button v-if="parent" class="relation-link" :aria-label="t('開啟父任務 {0}', [parent.identifier])" :disabled="saving" @click="emit('open', parent)">{{ parent.identifier }} · {{ parent.title }}</button><span v-else>{{ t('任務已無法存取') }}</span><button class="text-button" :disabled="saving" @click="emit('parent', '')">{{ t('解除父任務') }}</button></template>
+      <button v-else class="text-button" :aria-expanded="picker === 'parent'" :disabled="saving" @click="openPicker('parent')">{{ t('設定父任務') }}</button>
     </div>
-    <section v-if="issue && type !== 'epic' && !parentId" class="relation-group" aria-label="子任務">
-      <header><h3>子任務 <small v-if="children.length && !activityLoader">{{ done }} / {{ children.length }} 完成</small></h3><button class="text-button" :disabled="saving" @click="creatingChild = !creatingChild">{{ creatingChild ? '收起新增' : '新增子任務' }}</button></header>
-      <form v-if="creatingChild" class="child-create" @submit.prevent="emit('create-child', childTitle)"><label class="sr-only" for="child-title">子任務標題</label><input id="child-title" v-model="childTitle" placeholder="輸入子任務標題…" maxlength="180" required :disabled="saving" /><button class="button secondary" :disabled="saving || !childTitle.trim()">建立子任務</button></form>
-      <div v-for="item in children" :key="item.id" class="relation-row"><button class="relation-link" :aria-label="`開啟子任務 ${item.identifier}`" :disabled="saving" @click="emit('open', item)"><span class="identifier">{{ item.identifier }}</span><span>{{ item.title }}</span></button><span class="relation-state">{{ state(item) }}</span></div>
-      <p v-if="childPage.loading.value" role="status">載入子任務中…</p><p v-if="childPage.error.value" class="error-box" role="alert">{{ childPage.error.value }}</p><button v-if="childPage.more.value" class="text-button" :disabled="childPage.loading.value" @click="childPage.fetchPage(true)">載入更多子任務</button>
+    <section v-if="issue && type !== 'epic' && !parentId" class="relation-group" :aria-label="t('子任務')">
+      <header><h3>{{ t('子任務') }} <small v-if="children.length && !activityLoader">{{ done }} / {{ children.length }} {{ t('完成') }}</small></h3><button class="text-button" :disabled="saving" @click="creatingChild = !creatingChild">{{ creatingChild ? t('收起新增') : t('新增子任務') }}</button></header>
+      <form v-if="creatingChild" class="child-create" @submit.prevent="emit('create-child', childTitle)"><label class="sr-only" for="child-title">{{ t('子任務標題') }}</label><input id="child-title" v-model="childTitle" :placeholder="t('輸入子任務標題…')" maxlength="180" required :disabled="saving" /><button class="button secondary" :disabled="saving || !childTitle.trim()">{{ t('建立子任務') }}</button></form>
+      <div v-for="item in children" :key="item.id" class="relation-row"><button class="relation-link" :aria-label="t('開啟子任務 {0}', [item.identifier])" :disabled="saving" @click="emit('open', item)"><span class="identifier">{{ item.identifier }}</span><span>{{ item.title }}</span></button><span class="relation-state">{{ state(item) }}</span></div>
+      <p v-if="childPage.loading.value" role="status">{{ t('載入子任務中…') }}</p><p v-if="childPage.error.value" class="error-box" role="alert">{{ childPage.error.value }}</p><button v-if="childPage.more.value" class="text-button" :disabled="childPage.loading.value" @click="childPage.fetchPage(true)">{{ t('載入更多子任務') }}</button>
     </section>
-    <section class="relation-group" aria-label="關聯任務">
-      <header><h3>關聯任務 <small v-if="related.length">{{ related.length }}</small></h3><button class="text-button" :aria-expanded="picker === 'related'" :disabled="saving" @click="openPicker('related')">新增關聯</button></header>
-      <div v-for="item in related" :key="item.id" class="relation-row"><button class="relation-link" :aria-label="`開啟關聯任務 ${item.identifier}`" :disabled="saving" @click="emit('open', item)"><span class="identifier">{{ item.identifier }}</span><span>{{ item.title }}</span></button><span class="relation-state">{{ state(item) }}</span><button class="icon-button" :aria-label="`解除關聯 ${item.identifier}`" :disabled="saving" @click="emit('related', relatedIds.filter(id => id !== item.id))"><Icon name="close" :size="16" /></button></div>
+    <section class="relation-group" :aria-label="t('關聯任務')">
+      <header><h3>{{ t('關聯任務') }} <small v-if="related.length">{{ related.length }}</small></h3><button class="text-button" :aria-expanded="picker === 'related'" :disabled="saving" @click="openPicker('related')">{{ t('新增關聯') }}</button></header>
+      <div v-for="item in related" :key="item.id" class="relation-row"><button class="relation-link" :aria-label="t('開啟關聯任務 {0}', [item.identifier])" :disabled="saving" @click="emit('open', item)"><span class="identifier">{{ item.identifier }}</span><span>{{ item.title }}</span></button><span class="relation-state">{{ state(item) }}</span><button class="icon-button" :aria-label="t('解除關聯 {0}', [item.identifier])" :disabled="saving" @click="emit('related', relatedIds.filter(id => id !== item.id))"><Icon name="close" :size="16" /></button></div>
     </section>
-    <div v-if="picker" class="relation-picker" :aria-label="picker === 'parent' ? '選擇父任務' : '選擇關聯任務'">
-      <PagedSelect v-if="lookup" v-model="selectedCandidate" :label="picker === 'parent' ? '父任務' : '關聯任務'" :context="`${project.id}:${picker}`" :options="candidates" :load="(filters, options) => lookup(picker === 'parent' ? 'parent' : 'issue', filters, options)" :disabled="saving" empty-label="選擇任務" @choose="select" />
-      <template v-else><div class="relation-search"><input v-model="search" :aria-label="picker === 'parent' ? '搜尋父任務' : '搜尋關聯任務'" placeholder="搜尋任務編號或標題…" :disabled="saving" /><button class="icon-button" aria-label="關閉任務選擇" :disabled="saving" @click="picker = ''"><Icon name="close" :size="16" /></button></div>
-      <div class="relation-options"><button v-for="item in candidates" :key="item.id" :aria-label="`${picker === 'parent' ? '選為父任務' : '關聯'} ${item.identifier}`" :disabled="saving" @click="select(item)"><span class="identifier">{{ item.identifier }}</span><span>{{ item.title }}</span><span class="relation-state">{{ state(item) }}</span></button><p v-if="!candidates.length">沒有符合條件的任務</p></div></template>
+    <div v-if="picker" class="relation-picker" :aria-label="picker === 'parent' ? t('選擇父任務') : t('選擇關聯任務')">
+      <PagedSelect v-if="lookup" v-model="selectedCandidate" :label="picker === 'parent' ? t('父任務') : t('關聯任務')" :context="`${project.id}:${picker}`" :options="candidates" :load="(filters, options) => lookup(picker === 'parent' ? 'parent' : 'issue', filters, options)" :disabled="saving" :empty-label="t('選擇任務')" @choose="select" />
+      <template v-else><div class="relation-search"><input v-model="search" :aria-label="picker === 'parent' ? t('搜尋父任務') : t('搜尋關聯任務')" :placeholder="t('搜尋任務編號或標題…')" :disabled="saving" /><button class="icon-button" :aria-label="t('關閉任務選擇')" :disabled="saving" @click="picker = ''"><Icon name="close" :size="16" /></button></div>
+      <div class="relation-options"><button v-for="item in candidates" :key="item.id" :aria-label="`${picker === 'parent' ? t('選為父任務') : t('關聯')} ${item.identifier}`" :disabled="saving" @click="select(item)"><span class="identifier">{{ item.identifier }}</span><span>{{ item.title }}</span><span class="relation-state">{{ state(item) }}</span></button><p v-if="!candidates.length">{{ t('沒有符合條件的任務') }}</p></div></template>
     </div>
   </section>
 </template>

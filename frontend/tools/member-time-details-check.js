@@ -19,7 +19,7 @@ async function call(page, operation, input = {}, group = 'rpc') {
 try {
   server = await preview({ preview: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const page = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage();
+  const page = await (await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } })).newPage();
   page.setDefaultTimeout(10000);
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   if (process.env.E2E_VISUAL_FIXTURE === '1') await page.clock.setFixedTime(new Date('2026-11-13T01:00:00Z'));

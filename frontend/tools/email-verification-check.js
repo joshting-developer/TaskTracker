@@ -14,7 +14,7 @@ let server, browser;
 try {
   server = await createServer({ root: new URL('../', import.meta.url).pathname, server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } }); await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const context = await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } });
   const page = await context.newPage(), errors = [], authRequests = []; page.setDefaultTimeout(15000); page.on('pageerror', e => errors.push(e.message));
   page.on('request', r => { if (new URL(r.url()).pathname.startsWith('/api/auth/')) authRequests.push({ path: new URL(r.url()).pathname, method: r.method() }); });
   await page.goto(`${base}/login?mode=register`);
@@ -46,7 +46,7 @@ try {
   await page.locator('.app-shell').waitFor();
   await page.reload(); await page.locator('.app-shell').waitFor();
   // A separate browser cookie jar cannot share the activation login or localStorage event.
-  const secondContext = await browser.newContext(), thirdContext = await browser.newContext();
+  const secondContext = await browser.newContext({ locale: 'zh-TW' }), thirdContext = await browser.newContext({ locale: 'zh-TW' });
   const second = await secondContext.newPage(), third = await thirdContext.newPage();
   const otherEmail = `verify-other-${crypto.randomUUID()}@example.test`;
   await second.goto(`${base}/login?mode=register`);
@@ -71,7 +71,7 @@ try {
   await second.reload(); await second.locator('.app-shell').waitFor();
   const csrf = await (await context.request.get(`${base}/api/csrf-cookie`)).json();
   assert.equal((await context.request.post(`${base}/api/auth/verify-email`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, data: { token } })).status(), 400);
-  const stranger = await browser.newContext();
+  const stranger = await browser.newContext({ locale: 'zh-TW' });
   assert.equal((await stranger.request.get(`${base}/api/v1/projects`)).status(), 401);
   await stranger.close(); await secondContext.close(); await thirdContext.close();
   assert.deepEqual(errors, []);

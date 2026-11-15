@@ -13,7 +13,7 @@ try {
   vite = await createServer({ root: new URL('../', import.meta.url).pathname, server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   await vite.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } }), page = await context.newPage(), errors = [];
+  const context = await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } }), page = await context.newPage(), errors = [];
   page.setDefaultTimeout(15000);
   page.on('pageerror', e => errors.push(e.message));
   async function call(operation, input, client = context) { const csrf = await (await client.request.get(`${base}/api/csrf-cookie`)).json(); const res = await client.request.post(`${base}/api/${operation === 'register' ? 'auth' : 'rpc'}/${operation}`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, data: { requestId: crypto.randomUUID(), ...input } }); assert.equal(res.status(), 200, await res.text()); return (await fixtureResponse(client.request, res, input)).data; }
@@ -125,7 +125,7 @@ try {
     await page.getByLabel('快速編輯 EDIT-2').click();
     await page.getByRole('dialog', { name: '任務詳細內容', exact: true }).waitFor();
     await page.getByRole('button', { name: '關閉任務', exact: true }).click();
-    const email = `inline-reader-${crypto.randomUUID()}@example.test`, invite = await call('inviteMember', { email }), reader = await browser.newContext();
+    const email = `inline-reader-${crypto.randomUUID()}@example.test`, invite = await call('inviteMember', { email }), reader = await browser.newContext({ locale: 'zh-TW' });
     const person = await call('register', { name: 'Reader', email, password: 'isolated-inline-password', inviteToken: invite.token }, reader);
     const acl = await call('getProjectMembers', { projectId: project.id });
     await call('setProjectMember', { projectId: project.id, userId: person.user.id, roleId: 'reader', expectedRevision: acl.revision });

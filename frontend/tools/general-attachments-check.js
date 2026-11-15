@@ -12,7 +12,7 @@ let server, browser;
 try {
   server = await createServer({ root: new URL('../', import.meta.url).pathname, server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } }); await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1050 } }), page = await context.newPage(); page.setDefaultTimeout(15000);
+  const context = await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1050 } }), page = await context.newPage(); page.setDefaultTimeout(15000);
   const errors = [], contentRequests = []; page.on('pageerror', e => errors.push(e.message)); page.on('request', r => { if (/attachments\/[^/]+\/content/.test(r.url())) contentRequests.push(r.url()); });
   async function call(operation, input) {
     const csrf = await (await context.request.get(`${base}/api/csrf-cookie`)).json();

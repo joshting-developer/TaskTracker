@@ -10,7 +10,7 @@ mkdirSync('artifacts/notes', { recursive: true });
 try {
   server = await createServer({ server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': { target: apiUrl, changeOrigin: false } } } }); assert.equal(server.config.server.proxy['/api'].target, apiUrl); await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const [owner, josh, codex] = await Promise.all(['Owner', 'Josh', 'Codex'].map(async () => (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage()));
+  const [owner, josh, codex] = await Promise.all(['Owner', 'Josh', 'Codex'].map(async () => (await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } })).newPage()));
   const pages = [owner, josh, codex], errors = [];
   for (const page of pages) { page.setDefaultTimeout(12000); page.on('pageerror', e => { errors.push(e.message); console.error('PAGE', e.message); }); await page.goto(`http://127.0.0.1:${port}/login`); }
   async function call(page, operation, input = {}, group = 'rpc') {
@@ -28,7 +28,7 @@ try {
   const card = await call(owner, 'createIssue', { projectId: project.id, title: '紙條連結任務' });
   const reference = (await (await owner.request.get(`http://127.0.0.1:${port}/api/v1/projects/${project.id}/issues/${card.id}`)).json()).data.identifier;
   await call(owner, 'setProjectMember', { projectId: project.id, userId: people.Josh.id, roleId: 'developer', expectedRevision: 0 });
-  const responses = []; owner.on('response', r => { if (r.request().method() === 'GET' && /\/api\/v1\/todos(?:\?|$)/.test(r.url())) responses.push(r.text().then(raw => ({ raw, url: r.url() }))); });
+  const responses = []; const collectResponse = r => { if (r.request().method() === 'GET' && /\/api\/v1\/todos(?:\?|$)/.test(r.url())) responses.push(r.text().then(raw => ({ raw, url: r.url() }))); }; owner.on('response', collectResponse);
   const requests = []; owner.on('request', r => { if (r.url().includes('/api/')) requests.push(new URL(r.url()).pathname); });
   await owner.reload(); await owner.locator('.app-shell').waitFor();
   assert.equal(await owner.getByRole('region', { name: '紙條', exact: true }).count(), 0);
@@ -101,6 +101,7 @@ try {
   owner.once('dialog', d => d.dismiss()); await owner.getByRole('link', { name: '專案列表', exact: true }).click(); assert.equal(await owner.getByLabel('紙條內容', { exact: true }).inputValue(), '未送出草稿');
   await owner.getByLabel('紙條內容', { exact: true }).fill(''); await owner.reload(); await owner.getByRole('heading', { name: '紙條', exact: true }).waitFor();
   assert.equal(requests.some(p => /\/(getWorkspace|getTodos)$/.test(p)), false); assert.deepEqual(errors, []);
+  owner.off('response', collectResponse);
   const samples = []; for (const { raw, url } of await Promise.all(responses)) { const body = JSON.parse(raw).data; assert.ok(body.items.length <= 20); for (const item of body.items) for (const field of ['content', 'note', 'history', 'comments', 'handoffs']) assert.equal(Object.hasOwn(item, field), false); samples.push({ scope: new URL(url).searchParams.get('scope'), rows: body.items.length, bytes: Buffer.byteLength(raw) }); }
   writeFileSync('../artifacts/tt331/network.json', JSON.stringify({ topology: 'isolated MySQL HTTP and Chrome', samples }, null, 2));
   console.log('PASS notes route, safe card links and actual popup, reply-to-previous path, four tabs, self-notes, lazy histories, 3-person transfer/completion replies, stale draft, leave guard and 3 widths');

@@ -1,4 +1,6 @@
 <script setup>
+import LocalePicker from './LocalePicker.vue';
+import { t } from '../i18n/index.js';
 import { nextTick, onBeforeUnmount, onMounted, ref, useId } from 'vue';
 const props = defineProps({ name: String, email: String, workspaceName: String, tokensEnabled: { type: Boolean, default: true } });
 const emit = defineEmits(['profile', 'tokens', 'logout']);
@@ -6,14 +8,14 @@ const root = ref(null), trigger = ref(null), menu = ref(null), open = ref(false)
 function focus() { trigger.value?.focus(); }
 defineExpose({ focus });
 function close(restore = false) { open.value = false; if (restore) focus(); }
-async function show(last = false) { open.value = true; await nextTick(); const items = menu.value?.querySelectorAll('[role="menuitem"]'); items?.[last ? items.length - 1 : 0]?.focus(); }
+async function show(last = false) { open.value = true; await nextTick(); const items = menu.value?.querySelectorAll('[role="menuitem"], [role="menuitemradio"]'); items?.[last ? items.length - 1 : 0]?.focus(); }
 function choose(action) { close(true); emit(action); }
 function outside(event) { if (!root.value?.contains(event.target)) close(); }
 function keydown(event) {
   if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(true); return; }
   if (event.key === 'Tab') { close(true); return; }
   if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
-  event.preventDefault(); const items = [...menu.value.querySelectorAll('[role="menuitem"]')];
+  event.preventDefault(); const items = [...menu.value.querySelectorAll('[role="menuitem"], [role="menuitemradio"]')];
   const index = items.indexOf(document.activeElement);
   const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
   items[next].focus();
@@ -23,14 +25,15 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', outside));
 </script>
 <template>
   <div ref="root" class="account-menu">
-    <button ref="trigger" type="button" class="account-trigger" aria-label="帳號選單" aria-haspopup="menu" :aria-expanded="open" :aria-controls="id" @click="open ? close() : show()" @keydown.down.prevent="show()" @keydown.up.prevent="show(true)"><span class="avatar tiny" aria-hidden="true">{{ name?.slice(0, 1) }}</span></button>
-    <div v-if="open" :id="id" ref="menu" class="account-dropdown" role="menu" aria-label="帳號選項" @keydown="keydown">
+    <button ref="trigger" type="button" class="account-trigger" :aria-label="t('帳號選單')" aria-haspopup="menu" :aria-expanded="open" :aria-controls="id" @click="open ? close() : show()" @keydown.down.prevent="show()" @keydown.up.prevent="show(true)"><span class="avatar tiny" aria-hidden="true">{{ name?.slice(0, 1) }}</span></button>
+    <div v-if="open" :id="id" ref="menu" class="account-dropdown" role="menu" :aria-label="t('帳號選項')" @keydown="keydown">
       <div class="account-summary" role="presentation"><strong>{{ name }}</strong><span>{{ email }}</span><span>{{ workspaceName }}</span></div>
-      <button type="button" role="menuitem" tabindex="-1" @click="choose('profile')">個人資料</button>
-      <button v-if="tokensEnabled" type="button" role="menuitem" tabindex="-1" @click="choose('tokens')">個人 API Token</button>
+      <button type="button" role="menuitem" tabindex="-1" @click="choose('profile')">{{ t('個人資料') }}</button>
+      <button v-if="tokensEnabled" type="button" role="menuitem" tabindex="-1" @click="choose('tokens')">{{ t('個人 API Token') }}</button>
       <!-- TT-304：已登入的人從這裡看產品介紹；首頁本身仍會自動轉進工作空間 -->
-      <a role="menuitem" tabindex="-1" class="account-intro" href="/?intro=1">產品介紹</a>
-      <button type="button" role="menuitem" tabindex="-1" class="account-logout" @click="choose('logout')">登出</button>
+      <a role="menuitem" tabindex="-1" class="account-intro" href="/?intro=1">{{ t('產品介紹') }}</a>
+      <LocalePicker menu />
+      <button type="button" role="menuitem" tabindex="-1" class="account-logout" @click="choose('logout')">{{ t('登出') }}</button>
     </div>
   </div>
 </template>

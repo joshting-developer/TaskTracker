@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import { Marked } from 'marked';
 import DOMPurify from 'dompurify';
 
@@ -26,10 +27,10 @@ function parserFor(attachments) { return new Marked({
     },
     // 只讓伺服器附件參照進入可信占位, 不接受內容提供 src 或 HTML
     image({ href, text }) {
-      const label = escapeHtml(text || '圖片');
+      const label = escapeHtml(text || t('圖片'));
       if (attachments && /^attachment:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(href) && attachments.length < 20) {
         const slot = attachments.length;
-        attachments.push({ id: href.slice(11), label: text || '圖片' });
+        attachments.push({ id: href.slice(11), label: text || t('圖片') });
         return `<span data-attachment-slot="${slot}"></span>`;
       }
       return safeHref(href) ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${label}</a>` : label;

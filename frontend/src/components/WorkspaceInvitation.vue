@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { api } from '../api/index.js';
 import { useLeaveGuard } from '../ui/leaveGuard.js';
@@ -33,12 +34,12 @@ onBeforeUnmount(() => dialog.value?.close());
 </script>
 <template>
   <dialog ref="dialog" class="workspace-invitation" aria-labelledby="workspace-invite-title" @cancel.prevent="close">
-    <header><h2 id="workspace-invite-title">工作空間邀請</h2><button class="icon-button" aria-label="關閉工作空間邀請" :disabled="busy" @click="close"><Icon name="close" /></button></header>
-    <p v-if="loading" role="status">正在確認邀請…</p><div v-if="error" class="error-box" role="alert">{{ error }}<button v-if="!invitation" class="text-button" @click="load">重試</button></div>
-    <template v-if="invitation"><h3>{{ invitation.workspaceName }}</h3><p>受邀帳號：{{ invitation.email }}</p>
-      <p v-if="invitation.declined || invitation.consumed" role="status">{{ invitation.declined ? '邀請已拒絕' : '邀請已使用' }}</p>
-      <template v-else-if="email === invitation.email"><div class="invitation-actions"><button class="button secondary" :disabled="busy" @click="decline">拒絕邀請</button><button class="button primary" :disabled="busy" @click="join">{{ busy ? '處理中…' : '接受邀請並進入' }}</button></div></template>
-      <template v-else><p>目前登入的是 {{ email }}, 請切換成受邀帳號</p><button class="button secondary" :disabled="busy" @click="emit('logout')">改用受邀帳號登入</button></template>
+    <header><h2 id="workspace-invite-title">{{ t('工作空間邀請') }}</h2><button class="icon-button" :aria-label="t('關閉工作空間邀請')" :disabled="busy" @click="close"><Icon name="close" /></button></header>
+    <p v-if="loading" role="status">{{ t('正在確認邀請…') }}</p><div v-if="error" class="error-box" role="alert">{{ t(error) }}<button v-if="!invitation" class="text-button" @click="load">{{ t('重試') }}</button></div>
+    <template v-if="invitation"><h3>{{ invitation.workspaceName }}</h3><p>{{ t('受邀帳號：') }}{{ invitation.email }}</p>
+      <p v-if="invitation.declined || invitation.consumed" role="status">{{ invitation.declined ? t('邀請已拒絕') : t('邀請已使用') }}</p>
+      <template v-else-if="email === invitation.email"><div class="invitation-actions"><button class="button secondary" :disabled="busy" @click="decline">{{ t('拒絕邀請') }}</button><button class="button primary" :disabled="busy" @click="join">{{ busy ? t('處理中…') : t('接受邀請並進入') }}</button></div></template>
+      <template v-else><p>{{ t('目前登入的是') }} {{ email }}{{ t(', 請切換成受邀帳號') }}</p><button class="button secondary" :disabled="busy" @click="emit('logout')">{{ t('改用受邀帳號登入') }}</button></template>
     </template>
   </dialog>
 </template>

@@ -1,15 +1,16 @@
+import { t } from '../i18n/index.js';
 import { isClosed, PRIORITIES, statusesFor } from './model.js';
 
 export const CONDITIONS = [
-  { id: '', label: '所有情況' },
-  { id: 'overdue', label: '已逾期' }, { id: 'unassigned', label: '尚未指派' },
+  { id: '', label: t('所有情況') },
+  { id: 'overdue', label: t('已逾期') }, { id: 'unassigned', label: t('尚未指派') },
 ];
 export function selectedStates(value) { return Array.isArray(value) ? value : value ? [value] : []; }
 export function missingFilters(filters, project, members, issues) {
   const messages = [];
-  if (selectedStates(filters.state).some(id => !statusesFor(project).some(state => state.id === id))) messages.push('狀態已不存在');
-  if (filters.assignee && !members.some((member) => member.id === filters.assignee)) messages.push('成員已不存在');
-  if (filters.epicId && filters.epicId !== 'unlinked' && !issues.some((issue) => issue.id === filters.epicId && issue.type === 'epic' && issue.projectId === project.id)) messages.push('Epic 已不存在');
+  if (selectedStates(filters.state).some(id => !statusesFor(project).some(state => state.id === id))) messages.push(t('狀態已不存在'));
+  if (filters.assignee && !members.some((member) => member.id === filters.assignee)) messages.push(t('成員已不存在'));
+  if (filters.epicId && filters.epicId !== 'unlinked' && !issues.some((issue) => issue.id === filters.epicId && issue.type === 'epic' && issue.projectId === project.id)) messages.push(t('Epic 已不存在'));
   return messages;
 }
 export function filterIssues(issues, filters, { project, userId, members, today, includeEpics = false }) {

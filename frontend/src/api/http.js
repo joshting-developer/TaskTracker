@@ -1,3 +1,4 @@
+import { t, translateError } from '../i18n/index.js';
 let workspaceId = '', generation = 0, csrfToken = '', csrfPending;
 const active = new Set();
 
@@ -9,8 +10,8 @@ export function setWorkspaceContext(id) {
   for (const controller of active) controller.abort();
 }
 
-function failure(code, message, status) {
-  return Object.assign(new Error(message), { code, status });
+function failure(code, message, status, fromServer = false) {
+  return Object.assign(new Error(fromServer ? translateError(code, message) : message), { code, status, originalMessage: message });
 }
 
 function accessChanged(code, method) {
@@ -24,7 +25,7 @@ async function csrf() {
   if (csrfToken) return csrfToken;
   if (!csrfPending) {
     csrfPending = requestJson('/api/csrf-cookie', { scoped: false }).then(data => {
-      if (typeof data.csrfToken !== 'string') throw failure('INVALID_RESPONSE', '無法取得驗證資訊');
+      if (typeof data.csrfToken !== 'string') throw failure('INVALID_RESPONSE', t('無法取得驗證資訊'));
       csrfToken = data.csrfToken;
       return csrfToken;
     }).finally(() => { csrfPending = undefined; });
@@ -34,7 +35,7 @@ async function csrf() {
 
 function waitForToken(signal) {
   return new Promise((resolve, reject) => {
-    const canceled = () => reject(failure('ABORTED', '請求已取消'));
+    const canceled = () => reject(failure('ABORTED', t('請求已取消')));
     if (signal.aborted) return canceled();
     signal.addEventListener('abort', canceled, { once: true });
     csrf().then(resolve, reject).finally(() => signal.removeEventListener('abort', canceled));
@@ -57,12 +58,12 @@ export async function requestJson(path, { method = 'GET', input, scoped = true, 
       headers['Content-Type'] = 'application/json';
       headers['X-CSRF-TOKEN'] = await waitForToken(controller.signal);
     }
-    if (scoped && captured !== generation) throw failure('STALE_RESPONSE', '工作空間已切換');
+    if (scoped && captured !== generation) throw failure('STALE_RESPONSE', t('工作空間已切換'));
     if (scoped && workspaceId) headers['X-Workspace-ID'] = workspaceId;
     const response = await fetch(path, { method, credentials: 'include', headers, signal: controller.signal, ...(binary ? { redirect: 'error' } : {}), ...(input === undefined ? {} : { body: JSON.stringify(input) }) });
     const rotated = response.headers.get('X-CSRF-TOKEN');
     if (rotated) csrfToken = rotated;
-    if (scoped && captured !== generation) throw failure('STALE_RESPONSE', '工作空間已切換，已捨棄舊回應');
+    if (scoped && captured !== generation) throw failure('STALE_RESPONSE', t('工作空間已切換，已捨棄舊回應'));
     if (response.status === 419 && method !== 'GET' && retryCsrf) {
       csrfToken = '';
       return await requestJson(path, { method, input, scoped, signal: controller.signal, timeoutMs, retryCsrf: false, notifyAccess });
@@ -70,35 +71,35 @@ export async function requestJson(path, { method = 'GET', input, scoped = true, 
     if (binary && response.ok) {
       const mime = response.headers.get('Content-Type')?.split(';')[0];
       const length = Number(response.headers.get('Content-Length'));
-      const label = binary === 'attachment' ? '附件' : '圖片', errorCode = binary === 'attachment' ? 'INVALID_ATTACHMENT' : 'INVALID_IMAGE';
+      const label = binary === 'attachment' ? t('附件') : t('圖片'), errorCode = binary === 'attachment' ? 'INVALID_ATTACHMENT' : 'INVALID_IMAGE';
       const allowed = binary === 'attachment' ? ['image/png', 'image/jpeg', 'image/webp', 'application/pdf', 'application/zip'] : ['image/png', 'image/jpeg', 'image/webp'];
-      if (!allowed.includes(mime) || !length || length > 10 * 1024 * 1024) throw failure(errorCode, `${label}格式或大小不正確`);
+      if (!allowed.includes(mime) || !length || length > 10 * 1024 * 1024) throw failure(errorCode, t('{0}格式或大小不正確', [label]));
       const blob = await response.blob();
-      if (scoped && captured !== generation) throw failure('STALE_RESPONSE', '工作空間已切換');
-      if (blob.size !== length) throw failure(errorCode, `${label}未完整載入`);
+      if (scoped && captured !== generation) throw failure('STALE_RESPONSE', t('工作空間已切換'));
+      if (blob.size !== length) throw failure(errorCode, t('{0}未完整載入', [label]));
       const disposition = response.headers.get('Content-Disposition') || '';
-      if (binary === 'attachment' && !/^attachment(?:;|$)/i.test(disposition)) throw failure('INVALID_ATTACHMENT', '附件下載回應不正確');
+      if (binary === 'attachment' && !/^attachment(?:;|$)/i.test(disposition)) throw failure('INVALID_ATTACHMENT', t('附件下載回應不正確'));
       let name = label;
       try { name = decodeURIComponent(disposition.match(/filename\*=utf-8''([^;]+)/i)?.[1] || disposition.match(/filename="([^"]+)"/)?.[1] || name); } catch { /* Use the safe fallback label. */ }
       return { blob, name, bytes: length };
     }
     let body;
     try { body = await response.json(); }
-    catch { throw failure('INVALID_RESPONSE', '伺服器回應格式不正確', response.status); }
-    if (scoped && captured !== generation) throw failure('STALE_RESPONSE', '工作空間已切換，已捨棄舊回應');
-    if (!body || typeof body !== 'object' || Array.isArray(body)) throw failure('INVALID_RESPONSE', '伺服器回應格式不正確', response.status);
+    catch { throw failure('INVALID_RESPONSE', t('伺服器回應格式不正確'), response.status); }
+    if (scoped && captured !== generation) throw failure('STALE_RESPONSE', t('工作空間已切換，已捨棄舊回應'));
+    if (!body || typeof body !== 'object' || Array.isArray(body)) throw failure('INVALID_RESPONSE', t('伺服器回應格式不正確'), response.status);
     if (!response.ok || body.ok === false) {
       const code = body.error?.code || ({ 401: 'UNAUTHENTICATED', 403: 'FORBIDDEN', 404: 'NOT_FOUND', 409: 'CONFLICT', 419: 'CSRF_EXPIRED', 429: 'RATE_LIMITED' }[response.status]) || 'HTTP_ERROR';
       if (notifyAccess && scoped && workspaceId) accessChanged(code, method);
-      throw failure(code, body.error?.message || '請求失敗', response.status);
+      throw failure(code, body.error?.message || t('請求失敗'), response.status, true);
     }
     return body.ok === true ? body.data : body;
   } catch (error) {
-    if (scoped && captured !== generation) throw failure('STALE_RESPONSE', '工作空間已切換，已捨棄舊回應');
-    if (timedOut) throw failure('TIMEOUT', '請求逾時，請稍後重試');
-    if (controller.signal.aborted) throw failure('ABORTED', '請求已取消');
+    if (scoped && captured !== generation) throw failure('STALE_RESPONSE', t('工作空間已切換，已捨棄舊回應'));
+    if (timedOut) throw failure('TIMEOUT', t('請求逾時，請稍後重試'));
+    if (controller.signal.aborted) throw failure('ABORTED', t('請求已取消'));
     if (typeof error.code === 'string') throw error;
-    throw failure('NETWORK_ERROR', '暫時無法連線，請稍後重試');
+    throw failure('NETWORK_ERROR', t('暫時無法連線，請稍後重試'));
   } finally {
     clearTimeout(timer);
     signal?.removeEventListener('abort', abort);
@@ -137,7 +138,7 @@ export async function requestUpload(path, form, { signal, onProgress } = {}) {
   active.add(controller);
   try {
     const token = await waitForToken(controller.signal);
-    if (captured !== generation) throw failure('STALE_RESPONSE', '工作空間已切換');
+    if (captured !== generation) throw failure('STALE_RESPONSE', t('工作空間已切換'));
     return await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       const cancel = () => xhr.abort();
@@ -149,21 +150,21 @@ export async function requestUpload(path, form, { signal, onProgress } = {}) {
       xhr.upload.onprogress = event => { if (event.lengthComputable) onProgress?.(Math.round(event.loaded / event.total * 100)); };
       xhr.onload = () => {
         cleanup();
-        if (captured !== generation) return reject(failure('STALE_RESPONSE', '工作空間已切換'));
+        if (captured !== generation) return reject(failure('STALE_RESPONSE', t('工作空間已切換')));
         try {
           const body = JSON.parse(xhr.responseText);
           if (xhr.status === 419) csrfToken = '';
           if (xhr.status !== 200 || body.ok !== true) {
             const code = body.error?.code || 'HTTP_ERROR'; accessChanged(code, 'POST');
-            return reject(failure(code, body.error?.message || '圖片上傳失敗', xhr.status));
+            return reject(failure(code, body.error?.message || t('圖片上傳失敗'), xhr.status, true));
           }
           resolve(body.data);
-        } catch { reject(failure('INVALID_RESPONSE', '圖片上傳回應不正確', xhr.status)); }
+        } catch { reject(failure('INVALID_RESPONSE', t('圖片上傳回應不正確'), xhr.status)); }
       };
-      xhr.onerror = () => { cleanup(); reject(failure('NETWORK_ERROR', '圖片上傳失敗, 可重試')); };
-      xhr.ontimeout = () => { cleanup(); reject(failure('TIMEOUT', '圖片上傳逾時, 可重試')); };
-      xhr.onabort = () => { cleanup(); reject(failure('ABORTED', '圖片上傳已取消')); };
-      if (controller.signal.aborted) { cleanup(); return reject(failure('ABORTED', '圖片上傳已取消')); }
+      xhr.onerror = () => { cleanup(); reject(failure('NETWORK_ERROR', t('圖片上傳失敗, 可重試'))); };
+      xhr.ontimeout = () => { cleanup(); reject(failure('TIMEOUT', t('圖片上傳逾時, 可重試'))); };
+      xhr.onabort = () => { cleanup(); reject(failure('ABORTED', t('圖片上傳已取消'))); };
+      if (controller.signal.aborted) { cleanup(); return reject(failure('ABORTED', t('圖片上傳已取消'))); }
       xhr.send(form);
     });
   } finally { active.delete(controller); signal?.removeEventListener('abort', abort); }

@@ -12,7 +12,7 @@ try {
   server = await createServer({ server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   await server.listen();
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const owner = await browser.newContext(), member = await browser.newContext();
+  const owner = await browser.newContext({ locale: 'zh-TW' }), member = await browser.newContext({ locale: 'zh-TW' });
   const admin = await owner.newPage(), recipient = await member.newPage(), errors = [];
   for (const page of [admin, recipient]) { page.setDefaultTimeout(12000); page.on('pageerror', e => errors.push(e.message)); }
   async function call(context, operation, input = {}, group = 'rpc') {

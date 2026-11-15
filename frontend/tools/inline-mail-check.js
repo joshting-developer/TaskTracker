@@ -10,7 +10,7 @@ let server, browser;
 try {
   server = await preview({ preview: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
-  const page = await browser.newPage(), errors = [];
+  const page = await browser.newPage({ locale: 'zh-TW' }), errors = [];
   page.setDefaultTimeout(12000); page.on('pageerror', error => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${port}/login`);
   await page.getByRole('button', { name: '第一次使用？建立工作空間', exact: true }).click();

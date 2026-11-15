@@ -61,3 +61,11 @@ comparison參數來自唯一policy.json，版本讀實際安裝套件，不用�
 Atomic lock拒絕同時啟動或stale lock，不拆掉另一個runner；trap保留退出碼並清本次服務／volume／lock。CI觸發涵蓋前端、後端app／routes／config、fixture、Compose及核准檔，並跑工具與fixture邊界測試。未經push仍不能宣稱遠端已實跑。
 
 後續審查補上實際匯入的navigation／board-actions helpers至harness與source；shared gate會重新列舉sourceRoots，新增來源也使舊結果失效。實際測helper異動／新增source均被擋，還原後門檻通過。
+
+## TT-308中英文介面
+
+新增英文登入、首頁、帳號語言選單、任務列表、詳細、看板及工作區設定, 各三尺寸, 共162張。英文情境使用同一套受限合成fixture及固定時間, 不另造API回應；只有帳號選單的隨機合成Email作明確mask, 其餘文案、按鈕、草稿與畫面都實際比較
+
+校準每個fault前會先檢查APP_ENV=testing、TASKTRACKER_MYSQL_TEST=1、mysql host／tasktracker_test資料庫與帳號, 才重建這套tasktracker-codex-visual的人造資料。原因是固定Email跨校準重跑會重複註冊, 導致還沒到05-issues就失敗；那種失敗沒有diff, 不算成功攔截畫面退化
+
+比較器與容忍度維持原值。既有核准圖會先另存, 本次按Josh持續授權檢閱候選後更新核准紀錄, 正式compare通過才算完成

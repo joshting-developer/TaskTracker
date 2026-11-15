@@ -14,7 +14,7 @@ try {
   vite = await createServer({ logLevel: 'error', server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': apiTarget } } });
   await vite.listen();
   browser = await chromium.launch({ headless: !process.env.E2E_HEADED, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const page = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 900 } });
   page.setDefaultTimeout(12000);
   page.on('pageerror', error => failures.push(error.message));
   page.on('crash', () => failures.push('PAGE_CRASH'));

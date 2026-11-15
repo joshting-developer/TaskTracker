@@ -30,7 +30,7 @@ async function call(page, operation, input = {}, group = 'rpc') {
 try {
   server = await preview({ preview: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL, '/reverb': { target: `http://127.0.0.1:${topology.websocketPort}`, ws: true, rewrite: path => path.replace(/^\/reverb/, '') } } } });
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const owner = await (await browser.newContext()).newPage(), reader = await (await browser.newContext()).newPage();
+  const owner = await (await browser.newContext({ locale: 'zh-TW' })).newPage(), reader = await (await browser.newContext({ locale: 'zh-TW' })).newPage();
   const errors = [], signals = []; let closed = 0;
   reader.on('pageerror', error => errors.push(error.message));
   reader.on('websocket', socket => {

@@ -16,7 +16,7 @@ async function call(page, operation, input = {}, group = 'rpc') {
 try {
   server = await preview({ preview: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } }), first = await context.newPage(), second = await (await browser.newContext({ viewport: { width: 1440, height: 1000 } })).newPage();
+  const context = await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } }), first = await context.newPage(), second = await (await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } })).newPage();
   const errors = []; for (const page of [first, second]) { page.setDefaultTimeout(10000); page.on('pageerror', e => errors.push(e.message)); await page.goto(`http://127.0.0.1:${e2ePort}/login`); }
   mkdirSync('artifacts/workspace-switch', { recursive: true });
   const token = crypto.randomUUID(), password = 'workspace-switch-test';
@@ -79,20 +79,20 @@ try {
   const todos = await call(first, 'getTodos'); assert.equal(todos.todos.some(todo => todo.title === '舊分頁不能錯寫'), false); await stale.getByText('A工作區速記', { exact: true }).first().waitFor({ state: 'hidden' });
   console.log('PASS: Owner側欄設定、身份隔離、既有登入邀請、兩個工作區切換、私有專案與待辦隔離、草稿取消／確認、另一分頁舊請求409與重讀、三尺寸');
   const c = await call(second, 'inviteMember', { email: `ws-new-${token}@example.test` });
-  const fresh = await (await browser.newContext()).newPage(); fresh.setDefaultTimeout(10000); await fresh.goto(`http://127.0.0.1:${e2ePort}/app/#/invite?token=${c.token}`); await fresh.getByLabel('你的名字').fill('新同事'); await fresh.getByLabel('確認密碼', { exact: true }).fill(password); await fresh.getByLabel('密碼', { exact: true }).fill(password); await fresh.getByRole('button', { name: '建立帳號', exact: true }).click();
+  const fresh = await (await browser.newContext({ locale: 'zh-TW' })).newPage(); fresh.setDefaultTimeout(10000); await fresh.goto(`http://127.0.0.1:${e2ePort}/app/#/invite?token=${c.token}`); await fresh.getByLabel('你的名字').fill('新同事'); await fresh.getByLabel('確認密碼', { exact: true }).fill(password); await fresh.getByLabel('密碼', { exact: true }).fill(password); await fresh.getByRole('button', { name: '建立帳號', exact: true }).click();
    await fresh.locator('.app-shell').waitFor();
   await fresh.getByRole('dialog', { name: '工作空間邀請', exact: true }).getByRole('button', { name: '接受邀請並進入', exact: true }).click();
   await call(first, 'switchWorkspace', { workspaceId: a.workspace.id }, 'auth');
   const existingInvite = await call(first, 'inviteMember', { email: b.user.email });
-  const existing = await (await browser.newContext()).newPage(); existing.setDefaultTimeout(10000);
+  const existing = await (await browser.newContext({ locale: 'zh-TW' })).newPage(); existing.setDefaultTimeout(10000);
   await existing.goto(`http://127.0.0.1:${e2ePort}/app/#/invite?token=${existingInvite.token}`);
   await existing.getByLabel('密碼', { exact: true }).fill(password); await existing.getByRole('button', { name: '登入', exact: true }).click();
   await existing.getByRole('dialog', { name: '工作空間邀請', exact: true }).getByRole('button', { name: '接受邀請並進入', exact: true }).click();
   assert.equal((await call(existing, 'current', {}, 'auth')).workspace.id, a.workspace.id);
-  const creator = await (await browser.newContext()).newPage(); await creator.goto(`http://127.0.0.1:${e2ePort}/login`);
+  const creator = await (await browser.newContext({ locale: 'zh-TW' })).newPage(); await creator.goto(`http://127.0.0.1:${e2ePort}/login`);
   const third = await call(creator, 'register', { name: 'C', email: `third-${token}@example.test`, password, workspaceName: 'Third' }, 'auth');
   const nextInvite = await call(creator, 'inviteMember', { email: a.user.email });
-  const mismatch = await (await browser.newContext()).newPage(); mismatch.setDefaultTimeout(10000); mismatch.on('pageerror', e => errors.push(e.message));
+  const mismatch = await (await browser.newContext({ locale: 'zh-TW' })).newPage(); mismatch.setDefaultTimeout(10000); mismatch.on('pageerror', e => errors.push(e.message));
   await mismatch.goto(`http://127.0.0.1:${e2ePort}/login`); await call(mismatch, 'login', { email: b.user.email, password }, 'auth');
   await mismatch.goto(`http://127.0.0.1:${e2ePort}/app/#/invite?token=${nextInvite.token}`); await mismatch.reload();
   await mismatch.getByRole('button', { name: '改用受邀帳號登入', exact: true }).click();

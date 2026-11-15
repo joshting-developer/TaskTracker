@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { computed, nextTick, ref, shallowRef, useId, watch } from 'vue';
 import { api } from '../api/index.js';
 import { onTabKeydown } from '../ui/tabs.js';
@@ -11,10 +12,10 @@ const emit = defineEmits(['convert', 'open-issue', 'scope', 'tab']);
 const content = shallowRef(''), assigneeId = shallowRef(props.userId), tab = shallowRef('mine');
 const busy = shallowRef(false), error = shallowRef(''), success = shallowRef(''), selected = shallowRef(null);
 const quickInput = ref(null), drawer = ref(null), tabId = useId();
-const tabs = [{ id: 'create', label: '建立' }, { id: 'mine', label: '待處理' }, { id: 'sent', label: '我交辦的' }, { id: 'involved', label: '我經手的' }];
+const tabs = [{ id: 'create', label: t('建立') }, { id: 'mine', label: t('待處理') }, { id: 'sent', label: t('我交辦的') }, { id: 'involved', label: t('我經手的') }];
 const dirty = computed(() => Boolean(content.value.trim() || drawer.value?.dirty));
 const items = computed(() => props.data.todos.filter(item => tab.value === 'mine' ? item.assigneeId === props.userId && item.state === 'open' : tab.value === 'sent' ? item.createdBy === props.userId : true));
-const labels = { open: '待處理', done: '已完成', canceled: '已取消', converted: '已轉卡' };
+const labels = { open: t('待處理'), done: t('已完成'), canceled: t('已取消'), converted: t('已轉卡') };
 let pending;
 watch(() => props.data.todos, rows => {
   if (!selected.value) return;
@@ -41,7 +42,7 @@ async function run(operation, payload) {
     await api[operation]({ ...payload, requestId: pending.requestId }); pending = null;
     await props.refresh?.();
     if (selected.value && props.loadItem) selected.value = await props.loadItem(selected.value.id);
-    success.value = ({ createTodo: '紙條已建立', updateTodo: '紙條已儲存', completeTodo: '紙條已完成', reopenTodo: '紙條已重新開啟', forwardTodo: '紙條已傳遞', cancelTodo: '紙條已取消' })[operation];
+    success.value = ({ createTodo: t('紙條已建立'), updateTodo: t('紙條已儲存'), completeTodo: t('紙條已完成'), reopenTodo: t('紙條已重新開啟'), forwardTodo: t('紙條已傳遞'), cancelTodo: t('紙條已取消') })[operation];
     return true;
   } catch (failure) {
     error.value = failure.message;
@@ -51,26 +52,26 @@ async function run(operation, payload) {
     return false;
   } finally { busy.value = false; }
 }
-async function create() { if (content.value.trim() && await run('createTodo', { content: content.value, assigneeId: assigneeId.value })) { content.value = ''; assigneeId.value = props.userId; choose('mine'); success.value = '紙條已建立'; } }
+async function create() { if (content.value.trim() && await run('createTodo', { content: content.value, assigneeId: assigneeId.value })) { content.value = ''; assigneeId.value = props.userId; choose('mine'); success.value = t('紙條已建立'); } }
 async function convert(item) { emit('convert', item); selected.value = null; }
 </script>
 <template>
-  <section class="notes-page" aria-label="紙條">
-    <h1>紙條</h1>
-    <div class="notes-tabs" role="tablist" aria-label="紙條分頁" @keydown="onTabKeydown">
-      <button v-for="option in tabs" :id="`${tabId}-${option.id}`" :key="option.id" role="tab" :aria-selected="tab === option.id" :tabindex="tab === option.id ? 0 : -1" :aria-controls="`${tabId}-panel`" :disabled="busy" @click="choose(option.id)">{{ option.label }}</button>
+  <section class="notes-page" :aria-label="t('紙條')">
+    <h1>{{ t('紙條') }}</h1>
+    <div class="notes-tabs" role="tablist" :aria-label="t('紙條分頁')" @keydown="onTabKeydown">
+      <button v-for="option in tabs" :id="`${tabId}-${option.id}`" :key="option.id" role="tab" :aria-selected="tab === option.id" :tabindex="tab === option.id ? 0 : -1" :aria-controls="`${tabId}-panel`" :disabled="busy" @click="choose(option.id)">{{ t(option.label) }}</button>
     </div>
-    <p v-if="error" class="error-box" role="alert">{{ error }}</p><p v-if="success" class="notes-success" role="status">{{ success }}</p>
+    <p v-if="error" class="error-box" role="alert">{{ t(error) }}</p><p v-if="success" class="notes-success" role="status">{{ success }}</p>
     <div :id="`${tabId}-panel`" role="tabpanel" :aria-labelledby="`${tabId}-${tab}`">
       <form v-if="canWrite && tab === 'create'" class="notes-create" @submit.prevent="create">
-        <MarkdownEditor ref="quickInput" v-model="content" label="紙條內容" placeholder="輸入紙條內容…" :maxlength="6000" :rows="5" :disabled="busy" required />
-        <div class="notes-create-actions"><PagedSelect v-if="canAssign && loadMembers" v-model="assigneeId" label="交給誰" :fixed-options="[{ id: userId, name: '自己' }]" :context="workspaceId" :load="loadMembers" :disabled="busy" autoload required empty-label="選擇承辦人" /><button class="button primary" :disabled="busy || !content.trim() || !assigneeId">建立紙條</button></div>
+        <MarkdownEditor ref="quickInput" v-model="content" :label="t('紙條內容')" :placeholder="t('輸入紙條內容…')" :maxlength="6000" :rows="5" :disabled="busy" required />
+        <div class="notes-create-actions"><PagedSelect v-if="canAssign && loadMembers" v-model="assigneeId" :label="t('交給誰')" :fixed-options="[{ id: userId, name: t('自己') }]" :context="workspaceId" :load="loadMembers" :disabled="busy" autoload required :empty-label="t('選擇承辦人')" /><button class="button primary" :disabled="busy || !content.trim() || !assigneeId">{{ t('建立紙條') }}</button></div>
       </form>
       <template v-if="tab !== 'create'">
-        <p v-if="!items.length" class="notes-empty">尚無紙條</p>
+        <p v-if="!items.length" class="notes-empty">{{ t('尚無紙條') }}</p>
         <ol class="notes-list"><li v-for="item in items" :key="item.id" :data-todo-id="item.id">
-          <div class="notes-row-content"><strong>{{ item.title }}</strong><p>來自 {{ item.creatorName }} <span v-if="item.state !== 'open'">· {{ labels[item.state] }}</span><time :datetime="todoDate(item, userId).at" :title="todoDate(item, userId).full">{{ todoDate(item, userId).label }}</time></p></div>
-          <button type="button" class="text-button notes-more" :aria-label="`更多：${item.title}`" :disabled="busy" @click="focus(item.id)">更多 <span aria-hidden="true">›</span></button>
+          <div class="notes-row-content"><strong>{{ item.title }}</strong><p>{{ t('來自') }} {{ item.creatorName }} <span v-if="item.state !== 'open'">· {{ t(labels[item.state]) }}</span><time :datetime="todoDate(item, userId).at" :title="todoDate(item, userId).full">{{ t(todoDate(item, userId).label) }}</time></p></div>
+          <button type="button" class="text-button notes-more" :aria-label="t('更多：{0}', [item.title])" :disabled="busy" @click="focus(item.id)">{{ t('更多') }} <span aria-hidden="true">›</span></button>
         </li></ol>
       </template>
     </div>

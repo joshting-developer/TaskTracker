@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useId } from 'vue';
 import Icon from './Icon.vue';
 import PagedSelect from './PagedSelect.vue';
@@ -14,11 +15,11 @@ const defaultRecipient = () => props.item.capabilities.return ? '__previous__' :
 const reply = shallowRef(''), recipient = shallowRef(defaultRecipient()), revision = shallowRef(props.item.revision), editing = shallowRef(false), content = shallowRef('');
 const dirty = computed(() => Boolean(reply.value.trim() || editing.value));
 const stale = computed(() => revision.value !== props.item.revision);
-const labels = { open: '待處理', done: '已完成', canceled: '已取消', converted: '已轉卡' };
+const labels = { open: t('待處理'), done: t('已完成'), canceled: t('已取消'), converted: t('已轉卡') };
 let opener;
 defineExpose({ dirty });
 function close() {
-  if (props.busy || (dirty.value && !window.confirm('捨棄尚未送出的紙條內容？'))) return;
+  if (props.busy || (dirty.value && !window.confirm(t('捨棄尚未送出的紙條內容？')))) return;
   emit('close');
 }
 function latest() { revision.value = props.item.revision; }
@@ -34,30 +35,30 @@ async function send(operation) {
   if (await props.perform(operation, fields)) { reply.value = ''; editing.value = false; await nextTick(); recipient.value = defaultRecipient(); latest(); }
 }
 function edit() { content.value = todoSource(props.item); editing.value = true; latest(); }
-async function cancel() { if (window.confirm('取消這張紙條？')) await send('cancelTodo'); }
-function convert() { if (!dirty.value || window.confirm('捨棄尚未送出的紙條內容並轉成卡片？')) { reply.value = ''; editing.value = false; emit('convert', props.item); } }
+async function cancel() { if (window.confirm(t('取消這張紙條？'))) await send('cancelTodo'); }
+function convert() { if (!dirty.value || window.confirm(t('捨棄尚未送出的紙條內容並轉成卡片？'))) { reply.value = ''; editing.value = false; emit('convert', props.item); } }
 onMounted(() => { opener = document.activeElement; dialog.value.showModal(); });
 onBeforeUnmount(() => { dialog.value?.close(); if (opener?.isConnected) opener.focus({ preventScroll: true }); });
 </script>
 <template>
   <dialog ref="dialog" class="note-drawer" :aria-labelledby="`${id}-heading`" @cancel.prevent="close" @click="event => { if (event.target === dialog) close(); }">
-    <header class="note-drawer-header"><div><h2 :id="`${id}-heading`">紙條</h2><span>{{ labels[item.state] }} · {{ item.assigneeName }}</span></div><div class="note-header-actions">
-      <button v-if="item.capabilities.complete && !editing" type="button" class="button secondary" :disabled="busy || stale" @click="send('completeTodo')">完成</button>
-      <button v-if="item.capabilities.convert && canConvert && !editing" type="button" class="text-button" :disabled="busy" @click="convert">轉為卡片</button>
-      <TodoActions v-if="item.capabilities.edit || item.capabilities.cancel || item.capabilities.reopen"><button v-if="item.capabilities.edit" :disabled="busy" @click="edit">編輯</button><button v-if="item.capabilities.reopen" :disabled="busy || stale" @click="send('reopenTodo')">重新開啟</button><button v-if="item.capabilities.cancel" :disabled="busy || stale" @click="cancel">取消紙條</button></TodoActions>
-      <button class="icon-button" aria-label="關閉紙條" :disabled="busy" @click="close"><Icon name="close" /></button>
+    <header class="note-drawer-header"><div><h2 :id="`${id}-heading`">{{ t('紙條') }}</h2><span>{{ t(labels[item.state]) }} · {{ item.assigneeName }}</span></div><div class="note-header-actions">
+      <button v-if="item.capabilities.complete && !editing" type="button" class="button secondary" :disabled="busy || stale" @click="send('completeTodo')">{{ t('完成') }}</button>
+      <button v-if="item.capabilities.convert && canConvert && !editing" type="button" class="text-button" :disabled="busy" @click="convert">{{ t('轉為卡片') }}</button>
+      <TodoActions v-if="item.capabilities.edit || item.capabilities.cancel || item.capabilities.reopen"><button v-if="item.capabilities.edit" :disabled="busy" @click="edit">{{ t('編輯') }}</button><button v-if="item.capabilities.reopen" :disabled="busy || stale" @click="send('reopenTodo')">{{ t('重新開啟') }}</button><button v-if="item.capabilities.cancel" :disabled="busy || stale" @click="cancel">{{ t('取消紙條') }}</button></TodoActions>
+      <button class="icon-button" :aria-label="t('關閉紙條')" :disabled="busy" @click="close"><Icon name="close" /></button>
     </div></header>
     <div class="note-drawer-body">
-      <p v-if="error" class="error-box" role="alert">{{ error }}</p>
-      <p v-if="stale" class="note-conflict" role="status">紙條已更新, 草稿已保留 <button class="text-button" :disabled="busy" @click="latest">使用最新版本繼續</button></p>
-      <form v-if="editing" @submit.prevent="send('updateTodo')"><MarkdownEditor v-model="content" label="編輯紙條內容" :maxlength="6000" :rows="5" :disabled="busy" required /><button class="button primary" :disabled="busy || stale || !content.trim()">儲存修改</button><button type="button" class="text-button note-cancel-edit" :disabled="busy" @click="editing = false">取消修改</button></form>
+      <p v-if="error" class="error-box" role="alert">{{ t(error) }}</p>
+      <p v-if="stale" class="note-conflict" role="status">{{ t('紙條已更新, 草稿已保留') }} <button class="text-button" :disabled="busy" @click="latest">{{ t('使用最新版本繼續') }}</button></p>
+      <form v-if="editing" @submit.prevent="send('updateTodo')"><MarkdownEditor v-model="content" :label="t('編輯紙條內容')" :maxlength="6000" :rows="5" :disabled="busy" required /><button class="button primary" :disabled="busy || stale || !content.trim()">{{ t('儲存修改') }}</button><button type="button" class="text-button note-cancel-edit" :disabled="busy" @click="editing = false">{{ t('取消修改') }}</button></form>
       <template v-else><MarkdownContent issue-references class="note-content" :source="todoSource(item)" /></template>
       <button v-if="item.convertedIssue" class="text-button" @click="emit('open-issue', item.convertedIssue)">{{ item.convertedIssue.identifier }} ↗</button>
       <TodoConversation :item="item" />
     </div>
     <form v-if="item.capabilities.forward && !editing" class="note-transfer" @submit.prevent="send('forwardTodo')">
-      <label :for="`${id}-reply`">回覆內容</label><textarea :id="`${id}-reply`" v-model="reply" rows="3" maxlength="2000" :disabled="busy" placeholder="輸入回覆…" />
-      <div class="note-transfer-actions"><PagedSelect v-model="recipient" label="要傳給誰" :context="workspaceId" :load="loadMembers" :fixed-options="[...(item.capabilities.return ? [{ id: '__previous__', name: '回覆上一手' }] : []), { id: item.createdBy, name: item.creatorName }, { id: item.initialAssigneeId, name: item.initialAssigneeName || item.assigneeName }]" :disabled="busy" autoload required empty-label="選擇承辦人" /><button class="button primary" :disabled="busy || stale || !recipient || recipient === item.assigneeId || (recipient === '__previous__' && (!item.capabilities.return || !reply.trim()))">傳遞</button></div>
+      <label :for="`${id}-reply`">{{ t('回覆內容') }}</label><textarea :id="`${id}-reply`" v-model="reply" rows="3" maxlength="2000" :disabled="busy" :placeholder="t('輸入回覆…')" />
+      <div class="note-transfer-actions"><PagedSelect v-model="recipient" :label="t('要傳給誰')" :context="workspaceId" :load="loadMembers" :fixed-options="[...(item.capabilities.return ? [{ id: '__previous__', name: t('回覆上一手') }] : []), { id: item.createdBy, name: item.creatorName }, { id: item.initialAssigneeId, name: item.initialAssigneeName || item.assigneeName }]" :disabled="busy" autoload required :empty-label="t('選擇承辦人')" /><button class="button primary" :disabled="busy || stale || !recipient || recipient === item.assigneeId || (recipient === '__previous__' && (!item.capabilities.return || !reply.trim()))">{{ t('傳遞') }}</button></div>
     </form>
   </dialog>
 </template>

@@ -15,8 +15,8 @@ try {
  const previous = new Set(['App.vue','components/PersonalNotifications.vue','components/TodoNotifications.vue']);
  server=await createServer({plugins: phase === 'before' ? [{name:'tt354-before',enforce:'pre',load(id){const relative=id.split('/frontend/src/')[1]; if(previous.has(relative))return execFileSync('git',['show',`b005dc5:frontend/src/${relative}`],{encoding:'utf8'});}}] : [],server:{host:'127.0.0.1',port:5199,strictPort:true,proxy:{'/api':{target:process.env.E2E_API_URL,changeOrigin:false}}}});await server.listen();
  browser=await chromium.launch({headless:true,executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
- const page=await browser.newPage({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
- const other=await browser.newPage();
+ const page=await browser.newPage({ locale: 'zh-TW',viewport:{width:1440,height:1000},reducedMotion:'reduce'});
+ const other=await browser.newPage({ locale: 'zh-TW' });
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  const base='http://127.0.0.1:5199';
  await page.goto(base+'/login');await other.goto(base+'/login');

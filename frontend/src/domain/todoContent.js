@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 // 舊待辦只在編輯時組合原標題及說明，新格式以完整content為準。
 export function todoSource(todo) {
   return typeof todo.content === 'string' ? todo.content : [todo.title, todo.note].filter(Boolean).join('\n\n');
@@ -16,9 +17,9 @@ const parts = value => Object.fromEntries(new Intl.DateTimeFormat('en-CA', { tim
  * @returns {{label: string, full: string, at: string}} 顯示文字、完整時間與ISO時間
  */
 export function todoDate(item, userId, now = new Date()) {
-  const [at, verb] = item.state === 'done' && item.completedAt ? [item.completedAt, '完成']
-    : item.returnedAt ? [item.returnedAt, '退回']
-      : [item.createdAt, item.createdBy === userId && item.initialAssigneeId === userId ? '建立' : '交辦'];
+  const [at, verb] = item.state === 'done' && item.completedAt ? [item.completedAt, t('完成')]
+    : item.returnedAt ? [item.returnedAt, t('退回')]
+      : [item.createdAt, item.createdBy === userId && item.initialAssigneeId === userId ? t('建立') : t('交辦')];
   if (!at) return { label: '', full: '', at: '' };
   const date = parts(at), thisYear = parts(now).year;
   const short = `${Number(date.month)}/${Number(date.day)}`;

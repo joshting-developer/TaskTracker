@@ -56,7 +56,21 @@ def verify_bundle(bundle, manifest):
         raise ValueError('Unrecorded baseline images')
 
 
+CALIBRATION_RESET_GUARD = r"""if(getenv('APP_ENV')!=='testing'||getenv('TASKTRACKER_MYSQL_TEST')!=='1')throw new RuntimeException('Isolated visual testing required');
+require 'vendor/autoload.php';$app=require 'bootstrap/app.php';$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+if(!$app->environment('testing')||config('database.default')!=='mysql'||config('database.connections.mysql.host')!=='mysql'||config('database.connections.mysql.database')!=='tasktracker_test'||config('database.connections.mysql.username')!=='tasktracker_test')throw new RuntimeException('Owned visual database required');
+Illuminate\Support\Facades\Artisan::call('migrate:fresh',['--force'=>true]);"""
+
+
+def reset_calibration_fixtures():
+    # Each fault run needs fresh synthetic accounts; fixed screenshot emails cannot be reused.
+
+    subprocess.run(['docker', 'compose', '-p', 'tasktracker-codex-visual', '-f', str(ROOT / 'docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', '-r', CALIBRATION_RESET_GUARD], cwd=ROOT, check=True, capture_output=True, timeout=90)
+
+
 def run_tests(bundle, label, update=False, inject=None, desktop=False):
+    if label.startswith('calibration-'):
+        reset_calibration_fixtures()
     environment = os.environ.copy()
     environment['E2E_API_URL'] = 'http://127.0.0.1:13079'
     environment['VISUAL_SNAPSHOT_DIR'] = str(bundle / 'snapshots')

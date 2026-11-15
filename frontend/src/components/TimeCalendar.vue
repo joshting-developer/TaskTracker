@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { useLeaveGuard } from '../ui/leaveGuard.js';
@@ -109,20 +110,20 @@ function moveMonth(direction) {
   month.value = new Date(Date.UTC(year, current - 1 + direction, 1)).toISOString().slice(0, 7);
 }
 function selectDay(day) {
-  if (saving.value || (dirty.value && !window.confirm('捨棄尚未儲存的工時？'))) return;
+  if (saving.value || (dirty.value && !window.confirm(t('捨棄尚未儲存的工時？')))) return;
   month.value = day.date.slice(0, 7); selectedDate.value = day.date;
   editing.value = null; error.value = '';
   drawerTab.value = props.canWrite ? 'form' : 'details'; formKey.value++; panelOpen.value = true;
 }
 function openDetails() {
-  if (saving.value || (dirty.value && !window.confirm('捨棄尚未儲存的工時？'))) return;
+  if (saving.value || (dirty.value && !window.confirm(t('捨棄尚未儲存的工時？')))) return;
   editing.value = null; drawerTab.value = 'details'; formKey.value++; panelOpen.value = true;
 }
 function openIssue(issue) { if (issue?.id) emit('open', { ...issue, projectId: issue.projectId || props.project.id }); }
 function lookupIssues(filters, options) { return api.issueOptions(props.project.id, { ...filters, kind: 'issue' }, options); }
 function lookupMembers(filters, options) { return api.members(props.project.id, filters, options); }
 function edit(entry) {
-  if (!props.canWrite || saving.value || entry.userId !== props.userId || (dirty.value && !window.confirm('捨棄尚未儲存的工時？'))) return;
+  if (!props.canWrite || saving.value || entry.userId !== props.userId || (dirty.value && !window.confirm(t('捨棄尚未儲存的工時？')))) return;
   // 從明細按修改：同一個抽屜換到填報分頁並帶入這筆紀錄。
   editing.value = { ...entry }; error.value = ''; drawerTab.value = 'form'; formKey.value++; panelOpen.value = true;
 }
@@ -132,45 +133,45 @@ async function saved(entry) {
   month.value = entry.workDate.slice(0, 7); selectedDate.value = entry.workDate;
   closePanel();
   if (sameScope) await refresh();
-  emit('updated', '工時已儲存');
+  emit('updated', t('工時已儲存'));
 }
 const voidRequests = new Map();
 async function voidEntry(entry) {
-  if (!props.canWrite || saving.value || !window.confirm('確定作廢這筆工時？紀錄會保留, 但不再納入加總')) return;
+  if (!props.canWrite || saving.value || !window.confirm(t('確定作廢這筆工時？紀錄會保留, 但不再納入加總'))) return;
   busy.value = true; error.value = '';
   const key = `${entry.id}:${entry.revision}`;
   if (!voidRequests.has(key)) voidRequests.set(key, crypto.randomUUID());
-  try { await api.voidTime({ id: entry.id, expectedRevision: entry.revision, requestId: voidRequests.get(key) }); voidRequests.delete(key); await refresh(); emit('updated', '工時已作廢'); }
-  catch (failure) { error.value = failure.message; if (failure.code === 'REVISION_CONFLICT') { await refresh(); emit('updated', '工時已更新, 請再確認'); } }
+  try { await api.voidTime({ id: entry.id, expectedRevision: entry.revision, requestId: voidRequests.get(key) }); voidRequests.delete(key); await refresh(); emit('updated', t('工時已作廢')); }
+  catch (failure) { error.value = failure.message; if (failure.code === 'REVISION_CONFLICT') { await refresh(); emit('updated', t('工時已更新, 請再確認')); } }
   finally { busy.value = false; }
 }
 </script>
 
 <template>
-  <section class="time-workspace" aria-label="工時月曆">
-    <header class="section-title"><div><h2>工時月曆</h2><p class="subtle">本月合計 {{ hours(total) }}</p></div><div v-if="canReadTeam" class="member-filter"><PagedSelect v-model="member" label="工時成員" :context="`${project.id}:time-member`" :fixed-options="memberOptions" :load="lookupMembers" empty-label="全團隊" /></div><p v-else class="subtle">只顯示你的工時</p></header>
-    <div v-if="error" class="error-box" role="alert">{{ error }}<button class="text-button" @click="refresh">重試</button></div>
+  <section class="time-workspace" :aria-label="t('工時月曆')">
+    <header class="section-title"><div><h2>{{ t('工時月曆') }}</h2><p class="subtle">{{ t('本月合計') }} {{ hours(total) }}</p></div><div v-if="canReadTeam" class="member-filter"><PagedSelect v-model="member" :label="t('工時成員')" :context="`${project.id}:time-member`" :fixed-options="memberOptions" :load="lookupMembers" :empty-label="t('全團隊')" /></div><p v-else class="subtle">{{ t('只顯示你的工時') }}</p></header>
+    <div v-if="error" class="error-box" role="alert">{{ t(error) }}<button class="text-button" @click="refresh">{{ t('重試') }}</button></div>
     <div class="time-layout">
-      <div class="calendar"><header class="calendar-toolbar"><div><button class="icon-button previous" aria-label="上個月" @click="moveMonth(-1)"><Icon name="chevron" /></button><input v-model="month" type="month" aria-label="工時月份" required /><button class="icon-button" aria-label="下個月" @click="moveMonth(1)"><Icon name="chevron" /></button></div><button class="text-button" @click="month = dateInTaipei().slice(0, 7); selectedDate = dateInTaipei()">今天</button></header>
-        <p v-if="summaryLoading && !summary" role="status">載入工時中…</p>
-        <div class="calendar-weekdays"><span v-for="day in ['一','二','三','四','五','六','日']" :key="day">{{ day }}</span></div>
-        <div class="calendar-grid"><button v-for="day in days" :key="day.date" :class="{ muted: !day.inMonth, selected: day.date === selectedDate, today: day.date === dateInTaipei() }" :aria-label="`${day.date} 工時 ${hours(day.minutes)}`" :aria-pressed="day.date === selectedDate" :aria-haspopup="canWrite ? 'dialog' : undefined" @click="selectDay(day)"><span>{{ day.number }}</span><strong v-if="day.minutes">{{ hours(day.minutes) }}</strong><small v-if="day.count">{{ day.count }} 筆</small></button></div>
+      <div class="calendar"><header class="calendar-toolbar"><div><button class="icon-button previous" :aria-label="t('上個月')" @click="moveMonth(-1)"><Icon name="chevron" /></button><input v-model="month" type="month" :aria-label="t('工時月份')" required /><button class="icon-button" :aria-label="t('下個月')" @click="moveMonth(1)"><Icon name="chevron" /></button></div><button class="text-button" @click="month = dateInTaipei().slice(0, 7); selectedDate = dateInTaipei()">{{ t('今天') }}</button></header>
+        <p v-if="summaryLoading && !summary" role="status">{{ t('載入工時中…') }}</p>
+        <div class="calendar-weekdays"><span v-for="day in [t('一'),t('二'),t('三'),t('四'),t('五'),t('六'),t('日')]" :key="day">{{ day }}</span></div>
+        <div class="calendar-grid"><button v-for="day in days" :key="day.date" :class="{ muted: !day.inMonth, selected: day.date === selectedDate, today: day.date === dateInTaipei() }" :aria-label="t('{0} 工時 {1}', [day.date, hours(day.minutes)])" :aria-pressed="day.date === selectedDate" :aria-haspopup="canWrite ? 'dialog' : undefined" @click="selectDay(day)"><span>{{ day.number }}</span><strong v-if="day.minutes">{{ hours(day.minutes) }}</strong><small v-if="day.count">{{ day.count }} {{ t('筆') }}</small></button></div>
       </div>
-      <div class="time-day-summary"><span>{{ selectedDate }} · {{ hours(selectedTotal) }}</span><button class="button secondary" type="button" :aria-label="`查看 ${selectedDate} 工時明細`" :aria-haspopup="'dialog'" @click="openDetails">查看工時明細</button></div>
+      <div class="time-day-summary"><span>{{ selectedDate }} · {{ hours(selectedTotal) }}</span><button class="button secondary" type="button" :aria-label="t('查看 {0} 工時明細', [selectedDate])" :aria-haspopup="'dialog'" @click="openDetails">{{ t('查看工時明細') }}</button></div>
     </div>
-    <TimeEntryDrawer v-if="panelOpen" ref="panel" :key="formKey" :show-form="canWrite" :details-label="`${selectedDate} 工時明細`" :initial-tab="drawerTab" :lookup="lookupIssues" :fixed-issues="editing ? [editing.issue] : []" :default-date="selectedDate" :entry="editing" @close="closePanel" @saved="saved" @conflict="refresh(); emit('updated', '已重新載入工時, 請取消編輯後再選最新紀錄')">
+    <TimeEntryDrawer v-if="panelOpen" ref="panel" :key="formKey" :show-form="canWrite" :details-label="t('{0} 工時明細', [selectedDate])" :initial-tab="drawerTab" :lookup="lookupIssues" :fixed-issues="editing ? [editing.issue] : []" :default-date="selectedDate" :entry="editing" @close="closePanel" @saved="saved" @conflict="refresh(); emit('updated', t('已重新載入工時, 請取消編輯後再選最新紀錄'))">
       <template #details>
-        <p class="time-drawer-total">合計 {{ hours(selectedTotal) }}</p>
-        <p v-if="dayLoading && !dayResult" role="status">載入明細中…</p>
-        <p v-else-if="!selectedEntries.length" class="subtle">這天還沒有符合篩選條件的紀錄</p>
+        <p class="time-drawer-total">{{ t('合計') }} {{ hours(selectedTotal) }}</p>
+        <p v-if="dayLoading && !dayResult" role="status">{{ t('載入明細中…') }}</p>
+        <p v-else-if="!selectedEntries.length" class="subtle">{{ t('這天還沒有符合篩選條件的紀錄') }}</p>
         <details v-for="group in entryGroups" :key="group.id" class="time-entry-group" open>
-          <summary><span>{{ group.name }}{{ group.id === userId ? '（我）' : '' }}</span><span>{{ hours(group.minutes) }} · {{ group.entries.length }} 筆</span></summary>
-          <article v-for="entry in group.entries" :key="entry.id" class="time-entry"><div><span class="identifier">{{ entry.issue.identifier }}</span><button class="text-button time-issue-link" @click="openIssue(entry.issue)">{{ entry.issue.title }}</button><p>{{ entry.note || '未填說明' }}</p></div><div class="time-entry-end"><strong>{{ hours(entry.minutes) }}</strong><div v-if="canWrite && entry.userId === userId"><button class="text-button" :disabled="busy" :aria-label="`修改工時 ${entry.id}`" @click="edit(entry)">修改</button><button class="text-button danger-text" :disabled="busy" :aria-label="`作廢工時 ${entry.id}`" @click="voidEntry(entry)">作廢</button></div></div></article>
+          <summary><span>{{ group.name }}{{ group.id === userId ? t('（我）') : '' }}</span><span>{{ hours(group.minutes) }} · {{ group.entries.length }} {{ t('筆') }}</span></summary>
+          <article v-for="entry in group.entries" :key="entry.id" class="time-entry"><div><span class="identifier">{{ entry.issue.identifier }}</span><button class="text-button time-issue-link" @click="openIssue(entry.issue)">{{ entry.issue.title }}</button><p>{{ entry.note || t('未填說明') }}</p></div><div class="time-entry-end"><strong>{{ hours(entry.minutes) }}</strong><div v-if="canWrite && entry.userId === userId"><button class="text-button" :disabled="busy" :aria-label="t('修改工時 {0}', [entry.id])" @click="edit(entry)">{{ t('修改') }}</button><button class="text-button danger-text" :disabled="busy" :aria-label="t('作廢工時 {0}', [entry.id])" @click="voidEntry(entry)">{{ t('作廢') }}</button></div></div></article>
         </details>
-        <div v-if="dayResult?.lastPage > 1" class="pagination" aria-label="工時明細分頁"><button class="text-button" :disabled="dayLoading || dayPage <= 1" @click="dayPage--">上一頁</button><span>{{ dayPage }} / {{ dayResult.lastPage }}</span><button class="text-button" :disabled="dayLoading || dayPage >= dayResult.lastPage" @click="dayPage++">下一頁</button></div>
+        <div v-if="dayResult?.lastPage > 1" class="pagination" :aria-label="t('工時明細分頁')"><button class="text-button" :disabled="dayLoading || dayPage <= 1" @click="dayPage--">{{ t('上一頁') }}</button><span>{{ dayPage }} / {{ dayResult.lastPage }}</span><button class="text-button" :disabled="dayLoading || dayPage >= dayResult.lastPage" @click="dayPage++">{{ t('下一頁') }}</button></div>
       </template>
     </TimeEntryDrawer>
-    <div class="time-report-grid"><section class="report-card"><h3>本月成員投入</h3><p v-if="!teamRows.length" class="subtle">尚無符合條件的工時</p><div v-for="person in teamRows" :key="person.id" class="report-row"><div><span>{{ person.name }}{{ person.id === userId ? '（我）' : '' }}</span><strong>{{ hours(person.minutes) }}</strong></div><div class="progress-track"><span :style="{ width: `${total ? person.minutes / total * 100 : 0}%` }"></span></div></div></section><section class="report-card"><h3>Epic 工時</h3><div v-for="epic in epicRows" :key="epic.id" class="report-epic"><button class="text-button" @click="openIssue(epic)">{{ epic.title }}</button><span>{{ hours(epic.spentMinutes) }} / 預估 {{ hours(epic.estimateMinutes) }}</span></div><p v-if="!epicRows.length" class="subtle">尚無 Epic 工時</p></section></div>
-    <section class="report-card issue-time-report"><h3>本月任務投入</h3><p v-if="!issueRows.length" class="subtle">尚無符合條件的工時</p><div v-for="issue in issueRows" :key="issue.id" class="report-epic"><button class="text-button" @click="openIssue(issue)">{{ issue.identifier }} · {{ issue.title }}</button><span>{{ hours(issue.spent) }} / 預估 {{ hours(issue.estimateMinutes || 0) }}</span></div><p v-if="summary && issueRows.length >= summary.limit" class="subtle">僅顯示投入最多的 {{ summary.limit }} 項</p></section>
+    <div class="time-report-grid"><section class="report-card"><h3>{{ t('本月成員投入') }}</h3><p v-if="!teamRows.length" class="subtle">{{ t('尚無符合條件的工時') }}</p><div v-for="person in teamRows" :key="person.id" class="report-row"><div><span>{{ person.name }}{{ person.id === userId ? t('（我）') : '' }}</span><strong>{{ hours(person.minutes) }}</strong></div><div class="progress-track"><span :style="{ width: `${total ? person.minutes / total * 100 : 0}%` }"></span></div></div></section><section class="report-card"><h3>{{ t('Epic 工時') }}</h3><div v-for="epic in epicRows" :key="epic.id" class="report-epic"><button class="text-button" @click="openIssue(epic)">{{ epic.title }}</button><span>{{ hours(epic.spentMinutes) }} {{ t('/ 預估') }} {{ hours(epic.estimateMinutes) }}</span></div><p v-if="!epicRows.length" class="subtle">{{ t('尚無 Epic 工時') }}</p></section></div>
+    <section class="report-card issue-time-report"><h3>{{ t('本月任務投入') }}</h3><p v-if="!issueRows.length" class="subtle">{{ t('尚無符合條件的工時') }}</p><div v-for="issue in issueRows" :key="issue.id" class="report-epic"><button class="text-button" @click="openIssue(issue)">{{ issue.identifier }} · {{ issue.title }}</button><span>{{ hours(issue.spent) }} {{ t('/ 預估') }} {{ hours(issue.estimateMinutes || 0) }}</span></div><p v-if="summary && issueRows.length >= summary.limit" class="subtle">{{ t('僅顯示投入最多的') }} {{ summary.limit }} {{ t('項') }}</p></section>
   </section>
 </template>

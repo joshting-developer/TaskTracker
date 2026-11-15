@@ -45,8 +45,8 @@ try {
   vite = await createServer({ server: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': apiTarget } } });
   await vite.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  const member = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const page = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 900 } });
+  const member = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 900 } });
   for (const target of [page, member]) { target.setDefaultTimeout(12000); target.on('pageerror', error => failures.push(error.message)); }
   const token = crypto.randomUUID();
   await register(page, `flow-owner-${token}@example.test`);

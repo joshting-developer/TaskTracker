@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { onBeforeUnmount, onMounted, ref, useId } from 'vue';
 const props = defineProps({ board: Object, action: String, busy: Boolean, error: String });
 const emit = defineEmits(['close', 'confirm', 'reload']);
@@ -18,10 +19,10 @@ onBeforeUnmount(() => dialog.value?.close());
 <template>
   <dialog ref="dialog" class="board-lifecycle-dialog" :aria-labelledby="id" :aria-describedby="`${id}-description`" :aria-busy="busy" @cancel.prevent="close" @keydown="keepFocus">
     <form @submit.prevent="$emit('confirm')">
-      <h2 :id="id">{{ action === 'archive' ? '封存' : '還原' }}看板「{{ board.name }}」？</h2>
-      <p :id="`${id}-description`">{{ action === 'archive' ? '卡片、留言和工時都會保留, 之後可從已封存看板還原' : '還原後會回到使用中列表, 保留原本的卡片收錄' }}</p>
-      <div v-if="error" class="error-box" role="alert">{{ error }}<button type="button" class="text-button" :disabled="busy" @click="$emit('reload')">重新載入</button></div>
-      <footer><button type="button" class="button secondary" autofocus :disabled="busy" @click="close">取消</button><button class="button primary" :disabled="busy || Boolean(error)">{{ busy ? '處理中…' : action === 'archive' ? '封存看板' : '還原看板' }}</button></footer>
+      <h2 :id="id">{{ action === 'archive' ? t('封存') : t('還原') }}{{ t('看板「') }}{{ board.name }}」？</h2>
+      <p :id="`${id}-description`">{{ action === 'archive' ? t('卡片、留言和工時都會保留, 之後可從已封存看板還原') : t('還原後會回到使用中列表, 保留原本的卡片收錄') }}</p>
+      <div v-if="error" class="error-box" role="alert">{{ t(error) }}<button type="button" class="text-button" :disabled="busy" @click="$emit('reload')">{{ t('重新載入') }}</button></div>
+      <footer><button type="button" class="button secondary" autofocus :disabled="busy" @click="close">{{ t('取消') }}</button><button class="button primary" :disabled="busy || Boolean(error)">{{ busy ? t('處理中…') : action === 'archive' ? t('封存看板') : t('還原看板') }}</button></footer>
     </form>
   </dialog>
 </template>

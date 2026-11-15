@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import { computed, nextTick, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 /** 紙條頁只讀目前Todo分頁，原稿／歷史快取限50筆且不保存到storage。 */
@@ -27,7 +28,7 @@ export function usePersonalQueries({ versions, resumed, draftId, onError, enable
       if (history)
         events = await api.todoHistory(id, { page: 1, perPage: 20 }, { signal: request.signal });
       if (disposed || request.signal.aborted)
-        throw Object.assign(new Error('頁面已切換'), { code: 'ABORTED' });
+        throw Object.assign(new Error(t('頁面已切換')), { code: 'ABORTED' });
       const next = new Map(details.value);
       next.set(id, { ...todo, ...(events ? { history: events.items, historyPage: events } : {}) });
       while (next.size > 50) {

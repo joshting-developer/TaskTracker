@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { computed } from 'vue';
 import { hours } from '../domain/model.js';
 const props = defineProps({ mode: String, rows: Array, allocations: Array, total: Number });
@@ -19,13 +20,13 @@ const memberRows = computed(() => topRows.value.map(row => ({
 const percentage = minutes => props.total ? (minutes / props.total * 100).toFixed(1) : '0.0';
 </script>
 <template>
-  <section class="distribution" :aria-label="mode === 'members' ? '成員跨專案工時分布' : '專案工時比較'">
+  <section class="distribution" :aria-label="mode === 'members' ? t('成員跨專案工時分布') : t('專案工時比較')">
     <header class="distribution-heading">
-      <h2>{{ mode === 'members' ? '跨專案分配' : '專案投入比較' }}</h2>
-      <span>{{ rows.length }} {{ mode === 'members' ? '位成員' : '個專案' }}</span>
+      <h2>{{ mode === 'members' ? t('跨專案分配') : t('專案投入比較') }}</h2>
+      <span>{{ rows.length }} {{ mode === 'members' ? t('位成員') : t('個專案') }}</span>
     </header>
     <template v-if="mode === 'members'">
-      <ul class="legend" aria-label="專案圖例">
+      <ul class="legend" :aria-label="t('專案圖例')">
         <li v-for="[id, name] in projects" :key="id"><i :style="{ background: colorFor(id) }"></i>{{ name }}</li>
       </ul>
       <div v-for="row in memberRows" :key="row.id" class="chart-row member-row">
@@ -34,7 +35,7 @@ const percentage = minutes => props.total ? (minutes / props.total * 100).toFixe
           <button
             v-for="segment in row.segments" :key="segment.projectId" class="segment"
             :style="{ width: `${segment.minutes / maximum * 100}%`, '--segment-color': colorFor(segment.projectId) }"
-            :aria-label="`${row.name}，${segment.projectName}，${hours(segment.minutes)}，查看工時明細`"
+            :aria-label="t('{0}，{1}，{2}，查看工時明細', [row.name, segment.projectName, hours(segment.minutes)])"
             @click="emit('select', row.id, segment.projectId)"
           ><i class="segment-mark" aria-hidden="true"></i><span class="segment-tip">{{ segment.projectName }} · {{ hours(segment.minutes) }}</span></button>
         </div>
@@ -42,12 +43,12 @@ const percentage = minutes => props.total ? (minutes / props.total * 100).toFixe
       </div>
       <div class="member-axis" aria-hidden="true"><span>0 h</span><span>{{ hours(maximum / 2) }}</span><span>{{ hours(maximum) }}</span></div>
     </template>
-    <div v-else class="project-plot" tabindex="0" role="region" aria-label="專案投入直條圖，可左右捲動">
+    <div v-else class="project-plot" tabindex="0" role="region" :aria-label="t('專案投入直條圖，可左右捲動')">
       <div class="project-axis" aria-hidden="true"><span>{{ hours(maximum) }}</span><span>{{ hours(maximum / 2) }}</span><span>0 h</span></div>
       <div class="project-columns" :style="{ gridTemplateColumns: `repeat(${topRows.length}, minmax(110px, 1fr))` }">
         <button
           v-for="row in topRows" :key="row.id" class="chart-row project-column"
-          :aria-label="`${row.name}，${hours(row.minutes)}，查看成員分配`" @click="emit('select', row.id)"
+          :aria-label="t('{0}，{1}，查看成員分配', [row.name, hours(row.minutes)])" @click="emit('select', row.id)"
         >
           <span class="row-value">{{ hours(row.minutes) }}</span>
           <span class="project-bar-track"><i class="project-bar" :style="{ height: `${row.minutes / maximum * 100}%` }"></i></span>
@@ -55,7 +56,7 @@ const percentage = minutes => props.total ? (minutes / props.total * 100).toFixe
         </button>
       </div>
     </div>
-    <p v-if="rows.length > 12" class="chart-note">顯示投入前 12 項，完整資料見下表</p>
+    <p v-if="rows.length > 12" class="chart-note">{{ t('顯示投入前 12 項，完整資料見下表') }}</p>
   </section>
 </template>
 <style scoped>

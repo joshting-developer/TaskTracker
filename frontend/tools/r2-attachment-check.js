@@ -11,7 +11,7 @@ let vite, browser, project, page;
 try {
   vite = await createServer({ root: new URL('../', import.meta.url).pathname, server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } }); await vite.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const context = await browser.newContext(); page = await context.newPage(); page.setDefaultTimeout(45000);
+  const context = await browser.newContext({ locale: 'zh-TW' }); page = await context.newPage(); page.setDefaultTimeout(45000);
   const external = []; page.on('request', request => { if (request.url().includes('cloudflarestorage')) external.push(request.url()); });
   async function call(operation, input) {
     const csrf = await (await context.request.get(`${base}/api/csrf-cookie`)).json();
@@ -27,6 +27,8 @@ try {
   await page.getByRole('button', { name: '新增任務', exact: false }).first().click();
   const editor = page.getByRole('dialog').first();
   await editor.getByLabel(/任務標題/).fill('R2附件測試');
+  await page.getByRole('button', { name: '選擇描述圖片', exact: true }).waitFor({ state: 'visible' });
+  await page.waitForFunction(() => !document.querySelector('.editor-tools button:last-of-type')?.disabled);
   const uploading = page.waitForResponse(response => response.request().method() === 'POST' && new URL(response.url()).pathname === `/api/v1/projects/${project.id}/attachments`);
   await editor.getByLabel('上傳描述圖片', { exact: true }).setInputFiles({ name: 'r2-browser.png', mimeType: 'image/png', buffer: png });
   assert.equal((await uploading).status(), 200, 'R2 upload response');

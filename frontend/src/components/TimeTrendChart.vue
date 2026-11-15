@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n/index.js';
 import { computed, shallowRef } from 'vue';
 import { hours } from '../domain/model.js';
 const props = defineProps({ days: { type: Array, required: true } });
@@ -23,16 +24,16 @@ function selectPoint(event) {
 </script>
 <template>
   <section class="trend-chart">
-    <div class="chart-heading"><h2>每日實際投入</h2><span>最高 {{ peak?.date }} · {{ hours(peak?.minutes || 0) }}</span></div>
+    <div class="chart-heading"><h2>{{ t('每日實際投入') }}</h2><span>{{ t('最高') }} {{ peak?.date }} · {{ hours(peak?.minutes || 0) }}</span></div>
     <div class="trend-selection">
-      <output aria-live="polite"><strong>{{ hours(selected?.minutes || 0) }}</strong><span>{{ selected?.date }} · {{ selected?.entryCount || 0 }} 筆</span></output>
-      <label class="point-picker">工作日期<select v-model="selectedDate" aria-label="圖表工作日期"><option v-for="day in days" :key="day.date" :value="day.date">{{ day.date }}</option></select></label>
+      <output aria-live="polite"><strong>{{ hours(selected?.minutes || 0) }}</strong><span>{{ selected?.date }} · {{ selected?.entryCount || 0 }} {{ t('筆') }}</span></output>
+      <label class="point-picker">{{ t('工作日期') }}<select v-model="selectedDate" :aria-label="t('圖表工作日期')"><option v-for="day in days" :key="day.date" :value="day.date">{{ day.date }}</option></select></label>
     </div>
     <div class="trend-frame">
       <div class="trend-axis" aria-hidden="true"><span>{{ hours(maximum) }}</span><span>{{ hours(maximum / 2) }}</span><span>0 h</span></div>
       <div class="trend-canvas">
-        <div class="trend-plot" tabindex="0" role="region" aria-label="每日趨勢圖">
-          <svg viewBox="0 0 800 200" preserveAspectRatio="none" role="img" aria-label="每日工時趨勢；含零日期，詳細數值見下表" @pointermove="selectPoint" @click="selectPoint">
+        <div class="trend-plot" tabindex="0" role="region" :aria-label="t('每日趨勢圖')">
+          <svg viewBox="0 0 800 200" preserveAspectRatio="none" role="img" :aria-label="t('每日工時趨勢；含零日期，詳細數值見下表')" @pointermove="selectPoint" @click="selectPoint">
             <line v-for="y in [20, 100, 180]" :key="y" x1="0" :y1="y" x2="800" :y2="y" class="plot-grid" vector-effect="non-scaling-stroke" />
             <polygon v-if="points.length > 1" :points="area" class="plot-area" />
             <polyline v-if="points.length > 1" :points="line" class="plot-line" vector-effect="non-scaling-stroke" />

@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import { onScopeDispose, readonly, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 
@@ -29,7 +30,7 @@ export function useIssueTransitions({ canWrite, contextKey, saved, refresh, onEr
       rollback?.();
       if (failure.code === 'REVISION_CONFLICT') {
         await refresh();
-        if (current === generation) onError(`${failure.message}, 清單已更新`);
+        if (current === generation) onError(t('{0}, 清單已更新', [failure.message]));
       } else onError(failure.message);
     } finally {
       if (current === generation) moving.value = '';

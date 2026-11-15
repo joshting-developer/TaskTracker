@@ -25,7 +25,7 @@ createApp({setup(){const source=ref(fixture.source);window.setSource=value=>sour
   server = await createServer({ root: new URL('../', import.meta.url).pathname, optimizeDeps: { include: ['vue', 'marked', 'dompurify'] }, plugins: [{ name: 'isolated-attachment-review', configureServer(instance) { instance.middlewares.use('/__attachment_review', serveFixture); } }], server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   await server.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const context = await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } });
   const page = await context.newPage(); const errors = [], external = [];
   page.on('pageerror', e => { errors.push(e.message); console.error('browser:', e.message); }); page.on('response', r => { if(r.status() >= 400) console.error('response:', r.status(), new URL(r.url()).pathname); }); page.on('request', r => { if (r.url().includes('tracker.example')) external.push(r.url()); });
   async function call(path, data, method = 'POST', client = context) {
@@ -78,7 +78,7 @@ createApp({setup(){const source=ref(fixture.source);window.setSource=value=>sour
     await before.close();
   }
   const download = page.waitForEvent('download'); await preview.click(); await dialog.getByRole('button', { name: '下載圖片' }).click(); assert.equal((await download).suggestedFilename(), 'login-layout.png'); await page.keyboard.press('Escape');
-  const other = await browser.newContext();
+  const other = await browser.newContext({ locale: 'zh-TW' });
   const otherIdentity = await call('/api/auth/register', { name: 'Other tenant', email: `view-other-${crypto.randomUUID()}@example.test`, password: 'isolated-image-view', workspaceName: 'Other tenant' }, 'POST', other);
   fixture.workspace = otherIdentity.workspace.id;
   const otherPage = await other.newPage(); await otherPage.goto(`${base}/__attachment_review`);

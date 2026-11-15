@@ -1,4 +1,5 @@
 <script setup>
+import { t, workspaceRoleLabel } from '../i18n/index.js';
 import { computed, onScopeDispose, ref, shallowRef, useId, watch } from 'vue';
 import { api } from '../api/index.js';
 import { useLeaveGuard } from '../ui/leaveGuard.js';
@@ -7,7 +8,6 @@ import { onTabKeydown } from '../ui/tabs.js';
 import WorkspaceInvitationManager from './WorkspaceInvitationManager.vue';
 const props = defineProps({ meta: Object, activeTab: { type: String, default: 'general' } });
 const emit = defineEmits(['navigate', 'saved', 'access']);
-const roleLabels = { owner: 'Owner', manager: 'Manager', admin: 'Manager', user: '成員', member: '成員', maintainer: '成員', developer: '成員' };
 const tab = ref(props.activeTab), data = shallowRef(null), roleChoices = shallowRef([]);
 const name = ref(''), loading = ref(true), busy = ref(false), error = ref(''), conflict = ref(false), success = ref('');
 const invitationManager = ref(null);
@@ -37,7 +37,7 @@ function handleFailure(failure) {
 }
 function switchTab(next) {
   if (next === tab.value || working.value) return;
-  if (dirty.value && !window.confirm('切換設定分區會捨棄尚未儲存的內容，要繼續嗎？')) return;
+  if (dirty.value && !window.confirm(t('切換設定分區會捨棄尚未儲存的內容，要繼續嗎？'))) return;
   if (data.value) name.value = data.value.workspace.name;
   pending = null; invitationManager.value?.reset();
   emit('navigate', next);
@@ -55,7 +55,7 @@ async function loadMembers() {
 }
 async function load(confirm = false) {
   if (working.value && confirm) return;
-  if (confirm && dirty.value && !window.confirm('重新載入會捨棄目前修改，要繼續嗎？')) return;
+  if (confirm && dirty.value && !window.confirm(t('重新載入會捨棄目前修改，要繼續嗎？'))) return;
   if (confirm) invitationManager.value?.reset();
   const current = ++generation;
   controller?.abort(); controller = new AbortController();
@@ -73,7 +73,7 @@ async function load(confirm = false) {
 }
 async function save(operation, payload) {
   if (working.value || loading.value) return;
-  if (operation === 'setWorkspaceMemberRole' && !window.confirm('變更工作空間角色會影響成員對所有專案的存取，確定儲存嗎？')) return;
+  if (operation === 'setWorkspaceMemberRole' && !window.confirm(t('變更工作空間角色會影響成員對所有專案的存取，確定儲存嗎？'))) return;
   busy.value = true; error.value = ''; success.value = ''; conflict.value = false;
   const signature = JSON.stringify([operation, payload]);
   if (pending?.signature !== signature) pending = { signature, requestId: crypto.randomUUID() };
@@ -82,7 +82,7 @@ async function save(operation, payload) {
     pending = null;
     if (operation === 'updateWorkspace') await load();
     else await members.reload();
-    success.value = operation === 'updateWorkspace' ? '工作空間名稱已儲存' : operation === 'setWorkspaceMemberStatus' ? (payload.status === 'disabled' ? '成員已停用' : '成員已恢復') : '工作空間角色已儲存';
+    success.value = operation === 'updateWorkspace' ? t('工作空間名稱已儲存') : operation === 'setWorkspaceMemberStatus' ? (payload.status === 'disabled' ? t('成員已停用') : t('成員已恢復')) : t('工作空間角色已儲存');
     emit('saved');
   } catch (failure) { error.value = failure.message; conflict.value = failure.code === 'REVISION_CONFLICT'; handleFailure(failure); }
   finally { busy.value = false; }
@@ -96,7 +96,7 @@ function changeRole(member, event) {
 function changeMemberStatus(member) {
   if (working.value || loading.value) return;
   const status = member.disabledAt ? 'active' : 'disabled';
-  if (!window.confirm(`要${status === 'disabled' ? '停用' : '恢復'} ${member.name} 的工作空間資格嗎？`)) return;
+  if (!window.confirm(t('要{0} {1} 的工作空間資格嗎？', [status === 'disabled' ? t('停用') : t('恢復'), member.name]))) return;
   save('setWorkspaceMemberStatus', { userId: member.id, status, expectedRevision: member.revision });
 }
 watch(() => props.activeTab, next => {
@@ -113,23 +113,23 @@ defineExpose({ refresh: () => load(true) });
 </script>
 <template>
   <section class="workspace-settings-page" aria-labelledby="workspace-settings-heading">
-    <header class="section-title"><h1 id="workspace-settings-heading">工作空間設定</h1><span class="workspace-name">{{ meta.workspace?.name }}</span></header>
-    <div class="settings-tabs" role="tablist" aria-label="工作空間設定分區" @keydown="onTabKeydown"><button :id="`${id}-general`" role="tab" :aria-selected="tab === 'general'" :tabindex="tab === 'general' ? 0 : -1" :aria-controls="`${id}-general-panel`" :disabled="working" @click="switchTab('general')">一般設定</button><button :id="`${id}-members`" role="tab" :aria-selected="tab === 'members'" :tabindex="tab === 'members' ? 0 : -1" :aria-controls="`${id}-members-panel`" :disabled="working" @click="switchTab('members')">成員與權限</button></div>
-    <p v-if="loading" role="status">正在載入工作空間設定…</p>
-    <div v-if="error" class="error-box" role="alert">{{ error }}<button v-if="!working" class="text-button" @click="load(true)">{{ conflict ? '載入最新設定' : '重試載入' }}</button></div>
+    <header class="section-title"><h1 id="workspace-settings-heading">{{ t('工作空間設定') }}</h1><span class="workspace-name">{{ meta.workspace?.name }}</span></header>
+    <div class="settings-tabs" role="tablist" :aria-label="t('工作空間設定分區')" @keydown="onTabKeydown"><button :id="`${id}-general`" role="tab" :aria-selected="tab === 'general'" :tabindex="tab === 'general' ? 0 : -1" :aria-controls="`${id}-general-panel`" :disabled="working" @click="switchTab('general')">{{ t('一般設定') }}</button><button :id="`${id}-members`" role="tab" :aria-selected="tab === 'members'" :tabindex="tab === 'members' ? 0 : -1" :aria-controls="`${id}-members-panel`" :disabled="working" @click="switchTab('members')">{{ t('成員與權限') }}</button></div>
+    <p v-if="loading" role="status">{{ t('正在載入工作空間設定…') }}</p>
+    <div v-if="error" class="error-box" role="alert">{{ t(error) }}<button v-if="!working" class="text-button" @click="load(true)">{{ conflict ? t('載入最新設定') : t('重試載入') }}</button></div>
     <p v-if="success" class="settings-success" role="status">{{ success }}</p>
     <section v-show="tab === 'general'" :id="`${id}-general-panel`" role="tabpanel" :aria-labelledby="`${id}-general`" tabindex="0">
-      <form v-if="data" @submit.prevent="save('updateWorkspace', { name, expectedRevision: data.workspace.revision })"><label class="field">工作空間名稱<input v-model="name" maxlength="60" required :readonly="!canUpdate" :disabled="working || loading" /></label><button v-if="canUpdate" class="button primary" :disabled="working || loading || !name.trim() || name === data.workspace.name">儲存工作空間名稱</button><p v-else class="subtle">你目前可查看設定；修改名稱需要工作空間管理權限。</p></form>
+      <form v-if="data" @submit.prevent="save('updateWorkspace', { name, expectedRevision: data.workspace.revision })"><label class="field">{{ t('工作空間名稱') }}<input v-model="name" maxlength="60" required :readonly="!canUpdate" :disabled="working || loading" /></label><button v-if="canUpdate" class="button primary" :disabled="working || loading || !name.trim() || name === data.workspace.name">{{ t('儲存工作空間名稱') }}</button><p v-else class="subtle">{{ t('你目前可查看設定；修改名稱需要工作空間管理權限。') }}</p></form>
     </section>
     <section v-show="tab === 'members'" :id="`${id}-members-panel`" role="tabpanel" :aria-labelledby="`${id}-members`" tabindex="0">
 
-      <label v-if="canReadMembers" class="field">成員狀態<select v-model="memberStatus" aria-label="成員狀態" :disabled="working || loading"><option value="active">啟用</option><option value="disabled">已停用</option></select></label>
-      <label v-if="canReadMembers" class="field">搜尋工作空間成員<input v-model="members.search.value" aria-label="搜尋工作空間成員" placeholder="姓名或信箱" /></label>
-      <p v-if="members.loading.value" role="status">載入成員中…</p>
-      <p v-if="members.error.value" class="error-box" role="alert">{{ members.error.value }}<button class="text-button" @click="members.reload">重試</button></p>
-      <ul class="member-list"><li v-for="member in visibleMembers" :key="member.id" :data-member-id="member.id"><span class="avatar small">{{ member.name.slice(0, 1) }}</span><div><strong>{{ member.name }}</strong><small>{{ member.email }}</small><small v-if="member.disabledAt">已停用</small></div><select v-if="canManage && member.canChange" class="member-role" :aria-label="`工作空間身份 ${member.name}`" :value="member.roleId" :disabled="working || loading || members.loading.value" @change="changeRole(member, $event)"><option v-if="!roles.some(role => role.id === member.roleId)" :value="member.roleId" disabled>{{ roleLabels[member.roleId] || member.roleId }}</option><option v-for="role in roles" :key="role.id" :value="role.id">{{ role.label }}</option></select><span v-else class="type-tag">{{ roleLabels[member.roleId] || member.roleId }}</span><button v-if="canManage && member.canSetStatus" class="button secondary member-status-action" :aria-label="`${member.disabledAt ? '恢復' : '停用'}成員 ${member.name}`" :disabled="working || loading || members.loading.value" @click="changeMemberStatus(member)">{{ member.disabledAt ? '恢復' : '停用' }}</button></li></ul>
-      <p v-if="members.result.value && !visibleMembers.length && !members.loading.value">{{ memberStatus === 'disabled' ? '沒有已停用成員' : '沒有符合條件的成員' }}</p>
-      <div v-if="members.result.value?.lastPage > 1" class="pagination" aria-label="工作空間成員分頁"><button class="text-button" :disabled="members.loading.value || working || members.page.value <= 1" @click="members.page.value--">上一頁</button><span>{{ members.page.value }} / {{ members.result.value.lastPage }}</span><button class="text-button" :disabled="members.loading.value || working || members.page.value >= members.result.value.lastPage" @click="members.page.value++">下一頁</button></div>
+      <label v-if="canReadMembers" class="field">{{ t('成員狀態') }}<select v-model="memberStatus" :aria-label="t('成員狀態')" :disabled="working || loading"><option value="active">{{ t('啟用') }}</option><option value="disabled">{{ t('已停用') }}</option></select></label>
+      <label v-if="canReadMembers" class="field">{{ t('搜尋工作空間成員') }}<input v-model="members.search.value" :aria-label="t('搜尋工作空間成員')" :placeholder="t('姓名或信箱')" /></label>
+      <p v-if="members.loading.value" role="status">{{ t('載入成員中…') }}</p>
+      <p v-if="members.error.value" class="error-box" role="alert">{{ members.error.value }}<button class="text-button" @click="members.reload">{{ t('重試') }}</button></p>
+      <ul class="member-list"><li v-for="member in visibleMembers" :key="member.id" :data-member-id="member.id"><span class="avatar small">{{ member.name.slice(0, 1) }}</span><div><strong>{{ member.name }}</strong><small>{{ member.email }}</small><small v-if="member.disabledAt">{{ t('已停用') }}</small></div><select v-if="canManage && member.canChange" class="member-role" :aria-label="t('工作空間身份 {0}', [member.name])" :value="member.roleId" :disabled="working || loading || members.loading.value" @change="changeRole(member, $event)"><option v-if="!roles.some(role => role.id === member.roleId)" :value="member.roleId" disabled>{{ workspaceRoleLabel(member.roleId) }}</option><option v-for="role in roles" :key="role.id" :value="role.id">{{ workspaceRoleLabel(role) }}</option></select><span v-else class="type-tag">{{ workspaceRoleLabel(member.roleId) }}</span><button v-if="canManage && member.canSetStatus" class="button secondary member-status-action" :aria-label="t('{0}成員 {1}', [member.disabledAt ? t('恢復') : t('停用'), member.name])" :disabled="working || loading || members.loading.value" @click="changeMemberStatus(member)">{{ member.disabledAt ? t('恢復') : t('停用') }}</button></li></ul>
+      <p v-if="members.result.value && !visibleMembers.length && !members.loading.value">{{ memberStatus === 'disabled' ? t('沒有已停用成員') : t('沒有符合條件的成員') }}</p>
+      <div v-if="members.result.value?.lastPage > 1" class="pagination" :aria-label="t('工作空間成員分頁')"><button class="text-button" :disabled="members.loading.value || working || members.page.value <= 1" @click="members.page.value--">{{ t('上一頁') }}</button><span>{{ members.page.value }} / {{ members.result.value.lastPage }}</span><button class="text-button" :disabled="members.loading.value || working || members.page.value >= members.result.value.lastPage" @click="members.page.value++">{{ t('下一頁') }}</button></div>
 
       <WorkspaceInvitationManager v-if="data && tab === 'members' && permissions.includes('workspace.invite')" ref="invitationManager" :workspace-id="context" :disabled="busy || loading" @access="handleFailure" />
     </section>

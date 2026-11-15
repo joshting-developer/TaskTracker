@@ -9,7 +9,7 @@ let vite, browser;
 try {
   vite = await createServer({ root: new URL('../', import.meta.url).pathname, server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } }); await vite.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } }), page = await context.newPage(), errors = []; page.setDefaultTimeout(15000); page.on('pageerror', e => errors.push(e.message));
+  const context = await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } }), page = await context.newPage(), errors = []; page.setDefaultTimeout(15000); page.on('pageerror', e => errors.push(e.message));
   async function call(operation, input, group = 'rpc', client = context) {
     const csrf = await (await client.request.get(`${base}/api/csrf-cookie`)).json(); const response = await client.request.post(`${base}/api/${group}/${operation}`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, data: { requestId: crypto.randomUUID(), ...input } }); assert.equal(response.status(), 200, await response.text()); return (await fixtureResponse(client.request, response, input)).data;
   }
@@ -69,7 +69,7 @@ try {
   assert.equal(await projectSelect.inputValue(), project.id); assert.equal(await conversion.getByLabel('描述', { exact: true }).inputValue(), draft);
   page.once('dialog', dialog => dialog.accept()); await conversion.getByRole('button', { name: '關閉任務', exact: true }).click();
   const email = `reader-${crypto.randomUUID()}@example.test`, invite = await call('inviteMember', { email });
-  const reader = await browser.newContext(); const person = await call('register', { name: 'Reader', email, password: 'isolated-form-password', inviteToken: invite.token }, 'auth', reader);
+  const reader = await browser.newContext({ locale: 'zh-TW' }); const person = await call('register', { name: 'Reader', email, password: 'isolated-form-password', inviteToken: invite.token }, 'auth', reader);
   const acl = await call('getProjectMembers', { projectId: project.id }); await call('setProjectMember', { projectId: project.id, userId: person.user.id, roleId: 'reader', expectedRevision: acl.revision });
   const readPage = await reader.newPage(); await readPage.goto(root); await readPage.getByRole('button', { name: '另一個人的更新', exact: true }).waitFor();
   assert.equal(await readPage.getByRole('button', { name: /新增任務/ }).count(), 0); await readPage.getByRole('button', { name: '另一個人的更新', exact: true }).click(); assert.equal(await readPage.getByRole('button', { name: '編輯任務', exact: true }).count(), 0);
