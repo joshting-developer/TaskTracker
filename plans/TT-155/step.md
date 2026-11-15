@@ -6,3 +6,7 @@
 - Fly帳號與單台nrt／512MB現況核對, 舊映像digest符合v0.3.0, 私有Machine快照保留
 - 正式MySQL只讀確認35項migration均已套用, release migration guard通過, 本次不含待執行schema
 - 多語系來源main CI 43692820217仍在執行, 等通過再建立單一版本tag
+- 2026-11-15 v0.4.0來源固定ba48d05, contract及映像驗證通過, 正式migration無待執行, Fly已成功更新單台HTTP機器
+- 首次release run 43693179529在部署後Python匿名registration-policy驗證收到403, 實際HTTPS健康及正式瀏覽器登入／雙語／偏好保存／1440、768、390寬度均已通過。不能把這次CI宣稱成功
+- 以具名TaskTrackerRelease/1.0客戶端請求政策端點實測200。修正驗證標頭, 同tag重試只允許image ID與已驗證artifact完全相同, 不覆寫既有版本；不同映像或registry拒絕立即停止
+- 12項發布／migration／archive測試通過, 包含同版本續跑、不同image拒絕及registry拒絕不當缺版處理。待push後重跑失敗deploy job, 不移動tag或新建版本

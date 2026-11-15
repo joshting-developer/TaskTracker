@@ -40,3 +40,9 @@ v0.3.0第一次執行的秘密掃描、契約CI與Linux runtime smoke通過, 但
 修正後改用Actions artifact傳遞已驗證映像, 只在部署工作拿App範圍Fly token推私有registry。workflow_dispatch可指定既有版本續跑, 不移動或重打tag；所有用於build／契約測試的來源都解析到該tag固定SHA, 部署腳本則從main取得修正後的編排。新的tag仍須指向main HEAD
 
 清理工作只接受首次失敗產出的精確digest與兩個標籤, 若套件多了其他版本就拒絕刪除, 不廣泛清空帳號套件。實際清理與同tag續跑結果須另行確認
+
+## 部署後檢查失敗的續跑
+
+Fly更新成功但最後HTTP驗證失敗時, 先核對Machine實際版本及網站, 不直接判斷程式尚未部署。部署job從main讀編排, 可修正後重跑原run的失敗job, 沿用原tag受測artifact
+
+已存在的Fly版本只有在拉回後image ID等於原artifact驗證值時才能重用, 不重新push；不同image或registry權限錯誤會停止。匿名註冊政策檢查明確使用TaskTrackerRelease/1.0與JSON Accept, 避免Python預設客戶端被邊緣規則拒絕

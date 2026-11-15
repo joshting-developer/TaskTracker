@@ -24,13 +24,19 @@ sh tools/check-release-archive.sh
 flyctl auth docker >/dev/null
 target="registry.fly.io/tasktracker-josh:$RELEASE_TAG"
 if docker manifest inspect "$target" > "$folder/existing.json" 2> "$folder/manifest-error.log"; then
-  echo 'Existing Fly version cannot be overwritten' >&2
-  exit 1
+  # A retry may follow a successful deployment whose final HTTP check failed.
+  # Reuse only the exact verified image; never overwrite a published version.
+  docker pull "$target"
+  if test "$(docker inspect --format '{{.Id}}' "$target")" != "$RELEASE_IMAGE_ID"; then
+    echo 'Existing Fly version differs from the verified image' >&2
+    exit 1
+  fi
+  echo 'Reusing identical published version image'
 else
   grep -Eiq 'manifest unknown|no such manifest|not found' "$folder/manifest-error.log"
+  docker tag tasktracker-release:candidate "$target"
+  docker push "$target"
 fi
-docker tag tasktracker-release:candidate "$target"
-docker push "$target"
 # Migrate with the exact tested image in a service-free Machine, then deploy HTTP.
 python3 tools/fly-migrate.py --image "$target"
 # Only this image is deployed; no source build, seed or reset.
@@ -38,7 +44,9 @@ flyctl deploy --app tasktracker-josh --config fly.toml --image "$target" --strat
 curl --fail --silent --show-error --retry 3 --retry-delay 2 --max-time 45 https://task-tracker.josh-ting.com/api/health >/dev/null
 python3 - <<'PY'
 import json,urllib.request
-with urllib.request.urlopen('https://task-tracker.josh-ting.com/api/auth/registration-policy',timeout=15) as r:
+request = urllib.request.Request('https://task-tracker.josh-ting.com/api/auth/registration-policy',
+    headers={'User-Agent': 'TaskTrackerRelease/1.0', 'Accept': 'application/json'})
+with urllib.request.urlopen(request,timeout=15) as r:
     assert json.load(r)['data']['publicRegistration'] is True
 print('PASS: deployed HTTP health and public registration policy')
 PY
