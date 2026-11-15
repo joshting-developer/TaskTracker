@@ -175,6 +175,7 @@ foreach (Route::getRoutes() as $route) {
 }
 
 require __DIR__.'/tokens.php';
+require __DIR__.'/admin.php';
 
 // TT-260：所有本專案路由在回應後記錄具名寫入操作；紀錄失敗不影響回應。
 foreach (Route::getRoutes() as $route) {
