@@ -1,0 +1,9 @@
+{
+  "approved": true,
+  "reviewer": "Standing authorization delegated by Josh",
+  "authorization": "Three-width bilingual login before/after reviewed under standing delegated approval. No masks or comparator tolerance changes.",
+  "manifestFile": "docs/evidence/tt393-visual-manifest.json",
+  "manifestSha256": "d48f2647259bedc4e85ff1204ffc7543b340df08a8fc02d4280959ee904a37a1",
+  "harnessSha256": "82e06e1afdbd7c4419392e8a8674876fdb9d5b0119ee2e6bed3cfb58744b8009",
+  "images": 6
+}

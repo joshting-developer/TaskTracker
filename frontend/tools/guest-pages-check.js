@@ -44,13 +44,13 @@ try {
   await nav.waitFor();
   await page.waitForURL(url => url.pathname === '/login');
   assert.equal(pathOf(page), '/login#/projects', '舊hash連結轉到/login並保留深層連結');
-  assert.equal(await nav.getByRole('link', { name: '登入' }).getAttribute('aria-current'), 'page');
+  assert.equal(await nav.getByRole('link', { name: '登入', exact: true }).count(), 0, '登入頁不重複顯示登入連結');
   assert.equal(await nav.getByRole('link', { name: '產品介紹' }).getAttribute('href'), '/', '登入頁有明確回介紹頁的連結');
   assert.equal(await nav.getByRole('link', { name: /建立工作空間/ }).getAttribute('href'), '/login?mode=register');
   await page.keyboard.press('Tab');
   assert.equal(await page.evaluate(() => document.activeElement.getAttribute('aria-label')), 'TaskTracker 首頁');
   await measure(page, 'login');
-  assert.ok(measurements.filter(row => row.page === 'login').every(row => row.bar && row.links.length === 3 && row.links.every(height => height >= 44)), '登入頁TopBar三個連結可見且≥44px');
+  assert.ok(measurements.filter(row => row.page === 'login').every(row => row.bar && row.links.length === 2 && row.links.every(height => height >= 44)), '登入頁TopBar保留介紹與註冊, 連結≥44px');
 
   // 註冊後同一頁換到/app/並進入原深層連結，不顯示訪客TopBar。
   const email = `guest-${crypto.randomUUID()}@example.test`;

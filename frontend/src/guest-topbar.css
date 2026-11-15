@@ -17,10 +17,12 @@
 .guest-cta-short { display: none; }
 @media (max-width: 420px) { html[lang="en"] .guest-cta-full { display: none; } html[lang="en"] .guest-cta-short { display: inline; } }
 
-.auth-guest-topbar > .locale-picker { margin: 0 0 0 auto; flex-shrink: 0; }
-.auth-guest-topbar > .locale-picker > span { display: none; }
-.auth-guest-topbar > .locale-picker select { min-height: 44px; max-width: 130px; }
+.guest-actions { display: flex; align-items: center; justify-content: flex-end; gap: 16px; margin-left: auto; }
+.auth-guest-topbar .guest-actions > .locale-picker { margin: 0; flex-shrink: 0; }
+.auth-guest-topbar .locale-picker > span { display: none; }
+.auth-guest-topbar .locale-picker select { min-height: 44px; max-width: 130px; }
+html[lang="en"] .auth-guest-topbar .guest-cta-extra { margin-inline-end: .3em; }
 @media(max-width:700px) {
   .auth-guest-topbar { height: auto; min-height: 64px; flex-wrap: wrap; padding-block: 10px; }
-  .auth-guest-topbar > .guest-nav { flex: 0 0 100%; justify-content: flex-end; }
+  .guest-actions { flex-wrap: wrap; gap: 8px; }
 }
