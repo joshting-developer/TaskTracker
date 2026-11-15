@@ -18,7 +18,7 @@ CANDIDATE = ARTIFACTS / 'candidate'
 PROFILE = sys.platform + '-' + platform.machine()
 APPROVED = ARTIFACTS / ('approved-' + PROFILE)
 APPROVAL = ROOT / 'docs/visual-baselines' / (PROFILE + '.json')
-SOURCE_ROOTS = ['frontend/features', 'frontend/landing', 'frontend/src', 'backend/app', 'backend/routes', 'backend/config', 'frontend/tools/visual']
+SOURCE_ROOTS = ['frontend/app', 'frontend/public-assets', 'frontend/features', 'frontend/landing', 'frontend/src', 'backend/app', 'backend/routes', 'backend/config', 'frontend/tools/visual']
 
 
 def digest(path):

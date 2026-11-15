@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "f489e363dc61758a1dbe9c579cda9b236fd1b55d554ba1ed8653ab0d9acc5930",
+  "harnessSha256": "8bf12e2df350c49d67abb411766373b75b0383915eb527f54454b259c796fcc8",
   "profile": "darwin-arm64",
   "reviewer": "Codex under Josh standing approval",
-  "note": "TT-308: reviewed bilingual login/account menu/issues/detail/board/settings at 1440/768/390, retained purple brand and user content; 162 synthetic screenshots, unchanged comparator and tolerance; Josh standing authorization allows saving reviewed candidates without another confirmation",
-  "manifestSha256": "d62e2f4fc224bca9b353ccfd1f874b5f143446e091e545fdde0849cbbe27bc3a",
+  "note": "TT-363 brand source and entrypoint integration; 162 snapshots reviewed, 127 diffs constrained to header brand region and 35 unchanged; Chrome 157 matches prior baseline; asset and App HTML added to source fingerprint; threshold 0.02 and maxDiffPixels 0 unchanged; prior bundle archived",
+  "manifestSha256": "5c9be25a8c181984c5b6bf327adc3d579173639471bab0505caff9942098788e",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

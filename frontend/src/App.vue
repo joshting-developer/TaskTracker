@@ -2,6 +2,7 @@
 import { setLocaleAccount, t } from './i18n/index.js';
 import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from 'vue';
 import Icon from './components/Icon.vue';
+import BrandMark from './components/BrandMark.vue';
 import { lazyFeature } from './ui/lazyFeature.js';
 import { useToast } from './composables/useToast.js';
 import { useRefreshQueue } from './composables/useRefreshQueue.js';
@@ -429,7 +430,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
   <div v-else class="app-shell">
     <button v-if="sidebarOpen" class="sidebar-scrim" :aria-label="t('收起導覽')" @click="sidebarOpen = false"></button>
     <aside class="sidebar" :class="{ open: sidebarOpen }">
-      <a class="brand" href="#/" :aria-label="t('TaskTracker 返回首頁')" :title="t('返回首頁')" @click.prevent="goHome()"><span class="brand-mark"><span></span><span></span><span></span></span>TaskTracker<span class="brand-dot">.</span></a>
+      <a class="brand" href="#/" :aria-label="t('TaskTracker 返回首頁')" :title="t('返回首頁')" @click.prevent="goHome()"><BrandMark class="brand-mark" />TaskTracker<span class="brand-dot">.</span></a>
       <WorkspaceSwitcher ref="workspaceSwitcher" :workspace="workspace.meta.workspace" :has-workspaces="workspace.meta.hasWorkspaces" :switching="switchingWorkspace" :change="changeWorkspace" :create="input => changeWorkspace('', '', input)" />
       <template v-if="selectedProject">
         <div class="project-context" :aria-label="t('目前專案')">
