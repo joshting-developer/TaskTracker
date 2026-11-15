@@ -11,3 +11,6 @@
 - 實際檢閱桌面登入／看板及手機公開入口等候選後, 依Josh持續授權封存舊bundle並核准新162張, threshold0.02與maxDiffPixels0不變。原樣、spacing／overflow／hide-action退化注入與還原全部達預期, 正式compare 6流程／162張全部通過且environmentMatches=true
 - 冒煙routes／API client／composables／build與真實側欄導覽通過。視覺工具Unit5項中4通過、1因host PHP依賴條件略過, 同工具隔離fixture guard另以真PHP驗5項18斷言通過
 - 只補manifest／裝置metadata, 沒有Service Worker, 沒有宣稱已驗Apple／Android真機安裝或離線能力。正式站尚待與後台／公開頁多語系整批部署後驗favicon及快取
+- 2026-11-16 收尾：v0.5.0 正式站八入口已逐一讀回, 每頁六組圖示 MIME／版本快取、manifest MIME／no-cache、裝置圖與 1200×630 OG 均通過。臨時驗證腳本已修 HTTP 標頭大小寫假設, 不改正式快取
+- 本輪前端完整一般回歸中的 brand-entrypoints 也通過, 未新增 Service Worker。真機安裝不在本卡驗收要求內, 沒有宣稱已驗 iOS／Android 安裝或離線能力
+- 本卡先前程式已隨 v0.5.0 發布, 目前正式驗收完成；不需要等 v1.0.0 再重複發布品牌功能

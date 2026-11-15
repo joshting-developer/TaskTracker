@@ -26,3 +26,5 @@ v0.5.0已部署, tag來源c99ebab455d3b5299af26273e5582fb77976b3ea, GitHub run43
 - 真實Chrome驗HTTPS公開五頁、語系跨登入保存、Codex本人登入與Secure／HttpOnly Cookie、App三尺寸上方語言選單及reload。獨立管理登入／真實彙總／三尺寸／登出通過, 匿名及一般Codex登入查管理統計均401
 - 既有Codex PAT已讀正式卡片／看板並核對自身Workspace, 無退回Owner。正式驗收只有既有登入與讀取, 未建合成Issue／Workspace／附件
 - GPT私人服務等待切回joshting.1999且Josh明確要求恢復, 暫停Plugin／PAT／Secret操作, 不因主站部署成功就結案TT-350
+
+2026-11-16 補完 TT-363 正式收尾：八個入口各六組圖示、版本快取與 MIME、manifest 的 no-cache、裝置圖及 1200×630 OG 重新讀回通過。沒有執行真機安裝, 也未宣稱離線 PWA；本卡正式驗收已完成
