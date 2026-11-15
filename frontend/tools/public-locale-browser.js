@@ -15,12 +15,15 @@ try {
   server = await preview({ preview: { host: '127.0.0.1', port: 5199, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
   browser = await chromium.launch({ headless: true, executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' });
   const context = await browser.newContext({ locale: 'en-US', reducedMotion: 'reduce' });
-  const page = await context.newPage(), errors = [], findings = [], requests = [];
+  let page = await context.newPage();
+  const errors = [], findings = [], requests = [];
   page.on('pageerror', error => errors.push(error.message));
-  page.on('request', request => { if (new URL(request.url()).pathname.startsWith('/api/')) requests.push(request.url()); });
+  context.on('request', request => { if (new URL(request.url()).pathname.startsWith('/api/')) requests.push(request.url()); });
   for (const width of [1440,768,390]) {
-    await page.setViewportSize({ width, height: 1000 });
     for (const [index,path] of paths.entries()) {
+      await page.close(); page = await context.newPage();
+      page.on('pageerror', error => errors.push(error.message));
+      await page.setViewportSize({ width, height: 1000 });
       await page.goto(`http://127.0.0.1:5199${path}?intro=1`);
       await page.locator('html:not(.auth-pending)').waitFor();
       assert.equal(await page.locator('html').getAttribute('lang'), 'en');
@@ -28,12 +31,14 @@ try {
       assert.equal((await page.locator('body').innerText()).replaceAll('繁體中文','').match(/\p{Script=Han}/gu), null, 'All public copy is translated');
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${path} ${width}`);
       await page.evaluate(() => document.fonts.ready);
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       await page.screenshot({ path: `${out}/public-en-${index}-${width}.png`, fullPage: true });
       const metrics = await page.evaluate(probe), options = { width, allow: ['palette-purple'] };
       findings.push({ path, width, rows: [...judge(metrics,options),...judgeLayout(await page.evaluate(layout),options)] });
       const before = requests.length;
       await page.locator('[data-public-locale]').selectOption('zh-TW');
       assert.equal(await page.locator('html').getAttribute('lang'), 'zh-Hant');
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       await page.screenshot({ path: `${out}/public-zh-${index}-${width}.png`, fullPage: true });
       await page.locator('[data-public-locale]').selectOption('en');
       assert.equal(requests.length, before, 'Language switch sends no API requests');

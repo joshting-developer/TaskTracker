@@ -2,7 +2,7 @@
 
 - 獨立管理後台：docs/admin-dashboard-contract.md, TT-364待整批正式驗收
 - 公開頁與上方語言入口：docs/public-language-contract.md, TT-365／366同批發布
-- GPT私人服務已重建在joshting.1999帳號：docs/chatgpt-bridge-deployment.md, TT-350仍缺專用唯讀Token及真實工具查卡, 不宣稱已連通；紙條681f0a23-3664-48f1-940e-700c49a7c42b已轉給Josh
+- GPT私人串接依Josh最新交接暫停：目標joshting.1999並非目前登入帳號, 先前歸屬推定撤回, TT-350 blocked；待切回目標帳號且明確要求恢復, 才重驗所有者／安裝並操作Plugin／Secret／PAT。歷史見docs/chatgpt-bridge-deployment.md, 舊催促紙條不構成恢復授權
 
 # TaskTracker 專案記憶
 

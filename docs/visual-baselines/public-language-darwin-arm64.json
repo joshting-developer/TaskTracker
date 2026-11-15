@@ -1,8 +1,8 @@
 {
   "approved": true,
   "reviewer": "Codex under Josh standing approval",
-  "note": "TT-365 public pages retain approved product composition; reviewed English mobile homepage and API detail, all five pages checked for complete translation and overflow at three widths; existing full workspace baseline will be compared after TT-366",
-  "harnessSha256": "c945d33f37dc2a70eee4b98280df7151e3cd8574bde4c974f7671bb24287579a",
+  "note": "TT-365/366: fresh page per URL and width with fonts and two animation frames settled. Thirty full-page screenshots reviewed under standing approval. Prior full workspace approval archived separately; no threshold relaxed. Public locale controls and translated content preserve product layout.",
+  "harnessSha256": "4e31cb2ea9e7ab2d880bad92d8281839d1fa6fc1a95bd42d6ca118b6cbe2bd8b",
   "manifestSha256": "5892ed5ce396c8864fa295c8067e93cb9e6efb73931795100d4e8f3ae07b333c",
   "files": [
     {
