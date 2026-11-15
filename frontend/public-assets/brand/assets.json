@@ -1,0 +1,89 @@
+{
+  "master": "tasktracker-mark.svg",
+  "masterSha256": "604d0464686a64ab807ad517ae62ecc6459052db6ee404c3df765df472769b6e",
+  "color": "#ab9cf3",
+  "rotation": -8,
+  "maskable": {
+    "markBounds": [
+      0.25,
+      0.25,
+      0.75,
+      0.75
+    ],
+    "safeRadius": 0.4
+  },
+  "images": [
+    {
+      "file": "tasktracker-favicon-v1-16.png",
+      "width": 16,
+      "height": 16,
+      "sha256": "7d1731ae606248f36175a0aade0b93c4a29e59adc037cd47311a400b21b21d07"
+    },
+    {
+      "file": "tasktracker-favicon-v1-32.png",
+      "width": 32,
+      "height": 32,
+      "sha256": "bb235ce8be351ab998c8fbdceee8adb1ddea6a2f7f1b093c2f650760ca3e8a0b"
+    },
+    {
+      "file": "tasktracker-favicon-v1-48.png",
+      "width": 48,
+      "height": 48,
+      "sha256": "4580b371bc5ac052b3c11d28993c979b9d1a6bccb3c661ac43308c7618c6b51e"
+    },
+    {
+      "file": "tasktracker-apple-v1-180.png",
+      "width": 180,
+      "height": 180,
+      "sha256": "385afe914c4c80e84d9ca32ba9e65365db17ddc6133f478cc26274d1dc06ec07"
+    },
+    {
+      "file": "tasktracker-app-v1-192.png",
+      "width": 192,
+      "height": 192,
+      "sha256": "0ee6f56a4547b10db6f582b8562c9b926e173148fbdcaa4ca35156c9dc6e0aff"
+    },
+    {
+      "file": "tasktracker-app-v1-512.png",
+      "width": 512,
+      "height": 512,
+      "sha256": "20cfb6ad26cf71e0ce99af293219da011bb9b7f679e68f6ac5474e9a94b35f08"
+    },
+    {
+      "file": "tasktracker-maskable-v1-512.png",
+      "width": 512,
+      "height": 512,
+      "sha256": "0ba793b78fcfee788e7bd5761b4c6e58c2fde86fe823d8528237c52590c7f083"
+    },
+    {
+      "file": "tasktracker-mark-v1-64.png",
+      "width": 64,
+      "height": 64,
+      "sha256": "5661f71b654b2cc10a9a8944c3baef7f529bdd769e7da846e0d1bbbfff4aa01e"
+    },
+    {
+      "file": "tasktracker-mark-v1-128.png",
+      "width": 128,
+      "height": 128,
+      "sha256": "0362aa0dbba176fd0b7bd472ead55ff141a42ac4c0b2e72f136f6cd91901a16c"
+    },
+    {
+      "file": "tasktracker-mark-v1-256.png",
+      "width": 256,
+      "height": 256,
+      "sha256": "41c5cf55fc5e9b44f7e517fd4f68de5869703496b0b79af0230c4a33ccd13a88"
+    },
+    {
+      "file": "tasktracker-mark-v1-512.png",
+      "width": 512,
+      "height": 512,
+      "sha256": "f961245ded7d412cef018550996301ce74f76406ebaba838fc88e522c01fc4a2"
+    },
+    {
+      "file": "tasktracker-mark-v1-1024.png",
+      "width": 1024,
+      "height": 1024,
+      "sha256": "fee0c4c9a3b0872079bd8246fbaf64268732d70b9ac45efe0dddb14b9438421c"
+    }
+  ]
+}

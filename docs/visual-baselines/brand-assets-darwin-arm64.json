@@ -1,0 +1,21 @@
+{
+  "approved": true,
+  "reviewer": "Codex under Josh standing approval",
+  "scope": "TT-362 asset gallery only; product UI and deployment are TT-363",
+  "manifestSha256": "5399cf27e1f10f74ee29a30e65b1350c7c8abff5b5154298ee1d083f5f7bfe90",
+  "harnessSha256": "4960779a5b82fa19e24ba80c6586ab57a53d29d668a4349657f24ba873c2fc22",
+  "screenshots": [
+    {
+      "file": "assets-1440.png",
+      "sha256": "9779ebfcbe3a14a54d1359fa337dc5db047d03c3f40855ab1f64e30c428b3ea2"
+    },
+    {
+      "file": "assets-768.png",
+      "sha256": "69e398bc0b6a4b23bfff7d1be0d89edb42724ad9ff1a9824d6bfdea6d7e1ba39"
+    },
+    {
+      "file": "assets-390.png",
+      "sha256": "3162aec305ca19420842043dd7f829edaa30880a9afc9336cc0bf2d947b4a9ec"
+    }
+  ]
+}
