@@ -92,7 +92,7 @@ try {
   await page.getByRole('heading', { name: '保留中文卡片標題', exact: true }).waitFor();
   await language('en'); await page.reload(); await account().waitFor();
   assert.equal(await page.locator('html').getAttribute('lang'), 'en');
-  // Each account keeps its own browser preference; switching user never overwrites it.
+  // Explicit browser language stays consistent across public pages and accounts; business data stays isolated.
   await call('logout', {}, 'auth'); await page.reload();
   await page.getByRole('button', { name: tr('登入'), exact: true }).waitFor();
   await page.getByLabel(tr('選擇語言'), { exact: true }).selectOption('zh-TW');
@@ -101,12 +101,12 @@ try {
   assert.equal(await page.locator('html').getAttribute('lang'), 'zh-TW');
   await call('logout', {}, 'auth');
   await call('login', { email: `i18n-${stamp}@example.test`, password: 'isolated-i18n-password' }, 'auth');
-  await page.reload(); await account().waitFor();
-  assert.equal(await page.locator('html').getAttribute('lang'), 'en');
+  await page.reload(); await page.getByRole('button', { name: '帳號選單', exact: true }).waitFor();
+  assert.equal(await page.locator('html').getAttribute('lang'), 'zh-TW');
   const fallback = await browser.newPage({ locale: 'ja-JP' }); await fallback.goto(base + '/login');
   await fallback.getByRole('button', { name: '登入', exact: true }).waitFor();
   assert.equal(await fallback.locator('html').getAttribute('lang'), 'zh-TW');
   await fallback.close();
   assert.deepEqual(errors, []);
-  console.log('PASS: browser defaults/fallback, bilingual auth, reload and per-account preferences, no-remount/no-fetch draft switch, unchanged Chinese user content, English detail/time entry and three viewport menus');
+  console.log('PASS: browser defaults/fallback, bilingual auth, reload and shared explicit browser preference, no-remount/no-fetch draft switch, unchanged Chinese user content, English detail/time entry and three viewport menus');
 } finally { await browser?.close(); await new Promise(resolve => server ? server.httpServer.close(resolve) : resolve()); }

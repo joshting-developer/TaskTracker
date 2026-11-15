@@ -1,3 +1,4 @@
+import { initializePublicLocale } from './i18n.js';
 // TT-355：不用自動播放, 無JS時三個情境皆可閱讀；切換保留鍵盤焦點。
 const scenarios = document.querySelector('.scenarios');
 if (scenarios) {
@@ -25,6 +26,8 @@ if (scenarios) {
 for (const link of document.querySelectorAll('.product-nav a')) {
   if (new URL(link.href).pathname === location.pathname) link.setAttribute('aria-current', 'page');
 }
+
+initializePublicLocale();
 
 // TT-207／297：首頁只判斷是否已登入；已登入直接進工作空間/app/。失敗一律當訪客，不讀任何私人資料。
 const root = document.documentElement;

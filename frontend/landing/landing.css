@@ -171,3 +171,7 @@ figure { min-width: 0; margin: 0; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+.public-locale { min-height: 44px; max-width: 136px; padding: 8px 28px 8px 10px; font: inherit; font-size: 14px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; }
+.public-locale:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media(max-width:600px) { .public-locale { max-width: 112px; padding-left: 8px; }.guest-nav { gap: 4px; }.guest-nav a.guest-cta { min-width: 0; padding-inline: 8px; } }
