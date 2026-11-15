@@ -5,6 +5,7 @@ import { toRef } from 'vue';
 import { useIssueActivity } from '../composables/useIssueActivity.js';
 import { onTabKeydown } from '../ui/tabs.js';
 import Icon from './Icon.vue';
+import IssueTagsEditor from './IssueTagsEditor.vue';
 import PagedSelect from './PagedSelect.vue';
 import IssueRelations from './IssueRelations.vue';
 import MarkdownEditor from './MarkdownEditor.vue';
@@ -14,6 +15,7 @@ import { FIELD_LABELS, hours, ISSUE_FIELDS, PRIORITIES, statusesFor, TYPES } fro
 
 const props = defineProps({ projectLoader: Function, projectOptionsLoader: Function, lookup: Function, activityLoader: Function, issue: Object, todo: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, defaultEpicId: String, defaultBoardId: String, members: Array, issues: Array, entries: Array, canExpand: Boolean, inline: Boolean });
 const emit = defineEmits(['close', 'saved', 'converted', 'reload', 'open', 'expand']);
+const tagsTool = ref(null);
 const dialog = ref(null), descriptionEditor = ref(null), saveError = ref(null);
 const propertiesOpen = ref(props.inline), titleError = ref('');
 const formId = useId();
@@ -111,7 +113,7 @@ function invalidField(event) {
 watch(() => form.title, () => { titleError.value = ''; });
 const inputDisabled = computed(() => saving.value || projectLoading.value);
 const dirty = computed(() => JSON.stringify(values()) !== savedValues.value || Boolean(descriptionEditor.value?.attachmentDirty));
-defineExpose({ dirty: computed(() => dirty.value || Boolean(comment.value.trim()) || Boolean(commentEditor.value?.attachmentDirty) || Boolean(relationsTool.value?.dirty)), saving: computed(() => inputDisabled.value || Boolean(descriptionEditor.value?.uploadBusy) || Boolean(commentEditor.value?.uploadBusy)) });
+defineExpose({ dirty: computed(() => Boolean(tagsTool.value?.dirty) || dirty.value || Boolean(comment.value.trim()) || Boolean(commentEditor.value?.attachmentDirty) || Boolean(relationsTool.value?.dirty)), saving: computed(() => Boolean(tagsTool.value?.saving) || inputDisabled.value || Boolean(descriptionEditor.value?.uploadBusy) || Boolean(commentEditor.value?.uploadBusy)) });
 watch(() => props.issue, () => { if (!dirty.value) resetForm(); });
 function close() {
   if (inputDisabled.value) return;
@@ -196,6 +198,7 @@ function reload() {
   emit('reload', () => resetForm(), () => { saving.value = false; });
 }
 function display(field, value) {
+  if (field === 'tags') return (value || []).map(tag => tag.name || tag.id).join('、') || t('無');
   if (field === 'relatedIssueIds' || field === 'blockedBy') return (value || []).map((id) => props.issues.find((issue) => issue.id === id)?.identifier || id).join('、') || t('無');
   const options = { state: states.value, priority: PRIORITIES, type: TYPES }[field];
   if (field === 'assignee') return props.members.find((member) => member.id === value)?.name || value || t('未指派');

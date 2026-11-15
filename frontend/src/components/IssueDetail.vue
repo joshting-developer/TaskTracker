@@ -5,6 +5,7 @@ import { toRef } from 'vue';
 import { useIssueActivity } from '../composables/useIssueActivity.js';
 import { onTabKeydown } from '../ui/tabs.js';
 import Icon from './Icon.vue';
+import IssueTagsEditor from './IssueTagsEditor.vue';
 import AttachmentFiles from './AttachmentFiles.vue';
 import MarkdownEditor from './MarkdownEditor.vue';
 import MarkdownContent from './MarkdownContent.vue';
@@ -14,6 +15,7 @@ import { FIELD_LABELS, hours, PRIORITIES, statusesFor, TYPES } from '../domain/m
 
 const props = defineProps({ activityLoader: Function, issue: Object, project: Object, issues: Array, members: Array, entries: Array, returnLabel: String, busy: Boolean, canWrite: { type: Boolean, default: true }, canReadTime: { type: Boolean, default: true }, canLogTime: { type: Boolean, default: false }, canDelete: { type: Boolean, default: false }, deleting: Boolean, userId: String });
 const emit = defineEmits(['close', 'open', 'edit', 'saved', 'reload', 'state', 'time-updated', 'delete']);
+const tagsTool = ref(null);
 const attachments = ref(null), attachmentsOpened = ref(false);
 const commentEditor = ref(null), commentEditorKey = ref(0);
 const tab = ref('comments'), comment = ref(''), saving = ref(false), error = ref(''), conflict = ref(false);
@@ -29,8 +31,8 @@ watch([() => props.canReadTime, () => props.canLogTime], ([read, write]) => {
   if (!write) { timeOpen.value = false; editingTime.value = null; }
 });
 const commentDirty = computed(() => Boolean(comment.value.trim()));
-const dirty = computed(() => Boolean(attachments.value?.dirty) || commentDirty.value || Boolean(commentEditor.value?.attachmentDirty) || Boolean(timeDrawer.value?.dirty));
-const isSaving = computed(() => Boolean(attachments.value?.saving) || saving.value || Boolean(commentEditor.value?.uploadBusy) || Boolean(timeDrawer.value?.saving));
+const dirty = computed(() => Boolean(tagsTool.value?.dirty) || Boolean(attachments.value?.dirty) || commentDirty.value || Boolean(commentEditor.value?.attachmentDirty) || Boolean(timeDrawer.value?.dirty));
+const isSaving = computed(() => Boolean(tagsTool.value?.saving) || Boolean(attachments.value?.saving) || saving.value || Boolean(commentEditor.value?.uploadBusy) || Boolean(timeDrawer.value?.saving));
 defineExpose({ dirty, saving: isSaving, focus: () => heading.value?.focus() });
 const states = computed(() => statusesFor(props.project));
 const state = issue => states.value.find(item => item.id === issue.state);
@@ -54,6 +56,7 @@ function timestamp(value) {
   return new Intl.DateTimeFormat(locale.value, { timeZone: 'Asia/Taipei', year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 }
 function display(field, value) {
+  if (field === 'tags') return (value || []).map(tag => tag.name || tag.id).join('、') || t('無');
   if (field === 'relatedIssueIds' || field === 'blockedBy') return (value || []).map(id => props.issues.find(issue => issue.id === id)?.identifier || id).join('、') || t('無');
   if (field === 'assignee') return memberName(value);
   if (field === 'epicId' || field === 'parentIssueId') return props.issues.find(issue => issue.id === value)?.identifier || value || t('未連結');
@@ -166,6 +169,7 @@ function timeSaved() {
           </div>
           <div v-if="attachmentsOpened" v-show="sidebarTab === 'attachments'" id="detail-attachments" class="sidebar-panel" role="tabpanel" tabindex="0" aria-labelledby="detail-attachments-tab"><AttachmentFiles ref="attachments" :issue="issue" :can-write="canWrite" @changed="emit('reload')" /></div>
           <div v-show="sidebarTab === 'properties'" id="detail-properties" class="sidebar-panel property-fields" role="tabpanel" tabindex="0" aria-labelledby="detail-properties-tab">
+            <IssueTagsEditor ref="tagsTool" :issue="issue" :can-write="canWrite" :disabled="busy || saving || commentDirty" @changed="emit('reload')" />
             <dl>
               <div><dt>{{ t('類型') }}</dt><dd>{{ TYPES.find(item => item.id === issue.type)?.label || issue.type }}</dd></div>
               <div><dt>{{ t('優先級') }}</dt><dd>{{ t(PRIORITIES.find(item => item.id === issue.priority)?.label || issue.priority) }}</dd></div>

@@ -2,6 +2,7 @@
 import { t } from '../i18n/index.js';
 import { computed } from 'vue';
 import Icon from './Icon.vue';
+import TagLabels from './TagLabels.vue';
 import { isClosed, PRIORITIES, TYPES } from '../domain/model.js';
 
 const props = defineProps({
@@ -40,6 +41,7 @@ const rows = computed(() => {
           <td class="task-title-cell">
             <button class="task-title" @click="emit('open', row.issue, true)">{{ row.issue.title }}</button>
             <div class="task-subline"><span class="identifier">{{ row.issue.identifier }}</span></div>
+            <TagLabels :tags="row.issue.tags || []" />
           </td>
           <td><span class="status-badge" :class="row.issue.state" :style="{ '--status-color': row.state?.color }"><i></i>{{ row.state?.label }}</span></td>
           <td>

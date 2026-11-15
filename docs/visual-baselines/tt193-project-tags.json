@@ -1,0 +1,9 @@
+{
+  "approved": true,
+  "reviewer": "Standing authorization delegated by Josh",
+  "authorization": "Josh authorized automatic review of subsequent UI candidates. Real browser interaction and three-width before/after review completed; existing comparator policy retained.",
+  "manifestFile": "docs/evidence/tt193-visual-manifest.json",
+  "manifestSha256": "f73b27314ae11a2d0b1819a078beae55bb8ab656ff9e8e1f57c0f3de6da843b7",
+  "harnessSha256": "5e0b2d1b10ed8c8d68c080460ea0eaaa1b9e23bef32d48971f48dd4a596459ca",
+  "images": 15
+}

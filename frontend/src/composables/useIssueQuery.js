@@ -6,14 +6,14 @@ import { CONDITIONS, filterIssues, missingFilters } from '../domain/filters.js';
 // 任務查詢的唯一狀態來源；路由範圍由App提供，篩選、標籤與分頁一起維護。
 export function useIssueQuery({ project, issues, boardIssues, members, userId, today, view, scope, projectId, remote = false }) {
   const search = shallowRef('');
-  const stateFilter = ref([]);
+  const stateFilter = ref([]), tagIds = shallowRef([]);
   const priorityFilter = shallowRef(''), assigneeFilter = shallowRef(''), epicFilter = shallowRef('');
   const typeFilter = shallowRef(''), conditionFilter = shallowRef(''), sort = shallowRef('updated'), direction = shallowRef('');
   const page = shallowRef(1);
   const pageSize = 20;
   const projectStates = computed(() => statusesFor(project.value));
   const filters = computed(() => ({
-    search: search.value, scope: scope.value, state: stateFilter.value, priority: priorityFilter.value,
+    search: search.value, scope: scope.value, tagIds: tagIds.value, state: stateFilter.value, priority: priorityFilter.value,
     assignee: assigneeFilter.value, epicId: epicFilter.value, type: typeFilter.value,
     condition: conditionFilter.value, sort: sort.value, direction: direction.value, view: view.value,
   }));
@@ -24,11 +24,11 @@ export function useIssueQuery({ project, issues, boardIssues, members, userId, t
   ) : []);
   const pageCount = computed(() => Math.max(1, Math.ceil(visibleIssues.value.length / pageSize)));
   const pagedIssues = computed(() => visibleIssues.value.slice((page.value - 1) * pageSize, page.value * pageSize));
-  const filterActive = computed(() => Boolean(search.value || stateFilter.value.length || priorityFilter.value || assigneeFilter.value || epicFilter.value || typeFilter.value || conditionFilter.value));
-  const fields = { state: stateFilter, priority: priorityFilter, assignee: assigneeFilter, epicId: epicFilter, type: typeFilter, condition: conditionFilter };
+  const filterActive = computed(() => Boolean(search.value || tagIds.value.length || stateFilter.value.length || priorityFilter.value || assigneeFilter.value || epicFilter.value || typeFilter.value || conditionFilter.value));
+  const fields = { tagIds, state: stateFilter, priority: priorityFilter, assignee: assigneeFilter, epicId: epicFilter, type: typeFilter, condition: conditionFilter };
   const filterInput = computed({
     get: () => ({
-      search: search.value, state: stateFilter.value, priority: priorityFilter.value,
+      search: search.value, tagIds: tagIds.value, state: stateFilter.value, priority: priorityFilter.value,
       assignee: assigneeFilter.value, epicId: epicFilter.value, type: typeFilter.value,
       condition: conditionFilter.value, sort: sort.value, direction: direction.value,
     }),
@@ -37,10 +37,11 @@ export function useIssueQuery({ project, issues, boardIssues, members, userId, t
       sort.value = value.sort;
       // TT-306：空字串代表用各排序的預設方向
       direction.value = value.direction || '';
-      Object.entries(fields).forEach(([key, field]) => { field.value = value[key]; });
+      Object.entries(fields).forEach(([key, field]) => { field.value = ['state', 'tagIds'].includes(key) ? (value[key] || []) : value[key]; });
     },
   });
   const activeFilterChips = computed(() => [
+    { key: 'tagIds', label: t('標籤'), value: tagIds.value.length, name: t('已選 {0} 個標籤', [tagIds.value.length]) },
     { key: 'state', label: t('狀態'), value: stateFilter.value.length, name: stateFilter.value.map(id => projectStates.value.find(item => item.id === id)?.label || t('已移除')).join('、') },
     { key: 'priority', label: t('優先級'), value: priorityFilter.value, name: PRIORITIES.find(item => item.id === priorityFilter.value)?.label },
     { key: 'assignee', label: t('負責人'), value: assigneeFilter.value, name: members.value.find(item => item.id === assigneeFilter.value)?.name || t('已移除') },
@@ -50,13 +51,13 @@ export function useIssueQuery({ project, issues, boardIssues, members, userId, t
   ].filter(item => item.value));
 
   function removeFilter(key) {
-    if (fields[key]) fields[key].value = key === 'state' ? [] : '';
+    if (fields[key]) fields[key].value = ['state', 'tagIds'].includes(key) ? [] : '';
   }
   function clearFilters() {
     search.value = '';
     Object.keys(fields).forEach(removeFilter);
   }
-  watch([search, stateFilter, priorityFilter, assigneeFilter, epicFilter, typeFilter, conditionFilter, sort, direction, scope, projectId], () => { page.value = 1; });
+  watch([search, tagIds, stateFilter, priorityFilter, assigneeFilter, epicFilter, typeFilter, conditionFilter, sort, direction, scope, projectId], () => { page.value = 1; });
   watch(pageCount, count => { if (!toValue(remote) && page.value > count) page.value = count; });
 
   return {

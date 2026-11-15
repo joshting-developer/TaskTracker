@@ -20,6 +20,7 @@ export function filterIssues(issues, filters, { project, userId, members, today,
   const literal = term.startsWith('text:') ? term.slice(5) : term;
   return issues.filter((issue) => {
     if (issue.projectId !== project.id || (!includeEpics && issue.type === 'epic')) return false;
+    if ((filters.tagIds || []).some(id => !(issue.tags || []).some(tag => tag.id === id))) return false;
     const closed = isClosed(issue);
     if (filters.scope === 'mine' && issue.assignee !== userId) return false;
     if (selectedStates(filters.state).length && !selectedStates(filters.state).includes(issue.state)) return false;

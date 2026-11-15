@@ -11,8 +11,10 @@ use App\Http\Controllers\Integrations\PublicIssuesController;
 use App\Http\Controllers\Integrations\PublicNotificationsController;
 use App\Http\Controllers\Integrations\PublicProjectsController;
 use App\Http\Controllers\Integrations\PublicQueriesController;
+use App\Http\Controllers\Integrations\PublicTagsController;
 use App\Http\Controllers\Integrations\PublicTodosController;
 use App\Http\Controllers\Integrations\TokenIdentityController;
+use App\Http\Middleware\RecordHttpOperation;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
@@ -113,4 +115,16 @@ Route::prefix('/api/public/v1/projects/{project}/boards')->middleware('throttle:
     Route::patch('/{board}', [PublicBoardsController::class, 'write'])->name('public.boards.update');
     Route::get('/{board}', [PublicBoardsController::class, 'show'])->name('public.v1.boards.show');
     Route::get('/{board}/issues', [PublicBoardsController::class, 'issues'])->name('public.v1.boards.issues');
+});
+
+Route::prefix('/api/public/v1/projects/{project}')->middleware(['throttle:public-api-v1', RecordHttpOperation::class])->withoutMiddleware([
+    StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class,
+])->group(function () {
+    $tags = PublicTagsController::class;
+    Route::get('/tags', [$tags, 'index'])->name('public.v1.tags.index');
+    Route::get('/tags/{tag}', [$tags, 'show'])->name('public.v1.tags.show');
+    Route::post('/tags', [$tags, 'write'])->defaults('tagAction', 'create')->name('public.tags.create');
+    Route::patch('/tags/{tag}', [$tags, 'write'])->defaults('tagAction', 'update')->name('public.tags.update');
+    Route::delete('/tags/{tag}', [$tags, 'write'])->defaults('tagAction', 'delete')->name('public.tags.delete');
+    Route::patch('/issues/{issue}/tags', [$tags, 'write'])->defaults('tagAction', 'apply')->name('public.tags.apply');
 });

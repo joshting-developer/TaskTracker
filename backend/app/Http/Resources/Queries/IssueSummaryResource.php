@@ -19,7 +19,7 @@ class IssueSummaryResource extends JsonResource
     {
         $i = $this->resource;
 
-        return ['id' => $i->public_id, 'projectId' => $i->getRelation('project')->public_id,
+        return ['tags' => $i->getRelation('tags')->map(fn ($tag) => ['id' => $tag->public_id, 'name' => $tag->name, 'color' => $tag->color])->values()->all(), 'id' => $i->public_id, 'projectId' => $i->getRelation('project')->public_id,
             'identifier' => $i->identifier, 'title' => $i->title, 'type' => $i->type,
             'state' => $i->getRelation('status')->code, 'priority' => $i->priority,
             'assignee' => $i->getRelation('assignee')?->user_id ?? '', 'assigneeName' => $i->getRelation('assignee')?->getRelation('user')?->name ?? '', 'assigneeDisabled' => $i->getRelation('assignee')?->disabled_at !== null, 'dueDate' => $i->due_date ?? '',

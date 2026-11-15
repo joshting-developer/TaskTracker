@@ -19,7 +19,7 @@ class IssueListResource extends JsonResource
     {
         $issue = $this->resource;
 
-        return ['id' => $issue->public_id, 'projectId' => $issue->getRelation('project')->public_id,
+        return ['tags' => $issue->getRelation('tags')->map(fn ($tag) => ['id' => $tag->public_id, 'name' => $tag->name, 'color' => $tag->color])->values()->all(), 'id' => $issue->public_id, 'projectId' => $issue->getRelation('project')->public_id,
             'identifier' => $issue->identifier, 'title' => $issue->title, 'type' => $issue->type,
             'state' => $issue->getRelation('status')->code, 'priority' => $issue->priority,
             'assignee' => $issue->getRelation('assignee')?->user_id ?? '',

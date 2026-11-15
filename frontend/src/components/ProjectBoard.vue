@@ -2,6 +2,7 @@
 import { t } from '../i18n/index.js';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import Icon from './Icon.vue';
+import TagLabels from './TagLabels.vue';
 import IssueContext from './IssueContext.vue';
 import { buildIssueIndex } from '../domain/issueIndex.js';
 import { isClosed, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
@@ -127,6 +128,7 @@ function drop(event, state, lane) {
                 <div class="card-top"><span class="identifier">{{ issue.identifier }}</span><span class="type-tag">{{ option(TYPES, issue.type)?.label }}</span><span v-if="density === 'comfortable'" class="priority-label" :style="{ '--priority-color': option(PRIORITIES, issue.priority)?.color }" :title="t('優先級：{0}', [t(option(PRIORITIES, issue.priority)?.label)])"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span></span><button v-if="canWrite" type="button" class="icon-button card-edit" :aria-label="t('編輯 {0}', [issue.identifier])" :title="t('編輯任務（也可雙擊卡片或按 F2）')" :disabled="Boolean(moving)" @click="clearReading(); emit('open', issue, false)"><Icon name="edit" :size="15" /></button></div>
                 <button class="card-title" :title="issue.title" @click="read(issue, $event)">{{ issue.title }}</button>
                 <p v-if="density === 'comfortable' && issue.description" class="board-card-description">{{ issue.description }}</p>
+                <TagLabels :tags="issue.tags || []" />
                 <div class="card-bottom"><span v-if="density === 'comfortable' && issue.dueDate" :class="['due-date', { overdue: overdue(issue) }]"><Icon name="clock" :size="12" />{{ issue.dueDate.slice(5).replace('-', '/') }}</span><span v-if="density === 'comfortable' && (issue.commentCount ?? issue.comments?.length ?? 0)" class="comment-count"><Icon name="message" :size="13" />{{ (issue.commentCount ?? issue.comments?.length ?? 0) }}</span><span class="board-assignee" :title="memberName(issue.assignee)"><span v-if="issue.assignee" class="avatar small">{{ memberName(issue.assignee).slice(0, 1) }}</span>{{ memberName(issue.assignee) }}</span></div>
                 <IssueContext v-if="density === 'comfortable'" :issue="issue" :index="contextIndex" :can-read-time="project.permissions?.includes('timeEntry.readOwn')" @open="emit('open', $event)" />
               </article>

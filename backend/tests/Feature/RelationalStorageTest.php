@@ -160,6 +160,7 @@ class RelationalStorageTest extends TestCase
         $this->seedWorkspace();
         $before = $this->snapshot();
         $migration = require database_path('migrations/2026_11_04_000000_create_relational_business_tables.php');
+        (require database_path('migrations/2026_11_15_060000_create_project_tags.php'))->down();
         Schema::dropIfExists('workspace_member_status_events'); // 後續資格事件先回退, 保留真實外鍵順序
         Schema::dropIfExists('issue_external_refs'); // 後續migration的FK表；正常rollback會先撤它
         (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->down();
@@ -174,6 +175,7 @@ class RelationalStorageTest extends TestCase
         $migration->up();
         // TT-314：只重跑基礎migration時, 後來才加的建卡者欄位要靠後續migration補回（照真實升級順序）。
         (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->up();
+        (require database_path('migrations/2026_11_15_050000_add_issue_planned_dates.php'))->up();
         $this->assertEquals($before, $this->snapshot());
         $this->assertSame($archive, DB::table('records')->orderBy('kind')->orderBy('id')->get()->toJson());
         $tenant = (new RecordStore)->forWorkspace(DemoSeeder::WORKSPACE_ID);
@@ -192,6 +194,7 @@ class RelationalStorageTest extends TestCase
         $migration->up();
         // TT-314：只重跑基礎migration時, 後來才加的建卡者欄位要靠後續migration補回（照真實升級順序）。
         (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->up();
+        (require database_path('migrations/2026_11_15_050000_add_issue_planned_dates.php'))->up();
         $this->assertEquals($latest, $this->snapshot());
         $this->rpc('getWorkspace', []);
         $this->assertSame([], DB::select('PRAGMA foreign_key_check'));
@@ -204,6 +207,7 @@ class RelationalStorageTest extends TestCase
     {
         $this->seedWorkspace();
         $migration = require database_path('migrations/2026_11_04_000000_create_relational_business_tables.php');
+        (require database_path('migrations/2026_11_15_060000_create_project_tags.php'))->down();
         Schema::dropIfExists('workspace_member_status_events'); // 後續資格事件先回退, 保留真實外鍵順序
         Schema::dropIfExists('issue_external_refs'); // 後續migration的FK表；正常rollback會先撤它
         (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->down();

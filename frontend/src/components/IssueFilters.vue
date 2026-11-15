@@ -5,6 +5,7 @@ import { PRIORITIES, TYPES } from '../domain/model.js';
 import { CONDITIONS, defaultDirection } from '../domain/filters.js';
 import Icon from './Icon.vue';
 import PagedSelect from './PagedSelect.vue';
+import TagPicker from './TagPicker.vue';
 
 const props = defineProps({ lookup: Function, lookupContext: String, expanded: {type: Boolean, default: undefined},
   states: { type: Array, required: true },
@@ -27,7 +28,7 @@ function field(key) {
 }
 const search = field('search'), stateFilter = field('state'), priorityFilter = field('priority');
 const assigneeFilter = field('assignee'), epicFilter = field('epicId'), typeFilter = field('type');
-const conditionFilter = field('condition');
+const conditionFilter = field('condition'), tagIds = field('tagIds');
 // TT-306：換排序時方向回到該排序的預設；方向按鈕只在預設與反向之間切換。
 const sort = computed({ get: () => model.value.sort, set: value => { model.value = { ...model.value, sort: value, direction: '' }; } });
 const DIRECTION_LABELS = { updated: { desc: t('新到舊'), asc: t('舊到新') }, created: { desc: t('新到舊'), asc: t('舊到新') }, priority: { asc: t('緊急到低'), desc: t('低到緊急') }, due: { asc: t('近到遠'), desc: t('遠到近') } };
@@ -84,6 +85,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutside
         </div>
       </details>
     </div>
+    <TagPicker v-if="lookupContext" v-model="tagIds" :project-id="lookupContext" :label="t('篩選標籤')" />
     <label>{{ t('優先級') }}
       <select v-model="priorityFilter" :aria-label="t('篩選優先級')">
         <option value="">{{ t('所有優先級') }}</option>

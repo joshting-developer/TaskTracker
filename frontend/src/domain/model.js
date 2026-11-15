@@ -17,7 +17,7 @@ export const TYPES = [
 ];
 export const PROJECT_COLORS = ['#8d83ed', '#64b0a0', '#e5a25c', '#cf82ae', '#71a2d5'];
 export const ISSUE_FIELDS = ['title', 'description', 'state', 'priority', 'type', 'assignee', 'startDate', 'endDate', 'dueDate', 'epicId', 'estimateMinutes', 'parentIssueId', 'relatedIssueIds'];
-export const FIELD_LABELS = { title: t('標題'), description: t('描述'), state: t('狀態'), priority: t('優先級'), type: t('類型'), assignee: t('負責人'), startDate: t('計畫開始日'), endDate: t('計畫結束日'), dueDate: t('到期日'), epicId: 'Epic', estimateMinutes: t('預估分鐘'), parentIssueId: t('父任務'), relatedIssueIds: t('關聯任務'), blockedBy: t('舊前置任務（已停用）') };
+export const FIELD_LABELS = { tags: t('標籤'), title: t('標題'), description: t('描述'), state: t('狀態'), priority: t('優先級'), type: t('類型'), assignee: t('負責人'), startDate: t('計畫開始日'), endDate: t('計畫結束日'), dueDate: t('到期日'), epicId: 'Epic', estimateMinutes: t('預估分鐘'), parentIssueId: t('父任務'), relatedIssueIds: t('關聯任務'), blockedBy: t('舊前置任務（已停用）') };
 
 export function fail(code, message) {
   throw Object.assign(new Error(message), { code });

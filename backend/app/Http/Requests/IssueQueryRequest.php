@@ -24,6 +24,7 @@ class IssueQueryRequest extends PageQueryRequest
             'condition' => ['sometimes', 'nullable', Rule::in(['overdue', 'unassigned'])],
             'sort' => ['sometimes', Rule::in(['updated', 'created', 'priority', 'due'])],
             'direction' => ['sometimes', Rule::in(['asc', 'desc'])],
+            'tagIds' => ['sometimes', 'array', 'list', 'max:20'], 'tagIds.*' => ['uuid', 'distinct'],
             'scope' => ['sometimes', Rule::in(['all', 'mine'])],
         ];
     }
@@ -37,6 +38,6 @@ class IssueQueryRequest extends PageQueryRequest
     {
         $d = $this->validated();
 
-        return new IssueQueryData($this->pagination(), $d['state'] ?? [], $d['priority'] ?? '', $d['type'] ?? '', $d['assignee'] ?? '', $d['epicId'] ?? '', $d['condition'] ?? '', $d['sort'] ?? 'updated', $d['scope'] ?? 'all', $d['identifier'] ?? '', $d['direction'] ?? '');
+        return new IssueQueryData($this->pagination(), $d['state'] ?? [], $d['priority'] ?? '', $d['type'] ?? '', $d['assignee'] ?? '', $d['epicId'] ?? '', $d['condition'] ?? '', $d['sort'] ?? 'updated', $d['scope'] ?? 'all', $d['identifier'] ?? '', $d['direction'] ?? '', $d['tagIds'] ?? []);
     }
 }

@@ -150,6 +150,7 @@ class TodoTest extends TestCase
         $markdown = require database_path('migrations/2026_11_05_000000_add_todo_markdown_content.php');
         $relational = require database_path('migrations/2026_11_04_000000_create_relational_business_tables.php');
         $markdown->down();
+        (require database_path('migrations/2026_11_15_060000_create_project_tags.php'))->down();
         Schema::dropIfExists('workspace_member_status_events'); // 後續資格事件先回退, 保留真實外鍵順序
         Schema::dropIfExists('issue_external_refs'); // 後續migration的FK表；正常rollback會先撤它
         $relational->down();

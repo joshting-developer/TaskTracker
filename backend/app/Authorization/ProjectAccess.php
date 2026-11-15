@@ -14,7 +14,7 @@ class ProjectAccess
 
     public const DEVELOP = [...self::READ, 'issue.write', 'timeEntry.readOwn', 'timeEntry.readTeam', 'timeEntry.writeOwn'];
 
-    public const MANAGE = [...self::DEVELOP, 'project.update', 'project.statuses.update', 'project.members.manage', 'board.manage', 'notification.readTeam', 'issue.delete'];
+    public const MANAGE = [...self::DEVELOP, 'project.update', 'project.statuses.update', 'project.members.manage', 'board.manage', 'project.tags.manage', 'notification.readTeam', 'issue.delete'];
 
     public const ANY = [
         'project.read' => 'project.readAny',
@@ -25,6 +25,7 @@ class ProjectAccess
         'project.statuses.update' => 'project.statuses.updateAny',
         'project.members.manage' => 'project.members.manageAny',
         'board.manage' => 'board.manageAny',
+        'project.tags.manage' => 'project.tags.manageAny',
         'timeEntry.readOwn' => 'timeEntry.readOwnAny',
         'timeEntry.readTeam' => 'timeEntry.readTeamAny',
         'timeEntry.writeOwn' => 'timeEntry.writeOwnAny',

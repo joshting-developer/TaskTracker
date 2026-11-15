@@ -42,7 +42,7 @@ class IssueReadRepository
      */
     private function relations(): array
     {
-        return ['project:id,public_id', 'status:id,code', 'assignee:id,user_id,disabled_at', 'assignee.user:id,name', 'epic:id,public_id,title,identifier,type,state_id', 'parent:id,public_id,title,identifier,type,state_id'];
+        return ['tags', 'project:id,public_id', 'status:id,code', 'assignee:id,user_id,disabled_at', 'assignee.user:id,name', 'epic:id,public_id,title,identifier,type,state_id', 'parent:id,public_id,title,identifier,type,state_id'];
     }
 
     /**
@@ -100,7 +100,7 @@ class IssueReadRepository
      */
     public function page(Project $project, string $userId, IssueQueryData $filters, ?int $boardId = null, ?string $timeUser = null, bool $teamTime = false, bool $listOnly = false): LengthAwarePaginator
     {
-        $q = $this->query($project)->with($listOnly ? ['project:id,public_id', 'status:id,code', 'assignee:id,user_id,disabled_at', 'assignee.user:id,name'] : $this->relations());
+        $q = $this->query($project)->with($listOnly ? ['tags', 'project:id,public_id', 'status:id,code', 'assignee:id,user_id,disabled_at', 'assignee.user:id,name'] : $this->relations());
         if ($boardId !== null) {
             $this->boardScope->apply($q, $boardId);
         }
@@ -162,6 +162,9 @@ class IssueReadRepository
      */
     private function applyFilters(Builder $q, string $userId, IssueQueryData $filters): void
     {
+        if ($filters->tagIds !== []) {
+            $q->whereHas('tags', fn ($tags) => $tags->whereIn('project_tags.public_id', $filters->tagIds), '>=', count($filters->tagIds));
+        }
         if ($filters->identifier !== '') {
             $q->where('identifier', $filters->identifier);
         }
@@ -241,7 +244,7 @@ class IssueReadRepository
     public function changes(Project $project, string $userId, IssueQueryData $filters, ?string $since, string $until, ?array $after): Collection
     {
         $q = $this->query($project)->select(['id', 'workspace_id', 'public_id', 'project_id', 'identifier', 'title', 'type', 'state_id', 'priority', 'assignee_id', 'due_date', 'revision', 'created_at', 'updated_at'])
-            ->with(['project:id,public_id', 'status:id,code', 'assignee:id,user_id,disabled_at', 'assignee.user:id,name']);
+            ->with(['tags', 'project:id,public_id', 'status:id,code', 'assignee:id,user_id,disabled_at', 'assignee.user:id,name']);
         $this->applyFilters($q, $userId, $filters);
         $q->where(fn ($q) => $q->where('updated_at', '<=', DatabaseTimes::store($until))->orWhereNull('updated_at'));
         if ($since !== null) {

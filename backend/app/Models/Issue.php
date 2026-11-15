@@ -18,6 +18,15 @@ class Issue extends Model
 
     protected $guarded = ['id'];
 
+    /** 已套用且仍有效的標籤, 摘要只取識別、名稱與色彩
+     * @return BelongsToMany<ProjectTag> 預載後序列化, 不在 Resource 發出查詢
+     */
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(ProjectTag::class, 'issue_tags', 'issue_id', 'tag_id')
+            ->whereNull('project_tags.deleted_at')->select(['project_tags.id', 'project_tags.public_id', 'project_tags.name', 'project_tags.color'])->orderBy('project_tags.name')->orderBy('project_tags.id');
+    }
+
     /**
      * 取得project關聯，使用資料庫內部外鍵避免不同租戶公開ID衝突。
      *

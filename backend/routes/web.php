@@ -23,6 +23,7 @@ use App\Http\Controllers\Queries\WorkspaceSettingsController;
 use App\Http\Controllers\RealtimeController;
 use App\Http\Controllers\SmtpController;
 use App\Http\Controllers\SystemController;
+use App\Http\Controllers\TagsController;
 use App\Http\Controllers\TimeEntryController;
 use App\Http\Controllers\TodoController;
 use App\Http\Controllers\TodoNotificationsController;
@@ -181,3 +182,14 @@ require __DIR__.'/admin.php';
 foreach (Route::getRoutes() as $route) {
     $route->middleware(RecordHttpOperation::class);
 }
+
+// Project tags use the same Session/CSRF transaction boundary as other authenticated writes.
+Route::prefix('/api/v1/projects/{project}')->middleware(RecordHttpOperation::class)->group(function () {
+    $tags = TagsController::class;
+    Route::get('/tags', [$tags, 'index'])->name('v1.tags.index');
+    Route::get('/tags/{tag}', [$tags, 'show'])->name('v1.tags.show');
+    Route::post('/tags', [$tags, 'write'])->defaults('tagAction', 'create')->name('v1.tags.create')->block(10, 10);
+    Route::patch('/tags/{tag}', [$tags, 'write'])->defaults('tagAction', 'update')->name('v1.tags.update')->block(10, 10);
+    Route::delete('/tags/{tag}', [$tags, 'write'])->defaults('tagAction', 'delete')->name('v1.tags.delete')->block(10, 10);
+    Route::patch('/issues/{issue}/tags', [$tags, 'write'])->defaults('tagAction', 'apply')->name('v1.tags.apply')->block(10, 10);
+});

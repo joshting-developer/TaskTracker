@@ -20,6 +20,7 @@ readonly class IssueQueryData
      * @param  string  $sort  排序方式（updated／created／priority／due）
      * @param  string  $scope  all或mine
      * @param  string  $identifier  精確卡號
+     * @param  list<string>  $tagIds  至多 20 個標籤公開 ID, 全部符合
      * @param  string  $direction  排序方向asc／desc；空字串用各排序的預設（TT-306）
      */
     public function __construct(
@@ -34,5 +35,6 @@ readonly class IssueQueryData
         public string $scope = 'all',
         public string $identifier = '',
         public string $direction = '',
+        public array $tagIds = [],
     ) {}
 }
