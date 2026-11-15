@@ -73,10 +73,11 @@ Owner／Manager可從側欄「工時分析」選擇成員投入、專案投入�
 
 ## Docker 開始試用
 
-新環境直接執行下列指令；有既有SQLite資料時，先依上面的切換文件離線匯入。MySQL密碼由一次性服務隨機產生並保存在獨立volume，不需設定公開預設密碼。
+本地開發使用獨立的 tasktracker-local-dev 服務, 不繼承根目錄 .env、舊備份 volume 或正式服務連線。MySQL 密碼由一次性服務隨機產生, 合成登入帳號另存於被忽略的本機檔案。完整啟停與驗證見[本地開發環境](docs/local-development.md)
 
 ```sh
-docker compose up -d --build
+python3 tools/local-dev.py up
+python3 tools/local-dev.py seed
 ```
 
 開啟 [TaskTracker](http://127.0.0.1:5174), 建立帳號及工作空間, 再建立／選擇專案。預設空資料, 不提供網頁載入示範專案；本地開發需要假資料時使用CLI seed, 不對正式站執行

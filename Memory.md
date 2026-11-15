@@ -1,5 +1,7 @@
 ## 2026-11-15 本批工作入口
 
+- 本地 5174／3002 已由 TT-370 恢復為全新 tasktracker-local-dev 隔離服務, 啟停與合成帳號位置見 docs/local-development.md；原 tasktracker MySQL 仍是唯讀備份, 不重啟舊 Compose
+
 - Season查重／看板／Future與補標紙條索引：docs/season-roadmap-status-2026-11-15.md, TT-367；Future不自動領卡, 私人GPT仍暫停
 
 - 獨立管理後台：docs/admin-dashboard-contract.md, TT-364已隨v0.5.0發布並通過正式獨立管理驗收
