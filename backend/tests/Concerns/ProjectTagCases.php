@@ -10,6 +10,7 @@ use App\Repositories\RecordStore;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Opis\JsonSchema\CompliantValidator;
 
@@ -167,5 +168,14 @@ trait ProjectTagCases
             DB::disableQueryLog();
         }
         $this->assertSame([1, 1], $counts);
+    }
+
+    /** Eloquent 關聯只有 issue_id 條件, 需有能直接命中的左前綴索引
+     * @return void
+     */
+    public function test_tag_eager_loading_has_an_issue_id_leading_index(): void
+    {
+        $indexes = Schema::getIndexes('issue_tags');
+        $this->assertTrue(collect($indexes)->contains(fn (array $index) => $index['columns'] === ['issue_id', 'tag_id'] && ! $index['unique']));
     }
 }

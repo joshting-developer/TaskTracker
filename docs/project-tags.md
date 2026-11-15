@@ -48,3 +48,5 @@ Session 使用 `/api/v1/projects/{project}`, PAT 使用 `/api/public/v1/projects
 SQLite／隔離 MySQL 完整後端共 520 項、20,185 assertions 通過。R2 專用生命週期測試需獨立分組, 本次不以跳過代表通過。標籤定義 CRUD、差量套用、草稿保護、SQL 篩選及列表／看板／完整頁已用真實隔離瀏覽器操作；三尺寸共 15 張候選依 Josh 持續授權核准, 原比較參數下獨立比對零差異
 
 共用 Skill 的 CLI 以隔離 PAT 實測定義 CRUD、說明、卡片套標、AND 篩選、看板篩選與刪除重播, 測後撤銷 Token。共用庫提交 bf23658；正式尚未部署, Season／Future 實際套標待整批 v1.0.0 上線後執行
+
+關聯查詢另以 `issue_tags_issue(issue_id, tag_id)` 支援 Eloquent 的預載與 whereHas。原本 workspace／project 開頭的索引仍供限定專案寫入使用。隔離 MySQL 的 EXPLAIN 已從沒有 possible_keys 改為可選且實際使用 issue_tags_issue；資料量很少, 這只是查詢計畫驗證, 不代表正式環境延遲或 p95

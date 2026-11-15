@@ -12,3 +12,8 @@
 - 共用 CLI 實際以隔離 PAT 驗 CRUD、差量、AND 篩選、看板篩選與刪除 receipt 重播, 結束撤銷測試 PAT
 - 修正完整回歸發現的操作紀錄 middleware、OpenAPI 範例、PHPDoc 及歷史 migration 外鍵／日期相容
 - 新增 TT-393／394／395 已收錄 Bug 與 Season 0；除 GPT 外全數完成才發 v1.0.0, GPT 另外部署。本卡正式套標與發布仍待整批收尾
+
+- 回到本卡補發布前索引：隔離 MySQL 修前 EXPLAIN 的 possible_keys 為空, 只會掃 PRIMARY；因為關聯預載只有 issue_id 條件, 既有 workspace／project 前綴無法直接使用
+- 新增獨立 migration 補 issue_id／tag_id 索引, 不修改卡片或標籤資料；兩種引擎測試檢查實際索引左前綴
+- 隔離 MySQL 修後 EXPLAIN 已能選用 issue_tags_issue, 並實際選用該索引；現有合成資料量小, 不宣稱延遲倍率或正式 p95
+- 補索引階段雙引擎 Tags、歷史儲存及 PHPDoc 檢查通過；不以原先 520 項全套結果替代最終發布回歸
