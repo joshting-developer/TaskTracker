@@ -130,7 +130,7 @@ class TodoCollaborationService
             }
             $reply = Fields::text($input['reply'] ?? ($operation === 'commentTodo' ? ($input['content'] ?? null) : ($input['note'] ?? '')), '回覆', 2000, $operation === 'commentTodo');
             $this->todos->initialize($todo);
-            $at = now();
+            $at = now()->toISOString();
             $actor = $identity['user']['name'];
             if ($reply !== '') {
                 $this->todos->append('todo_comments', ['public_id' => (string) Str::uuid(), 'workspace_id' => $todo->workspace_id, 'todo_id' => $todo->id, 'author_id' => $context->memberId, 'author_name' => $actor, 'content' => $reply, 'created_at' => $at]);
@@ -167,7 +167,7 @@ class TodoCollaborationService
                 $changes = ['state' => 'done', 'completed_at' => $at];
             }
             $this->todos->update($todo, [...$changes, 'revision' => $todo->revision + 1, 'updated_at' => $at]);
-            $this->todos->audit($todo, ['event' => $event, 'actorId' => $context->userId, 'actor' => $actor, 'at' => $at->toISOString()]);
+            $this->todos->audit($todo, ['event' => $event, 'actorId' => $context->userId, 'actor' => $actor, 'at' => $at]);
             if ($recipient !== $context->memberId) {
                 $recipientMember = $this->todos->memberByKey($context->workspaceId, $recipient);
                 if ($recipientMember && in_array('todo.read', WorkspacePermissions::resolve($recipientMember->role), true)) {

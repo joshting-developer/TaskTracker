@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Data\PageQueryData;
 use App\Data\PersonalReadContext;
+use App\Database\DatabaseTimes;
 use App\Models\Todo;
 use App\Models\WorkspaceMember;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -110,6 +111,7 @@ class TodoCollaborationRepository
         if (! in_array($table, ['todo_comments', 'todo_handoffs'], true)) {
             throw new \LogicException('Invalid collaboration table');
         }
+        $data['created_at'] = DatabaseTimes::store($data['created_at']);
         DB::table($table)->insert($data);
     }
 
@@ -120,6 +122,11 @@ class TodoCollaborationRepository
      */
     public function update(Todo $todo, array $data): void
     {
+        foreach (['updated_at', 'completed_at', 'returned_at'] as $column) {
+            if (array_key_exists($column, $data)) {
+                $data[$column] = DatabaseTimes::store($data[$column]);
+            }
+        }
         $todo->forceFill($data)->save();
     }
 
@@ -170,7 +177,7 @@ class TodoCollaborationRepository
      */
     public function notify(Todo $todo, int $recipientId, string $event, string $actor): void
     {
-        DB::table('todo_notifications')->insert(['public_id' => (string) Str::uuid(), 'workspace_id' => $todo->workspace_id, 'todo_id' => $todo->id, 'recipient_id' => $recipientId, 'event' => $event, 'actor' => $actor, 'created_at' => now()]);
+        DB::table('todo_notifications')->insert(['public_id' => (string) Str::uuid(), 'workspace_id' => $todo->workspace_id, 'todo_id' => $todo->id, 'recipient_id' => $recipientId, 'event' => $event, 'actor' => $actor, 'created_at' => DatabaseTimes::store(now()->toISOString())]);
     }
 
     /** 單筆讀取不取寫入鎖, 仍保留租戶範圍與最小投影

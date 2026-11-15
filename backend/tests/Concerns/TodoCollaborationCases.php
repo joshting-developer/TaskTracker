@@ -5,6 +5,7 @@ namespace Tests\Concerns;
 use App\Models\User;
 use App\Models\WorkspaceMember;
 use App\Repositories\RecordStore;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Queue;
@@ -68,6 +69,31 @@ trait TodoCollaborationCases
         $this->getJson('/api/v1/todos/'.$todo['id'])->assertStatus(404);
         $this->getJson('/api/v1/todos/'.$todo['id'].'/comments')->assertStatus(404);
         $this->postJson('/api/rpc/commentTodo', ['id' => $todo['id'], 'content' => 'Unauthorized', 'expectedRevision' => 4, 'requestId' => (string) Str::uuid()])->assertStatus(404);
+    }
+
+    /** 台北晚間寫入後 API 必須維持同一瞬間, 不得再加八小時
+     * @return void
+     */
+    public function test_collaboration_timestamps_preserve_the_instant_across_midnight(): void
+    {
+        [$owner, $store, $people] = $this->collaborationFixture();
+        $this->travelTo(Carbon::parse('2026-11-15T20:45:51.123456+08:00'));
+        try {
+            $expected = '2026-11-15T12:45:51.123456Z';
+            $todo = $this->postJson('/api/rpc/createTodo', ['title' => 'Timezone regression', 'assigneeId' => $people['Josh']['id'], 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+            $this->collaborationLogin($people['Josh']);
+            $this->postJson('/api/rpc/forwardTodo', ['id' => $todo['id'], 'expectedRevision' => 1, 'assigneeId' => $people['Codex']['id'], 'reply' => 'Forward at Taipei evening', 'requestId' => (string) Str::uuid()])->assertOk();
+            $this->collaborationLogin($people['Codex']);
+            $this->getJson('/api/v1/todos/'.$todo['id'].'/comments')->assertOk()->assertJsonPath('data.items.0.createdAt', $expected);
+            $this->getJson('/api/v1/todos/'.$todo['id'].'/handoffs')->assertOk()->assertJsonPath('data.items.0.createdAt', $expected);
+            $this->getJson('/api/v1/todo-notifications')->assertOk()->assertJsonPath('data.items.0.createdAt', $expected);
+            $this->postJson('/api/rpc/completeTodo', ['id' => $todo['id'], 'expectedRevision' => 2, 'reply' => 'Done', 'requestId' => (string) Str::uuid()])->assertOk();
+            $detail = $this->getJson('/api/v1/todos/'.$todo['id'])->assertOk()->json('data');
+            $this->assertSame($expected, $detail['completedAt']);
+            $this->assertSame($expected, $detail['updatedAt']);
+        } finally {
+            $this->travelBack();
+        }
     }
 
     /** 紙條四分頁使用同一SQL分頁, sent包含自己建立的紙條而all仍限定參與範圍
