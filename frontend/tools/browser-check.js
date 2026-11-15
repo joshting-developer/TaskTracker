@@ -1232,9 +1232,14 @@ try {
   assert.equal(await projectSidebar.getByRole('navigation', { name: '專案任務', exact: true }).count(), 0);
   await page.getByRole('button', { name: '建立專案', exact: true }).click();
   const projectDialog = page.getByRole('dialog', { name: '建立專案' });
-  await projectDialog.getByLabel(/專案名稱/).fill('我的測試專案');
-  await projectDialog.getByLabel(/專案代碼/).fill('TEST');
+  await projectDialog.getByLabel('專案代碼', { exact: true }).waitFor();
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await projectDialog.getByLabel('專案名稱', { exact: true }).fill('我的測試專案');
+  await projectDialog.getByLabel('專案代碼', { exact: true }).fill('TEST');
+  assert.equal(await projectDialog.getByLabel('專案名稱', { exact: true }).inputValue(), '我的測試專案');
+  assert.equal(await projectDialog.getByLabel('專案代碼', { exact: true }).inputValue(), 'TEST');
   await projectDialog.getByRole('button', { name: '建立專案', exact: true }).click();
+  await projectDialog.waitFor({ state: 'detached' });
   await openProjectList(page);
   await page.getByRole('heading', { name: '專案列表', exact: true }).waitFor();
   assert.equal(await page.getByRole('link', { name: '任務看板', exact: true }).count(), 0);
@@ -1312,7 +1317,7 @@ try {
   await page.getByRole('dialog', { name: '新增一個任務' }).waitFor();
   await page.screenshot({ path: 'artifacts/mobile-editor.png', fullPage: true });
   await page.getByRole('button', { name: '關閉任務', exact: true }).click();
-  await page.getByRole('button', { name: '專案', exact: true }).click();
+  await openProjectList(page);
   await page.screenshot({ path: 'artifacts/mobile-projects.png', fullPage: true });
   assert.equal(await page.getByRole('link', { name: '任務看板', exact: true }).count(), 0);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);

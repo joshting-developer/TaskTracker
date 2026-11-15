@@ -1,5 +1,4 @@
 <script setup>
-import LocalePicker from './LocalePicker.vue';
 import { t } from '../i18n/index.js';
 import { nextTick, onBeforeUnmount, onMounted, ref, useId } from 'vue';
 const props = defineProps({ name: String, email: String, workspaceName: String, tokensEnabled: { type: Boolean, default: true } });
@@ -32,7 +31,6 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', outside));
       <button v-if="tokensEnabled" type="button" role="menuitem" tabindex="-1" @click="choose('tokens')">{{ t('個人 API Token') }}</button>
       <!-- TT-304：已登入的人從這裡看產品介紹；首頁本身仍會自動轉進工作空間 -->
       <a role="menuitem" tabindex="-1" class="account-intro" href="/?intro=1">{{ t('產品介紹') }}</a>
-      <LocalePicker menu />
       <button type="button" role="menuitem" tabindex="-1" class="account-logout" @click="choose('logout')">{{ t('登出') }}</button>
     </div>
   </div>

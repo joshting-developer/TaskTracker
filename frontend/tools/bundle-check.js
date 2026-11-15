@@ -25,7 +25,9 @@ try {
   const login = await measure();
   if (!before) {
     const scripts = login.filter(entry => entry.name.endsWith('.js'));
-    assert.ok(scripts.length >= 1 && scripts.length <= 2, 'App entry plus at most one Vue/Vuetify shared runtime');
+    const localeScripts = scripts.filter(entry => /^locale-preference-/.test(entry.name));
+    assert.ok(localeScripts.length <= 1 && localeScripts.every(entry => entry.bytes < 2000), 'Only one small shared language preference module');
+    assert.ok(scripts.length - localeScripts.length >= 1 && scripts.length - localeScripts.length <= 2, 'App entry plus at most one Vue/Vuetify shared runtime');
     assert.ok(scripts.reduce((sum, entry) => sum + entry.bytes, 0) < 450000, 'Login script budget remains bounded after adding a separate admin entry');
     assert(!scripts.some(entry => /^admin-/.test(entry.name)), 'Regular login never downloads admin screen code');
     assert(!login.some(entry => /TimeAnalysis|ProjectBoard|MarkdownEditor|pusher|woff|ttf/.test(entry.name)));

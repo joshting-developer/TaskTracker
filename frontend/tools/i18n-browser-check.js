@@ -37,9 +37,7 @@ try {
   await page.goto(base + '/app/#/'); await page.reload(); await page.locator('.app-shell').waitFor();
   const account = () => page.getByRole('button', { name: tr('帳號選單'), exact: true });
   async function language(id) {
-    await page.locator('.account-trigger').click();
-    await page.getByRole('menuitemradio', { name: id === 'en' ? 'English' : '繁體中文', exact: true }).click();
-    await page.keyboard.press('Escape');
+    await page.locator('.topbar .locale-picker select').selectOption(id);
     assert.equal(await page.locator('html').getAttribute('lang'), id);
   }
   await account().waitFor();

@@ -369,13 +369,11 @@ test('English workspace and account language', async ({ page, browser }) => {
   await shot(page, '48-login-en');
   await page.getByLabel('Select language', { exact: true }).selectOption('zh-TW');
   const data = await fixture(page, browser), project = data.project, issue = data.tasks[0];
-  await page.getByRole('button', { name: '帳號選單', exact: true }).click();
-  await page.getByRole('menuitemradio', { name: 'English', exact: true }).click();
-  await page.keyboard.press('Escape');
+  await page.locator('.topbar .locale-picker select').selectOption('en');
   await page.goto('/app/#/'); await page.locator('.app-shell').waitFor();
   await shot(page, '49-home-en');
   await page.getByRole('button', { name: 'Account menu', exact: true }).click();
-  await page.getByRole('menuitemradio', { name: 'English', exact: true }).waitFor();
+  await page.getByRole('menuitem', { name: 'Profile', exact: true }).waitFor();
   await shot(page, '50-language-menu-en');
   await page.keyboard.press('Escape');
   await page.goto(`/app/#/projects/${project.id}`);

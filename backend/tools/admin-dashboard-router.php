@@ -15,5 +15,5 @@ $kernel->bootstrap();
 if (! $app->environment('testing') || config('database.default') !== 'mysql' || config('database.connections.mysql.database') !== 'tasktracker_test' || config('database.connections.mysql.username') !== 'tasktracker_test' || config('admin.username') !== 'isolated_admin') {
     throw new RuntimeException('Only isolated tasktracker_test is allowed');
 }
-CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-11-15 '.gmdate('H:i:s'), 'UTC'));
+CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-11-15 '.(new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('H:i:s.u'), 'UTC'));
 $app->handleRequest(Request::capture());

@@ -225,6 +225,12 @@ try {
   console.log('PASS: U03 五種功能重整／深連結、瀏覽器前後、草稿阻擋、Issue 返回原功能、reader 權限回退');
   console.log('PASS: U02 紙條列表與建立分頁首屏；U04 三處 tab 鍵盤；U06 手機閱讀／展開屬性；U07 平板工具列；U08 44px 觸控目標');
   console.log('PASS: U01 文字對比與字級；U05 整數分鐘提示、欄位關聯／焦點／草稿及有效工時保存', readability);
+} catch (error) {
+  for (const [index, candidate] of (browser?.contexts().flatMap(context => context.pages()) || []).entries()) {
+    await candidate.screenshot({ path: `${artifacts}/failure-${index}.png`, fullPage: true }).catch(() => {});
+    console.error('Failure page headings:', candidate.url(), await candidate.getByRole('heading').allInnerTexts());
+  }
+  throw error;
 } finally {
   await browser?.close();
   await vite?.close();

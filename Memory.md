@@ -1,3 +1,9 @@
+## 2026-11-15 本批工作入口
+
+- 獨立管理後台：docs/admin-dashboard-contract.md, TT-364待整批正式驗收
+- 公開頁與上方語言入口：docs/public-language-contract.md, TT-365／366同批發布
+- GPT私人服務已重建在joshting.1999帳號：docs/chatgpt-bridge-deployment.md, TT-350仍缺專用唯讀Token及真實工具查卡, 不宣稱已連通；紙條681f0a23-3664-48f1-940e-700c49a7c42b已轉給Josh
+
 # TaskTracker 專案記憶
 
 更新：2026-11-12／TT-268。本文保存產品決策、環境現況與歷史交接；**不是開發規範入口**。規則以AGENTS及共用Skill為準。不要每次開工載入整份本文；依下列索引選讀相關功能文件及卡片。

@@ -1,5 +1,4 @@
 <script setup>
-import LocalePicker from './LocalePicker.vue';
 import { t } from '../i18n/index.js';
 import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
@@ -119,7 +118,6 @@ async function backToLogin() {
   <main class="auth-page">
     <div class="auth-story"><h1>TaskTracker</h1></div>
     <v-card class="auth-card" elevation="0" rounded="0">
-      <LocalePicker />
 
       <PasswordRecovery v-if="recovery" :token="resetToken" :email="resetEmail" @back="recovery = false; resetToken = ''; form.password = ''" />
       <template v-else-if="verification || activationToken">
