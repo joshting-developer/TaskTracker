@@ -23,7 +23,7 @@ class IssueListResource extends JsonResource
             'identifier' => $issue->identifier, 'title' => $issue->title, 'type' => $issue->type,
             'state' => $issue->getRelation('status')->code, 'priority' => $issue->priority,
             'assignee' => $issue->getRelation('assignee')?->user_id ?? '',
-            'assigneeName' => $issue->getRelation('assignee')?->getRelation('user')?->name ?? '',
+            'assigneeName' => $issue->getRelation('assignee')?->getRelation('user')?->name ?? '', 'assigneeDisabled' => $issue->getRelation('assignee')?->disabled_at !== null,
             'dueDate' => $issue->due_date ?? '', 'revision' => (int) $issue->revision,
             'createdAt' => DatabaseTimes::public($issue->created_at), 'updatedAt' => DatabaseTimes::public($issue->updated_at)];
     }

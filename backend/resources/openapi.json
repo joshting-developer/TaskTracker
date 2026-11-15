@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker API",
-    "version": "0.21.0",
+    "version": "0.22.0",
     "description": "公開Bearer v1提供卡片查建改、留言、刪除、外部識別與批次, 紙條協作、本人通知、私有附件, 以及看板讀取、建立和差量收錄。Session個人憑證管理獨立, 不提供公開看板封存／還原。[HTTP契約](/api/public/contract.md)"
   },
   "servers": [
@@ -2708,7 +2708,8 @@
                         "dueDate": "",
                         "revision": 1,
                         "createdAt": "2026-11-12T00:00:00Z",
-                        "updatedAt": "2026-11-12T00:00:00Z"
+                        "updatedAt": "2026-11-12T00:00:00Z",
+                        "assigneeDisabled": false
                       }
                     ],
                     "page": 1,
@@ -3444,7 +3445,8 @@
                     "lastChange": {
                       "actor": "Example user",
                       "at": "2026-11-13T02:00:00.000000Z"
-                    }
+                    },
+                    "assigneeDisabled": false
                   }
                 }
               }
@@ -5043,7 +5045,8 @@
                         "createdAt": "2026-11-12T00:00:00Z",
                         "updatedAt": "2026-11-12T00:00:00Z",
                         "externalRefs": [],
-                        "lastWrite": null
+                        "lastWrite": null,
+                        "assigneeDisabled": false
                       }
                     ],
                     "perPage": 20,
@@ -5470,7 +5473,8 @@
                     "lastChange": {
                       "actor": "Example user",
                       "at": "2026-11-13T02:00:00.000000Z"
-                    }
+                    },
+                    "assigneeDisabled": false
                   }
                 }
               }
@@ -13515,7 +13519,8 @@
                         "dueDate": "",
                         "revision": 1,
                         "createdAt": "2026-11-12T00:00:00Z",
-                        "updatedAt": "2026-11-12T00:00:00Z"
+                        "updatedAt": "2026-11-12T00:00:00Z",
+                        "assigneeDisabled": false
                       }
                     ],
                     "page": 1,
@@ -14331,7 +14336,8 @@
           "priority",
           "revision",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "assigneeDisabled"
         ],
         "additionalProperties": false,
         "properties": {
@@ -14391,6 +14397,10 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "assigneeDisabled": {
+            "type": "boolean",
+            "description": "True when the retained assignee has a disabled membership in this workspace; history and assignment remain intact. This does not grant that user access."
           }
         }
       },
@@ -14480,7 +14490,8 @@
           "activityCounts",
           "createdBy",
           "createdByName",
-          "lastChange"
+          "lastChange",
+          "assigneeDisabled"
         ],
         "additionalProperties": false,
         "properties": {
@@ -14638,6 +14649,10 @@
                 "type": "null"
               }
             ]
+          },
+          "assigneeDisabled": {
+            "type": "boolean",
+            "description": "True when the retained assignee has a disabled membership in this workspace; history and assignment remain intact. This does not grant that user access."
           }
         }
       },
@@ -15262,7 +15277,8 @@
           "createdAt",
           "updatedAt",
           "externalRefs",
-          "lastWrite"
+          "lastWrite",
+          "assigneeDisabled"
         ],
         "additionalProperties": false,
         "properties": {
@@ -15370,6 +15386,10 @@
                 "description": "僅sameUser時回傳"
               }
             }
+          },
+          "assigneeDisabled": {
+            "type": "boolean",
+            "description": "True when the retained assignee has a disabled membership in this workspace; history and assignment remain intact. This does not grant that user access."
           }
         },
         "description": "增量摘要項目：列表欄位加externalRefs"

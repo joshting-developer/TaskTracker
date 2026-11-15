@@ -330,5 +330,31 @@ test('representative workspace flows', async ({ page, browser }) => {
   await picker.getByRole('button', { name: '建立工作空間', exact: true }).click();
   await picker.getByLabel('工作空間名稱', { exact: true }).fill('我的工作區');
   await shot(page, '43-detached-create');
+  await picker.getByRole('button', { name: '關閉工作空間選擇', exact: true }).click();
+  await call(page.request, 'logout', {}, 'auth');
+  await call(page.request, 'register', { name: '工作區擁有者', email: `status-owner-${crypto.randomUUID()}@example.test`, password, workspaceName: '協作空間' }, 'auth');
+  const statusContext = await browser.newContext({ baseURL: origin });
+  try {
+    const statusEmail = `status-member-${test.info().project.name}@example.test`;
+    const statusInvite = await call(page.request, 'inviteMember', { email: statusEmail });
+    const statusMember = await call(statusContext.request, 'register', { name: '協作成員', email: statusEmail, password, inviteToken: statusInvite.token }, 'auth');
+    const statusProject = await call(page.request, 'createProject', { name: '資格管理', code: 'MEMBER' });
+    const acl = await call(page.request, 'getProjectMembers', { projectId: statusProject.id });
+    await call(page.request, 'setProjectMember', { projectId: statusProject.id, userId: statusMember.user.id, roleId: 'developer', expectedRevision: acl.revision });
+    await call(page.request, 'createIssue', { projectId: statusProject.id, title: '保留原指派的卡片', assignee: statusMember.user.id });
+    const statusDirectory = await (await page.request.get('/api/v1/workspace/members')).json();
+    const statusRow = statusDirectory.data.items.find(member => member.id === statusMember.user.id);
+    await call(page.request, 'setWorkspaceMemberStatus', { userId: statusMember.user.id, status: 'disabled', expectedRevision: statusRow.revision });
+    // Fixture account changed through HTTP, so bootstrap the UI with that identity before navigating.
+    await page.goto('/login');
+    await page.locator('.app-shell').waitFor();
+    await page.goto('/app/#/workspace/settings/members');
+    await page.getByLabel('成員狀態', { exact: true }).selectOption('disabled');
+    await page.getByRole('button', { name: '恢復成員 協作成員', exact: true }).waitFor();
+    await shot(page, '46-disabled-member');
+    await page.goto(`/app/#/projects/${statusProject.id}`);
+    await page.getByRole('button', { name: '保留原指派的卡片', exact: true }).waitFor();
+    await shot(page, '47-disabled-assignee');
+  } finally { await statusContext.close(); }
   expect(errors).toEqual([]);
 });

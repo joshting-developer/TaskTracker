@@ -72,7 +72,7 @@ watch(() => form.projectId, async id => {
   finally{if(current===projectGeneration)projectLoading.value=false;}
 });
 const availableIssues = computed(() => [...new Map([...props.issues, ...picked.value].filter(issue => issue.projectId === form.projectId).map(item => [item.id, item])).values()]);
-const availableMembers = computed(() => props.todo && !props.lookup ? props.members.filter(member => selectedProject.value?.memberIds?.includes(member.id)) : [...new Map([...props.members, ...pickedMembers.value].map(item => [item.id,item])).values()]);
+const availableMembers = computed(() => (props.todo && !props.lookup ? props.members.filter(member => selectedProject.value?.memberIds?.includes(member.id)) : [...new Map([...props.members, ...pickedMembers.value].map(item => [item.id,item])).values()]).filter(member => !member.disabled || member.id === form.assignee));
 const states = computed(() => statusesFor(selectedProject.value));
 const epics = computed(() => availableIssues.value.filter((issue) => issue.type === 'epic' && issue.id !== props.issue?.id));
 const parentIssue = computed(() => availableIssues.value.find(item => item.id === form.parentIssueId));

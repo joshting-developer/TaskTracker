@@ -160,6 +160,7 @@ class RelationalStorageTest extends TestCase
         $this->seedWorkspace();
         $before = $this->snapshot();
         $migration = require database_path('migrations/2026_11_04_000000_create_relational_business_tables.php');
+        Schema::dropIfExists('workspace_member_status_events'); // 後續資格事件先回退, 保留真實外鍵順序
         Schema::dropIfExists('issue_external_refs'); // 後續migration的FK表；正常rollback會先撤它
         (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->down();
         $migration->down();
@@ -203,6 +204,7 @@ class RelationalStorageTest extends TestCase
     {
         $this->seedWorkspace();
         $migration = require database_path('migrations/2026_11_04_000000_create_relational_business_tables.php');
+        Schema::dropIfExists('workspace_member_status_events'); // 後續資格事件先回退, 保留真實外鍵順序
         Schema::dropIfExists('issue_external_refs'); // 後續migration的FK表；正常rollback會先撤它
         (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->down();
         $migration->down();

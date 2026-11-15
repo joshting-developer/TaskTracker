@@ -20,8 +20,10 @@ const canManage = computed(() => permissions.value.includes('workspace.members.m
 const canReadMembers = computed(() => permissions.value.includes('workspace.members.read'));
 const dirty = computed(() => Boolean(data.value && name.value !== data.value.workspace.name || invitationManager.value?.dirty));
 const roles = computed(() => roleChoices.value);
-const members = usePagedLookup({ context, load: async (filters, options) => {
-  try { return await api.workspaceMembers({ ...filters, perPage: 20 }, options); }
+const memberStatus = shallowRef('active');
+const memberContext = computed(() => `${context.value}:${memberStatus.value}`);
+const members = usePagedLookup({ context: memberContext, load: async (filters, options) => {
+  try { return await api.workspaceMembers({ ...filters, perPage: 20, status: memberStatus.value }, options); }
   catch (failure) { handleFailure(failure); throw failure; }
 } });
 const visibleMembers = computed(() => data.value ? members.result.value?.items || [] : []);
@@ -80,7 +82,7 @@ async function save(operation, payload) {
     pending = null;
     if (operation === 'updateWorkspace') await load();
     else await members.reload();
-    success.value = operation === 'updateWorkspace' ? '工作空間名稱已儲存' : '工作空間角色已儲存';
+    success.value = operation === 'updateWorkspace' ? '工作空間名稱已儲存' : operation === 'setWorkspaceMemberStatus' ? (payload.status === 'disabled' ? '成員已停用' : '成員已恢復') : '工作空間角色已儲存';
     emit('saved');
   } catch (failure) { error.value = failure.message; conflict.value = failure.code === 'REVISION_CONFLICT'; handleFailure(failure); }
   finally { busy.value = false; }
@@ -90,6 +92,12 @@ function changeRole(member, event) {
   event.target.value = member.roleId;
   if (busy.value || loading.value || roleId === member.roleId) return;
   save('setWorkspaceMemberRole', { userId: member.id, roleId, expectedRevision: member.revision });
+}
+function changeMemberStatus(member) {
+  if (working.value || loading.value) return;
+  const status = member.disabledAt ? 'active' : 'disabled';
+  if (!window.confirm(`要${status === 'disabled' ? '停用' : '恢復'} ${member.name} 的工作空間資格嗎？`)) return;
+  save('setWorkspaceMemberStatus', { userId: member.id, status, expectedRevision: member.revision });
 }
 watch(() => props.activeTab, next => {
   tab.value = next;
@@ -115,10 +123,12 @@ defineExpose({ refresh: () => load(true) });
     </section>
     <section v-show="tab === 'members'" :id="`${id}-members-panel`" role="tabpanel" :aria-labelledby="`${id}-members`" tabindex="0">
 
+      <label v-if="canReadMembers" class="field">成員狀態<select v-model="memberStatus" aria-label="成員狀態" :disabled="working || loading"><option value="active">啟用</option><option value="disabled">已停用</option></select></label>
       <label v-if="canReadMembers" class="field">搜尋工作空間成員<input v-model="members.search.value" aria-label="搜尋工作空間成員" placeholder="姓名或信箱" /></label>
       <p v-if="members.loading.value" role="status">載入成員中…</p>
       <p v-if="members.error.value" class="error-box" role="alert">{{ members.error.value }}<button class="text-button" @click="members.reload">重試</button></p>
-      <ul class="member-list"><li v-for="member in visibleMembers" :key="member.id"><span class="avatar small">{{ member.name.slice(0, 1) }}</span><div><strong>{{ member.name }}</strong><small>{{ member.email }}</small></div><select v-if="canManage && member.canChange" class="member-role" :aria-label="`工作空間身份 ${member.name}`" :value="member.roleId" :disabled="working || loading || members.loading.value" @change="changeRole(member, $event)"><option v-if="!roles.some(role => role.id === member.roleId)" :value="member.roleId" disabled>{{ roleLabels[member.roleId] || member.roleId }}</option><option v-for="role in roles" :key="role.id" :value="role.id">{{ role.label }}</option></select><span v-else class="type-tag">{{ roleLabels[member.roleId] || member.roleId }}</span></li></ul>
+      <ul class="member-list"><li v-for="member in visibleMembers" :key="member.id" :data-member-id="member.id"><span class="avatar small">{{ member.name.slice(0, 1) }}</span><div><strong>{{ member.name }}</strong><small>{{ member.email }}</small><small v-if="member.disabledAt">已停用</small></div><select v-if="canManage && member.canChange" class="member-role" :aria-label="`工作空間身份 ${member.name}`" :value="member.roleId" :disabled="working || loading || members.loading.value" @change="changeRole(member, $event)"><option v-if="!roles.some(role => role.id === member.roleId)" :value="member.roleId" disabled>{{ roleLabels[member.roleId] || member.roleId }}</option><option v-for="role in roles" :key="role.id" :value="role.id">{{ role.label }}</option></select><span v-else class="type-tag">{{ roleLabels[member.roleId] || member.roleId }}</span><button v-if="canManage && member.canSetStatus" class="button secondary member-status-action" :aria-label="`${member.disabledAt ? '恢復' : '停用'}成員 ${member.name}`" :disabled="working || loading || members.loading.value" @click="changeMemberStatus(member)">{{ member.disabledAt ? '恢復' : '停用' }}</button></li></ul>
+      <p v-if="members.result.value && !visibleMembers.length && !members.loading.value">{{ memberStatus === 'disabled' ? '沒有已停用成員' : '沒有符合條件的成員' }}</p>
       <div v-if="members.result.value?.lastPage > 1" class="pagination" aria-label="工作空間成員分頁"><button class="text-button" :disabled="members.loading.value || working || members.page.value <= 1" @click="members.page.value--">上一頁</button><span>{{ members.page.value }} / {{ members.result.value.lastPage }}</span><button class="text-button" :disabled="members.loading.value || working || members.page.value >= members.result.value.lastPage" @click="members.page.value++">下一頁</button></div>
 
       <WorkspaceInvitationManager v-if="data && tab === 'members' && permissions.includes('workspace.invite')" ref="invitationManager" :workspace-id="context" :disabled="busy || loading" @access="handleFailure" />
@@ -140,6 +150,7 @@ h1 { font-size: 24px; margin: 0; } h3 { font-size: 18px; margin: 22px 0 12px; }
 .member-list li > div { flex: 1; min-width: 160px; overflow-wrap: anywhere; }
 .member-list strong, .member-list small { display: block; }.member-list small { color: #5f6673; font-size: 13px; margin-top: 4px; }
 .member-list .type-tag { font-size: 12px; color: #424b5c; border-color: #cbd0db; padding: 4px 6px; }
+.member-status-action { min-height: 44px; }
 .member-role, .icon-button { min-width: 44px; min-height: 44px; }
 .member-role { width: 130px; max-width: 100%; padding: 8px 10px; border: 1px solid #bfc6d2; border-radius: 6px; background: #fff; color: #424b5c; font-size: 14px; }
 .settings-success { color: #286b55; font-size: 14px; margin-bottom: 16px; }

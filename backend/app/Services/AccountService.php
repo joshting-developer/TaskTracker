@@ -97,6 +97,7 @@ class AccountService
             ],
             'role' => $member->role,
             'permissions' => WorkspacePermissions::resolve($member->role),
+            'hasWorkspaces' => true,
         ];
     }
 
@@ -245,10 +246,10 @@ class AccountService
         $workspace = is_string($workspaceId) ? $this->accounts->workspace($workspaceId) : null;
         $member = $workspace ? $this->accounts->membership($workspace->id, $user->id) : null;
         if (! $member) {
-            return ['user' => $this->publicUser($user), 'workspace' => null, 'role' => null, 'permissions' => []];
+            return ['user' => $this->publicUser($user), 'workspace' => null, 'role' => null, 'permissions' => [], 'hasWorkspaces' => $this->accounts->firstWorkspace($user->id) !== null];
         }
 
-        return ['user' => $this->publicUser($user), 'workspace' => ['id' => $workspaceId, 'name' => $workspace->name], 'role' => $member->role, 'permissions' => WorkspacePermissions::resolve($member->role)];
+        return ['user' => $this->publicUser($user), 'workspace' => ['id' => $workspaceId, 'name' => $workspace->name], 'role' => $member->role, 'permissions' => WorkspacePermissions::resolve($member->role), 'hasWorkspaces' => true];
     }
 
     /**

@@ -2,7 +2,7 @@
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { api } from '../api/index.js';
 import Icon from './Icon.vue';
-const props = defineProps({ workspace: Object, switching: Boolean, change: Function, create: Function });
+const props = defineProps({ workspace: Object, hasWorkspaces: Boolean, switching: Boolean, change: Function, create: Function });
 const dialog = ref(null), trigger = ref(null), choices = ref([]), loading = ref(false), error = ref('');
 const creating = ref(false), name = ref(''), nameInput = ref(null);
 let creationRequestId = crypto.randomUUID(), opener;
@@ -33,7 +33,7 @@ defineExpose({ open });
 onBeforeUnmount(() => dialog.value?.close());
 </script>
 <template>
-  <button ref="trigger" class="workspace-switch" aria-label="切換工作空間" aria-haspopup="dialog" :disabled="switching" @click="open"><span class="workspace-avatar">{{ workspace?.name?.slice(0, 1) || '—' }}</span><span class="switcher-current"><strong>{{ workspace?.name || '無隸屬工作區' }}</strong><span>切換工作空間</span></span><span class="workspace-chevron">⌄</span></button>
+  <button ref="trigger" class="workspace-switch" aria-label="切換工作空間" aria-haspopup="dialog" :disabled="switching" @click="open"><span class="workspace-avatar">{{ workspace?.name?.slice(0, 1) || '—' }}</span><span class="switcher-current"><strong>{{ workspace?.name || (hasWorkspaces ? '選擇工作區' : '無隸屬工作區') }}</strong><span>切換工作空間</span></span><span class="workspace-chevron">⌄</span></button>
   <dialog ref="dialog" class="workspace-picker" aria-labelledby="workspace-picker-title" @cancel.prevent="close">
     <header><h2 id="workspace-picker-title">選擇工作空間</h2><button class="icon-button" aria-label="關閉工作空間選擇" :disabled="switching" @click="close"><Icon name="close" /></button></header>
     <p v-if="loading || switching" role="status">{{ switching ? '正在切換工作空間…' : '正在載入工作空間…' }}</p>

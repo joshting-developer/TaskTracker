@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
-use App\Data\WorkspaceContext;
 use App\Authorization\WorkspacePermissions;
 use App\Data\PageQueryData;
+use App\Data\WorkspaceContext;
 use App\Data\WorkspaceMemberSummaryData;
+use App\Database\DatabaseTimes;
 use App\Repositories\SettingsRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
@@ -38,16 +39,17 @@ class WorkspaceSettingsReadService
      *
      * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  PageQueryData  $filters  有界分頁／搜尋
+     * @param  string  $status  已驗證啟用／停用篩選
      * @return LengthAwarePaginator<WorkspaceMemberSummaryData> 成員管理分頁
      */
-    public function members(WorkspaceContext $context, PageQueryData $filters): LengthAwarePaginator
+    public function members(WorkspaceContext $context, PageQueryData $filters, string $status = 'active'): LengthAwarePaginator
     {
         WorkspacePermissions::authorize($context->legacyIdentity(), 'workspace.members.read');
         $workspace = $this->settings->summary($context->workspaceId);
 
-        return $this->settings->memberPage($workspace, $filters)->through(fn ($member) => new WorkspaceMemberSummaryData(
+        return $this->settings->memberPage($workspace, $filters, $status)->through(fn ($member) => new WorkspaceMemberSummaryData(
             $member->user_id, $member->member_name, $member->member_email, $member->role, (int) $member->role_revision,
-            WorkspacePermissions::canManageRole($context->permissions, $member->role)));
+            WorkspacePermissions::canManageRole($context->permissions, $member->role) && $member->disabled_at === null, DatabaseTimes::public($member->disabled_at), $member->user_id !== $context->userId && WorkspacePermissions::canManageRole($context->permissions, $member->role)));
     }
 
     /**

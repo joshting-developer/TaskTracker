@@ -13,7 +13,9 @@ readonly class WorkspaceMemberSummaryData
      * @param  string  $email  管理用途信箱
      * @param  string  $roleId  當前Workspace角色映射ID
      * @param  int  $revision  角色版本
-     * @param  bool  $canChange  當次有效permission是否可管理此資格
+     * @param  bool  $canChange  當次有效permission是否可管理角色
+     * @param  ?string  $disabledAt  停用時間
+     * @param  bool  $canSetStatus  是否可調整狀態
      */
-    public function __construct(public string $id, public string $name, public string $email, public string $roleId, public int $revision, public bool $canChange) {}
+    public function __construct(public string $id, public string $name, public string $email, public string $roleId, public int $revision, public bool $canChange, public ?string $disabledAt = null, public bool $canSetStatus = false) {}
 }

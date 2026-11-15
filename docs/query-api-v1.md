@@ -155,3 +155,14 @@ TT-319起新註冊先回pending驗證資料, 不建立工作區登入資格。�
 寫入沿用ProjectBoards, 由Bearer writeOnce擁有User→Workspace鎖與交易。公開PATCH只接受部分欄位和有界加入／移除差量, 不使用網頁相容RPC的整包覆蓋。建卡boardIds與編號、Issue和所有收錄同交易；失敗不保留部分成果。重播前仍重驗本人permission及Token能力
 
 - `GET /api/v1/workspace/invitations`（TT-340）：Session的workspace.invite限定, 當工作區未接受且未到期邀請, 預設20／上限100筆, expiresAt與內部id遞減穩定排序；只回id、email、role、createdAt、expiresAt、deliveryStatus, 不回token或信件內容。一般設定不載入此清單；正式契約與寄送寫入見backend/resources/auth-session-openapi.json, 不是PAT公開端點
+
+
+## 成員資格與保留指派（TT-359）
+
+Session的`GET /api/v1/workspace/members`接受`status=active|disabled`, 預設active, 沿用SQL搜尋、穩定排序與每頁上限100筆。只回目前頁成員與disabledAt、canSetStatus, 不預載全工作區或歷史事件
+
+`POST /api/rpc/setWorkspaceMemberStatus`只開放Session管理, 接受userId、status、expectedRevision、requestId。角色與狀態共用revision, 當下重驗workspace.members.manage及目標角色；Owner及本人不能變更, 成功只回最小狀態。變更與永久事件、receipt同交易, 重播前仍授權, 重播不重新套用舊狀態
+
+Session identity新增hasWorkspaces, 區分「未選定目前空間」與「完全沒有有效空間」, workspace仍可為null。Issue摘要、列表及詳細新增assigneeDisabled布林值, 原指派仍保留姓名, 資格由同批eager load取得, 不增加逐卡查詢。公開PAT端點也使用相同Issue投影, 正式欄位見openapi.json
+
+停用後該空間的Session／PAT業務API即拒絕, 其他空間不受影響；恢復不改原Project ACL, 不重新啟用已撤銷的PAT。卡片的歷史留言與工時讀取規則不變

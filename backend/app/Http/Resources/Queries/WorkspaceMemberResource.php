@@ -19,6 +19,6 @@ class WorkspaceMemberResource extends JsonResource
         $member = $this->resource;
 
         return ['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'roleId' => $member->roleId,
-            'revision' => $member->revision, 'canChange' => $member->canChange];
+            'revision' => $member->revision, 'canChange' => $member->canChange, 'disabledAt' => $member->disabledAt, 'canSetStatus' => $member->canSetStatus];
     }
 }

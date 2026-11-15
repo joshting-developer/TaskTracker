@@ -27,6 +27,7 @@ use App\Http\Controllers\TimeEntryController;
 use App\Http\Controllers\TodoController;
 use App\Http\Controllers\TodoNotificationsController;
 use App\Http\Controllers\WorkspaceController;
+use App\Http\Controllers\WorkspaceMemberStatusController;
 use App\Http\Middleware\RecordHttpOperation;
 use App\Services\AccountSettings;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -66,6 +67,7 @@ foreach (AccountSettings::OPERATIONS as $operation) {
 }
 
 Route::post('/api/rpc/getWorkspace', [WorkspaceController::class, 'show'])->name('rpc.getWorkspace');
+Route::post('/api/rpc/setWorkspaceMemberStatus', [WorkspaceMemberStatusController::class, 'update'])->name('rpc.setWorkspaceMemberStatus');
 Route::post('/api/rpc/inviteMember', [WorkspaceController::class, 'invite'])->name('rpc.inviteMember')->middleware($authThrottle(10));
 
 Route::post('/api/rpc/createProject', [ProjectController::class, 'store'])->name('rpc.createProject');

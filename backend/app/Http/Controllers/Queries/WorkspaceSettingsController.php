@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Queries;
 use App\Data\WorkspaceContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PageQueryRequest;
+use App\Http\Requests\WorkspaceMembersQueryRequest;
 use App\Http\Resources\ApiResponse;
 use App\Http\Resources\Queries\PageResource;
 use App\Http\Resources\Queries\WorkspaceMemberResource;
@@ -39,12 +40,12 @@ class WorkspaceSettingsController extends Controller
     /**
      * 按需回傳有界有效成員目錄。
      *
-     * @param  PageQueryRequest  $request  分頁及搜尋條件
+     * @param  WorkspaceMembersQueryRequest  $request  分頁、搜尋及資格狀態
      * @return ApiResponse 當頁成員
      */
-    public function members(PageQueryRequest $request): ApiResponse
+    public function members(WorkspaceMembersQueryRequest $request): ApiResponse
     {
-        $data = $this->workspace->read($request, fn (WorkspaceContext $context) => ['page' => $this->settings->members($context, $request->pagination())]);
+        $data = $this->workspace->read($request, fn (WorkspaceContext $context) => ['page' => $this->settings->members($context, $request->pagination(), $request->status())]);
 
         return new ApiResponse(PageResource::wrap($data['page'], WorkspaceMemberResource::collection($data['page']->items())->resolve()));
     }

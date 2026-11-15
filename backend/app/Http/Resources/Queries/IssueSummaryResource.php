@@ -22,7 +22,7 @@ class IssueSummaryResource extends JsonResource
         return ['id' => $i->public_id, 'projectId' => $i->getRelation('project')->public_id,
             'identifier' => $i->identifier, 'title' => $i->title, 'type' => $i->type,
             'state' => $i->getRelation('status')->code, 'priority' => $i->priority,
-            'assignee' => $i->getRelation('assignee')?->user_id ?? '', 'assigneeName' => $i->getRelation('assignee')?->getRelation('user')?->name ?? '', 'dueDate' => $i->due_date ?? '',
+            'assignee' => $i->getRelation('assignee')?->user_id ?? '', 'assigneeName' => $i->getRelation('assignee')?->getRelation('user')?->name ?? '', 'assigneeDisabled' => $i->getRelation('assignee')?->disabled_at !== null, 'dueDate' => $i->due_date ?? '',
             'epicId' => $i->getRelation('epic')?->public_id ?? '',
             'epic' => $i->getRelation('epic') ? ['id' => $i->getRelation('epic')->public_id, 'projectId' => $i->getRelation('project')->public_id, 'title' => $i->getRelation('epic')->title, 'identifier' => $i->getRelation('epic')->identifier, 'type' => 'epic'] : null, 'parentIssueId' => $i->getRelation('parent')?->public_id ?? '',
             'estimateMinutes' => (int) ($i->type === 'epic' ? ($i->epic_estimate_minutes ?? $i->estimate_minutes) : $i->estimate_minutes),

@@ -94,18 +94,20 @@ class SettingsRepository
      *
      * @param  Workspace  $workspace  已授權Workspace
      * @param  PageQueryData  $filters  有界搜尋／分頁
+     * @param  string  $status  已驗證啟用／停用篩選
      * @return LengthAwarePaginator<WorkspaceMember> 當頁成員投影
      */
-    public function memberPage(Workspace $workspace, PageQueryData $filters): LengthAwarePaginator
+    public function memberPage(Workspace $workspace, PageQueryData $filters, string $status = 'active'): LengthAwarePaginator
     {
         $query = WorkspaceMember::query()->join('users as u', 'u.id', '=', 'workspace_members.user_id')
-            ->where('workspace_members.workspace_id', $workspace->id)->whereNull('workspace_members.disabled_at');
+            ->where('workspace_members.workspace_id', $workspace->id);
+        $status === 'disabled' ? $query->whereNotNull('workspace_members.disabled_at') : $query->whereNull('workspace_members.disabled_at');
         if ($filters->search !== '') {
             $term = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($filters->search)).'%';
             $query->where(fn ($q) => $q->whereRaw("LOWER(u.name) LIKE ? ESCAPE '!'", [$term])->orWhereRaw("LOWER(u.email) LIKE ? ESCAPE '!'", [$term]));
         }
 
         return $query->orderBy('u.name')->orderBy('u.id')->paginate($filters->perPage,
-            ['workspace_members.id', 'workspace_members.user_id', 'workspace_members.role', 'workspace_members.role_revision', 'u.name as member_name', 'u.email as member_email'], 'page', $filters->page);
+            ['workspace_members.id', 'workspace_members.user_id', 'workspace_members.role', 'workspace_members.role_revision', 'workspace_members.disabled_at', 'u.name as member_name', 'u.email as member_email'], 'page', $filters->page);
     }
 }

@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "35bfc8676b192ee59d91f032601e85a7d388f5a563aa078e35386ac5ffd1de74",
+  "harnessSha256": "34fb8bc4fe11f6e89224077c1f2f50f0b88285d843323a0172a62cd079127c5f",
   "profile": "darwin-arm64",
-  "reviewer": "Josh standing authorization / TT-340",
-  "note": "Final Repository split; all 135 images exactly match the previously reviewed invitation candidate; thresholds unchanged",
-  "manifestSha256": "c5c2ab568633a7f24c2c3be8166f4bba315bfe4b79644bba209f2f1aa7f8c17d",
+  "reviewer": "Josh delegated review / TT-359",
+  "note": "Reviewed all nine new/changed member-status images at desktop/tablet/mobile; 132 prior images unchanged. Three member settings changes and six new disabled-member/assignment images approved; comparison thresholds unchanged",
+  "manifestSha256": "12a2238ee74f196b08446c70c53a898984a03bc546ff3e0b4391c046450f35ca",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

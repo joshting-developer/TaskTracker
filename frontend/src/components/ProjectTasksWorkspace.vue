@@ -38,7 +38,7 @@ const rows = shallowRef([]);
 const dragging = ref(false), holdBackground = shallowRef(false);
 const detailRows = computed(() => unique([...(detail.value?.references || []), ...(editor.value?.issue?.references || []), ...candidates.value, ...rows.value, ...(detail.value ? [detail.value] : [])]));
 const contextRows = computed(() => unique([...rows.value.map(row => row.epic).filter(Boolean), ...rows.value]));
-const memberNames = computed(() => unique([...members.value, ...rows.value.filter(row => row.assignee).map(row => ({ id: row.assignee, name: row.assigneeName })), ...(detail.value?.assignee ? [{ id: detail.value.assignee, name: detail.value.assigneeName }] : [])]));
+const memberNames = computed(() => unique([...members.value, ...rows.value.filter(row => row.assignee).map(row => ({ id: row.assignee, name: `${row.assigneeName}${row.assigneeDisabled ? '（已停用）' : ''}`, disabled: Boolean(row.assigneeDisabled) })), ...(detail.value?.assignee ? [{ id: detail.value.assignee, name: `${detail.value.assigneeName}${detail.value.assigneeDisabled ? '（已停用）' : ''}`, disabled: Boolean(detail.value.assigneeDisabled) }] : [])]));
 function rememberOption({kind, item}) {
   if (kind === 'member') members.value = unique([...members.value, item]);
   else candidates.value = unique([...candidates.value, item]);

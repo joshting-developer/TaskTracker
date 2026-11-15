@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker Session Authentication",
-    "version": "1.8.0",
+    "version": "1.9.0",
     "description": "Session and CSRF only; not the PAT API. Legacy accounts keep their existing eligibility. New public registration requires an activation link; valid invitations verify the exact invited email during new-account registration. Activation GET only renders the page, with token in URL fragment. A verified account may have no active workspace; workspace and role are then null and permissions is empty. Workspace APIs still require active membership. Invitation login and registration never join implicitly; acceptance is a separate authenticated decision."
   },
   "paths": {
@@ -1322,6 +1322,142 @@
           }
         }
       }
+    },
+    "/api/rpc/setWorkspaceMemberStatus": {
+      "post": {
+        "operationId": "setWorkspaceMemberStatus",
+        "summary": "Disable or restore one workspace membership",
+        "description": "Session+CSRF and current workspace.members.manage required. Target must be in the current workspace and its effective permission set must be manageable. Owner and self are protected. Preserve account, other memberships, project ACLs and history. A shared role_revision prevents lost status/role updates. Recheck actor/target before receipt replay; same request returns original result without repeating the event. Replaying an old disable after restoration does not disable again. A permanent event records actor, status, time and revision atomically. Existing PATs are denied while membership is disabled; restore does not restore revoked tokens.",
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "userId",
+                  "status",
+                  "expectedRevision",
+                  "requestId"
+                ],
+                "properties": {
+                  "userId": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "enum": [
+                      "active",
+                      "disabled"
+                    ]
+                  },
+                  "expectedRevision": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "requestId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "id, revision, status and nullable disabledAt result"
+          },
+          "400": {
+            "description": "Invalid fields"
+          },
+          "401": {
+            "description": "Missing or disabled workspace session"
+          },
+          "403": {
+            "description": "Insufficient current permission, Owner or self target"
+          },
+          "404": {
+            "description": "Target is outside this workspace"
+          },
+          "409": {
+            "description": "Revision or request ID conflict"
+          },
+          "419": {
+            "description": "Invalid CSRF"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/members": {
+      "get": {
+        "operationId": "workspaceMembersSession",
+        "summary": "Bounded workspace member directory by membership state",
+        "description": "Session only, current workspace.members.read. SQL search and pagination with stable user name/user ID order; status defaults to active. Returns id/name/email/roleId/revision/canChange/disabledAt/canSetStatus. Inactive members cannot be role-edited, Owner/self cannot be status-changed.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "enum": [
+                "active",
+                "disabled"
+              ],
+              "default": "active"
+            }
+          },
+          {
+            "in": "query",
+            "name": "perPage",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bounded member page"
+          },
+          "400": {
+            "description": "Invalid query"
+          },
+          "401": {
+            "description": "Missing membership"
+          },
+          "403": {
+            "description": "Missing member directory permission"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1390,7 +1526,8 @@
           "user",
           "workspace",
           "role",
-          "permissions"
+          "permissions",
+          "hasWorkspaces"
         ],
         "properties": {
           "user": {
@@ -1413,6 +1550,10 @@
             "items": {
               "type": "string"
             }
+          },
+          "hasWorkspaces": {
+            "type": "boolean",
+            "description": "Whether an active membership exists. May be true while current workspace is null after its membership was disabled; choose another workspace explicitly."
           }
         }
       }

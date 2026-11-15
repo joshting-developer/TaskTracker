@@ -64,6 +64,7 @@ export const api = {
   workspaceMemberRoles: options => queryApi('workspace/member-roles', {}, options),
   updateWorkspace: input => callApi('updateWorkspace', input),
   setWorkspaceMemberRole: input => callApi('setWorkspaceMemberRole', input),
+  setWorkspaceMemberStatus: input => callApi('setWorkspaceMemberStatus', input),
   personalVersion: options => queryApi('personal-version', {}, options),
   todos: (filters, options) => queryApi('todos', filters, options),
   todo: (id, options) => queryApi(`todos/${encodeURIComponent(id)}`, {}, options),
