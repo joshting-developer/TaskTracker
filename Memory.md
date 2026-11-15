@@ -1,7 +1,9 @@
 ## 2026-11-15 本批工作入口
 
-- 獨立管理後台：docs/admin-dashboard-contract.md, TT-364待整批正式驗收
-- 公開頁與上方語言入口：docs/public-language-contract.md, TT-365／366同批發布
+- Season查重／看板／Future與補標紙條索引：docs/season-roadmap-status-2026-11-15.md, TT-367；Future不自動領卡, 私人GPT仍暫停
+
+- 獨立管理後台：docs/admin-dashboard-contract.md, TT-364已隨v0.5.0發布並通過正式獨立管理驗收
+- 公開頁與上方語言入口：docs/public-language-contract.md, TT-365／366已隨v0.5.0同批發布與正式驗收
 - GPT私人串接依Josh最新交接暫停：目標joshting.1999並非目前登入帳號, 先前歸屬推定撤回, TT-350 blocked；待切回目標帳號且明確要求恢復, 才重驗所有者／安裝並操作Plugin／Secret／PAT。歷史見docs/chatgpt-bridge-deployment.md, 舊催促紙條不構成恢復授權
 
 # TaskTracker 專案記憶

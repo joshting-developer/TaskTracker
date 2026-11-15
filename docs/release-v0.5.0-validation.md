@@ -16,13 +16,13 @@ TT-363品牌入口、TT-364獨立管理後台、TT-365公開五頁中英文、TT
 
 ## 正式發布
 
-尚未打tag或部署。預計v0.5.0由既有Tagged release CI驗來源、契約與amd64映像, 再部署同一映像。正式管理名稱與密碼雜湊已stage, 沒有改一般User或Owner權限
+v0.5.0已部署, tag來源c99ebab455d3b5299af26273e5582fb77976b3ea, GitHub run43718688726所有job成功。Fly讀回單台nrt機器8d10edbed02298, 正式映像digest sha256:c26c78b09d14881b13cc6f8b332793c249f4e94f9ec0b279c9d6dd43353262ed。獨立管理配置已隨同一映像套用, 沒有改一般User或Owner權限
 
 沒有schema異動, 不同步本地合成資料、不seed正式庫。前版保留v0.4.0, digest sha256:f6593b37e10c5343495ffeea14fe4c035306590223da7a8d1121e80f98d6bd9e, 回退只換映像, 不覆寫資料
 
-## 待正式確認
+## 正式驗收結果
 
-- CI及Fly整批部署成功, 讀回版本與映像digest
-- HTTPS、公開語系、登入與App、獨立管理資格及匿名拒絕
-- 既有Codex PAT讀卡與Workspace資格仍有效
+- CI及Fly整批部署成功, 版本與映像digest已讀回
+- 真實Chrome驗HTTPS公開五頁、語系跨登入保存、Codex本人登入與Secure／HttpOnly Cookie、App三尺寸上方語言選單及reload。獨立管理登入／真實彙總／三尺寸／登出通過, 匿名及一般Codex登入查管理統計均401
+- 既有Codex PAT已讀正式卡片／看板並核對自身Workspace, 無退回Owner。正式驗收只有既有登入與讀取, 未建合成Issue／Workspace／附件
 - GPT私人服務等待切回joshting.1999且Josh明確要求恢復, 暫停Plugin／PAT／Secret操作, 不因主站部署成功就結案TT-350
