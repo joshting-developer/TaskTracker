@@ -43,7 +43,17 @@ x-backend: &backend
     REVERB_ALLOWED_ORIGINS: 127.0.0.1,localhost
     ALLOWED_ORIGINS: http://127.0.0.1:5174,http://localhost:5174,http://127.0.0.1:5175
     ATTACHMENTS_DISK: attachments
-    MAIL_DELIVERY_MODE: preview
+    MAIL_DELIVERY_MODE: inline
+    MAIL_MAILER: smtp
+    MAIL_HOST: mailpit
+    MAIL_PORT: 1025
+    MAIL_SCHEME: smtp
+    MAIL_URL: smtp://mailpit:1025
+    MAIL_USERNAME: ''
+    MAIL_PASSWORD: ''
+    MAIL_FROM_ADDRESS: tasktracker@local.test
+    MAIL_FROM_NAME: TaskTracker Local
+    SSL_CERT_FILE: /run/local-mail-ca.pem
     SMTP_HOST: ''
     SMTP_USER: ''
     SMTP_PASSWORD: ''
@@ -60,6 +70,7 @@ x-backend: &backend
     - laravel-data:/data
     - laravel-storage:/app/storage
     - mysql-app-secret:/run/tasktracker-app:ro
+    - ./.local/local-mail/cert.pem:/run/local-mail-ca.pem:ro
 
 services:
   backend:
@@ -73,6 +84,8 @@ services:
       redis:
         condition: service_healthy
       mysql:
+        condition: service_healthy
+      mailpit:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:3002/api/health') === false ? 1 : 0);"]
@@ -149,6 +162,26 @@ services:
       retries: 30
       start_period: 30s
 
+  mailpit:
+    image: axllent/mailpit:v1.33.1
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_MAX_MESSAGES: 1000
+      MP_SMTP_TLS_CERT: /certs/cert.pem
+      MP_SMTP_TLS_KEY: /certs/key.pem
+      MP_SMTP_REQUIRE_STARTTLS: 'true'
+    ports:
+      - "127.0.0.1:8025:8025"
+    volumes:
+      - mailpit-data:/data
+      - ./.local/local-mail/cert.pem:/certs/cert.pem:ro
+      - ./.local/local-mail/key.pem:/certs/key.pem:ro
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   redis:
     image: redis:8-alpine
     command: ["redis-server", "--appendonly", "yes"]
@@ -197,3 +230,4 @@ volumes:
   mysql-data:
   mysql-root-secret:
   mysql-app-secret:
+  mailpit-data:

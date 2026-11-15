@@ -27,6 +27,18 @@ def initialize():
         credentials.chmod(0o600)
     elif not credentials.is_file():
         raise SystemExit('Missing local credentials; preserve local-dev.env and restore its credentials record')
+    mail = PRIVATE / 'local-mail'
+    mail.mkdir(exist_ok=True, mode=0o700)
+    certificate, key = mail / 'cert.pem', mail / 'key.pem'
+    if certificate.exists() != key.exists():
+        raise SystemExit('Incomplete local SMTP certificate; preserve the existing files and restore the missing file')
+    if not certificate.exists():
+        subprocess.run(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes',
+            '-keyout', str(key), '-out', str(certificate), '-sha256', '-days', '3650',
+            '-subj', '/CN=mailpit', '-addext', 'subjectAltName=DNS:mailpit',
+            '-addext', 'basicConstraints=critical,CA:TRUE'], check=True, capture_output=True)
+        key.chmod(0o600)
+        certificate.chmod(0o644)  # Public trust anchor, mounted separately for the unprivileged PHP process.
 
 
 def main():
@@ -44,6 +56,7 @@ def main():
     subprocess.run(command + operations[args.action], cwd=ROOT, env=environment, check=True)
     if args.action in ['up', 'seed']:
         print('Local development: http://127.0.0.1:5174')
+        print('Local-only mailbox: http://127.0.0.1:8025 (no external delivery)')
         print('Synthetic account credentials: .local/local-dev-credentials.json')
         print('Seed explicitly with: python3 tools/local-dev.py seed')
 
