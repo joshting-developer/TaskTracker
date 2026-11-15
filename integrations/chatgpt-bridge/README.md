@@ -11,3 +11,15 @@ Sites識別保存在`.openai/hosting.json`, 後續沿用, 不重複建立Site。
 - 沒有PAT、登入資訊或正式業務資料, 沒有公開代理
 
 TT-349接續8種唯讀工具與合成回應測試；首次發布後仍需驗MCP列舉、私人呼叫權限、執行時Secret隔離及固定HTTPS origin出站, 這些不在目前已驗項裡。完整紀錄見[能力檢查](../../docs/chatgpt-bridge-capability-check.md)
+
+## 本地開發與驗證
+
+`npm test`執行合成HTTP與OpenAPI契約測試, `npm run build`產生單一Worker ESM, 沒有新增依賴。來源入口worker/index.js, 只輸出dist/server/index.js與dist/.openai/hosting.json, dist不進Git
+
+工具：who_am_i、list_projects、search_issues、get_issue、list_issue_comments、list_boards、get_board、list_board_issues。get_issue的issue接受公開UUID或完整卡號, 其他資源接受公開UUID（board另接受default）；不接受內部數字ID或任意URL
+
+Site伺服器設定：TASKTRACKER_OWNER_EMAIL為目前Site owner的已驗證信箱、TASKTRACKER_WORKSPACE_ID為專用PAT綁定的空間。TASKTRACKER_PAT必須標成Secret, 只能由使用者安全設定專用短效唯讀PAT, 不複用Agent憑證。設定值不放本檔或hosting manifest
+
+每次工具呼叫核對Site可信身分及REST目前身分／read資格, 不跨請求快取資格或資料。單頁最多20筆, request最多16KiB、上游JSON最多256KiB、每次REST請求10秒, 拒絕轉址。一般操作2次REST, 卡號讀詳情3次, 不自動翻頁／輪詢／重試
+
+TT-349已完成合成工具, 私人發布、安裝與正式唯讀驗收仍由TT-350執行, 尚未連線正式資料
