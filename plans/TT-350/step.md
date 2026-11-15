@@ -1,0 +1,9 @@
+# 執行紀錄
+
+- TT-349已提交並push, 正式時間30分鐘, 卡片closed；讀回最新紙條後開始TT-350, 僅此卡inprogress
+- 原生Sites來源helper會另初始化巢狀Git, 與使用者原repository規則衝突；本卡改從原repository匯出Adapter子樹, 仍使用官方package helper及原生私人發布, 不複製整個TaskTracker或改寫main歷史
+- 原repository以git subtree split匯出Adapter, Site來源SHA 94a252ef3446e44a4c5e5adb9cecaf8f19ae704e, push後讀回分支一致, 未新建clone／worktree、未改main歷史、未傳完整TaskTracker
+- 官方package helper打包本地受測Worker, 原生owner-private發布成功, Site版本1, deployment appgdep_6af978ef11748191bfffd71a2595e248, env revision3
+- 私人網址https://tasktracker-private-bridge.consideratecheetah3.chatgpt.site, has_mcp=true, 讀回policy仍僅owner一人／無群組／無外部訪客, 匿名health與mcp實際401
+- 原生回傳Plugin ID plugin_asdk_app_sites_0844809a2eac8191b56b64b3bab240ad, 安裝工具回Already installed；目前對話工具表尚無8個新tool, 不能宣稱已呼叫
+- 只配置owner email（Secret）及SideProject workspace ID, 沒有TASKTRACKER_PAT。真實唯讀E2E、執行時Secret／出站、撤銷驗證仍受阻, 不重用Agent PAT或假裝已連線。需Josh安全設定專用短效唯讀Token及新聊天呼叫, 發紙條後繼續獨立任務
