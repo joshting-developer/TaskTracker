@@ -24,7 +24,10 @@ try {
   }
   const login = await measure();
   if (!before) {
-    assert.equal(login.filter(entry => entry.name.endsWith('.js')).length, 1);
+    const scripts = login.filter(entry => entry.name.endsWith('.js'));
+    assert.ok(scripts.length >= 1 && scripts.length <= 2, 'App entry plus at most one Vue/Vuetify shared runtime');
+    assert.ok(scripts.reduce((sum, entry) => sum + entry.bytes, 0) < 450000, 'Login script budget remains bounded after adding a separate admin entry');
+    assert(!scripts.some(entry => /^admin-/.test(entry.name)), 'Regular login never downloads admin screen code');
     assert(!login.some(entry => /TimeAnalysis|ProjectBoard|MarkdownEditor|pusher|woff|ttf/.test(entry.name)));
     await page.getByLabel('Email', { exact: true }).fill(`unknown-${crypto.randomUUID()}@example.test`);
     await page.getByLabel('密碼', { exact: true }).fill('bundle-test-password');

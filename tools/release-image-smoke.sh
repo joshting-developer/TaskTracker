@@ -24,16 +24,19 @@ for attempt in range(45):
     except (urllib.error.URLError,OSError): pass
     time.sleep(1)
 else: raise SystemExit('Synthetic runtime did not become healthy')
-for path in ['/', '/features/tasks/', '/features/collaboration/', '/features/time/', '/features/integrations/', '/login', '/app/', '/api/health', '/api/public/openapi.json']:
+for path in ['/', '/features/tasks/', '/features/collaboration/', '/features/time/', '/features/integrations/', '/login', '/app/', '/admin/', '/api/health', '/api/public/openapi.json']:
     with urllib.request.urlopen(base+path,timeout=5) as r:
         assert r.status==200,path
         if path=='/api/public/openapi.json': assert json.load(r)['openapi'].startswith('3.1')
+with urllib.request.urlopen(base+'/admin/',timeout=5) as r:
+    assert 'noindex' in r.headers.get('X-Robots-Tag','')
+    assert 'id="admin"' in r.read().decode()
 class Icons(HTMLParser):
     def __init__(self): super().__init__(); self.icons=[]
     def handle_starttag(self,tag,attrs):
         attrs=dict(attrs)
         if tag=='link' and attrs.get('rel') in ['icon','apple-touch-icon']: self.icons.append(attrs['href'])
-for path in ['/', '/features/tasks/', '/features/collaboration/', '/features/time/', '/features/integrations/', '/login', '/app/']:
+for path in ['/', '/features/tasks/', '/features/collaboration/', '/features/time/', '/features/integrations/', '/login', '/app/', '/admin/']:
     with urllib.request.urlopen(base+path,timeout=5) as r: html=r.read().decode()
     parser=Icons();parser.feed(html);assert len(parser.icons)==6,path
     for href in parser.icons:

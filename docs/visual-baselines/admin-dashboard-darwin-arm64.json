@@ -1,0 +1,41 @@
+{
+  "approved": true,
+  "reviewer": "Codex under Josh standing approval",
+  "note": "TT-364 new admin screens reviewed at three widths; actual isolated API; no old admin screen; new independent page repeat byte-identical for overview, existing 162 screenshots use unchanged approved baseline",
+  "environment": {
+    "platform": "Darwin",
+    "widths": [
+      1440,
+      768,
+      390
+    ],
+    "browser": "Chrome 157",
+    "data": "fresh isolated tasktracker_test: 1 user, 21 workspaces, 25 successful requests; fixed UTC date with live seconds for throttle expiry"
+  },
+  "files": [
+    {
+      "path": "admin-login-1440.png",
+      "sha256": "be7fbc6443584fdd4760a1977e7fed9305e11e9583718eb28b1f09001d9bf4fb"
+    },
+    {
+      "path": "admin-login-768.png",
+      "sha256": "891f97fcf8644a53356906ad95c998ef4b5866d329b2ee8e2eaab7df260ecd25"
+    },
+    {
+      "path": "admin-login-390.png",
+      "sha256": "48f5fce8d88c7f39a6be2d2a258778c1254c6321e6361561f0a8ee34f5937919"
+    },
+    {
+      "path": "admin-overview-1440.png",
+      "sha256": "0bfa642202155281980cdd80f849fa04f153b801395f9fa82ef85933a8467271"
+    },
+    {
+      "path": "admin-overview-768.png",
+      "sha256": "de8b0392663d67c85b7b553be3ad8483aab635eabd3cf53a4cd24cc7c963c3aa"
+    },
+    {
+      "path": "admin-overview-390.png",
+      "sha256": "a297f6cc243f5db235bd6a23c4d72682e3a0e2cab5cd70c8b99bbd0cb59d93de"
+    }
+  ]
+}

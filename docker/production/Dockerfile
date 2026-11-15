@@ -8,6 +8,7 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --include=dev --no-audit --no-fund
 COPY frontend/index.html frontend/vite.config.js ./
 COPY frontend/src ./src
+COPY frontend/admin ./admin
 COPY frontend/app ./app
 COPY frontend/landing ./landing
 COPY frontend/features ./features

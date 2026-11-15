@@ -27,7 +27,7 @@ const publicOrigin = {
   // sitemap包含首頁與四個公開功能頁, 不收錄登入及工作區。
   generateBundle() {
     for (const [path, asset] of Object.entries(staticAssets)) this.emitFile({ type: 'asset', fileName: path.slice(1), source: asset.source });
-    this.emitFile({ type: 'asset', fileName: 'robots.txt', source: `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /app/\n${siteOrigin ? `Sitemap: ${siteOrigin}/sitemap.xml\n` : ''}` });
+    this.emitFile({ type: 'asset', fileName: 'robots.txt', source: `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /app/\nDisallow: /admin/\n${siteOrigin ? `Sitemap: ${siteOrigin}/sitemap.xml\n` : ''}` });
     if (siteOrigin) this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${publicPaths.map(path => `  <url><loc>${siteOrigin}${path}</loc></url>`).join('\n')}\n</urlset>\n` });
   },
 };
@@ -39,7 +39,7 @@ const entryRoutes = (shell) => (request, response, next) => {
     const asset = staticAssets[path]; response.setHeader('Content-Type', asset.type); response.setHeader('Cache-Control', asset.cache);
     response.setHeader('X-Content-Type-Options', 'nosniff'); return response.end(asset.source);
   }
-  const redirect = { '/about': '/', '/about/': '/', '/app': '/app/', '/login/': '/login' }[path];
+  const redirect = { '/about': '/', '/about/': '/', '/app': '/app/', '/admin': '/admin/', '/login/': '/login' }[path];
   if (redirect) { response.statusCode = 301; response.setHeader('Location', redirect + (query && redirect !== '/' ? `?${query}` : '')); return response.end(); }
   if (path === '/login') request.url = shell + (query ? `?${query}` : '');
   next();
@@ -68,6 +68,6 @@ export default defineConfig({
     // 兩個HTML入口會讓polyfill成為共用chunk而多一個請求；支援的瀏覽器皆原生支援modulepreload。
     modulePreload: { polyfill: false },
     // TT-297：首頁/是靜態產品介紹；/app/（亦服務/login）是工作空間SPA殼層；同一映像，不另做SSR。
-    rollupOptions: { input: { landing: fileURLToPath(new URL('./index.html', import.meta.url)), app: fileURLToPath(new URL('./app/index.html', import.meta.url)), ...Object.fromEntries(featureSlugs.map(slug => [slug, fileURLToPath(new URL(`./features/${slug}/index.html`, import.meta.url))])) } },
+    rollupOptions: { input: { landing: fileURLToPath(new URL('./index.html', import.meta.url)), app: fileURLToPath(new URL('./app/index.html', import.meta.url)), admin: fileURLToPath(new URL('./admin/index.html', import.meta.url)), ...Object.fromEntries(featureSlugs.map(slug => [slug, fileURLToPath(new URL(`./features/${slug}/index.html`, import.meta.url))])) } },
   },
 });
