@@ -39,7 +39,6 @@ HTTP API、Repository、查詢、前端資料載入或輪詢異動，必讀共�
 - list／claim／status／comment維持同一Agent；有實質進度即留言已完成、實測、限制與下一步，不只留對話。
 - 看板分類、領卡前預估及逐階段本人實際工時，依共用task-tracker-usage的references/classification-and-time.md；不以留言代替正式工時。
 - 測試／提交後如實更新：需要Josh認可（視覺核准、驗收、決策）的卡改review待驗收並留言說明要確認什麼；驗收完成才closed，未通過／受阻維持並說明。不因commit自動假定整卡完成；完成一張回填後再領下一張，明確轉換工作或受阻例外亦須記錄。
-- Josh於2026-11-15授權後續由Agent代審操作、畫面及產品驗收；實測與審查通過後可直接closed, 不逐項請求確認。代審不免除測試或安全門檻, 也不解除已明確暫緩的tag／部署安排。
 - AI整合/API只放PAT／Scope／對外REST／契約文件與整合驗收；內部架構／DI／資料載入歸效能或結構優化；一般UI歸實際功能。不把跨主題Epic整包收錄。
 
 ## Git與階段交付
