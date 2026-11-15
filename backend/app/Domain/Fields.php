@@ -13,7 +13,7 @@ class Fields
         ['id' => 'closed', 'label' => '已關閉', 'color' => '#4aab8a'],
     ];
 
-    public const ISSUE_FIELDS = ['title', 'description', 'state', 'priority', 'type', 'assignee', 'dueDate', 'epicId', 'estimateMinutes', 'parentIssueId', 'relatedIssueIds'];
+    public const ISSUE_FIELDS = ['title', 'description', 'state', 'priority', 'type', 'assignee', 'startDate', 'endDate', 'dueDate', 'epicId', 'estimateMinutes', 'parentIssueId', 'relatedIssueIds'];
 
     /**
      * 驗證文字型別、必要內容及長度。
@@ -135,6 +135,19 @@ class Fields
         if ($dueDate !== '') {
             self::date($dueDate);
         }
+        $startDate = self::text($input['startDate'] ?? '', '計畫開始日', 10);
+        $endDate = self::text($input['endDate'] ?? '', '計畫結束日', 10);
+        foreach ([$startDate, $endDate] as $date) {
+            if ($date !== '') {
+                self::date($date);
+                if ($date < '1000-01-01') {
+                    DomainError::fail('INVALID_INPUT', '計畫日期需介於 1000-01-01 與 9999-12-31');
+                }
+            }
+        }
+        if ($startDate !== '' && $endDate !== '' && $endDate < $startDate) {
+            DomainError::fail('INVALID_INPUT', '計畫結束日不可早於開始日');
+        }
         if (array_key_exists('blockedBy', $input)) {
             DomainError::fail('INVALID_INPUT', '前置任務已停用, 請重新整理後使用子任務或關聯任務');
         }
@@ -156,6 +169,8 @@ class Fields
             'priority' => self::choice($input['priority'] ?? 'normal', ['urgent', 'high', 'normal', 'low'], '優先級'),
             'type' => self::choice($input['type'] ?? 'task', ['epic', 'task', 'bug'], '類型'),
             'assignee' => self::text($input['assignee'] ?? '', '負責人', 60),
+            'startDate' => $startDate,
+            'endDate' => $endDate,
             'dueDate' => $dueDate,
             'epicId' => self::text($input['epicId'] ?? '', 'Epic', 100),
             'estimateMinutes' => self::integer($input['estimateMinutes'] ?? 0, '預估分鐘', 0, 525600),

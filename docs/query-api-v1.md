@@ -166,3 +166,7 @@ Session的`GET /api/v1/workspace/members`接受`status=active|disabled`, 預設a
 Session identity新增hasWorkspaces, 區分「未選定目前空間」與「完全沒有有效空間」, workspace仍可為null。Issue摘要、列表及詳細新增assigneeDisabled布林值, 原指派仍保留姓名, 資格由同批eager load取得, 不增加逐卡查詢。公開PAT端點也使用相同Issue投影, 正式欄位見openapi.json
 
 停用後該空間的Session／PAT業務API即拒絕, 其他空間不受影響；恢復不改原Project ACL, 不重新啟用已撤銷的PAT。卡片的歷史留言與工時讀取規則不變
+
+## TT-368 計畫日期
+
+單卡詳細回傳 startDate／endDate（YYYY-MM-DD 或未設定的空字串）, 列表不載入。與 dueDate 分開, 寫入與清除規則見[任務計畫日期](issue-planned-dates.md)

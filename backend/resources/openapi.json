@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker API",
-    "version": "0.22.0",
+    "version": "0.23.0",
     "description": "公開Bearer v1提供卡片查建改、留言、刪除、外部識別與批次, 紙條協作、本人通知、私有附件, 以及看板讀取、建立和差量收錄。Session個人憑證管理獨立, 不提供公開看板封存／還原。[HTTP契約](/api/public/contract.md)"
   },
   "servers": [
@@ -3446,7 +3446,9 @@
                       "actor": "Example user",
                       "at": "2026-11-13T02:00:00.000000Z"
                     },
-                    "assigneeDisabled": false
+                    "assigneeDisabled": false,
+                    "startDate": "",
+                    "endDate": ""
                   }
                 }
               }
@@ -5474,7 +5476,9 @@
                       "actor": "Example user",
                       "at": "2026-11-13T02:00:00.000000Z"
                     },
-                    "assigneeDisabled": false
+                    "assigneeDisabled": false,
+                    "startDate": "",
+                    "endDate": ""
                   }
                 }
               }
@@ -14491,7 +14495,9 @@
           "createdBy",
           "createdByName",
           "lastChange",
-          "assigneeDisabled"
+          "assigneeDisabled",
+          "startDate",
+          "endDate"
         ],
         "additionalProperties": false,
         "properties": {
@@ -14653,6 +14659,32 @@
           "assigneeDisabled": {
             "type": "boolean",
             "description": "True when the retained assignee has a disabled membership in this workspace; history and assignment remain intact. This does not grant that user access."
+          },
+          "startDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$"
+              },
+              {
+                "const": ""
+              }
+            ],
+            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+          },
+          "endDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$"
+              },
+              {
+                "const": ""
+              }
+            ],
+            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
           }
         }
       },
@@ -14760,6 +14792,38 @@
               "maxLength": 100
             },
             "description": "Optional active custom boards in this Project; requires board.manage. Default is implicit and must not be supplied. Any invalid board rolls back the entire issue creation."
+          },
+          "startDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$"
+              },
+              {
+                "const": ""
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+          },
+          "endDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$"
+              },
+              {
+                "const": ""
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
           }
         },
         "required": [
@@ -14838,6 +14902,38 @@
             "type": "integer",
             "minimum": 1,
             "description": "從單卡GET取得的最新revision，嚴格JSON整數，不接受字串"
+          },
+          "startDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$"
+              },
+              {
+                "const": ""
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+          },
+          "endDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$"
+              },
+              {
+                "const": ""
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
           }
         },
         "required": [
@@ -14968,6 +15064,38 @@
             "type": "integer",
             "minimum": 1,
             "description": "更新既有綁定卡片時必填（從單卡GET取得），嚴格JSON整數；建立時忽略"
+          },
+          "startDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$"
+              },
+              {
+                "const": ""
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+          },
+          "endDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$"
+              },
+              {
+                "const": ""
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
           }
         },
         "required": [
@@ -15126,6 +15254,38 @@
             ],
             "additionalProperties": false,
             "description": "以外部識別指定父任務；不可與parentIssueId同時使用"
+          },
+          "startDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$"
+              },
+              {
+                "const": ""
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+          },
+          "endDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$"
+              },
+              {
+                "const": ""
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
           }
         },
         "required": [

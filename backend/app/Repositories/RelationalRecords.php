@@ -466,7 +466,7 @@ class RelationalRecords
         // JSON object順序不是契約；固定常用DTO順序方便人工比較與舊測試。
         $order = match ($kind) {
             'projects' => ['id', 'name', 'code', 'leadId', 'description', 'color', 'nextNumber', 'revision', 'statuses', 'settingsHistory', 'createdAt', 'updatedAt', 'detailsHistory'],
-            'issues' => ['id', 'projectId', 'identifier', 'title', 'description', 'state', 'priority', 'type', 'assignee', 'dueDate', 'epicId', 'estimateMinutes', 'parentIssueId', 'relatedIssueIds', 'revision', 'createdAt', 'updatedAt', 'comments', 'history'],
+            'issues' => ['id', 'projectId', 'identifier', 'title', 'description', 'state', 'priority', 'type', 'assignee', 'startDate', 'endDate', 'dueDate', 'epicId', 'estimateMinutes', 'parentIssueId', 'relatedIssueIds', 'revision', 'createdAt', 'updatedAt', 'comments', 'history'],
             'timeEntries' => ['id', 'issueId', 'projectId', 'userId', 'createdAt', 'history', 'workDate', 'minutes', 'note', 'revision', 'updatedAt', 'voidedAt'],
             'boards' => ['id', 'projectId', 'name', 'selectedIssueIds', 'isDefault', 'revision', 'createdBy', 'createdAt', 'updatedAt', 'archivedAt'],
             default => array_keys($value),

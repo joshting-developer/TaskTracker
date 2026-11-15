@@ -904,5 +904,9 @@
   "尚無工作區": "No workspaces",
   "工作區": "Workspaces",
   "第{0}頁": "Page {0}",
-  "期間": "Period"
+  "期間": "Period",
+  "計畫開始日": "Planned start date",
+  "計畫結束日": "Planned end date",
+  "計畫結束日不可早於開始日": "Planned end date cannot be before the start date",
+  "計畫日期需介於 1000-01-01 與 9999-12-31": "Planned dates must be between 1000-01-01 and 9999-12-31"
 }

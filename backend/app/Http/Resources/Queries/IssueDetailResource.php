@@ -23,6 +23,7 @@ class IssueDetailResource extends IssueSummaryResource
         $creator = $issue->getRelation('creator');
 
         return [...parent::toArray($request), 'description' => $issue->description,
+            'startDate' => $issue->start_date ?? '', 'endDate' => $issue->end_date ?? '',
             'createdBy' => $creator?->user_id ?? '', 'createdByName' => $creator?->getRelation('user')?->name ?? '',
             'lastChange' => $issue->last_at === null ? null : ['actor' => (string) $issue->last_actor, 'at' => (string) $issue->last_at],
             'activityCounts' => ['comments' => (int) $issue->comment_count, 'history' => (int) $issue->history_count,

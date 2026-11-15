@@ -170,6 +170,8 @@ function timeSaved() {
               <div><dt>{{ t('類型') }}</dt><dd>{{ TYPES.find(item => item.id === issue.type)?.label || issue.type }}</dd></div>
               <div><dt>{{ t('優先級') }}</dt><dd>{{ t(PRIORITIES.find(item => item.id === issue.priority)?.label || issue.priority) }}</dd></div>
               <div><dt>{{ t('負責人') }}</dt><dd>{{ memberName(issue.assignee) }}</dd></div>
+              <div><dt>{{ t('計畫開始日') }}</dt><dd>{{ issue.startDate || t('未設定') }}</dd></div>
+              <div><dt>{{ t('計畫結束日') }}</dt><dd>{{ issue.endDate || t('未設定') }}</dd></div>
               <div><dt>{{ t('到期日') }}</dt><dd>{{ issue.dueDate || t('未設定') }}</dd></div>
               <div><dt>{{ t('預估工時') }}</dt><dd>{{ estimate ? hours(estimate) : t('尚未估時') }}</dd></div>
               <div v-if="canReadTime"><dt>{{ t('已投入工時') }}</dt><dd>{{ hours(spent) }}{{ issue.type === 'epic' ? t('（含所屬卡片）') : '' }}</dd></div>

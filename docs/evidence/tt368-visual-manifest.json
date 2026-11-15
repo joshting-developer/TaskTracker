@@ -1,0 +1,446 @@
+{
+  "card": "TT-368",
+  "images": [
+    {
+      "name": "detail-1440.png",
+      "source": "artifacts/tt368/compare/detail-1440.png",
+      "sha256": "1cc48cd83fac0511030e520be529dbfe38b36503465f6cf3450c46f93553c8b7"
+    },
+    {
+      "name": "detail-390.png",
+      "source": "artifacts/tt368/compare/detail-390.png",
+      "sha256": "b4e1ab0b87e3b32769260d22e8b43c2fca7670c36d4c59a4d159783487b7493f"
+    },
+    {
+      "name": "detail-768.png",
+      "source": "artifacts/tt368/compare/detail-768.png",
+      "sha256": "27932022170312d8425993ee55ca481e9224af08832382db9f76475d49a9f019"
+    },
+    {
+      "name": "form-1440.png",
+      "source": "artifacts/tt368/compare/form-1440.png",
+      "sha256": "bb0ee4555779a9c80ebade949a18b6955348eaaa6e1a30aca322083509e062af"
+    },
+    {
+      "name": "form-390.png",
+      "source": "artifacts/tt368/compare/form-390.png",
+      "sha256": "68e14d64550c87fcdc6807dbf8149f90a94b0f463d07bb6db31567effd0a391e"
+    },
+    {
+      "name": "form-768.png",
+      "source": "artifacts/tt368/compare/form-768.png",
+      "sha256": "a9eadada06b9dc75a045f3ba4d8ba3894f2488b8c36f09364f6a111fdb2113f5"
+    }
+  ],
+  "harness": [
+    {
+      "path": "frontend/tools/issue-planned-dates-browser.js",
+      "sha256": "4668872696077ae29b15c7b1a4ba89247042267dc59605b39fb4c6cca3bb8da9"
+    },
+    {
+      "path": "frontend/tools/compare-reviewed-issue-planned-dates.js",
+      "sha256": "6e0f547a0928e2895bc8fbf25bb418ad6aa44f833a2128d5c760d4ef4ba8e45d"
+    },
+    {
+      "path": "frontend/tools/issue-form-actions.js",
+      "sha256": "e37d71e6b44feb40c19870febe4365e2960cdfc5bac1fc5c1d8a8548d42374a5"
+    }
+  ],
+  "policy": {
+    "animations": "disabled",
+    "caret": "hide",
+    "maxDiffPixels": 0,
+    "threshold": 0.02
+  },
+  "sourceFiles": [
+    {
+      "path": "frontend/src/App.vue",
+      "sha256": "cf7e11e64adcb05f903960c4e649f5563c184e8a9b771fcd66e89cac6c5911b1"
+    },
+    {
+      "path": "frontend/src/admin/AdminActivityChart.vue",
+      "sha256": "2dbfba965c0291eb0f4f055b4452d230ab931d12e86b129f6021e2f5fe5c152b"
+    },
+    {
+      "path": "frontend/src/admin/AdminApp.vue",
+      "sha256": "e7e86298cd4fe33aee778baca5108be19a61f8f7d01abc1d3de85db644e88368"
+    },
+    {
+      "path": "frontend/src/admin/AdminDashboard.vue",
+      "sha256": "11fd62a0e09dc583705b230b4c83c36e155c42d56e1bbd8c61b438f1dedb63b4"
+    },
+    {
+      "path": "frontend/src/admin/AdminLogin.vue",
+      "sha256": "697ae065f1dff4319b931ef854abedb336b613f368b220bc796d1522f71dc16b"
+    },
+    {
+      "path": "frontend/src/admin/AdminWorkspaces.vue",
+      "sha256": "24cc482501c6fe5d5ef79b3c86eb2c9f65f695a091586130d536c32e982944b0"
+    },
+    {
+      "path": "frontend/src/admin/admin.css",
+      "sha256": "57e22ec39c51b31a2875b4a320cb05f6db2678a25da918fb1ca0a58985c6eea8"
+    },
+    {
+      "path": "frontend/src/admin/main.js",
+      "sha256": "20aaee82bd0b9172d9dedfa056313f9e3496231cb0ec534bb75e44ae684affcf"
+    },
+    {
+      "path": "frontend/src/api/admin.js",
+      "sha256": "e2fc1e486145140cbd7a6c2372496b5627c603ec9c590e87838473f0c9fa16bc"
+    },
+    {
+      "path": "frontend/src/api/attachments.js",
+      "sha256": "66b7f41a818b82b8d98bbdac5dd042e4084a4a9c1d19c637ecc299732e8a4e81"
+    },
+    {
+      "path": "frontend/src/api/http.js",
+      "sha256": "ad18d2b9160f913e3f7fc93e68527c6e86c523bf7d86702e47ba11f620c323ab"
+    },
+    {
+      "path": "frontend/src/api/index.js",
+      "sha256": "a8a386c4d4ffff85562f60322c06afe5002f028fcefc261671eea782b7711e3f"
+    },
+    {
+      "path": "frontend/src/components/AccountMenu.vue",
+      "sha256": "de53f49fc53bb56bf6f2e7a0629a34486530fc5ab8fa7709b15dcac43ddd9284"
+    },
+    {
+      "path": "frontend/src/components/AttachmentFiles.vue",
+      "sha256": "20d671d59aa5c8b810f5be3f03202ff446a8496d492b68e26228be978ab70bb7"
+    },
+    {
+      "path": "frontend/src/components/AttachmentImage.vue",
+      "sha256": "808bc7604ef5af4c92ddf1c052cc214f60284f84193fe5ea12367aae7bc43e98"
+    },
+    {
+      "path": "frontend/src/components/AuthGate.vue",
+      "sha256": "e2c4c631edfcb1ee91646e12ad1530e95e8c375a3956d9a1a12c8ef05fb1e31a"
+    },
+    {
+      "path": "frontend/src/components/BoardDialog.vue",
+      "sha256": "03f55d334baaec7de10709b9ccfc2e106bc44986fe14d2303d1fbe843d407652"
+    },
+    {
+      "path": "frontend/src/components/BoardLifecycleDialog.vue",
+      "sha256": "c411e3506a716c1aaa84d72c034e47de4a4f2263d799cb36b84229bf9e709667"
+    },
+    {
+      "path": "frontend/src/components/BoardList.vue",
+      "sha256": "879109675059d4154f340836f86b8de0c44dbec43074270149364f0a72e98f90"
+    },
+    {
+      "path": "frontend/src/components/BrandMark.vue",
+      "sha256": "f0fab2519630546ed301d6fc16d07c588e3a81ee0f9f520f8fe1f183c167f2be"
+    },
+    {
+      "path": "frontend/src/components/GuestTopBar.vue",
+      "sha256": "56bd87c43edbe2c1abcfaf16130b26b5378ca0079ceb04de96a1337670998145"
+    },
+    {
+      "path": "frontend/src/components/Icon.vue",
+      "sha256": "bbb8082c83ffc86d3455d0527f9a052a7762d63e052b9ead9899e5313bb8b515"
+    },
+    {
+      "path": "frontend/src/components/IssueContext.vue",
+      "sha256": "7ab22107b747e2d520df5a3886b7c21a22aee47b0010cdc63e2aa589cd1a789d"
+    },
+    {
+      "path": "frontend/src/components/IssueDetail.vue",
+      "sha256": "3a005c10cbfdc577dad5437dd7a4e748b28ec545c0df1b1eb7874ba92257c46d"
+    },
+    {
+      "path": "frontend/src/components/IssueFilters.vue",
+      "sha256": "889846bfb964a5352c0436b46cab09717df3687d23c21a4b248a1f6d3d18935e"
+    },
+    {
+      "path": "frontend/src/components/IssueList.vue",
+      "sha256": "a88cec03908c710bda24d8785ef4506ac6203bda23585ccc1ba602a1d21a444f"
+    },
+    {
+      "path": "frontend/src/components/IssuePanel.vue",
+      "sha256": "7a06474ea598507f95a7596455eee5220ed4268a1d29cdf29d2e7ca6004893d3"
+    },
+    {
+      "path": "frontend/src/components/IssueRelations.vue",
+      "sha256": "7be934fb4d82cf467c97bdc6935cf20e300c74c3f8e99c3e2d0d90faf54d199a"
+    },
+    {
+      "path": "frontend/src/components/LocalePicker.vue",
+      "sha256": "ee291eaa483838066f65de2c372349feaf4457f9d40438188275ed8afa63a821"
+    },
+    {
+      "path": "frontend/src/components/MarkdownContent.vue",
+      "sha256": "51149ad65d13447e0af4b2808f900e37e1d2cd81b36519dc671a16273fff3d43"
+    },
+    {
+      "path": "frontend/src/components/MarkdownEditor.vue",
+      "sha256": "21bc9ef060410ce6f2bcc1e2372111c569f9f708aad9da6802ff5eca6e01999a"
+    },
+    {
+      "path": "frontend/src/components/NotificationPreview.vue",
+      "sha256": "32331d67ff693ffd0e79ca923051b28082975605aa7141da3c553a330599dfa9"
+    },
+    {
+      "path": "frontend/src/components/PagedSelect.vue",
+      "sha256": "1231a79af58d1989d224aef91e48cf52fff69b0d796135dfea439b69402ed9bb"
+    },
+    {
+      "path": "frontend/src/components/PasswordRecovery.vue",
+      "sha256": "459f18a63066dcb808f1e37a678a6ffe7eec652b86a73cadc1ea6319a2c21a19"
+    },
+    {
+      "path": "frontend/src/components/PersonalNotifications.vue",
+      "sha256": "ed34977c8466466c83fa228e7ba36e2dbb1dc6e9390d750c68465e896f2b90aa"
+    },
+    {
+      "path": "frontend/src/components/PersonalTokensDialog.vue",
+      "sha256": "433569f9831675a83d7fb55a412cb06e7352d09fd7b0528982416f52af252888"
+    },
+    {
+      "path": "frontend/src/components/PersonalWorkspace.vue",
+      "sha256": "20f1a08dfedb891b3f84639e5b90b3a4d05a5f46765f29b9d69dc35a2c9ccf23"
+    },
+    {
+      "path": "frontend/src/components/ProfileDialog.vue",
+      "sha256": "8f70685f89abd7da50fa150489f22b624e65d315434dfc5989668b0f53e503fa"
+    },
+    {
+      "path": "frontend/src/components/ProjectBoard.vue",
+      "sha256": "f375cc48a7743e313d283a2b0d1a0b13db19f20eac488894268766f964059db7"
+    },
+    {
+      "path": "frontend/src/components/ProjectDialog.vue",
+      "sha256": "185f452045f4f0664525a8eb1f7de5a51042e04db3deab90a9871d266f35c373"
+    },
+    {
+      "path": "frontend/src/components/ProjectDirectory.vue",
+      "sha256": "b7021d5ad6971af4143a1d01b5d2df03cf151ea64b0b7100daa8107c5a4231be"
+    },
+    {
+      "path": "frontend/src/components/ProjectHome.vue",
+      "sha256": "6634863078febd3fc4fa2c7ec704d587420a8f508d37feae7f140776af643180"
+    },
+    {
+      "path": "frontend/src/components/ProjectMembers.vue",
+      "sha256": "e69d1324dcd856d6d2606c12ba03e3e2f5fdab2d68e204ab6c82918430f3c70c"
+    },
+    {
+      "path": "frontend/src/components/ProjectSettings.vue",
+      "sha256": "96f4db39427722043faf8dde2483e19df43da75ec34fac5325cfd3a8986876a6"
+    },
+    {
+      "path": "frontend/src/components/ProjectStatusWorkspace.vue",
+      "sha256": "660d80ce30d26e87d05e7a17ee988f2e5923c8ec67008010f148a53c72e67194"
+    },
+    {
+      "path": "frontend/src/components/ProjectTasksWorkspace.vue",
+      "sha256": "b951bd6ef5b053c6f92e1bc5e9c2b86e5432e2cd0d1926ffc7832e552a1a3a9a"
+    },
+    {
+      "path": "frontend/src/components/ReportPagination.vue",
+      "sha256": "d568277f0c7e68a005f2388af4e8ed22ad90151a190f4bd2c8458b6501bc3817"
+    },
+    {
+      "path": "frontend/src/components/TimeAnalysis.vue",
+      "sha256": "c97d15a1661525f8bc1b4ea2d94146175755c49008acde2715782b0f6caf6fc8"
+    },
+    {
+      "path": "frontend/src/components/TimeCalendar.vue",
+      "sha256": "8b2fa6ff9ea92885ff70771f2616c56c44072849003a2983efdf32b5f04b6b77"
+    },
+    {
+      "path": "frontend/src/components/TimeDistributionChart.vue",
+      "sha256": "a279b7d5f9bd01d371b43d33dcbd75aa4b04029e2976978ae4187fd4511c5d5d"
+    },
+    {
+      "path": "frontend/src/components/TimeEntryDrawer.vue",
+      "sha256": "17caa9ab58ac07a5dad728bd1d3edd922c52b4c2b15699bb2ab902d01991632f"
+    },
+    {
+      "path": "frontend/src/components/TimeMemberDetails.vue",
+      "sha256": "2665e9b36db747ebe6c4cec114dd053f97b9fbff070006b84bcc2ebaab6e6c7c"
+    },
+    {
+      "path": "frontend/src/components/TimeTrendChart.vue",
+      "sha256": "1ec80574a69d1f2319340a21a9baaac576416cd25dabfdda1b0f90531269675c"
+    },
+    {
+      "path": "frontend/src/components/TodoActions.vue",
+      "sha256": "d0cd864ce714470f8b9d260c32fb9b73d04c81283c80c396b0ece6fff7d6cd9c"
+    },
+    {
+      "path": "frontend/src/components/TodoConversation.vue",
+      "sha256": "39948e11c1afb8feb3cf70fd9b4708ed0a1ab7940373ef4a4049907460acbbec"
+    },
+    {
+      "path": "frontend/src/components/TodoConversion.vue",
+      "sha256": "3c4049bfaa72e867172025f2b467e3f250e84e64fa17f9f38faf422661a70ca9"
+    },
+    {
+      "path": "frontend/src/components/TodoDetailDrawer.vue",
+      "sha256": "1ee2666a10cf14e9e619f641839e39823ae0c077c36aeb4d3d71ff6694512bdf"
+    },
+    {
+      "path": "frontend/src/components/TodoHome.vue",
+      "sha256": "eb7328f40247b79ab2525251a9a3d838f020a06d78e3afa8996f08f1d66e66e0"
+    },
+    {
+      "path": "frontend/src/components/TodoNotifications.vue",
+      "sha256": "e561e1ed24cd96181eb5b2a90e8d706919c2e0e6fd747107bad4546901cbe006"
+    },
+    {
+      "path": "frontend/src/components/WorkspaceInvitation.vue",
+      "sha256": "f8e2e756a8d2f8988d0efb2f5d563598f30083e2ef268196ef00e8b3b9bd9dd7"
+    },
+    {
+      "path": "frontend/src/components/WorkspaceInvitationManager.vue",
+      "sha256": "8bc124dc8e50c2f522d345095118c53ae0025aa2dc0f6d57693c1c384dd7706c"
+    },
+    {
+      "path": "frontend/src/components/WorkspaceSettings.vue",
+      "sha256": "c3e676733b2a50828ebb23c312adee604d5b415a8a3c609e3c71af79dd556533"
+    },
+    {
+      "path": "frontend/src/components/WorkspaceSwitcher.vue",
+      "sha256": "42800a7255a16b207b7417d2516302fa9e70a8b66dfb274bdf0b74cebc97c9cc"
+    },
+    {
+      "path": "frontend/src/composables/useAttachmentUpload.js",
+      "sha256": "2db2b0d74e09175d1f2be778255970a6661716e9684898485c18b4c072167b26"
+    },
+    {
+      "path": "frontend/src/composables/useIssueActivity.js",
+      "sha256": "3b059747591e9a03fefc8e16cd79f798c200baebd200a35e8fccbdb68e03e8f3"
+    },
+    {
+      "path": "frontend/src/composables/useIssueQuery.js",
+      "sha256": "179a389baa64597114615f27341aef7f049f94f60aef82890d18074e45c5bc2f"
+    },
+    {
+      "path": "frontend/src/composables/useIssueTransitions.js",
+      "sha256": "0b51fad3683d1ce1a8baba86419c99af00b41aad96106e8c343c7011bfc926b8"
+    },
+    {
+      "path": "frontend/src/composables/usePagedLookup.js",
+      "sha256": "04f7439463a2189f83f98a0b7468be850bd1110244ddaf7f20822cab1d3ec748"
+    },
+    {
+      "path": "frontend/src/composables/usePersonalQueries.js",
+      "sha256": "4439869d8ae1804bd4365dca0cc890a8367b044ea907e8a6508f1b9c7be72447"
+    },
+    {
+      "path": "frontend/src/composables/usePersonalSync.js",
+      "sha256": "6052ae5a1366fd3adb15675c3b10db4fe8897299dec45bebff5ca11356feeb85"
+    },
+    {
+      "path": "frontend/src/composables/usePolling.js",
+      "sha256": "cc4aee0a68c6dfb4efc11e00458d3f0283bad7918fb3829c6ee3bad14144692a"
+    },
+    {
+      "path": "frontend/src/composables/useProjectTaskQueries.js",
+      "sha256": "ea1d255a640e30dedfe8d9c8608854025753752475fc2ca545db227e363a4a60"
+    },
+    {
+      "path": "frontend/src/composables/useRefreshQueue.js",
+      "sha256": "797a0fded1fbf73ec469e9fe157ab3335d5301e74d87c5e75d1d001af0bccc9e"
+    },
+    {
+      "path": "frontend/src/composables/useToast.js",
+      "sha256": "caa93b2c11e8a1873bcc4e9e49e68008db2d3f3bb3da73ee7c8dc1d914327870"
+    },
+    {
+      "path": "frontend/src/composables/useWorkspaceClock.js",
+      "sha256": "2222b9e77530c3fb316d504c7259ca34d84f4d7522eb53334164e56dbe7452e1"
+    },
+    {
+      "path": "frontend/src/domain/boards.js",
+      "sha256": "ea8c4592c21386b39e1268adfd233c8e8940c51fb9f339accbaef76ac9b4b7e2"
+    },
+    {
+      "path": "frontend/src/domain/filters.js",
+      "sha256": "fb321f10ec7dd4c77453b3c4f03f40255082685df1a17762709cbead72892ad8"
+    },
+    {
+      "path": "frontend/src/domain/issueIndex.js",
+      "sha256": "11b7123aa0daef72cea8e922631da789e149449a11401a47e4481a9f25872af0"
+    },
+    {
+      "path": "frontend/src/domain/issueReferences.js",
+      "sha256": "bd347fe8fe81fca1000582f5e0f0e8d71ca0ae8c00fde0451a64ea31ef82a367"
+    },
+    {
+      "path": "frontend/src/domain/model.js",
+      "sha256": "05f0d9abd732404c0047380a7965c6a06cc5a01ba9566547db46a19709dfb01c"
+    },
+    {
+      "path": "frontend/src/domain/todoContent.js",
+      "sha256": "0b474178e1427c730ab0547b4b4f6fc4742540d835208f249da5127aab5dd354"
+    },
+    {
+      "path": "frontend/src/entryPath.js",
+      "sha256": "a65d3ebb7ce890d877c25410b9d242dca84691ce831f66810c8d7314e39608a5"
+    },
+    {
+      "path": "frontend/src/guest-topbar.css",
+      "sha256": "101615d6f988a739f538dc41dbe3c31423d25e41f3ae6f4280224aca43652819"
+    },
+    {
+      "path": "frontend/src/i18n/en.json",
+      "sha256": "4b08465850d8539582c3a147277548a4b89aafad07bd2f0ff5a2d2e20ec4a919"
+    },
+    {
+      "path": "frontend/src/i18n/index.js",
+      "sha256": "2298d67cdf03b3c6a95a6779d1a1f178b824c401e12ee4d3c236907cac655485"
+    },
+    {
+      "path": "frontend/src/i18n/zh-TW.json",
+      "sha256": "9e0068a930a5d4d427d87175374d79cfaffc38f1aac2cb32f60859940d376419"
+    },
+    {
+      "path": "frontend/src/main.js",
+      "sha256": "cd56411276fc4446e7efd6474a2bf483e3e5066228f5e517c345aee6cb1ad178"
+    },
+    {
+      "path": "frontend/src/styles.css",
+      "sha256": "17f40aabf8380066d17f9cc9eb6cddc903b7e8d3d6d7b3ac5eb398e0e5e24f18"
+    },
+    {
+      "path": "frontend/src/ui/boardRealtime.js",
+      "sha256": "94a29227a45bda319f0ae9884aef05f56a706476bd9c1eb07f29880c9b3107c8"
+    },
+    {
+      "path": "frontend/src/ui/hashRoutes.js",
+      "sha256": "65f0e8b7975a814a0cbb22331edc8a7ff4cbd7ea4206db98cbf53c810de4895a"
+    },
+    {
+      "path": "frontend/src/ui/lazyFeature.js",
+      "sha256": "42af90207baa9f0a7dee652e1e0e45c322f3e736123e4adbd243acb36bc317d3"
+    },
+    {
+      "path": "frontend/src/ui/leaveGuard.js",
+      "sha256": "5fe8f14666c0d2f50d321cc22f766416f5868ebb077b2db5076ff9b26800ca13"
+    },
+    {
+      "path": "frontend/src/ui/markdown.js",
+      "sha256": "652af33abc90713998b0db2115fe5fe8638ff0d6680f3c5776770a65bf5bd4fa"
+    },
+    {
+      "path": "frontend/src/ui/pollingConfig.js",
+      "sha256": "20e6e9e7640d36b562a1217c80ddebcd220a02f65b2bb88efc78ae70ec22d1f7"
+    },
+    {
+      "path": "frontend/src/ui/tabs.js",
+      "sha256": "3d4fb8d30916851eb10a4ef9975206208daab872ff79fbb6010869d0d43f34ed"
+    },
+    {
+      "path": "frontend/src/ui/workContext.js",
+      "sha256": "8411bccaf3dce5d9f51783c6a836ff9e26d3a6653984168480a9d5d8a1edcddc"
+    },
+    {
+      "path": "frontend/src/workspace.css",
+      "sha256": "9e6c121375b23ced2209daff33bce7521cf6a5adba1a0e8953495b02157e65b5"
+    }
+  ],
+  "sourceFingerprint": "7966fb7cb4d9075cebf79d7cb02adf4a77324ec9e840cb98be7215531a30092c"
+}

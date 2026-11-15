@@ -1,0 +1,9 @@
+{
+  "approved": true,
+  "reviewer": "Standing authorization delegated by Josh",
+  "authorization": "User standing approval for future UI candidates; real browser comparison remains required. Before and after inspected at three widths.",
+  "manifestFile": "docs/evidence/tt368-visual-manifest.json",
+  "manifestSha256": "0d5548ed156332ba36765e6c3493d258de3993888a79a76338af0787908f427c",
+  "harnessSha256": "9e7aefdea848c219da8eaec914a6ca0bf5fd8fe05f3a20ea29d74d05650f3bb5",
+  "images": 6
+}

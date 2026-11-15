@@ -90,7 +90,7 @@ class IssueWriteRequest extends JsonOperationRequest
         $text = ['sometimes', 'nullable', 'string'];
 
         return ['title' => $text, 'description' => $text, 'state' => $text, 'priority' => $text, 'type' => $text, 'assignee' => $text,
-            'dueDate' => $text, 'epicId' => $text, 'parentIssueId' => $text, 'estimateMinutes' => ['sometimes', 'nullable', 'integer'],
+            'startDate' => $text, 'endDate' => $text, 'dueDate' => $text, 'epicId' => $text, 'parentIssueId' => $text, 'estimateMinutes' => ['sometimes', 'nullable', 'integer'],
             'relatedIssueIds' => ['sometimes', 'nullable', 'array'], 'relatedIssueIds.*' => ['string']];
     }
 }

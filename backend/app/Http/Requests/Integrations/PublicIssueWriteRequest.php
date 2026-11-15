@@ -55,6 +55,8 @@ class PublicIssueWriteRequest extends JsonOperationRequest
             'priority' => ['sometimes', Rule::in(['urgent', 'high', 'normal', 'low'])],
             'type' => ['sometimes', Rule::in(['epic', 'task', 'bug'])],
             'assignee' => ['sometimes', 'string', 'max:60'],
+            'startDate' => ['sometimes', 'nullable', 'string', 'max:10'],
+            'endDate' => ['sometimes', 'nullable', 'string', 'max:10'],
             'dueDate' => ['sometimes', 'string', 'max:10'],
             'epicId' => ['sometimes', 'string', 'max:100'],
             'parentIssueId' => ['sometimes', 'string', 'max:100'],

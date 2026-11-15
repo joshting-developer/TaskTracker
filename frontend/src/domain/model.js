@@ -16,8 +16,8 @@ export const TYPES = [
   { id: 'bug', label: 'Bug' },
 ];
 export const PROJECT_COLORS = ['#8d83ed', '#64b0a0', '#e5a25c', '#cf82ae', '#71a2d5'];
-export const ISSUE_FIELDS = ['title', 'description', 'state', 'priority', 'type', 'assignee', 'dueDate', 'epicId', 'estimateMinutes', 'parentIssueId', 'relatedIssueIds'];
-export const FIELD_LABELS = { title: t('標題'), description: t('描述'), state: t('狀態'), priority: t('優先級'), type: t('類型'), assignee: t('負責人'), dueDate: t('到期日'), epicId: 'Epic', estimateMinutes: t('預估分鐘'), parentIssueId: t('父任務'), relatedIssueIds: t('關聯任務'), blockedBy: t('舊前置任務（已停用）') };
+export const ISSUE_FIELDS = ['title', 'description', 'state', 'priority', 'type', 'assignee', 'startDate', 'endDate', 'dueDate', 'epicId', 'estimateMinutes', 'parentIssueId', 'relatedIssueIds'];
+export const FIELD_LABELS = { title: t('標題'), description: t('描述'), state: t('狀態'), priority: t('優先級'), type: t('類型'), assignee: t('負責人'), startDate: t('計畫開始日'), endDate: t('計畫結束日'), dueDate: t('到期日'), epicId: 'Epic', estimateMinutes: t('預估分鐘'), parentIssueId: t('父任務'), relatedIssueIds: t('關聯任務'), blockedBy: t('舊前置任務（已停用）') };
 
 export function fail(code, message) {
   throw Object.assign(new Error(message), { code });
@@ -34,11 +34,15 @@ function enumField(value, choices, label) {
 }
 export function validateIssue(input, statuses = STATES) {
   if (!input || typeof input !== 'object') fail('INVALID_INPUT', t('任務資料格式不正確'));
-  const dueDate = textField(input.dueDate ?? '', t('到期日'), 10);
-  const parsedDate = dueDate ? new Date(`${dueDate}T00:00:00Z`) : null;
-  if (dueDate && (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate) || Number.isNaN(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== dueDate)) {
-    fail('INVALID_INPUT', t('到期日格式不正確'));
+  const dates = {};
+  for (const [field, label] of [['startDate', '計畫開始日'], ['endDate', '計畫結束日'], ['dueDate', '到期日']]) {
+    const value = textField(input[field] ?? '', t(label), 10);
+    const parsed = value ? new Date(`${value}T00:00:00Z`) : null;
+    if (value && (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value)) fail('INVALID_INPUT', t('日期格式不正確'));
+    if (field !== 'dueDate' && value && value < '1000-01-01') fail('INVALID_INPUT', t('計畫日期需介於 1000-01-01 與 9999-12-31'));
+    dates[field] = value;
   }
+  if (dates.startDate && dates.endDate && dates.endDate < dates.startDate) fail('INVALID_INPUT', t('計畫結束日不可早於開始日'));
   return {
     title: textField(input.title, t('標題'), 180, true),
     description: textField(input.description ?? '', t('描述'), 6000),
@@ -46,7 +50,7 @@ export function validateIssue(input, statuses = STATES) {
     priority: enumField(input.priority ?? 'normal', PRIORITIES, t('優先級')),
     type: enumField(input.type ?? 'task', TYPES, t('類型')),
     assignee: textField(input.assignee ?? '', t('負責人'), 60),
-    dueDate,
+    ...dates,
     epicId: textField(input.epicId ?? '', 'Epic', 100),
     estimateMinutes: integer(input.estimateMinutes ?? 0, t('預估分鐘'), 0, 525600),
     parentIssueId: textField(input.parentIssueId ?? '', t('父任務'), 100),

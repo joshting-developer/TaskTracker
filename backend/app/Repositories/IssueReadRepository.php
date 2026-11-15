@@ -83,7 +83,7 @@ class IssueReadRepository
      */
     private function columns(bool $detail = false): array
     {
-        return ['id', 'workspace_id', 'public_id', 'project_id', 'identifier', 'title', 'type', 'state_id', 'priority', 'assignee_id', 'epic_id', 'parent_issue_id', 'due_date', 'estimate_minutes', 'revision', 'created_at', 'updated_at', ...($detail ? ['description', 'created_by_id'] : [])];
+        return ['id', 'workspace_id', 'public_id', 'project_id', 'identifier', 'title', 'type', 'state_id', 'priority', 'assignee_id', 'epic_id', 'parent_issue_id', 'due_date', 'estimate_minutes', 'revision', 'created_at', 'updated_at', ...($detail ? ['description', 'created_by_id', 'start_date', 'end_date'] : [])];
     }
 
     /**

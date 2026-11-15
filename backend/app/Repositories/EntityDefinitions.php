@@ -59,6 +59,8 @@ class EntityDefinitions
                 ['type', 'type', 'string', 'task', null],
                 ['assignee', 'assignee_id', 'ref', null, 'members'],
                 ['createdBy', 'created_by_id', 'ref', null, 'members'],
+                ['startDate', 'start_date', 'date', null, null],
+                ['endDate', 'end_date', 'date', null, null],
                 ['dueDate', 'due_date', 'date', null, null],
                 ['epicId', 'epic_id', 'ref', null, 'issues'],
                 ['estimateMinutes', 'estimate_minutes', 'int', 0, null],
