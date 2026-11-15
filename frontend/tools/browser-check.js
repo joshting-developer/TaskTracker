@@ -63,6 +63,7 @@ async function checkSeedAccounts(browser, failures) {
     await page.getByRole('button', { name: '登入', exact: true }).click();
   await openProjectList(page);
     await page.getByRole('heading', { name: '專案列表', exact: true }).waitFor();
+    await page.getByRole('button', { name: '進入專案：first', exact: true }).waitFor();
     const manager = ['owner', 'manager'].includes(role), maintainer = role !== 'developer';
     assert.equal(await page.getByRole('button', { name: '建立專案', exact: true }).count(), manager ? 1 : 0);
     assert.equal(await page.getByRole('button', { name: '建立新專案', exact: false }).count(), manager ? 1 : 0);
@@ -82,7 +83,7 @@ async function checkSeedAccounts(browser, failures) {
     await page.getByRole('button', { name: '完成登入功能', exact: true }).waitFor();
     assert.equal(await page.getByRole('link', { name: '狀態設定', exact: true }).count(), maintainer ? 1 : 0);
     await page.getByRole('link', { name: '我的任務', exact: false }).click();
-    assert.equal(await page.locator('tbody tr').count(), role === 'developer' ? 4 : role === 'maintainer' ? 1 : 0, '個人清單按 userId, 非角色名稱');
+    await expectRows(page, role === 'developer' ? 4 : role === 'maintainer' ? 1 : 0);
     await page.getByRole('link', { name: '任務看板', exact: true }).click();
     await page.getByRole('button', { name: '開啟看板 Default', exact: true }).waitFor();
     assert.equal(await page.getByRole('button', { name: '新增看板', exact: true }).count(), maintainer ? 1 : 0);

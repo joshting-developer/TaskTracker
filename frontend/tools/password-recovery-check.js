@@ -1,11 +1,11 @@
+import { ownedDefaultTopology } from './fixtures/owned-topology.js';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import { verifyFixtureInBrowser } from './fixtures/verification.js';
 const api = process.env.E2E_API_URL;
-if (process.env.E2E_ISOLATED !== '1' || api !== 'http://127.0.0.1:13199') throw new Error('Use the Codex isolated recovery topology');
+const topology = ownedDefaultTopology();
 const port = Number(process.env.E2E_FRONTEND_PORT || 5199), origin = `http://127.0.0.1:${port}`;
 const folder = 'artifacts/tt328'; mkdirSync(folder, { recursive: true });
 let server, browser;
@@ -28,7 +28,7 @@ try {
   }
   await page.getByLabel('Email', { exact: true }).fill(email); await page.getByRole('button', { name: '寄送重設連結' }).click();
   await page.getByRole('status').filter({ hasText: '如果這個信箱已註冊' }).waitFor();
-  const token = execFileSync('docker', ['compose', '-p', 'tasktracker-codex-test', '-f', '../docker-compose.mysql-test.yml', 'exec', '-T', 'backend', 'php', 'tools/password-recovery-fixture.php', email], { encoding: 'utf8', env: { ...process.env, TASKTRACKER_TEST_PORT: '13199' } }).trim();
+  const token = topology.phpFile('tools/password-recovery-fixture.php', email).trim();
   assert.match(token, /^[a-f0-9]{64}$/);
   await page.goto(`${origin}/login#/reset-password/${token}?email=${encodeURIComponent(email)}`);
   await page.getByRole('heading', { name: '設定新密碼' }).waitFor();

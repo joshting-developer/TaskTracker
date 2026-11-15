@@ -38,6 +38,12 @@ TASKTRACKER_TEST_PORT=13198 docker compose -p tasktracker-claude-test -f docker-
 - 隔離環境的映像如果比較舊, 寄信範本（backend/resources）可能不是最新的, 註冊驗證信會出錯；這時另外多掛 `backend/resources`, 或先重建映像
 - 埠被佔用時不要停別人的程序, 先確認是不是自己的；只清理自己開的Compose專案
 
+## 專用測試分組
+
+完整分組使用 `python3 tools/frontend-regression.py --agent codex --group all`, Claude改agent。只重測某組可改為policy、inline、pagination、seed、realtime、r2或runtime；細節見consumer的docs/local-regression.md
+
+專用服務共用該Agent自己的測試MySQL, 各組使用獨立tasktracker_test_開頭schema。前端仍用5198／5199, 專用API埠由tools/regression-profiles.json管理, 不回用已停用的主服務或任意外部資料庫
+
 ## 截圖比對只有一套
 - 核准過的基準只有一份, 兩個人同時跑一定會互相覆蓋, 所以只能輪流
 - 一律用 `sh tools/visual-check.sh candidate｜prove｜compare`, 腳本自己有鎖, 有人在跑時會直接失敗, 不要硬拆鎖或重設別人的環境

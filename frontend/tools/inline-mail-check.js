@@ -1,9 +1,10 @@
 import { verifyFixtureInBrowser } from './fixtures/verification.js';
+import { ownedTopology } from './fixtures/owned-topology.js';
 import assert from 'node:assert/strict';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
-if (process.env.E2E_ISOLATED !== '1' || process.env.E2E_API_URL !== 'http://127.0.0.1:13199') throw new Error('Owned Codex isolated inline backend required');
+ownedTopology('inline');
 const port = Number(process.env.E2E_FRONTEND_PORT || 5199);
 let server, browser;
 try {

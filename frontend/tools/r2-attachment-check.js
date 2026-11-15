@@ -1,10 +1,10 @@
 import { fixtureResponse } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { ownedTopology } from './fixtures/owned-topology.js';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
-if (process.env.E2E_ISOLATED !== '1' || process.env.E2E_API_URL !== 'http://127.0.0.1:13089') throw Error('Only the owned isolated MySQL/R2 backend is supported');
+const topology = ownedTopology('r2');
 const port = Number(process.env.E2E_FRONTEND_PORT || 5291), base = `http://127.0.0.1:${port}`;
 const artifact = new URL('../../artifacts/tt291/', import.meta.url); mkdirSync(artifact, { recursive: true });
 let vite, browser, project, page;
@@ -55,10 +55,10 @@ try {
   if (project) {
     assert.match(project.id, /^[a-f0-9-]{36}$/);
     const php = String.raw`require 'vendor/autoload.php'; $app=require 'bootstrap/app.php'; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-      if(!$app->environment('testing')||getenv('TASKTRACKER_MYSQL_TEST')!=='1'||config('database.connections.mysql.database')!=='tasktracker_test'||config('database.connections.mysql.username')!=='tasktracker_test'||config('filesystems.disks.r2-attachments.bucket')!=='task-tracker-local')throw new RuntimeException('Isolation required');
+      if(!$app->environment('testing')||getenv('TASKTRACKER_MYSQL_TEST')!=='1'||config('database.connections.mysql.database')!=='${topology.database}'||config('database.connections.mysql.username')!=='tasktracker_test'||config('filesystems.disks.r2-attachments.bucket')!=='task-tracker-local')throw new RuntimeException('Isolation required');
       $p=Illuminate\Support\Facades\DB::table('projects')->where('public_id','${project.id}')->sole();
       foreach(App\Models\Attachment::where('project_id',$p->id)->get() as $row){if($row->storage_disk!=='r2-attachments')throw new RuntimeException('Unexpected disk');if(!Illuminate\Support\Facades\Storage::disk($row->storage_disk)->delete($row->storage_key))throw new RuntimeException('Cleanup failed');$row->update(['status'=>'purged','storage_key'=>'','expires_at'=>null]);}`;
-    execFileSync('docker', ['compose', '-p', 'tasktracker-codex-perf', '-f', 'docker-compose.mysql-test.yml', '-f', '/tmp/tt191-compose.yml', '-f', '/tmp/tt291-compose.yml', 'exec', '-T', 'backend', 'php', '-r', php], { cwd: new URL('../../', import.meta.url).pathname, env: { ...process.env, TASKTRACKER_TEST_PORT: '13089' }, stdio: 'pipe' });
+  topology.php(php);
     console.log('PASS: only this browser project R2 objects cleaned');
   }
 }

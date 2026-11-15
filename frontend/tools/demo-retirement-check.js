@@ -1,10 +1,11 @@
+import { ownedDefaultTopology } from './fixtures/owned-topology.js';
 import { verifyFixtureInBrowser } from './fixtures/verification.js';
 import { openProjectList } from './navigation.js';
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
-if (process.env.E2E_ISOLATED !== '1' || process.env.E2E_API_URL !== 'http://127.0.0.1:13199') throw new Error('Use the Codex isolated topology');
+ownedDefaultTopology();
 const port = Number(process.env.E2E_FRONTEND_PORT || 5199), base = `http://127.0.0.1:${port}`;
 let vite, browser;
 try {

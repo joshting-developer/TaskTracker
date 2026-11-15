@@ -1,9 +1,9 @@
 import { fixtureResponse } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { ownedTopology } from './fixtures/owned-topology.js';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
-if (process.env.E2E_ISOLATED !== '1' || process.env.E2E_API_URL !== 'http://127.0.0.1:13089') throw Error('Only the owned isolated MySQL backend is supported');
+const topology = ownedTopology('pagination');
 const port = Number(process.env.E2E_FRONTEND_PORT || 5291), base = `http://127.0.0.1:${port}`;
 let vite, browser;
 try {
@@ -22,11 +22,11 @@ try {
   // The random project belongs to this test alone; never reset a business database.
   assert.match(project.id, /^[a-f0-9-]{36}$/);
   const php = `require 'vendor/autoload.php'; $app=require 'bootstrap/app.php'; $app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap();
-    if(!$app->environment('testing')||getenv('TASKTRACKER_MYSQL_TEST')!=='1'||config('database.connections.mysql.database')!=='tasktracker_test'||config('database.connections.mysql.username')!=='tasktracker_test')throw new RuntimeException('Isolation required');
+    if(!$app->environment('testing')||getenv('TASKTRACKER_MYSQL_TEST')!=='1'||config('database.connections.mysql.database')!=='${topology.database}'||config('database.connections.mysql.username')!=='tasktracker_test')throw new RuntimeException('Isolation required');
     $project=Illuminate\\Support\\Facades\\DB::table('projects')->where('public_id','${project.id}')->sole();
     $row=(array)Illuminate\\Support\\Facades\\DB::table('issues')->where('project_id',$project->id)->sole(); unset($row['id']);
     for($first=2;$first<=10025;$first+=500){$batch=[];for($id=$first;$id<=min(10025,$first+499);$id++)$batch[]=[...$row,'public_id'=>(string)Illuminate\\Support\\Str::uuid(),'identifier'=>'PAGE-'.$id,'storage_position'=>$id];Illuminate\\Support\\Facades\\DB::table('issues')->insert($batch);}`;
-  execFileSync('docker', ['compose', '-p', 'tasktracker-codex-perf', '-f', 'docker-compose.mysql-test.yml', '-f', '/tmp/tt191-compose.yml', 'exec', '-T', 'backend', 'php', '-r', php], { cwd: new URL('../../', import.meta.url).pathname, env: { ...process.env, TASKTRACKER_TEST_PORT: '13089' }, stdio: 'pipe' });
+  topology.php(php);
   await page.goto(`${base}/app/#/projects/${project.id}`);
   await page.getByText('10025 筆結果', { exact: false }).waitFor();
   await page.getByText('1 / 501', { exact: true }).waitFor();

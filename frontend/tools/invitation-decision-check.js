@@ -1,6 +1,7 @@
+import { ownedDefaultTopology } from './fixtures/owned-topology.js';
 import {fixtureResponse} from './fixtures/verification.js';
 import {createServer} from 'vite';import{chromium}from'playwright';import assert from'node:assert/strict';import{mkdirSync,writeFileSync}from'node:fs';
-if(process.env.E2E_ISOLATED!=='1'||process.env.E2E_API_URL!=='http://127.0.0.1:13199')throw Error('Isolated Codex topology required');
+ownedDefaultTopology();
 const port=Number(process.env.E2E_FRONTEND_PORT||5199),base=`http://127.0.0.1:${port}`;let server,browser;
 try{
 server=await createServer({server:{host:'127.0.0.1',port,strictPort:true,proxy:{'/api':process.env.E2E_API_URL}}});await server.listen();browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH});

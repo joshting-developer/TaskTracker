@@ -1,3 +1,4 @@
+import { ownedTopology } from './fixtures/owned-topology.js';
 import { acceptInvitationFixture } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
@@ -8,11 +9,12 @@ import { chromium } from 'playwright';
 const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 
 // 本測試只使用獨立Compose；斷線測試會暫停該專案的Reverb，絕不操作主服務。
-const testProject = 'tasktracker-realtime-test';
-if (process.env.E2E_API_URL !== 'http://127.0.0.1:13024' || process.env.E2E_REALTIME_PROJECT !== testProject) throw new Error('需要指定獨立即時測試環境');
+const topology = ownedTopology('realtime');
 const run = promisify(execFile);
-const env = { ...process.env, TASKTRACKER_API_PORT: '13024', TASKTRACKER_WS_PORT: '18080', TASKTRACKER_PORT: '5175' };
-const compose = action => run('docker', ['compose', '-p', testProject, action, 'websocket'], { cwd: '..', env, timeout: 60000 });
+const compose = action => {
+  const [command, args] = topology.command(action, 'websocket');
+  return run(command, args, { cwd: '..', env: process.env, timeout: 60000 });
+};
 let server, browser, stopped = false;
 async function request(page, operation, input = {}, group = 'rpc') {
   return page.evaluate(async ({ operation, input, group }) => {
@@ -26,7 +28,7 @@ async function call(page, operation, input = {}, group = 'rpc') {
   assert.equal(result.ok, true, JSON.stringify(result)); if (result.data?.verificationRequired) return call(page, 'verify-email', { code: 'local666' }, 'auth'); return acceptInvitationFixture(page.request, result.data, input, operation, new URL(page.url()).origin);
 }
 try {
-  server = await preview({ preview: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL, '/reverb': { target: 'http://127.0.0.1:18080', ws: true, rewrite: path => path.replace(/^\/reverb/, '') } } } });
+  server = await preview({ preview: { host: '127.0.0.1', port: e2ePort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL, '/reverb': { target: `http://127.0.0.1:${topology.websocketPort}`, ws: true, rewrite: path => path.replace(/^\/reverb/, '') } } } });
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const owner = await (await browser.newContext()).newPage(), reader = await (await browser.newContext()).newPage();
   const errors = [], signals = []; let closed = 0;

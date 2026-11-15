@@ -1,8 +1,10 @@
+import { ownedTopology } from './fixtures/owned-topology.js';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 // TT-151：直接對正式runtime容器（Nginx＋PHP-FPM＋Vite靜態檔）驗證同源頁面、API、並行與快取標頭；只連隔離測試資料庫。
 const base = process.env.PROD_BASE_URL;
-if (!base) throw new Error('必須指定隔離正式runtime的PROD_BASE_URL');
+ownedTopology('runtime');
+assert.equal(base, process.env.E2E_API_URL);
 let browser;
 try {
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
@@ -23,10 +25,10 @@ try {
   await call('register', { name: 'Prod Owner', email: `prod-${crypto.randomUUID()}@example.test`, password: 'isolated-test-password', workspaceName: 'Prod' }, 'auth');
   const project = await call('createProject', { name: 'Prod', code: 'PRD' });
   const issue = await call('createIssue', { projectId: project.id, title: '正式runtime卡片' });
-  await page.goto(`${base}/#/projects/${project.id}/board`);
+  await page.goto(`${base}/app/#/projects/${project.id}/board`);
   await page.reload();
   await page.locator(`.issue-card[data-issue="${issue.identifier}"]`).waitFor();
-  await page.goto(`${base}/#/projects/${project.id}/issues/${issue.id}?detail=1`);
+  await page.goto(`${base}/app/#/projects/${project.id}/issues/${issue.id}?detail=1`);
   await page.reload();
   await page.getByRole('region', { name: '任務完整頁', exact: true }).getByText('正式runtime卡片').first().waitFor();
 

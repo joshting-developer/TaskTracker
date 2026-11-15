@@ -1,10 +1,11 @@
+import { ownedDefaultTopology } from './fixtures/owned-topology.js';
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import { fixtureResponse } from './fixtures/verification.js';
 const port = Number(process.env.E2E_FRONTEND_PORT || 5199), api = process.env.E2E_API_URL;
-if (process.env.E2E_ISOLATED !== '1' || api !== 'http://127.0.0.1:13199') throw Error('Owned Codex isolated invitations API required');
+ownedDefaultTopology();
 mkdirSync('../artifacts/tt340', { recursive: true });
 let server, browser;
 try {
