@@ -17,7 +17,7 @@ try {
   await page.goto(origin + '/login?mode=register');
   const email = `recover-${crypto.randomUUID()}@example.test`;
   await page.getByLabel('你的名字').fill('恢復驗收'); await page.getByLabel('Email', { exact: true }).fill(email);
-  await page.getByLabel('密碼', { exact: true }).fill('old-synthetic-password'); await page.getByLabel('工作空間名稱').fill('恢復驗收');
+  await page.getByLabel('密碼', { exact: true }).fill('old-synthetic-password'); await page.getByLabel('確認密碼', { exact: true }).fill('old-synthetic-password'); await page.getByLabel('工作空間名稱').fill('恢復驗收');
   await page.getByRole('button', { name: '建立工作空間', exact: true }).click(); await verifyFixtureInBrowser(page); await page.locator('.app-shell').waitFor();
   await page.evaluate(async () => { const csrf = await (await fetch('/api/csrf-cookie')).json(); await fetch('/api/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.csrfToken }, body: '{}' }); });
   await page.goto(origin + '/login');

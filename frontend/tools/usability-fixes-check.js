@@ -33,7 +33,7 @@ async function register(page, email, inviteToken = '') {
   if (!inviteToken) await page.getByRole('button', { name: '第一次使用？建立工作空間' }).click();
   await page.getByLabel('你的名字').fill(inviteToken ? 'Flow Member' : 'Flow Owner');
   if (!inviteToken) await page.getByLabel('Email', { exact: true }).fill(email);
-  else await page.getByLabel('確認密碼', { exact: true }).fill('flow-test-password');
+  await page.getByLabel('確認密碼', { exact: true }).fill('flow-test-password');
   await page.getByLabel('密碼', { exact: true }).fill('flow-test-password');
   if (!inviteToken) await page.getByLabel('工作空間名稱', { exact: true }).fill('流程回驗空間');
   await page.getByRole('button', { name: inviteToken ? '建立帳號' : '建立工作空間', exact: true }).click();

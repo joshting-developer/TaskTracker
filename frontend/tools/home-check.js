@@ -13,7 +13,7 @@ try {
   page.on('pageerror', e => errors.push(e.message));
   await page.goto(`http://127.0.0.1:${port}/login?mode=register`);
   await page.getByLabel('你的名字').fill('首頁測試'); await page.getByLabel('Email', { exact: true }).fill(`home-${crypto.randomUUID()}@example.test`);
-  await page.getByLabel('密碼', { exact: true }).fill('home-isolated-password'); await page.getByLabel('工作空間名稱', { exact: true }).fill('首頁測試');
+  await page.getByLabel('密碼', { exact: true }).fill('home-isolated-password'); await page.getByLabel('確認密碼', { exact: true }).fill('home-isolated-password'); await page.getByLabel('工作空間名稱', { exact: true }).fill('首頁測試');
   await page.getByRole('button', { name: '建立工作空間', exact: true }).click(); await verifyFixtureInBrowser(page);
   page.on('request', r => { if (r.url().includes('/api/')) reads.push(new URL(r.url()).pathname); });
   await page.reload(); await page.locator('.app-shell').waitFor();

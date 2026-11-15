@@ -65,7 +65,7 @@ onMounted(async () => {
 });
 async function submit() {
   if (busy.value || (inviteToken && !invitationLoaded.value)) return;
-  if (mode.value === 'register' && inviteToken && form.password !== passwordConfirmation.value) { error.value = t('兩次密碼不一致'); return; }
+  if (mode.value === 'register' && form.password !== passwordConfirmation.value) { error.value = t('兩次密碼不一致'); return; }
   busy.value = true; error.value = '';
   try {
     const result = await api[mode.value]({ ...form });
@@ -145,7 +145,7 @@ async function backToLogin() {
         <v-text-field v-if="mode === 'register'" v-model="form.name" :label="t('你的名字')" autocomplete="name" maxlength="60" required :disabled="busy" />
         <v-text-field v-model="form.email" label="Email" type="email" autocomplete="email" maxlength="254" required :disabled="busy" :readonly="Boolean(inviteToken)" />
         <v-text-field v-model="form.password" :label="t('密碼')" :aria-label="t('密碼')" type="password" :autocomplete="mode === 'login' ? 'current-password' : 'new-password'" :minlength="mode === 'register' ? 10 : 1" maxlength="128" required :disabled="busy" :hint="mode === 'register' ? t('至少 10 字') : ''" persistent-hint />
-        <v-text-field v-if="mode === 'register' && inviteToken" v-model="passwordConfirmation" :label="t('確認密碼')" type="password" autocomplete="new-password" minlength="10" maxlength="128" required :disabled="busy" />
+        <v-text-field v-if="mode === 'register'" v-model="passwordConfirmation" :label="t('確認密碼')" type="password" autocomplete="new-password" minlength="10" maxlength="128" required :disabled="busy" />
         <v-text-field v-if="mode === 'register' && !inviteToken" v-model="form.workspaceName" :label="t('工作空間名稱')" :placeholder="t('例如：產品團隊')" maxlength="60" required :disabled="busy" />
         <v-btn type="submit" color="primary" block size="large" :loading="busy" :disabled="busy || (Boolean(inviteToken) && !invitationLoaded)">{{ mode === 'login' ? t('登入') : inviteToken ? t('建立帳號') : t('建立工作空間') }}</v-btn>
       </form>

@@ -17,7 +17,7 @@ try {
   page.on('pageerror', e => errors.push(e.message));
   await page.goto(base + '/login?mode=register');
   await page.getByLabel('你的名字').fill('空白專案驗收'); await page.getByLabel('Email', { exact: true }).fill(`empty-${crypto.randomUUID()}@example.test`);
-  await page.getByLabel('密碼', { exact: true }).fill('isolated-demo-retirement'); await page.getByLabel('工作空間名稱').fill('空白工作空間');
+  await page.getByLabel('密碼', { exact: true }).fill('isolated-demo-retirement'); await page.getByLabel('確認密碼', { exact: true }).fill('isolated-demo-retirement'); await page.getByLabel('工作空間名稱').fill('空白工作空間');
   await page.getByRole('button', { name: '建立工作空間', exact: true }).click(); await verifyFixtureInBrowser(page); await page.locator('.app-shell').waitFor();
   await openProjectList(page); await page.getByRole('heading', { name: '尚無專案', exact: true }).waitFor();
   assert.equal(await page.getByRole('button', { name: /示範專案/ }).count(), 0); assert.deepEqual(demoCalls, []);

@@ -1,0 +1,9 @@
+{
+  "approved": true,
+  "reviewer": "Standing authorization delegated by Josh",
+  "authorization": "Reviewed bilingual three-width registration confirmation form under standing delegated authorization; existing comparator policy unchanged.",
+  "manifestFile": "docs/evidence/tt394-visual-manifest.json",
+  "manifestSha256": "f2442b3228443f1aaf99d26596092eed830801dd060f412fc6f8103f00995818",
+  "harnessSha256": "9f330019baaba0def1dfb17799d716f911f4f9b362420b238600f4569851a21f",
+  "images": 6
+}

@@ -1088,6 +1088,7 @@ try {
   await page.getByLabel('你的名字').fill('Josh');
   await page.getByLabel('Email', { exact: true }).fill(`josh-${crypto.randomUUID()}@example.test`);
   await page.getByLabel('密碼', { exact: true }).fill('test-local-password');
+  await page.getByLabel('確認密碼', { exact: true }).fill('test-local-password');
   await page.getByLabel('工作空間名稱', { exact: true }).fill('產品團隊');
   await page.getByRole('button', { name: '建立工作空間', exact: true }).click();
   await verifyFixtureInBrowser(page);

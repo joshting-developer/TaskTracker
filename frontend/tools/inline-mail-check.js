@@ -16,7 +16,7 @@ try {
   await page.getByRole('button', { name: '第一次使用？建立工作空間', exact: true }).click();
   await page.getByLabel('你的名字', { exact: true }).fill('Inline mail fixture');
   await page.getByLabel('Email', { exact: true }).fill(`inline-${crypto.randomUUID()}@example.test`);
-  await page.getByLabel('密碼', { exact: true }).fill('synthetic-inline-password');
+  await page.getByLabel('密碼', { exact: true }).fill('synthetic-inline-password'); await page.getByLabel('確認密碼', { exact: true }).fill('synthetic-inline-password');
   await page.getByLabel('工作空間名稱', { exact: true }).fill('Inline mail fixture');
   const [response] = await Promise.all([page.waitForResponse(value => value.url().endsWith('/api/auth/register')), page.getByRole('button', { name: '建立工作空間', exact: true }).click()]);
   assert.equal(response.status(), 200);

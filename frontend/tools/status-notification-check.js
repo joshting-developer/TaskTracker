@@ -18,7 +18,7 @@ try {
   await page.getByRole('button', { name: '第一次使用？建立工作空間', exact: true }).click();
   await page.getByLabel('你的名字', { exact: true }).fill('狀態通知檢查者');
   await page.getByLabel('Email', { exact: true }).fill(`status-${crypto.randomUUID()}@example.test`);
-  await page.getByLabel('密碼', { exact: true }).fill('status-test-only-password');
+  await page.getByLabel('密碼', { exact: true }).fill('status-test-only-password'); await page.getByLabel('確認密碼', { exact: true }).fill('status-test-only-password');
   await page.getByLabel('工作空間名稱', { exact: true }).fill('通知檢查');
   await page.getByRole('button', { name: '建立工作空間', exact: true }).click();
   await verifyFixtureInBrowser(page);
