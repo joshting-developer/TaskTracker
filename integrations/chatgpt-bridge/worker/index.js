@@ -6,6 +6,7 @@ const IDENTIFIER = /^[A-Z][A-Z0-9_]*-[1-9][0-9]*$/i;
 const PAGE_FIELDS = ['page', 'perPage', 'total', 'lastPage', 'maxOffset', 'accessibleLastPage'];
 const ISSUE_FIELDS = ['id', 'projectId', 'identifier', 'title', 'state', 'type', 'priority', 'assignee', 'assigneeName', 'dueDate', 'revision', 'updatedAt'];
 const BOARD_FIELDS = ['id', 'projectId', 'name', 'description', 'isDefault', 'revision', 'archivedAt', 'issueCount', 'closedCount'];
+const STATUS_FIELDS = ['id', 'label', 'color'];
 const MAX_RESPONSE = 256 * 1024;
 
 class BridgeError extends Error {
@@ -99,11 +100,18 @@ function scrub(value, secret) {
 
 function shape(name, data, args) {
   if (name === 'who_am_i') return pick(data, ['userId', 'workspaceId', 'abilities']);
+  if (name === 'get_project') {
+    if (!Array.isArray(data.statuses) || data.statuses.length > 20) throw new BridgeError('INVALID_RESPONSE', 502);
+    return { ...pick(data, ['id', 'name', 'code', 'description', 'color', 'leadId', 'leadName', 'revision', 'createdAt', 'updatedAt', 'permissions', 'accessSource']),
+      statuses: data.statuses.map(row => pick(row, STATUS_FIELDS)) };
+  }
   if (name === 'get_issue') return { ...pick(data, [...ISSUE_FIELDS, 'description', 'estimateMinutes', 'spentMinutes', 'epicId', 'parentIssueId']),
     url: `${ORIGIN}/app/#/projects/${args.project}/issues/${data.id}` };
   if (name === 'get_board') return pick(data, BOARD_FIELDS);
   if (!Array.isArray(data.items) || data.items.length > (args.perPage ?? 20)) throw new BridgeError('INVALID_RESPONSE', 502);
   const fields = name === 'list_projects' ? ['id', 'name', 'code', 'description', 'revision', 'permissions']
+    : name === 'list_project_members' ? ['id', 'name']
+      : name === 'list_project_statuses' ? STATUS_FIELDS
     : name === 'list_boards' ? BOARD_FIELDS
       : name === 'list_issue_comments' ? ['id', 'issueId', 'author', 'content', 'createdAt'] : ISSUE_FIELDS;
   const result = { ...pick(data, PAGE_FIELDS), items: data.items.map(row => pick(row, fields)) };

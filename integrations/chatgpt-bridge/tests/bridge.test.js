@@ -40,13 +40,16 @@ for (const [name, args, data] of [
   ['list_boards', { project }, { ...page([{ id: board, name: 'Synthetic board' }]), defaultBoard: { id: 'default' } }],
   ['get_board', { project, board }, { id: board, name: 'Synthetic', selectedIssueIds: ['must-not-return'] }],
   ['list_board_issues', { project, board: 'default' }, page([issueRow])],
+  ['get_project', { project }, { id: project, name: 'Synthetic', permissions: ['issue.write'], statuses: [{ id: 'open', label: 'Open', color: '#333' }] }],
+  ['list_project_members', { project }, page([{ id: 'synthetic-user', name: 'Synthetic' }])],
+  ['list_project_statuses', { project }, { items: [{ id: 'open', label: 'Open', color: '#333' }] }],
 ]) test(`${name} projects only its required fields`, async () => {
   const f = fake({ ...data, password: 'never-return', secret: env.TASKTRACKER_PAT });
   const result = await callTool(name, args, env, f.transport);
   assert.equal(result.workspaceId, workspace);
   assert.doesNotMatch(JSON.stringify(result), /never-return|synthetic-private-token|must-not-return/);
   assert.equal(f.calls.length, name === 'who_am_i' ? 1 : 2);
-  if (name.startsWith('list_') || name === 'search_issues') assert.ok(f.calls.at(-1).url.includes('perPage=20'));
+  if (Object.hasOwn(TOOLS[name].inputSchema.properties, 'perPage')) assert.ok(f.calls.at(-1).url.includes('perPage=20'));
 });
 
 test('contract operations, path and argument names match the backend specification', async () => {
@@ -153,6 +156,24 @@ test('tenant mismatch and revoked read scope stop before business data', async (
   }
 });
 
+test('project candidates remain scoped and bounded and propagate revoked access', async () => {
+  for (const name of ['get_project', 'list_project_members', 'list_project_statuses']) {
+    const calls = [];
+    await assert.rejects(callTool(name, { project }, env, async url => {
+      calls.push(url);
+      return url.endsWith('/me') ? response(identity) : new Response('{}', { status: 403 });
+    }), reject('FORBIDDEN'));
+    assert.equal(calls.length, 2);
+    assert.ok(calls[1].startsWith(`${ORIGIN}/api/public/v1/projects/${project}`));
+  }
+  await assert.rejects(callTool('list_project_members', { project, perPage: 21 }, env, async () => assert.fail('no fetch')), reject('INVALID_ARGUMENTS'));
+  await assert.rejects(callTool('list_project_statuses', { project }, env, fake({ items: Array(21).fill({ id: 'open' }) }).transport), reject('INVALID_RESPONSE'));
+  const f = fake(page([{ id: 'synthetic-user', name: 'Synthetic', email: 'private@example.test', permissions: ['private'] }]));
+  const result = await callTool('list_project_members', { project, page: 2, perPage: 5, search: 'Synthetic' }, env, f.transport);
+  assert.deepEqual(result.data.items, [{ id: 'synthetic-user', name: 'Synthetic' }]);
+  assert.match(f.calls[1].url, /page=2&perPage=5&search=Synthetic$/);
+});
+
 test('missing secret makes no request', async () => {
   let calls = 0;
   await assert.rejects(callTool('who_am_i', {}, {}, async () => { calls++; }), reject('NOT_CONFIGURED')); assert.equal(calls, 0);
@@ -189,9 +210,9 @@ test('overlarge header, streamed body, invalid JSON and too many rows are reject
   await assert.rejects(callTool('search_issues', { project }, env, fake(page(Array(21).fill(issueRow))).transport), reject('INVALID_RESPONSE'));
 });
 
-test('MCP discovery and list expose only eight read-only tools and no environment', async () => {
+test('MCP discovery and list expose the read-only contract and no environment', async () => {
   const listed = await (await handle(request('tools/list'), env)).json();
-  assert.equal(listed.result.tools.length, 8);
+  assert.equal(listed.result.tools.length, 11);
   assert.ok(listed.result.tools.every(t => t.annotations.readOnlyHint));
   assert.doesNotMatch(JSON.stringify(listed), /synthetic-private-token|owner@example/);
   const discovered = await (await handle(request('server/discover'), env)).json();

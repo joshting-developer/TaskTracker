@@ -23,3 +23,5 @@ Site伺服器設定：TASKTRACKER_OWNER_EMAIL為目前Site owner的已驗證信�
 每次工具呼叫核對Site可信身分及REST目前身分／read資格, 不跨請求快取資格或資料。單頁最多20筆, request最多16KiB、上游JSON最多256KiB、每次REST請求10秒, 拒絕轉址。一般操作2次REST, 卡號讀詳情3次, 不自動翻頁／輪詢／重試
 
 TT-349已完成合成工具, 私人發布、安裝與正式唯讀驗收仍由TT-350執行, 尚未連線正式資料
+
+2026-11-16 TT-399新增get_project、list_project_members及list_project_statuses, 使用正式Project詳細及有界候選API。合計11個唯讀工具, 每次重驗身分／工作區, 成員最多20筆、狀態最多20筆。發布與真實驗證結果留卡片
