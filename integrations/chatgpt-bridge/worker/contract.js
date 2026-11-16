@@ -137,6 +137,15 @@ export const TOOLS = {
             "mine"
           ],
           "default": "all"
+        },
+        "tagIds": {
+          "type": "array",
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
         }
       },
       "required": [
@@ -387,6 +396,15 @@ export const TOOLS = {
             "mine"
           ],
           "default": "all"
+        },
+        "tagIds": {
+          "type": "array",
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
         }
       },
       "required": [

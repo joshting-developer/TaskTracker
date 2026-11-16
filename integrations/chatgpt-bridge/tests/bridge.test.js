@@ -133,6 +133,18 @@ test('redirect never forwards token to another origin', async () => {
   }), reject('REDIRECT_REJECTED')); assert.equal(calls, 1);
 });
 
+test('write scope includes read access without enabling write tools', async () => {
+  const calls = [];
+  const result = await callTool('list_projects', {}, env, async (url, options) => {
+    calls.push(url);
+    assert.equal(options.method, 'GET');
+    return response(url.endsWith('/me') ? { ...identity, abilities: ['write'] } : page([{ id: project, name: 'Synthetic', code: 'EX' }]));
+  });
+  assert.equal(calls.length, 2);
+  assert.equal(result.data.items[0].id, project);
+  await assert.rejects(callTool('create_issue', {}, env, async () => assert.fail('must not call upstream')), reject('UNKNOWN_TOOL'));
+});
+
 test('tenant mismatch and revoked read scope stop before business data', async () => {
   for (const data of [{ ...identity, workspaceId: project }, { ...identity, abilities: [] }]) {
     let calls = 0;

@@ -1,5 +1,9 @@
 # 執行紀錄
 
+- 2026-11-16：Sites工具恢復, get_site確認唯一owner為joshting.1999@gmail.com。舊部署只套用env revision1, 重發revision18後NOT_CONFIGURED改為TOKEN_REJECTED
+- 使用者新PAT已透過原生Secret工具更新並私人發布revision20, 現為READ_SCOPE_REQUIRED。根因是Bridge只認read, 未按正式PAT契約接受write包含read。修正單一共用判斷, 增加write唯讀成功與未知寫入工具仍拒絕的合成回歸
+- 本次為使用者指定GPT串接優先的受阻卡修復, TT-398已有其他對話進行中差異, 不搶改其狀態或提交內容；TT-350驗收完成前仍保留blocked
+
 - TT-349已提交並push, 正式時間30分鐘, 卡片closed；讀回最新紙條後開始TT-350, 僅此卡inprogress
 - 原生Sites來源helper會另初始化巢狀Git, 與使用者原repository規則衝突；本卡改從原repository匯出Adapter子樹, 仍使用官方package helper及原生私人發布, 不複製整個TaskTracker或改寫main歷史
 - 原repository以git subtree split匯出Adapter, Site來源SHA 94a252ef3446e44a4c5e5adb9cecaf8f19ae704e, push後讀回分支一致, 未新建clone／worktree、未改main歷史、未傳完整TaskTracker

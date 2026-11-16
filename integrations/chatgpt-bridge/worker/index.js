@@ -118,7 +118,7 @@ export async function callTool(name, args, env, transport = fetch) {
   // Verify the configured token's tenant on every operation; no cross-user cache.
   const identity = await api('/api/public/v1/me', env, transport);
   if (identity.workspaceId !== env.TASKTRACKER_WORKSPACE_ID) throw new BridgeError('WORKSPACE_MISMATCH', 403);
-  if (!identity.abilities?.includes('read')) throw new BridgeError('READ_SCOPE_REQUIRED', 403);
+  if (!identity.abilities?.some(ability => ability === 'read' || ability === 'write')) throw new BridgeError('READ_SCOPE_REQUIRED', 403);
   let data;
   if (name === 'who_am_i') data = identity;
   else {
