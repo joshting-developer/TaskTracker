@@ -1,4 +1,6 @@
-## 2026-11-15 本批工作入口
+## 2026-11-16 本批工作入口
+
+- 正式主站已部署 v1.0.0, 原始碼 15b50c5, CI 與正式驗收通過；Season 0 已完成, Season／Future 已補標。結果見 docs/release-v1.0.0-validation.md；GPT 私人 Plugin 仍為獨立部署流程
 
 - Josh 最新授權：Season 0 含新開 Bug、除 GPT 串接外全部完成後以 v1.0.0 整批部署並正式驗收, 再恢復 GPT 串接並另外部署；使用者確認目前可處理目標帳號, 仍須實測 joshting.1999 的所有者／安裝歸屬。此指示取代下方 GPT 暫停的執行順序, 不跳過歸屬驗證
 
@@ -16,7 +18,7 @@
 
 ## 目前有效摘要與查閱入口
 
-- 工作區顯示時區與 UTC 儲存界線：docs/workspace-timezones.md（TT-398, 本地實作驗收中, 尚未正式部署）；工時工作日仍為 Asia/Taipei
+- 工作區顯示時區與 UTC 儲存界線：docs/workspace-timezones.md（TT-398, 已隨 v1.0.0 正式部署與驗收）；工時工作日仍為 Asia/Taipei
 
 - Skill／AGENTS記憶分工、前端按階段驗證與本機三尺寸基準：docs/structure-optimization-acceptance-2026-11-13.md、docs/visual-regression.md；長期規範仍在Side Project共用庫。核准影像不入Git，跨平台／遠端啟用不可沿用本機圖。
 

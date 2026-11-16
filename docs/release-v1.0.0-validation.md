@@ -1,33 +1,51 @@
-# v1.0.0 整批驗收（進行中）
+# v1.0.0 整批驗收與部署
 
-TT-396, 2026-11-16。正式版本目前仍為 v0.5.0, 未建立 v1.0.0 tag 或部署
+TT-396, 2026-11-16。Season 0 共17張卡已完成, 正式站已部署 v1.0.0
 
-## 範圍與門檻
+- 正式入口：https://task-tracker.josh-ting.com
+- 版本 tag：`v1.0.0`, 原始碼 `15b50c540d0f82956c1f00e2f2a4bcfd5a8ac9a5`
+- [發布 CI 43815701574](https://github.com/joshting-developer/TaskTracker/actions/runs/43815701574)：validate、source、contract、image、deploy 全部成功
+- Fly 映像：`registry.fly.io/tasktracker-josh:v1.0.0`
+- Digest：`sha256:7eea754effcca31c0046adedaf168edefc1b96a767fbfaa01248ce923eb6c862`
+- 維持單台 nrt／512MB, 未新增付費資源
 
-Season 0 除 GPT 串接外全部完成後才統一發布, 不逐卡升版。這批包含 TT-368 計畫日期、TT-369 紙條時間、TT-193 專案標籤與公開 API, 以及 TT-393 登入導覽、TT-394 註冊確認密碼；TT-395 本地捕捉信箱已在獨立本地服務驗收, 不修改正式郵件設定。TT-363 已補完 v0.5.0 正式品牌驗收
+## 範圍
 
-GPT 的目標帳號、Plugin、Secret 與 PAT 在主站正式驗收後另外處理與部署, 不混進這次映像。Season 1／2 與 Future 未開工
+這批包含計畫日期、紙條時間、專案標籤與公開 API、登入導覽、註冊確認密碼及工作區顯示時區。TT-395 本地捕捉信箱已獨立驗收, 不修改正式郵件設定。GPT 私人 Plugin 由另一流程交付, 不混入主站映像；交付與限制見 [GPT Plugin 紀錄](gpt-plugin-delivery-2026-11-16.md)
 
-## 已完成的準備
+Season 1／2 與 Future 沒有開工, 本次只依清冊補標
 
-- 正式 MySQL 唯讀一致備份保留私有 SQL 與雜湊, 不進 Git、映像或公開產物
-- 在無外部網路、無公開埠的獨立 MySQL 還原成功；四個加法 migration 預演通過, 主要業務表筆數不變。還原容器已清理, 備份保留
-- 四個待執行 migration 為 050000 計畫日期、060000 標籤資料表、070000 標籤關聯索引、2026_11_16_000000 工作區顯示時區；正式庫尚未修改
-- 原 Fly 映像保留 v0.5.0, digest `sha256:c26c78b09d14881b13cc6f8b332793c249f4e94f9ec0b279c9d6dd43353262ed`, 單台 nrt／512MB, 未新增付費資源
+## 資料與 migration
 
-## 整批驗證進度
+正式 MySQL 已先取一致備份, 私有 SQL 為 5,650,285 bytes, SHA-256 `699761ea11abe9cfcc46c80c43bfc24b00d3b404b55623d8a49fd85e30d25589`。備份在無外部網路、無公開埠的獨立 MySQL 還原成功, 當時核對47表、4帳號、1工作區、550卡片；這些是備份時的筆數, 不代表後續追蹤寫入後的即時筆數
 
-完整後端 522 項、20,187 assertions 通過（R2 專用項目另驗）；一般前端 74 項這次全數通過。七組專用拓樸仍在進行。162 張核准視覺比較已通過, environmentMatches=true, threshold 0.02／maxDiffPixels 0 維持；spacing／overflow／hide-action 三種退化與原樣／還原全部通過, 每種退化均有真正 screenshot diff 證據。初輪曾因測試容器停止而未啟動, 第二輪一般前端又遇到管理固定日期跨日造成 Cookie／CSRF 失效；目前已恢復標準 serve 時鐘重跑, 原失敗紀錄保留
+四個加法 migration 在副本預演後, 已使用專用 migration 帳號及 TLS CA 驗證套用到正式庫：
 
-正式 migration、tag CI、Fly 發布與正式 Session／PAT／標籤／日期／權限驗收尚未執行, 不宣稱發布完成。正式套標及 Josh 補標紙條的回填亦尚未執行
+- `2026_11_15_050000_add_issue_planned_dates`
+- `2026_11_15_060000_create_project_tags`
+- `2026_11_15_070000_index_issue_tag_relations`
+- `2026_11_16_000000_add_workspace_display_timezone`
 
+正式端重新核對無待執行 migration。沒有 seed、reset 或匯入覆寫；還原容器已清理, 私有備份保留
 
-## 2026-11-16 發版接手核對
+## 驗證結果
 
-TT-398 已由另一 session 提交 3aa73bf, TT-409 調整驗證頻率為發版前跑冒煙與完整回歸, 最新 main CI 43801947371 成功。GPT 私人 Plugin 已另行交付, 不重做或混進主站部署
+- 完整後端524項／20,249 assertions 通過, 1項 R2 專用測試另組驗證
+- 一般前端75項通過, 包含兩項記錄原因後的精準重跑；policy／inline／pagination 與新版 seed／realtime／R2／runtime 專用流程通過, 後四組退出碼皆0且完成清理
+- 發版標準 smoke 通過, 包含 routes／API／composables／build／真實瀏覽器
+- Chrome157 同環境162張核准視覺比較通過, threshold 0.02／maxDiffPixels 0 不變；spacing／overflow／hide-action 三種退化均被拒絕, 原樣與還原通過
+- actionlint、Skill 完整性與證據檢查通過；秘密掃描438個提交未發現洩漏
+- 正式瀏覽器使用 Codex 本人帳號, 驗證 Session、Secure／HttpOnly Cookie、一般帳號無管理後台資格、有界設定／標籤／通知查詢、卡片標籤與獨立計畫日期、工作區顯示時區及 UTC ISO 時間
+- 正式標籤管理1440／768／390三尺寸無橫向溢出, 公開 OpenAPI 為0.24.0。沒有寫入合成業務資料
 
-新版完整後端 524 項／20,249 assertions 通過, 1 個 R2 專用另組驗證；75 項一般前端含兩項記錄原因後的精準重跑均通過。162 張 Chrome157／同環境視覺比較與退化注入通過, 閾值不變。接手本輪重新執行 routes／API／composables／build／真實瀏覽器的標準 smoke 通過, 前一 session 的 macOS 啟動限制本輪未重現
+正式補標已逐卡寫後讀回：Season 0 共17張、Season 1 共10張、Season 2 共11張、「暫不執行」共9張。不因補標開始後續工作, Tag 也不取代權限
 
-正式資料已再取最新私有一致備份, 無網路副本還原及四個加法 migration 預演成功, 主要業務筆數不變。備份不進 Git。受新設定影響的四個專用拓樸新版全部驗收通過（seed／realtime／R2／runtime）, 保留每組退出碼與清理結果, 正式 migration、tag 與 Fly 尚未執行
+早期失敗紀錄保留, 包括測試容器停止、固定時鐘跨日造成 Cookie／CSRF 失效及舊 Chrome 版本不符。最終以正常時鐘及核准 Chrome157 完成驗證, 沒有放寬比較參數
 
-四個正式加法 migration 已於本輪成功執行, 專用 migration 帳號與 TLS CA 驗證維持, 無 seed／reset／匯入覆寫。舊 v0.5.0 仍可運作, 正式發布待單一 tag CI
+## 證據與限制
+
+忽略的 `artifacts/tt396/` 保留 `deployed-image.json`、`formal-migrations.json`、`release-migration-rehearsal.json`、`formal-season-tags.json`、`production/result.json` 與發布檢查日誌；視覺比較與退化證據在 `artifacts/tt398/`。資料備份、憑證與截圖不進 Git
+
+瀏覽器三尺寸不等於實體手機驗收。舊通知若曾存錯時間, 沒有可靠原始時間前不批量平移；工時工作日仍採原 Asia/Taipei 契約
+
+保留前版 v0.5.0 digest `sha256:c26c78b09d14881b13cc6f8b332793c249f4e94f9ec0b279c9d6dd43353262ed`。本次 schema 為加法, 已預演相容性；沒有實際回退正式映像, 也沒有用舊備份覆蓋新寫入

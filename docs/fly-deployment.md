@@ -61,3 +61,8 @@ TT-159原先包含的OCI來源收斂／不公開資料埠、最低權限與輪�
 ## v0.5.0
 
 2026-11-15同批發布品牌入口、獨立管理後台、公開五頁雙語與上方語言入口, tag c99ebab, release run43718688726成功。正式映像digest `sha256:c26c78b09d14881b13cc6f8b332793c249f4e94f9ec0b279c9d6dd43353262ed`, 維持單台nrt, 無新schema／付費資源。正式三尺寸App／獨立管理資格與公開語系通過, 詳見[本批驗證](release-v0.5.0-validation.md)。GPT私人串接依Josh最新帳號更正暫停, 不屬本次發布完成項
+
+
+## v1.0.0
+
+2026-11-16 Season 0 整批發布, tag 原始碼15b50c5, CI 43815701574成功。正式維持單台nrt／512MB, 四個加法 migration 已備份、預演並使用專用帳號／驗證 TLS 套用, 無 seed 或資料覆寫。Session／權限／日期／標籤／顯示時區及三尺寸正式驗收通過, 映像 digest 與回退限制見[發布驗收](release-v1.0.0-validation.md)。GPT Plugin 另行交付, 不混入主站映像
