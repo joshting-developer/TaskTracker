@@ -1,4 +1,12 @@
-# 最新帳號更正與暫停
+# 2026-11-16 已恢復私人連線
+
+Josh明確要求恢復並提供新PAT後, 原生Sites讀回目前帳號是既有Site的owner, 唯一允許者為joshting.1999@gmail.com, 無群組或外部訪客。下方暫停是歷史紀錄, 已由本次恢復取代
+
+TASKTRACKER_PAT已透過原生Secret工具更新, environment revision20。第2版部署appgdep_6afa67dfcb048191b29de717e2a8d158成功, 來源子樹085f71c6b8bc6c15818e9c15cc058f4141f5bfd2, 對應main 112c50b。修正write包含read的判斷並同步tagIds查詢契約；33項合成測試通過。npm build與官方打包helper的目錄清理遇EPERM, 改為覆寫既有兩個產物；helper已產出有效archive, 原生save確認2個檔案並成功發布
+
+真實Plugin呼叫who_am_i、list_projects與get_issue(TT-350)均成功, 身分為Josh、工作區為SideProject, 取得TT及MA兩個可見專案與卡片revision13。匿名存取、撤銷／過期及執行時log檢查本輪未重新驗收。現有8個工具仍只有專案／卡片／看板唯讀, 沒有紙條或建卡工具；write PAT不代表Plugin寫入功能已完成, TT-351另續
+
+# 歷史帳號更正與暫停
 
 2026-11-15 Josh確認目標是joshting.1999, 並非目前登入的ChatGPT帳號。以下歷史紀錄中的帳號歸屬推定不作為目標帳號驗收證明
 
