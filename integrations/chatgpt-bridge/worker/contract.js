@@ -853,5 +853,179 @@ export const TOOLS = {
       "idempotentHint": true,
       "openWorldHint": true
     }
+  },
+  "list_todos": {
+    "operationId": "listPublicTodos",
+    "path": "/api/public/v1/todos",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000,
+          "default": 1
+        },
+        "perPage": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 20
+        },
+        "scope": {
+          "enum": [
+            "mine",
+            "sent",
+            "involved"
+          ],
+          "default": "mine"
+        },
+        "state": {
+          "enum": [
+            "open",
+            "closed",
+            "all"
+          ]
+        },
+        "search": {
+          "type": "string",
+          "maxLength": 200
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "get_todo": {
+    "operationId": "getPublicTodo",
+    "path": "/api/public/v1/todos/{todo}",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "todo": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        }
+      },
+      "required": [
+        "todo"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "list_todo_assignees": {
+    "operationId": "listPublicTodoAssignees",
+    "path": "/api/public/v1/todo-assignees",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000,
+          "default": 1
+        },
+        "perPage": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 20
+        },
+        "search": {
+          "type": "string",
+          "maxLength": 200
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "list_todo_comments": {
+    "operationId": "getPublicTodoComments",
+    "path": "/api/public/v1/todos/{todo}/comments",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "todo": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000,
+          "default": 1
+        },
+        "perPage": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 20
+        }
+      },
+      "required": [
+        "todo"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "list_todo_handoffs": {
+    "operationId": "getPublicTodoHandoffs",
+    "path": "/api/public/v1/todos/{todo}/handoffs",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "todo": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000,
+          "default": 1
+        },
+        "perPage": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 20
+        }
+      },
+      "required": [
+        "todo"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
   }
 };

@@ -36,3 +36,17 @@ assert.equal((await read('get_issue', { project, issue: current.identifier })).i
 const readOnlyEnv = { ...env, TASKTRACKER_PAT: fixture.readToken };
 await assert.rejects(callTool('create_issue', { project, body: { title: 'Must not exist' } }, readOnlyEnv, transport), e => e.code === 'WRITE_SCOPE_REQUIRED');
 console.log('Isolated MySQL/HTTP: project candidates, create/update/comment, identifier lookup, replay, conflict and read-only scope passed');
+
+const noteResponse = await transport(ORIGIN + '/api/public/v1/todos', { method: 'POST', redirect: 'manual',
+  headers: { Authorization: `Bearer ${fixture.token}`, 'Content-Type': 'application/json', Accept: 'application/json' },
+  body: JSON.stringify({ content: 'Synthetic private note', requestId: crypto.randomUUID() }) });
+const noteBody = await noteResponse.json();
+assert.equal(noteBody.ok, true);
+const todo = noteBody.data.id;
+const note = await read('get_todo', { todo });
+assert.ok(JSON.stringify(note).includes('Synthetic private note'));
+assert.ok((await read('list_todos', { scope: 'mine', state: 'open' })).items.some(t => t.id === todo));
+assert.ok(Array.isArray((await read('list_todo_assignees')).items));
+assert.equal((await read('list_todo_comments', { todo })).items.length, 0);
+assert.equal((await read('list_todo_handoffs', { todo })).items.length, 0);
+console.log('Isolated MySQL/HTTP: all five todo read tools passed');
