@@ -175,3 +175,18 @@ figure { min-width: 0; margin: 0; }
 .public-locale { min-height: 44px; max-width: 136px; padding: 8px 28px 8px 10px; font: inherit; font-size: 14px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; }
 .public-locale:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 @media(max-width:600px) { .public-locale { max-width: 112px; padding-left: 8px; }.guest-nav { gap: 4px; }.guest-nav a.guest-cta { min-width: 0; padding-inline: 8px; } }
+
+/* TT-374: extend the existing page without changing its original sections. */
+.aspect > p { margin-bottom: 20px; font-size: 16px; line-height: 1.65; }
+.story-layout { display: grid; grid-template-columns: 4fr 7fr; gap: 96px; align-items: start; }
+.story-layout h2 { margin-bottom: 0; }
+.story-copy p { font-size: 18px; }
+.story-copy p:last-child { margin-bottom: 0; }
+.faq-list { max-width: 960px; }
+.faq-list details { padding: 16px 24px; background: var(--ground); }
+.faq-list details + details { margin-top: 16px; }
+.faq-list summary { min-height: 44px; padding-block: 8px; font-size: 18px; font-weight: 600; cursor: pointer; }
+.faq-list summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 5px; }
+.faq-list details > p { margin: 16px 0 8px; max-width: 68ch; }
+@media (max-width: 1100px) { .story-layout { grid-template-columns: 1fr; gap: 32px; } }
+@media (max-width: 600px) { .faq-list details { padding-inline: 16px; } }
