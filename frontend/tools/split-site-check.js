@@ -73,6 +73,10 @@ try {
   await page.getByLabel('Email',{exact:true}).waitFor();
   for (const width of [1440,768,390]) {
     await page.setViewportSize({width,height:1000});
+    await page.reload();
+    await page.getByLabel('Email',{exact:true}).waitFor();
+    await page.evaluate(() => document.fonts.ready);
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),false);
     assert.equal(await page.locator('.guest-brand').getAttribute('href'),site+'/');
     await page.screenshot({path:`${out}/app-login-${width}.png`,fullPage:true});
