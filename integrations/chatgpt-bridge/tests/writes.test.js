@@ -38,6 +38,7 @@ for (const [name, args] of [
   ['create_board', { project, body: { name: 'Synthetic board', description: 'Synthetic only' } }],
   ['update_board', { project, board: issue, body: { expectedRevision: 3, addIssueIds: [issue], removeIssueIds: [] } }],
   ['delete_issue', { project, issue, body: { expectedRevision: 3 } }],
+  ['upsert_external_issue', { project, source: 'synthetic', externalId: 'item-1', body: { title: 'Synthetic upsert' } }],
 ]) test(`${name} previews without writing and confirms the identical payload with a stable requestId`, async () => {
   const f = fixture();
   const preview = (await callTool(name, args, env, f.transport)).data;
@@ -117,13 +118,41 @@ test('deletion is destructive and preview includes exact identifier, title and p
   assert.ok(f.calls.every(c => c.options.method === 'GET'));
 });
 
+test('external upsert reads the exact external target for revision and batch keeps per-item results', async () => {
+  const f = fixture();
+  await callTool('upsert_external_issue', { project, source: 'synthetic', externalId: 'item:1', body: { expectedRevision: 3, title: 'Update' } }, env, f.transport);
+  assert.match(f.calls.at(-1).url, /issues\/external\/synthetic\/item%3A1$/);
+  const args = { project, body: { createOnly: true, items: [{ source: 'synthetic', externalId: 'one', title: 'One' }, { source: 'synthetic', externalId: 'two', parentRef: { source: 'synthetic', externalId: 'one' } }] } };
+  const calls = [];
+  const transport = async (url, options) => {
+    calls.push({ url, options });
+    return url.endsWith('/me') ? response(identity) : response({ items: [
+      { index: 0, externalSource: 'synthetic', externalId: 'one', status: 'created', id: issue, secret: 'hidden' },
+      { index: 1, externalSource: 'synthetic', externalId: 'two', status: 'failed', error: { code: 'CONFLICT', message: 'Conflict', internal: 'hidden' } },
+    ], summary: { created: 1, failed: 1 } });
+  };
+  const preview = (await callTool('batch_upsert_issues', args, env, transport)).data;
+  assert.equal(preview.preview.body.items.length, 2);
+  const result = (await callTool('batch_upsert_issues', { ...args, confirmation: preview.confirmation }, env, transport)).data;
+  assert.equal(result.items[1].error.code, 'CONFLICT');
+  assert.equal(result.summary.failed, 1);
+  assert.doesNotMatch(JSON.stringify(result), /hidden/);
+  assert.equal(calls.filter(c => c.options.method === 'POST').length, 1);
+  await assert.rejects(callTool('batch_upsert_issues', { project, body: { items: Array(51).fill(args.body.items[0]) } }, env, async () => assert.fail('no fetch')), errorCode('INVALID_ARGUMENTS'));
+});
+
 test('mutation payload contracts match official schemas with optional generated requestId', async () => {
   const spec = JSON.parse(await readFile(new URL('../../../backend/resources/openapi.json', import.meta.url)));
+  const resolve = value => {
+    if (Array.isArray(value)) return value.map(resolve);
+    if (!value || typeof value !== 'object') return value;
+    if (value.$ref) return resolve(spec.components.schemas[value.$ref.split('/').at(-1)]);
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, resolve(item)]));
+  };
   for (const tool of Object.values(TOOLS).filter(t => t.method)) {
     const op = spec.paths[tool.path][tool.method.toLowerCase()];
     assert.equal(tool.operationId, op.operationId);
-    let schema = structuredClone(op.requestBody.content['application/json'].schema);
-    if (schema.$ref) schema = structuredClone(spec.components.schemas[schema.$ref.split('/').at(-1)]);
+    const schema = resolve(op.requestBody.content['application/json'].schema);
     schema.additionalProperties = false;
     schema.required = schema.required.filter(k => k !== 'requestId');
     assert.deepEqual(tool.inputSchema.properties.body, schema);

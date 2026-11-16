@@ -24,6 +24,7 @@ function validateValue(value, schema) {
   if (schema === false) return false;
   if (Object.hasOwn(schema, 'const')) return Object.is(value, schema.const);
   if (schema.anyOf && !schema.anyOf.some(option => validateValue(value, option))) return false;
+  if (schema.oneOf && schema.oneOf.filter(option => validateValue(value, option)).length !== 1) return false;
   if (schema.allOf && !schema.allOf.every(option => validateValue(value, option))) return false;
   if (schema.required && (!value || typeof value !== 'object' || schema.required.some(k => !Object.hasOwn(value, k)))) return false;
   if (schema.enum && !schema.enum.includes(value)) return false;
@@ -38,7 +39,7 @@ function validateValue(value, schema) {
   if (schema.type === 'object') return value !== null && typeof value === 'object' && !Array.isArray(value)
     && (schema.required ?? []).every(k => Object.hasOwn(value, k))
     && Object.entries(value).every(([k, v]) => Object.hasOwn(schema.properties, k) && validateValue(v, schema.properties[k]));
-  return schema.enum !== undefined || schema.anyOf !== undefined || schema.allOf !== undefined || schema.required !== undefined;
+  return schema.enum !== undefined || schema.anyOf !== undefined || schema.oneOf !== undefined || schema.allOf !== undefined || schema.required !== undefined;
 }
 
 function argumentsFor(tool, args) {
@@ -125,7 +126,8 @@ async function confirmedWrite(name, tool, args, identity, env, transport) {
     let target;
     if (Object.hasOwn(args.body, 'expectedRevision')) {
       const revisionPath = args.todo ? `/api/public/v1/todos/${args.todo}`
-        : args.board ? `/api/public/v1/projects/${args.project}/boards/${args.board}` : `/api/public/v1/projects/${args.project}/issues/${args.issue}`;
+        : args.board ? `/api/public/v1/projects/${args.project}/boards/${args.board}`
+          : tool.method === 'PUT' ? pathFor(tool, args) : `/api/public/v1/projects/${args.project}/issues/${args.issue}`;
       const current = await api(revisionPath, env, transport);
       if (current.revision !== args.body.expectedRevision) throw new BridgeError('CONFLICT', 409);
       target = pick(current, ['id', 'identifier', 'title', 'name', 'revision', 'spentMinutes']);
@@ -148,7 +150,13 @@ async function confirmedWrite(name, tool, args, identity, env, transport) {
     if (ticket.digest !== digest || ticket.expires <= Date.now() || !UUID.test(ticket.requestId)) throw new Error();
   } catch { throw new BridgeError('CONFIRMATION_INVALID', 403); }
   const result = await api(pathFor(tool, args), env, transport, { method: tool.method, body: { ...args.body, requestId: ticket.requestId } });
-  return pick(result, ['id', 'issueId', 'projectId', 'revision', 'requestId']);
+  if (name === 'batch_upsert_issues') {
+    if (!Array.isArray(result.items) || result.items.length > args.body.items.length) throw new BridgeError('INVALID_RESPONSE', 502);
+    return { items: result.items.map(row => ({ ...pick(row, ['index', 'externalSource', 'externalId', 'status', 'id', 'projectId', 'identifier', 'revision']),
+      ...(row.error ? { error: pick(row.error, ['code', 'message']) } : {}) })),
+      summary: pick(result.summary ?? {}, ['created', 'updated', 'exists', 'failed']) };
+  }
+  return pick(result, ['id', 'issueId', 'projectId', 'identifier', 'revision', 'requestId', 'externalSource', 'externalId', 'created']);
 }
 
 function scrub(value, secret) {
@@ -165,7 +173,7 @@ function shape(name, data, args) {
     return { ...pick(data, ['id', 'name', 'code', 'description', 'color', 'leadId', 'leadName', 'revision', 'createdAt', 'updatedAt', 'permissions', 'accessSource']),
       statuses: data.statuses.map(row => pick(row, STATUS_FIELDS)) };
   }
-  if (name === 'get_issue') return { ...pick(data, [...ISSUE_FIELDS, 'description', 'estimateMinutes', 'spentMinutes', 'epicId', 'parentIssueId']),
+  if (name === 'get_issue' || name === 'get_external_issue') return { ...pick(data, [...ISSUE_FIELDS, 'description', 'estimateMinutes', 'spentMinutes', 'epicId', 'parentIssueId']),
     url: `${ORIGIN}/app/#/projects/${args.project}/issues/${data.id}` };
   if (name === 'get_board') return pick(data, BOARD_FIELDS);
   if (name === 'get_todo') return { ...pick(data, [...TODO_FIELDS, 'content', 'note']),

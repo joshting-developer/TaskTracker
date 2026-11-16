@@ -1622,5 +1622,389 @@ export const TOOLS = {
       "idempotentHint": true,
       "openWorldHint": true
     }
+  },
+  "get_external_issue": {
+    "operationId": "getPublicIssueByExternalId",
+    "path": "/api/public/v1/projects/{project}/issues/external/{source}/{externalId}",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,39}$"
+        },
+        "externalId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._~:@-]{1,200}$"
+        }
+      },
+      "required": [
+        "project",
+        "source",
+        "externalId"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "upsert_external_issue": {
+    "operationId": "upsertPublicIssueByExternalId",
+    "path": "/api/public/v1/projects/{project}/issues/external/{source}/{externalId}",
+    "method": "PUT",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,39}$"
+        },
+        "externalId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._~:@-]{1,200}$"
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 180,
+              "pattern": "\\S"
+            },
+            "description": {
+              "type": "string",
+              "maxLength": 6000
+            },
+            "state": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "priority": {
+              "enum": [
+                "urgent",
+                "high",
+                "normal",
+                "low"
+              ]
+            },
+            "type": {
+              "enum": [
+                "epic",
+                "task",
+                "bug"
+              ]
+            },
+            "assignee": {
+              "type": "string",
+              "maxLength": 60
+            },
+            "dueDate": {
+              "type": "string",
+              "description": "YYYY-MM-DD\u6216\u7a7a\u5b57\u4e32\u6e05\u9664"
+            },
+            "epicId": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "parentIssueId": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "relatedIssueIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 100
+              },
+              "maxItems": 200,
+              "uniqueItems": true
+            },
+            "estimateMinutes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 525600
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "expectedRevision": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "\u66f4\u65b0\u65e2\u6709\u7d81\u5b9a\u5361\u7247\u6642\u5fc5\u586b\uff08\u5f9e\u55ae\u5361GET\u53d6\u5f97\uff09\uff0c\u56b4\u683cJSON\u6574\u6578\uff1b\u5efa\u7acb\u6642\u5ffd\u7565"
+            },
+            "startDate": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date",
+                  "pattern": "^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$"
+                },
+                {
+                  "const": ""
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+            },
+            "endDate": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date",
+                  "pattern": "^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$"
+                },
+                {
+                  "const": ""
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+            }
+          },
+          "required": [],
+          "description": "JSON\u7269\u4ef6\u6700\u591a50000 bytes\uff1b\u6b04\u4f4d\u540cPATCH\uff0c\u5efa\u7acb\u6642title\u5fc5\u586b\u3002\u5916\u90e8\u8b58\u5225\u53ea\u53d6\u8def\u5f91\uff0cpayload\u540c\u540d\u6b04\u4f4d\u4e0d\u751f\u6548\u3002",
+          "additionalProperties": false
+        },
+        "confirmation": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "project",
+        "source",
+        "externalId",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "batch_upsert_issues": {
+    "operationId": "batchUpsertPublicIssuesByExternalId",
+    "path": "/api/public/v1/projects/{project}/issues/external-batch",
+    "method": "POST",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "createOnly": {
+              "type": "boolean",
+              "description": "true\u6642\u5df2\u7d81\u5b9a\u9805\u76ee\u56deexists\u3001\u4e0d\u66f4\u65b0"
+            },
+            "items": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 50,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 180,
+                    "pattern": "\\S"
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 6000
+                  },
+                  "state": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "priority": {
+                    "enum": [
+                      "urgent",
+                      "high",
+                      "normal",
+                      "low"
+                    ]
+                  },
+                  "type": {
+                    "enum": [
+                      "epic",
+                      "task",
+                      "bug"
+                    ]
+                  },
+                  "assignee": {
+                    "type": "string",
+                    "maxLength": 60
+                  },
+                  "dueDate": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD\u6216\u7a7a\u5b57\u4e32\u6e05\u9664"
+                  },
+                  "epicId": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "parentIssueId": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "relatedIssueIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 100
+                    },
+                    "maxItems": 200,
+                    "uniqueItems": true
+                  },
+                  "estimateMinutes": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 525600
+                  },
+                  "expectedRevision": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "\u66f4\u65b0\u65e2\u6709\u7d81\u5b9a\u5361\u7247\u6642\u5fc5\u586b\uff08\u5f9e\u55ae\u5361GET\u53d6\u5f97\uff09\uff0c\u56b4\u683cJSON\u6574\u6578\uff1b\u5efa\u7acb\u6642\u5ffd\u7565"
+                  },
+                  "source": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9._-]{0,39}$"
+                  },
+                  "externalId": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9._~:@-]{1,200}$"
+                  },
+                  "epicRef": {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9._-]{0,39}$"
+                      },
+                      "externalId": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9._~:@-]{1,200}$"
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "externalId"
+                    ],
+                    "additionalProperties": false,
+                    "description": "\u4ee5\u5916\u90e8\u8b58\u5225\u6307\u5b9aEpic\uff1b\u4e0d\u53ef\u8207epicId\u540c\u6642\u4f7f\u7528"
+                  },
+                  "parentRef": {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9._-]{0,39}$"
+                      },
+                      "externalId": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9._~:@-]{1,200}$"
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "externalId"
+                    ],
+                    "additionalProperties": false,
+                    "description": "\u4ee5\u5916\u90e8\u8b58\u5225\u6307\u5b9a\u7236\u4efb\u52d9\uff1b\u4e0d\u53ef\u8207parentIssueId\u540c\u6642\u4f7f\u7528"
+                  },
+                  "startDate": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$"
+                      },
+                      {
+                        "const": ""
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+                  },
+                  "endDate": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$"
+                      },
+                      {
+                        "const": ""
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+                  }
+                },
+                "required": [
+                  "source",
+                  "externalId"
+                ],
+                "description": "\u55ae\u9805\u6b04\u4f4d\u540cupsert\uff1b\u5efa\u7acb\u6642title\u5fc5\u586b\uff0c\u5df2\u7d81\u5b9a\u4e14\u672a\u8a2dcreateOnly\u6642\u9700expectedRevision\u3002"
+              }
+            }
+          },
+          "required": [
+            "items"
+          ],
+          "description": "JSON\u7269\u4ef6\u6700\u591a50000 bytes\uff1b\u540c\u6279\u5916\u90e8\u8b58\u5225\u4e0d\u53ef\u91cd\u8907\u3002",
+          "additionalProperties": false
+        },
+        "confirmation": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "project",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
   }
 };
