@@ -1,0 +1,9 @@
+{
+  "approved": true,
+  "reviewer": "Standing authorization delegated by Josh",
+  "authorization": "Before and after inspected at desktop, tablet and mobile; only timestamps changed, no overflow. Existing comparison policy unchanged.",
+  "manifestFile": "docs/evidence/tt397-visual-manifest.json",
+  "manifestSha256": "7ee092b81f44b2dcf9b69d9e004c83e161c5739ed3168d192060248d58b89616",
+  "harnessSha256": "b96f18c926c87b983d06d83a4769af8f29e734be6bdece9e1ddc2d6e8cab01b5",
+  "images": 6
+}

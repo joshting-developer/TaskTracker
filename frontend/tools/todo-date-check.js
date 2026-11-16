@@ -9,12 +9,12 @@ const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claud
 
 const now = new Date('2026-11-13T12:00:00Z');
 for (const [item, user, want] of [
-  [{ createdAt: '2026-11-12T16:30:00Z', createdBy: 'a', initialAssigneeId: 'b', state: 'open' }, 'b', '11/13 交辦'],
-  [{ createdAt: '2026-11-12T01:00:00Z', createdBy: 'b', initialAssigneeId: 'b', state: 'open' }, 'b', '11/12 建立'],
-  [{ createdAt: '2026-11-01T01:00:00Z', returnedAt: '2026-11-05T01:00:00Z', createdBy: 'b', initialAssigneeId: 'a', state: 'open' }, 'b', '11/5 退回'],
-  [{ createdAt: '2026-11-01T01:00:00Z', completedAt: '2026-11-06T01:00:00Z', createdBy: 'a', initialAssigneeId: 'b', state: 'done' }, 'b', '11/6 完成'],
-  [{ createdAt: '2025-12-31T17:00:00Z', createdBy: 'a', initialAssigneeId: 'b', state: 'open' }, 'b', '1/1 交辦'],
-  [{ createdAt: '2025-12-30T01:00:00Z', createdBy: 'a', initialAssigneeId: 'b', state: 'open' }, 'b', '2025/12/30 交辦'],
+  [{ createdAt: '2026-11-12T16:30:00Z', createdBy: 'a', initialAssigneeId: 'b', state: 'open' }, 'b', '11/13 00:30:00 交辦'],
+  [{ createdAt: '2026-11-12T01:00:00Z', createdBy: 'b', initialAssigneeId: 'b', state: 'open' }, 'b', '11/12 09:00:00 建立'],
+  [{ createdAt: '2026-11-01T01:00:00Z', returnedAt: '2026-11-05T01:00:00Z', createdBy: 'b', initialAssigneeId: 'a', state: 'open' }, 'b', '11/5 09:00:00 退回'],
+  [{ createdAt: '2026-11-01T01:00:00Z', completedAt: '2026-11-06T01:00:00Z', createdBy: 'a', initialAssigneeId: 'b', state: 'done' }, 'b', '11/6 09:00:00 完成'],
+  [{ createdAt: '2025-12-31T17:00:00Z', createdBy: 'a', initialAssigneeId: 'b', state: 'open' }, 'b', '1/1 01:00:00 交辦'],
+  [{ createdAt: '2025-12-30T01:00:00Z', createdBy: 'a', initialAssigneeId: 'b', state: 'open' }, 'b', '2025/12/30 09:00:00 交辦'],
 ]) assert.equal(todoDate(item, user, now).label, want);
 
 const api = process.env.E2E_API_URL || '';
@@ -49,17 +49,17 @@ try {
 
   await owner.goto(`http://127.0.0.1:${e2ePort}/app/#/notes`);
   const home = owner.getByRole('region', { name: '紙條', exact: true });
-  await home.locator('.notes-list li').filter({ hasText: '自己的待辦' }).locator('time').filter({ hasText: `${md} 建立` }).waitFor();
+  await home.locator('.notes-list li').filter({ hasText: '自己的待辦' }).locator('time').filter({ hasText: new RegExp(`${md} \\d{2}:\\d{2}:\\d{2} 建立`) }).waitFor();
   await home.getByRole('tab', { name: /我交辦的/ }).click();
   const sent = home.locator('.notes-list li').filter({ hasText: '交辦出去的待辦' });
   await sent.getByText('來自 交辦人', { exact: false }).waitFor();
-  await sent.locator('time').filter({ hasText: `${md} 交辦` }).waitFor();
-  assert.match(await sent.locator('time').getAttribute('title'), /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/, '滑鼠提示是完整日期時間');
+  await sent.locator('time').filter({ hasText: new RegExp(`${md} \\d{2}:\\d{2}:\\d{2} 交辦`) }).waitFor();
+  assert.match(await sent.locator('time').getAttribute('title'), /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/, '滑鼠提示是完整日期時間');
 
   await member.goto(`http://127.0.0.1:${e2ePort}/app/#/notes`);
   const inbox = member.getByRole('region', { name: '紙條', exact: true }).locator('.notes-list li').filter({ hasText: '交辦出去的待辦' });
   await inbox.getByText('來自 交辦人', { exact: false }).waitFor();
-  await inbox.locator('time').filter({ hasText: `${md} 交辦` }).waitFor();
+  await inbox.locator('time').filter({ hasText: new RegExp(`${md} \\d{2}:\\d{2}:\\d{2} 交辦`) }).waitFor();
   for (const [width, height] of [[1440, 900], [768, 1024], [390, 844]]) {
     await member.setViewportSize({ width, height }); await member.waitForTimeout(100);
     const row = await inbox.locator('.notes-row-content p').evaluate(el => ({ lines: Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight)), overflow: document.documentElement.scrollWidth > innerWidth }));
