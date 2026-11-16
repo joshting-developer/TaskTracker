@@ -1571,5 +1571,56 @@ export const TOOLS = {
       "idempotentHint": true,
       "openWorldHint": true
     }
+  },
+  "delete_issue": {
+    "operationId": "deletePublicIssue",
+    "method": "DELETE",
+    "path": "/api/public/v1/projects/{project}/issues/{issue}",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "issue": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "expectedRevision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "expectedRevision"
+          ],
+          "additionalProperties": false
+        },
+        "confirmation": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "project",
+        "issue",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
   }
 };

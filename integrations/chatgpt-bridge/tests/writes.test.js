@@ -18,7 +18,7 @@ function fixture({ status = 200, who = identity } = {}) {
     assert.ok(url.startsWith(ORIGIN + '/api/public/v1/'));
     assert.equal(options.redirect, 'manual');
     if (url.endsWith('/me')) return response(who);
-    if (options.method === 'GET') return response({ id: issue, revision: 3 });
+    if (options.method === 'GET') return response({ id: issue, identifier: 'EX-1', title: 'Synthetic target', revision: 3 });
     return status === 200 ? response({ id: issue, projectId: project, revision: 4, password: 'private' }) : new Response('{}', { status });
   };
   return { calls, transport };
@@ -37,6 +37,7 @@ for (const [name, args] of [
   ['forward_todo', { todo: issue, body: { expectedRevision: 3, assigneeId: 'synthetic-recipient', reply: 'Please check' } }],
   ['create_board', { project, body: { name: 'Synthetic board', description: 'Synthetic only' } }],
   ['update_board', { project, board: issue, body: { expectedRevision: 3, addIssueIds: [issue], removeIssueIds: [] } }],
+  ['delete_issue', { project, issue, body: { expectedRevision: 3 } }],
 ]) test(`${name} previews without writing and confirms the identical payload with a stable requestId`, async () => {
   const f = fixture();
   const preview = (await callTool(name, args, env, f.transport)).data;
@@ -103,6 +104,17 @@ test('board updates require a change and reject Default and whole-selection repl
     { project, board: 'default', body: { expectedRevision: 3, name: 'Default changed' } },
     { project, board: issue, body: { expectedRevision: 3, selectedIssueIds: [issue] } },
   ]) await assert.rejects(callTool('update_board', args, env, async () => assert.fail('no fetch')), errorCode('INVALID_ARGUMENTS'));
+});
+
+test('deletion is destructive and preview includes exact identifier, title and permanent effect', async () => {
+  const f = fixture();
+  const preview = (await callTool('delete_issue', { project, issue, body: { expectedRevision: 3 } }, env, f.transport)).data.preview;
+  assert.equal(TOOLS.delete_issue.annotations.destructiveHint, true);
+  assert.equal(preview.target.id, issue);
+  assert.equal(preview.target.identifier, 'EX-1');
+  assert.equal(preview.target.title, 'Synthetic target');
+  assert.match(preview.effect, /Permanently/);
+  assert.ok(f.calls.every(c => c.options.method === 'GET'));
 });
 
 test('mutation payload contracts match official schemas with optional generated requestId', async () => {

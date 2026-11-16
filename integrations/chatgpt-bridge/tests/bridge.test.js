@@ -255,7 +255,7 @@ test('MCP tools require both owner email and Site-scoped authenticated ID', asyn
 });
 
 test('MCP rejects writes, malformed requests and unsupported methods', async () => {
-  const unknown = await (await handle(request('tools/call', { name: 'delete_issue' }, owner), env)).json();
+  const unknown = await (await handle(request('tools/call', { name: 'delete_workspace' }, owner), env)).json();
   assert.equal(JSON.parse(unknown.result.content[0].text).error, 'UNKNOWN_TOOL');
   const malformed = new Request('https://private.example.test/mcp', { method: 'POST', body: 'invalid' });
   assert.equal((await handle(malformed, env)).status, 400);

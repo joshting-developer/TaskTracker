@@ -78,3 +78,7 @@ assert.ok((await read('list_board_issues', { project, board: newBoard.id })).ite
 await write('update_board', { project, board: newBoard.id, body: { expectedRevision: collectedBoard.revision, removeIssueIds: [created.id] } });
 assert.equal((await read('list_board_issues', { project, board: newBoard.id })).items.length, 0);
 console.log('Isolated MySQL/HTTP: board create and differential issue collection passed');
+const beforeDelete = await read('get_issue', { project, issue: created.id });
+await write('delete_issue', { project, issue: created.id, body: { expectedRevision: beforeDelete.revision } });
+await assert.rejects(read('get_issue', { project, issue: created.id }), e => e.code === 'NOT_FOUND');
+console.log('Isolated MySQL/HTTP: confirmed deletion of this run synthetic issue passed');
