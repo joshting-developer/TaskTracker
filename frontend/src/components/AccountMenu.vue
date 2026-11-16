@@ -1,6 +1,7 @@
 <script setup>
 import { t } from '../i18n/index.js';
 import { nextTick, onBeforeUnmount, onMounted, ref, useId } from 'vue';
+const publicHome = import.meta.env.VITE_BUILD_TARGET === 'app' ? import.meta.env.VITE_SITE_ORIGIN + '/' : '/?intro=1';
 const props = defineProps({ name: String, email: String, workspaceName: String, tokensEnabled: { type: Boolean, default: true } });
 const emit = defineEmits(['profile', 'tokens', 'logout']);
 const root = ref(null), trigger = ref(null), menu = ref(null), open = ref(false), id = useId();
@@ -30,7 +31,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', outside));
       <button type="button" role="menuitem" tabindex="-1" @click="choose('profile')">{{ t('個人資料') }}</button>
       <button v-if="tokensEnabled" type="button" role="menuitem" tabindex="-1" @click="choose('tokens')">{{ t('個人 API Token') }}</button>
       <!-- TT-304：已登入的人從這裡看產品介紹；首頁本身仍會自動轉進工作空間 -->
-      <a role="menuitem" tabindex="-1" class="account-intro" href="/?intro=1">{{ t('產品介紹') }}</a>
+      <a role="menuitem" tabindex="-1" class="account-intro" :href="publicHome">{{ t('產品介紹') }}</a>
       <button type="button" role="menuitem" tabindex="-1" class="account-logout" @click="choose('logout')">{{ t('登出') }}</button>
     </div>
   </div>

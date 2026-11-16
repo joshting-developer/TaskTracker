@@ -46,3 +46,46 @@ API 埠範圍為 13000–13999, MySQL 測試可在該實例執行 `docker compos
 repository 保留產品程式、公開規格、測試與發布工具。個人的 Agent 設定、Skill 安裝入口、工作計畫與 step 是本機配置, 不是啟動或協同開發的必要檔案；需要 AI 輔助開發時可自行安裝 README 列出的外部 Skills
 
 本機寄信驗收可指定 E2E_FRONTEND_URL 與 E2E_MAILBOX_URL 執行 `node frontend/tools/local-registration-probe.js`, 只接受 loopback 網址, 會建立合成帳號並從假信箱開啟真實啟用連結
+
+## 分開建置介紹站與工作區
+
+預設 `npm run build` 仍產生 `frontend/dist`, 同時包含介紹頁與 App, 沿用本機及既有合併部署。拆分模式需要明確指定兩站的公開 origin, 不要在設定值中加入路徑、帳密或 query
+
+```sh
+cd frontend
+VITE_SITE_ORIGIN=https://www.example.com VITE_APP_ORIGIN=https://app.example.com npm run build:public
+VITE_SITE_ORIGIN=https://www.example.com npm run build:app
+```
+
+| 目標 | 產物 | 使用方式 |
+| --- | --- | --- |
+| `public` | `dist-public` | 純靜態介紹頁與功能頁, 可放 Cloudflare Pages。沒有 App／管理後台入口或登入查詢, 不依賴 Laravel 運行 |
+| `app` | `dist-app` | Vue 工作區與管理後台, 與 Laravel 同源提供 `/api`, 根路徑與 `/login`／`/app/` 保留登入及 hash 路由 |
+| `combined` | `dist` | 既有合併模式, 維持目前預設與驗收工具 |
+
+介紹站的登入、註冊及開發者文件連結會在初始 HTML 指向 `VITE_APP_ORIGIN`, App 的產品介紹連結則回 `VITE_SITE_ORIGIN`。公開頁不使用登入提示自動轉址, 但仍會將舊 `/#/…` 深層連結導向 App 的 `/app/#/…`。兩個不同 origin 的語言偏好各自保存, 不宣稱跨網域共用 localStorage
+
+介紹站產物含 `404.html`, 避免未知路徑被當成工作區 SPA。`_redirects` 為舊的登入／工作區入口提供暫時轉址, 不代理 API 或搬動資料；永久舊公開網址遷移另由發布計畫處理。Cloudflare Pages 的輸出目錄選 `frontend/dist-public`（repository 根目錄作建置根時）, 或 `dist-public`（`frontend` 作建置根時）。規則格式依 [Cloudflare Pages redirects](https://developers.cloudflare.com/pages/configuration/redirects/)
+
+Fly runtime 可選擇 App 建置, 不需要新增 Node 後端：
+
+```sh
+docker build -f docker/production/Dockerfile \
+  --build-arg VITE_BUILD_TARGET=app \
+  --build-arg VITE_SITE_ORIGIN=https://www.example.com \
+  -t tasktracker:app .
+```
+
+Dockerfile 會把選定產物放入既有 `/srv/frontend`, 沿用 Nginx／PHP-FPM。省略 `VITE_BUILD_TARGET` 時維持合併建置。介紹站只上傳靜態目錄, 不把這個 PHP runtime 部署到 Pages
+
+### 新網域切換前
+
+先在對應平台確認 hostname／TLS, 保留舊網域與前一版映像, 再核對以下設定。這是切換清單, 不是建置或推送後自動執行的流程
+
+- Fly 的 `APP_URL` 及啟用信／邀請／重設密碼等連結改用新的 App origin, 不指向介紹站
+- 保持 App 與 `/api` 同源, 核對 `SESSION_DOMAIN`、Secure Cookie、Session／CSRF、WebSocket 與代理設定。介紹站不需要開放跨來源帶憑證存取 API
+- 不為換網域重設資料庫、PAT、密碼或應用程式金鑰。不同 hostname 的既有登入 Cookie 不會自然搬到新站, 上線時需驗重新登入
+- 確認介紹站在 App 休眠時仍可閱讀, App 登入／登出及舊 hash 連結正確, 所有新舊網址的 HTTPS 憑證有效
+- 標準版 tag 發布流程仍使用合併目標。獨立 Pages 自動發布、兩站設定集中化及正式舊網址遷移, 由各自發布工作接續, 不因本地拆分通過而直接切正式站
+
+在 `frontend` 執行 `tools/split-site-check.js` 可驗本地拆分流程, 須先依上列命令以 `http://127.0.0.1:5200`／`http://127.0.0.1:5199` 建置兩站, 並將 `E2E_ISOLATED=1`、`E2E_API_URL=http://127.0.0.1:13199` 指向專用隔離 Laravel。此檢查會建立合成帳號, 不得指向正式服務

@@ -42,3 +42,7 @@ __pycache__/
 
 # Generated scan, skill evidence and acceptance reports remain local
 /docs/evidence/
+
+# Separate static public site and workspace build outputs
+/frontend/dist-public/
+/frontend/dist-app/

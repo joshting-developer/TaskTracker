@@ -30,7 +30,9 @@
     "test:visual": "cd .. && sh tools/visual-check.sh compare",
     "test:visual:candidate": "cd .. && sh tools/visual-check.sh candidate",
     "test:visual:prove": "cd .. && sh tools/visual-check.sh prove",
-    "test:i18n": "node tools/i18n-check.js && node tools/i18n-browser-check.js"
+    "test:i18n": "node tools/i18n-check.js && node tools/i18n-browser-check.js",
+    "build:public": "vite build --mode public",
+    "build:app": "vite build --mode app"
   },
   "dependencies": {
     "dompurify": "3.4.17",

@@ -15,8 +15,10 @@ COPY frontend/features ./features
 COPY frontend/public-assets ./public-assets
 # 公開頁canonical／Open Graph／sitemap的正式網址；未提供時建置會省略這些絕對網址標籤。
 ARG VITE_SITE_ORIGIN=""
-ENV VITE_SITE_ORIGIN=$VITE_SITE_ORIGIN
-RUN npm run build
+ARG VITE_APP_ORIGIN=""
+ARG VITE_BUILD_TARGET=combined
+ENV VITE_SITE_ORIGIN=$VITE_SITE_ORIGIN VITE_APP_ORIGIN=$VITE_APP_ORIGIN VITE_BUILD_TARGET=$VITE_BUILD_TARGET
+RUN npm run build && if [ "$VITE_BUILD_TARGET" != "combined" ]; then mv "dist-$VITE_BUILD_TARGET" dist; fi
 
 FROM php:8.5.12-fpm-bookworm AS runtime
 RUN apt-get update && apt-get install -y --no-install-recommends nginx libicu-dev libzip-dev unzip curl \
