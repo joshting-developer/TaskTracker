@@ -27,7 +27,7 @@ try {
     const mark = await page.locator('.guest-brand-mark').evaluate(async image => { await image.decode(); return image.src; }); marks.add(mark);
     const manifest = page.locator('link[rel="manifest"]'); assert.equal(await manifest.count(), 1);
     const manifestUrl = await manifest.evaluate(el => el.href); const response = await context.request.get(manifestUrl); assert.equal(response.status(), 200);
-    const data = await response.json(); assert.equal(data.name, 'TaskTracker'); assert.equal(data.start_url, '/app/'); assert.equal(data.icons.length, 3);
+    const data = await response.json(); assert.equal(data.name, 'Pavenro'); assert.equal(data.start_url, '/app/'); assert.equal(data.icons.length, 3);
     for (const icon of data.icons) { assert.equal((await context.request.get(base + icon.src)).status(), 200); }
     assert.equal(data.icons.find(i => i.purpose === 'maskable').sizes, '512x512');
     const cdp = await context.newCDPSession(page); const appManifest = await cdp.send('Page.getAppManifest'); assert.deepEqual(appManifest.errors, []); await cdp.detach();
@@ -47,8 +47,9 @@ try {
   await page.goto(base + '/app/#/projects'); await page.locator('.app-shell').waitFor();
   marks.add(await page.locator('.brand-mark').evaluate(async image => { await image.decode(); return image.src; })); assert.equal(marks.size, 1, 'All entrypoints use the same SVG');
   await page.evaluate(() => { window.__brandDocument = document; });
-  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).focus(); await page.keyboard.press('Enter');
+  await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).focus(); await page.keyboard.press('Enter');
   await page.getByRole('heading', { name: '首頁', exact: true }).waitFor(); assert.equal(await page.evaluate(() => document === window.__brandDocument), true);
+  await page.waitForTimeout(500);
   for (const width of [1440, 768, 390]) {
     await page.setViewportSize({ width, height: 1000 });
     if (width === 390) await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);

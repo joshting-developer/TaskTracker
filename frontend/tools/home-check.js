@@ -26,7 +26,7 @@ try {
   await dialog.getByLabel(/專案名稱/).fill('獨立專案入口'); await dialog.getByLabel(/專案代碼/).fill('HOME'); await dialog.getByRole('button', { name: '建立專案', exact: true }).click();
   await page.getByRole('button', { name: '進入專案：獨立專案入口', exact: true }).click(); await page.getByRole('link', { name: '任務列表', exact: true }).waitFor();
   for (const width of [1440, 768, 390]) {
-    await page.setViewportSize({ width, height: 900 }); await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).evaluate(el => el.click());
+    await page.setViewportSize({ width, height: 900 }); await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).evaluate(el => el.click());
     await page.getByRole('heading', { name: '首頁', exact: true }).waitFor();
     assert.equal(await page.locator('.notes-page,.todo-home,.project-home').count(), 0); assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await openProjectList(page); await page.getByRole('button', { name: '進入專案：獨立專案入口', exact: true }).click();

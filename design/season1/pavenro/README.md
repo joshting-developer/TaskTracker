@@ -1,6 +1,6 @@
 # Pavenro — Season 1 預備品牌圖檔
 
-這裡是尚未啟用的 Pavenro 品牌圖檔，**不可提前替換 TaskTracker 正式網站、favicon、manifest 或 SEO**。正式切換由 Season 1 任務統一處理。
+這裡是 Pavenro 的 Season 1 品牌來源。TT-371 已接入產品建置, 正式站是否切換以發布版本為準。使用 `node frontend/tools/generate-pavenro-assets.js` 從這些 SVG 產生 PNG／ICO, 不另畫一套標誌。
 
 ## 用途對照
 
@@ -26,4 +26,4 @@
 5. 同步更新 Pavenro 產品名；執行三尺寸 UI、深色／淺色、手機安裝圖示、社群分享預覽、Google 搜尋外觀測試。
 6. 若更名與 Cloudflare Pages 切換採分次上線，使用暫存版本資產並避免混用 TaskTracker / Pavenro 品牌。
 
-備註：目前此提交提供**各用途 SVG 原始圖片**，並非已完成 PNG/ICO 輸出或正式啟用；不得將其當作 Season 1 品牌上線驗收完成。
+PNG／ICO 輸出位於 `frontend/public-assets/brand/pavenro-*`, 社群圖使用 `pavenro-og-v1.png`。建置與本地驗收不代表已部署到正式站。

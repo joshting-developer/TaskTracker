@@ -116,7 +116,7 @@ async function backToLogin() {
 <template>
   <GuestTopBar :current="mode" :signup-available="Boolean(registration?.publicRegistration && !verification && !activationToken)" />
   <main class="auth-page">
-    <div class="auth-story"><h1>TaskTracker</h1></div>
+    <div class="auth-story"><h1>Pavenro</h1></div>
     <v-card class="auth-card" elevation="0" rounded="0">
 
       <PasswordRecovery v-if="recovery" :token="resetToken" :email="resetEmail" @back="recovery = false; resetToken = ''; form.password = ''" />

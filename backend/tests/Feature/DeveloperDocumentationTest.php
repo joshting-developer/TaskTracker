@@ -22,10 +22,10 @@ class DeveloperDocumentationTest extends TestCase
         DB::enableQueryLog();
         try {
             foreach (['index', 'authentication', 'examples', 'agents', 'contract'] as $page) {
-                $html = $this->get('/api/public/docs/'.$page)->assertOk()->assertCookieMissing(config('session.cookie'))->assertSee('TaskTracker', false)->assertSee('跳到文件內容', false);
+                $html = $this->get('/api/public/docs/'.$page)->assertOk()->assertCookieMissing(config('session.cookie'))->assertSee('Pavenro', false)->assertSee('跳到文件內容', false);
                 $this->assertStringContainsString("default-src 'none'", $html->headers->get('Content-Security-Policy'));
-                // TT-299：文件頁可回到網站首頁（品牌與明確的回到TaskTracker連結）。
-                $html->assertSee('<a class="brand-site" href="/"', false)->assertSee('<a href="/">回到 TaskTracker</a>', false);
+                // TT-299：文件頁可回到網站首頁（品牌與明確的回到Pavenro連結）。
+                $html->assertSee('<a class="brand-site" href="/"', false)->assertSee('<a href="/">回到 Pavenro</a>', false);
                 $this->assertStringNotContainsString('<script', $html->getContent());
                 $this->assertStringNotContainsString('<input', $html->getContent());
                 $this->get('/api/public/docs/'.$page.'.md')->assertOk()->assertHeader('Content-Type', 'text/markdown; charset=UTF-8')->assertCookieMissing(config('session.cookie'));

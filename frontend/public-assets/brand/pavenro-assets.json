@@ -1,0 +1,60 @@
+{
+  "images": [
+    {
+      "file": "pavenro-v1-16.png",
+      "width": 16,
+      "height": 16,
+      "source": "pavenro-favicon-16.svg",
+      "sha256": "1065f24a3100807be9cb7941f943cbff8892eab861f5a8c4969c1a1bba62bdbf"
+    },
+    {
+      "file": "pavenro-v1-32.png",
+      "width": 32,
+      "height": 32,
+      "source": "pavenro-favicon-32.svg",
+      "sha256": "40104c8520ba07880d3eeb4fc9658822a6af9af5179a8a04bc20647632517111"
+    },
+    {
+      "file": "pavenro-v1-48.png",
+      "width": 48,
+      "height": 48,
+      "source": "pavenro-favicon-48.svg",
+      "sha256": "7704f2a8db8e8f02b7b776237fac9fdad0ee18ebf60780f05a65562833b120d2"
+    },
+    {
+      "file": "pavenro-apple-v1-180.png",
+      "width": 180,
+      "height": 180,
+      "source": "pavenro-apple-touch-180.svg",
+      "sha256": "22d9da6bb6bb8f9d3dbd7418e2eef5e343d95955672b0451a952f07095e417d2"
+    },
+    {
+      "file": "pavenro-app-v1-192.png",
+      "width": 192,
+      "height": 192,
+      "source": "pavenro-app-icon-192.svg",
+      "sha256": "1e1bf79a5be7f54fc105d0081c26fcc98423c284a90d9c1337a2ada6f46da933"
+    },
+    {
+      "file": "pavenro-app-v1-512.png",
+      "width": 512,
+      "height": 512,
+      "source": "pavenro-app-icon-512.svg",
+      "sha256": "d4a73ae1a8fb09cde0a387c43bcf2fd127a8ed6585f417ccc5f1a8e5be99c0f6"
+    },
+    {
+      "file": "pavenro-og-v1.png",
+      "width": 1200,
+      "height": 630,
+      "source": "pavenro-og-1200x630.svg",
+      "sha256": "185886de8b0a8c0167e520bdb362f3e14150bf02d2fe3a92b0c08190533a3dd0"
+    },
+    {
+      "file": "pavenro-maskable-v1-512.png",
+      "width": 512,
+      "height": 512,
+      "source": "pavenro-app-icon-512.svg",
+      "sha256": "7926efc13f109e50627d2941bfb4766e5c2817ecc6de981666052e2f5097ff4a"
+    }
+  ]
+}

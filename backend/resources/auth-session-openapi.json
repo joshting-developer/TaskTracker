@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "TaskTracker Session Authentication",
+    "title": "Pavenro Session Authentication",
     "version": "1.10.0",
     "description": "Session and CSRF only; not the PAT API. Legacy accounts keep their existing eligibility. New public registration requires an activation link; valid invitations verify the exact invited email during new-account registration. Activation GET only renders the page, with token in URL fragment. A verified account may have no active workspace; workspace and role are then null and permissions is empty. Workspace APIs still require active membership. Invitation login and registration never join implicitly; acceptance is a separate authenticated decision."
   },

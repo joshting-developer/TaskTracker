@@ -41,7 +41,7 @@ function expired() {
   <v-app>
     <div class="admin-shell">
       <header class="admin-topbar">
-        <a class="admin-brand" href="/" aria-label="TaskTracker"><BrandMark class="admin-mark" /><span>TaskTracker</span></a>
+        <a class="admin-brand" href="/" aria-label="Pavenro"><BrandMark class="admin-mark" /><span>Pavenro</span></a>
         <div class="admin-account"><LocalePicker /><template v-if="username"><span class="admin-username">{{ username }}</span><v-btn variant="text" :loading="busy" @click="logout">{{ t('登出') }}</v-btn></template></div>
       </header>
       <main class="admin-content">

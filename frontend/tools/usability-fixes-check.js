@@ -129,7 +129,7 @@ try {
   await page.getByRole('dialog').getByLabel(/任務標題/).waitFor();
   await page.getByRole('button', { name: '關閉任務', exact: true }).click();
   // F02：兩個專案的手機首頁首屏有入口，不丟速記內容。
-  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click(); await page.getByRole('link', { name: '紙條', exact: true }).click(); await page.getByRole('tab', { name: '建立', exact: true }).click();
+  await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click(); await page.getByRole('link', { name: '紙條', exact: true }).click(); await page.getByRole('tab', { name: '建立', exact: true }).click();
   for (const width of [390, 768]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 1024 });
     await page.evaluate(() => scrollTo(0, 0));

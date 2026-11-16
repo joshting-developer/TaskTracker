@@ -14,7 +14,7 @@
 
 ## Python 標準 HTTP
 
-沒有 CookieJar、TaskTracker SDK、原始碼或特殊 RPC。使用公開規格中的路徑與欄位；[下載原文](/api/public/docs/examples.py)，先閱讀，再 `CONFIRM_WRITE=1 python3 workflow.py`。
+沒有 CookieJar、Pavenro SDK、原始碼或特殊 RPC。使用公開規格中的路徑與欄位；[下載原文](/api/public/docs/examples.py)，先閱讀，再 `CONFIRM_WRITE=1 python3 workflow.py`。
 
 ```python
 {{PYTHON_EXAMPLE}}

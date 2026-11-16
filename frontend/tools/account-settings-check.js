@@ -83,7 +83,7 @@ try {
   await owner.reload(); await settings.getByLabel('工作空間名稱', { exact: true }).waitFor();
   assert.equal(await owner.locator('.sidebar').getByRole('link', { name: '工作空間設定', exact: true }).getAttribute('aria-current'), 'page');
   await settings.getByLabel('工作空間名稱', { exact: true }).fill('工作區草稿');
-  owner.once('dialog', dialog => dialog.dismiss()); await owner.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  owner.once('dialog', dialog => dialog.dismiss()); await owner.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click();
   assert.equal(await settings.getByLabel('工作空間名稱', { exact: true }).inputValue(), '工作區草稿');
   owner.once('dialog', dialog => dialog.dismiss()); await owner.goBack();
   await owner.waitForURL('**/#/workspace/settings');
@@ -113,7 +113,7 @@ try {
   assert.equal(await settings.getByRole('tab', { name: '成員與權限', exact: true }).getAttribute('aria-selected'), 'true');
   assert.equal(await settings.getByRole('combobox', { name: /^工作空間身份 / }).count(), 0, '擁有者資格不可由一般表單更動');
   await settings.getByLabel('受邀者 Email', { exact: true }).fill(`settings-member-${token}@example.test`); await settings.getByRole('button', { name: '邀請成員', exact: true }).click();
-  const invite = await settings.getByLabel('邀請連結', { exact: true }).inputValue(); await owner.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  const invite = await settings.getByLabel('邀請連結', { exact: true }).inputValue(); await owner.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click();
   await member.goto(invite); await member.getByLabel('你的名字').fill('Member'); assert.equal(await member.getByLabel('Email', { exact: true }).getAttribute('readonly'), ''); await member.getByLabel('密碼', { exact: true }).fill('settings-ui-test-password'); await member.getByLabel('確認密碼', { exact: true }).fill('settings-ui-test-password'); await member.getByRole('button', { name: '建立帳號', exact: true }).click();
   await member.locator('.app-shell').waitFor();
   await member.getByRole('dialog', { name: '工作空間邀請', exact: true }).getByRole('button', { name: '接受邀請並進入', exact: true }).click();
@@ -141,7 +141,7 @@ try {
     if (role === 'user') await screenshots('members', settings);
     await member.getByRole('button', { name: '重新整理工作空間', exact: true }).click(); await openProjectList(member); await member.getByRole('button', { name: '進入專案：權限測試專案', exact: true }).waitFor({ state: role === 'manager' ? 'visible' : 'hidden' });
   }
-  await owner.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await owner.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click();
   assert.equal(await member.getByRole('link', { name: '工作空間設定', exact: true }).count(), 0, '一般成員無設定入口');
   await member.goto(`http://127.0.0.1:${e2ePort}/app/#/workspace/settings/members`);
   await member.locator('.app-shell').waitFor();
@@ -161,7 +161,7 @@ try {
   await owner.getByRole('button', { name: '進入專案：權限測試專案', exact: true }).click(); const hash = await owner.evaluate(() => location.hash);
   await owner.getByRole('link', { name: '工作空間設定', exact: true }).click(); assert.equal(await owner.evaluate(() => location.hash), '#/workspace/settings');
   await owner.goBack(); await owner.getByRole('link', { name: '專案成員與權限', exact: true }).waitFor(); assert.equal(await owner.evaluate(() => location.hash), hash);
-  await owner.getByRole('link', { name: '專案成員與權限', exact: true }).click(); await owner.getByRole('region', { name: '專案成員與權限', exact: true }).waitFor(); await owner.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await owner.getByRole('link', { name: '專案成員與權限', exact: true }).click(); await owner.getByRole('region', { name: '專案成員與權限', exact: true }).waitFor(); await owner.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click();
   await owner.getByRole('link', { name: '紙條', exact: true }).click(); await owner.getByRole('tab', { name: '建立', exact: true }).click(); await owner.getByLabel('紙條內容', { exact: true }).fill('未保存的速記'); owner.once('dialog', dialog => dialog.dismiss()); await choose('登出'); assert.equal(await owner.getByLabel('紙條內容', { exact: true }).inputValue(), '未保存的速記');
   await owner.getByLabel('紙條內容', { exact: true }).fill(''); await choose('登出'); await owner.getByRole('button', { name: '登入', exact: true }).waitFor(); assert.deepEqual(errors, []);
   console.log('PASS: 設定獨立頁與分頁網址／重整／返回／草稿與送出中保護、帳號選單、改名衝突、邀請與固定身份、無權限深連結、登出保護、1440／768／390');

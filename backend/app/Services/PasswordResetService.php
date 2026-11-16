@@ -52,7 +52,7 @@ class PasswordResetService
                     $this->resets->cancelMail($user->id);
                     $this->resets->replace($email, $hash);
                     $url = $base.'/login#/reset-password/'.$token.'?email='.rawurlencode($email);
-                    $this->mail->enqueue(new MailDeliveryData($user->id, 'password-reset:'.$hash, 'password_reset', 'TaskTracker 重設密碼', "重設密碼：{$url}\n\n30分鐘內有效, 只能使用一次。若不是你提出的申請, 可以忽略這封信", now()->addMinutes(30), passwordResetHash: $hash));
+                    $this->mail->enqueue(new MailDeliveryData($user->id, 'password-reset:'.$hash, 'password_reset', 'Pavenro 重設密碼', "重設密碼：{$url}\n\n30分鐘內有效, 只能使用一次。若不是你提出的申請, 可以忽略這封信", now()->addMinutes(30), passwordResetHash: $hash));
                 });
             } catch (\Throwable $error) {
                 // Do not expose account existence through an outbox or database failure.
@@ -81,7 +81,7 @@ class PasswordResetService
             }
             $this->resets->reset($user, Hash::make($password), Str::random(60));
             $this->resets->cancelMail($user->id);
-            $this->mail->enqueue(new MailDeliveryData($user->id, 'password-changed:'.Str::uuid(), 'password_changed', 'TaskTracker 密碼已變更', '你的密碼已變更, 原有登入與個人API Token已撤銷。若不是你本人操作, 請立即重新申請重設密碼', now()->addHours(24)));
+            $this->mail->enqueue(new MailDeliveryData($user->id, 'password-changed:'.Str::uuid(), 'password_changed', 'Pavenro 密碼已變更', '你的密碼已變更, 原有登入與個人API Token已撤銷。若不是你本人操作, 請立即重新申請重設密碼', now()->addHours(24)));
 
             return ['reset' => true];
         });

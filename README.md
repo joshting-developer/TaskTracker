@@ -1,6 +1,6 @@
-# TaskTracker
+# Pavenro
 
-TaskTracker 是多人協作的任務管理平台, 提供專案、任務看板、紙條與工時管理
+Pavenro 是多人協作的任務管理平台, 提供專案、任務看板、紙條與工時管理
 
 [前往正式站](https://task-tracker.josh-ting.com), 查看功能介紹或直接使用
 

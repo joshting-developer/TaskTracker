@@ -9,16 +9,16 @@ const siteOrigin = (process.env.VITE_SITE_ORIGIN || '').replace(/\/+$/, '');
 if (siteOrigin && !/^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(siteOrigin)) throw new Error('VITE_SITE_ORIGIN必須是不含路徑的origin，例如https://tasks.example.com');
 const featureSlugs = ['tasks', 'collaboration', 'time', 'integrations'];
 const publicPaths = ['/', ...featureSlugs.map(slug => `/features/${slug}/`)];
-const deviceIconNames = ['tasktracker-app-v1-192.png', 'tasktracker-app-v1-512.png', 'tasktracker-maskable-v1-512.png'];
+const deviceIconNames = ['pavenro-app-v1-192.png', 'pavenro-app-v1-512.png', 'pavenro-maskable-v1-512.png'];
 const brandBytes = name => readFileSync(fileURLToPath(new URL(`./public-assets/brand/${name}`, import.meta.url)));
-const manifest = JSON.stringify({ id: '/app/', name: 'TaskTracker', short_name: 'TaskTracker', start_url: '/app/', scope: '/',
+const manifest = JSON.stringify({ id: '/app/', name: 'Pavenro', short_name: 'Pavenro', start_url: '/app/', scope: '/',
   display: 'standalone', background_color: '#23242b', theme_color: '#23242b',
   icons: deviceIconNames.map((name, index) => ({ src: `/brand/${name}`, sizes: index === 0 ? '192x192' : '512x512', type: 'image/png', purpose: index === 2 ? 'maskable' : 'any' })) });
 // Serve identical static bytes in dev, preview and the built runtime.
 const staticAssets = {
-  '/og-image.png': { source: readFileSync(fileURLToPath(new URL('./public-assets/og-image.png', import.meta.url))), type: 'image/png', cache: 'no-cache' },
+  '/og-image.png': { source: readFileSync(fileURLToPath(new URL('./public-assets/brand/pavenro-og-v1.png', import.meta.url))), type: 'image/png', cache: 'no-cache' },
   '/site.webmanifest': { source: manifest, type: 'application/manifest+json', cache: 'no-cache' },
-  '/favicon.ico': { source: brandBytes('favicon-v1.ico'), type: 'image/x-icon', cache: 'public, max-age=86400' },
+  '/favicon.ico': { source: brandBytes('pavenro-v1.ico'), type: 'image/x-icon', cache: 'public, max-age=86400' },
   ...Object.fromEntries(deviceIconNames.map(name => [`/brand/${name}`, { source: brandBytes(name), type: 'image/png', cache: 'public, max-age=31536000, immutable' }])),
 };
 const publicOrigin = {

@@ -29,7 +29,7 @@ class MailDiagnosticService
             DomainError::fail('INVALID_INPUT', '測試寄信只允許本機環境與有效識別碼');
         }
         $user = $this->accounts->byEmail(mb_strtolower(trim($email))) ?? DomainError::fail('NOT_FOUND', '找不到收件帳號');
-        $row = $this->mail->enqueue(new MailDeliveryData($user->id, 'diagnostic:'.$key, 'diagnostic', 'TaskTracker 郵件測試', "TaskTracker 寄信測試\n\n這封信由明確操作建立, 用於確認SMTP設定\n", now()->addHour()));
+        $row = $this->mail->enqueue(new MailDeliveryData($user->id, 'diagnostic:'.$key, 'diagnostic', 'Pavenro 郵件測試', "Pavenro 寄信測試\n\n這封信由明確操作建立, 用於確認SMTP設定\n", now()->addHour()));
 
         return $row->id;
     }

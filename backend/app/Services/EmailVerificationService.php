@@ -164,7 +164,7 @@ class EmailVerificationService
         if (! filter_var($base, FILTER_VALIDATE_URL) || (! in_array(config('app.env'), ['local', 'testing'], true) && ! str_starts_with($base, 'https://'))) {
             DomainError::fail('INVALID_INPUT', '啟用連結網址尚未配置');
         }
-        $this->mail->enqueue(new MailDeliveryData($user->id, 'verification:'.$row->id, 'verification', 'TaskTracker 信箱驗證', "啟用連結：{$base}/app/#/activate/{$token}\n\n30分鐘內有效, 只能使用一次\n\n請開啟連結後按下啟用帳號", $row->expires_at, $row->id));
+        $this->mail->enqueue(new MailDeliveryData($user->id, 'verification:'.$row->id, 'verification', 'Pavenro 信箱驗證', "啟用連結：{$base}/app/#/activate/{$token}\n\n30分鐘內有效, 只能使用一次\n\n請開啟連結後按下啟用帳號", $row->expires_at, $row->id));
 
         return $this->view($user, $row);
     }

@@ -1,10 +1,10 @@
-# TaskTracker HTTP API 契約 v1
+# Pavenro HTTP API 契約 v1
 
 HTTP契約v1；規格版號以OpenAPI的info.version為準；更新：2026-11-12。正式機器契約：[OpenAPI](/api/public/openapi.json)。本文是版本／使用規則，OpenAPI是唯一端點及Schema來源；不另維護一份規格。本文與規格可匿名取得，不代表業務資料可匿名存取。
 
 ## 已開放能力與入口
 
-Base URL是你實際部署TaskTracker的origin。公開Bearer前綴為`/api/public/v1`，目前提供身分、可見專案／成員／狀態、任務摘要／單卡詳細及留言查詢。不要以PAT呼叫Session RPC。已提供Issue建立／PATCH／留言／永久刪除寫入、刪除墓碑查詢與外部識別查詢／upsert／批次；不提供封存、MCP或工具專屬介面。
+Base URL是你實際部署Pavenro的origin。公開Bearer前綴為`/api/public/v1`，目前提供身分、可見專案／成員／狀態、任務摘要／單卡詳細及留言查詢。不要以PAT呼叫Session RPC。已提供Issue建立／PATCH／留言／永久刪除寫入、刪除墓碑查詢與外部識別查詢／upsert／批次；不提供封存、MCP或工具專屬介面。
 
 | Method／path | 認證／用途 | 限流 |
 | --- | --- | --- |

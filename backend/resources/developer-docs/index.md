@@ -1,4 +1,4 @@
-# TaskTracker API
+# Pavenro API
 
 使用個人 PAT，以標準 HTTP 查詢專案、建立卡片、更新與留言，也能讀取與處理小待辦。Workspace → Project → Issue 是資源層級；PAT 綁定一個 Workspace，可見 Project 仍由使用者當下資格決定。
 

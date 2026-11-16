@@ -71,7 +71,7 @@ class PublicApiContractTest extends TestCase
         DB::enableQueryLog();
         try {
             $this->getJson('/api/public/openapi.json')->assertOk()->assertCookieMissing(config('session.cookie'));
-            $this->get('/api/public/contract.md')->assertOk()->assertHeader('Content-Type', 'text/markdown; charset=UTF-8')->assertCookieMissing(config('session.cookie'))->assertSee('TaskTracker HTTP API', false);
+            $this->get('/api/public/contract.md')->assertOk()->assertHeader('Content-Type', 'text/markdown; charset=UTF-8')->assertCookieMissing(config('session.cookie'))->assertSee('Pavenro HTTP API', false);
             $this->assertCount(0, DB::getQueryLog());
         } finally {
             DB::disableQueryLog();

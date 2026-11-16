@@ -112,7 +112,7 @@ try {
     await editor.getByRole('button', { name: '取消', exact: true }).click();
     assert.equal(await editor.isVisible(), true);
     page.once('dialog', d => d.dismiss());
-    await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+    await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click();
     assert.equal(await editor.isVisible(), true, 'Navigation cancel retains inline draft');
     const unload = await editor.evaluate(() => { const e = new Event('beforeunload', { cancelable: true }); window.dispatchEvent(e); return e.defaultPrevented; });
     assert.equal(unload, true, 'Inline draft registers browser unload protection');

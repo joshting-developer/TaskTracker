@@ -76,7 +76,7 @@ async function checkSeedAccounts(browser, failures) {
       const team = page.getByRole('region', { name: '工作空間設定', exact: true });
       for (const account of ['owner', 'manager', 'maintainer', 'developer']) await team.getByText(`${account}@example.test`, { exact: true }).waitFor();
       assert.ok(await team.getByRole('combobox', { name: /^工作空間身份 / }).count() > 0);
-      await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+      await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click();
     } else assert.equal(await page.getByRole('link', { name: '工作空間設定', exact: true }).count(), 0);
   await openProjectList(page);
     await page.getByRole('button', { name: '進入專案：first', exact: true }).click();
@@ -397,7 +397,7 @@ async function checkProjectDetails(page, browser) {
     await api.setProjectMember({ projectId: project.id, userId: member.id, roleId: 'reader', expectedRevision: acl.revision, requestId: crypto.randomUUID() });
     return project;
   });
-  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click();
   await page.reload();
   await openProjectList(page);
   await page.getByLabel('搜尋專案').fill('INFO');
@@ -853,14 +853,14 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await moveBoardCard(page, 'TEST-1', reviewState);
   await page.locator(`.board-cell[data-column="${reviewState}"] [data-issue="TEST-1"]`).waitFor();
 
-  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click();
   await page.getByRole('link', { name: '工作空間設定', exact: true }).click();
   await page.getByRole('tab', { name: '成員與權限', exact: true }).click();
   await page.getByLabel('受邀者 Email', { exact: true }).fill(memberEmail);
   await page.getByRole('button', { name: '邀請成員' }).click();
   await page.getByLabel('邀請連結', { exact: true }).waitFor();
   const inviteUrl = await page.getByLabel('邀請連結', { exact: true }).inputValue();
-  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click();
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：我的測試專案', exact: true }).click();
   const teammate = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 1050 } });
@@ -1063,12 +1063,12 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.getByRole('button', { name: '開啟導覽' }).click();
   assert.equal(await page.locator('.sidebar').getByRole('link', { name: '工作空間設定', exact: true }).count(), 1);
   page.once('dialog', dialog => dialog.dismiss());
-  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click();
   assert.equal(page.url(), settingsUrl, '取消離開時保留目前專案');
   assert.equal(await page.getByLabel('狀態 4 名稱', { exact: true }).inputValue(), '待驗收');
   await page.getByRole('button', { name: '開啟導覽' }).click();
   page.once('dialog', dialog => dialog.accept());
-  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click();
   await openProjectList(page);
   await page.getByRole('heading', { name: '專案列表', exact: true }).waitFor();
   await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
@@ -1228,7 +1228,7 @@ try {
   assert.equal(await projectSidebar.getByRole('navigation', { name: '工作空間', exact: true }).count(), 0, '專案內不混入工作空間導覽');
   assert.equal(await projectSidebar.getByRole('link', { name: '工作空間設定', exact: true }).count(), 1);
   assert.equal(await projectSidebar.getByRole('button', { name: /建立.*專案|新增專案/ }).count(), 0);
-  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click();
   await openProjectList(page);
   await page.getByRole('heading', { name: '專案列表', exact: true }).waitFor();
   assert.equal(await projectSidebar.getByRole('navigation', { name: '專案任務', exact: true }).count(), 0);
@@ -1266,7 +1266,7 @@ try {
   await page.getByRole('link', { name: '我的任務', exact: false }).click();
   await expectRows(page, 1, '.issue-card, tbody tr');
   const testProjectUrl = page.url();
-  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click();
   await openProjectList(page);
   await page.getByRole('heading', { name: '專案列表', exact: true }).waitFor();
   assert.equal(await page.getByRole('link', { name: '任務看板', exact: true }).count(), 0);
@@ -1282,10 +1282,10 @@ try {
   assert.equal(await page.getByRole('link', { name: '任務看板', exact: true }).count(), 0);
   await page.goto(testProjectUrl);
   await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).waitFor();
-  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click();
   await page.goBack();
   await page.getByRole('button', { name: '我建立的任務 <script>alert(1)</script>', exact: true }).waitFor();
-  await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+  await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click();
   await openProjectList(page);
   await page.getByRole('button', { name: '進入專案：產品第一版 · 驗收', exact: true }).click();
   await expectRows(page, 9, '.issue-card, tbody tr');

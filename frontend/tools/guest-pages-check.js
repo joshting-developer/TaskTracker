@@ -48,7 +48,7 @@ try {
   assert.equal(await nav.getByRole('link', { name: '產品介紹' }).getAttribute('href'), '/', '登入頁有明確回介紹頁的連結');
   assert.equal(await nav.getByRole('link', { name: /建立工作空間/ }).getAttribute('href'), '/login?mode=register');
   await page.keyboard.press('Tab');
-  assert.equal(await page.evaluate(() => document.activeElement.getAttribute('aria-label')), 'TaskTracker 首頁');
+  assert.equal(await page.evaluate(() => document.activeElement.getAttribute('aria-label')), 'Pavenro 首頁');
   await measure(page, 'login');
   assert.ok(measurements.filter(row => row.page === 'login').every(row => row.bar && row.links.length === 2 && row.links.every(height => height >= 44)), '登入頁TopBar保留介紹與註冊, 連結≥44px');
 
@@ -84,7 +84,7 @@ try {
   assert.ok(await page.locator('.guest-topbar').isVisible(), '已登入看介紹頁也有上方選單');
   assert.equal(await memberNav.getByRole('link', { name: '回到工作區' }).getAttribute('href'), '/app/');
   assert.equal(await memberNav.getByRole('link', { name: '登入', exact: true }).count(), 0, '已登入不顯示登入');
-  assert.equal(await page.getByRole('link', { name: '登入 TaskTracker' }).count(), 0, '已登入不顯示建立工作空間');
+  assert.equal(await page.getByRole('link', { name: '登入 Pavenro' }).count(), 0, '已登入不顯示建立工作空間');
   await memberNav.getByRole('link', { name: '回到工作區' }).click();
   await page.locator('.app-shell').waitFor();
   await page.goto(`${origin}/`);
@@ -134,7 +134,7 @@ try {
 
   // 未登入／不執行JS：首頁原始HTML即有title、description、H1與正文；舊/about轉首頁。
   const raw = await (await fetch(`${origin}/`)).text();
-  for (const pattern of [/<title>[^<]*TaskTracker[^<]*<\/title>/, /<meta name="description" content="[^"]{40,}"/, /<h1[^>]*>[^<]+<\/h1>/, /<meta property="og:title"/, /<meta property="og:image"/, /<html lang="zh-Hant"/, /<meta name="robots" content="index, follow"/]) assert.match(raw, pattern);
+  for (const pattern of [/<title>[^<]*Pavenro[^<]*<\/title>/, /<meta name="description" content="[^"]{40,}"/, /<h1[^>]*>[^<]+<\/h1>/, /<meta property="og:title"/, /<meta property="og:image"/, /<html lang="zh-Hant"/, /<meta name="robots" content="index, follow"/]) assert.match(raw, pattern);
   assert.doesNotMatch(raw, /@example\.test|workspaceId|api\/v1/, '公開HTML不含私人資料或API');
   for (const path of ['/about', '/about/']) {
     const moved = await fetch(`${origin}${path}`, { redirect: 'manual' });

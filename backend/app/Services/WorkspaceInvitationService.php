@@ -61,7 +61,7 @@ class WorkspaceInvitationService
                 DomainError::fail('INVALID_INPUT', '邀請連結網址尚未配置');
             }
             $body = "你受邀加入{$workspace->name}\n\n{$base}/app/#/invite?token={$token}\n\n連結7天內有效, 請使用{$email}接受邀請";
-            $this->mail->enqueue(new MailDeliveryData($context->userId, 'invitation:'.$invite->public_id, 'invitation', 'TaskTracker 工作空間邀請', $body, $expires, invitationId: $invite->id));
+            $this->mail->enqueue(new MailDeliveryData($context->userId, 'invitation:'.$invite->public_id, 'invitation', 'Pavenro 工作空間邀請', $body, $expires, invitationId: $invite->id));
 
             return ['ciphertext' => $this->encryption->encrypt(json_encode(['token' => $token, 'email' => $email, 'expiresAt' => $expires->utc()->toISOString()], JSON_THROW_ON_ERROR), false)];
         });

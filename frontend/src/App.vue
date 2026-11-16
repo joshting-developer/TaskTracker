@@ -433,7 +433,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
   <div v-else class="app-shell">
     <button v-if="sidebarOpen" class="sidebar-scrim" :aria-label="t('收起導覽')" @click="sidebarOpen = false"></button>
     <aside class="sidebar" :class="{ open: sidebarOpen }">
-      <a class="brand" href="#/" :aria-label="t('TaskTracker 返回首頁')" :title="t('返回首頁')" @click.prevent="goHome()"><BrandMark class="brand-mark" />TaskTracker<span class="brand-dot">.</span></a>
+      <a class="brand" href="#/" :aria-label="t('Pavenro 返回首頁')" :title="t('返回首頁')" @click.prevent="goHome()"><BrandMark class="brand-mark" />Pavenro</a>
       <WorkspaceSwitcher ref="workspaceSwitcher" :workspace="workspace.meta.workspace" :has-workspaces="workspace.meta.hasWorkspaces" :switching="switchingWorkspace" :change="changeWorkspace" :create="input => changeWorkspace('', '', input)" />
       <template v-if="selectedProject">
         <div class="project-context" :aria-label="t('目前專案')">
@@ -491,7 +491,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
         <ProjectMembers @access="refresh" v-if="section === 'members' && can('project.members.manage')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" />
         <NotificationPreview ref="workspaceTool" v-if="section === 'notifications' && notificationPreviewEnabled" :project="selectedProject" :permissions="workspace.meta.permissions || []" @open="openIssue" @access="refresh" />
         </template>
-        <footer class="page-footer"><span>TaskTracker <b>v0.2</b></span></footer>
+        <footer class="page-footer"><span>Pavenro <b>v0.2</b></span></footer>
       </div>
     </main>
     <WorkspaceInvitation v-if="workspaceInviteToken" :key="workspaceInviteToken" :token="workspaceInviteToken" :email="workspace.members.find(member => member.id === currentUserId)?.email" :accept="token => changeWorkspace('', token)" @close="closeInvitation" @logout="loginForInvitation" />

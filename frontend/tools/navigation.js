@@ -7,7 +7,7 @@ export async function openProjectList(page) {
   }
   if (await page.getByLabel('目前專案', { exact: true }).count()) {
     await showNavigation();
-    await page.getByRole('link', { name: 'TaskTracker 返回首頁', exact: true }).click();
+    await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).click();
   }
   await showNavigation();
   await page.getByRole('link', { name: '專案列表', exact: true }).click();
