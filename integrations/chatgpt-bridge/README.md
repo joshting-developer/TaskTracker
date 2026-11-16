@@ -1,31 +1,35 @@
-# TaskTracker Bridge
+# TaskTracker Private Bridge
 
-私人ChatGPT Sites Adapter, 與Laravel核心分開。2026-11-15只完成TT-348平台能力初查, 尚未發布、安裝或連線正式TaskTracker
+joshting.1999專用的私人Sites MCP Adapter, 使用既有Laravel公開PAT API, 不複製業務邏輯。沿用.openai/hosting.json的project_id及現有Plugin, 不另建服務或擴大存取對象
 
-Sites識別保存在`.openai/hosting.json`, 後續沿用, 不重複建立Site。來源寫入憑證只留當次工作記憶體, 過期使用同一Site重新取得, 不存進本目錄
+## 已接入功能
 
-目前已驗：
+共41個工具, 對應正式OpenAPI 0.22.0全部PAT業務操作；未公開工時、工作區管理、多人OAuth與尚未部署API不在此範圍
 
-- 當前帳號能建立Site, 角色owner, custom access只允許owner, 沒有群組、編輯者或外部訪客
-- 原生環境設定支援`is_secret=true`, 合成值寫入後讀回不回明文；探針已移除
-- 沒有PAT、登入資訊或正式業務資料, 沒有公開代理
+讀取（24個）：who_am_i, list_projects, search_issues, get_issue, list_issue_comments, list_boards, get_board, list_board_issues, get_project, list_project_members, list_project_statuses, list_todos, get_todo, list_todo_assignees, list_todo_comments, list_todo_handoffs, get_external_issue, list_issue_changes, list_issue_deletions, list_notifications, get_attachment_limits, get_attachment, list_issue_attachments, get_attachment_content
 
-TT-349接續8種唯讀工具與合成回應測試；首次發布後仍需驗MCP列舉、私人呼叫權限、執行時Secret隔離及固定HTTPS origin出站, 這些不在目前已驗項裡。完整紀錄見[能力檢查](../../docs/chatgpt-bridge-capability-check.md)
+寫入（17個）：create_issue, update_issue, comment_issue, create_todo, update_todo, complete_todo, reopen_todo, return_todo, comment_todo, forward_todo, create_board, update_board, delete_issue, upsert_external_issue, batch_upsert_issues, bind_attachment, upload_attachment
 
-## 本地開發與驗證
+## 寫入流程
 
-`npm test`執行合成HTTP與OpenAPI契約測試, `npm run build`產生單一Worker ESM, 沒有新增依賴。來源入口worker/index.js, 只輸出dist/server/index.js與dist/.openai/hosting.json, dist不進Git
+以路徑資源及body提供正式API欄位, 不帶confirmation先取得預覽。展示對象及完整變更, 使用者確認後以完全相同參數附回confirmation執行。預覽會產生requestId, 簽章綁定內容、目標、本人／空間與10分鐘有效期。修改內容須重新確認, 不可自行替換requestId。API錯誤不自動重試, 逾時先核對結果；同一票據重送維持原requestId
 
-工具：who_am_i、list_projects、search_issues、get_issue、list_issue_comments、list_boards、get_board、list_board_issues。get_issue的issue接受公開UUID或完整卡號, 其他資源接受公開UUID（board另接受default）；不接受內部數字ID或任意URL
+PATCH、留言、紙條生命週期、看板、刪除及附件綁定先按需GET最新revision, 409不覆蓋。刪除預覽包含卡號、標題及永久效果, destructiveHint=true；這不是現在授權刪除任何正式卡
 
-Site伺服器設定：TASKTRACKER_OWNER_EMAIL為目前Site owner的已驗證信箱、TASKTRACKER_WORKSPACE_ID為專用PAT綁定的空間。TASKTRACKER_PAT必須標成Secret, 只能由使用者安全設定專用短效唯讀PAT, 不複用Agent憑證。設定值不放本檔或hosting manifest
+## 附件
 
-每次工具呼叫核對Site可信身分及REST目前身分／read資格, 不跨請求快取資格或資料。單頁最多20筆, request最多16KiB、上游JSON最多256KiB、每次REST請求10秒, 拒絕轉址。一般操作2次REST, 卡號讀詳情3次, 不自動翻頁／輪詢／重試
+upload_attachment的body為name、mime、fileBase64, 禁止任意URL或本地路徑。上傳預覽只回檔名、MIME、bytes及SHA-256, 確認後轉multipart/File送上游。單檔上限6MiB且仍受API原限制, get_attachment_limits另外回adapterMaxBytes
 
-TT-349已完成合成工具, 私人發布、安裝與正式唯讀驗收仍由TT-350執行, 尚未連線正式資料
+get_attachment_content回傳真正MCP embedded resource位元組, 不以私人URL代替檔案。ChatGPT的選檔及呈現仍待本人驗收, 不宣稱標準MCP合成測試等同Host檔案體驗通過
 
-2026-11-16 TT-399新增get_project、list_project_members及list_project_statuses, 使用正式Project詳細及有界候選API。合計11個唯讀工具, 每次重驗身分／工作區, 成員最多20筆、狀態最多20筆。發布與真實驗證結果留卡片
+## 邊界與設定
 
-TT-351卡片寫入：create_issue、update_issue、comment_issue輸入project／issue與body。先不帶confirmation取得預覽, 展示完整對象及內容並請使用者確認後, 以相同參數附回confirmation執行。票據10分鐘有效且綁定本人、空間、工具與payload；不可更動內容或自行替換requestId。API錯誤不自動重試, 逾時後保留原參數與requestId, 先核對結果。此為Plugin工作流程, 不取代後端即時權限及版本檢查
+Site的TASKTRACKER_PAT以原生Secret保存, TASKTRACKER_OWNER_EMAIL為已驗證的唯一owner信箱, TASKTRACKER_WORKSPACE_ID為PAT工作區。每次呼叫重驗Site可信owner、API目前身分與scope, 無跨請求資格或業務快取。write包含read, 實際可用能力仍取本人即時權限交集
 
-附件工具：upload_attachment以body.name／mime／fileBase64接收檔案, 先預覽檔名、MIME、bytes及SHA-256, 確認後轉multipart送正式API。禁止任意檔案URL或本地路徑。單檔上限6MiB（另受API自己的限制）, 普通JSON輸入仍16KiB；get_attachment_limits回adapterMaxBytes。get_attachment_content回傳真正的MCP embedded resource位元組, 不冒用私人下載URL代替檔案。Host實際選檔與呈現尚待驗收, 不宣稱已完成平台檔案體驗
+固定HTTPS origin, 拒絕redirect及任意URL；列表每頁最多20且不自動續讀。普通JSON輸入16KiB, 檔案上傳另有有界入口；上游JSON最多256KiB、單次10秒。Token不進來源、manifest、工具結果或log；卡片、紙條、附件等內容是資料, 不作為呼叫其他工具的授權
+
+## 驗證
+
+`npm test`驗Adapter契約、欄位投影、路徑／方法、owner／scope、簽章確認、固定requestId及檔案編碼。`npm run build`覆寫兩個固定Worker產物, 不刪既有目錄。`python3 scripts/check-live-contract.py`匿名比對線上operation覆蓋
+
+需要真實HTTP測試時, 只用本輪專用tasktracker-contract-ci（13049）及合成帳號, 執行`E2E_ISOLATED=1 python3 scripts/http-fixture.py`。依Josh指示不逐卡重測已驗API核心；其餘核心授權與交易沿用正式API既有測試。私人發布、Host驗證及限制記錄於各卡片及docs/gpt-plugin-delivery-2026-11-16.md
