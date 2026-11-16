@@ -6,11 +6,10 @@ import os
 import re
 import subprocess
 import time
-import tomllib
 import urllib.error
 import urllib.request
 import uuid
-from pathlib import Path
+from fly_config import load_config
 
 
 class Machines:
@@ -70,13 +69,14 @@ def run(config, image, credentials, client, execute=subprocess.run, sleep=time.s
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--image', required=True)
+    parser.add_argument('--config', default=os.environ.get('FLY_CONFIG_PATH', 'fly.toml'))
     args = parser.parse_args()
-    config = tomllib.loads(Path('fly.toml').read_text())
     token = os.environ.get('FLY_API_TOKEN', '')
     credentials = {'username': os.environ.get('MIGRATION_DB_USERNAME', ''), 'password': os.environ.get('MIGRATION_DB_PASSWORD', '')}
     if not token or not all(credentials.values()):
         raise SystemExit('Missing deployment or migration credential')
     try:
+        config = load_config(args.config)
         run(config, args.image, credentials, Machines(token, config['app']))
     except Exception:
         raise SystemExit('Migration failed or cleanup incomplete; do not deploy HTTP, inspect the protected job context') from None

@@ -4,7 +4,7 @@
 
 ## 逐檔清單與檢查範圍
 
-[完整JSON](architecture/backend-dependency-inventory-2026-11-12.json)列出248個自有PHP／artisan檔案，含零出現次數的檔案。範圍包含app（Console亦含）、database／seeders／migration、tools、tests及支援類別、routes、config、bootstrap、public、docker；排除vendor、storage、node_modules、Git及bootstrap/cache生成內容。已用獨立rg檔案清單核對分母，沒有漏掉Docker初始化PHP。
+完整JSON（歷次紀錄）列出248個自有PHP／artisan檔案，含零出現次數的檔案。範圍包含app（Console亦含）、database／seeders／migration、tools、tests及支援類別、routes、config、bootstrap、public、docker；排除vendor、storage、node_modules、Git及bootstrap/cache生成內容。已用獨立rg檔案清單核對分母，沒有漏掉Docker初始化PHP。
 
 | 觀測 | 數量 |
 | --- | --- |

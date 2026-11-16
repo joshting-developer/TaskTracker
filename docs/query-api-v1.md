@@ -31,7 +31,7 @@
 
 本機tools/tasktracker.py的list改逐頁摘要，status／comment用identifier精準定位取得ID與revision，不為寫入載入任務描述／活動；只有初次import／歷史verify保留明確使用相容Workspace快照，不能以初始manifest蓋掉後來進度。
 
-2026-11-12契約修正：使用者已授權調整原API資料契約。舊RPC僅是前端／工具移轉中的暫時接口，不承諾永久保留整包Workspace；移轉後須退役過量入口並修改依賴它的測試，不可只新增v1而放任舊預設載入。安全與版本／冪等語意維持。資料存取審查見[審查紀錄](data-access-review-2026-11-12.md)。
+2026-11-12契約修正：使用者已授權調整原API資料契約。舊RPC僅是前端／工具移轉中的暫時接口，不承諾永久保留整包Workspace；移轉後須退役過量入口並修改依賴它的測試，不可只新增v1而放任舊預設載入。安全與版本／冪等語意維持。資料存取審查見審查紀錄（歷次紀錄）。
 
 Project授權僅讀指定ID或當頁ID（最多100筆），可見範圍在SQL分頁前依有效permission映射篩選。單Project回應不附全員memberIds；成員選項由獨立member-options端點提供，不能宣稱全部頁面已完整取代舊getWorkspace。
 
@@ -59,7 +59,7 @@ Project授權僅讀指定ID或當頁ID（最多100筆），可見範圍在SQL分
 
 列表回應改為IssueListResource的純表格欄位，不附Epic／父卡參照、估時／工時SUM或活動；選項、看板摘要、詳細屬性各有不同明確投影。列表的filters／scope／page都送SQL，total／lastPage由後端決定，沒有把當頁再切片。詳細關聯最多200，查201作超限拒絕檢查；不靜默截斷後允許儲存。子卡／活動分頁最大100，預設20。選項UI每頁30，搜尋可達第一頁以外，已選值保留。
 
-ProjectTasksWorkspace與useProjectTaskQueries已取代原BoardWorkspace／useBoardQueries；詳細頁不在背景載入列表或看板全卡，按需讀單卡及活動，未儲存／送出中只重驗資格。單卡工時按timeEntry.readOwn／readTeam限制SQL，明細附最小Issue參照讓Epic下編輯子卡紀錄時仍鎖原卡。完整審查與證據見[任務頁面資料分責](performance-task-pages-2026-11-12.md)。
+ProjectTasksWorkspace與useProjectTaskQueries已取代原BoardWorkspace／useBoardQueries；詳細頁不在背景載入列表或看板全卡，按需讀單卡及活動，未儲存／送出中只重驗資格。單卡工時按timeEntry.readOwn／readTeam限制SQL，明細附最小Issue參照讓Epic下編輯子卡紀錄時仍鎖原卡。完整審查與證據見任務頁面資料分責（歷次紀錄）。
 
 
 ## 2026-11-12 個人查詢與候選
@@ -72,7 +72,7 @@ ProjectTasksWorkspace與useProjectTaskQueries已取代原BoardWorkspace／useBoa
 - `GET /api/v1/personal-version`：本人Todo及通知兩個無內容指紋；包含資格版本，不是完整bootstrap。
 - `GET /api/v1/todo-assignees`：有效承辦候選；`/project-options`：可寫卡片Project候選；`/project-lead-options?project=<optional>`：建立／編輯用途的有效負責人候選。
 
-上述沿用相同Session／可信Workspace／交易驗權與PageQuery上限，純Resource投影。實際接線、八項審查與限制見[個人頁面資料分責](performance-personal-pages-2026-11-12.md)。
+上述沿用相同Session／可信Workspace／交易驗權與PageQuery上限，純Resource投影。實際接線、八項審查與限制見個人頁面資料分責（歷次紀錄）。
 
 ## 2026-11-12 專案管理頁與月曆
 
@@ -82,17 +82,17 @@ ProjectTasksWorkspace與useProjectTaskQueries已取代原BoardWorkspace／useBoa
 - `GET /api/v1/projects/{project}/time-calendar?month=YYYY-MM&member=<optional>`（TT-223）：需`issue.read`及團隊／本人工時資格；回傳days／members／issues／epics SQL聚合與total，各清單上限100，不回原始工時列。Epic為本身＋所屬卡片各計一次，預估為所屬卡片加總。無團隊資格時伺服器固定為本人。
 - `GET /api/v1/projects/{project}/time-entries?date=YYYY-MM-DD&member=&page=&perPage=`（TT-223）：當日有效工時分頁，欄位同單卡工時。
 
-月曆八項審查與限制見[工時月曆查詢](performance-time-calendar-2026-11-12.md)。
+月曆八項審查與限制見工時月曆查詢（歷次紀錄）。
 
 ## 2026-11-12 Project ACL管理查詢（TT-242）
 
-`GET /api/v1/projects/{project}/acl`只回revision及可授予角色；`/acl/members`有效成員管理分頁、`/acl/candidates`候選搜尋分頁、`/acl/history`按需歷史分頁。四者均要求project.members.manage，與只回姓名的member-options不同；UI每頁20、最大100，source／canChange由當次permission判斷。細節與證據見[ACL讀取拆分](performance-project-acl-2026-11-12.md)。
+`GET /api/v1/projects/{project}/acl`只回revision及可授予角色；`/acl/members`有效成員管理分頁、`/acl/candidates`候選搜尋分頁、`/acl/history`按需歷史分頁。四者均要求project.members.manage，與只回姓名的member-options不同；UI每頁20、最大100，source／canChange由當次permission判斷。細節與證據見ACL讀取拆分（歷次紀錄）。
 
 ## 2026-11-12 工作區設定（TT-241）
 
 `GET /api/v1/workspace/settings`只回Workspace的id／name／timeZone／revision（TT-398 新增 IANA 顯示時區, 預設 UTC），要求workspace.read；`/workspace/members`要求workspace.members.read，姓名／email SQL搜尋及管理摘要分頁；`/workspace/member-roles`要求workspace.members.manage，只回可授予非ownership角色id／label。成員20筆預設／最大100，canChange與寫入共用規則，前端Owner設定入口不變。
 
-舊`POST /api/rpc/getWorkspaceSettings`整包讀取已退役，已登入且有效JSON請求返回404；前後端及測試已改分責GET，不保留全員名單相容支線。詳見[設定資料分責](performance-workspace-settings-2026-11-12.md)。
+舊`POST /api/rpc/getWorkspaceSettings`整包讀取已退役，已登入且有效JSON請求返回404；前後端及測試已改分責GET，不保留全員名單相容支線。詳見設定資料分責（歷次紀錄）。
 
 ## 看板輕量變更檢查（TT-148，2026-11-12）
 

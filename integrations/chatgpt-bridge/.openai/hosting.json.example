@@ -1,0 +1,6 @@
+{
+  "capabilities": [
+    "mcp"
+  ],
+  "project_id": "your-site-project-id"
+}

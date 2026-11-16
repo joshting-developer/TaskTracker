@@ -16,7 +16,7 @@ TT-165新增 `personal_access_tokens`，User UUID外鍵、Workspace外鍵、雜�
 
 更新：2026-11-04（Asia/Taipei）。使用者要求以正常關聯式資料儲存取代原型的 `records.payload`。目前資料庫保留 SQLite，API／前端 DTO 保留；不是以清空資料換架構。
 
-2026-11-09：現行主庫改MySQL 8.4 LTS／InnoDB，沿用下列業務關聯；新增transaction_guards只管理帳號流程鎖。時間以UTC DATETIME(6)儲存、API維持ISO；SQLite原檔保留。詳見[切換與交易](mysql-migration-2026-11-09.md)。下方11-04的SQLite描述保留沿革。
+2026-11-09：現行主庫改MySQL 8.4 LTS／InnoDB，沿用下列業務關聯；新增transaction_guards只管理帳號流程鎖。時間以UTC DATETIME(6)儲存、API維持ISO；SQLite原檔保留。詳見切換與交易（歷次紀錄）。下方11-04的SQLite描述保留沿革。
 
 ## 主要關聯
 

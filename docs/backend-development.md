@@ -79,7 +79,7 @@ flowchart TD
 
 2026-11-06階段二：工時分析增加專用TimeReportRequest、readonly TimeReportData／TimeReportEntryData及Eloquent TimeReportRepository，HTTP用例只傳DTO，Repository先按工作區／已授權專案／日期／成員查詢，不讀全歷史或整個卡片集合。WorkspaceTimeReport仍負責permission、聚合與輸出投影，ApiResponse保持原契約；現有非HTTP入口array僅相容轉DTO，不作為新功能預設。SQL群組聚合／分頁不在此次範圍。
 
-完整前後端重構成果、閱讀入口及未遷移的相容邊界見[重構紀錄](refactoring-2026-11-06.md)。
+完整前後端重構成果、閱讀入口及未遷移的相容邊界見重構紀錄（歷次紀錄）。
 
 ## 2026-11-12 可信Context與組裝入口
 

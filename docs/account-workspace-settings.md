@@ -30,4 +30,4 @@
 
 專用驗證：在frontend執行`E2E_API_URL=http://127.0.0.1:13024 npm run test:settings`；以`E2E_PREVIEW=1`跑production build。API須為獨立隔離服務，腳本會建假帳號及資料，不可指向使用者DB。日誌`/tmp/tasktracker-settings-*.log`、忽略的`frontend/artifacts/account-settings/`；不提交產物與備份。
 
-2026-11-12（TT-241）：舊getWorkspaceSettings整包RPC已退役（有效JSON及已登入時404），前端一般設定不讀名單，成員tab才讀成員及角色；角色讀寫共用permission交集／ownership限制。詳見[設定分責與驗證](performance-workspace-settings-2026-11-12.md)。
+2026-11-12（TT-241）：舊getWorkspaceSettings整包RPC已退役（有效JSON及已登入時404），前端一般設定不讀名單，成員tab才讀成員及角色；角色讀寫共用permission交集／ownership限制。詳見設定分責與驗證（歷次紀錄）。

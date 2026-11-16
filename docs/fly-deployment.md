@@ -1,68 +1,29 @@
-# Fly首次部署（TT-323）
+# Fly.io 部署
 
-## 現況
+公開 repository 保留 `fly.toml.example`、正式映像 Dockerfile 與部署工具。真正的 App 名稱、資料服務位址和環境識別放在被忽略的 `fly.toml`, 不提交正式設定
 
-- App：tasktracker-josh, 本人joshting.1999@gmail.com帳號的personal組織, 東京nrt, 1 shared CPU／512MB
-- 使用者指定的josh-90在建立App時回不存在, 依本次「決策先採建議方案」授權使用同帳號唯一可見組織, 差異已發Josh紙條, 不另建組織
-- 正式入口：https://task-tracker.josh-ting.com；Josh已設DNS, Fly憑證Issued且HTTPS正常。https://tasktracker-josh.fly.dev保留相容入口, 兩者共用同一正式資料庫
-- 首次映像：registry.fly.io/tasktracker-josh:git-0f1f1b4, digest sha256:6d8d17c91e5c2c6e98842249c0747ab808778ab7108b9ea888938624f7b5fca7
-- 首次以Fly remote build發布, 沒有push／Git tag／GHCR發布；TT-320的CI仍未完成, 不將本次視為CI驗收
+## 首次設定
 
-## 發布與設定
+複製 `fly.toml.example` 為 `fly.toml`, 填入自己的 App、HTTPS 網址、MySQL／Redis 位址與資料庫名稱。沿用已建立的 Fly App, 不因缺設定檔而重建；資料服務必須驗證 TLS 憑證與主機名稱
 
-使用專案忽略目錄.local/flyctl/bin/flyctl（本次v0.5.10）, 先讀共用06-deploy/fly-io。原系統CLI為2023年版, 登入狀態不相容, 已由Josh核准新版官方登入
+應用程式帳密、APP_KEY、R2、SMTP 與 CA 內容使用 Fly Secrets, 不放 TOML 的 env、build args、Git 或公開日誌。變更既有 APP_KEY 或資料服務憑證前先確認資料相容性與回復方式
 
-fly.toml包含正式一般設定、CA的files掛載、HTTPS、自動停啟及release command。Secrets只以私有0600檔案stdin匯入；特殊字元須依dotenv語法引用, 第一輪未引用造成Redis認證失敗, 引用後同映像重新套用已通過, 未修改Redis原密碼
+## GitHub Actions
 
-正式MySQL為task_tracker, Redis命名空間tasktracker:production:, 兩者驗CA與主機名稱。Session為database／secure／host-only, 公開註冊依TT-347改為開放並保留信箱啟用, mail inline／queue sync／broadcast null, 附件r2-attachments。TT-162重新分析後建議初期只在有需要時人工維護, 不定時喚醒Fly；沒有自動清理期限保證, 不宣稱已有外部觸發／常駐worker或Reverb
+在 GitHub 的 `production` Environment 設定：
 
-## 驗證
+| Secret | 用途 |
+| --- | --- |
+| FLY_CONFIG_TOML | 真正 fly.toml 的完整內容 |
+| FLY_API_TOKEN | 限目標 App 的部署資格 |
+| MIGRATION_DB_USERNAME、MIGRATION_DB_PASSWORD | 限目標 schema 的 migration 帳號 |
 
-已實測一次Machine停機→HTTP自動喚醒, health 200約5.43秒, 原PAT可繼續讀卡；這是單次結果, 不是p95或完整TT-154成本驗收
+workflow 只在部署 job 讀取正式設定, 寫入 runner 暫存檔並限制權限為 0600, 結束後刪除。建置與測試 job 不取得這些 Secrets, 發布工具的原始 Fly／Docker 輸出不轉印到公開日誌
 
-Fly release migration成功；HTTPS health、實際Machine MySQL TLS／Redis TLS、正式設定及1440／768／390px登入頁通過。TT-321已驗新正式映像、專案冒煙與核准視覺比較, 這次沒有更改產品元件
+部署方式與重跑條件見 [Tag 發布](tagged-release.md), 執行期設定見 [正式環境](production-environment.md)。未真正發布與驗收前, 不把本機檢查當成正式部署成功
 
-隔離後端429項18155斷言通過、1項既有skip。預設128MB兩次因大批fixture／全量測試查詢不足, 最後只把Codex測試容器CLI上限設512MB, 清掉自身合成測試schema後通過, 沒有改正式runtime記憶體限制。沒有宣稱frontend全部工具皆通過, 先前單支browser-check編輯器關閉及特殊環境項目仍未完整回歸
+## 本機使用
 
-資料同步由TT-341依Josh本次授權完成44表兩輪完整比對, 19帳號／462卡片等原資料與PAT保留。遷移後Codex登入、專案／看板／三尺寸卡片詳細頁及R2 PDF上傳／綁卡／下載雜湊／匿名拒絕通過；原庫唯讀與私有備份保留；搬移工具／回復限制見[搬遷手冊](mysql-transfer-runbook.md)
+使用被忽略的 fly.toml, 或以 FLY_CONFIG_PATH 指定私有檔案。設定檢查可執行 `python3 tools/fly_config.py --config fly.toml`, Fly 平台檢查使用 `flyctl config validate --strict --config fly.toml`, 原始輸出也應保存在私有位置
 
-## 後續部署與回退
-
-後續先跑consumer規定的驗收, 以固定commit標籤或已驗證digest發布, 不用latest；migration前備份實際庫。首次沒有更早的已知良好程式版本, 尚未宣稱真實前版回退演練完成
-
-回退映像不還原資料, 必須相容目前schema；正式恢復寫入後不能直接覆蓋本地舊快照。若需回原庫, 先停寫／備份新資料並處理差異, 不直接重啟本機舊服務讓兩邊各寫各的
-
-DNS已生效並經fly certs check驗憑證, APP_URL已切正式網域且驗登入。ALLOWED_ORIGINS只保留實際使用的origin；不因DNS缺資格嘗試用R2憑證修改DNS
-
-## 線上與本地的分工
-
-- 日常工作：線上TaskTracker是唯一進度來源, 包含卡片、紙條、留言、指派與正式工時；Codex／Claude工具使用各自私有設定的線上baseUrl
-- 本地開發／測試：程式碼在本地修改, 用各Agent隔離Compose、MySQL及合成資料驗證, 不把測試資料同步回正式庫, 不使用正式帳號／PAT跑fixture或回歸
-- 保留的原本機MySQL：這是搬移前的唯讀備份, 不是可以seed／reset的測試庫；不解除super_read_only來方便測試。要另開本地開發服務先配置獨立新庫, 不直接重新啟動舊Compose
-
-線上暫時不可用時先保留工作草稿, 不回舊庫記另一份進度；恢復後讀最新revision再補登。本地啟動與測試方式見開發說明, 個人共用環境設定留在本機工作流
-
-## v0.3.0 整批發布（2026-11-14）
-
-本批只建立v0.3.0一個tag, 程式來源固定1b728db, 發布編排修正為604c76a。成功run為43592690092, 正式映像digest為sha256:f5824ccd684cbe53121e9bec09daccb25bd43c55852e58d9d9e538f1315ef8a3, 仍只有一台512MB Machine
-
-首次GHCR交付的private檢查失敗而沒有部署, 誤公開的精確映像已清除且匿名manifest回403。修正後透過Actions artifact傳同一個受測映像, 核對archive／image／source／version後推私有Fly registry；同tag續跑而非改寫tag, 流程見[tag發布文件](tagged-release.md)
-
-正式Codex登入、通知全部已讀入口、既有看板、三尺寸與HTTPS健康檢查通過；MySQL嚴格TLS有實際cipher、Redis TLS連線PING成功, 真正fpm-fcgi內部請求確認mysqlnd讀取逾時為3秒。沒有新增公開探針端點, 暫存探針檔已刪除
-
-R2以同一digest短暫停寫完成目標切換, 三個既有附件及新上傳探針下載雜湊與匿名拒絕通過, 來源保留。驗證範圍及5支專用拓樸未跑的限制見[整批驗證](batch-release-validation-2026-11-14.md)
-
-TT-159原先包含的OCI來源收斂／不公開資料埠、最低權限與輪替仍依TT-327／TT-330追蹤, 沒有因本次TLS與FPM驗證成功就宣稱那些條件已通過
-
-## v0.4.0
-
-2026-11-15已統一發布多語系, tag ba48d05, 正式映像digest `sha256:f6593b37e10c5343495ffeea14fe4c035306590223da7a8d1121e80f98d6bd9e`。同一release run 43693179529續跑後成功, 瀏覽器登入與雙語切換通過；完整範圍與未驗項見[v0.4.0驗證](release-v0.4.0-validation.md)
-
-## v0.5.0
-
-2026-11-15同批發布品牌入口、獨立管理後台、公開五頁雙語與上方語言入口, tag c99ebab, release run43718688726成功。正式映像digest `sha256:c26c78b09d14881b13cc6f8b332793c249f4e94f9ec0b279c9d6dd43353262ed`, 維持單台nrt, 無新schema／付費資源。正式三尺寸App／獨立管理資格與公開語系通過, 詳見[本批驗證](release-v0.5.0-validation.md)。GPT私人串接依Josh最新帳號更正暫停, 不屬本次發布完成項
-
-
-## v1.0.0
-
-2026-11-16 Season 0 整批發布, tag 原始碼15b50c5, CI 43815701574成功。正式維持單台nrt／512MB, 四個加法 migration 已備份、預演並使用專用帳號／驗證 TLS 套用, 無 seed 或資料覆寫。Session／權限／日期／標籤／顯示時區及三尺寸正式驗收通過, 映像 digest 與回退限制見[發布驗收](release-v1.0.0-validation.md)。GPT Plugin 另行交付, 不混入主站映像
+回退必須使用已驗證且相容目前 schema 的舊映像。映像回退不會還原資料庫, 不用舊備份覆蓋上線後的新進度

@@ -1,6 +1,6 @@
 # MySQL搬遷與回退
 
-本文件是TT-341搬遷工具與回退手冊。2026-11-14已依Josh當次授權完成44表本地到正式task_tracker搬移, 兩輪完整比對通過, 現況見[Fly部署](fly-deployment.md)。後續每次搬移仍須先確認部署成功、當次授權來源／目標與停寫時段
+本文件是TT-341搬遷工具與回退手冊。2026-11-14已依Josh當次授權完成44表本地到正式資料庫搬移, 兩輪完整比對通過, 現況見[Fly部署](fly-deployment.md)。後續每次搬移仍須先確認部署成功、當次授權來源／目標與停寫時段
 
 ## 工具與限制
 
@@ -44,7 +44,7 @@ DDL比對只正規化欄位型別後已由COLLATE決定的重複CHARACTER SET宣
 1. 確認TT-323部署成功及Josh當次授權, 記錄來源、目標、版本、網路／TLS與停寫時段。前一天先以相同schema及引擎版本演練
 2. 兩端進maintenance並停止API寫入, 盤點PAT工具、worker、scheduler、Reverb及其他DDL來源；等待已接收寫入完成, 清空或明確交接本服務待處理工作。只操作本服務的Redis namespace, 不flush共享Redis
 3. 備份兩端設定、APP_KEY、資料庫與附件。既有正式空服務可能已跑migration, 這仍不是「完全空庫」；不要直接匯入或覆蓋。先保留其完整備份, 在當次授權下另外準備完全空的目標schema。工具本身不提供強制覆蓋／清空選項
-4. 若需使用暫存schema驗收, 先用新的明確名稱, 驗證後再於maintenance切換DB設定；MySQL不靠改資料庫名稱當切換手段。正式物理schema要用`task_tracker`時, 需先在當次授權內處理空部署留下的schema與備份, 不能拿現有業務庫當空庫
+4. 若需使用暫存schema驗收, 先用新的明確名稱, 驗證後再於maintenance切換DB設定；MySQL不靠改資料庫名稱當切換手段。使用既定正式 schema 名稱時, 需先在當次授權內處理空部署留下的schema與備份, 不能拿現有業務庫當空庫
 5. 執行snapshot。它只讀兩端, 建立`source.sql`、`manifest.json`及空目標原始狀態紀錄, 失敗的bundle不可使用, 換新bundle重做
 6. 執行apply。必須輸入完全相同的目標資料庫名稱, 取得目標伺服器命名鎖後才寫入；匯入與完整核對前不解除maintenance
 7. 執行verify。只有來源／目標全部資料表筆數、DDL與全內容雜湊相同才通過, 不是只抽查幾張表

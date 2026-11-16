@@ -1,6 +1,6 @@
 # 開發與測試
 
-前端使用 Vue／Vuetify／Vite, 後端是 Laravel JSON API。執行環境由根目錄 docker-compose.yml 定義, Fly 的正式發布設定另放 fly.toml 與 docker/production
+前端使用 Vue／Vuetify／Vite, 後端是 Laravel JSON API。執行環境由根目錄 docker-compose.yml 定義, Fly 的公開發布範本放 fly.toml.example 與 docker/production, 真正 fly.toml 不版控
 
 ## 獨立模式
 

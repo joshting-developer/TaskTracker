@@ -60,4 +60,4 @@ Storage與內容驗證按目前Laravel 13 API確認, 參考[Filesystem](https://
 
 Issue create／update 的 description 可包含 `![替代文字](attachment:UUID)`。仍使用原本的 requestId／revision 寫入契約, 描述與附件綁定在同一既有 Workspace 交易完成, 不另加 Issue revision。只接受同 Project 的有效附件與本人尚未過期 pending, 已綁到別張卡不能直接挪用；任何失敗回滾任務、編號、附件與 receipt。現有獨立 bind API 保留, 規則不因此放寬
 
-描述移除引用不永久刪除附件, 歷史可讀性與保存限制維持。UI 只在 Issue 描述顯式開啟貼上／拖檔／選檔, 失敗與取消的未綁定檔案依既有 TTL 清理。完整驗證與能力邊界見 [TT-282](tt282-description-upload.md)
+描述移除引用不永久刪除附件, 歷史可讀性與保存限制維持。UI 只在 Issue 描述顯式開啟貼上／拖檔／選檔, 失敗與取消的未綁定檔案依既有 TTL 清理。完整驗證與能力邊界見 TT-282（歷次紀錄）

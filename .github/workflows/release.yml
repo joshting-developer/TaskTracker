@@ -112,8 +112,14 @@ jobs:
       - uses: superfly/flyctl-actions/setup-flyctl@98172f70657cb3e15db199af139be99bd3e61200
         with:
           version: 0.5.10
+      - name: Materialize private deployment config
+        env:
+          FLY_CONFIG_TOML: ${{ secrets.FLY_CONFIG_TOML }}
+          FLY_CONFIG_PATH: ${{ runner.temp }}/fly.private.toml
+        run: python3 tools/fly_config.py --output "$FLY_CONFIG_PATH"
       - name: Verify archive, schema and image before private Fly deployment
         env:
+          FLY_CONFIG_PATH: ${{ runner.temp }}/fly.private.toml
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           MIGRATION_DB_USERNAME: ${{ secrets.MIGRATION_DB_USERNAME }}
           MIGRATION_DB_PASSWORD: ${{ secrets.MIGRATION_DB_PASSWORD }}
@@ -123,3 +129,8 @@ jobs:
           RELEASE_SOURCE_SHA: ${{ needs.validate.outputs.sha }}
           RELEASE_TAG: ${{ needs.validate.outputs.tag }}
         run: sh tools/fly-tagged-release.sh
+      - name: Remove private deployment config
+        if: always()
+        env:
+          FLY_CONFIG_PATH: ${{ runner.temp }}/fly.private.toml
+        run: rm -f "$FLY_CONFIG_PATH"

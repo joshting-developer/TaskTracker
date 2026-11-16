@@ -23,6 +23,6 @@ PHP：Composer最低需求8.3，Docker指定8.5.12；目前以Docker為驗證環
 
 資料入口：見[關聯式資料設計](../docs/database-design.md)，包含 ER 圖、資料表用途、外鍵／索引、JSON 邊界及升級／回退驗證。
 
-示範資料統一在`database/seeders/DemoSeeder.php`；DatabaseSeeder、`php artisan db:seed --class=DemoSeeder`與`tasktracker:seed-demo`共用，後者提供明確的`--reset`。只允許local／testing，其他環境拒絕；不在Services保存demo資料。新seed包含工時分析的跨成員／專案／日期示範，見[review](../docs/time-analysis-review-2026-11-06.md)。
+示範資料統一在`database/seeders/DemoSeeder.php`；DatabaseSeeder、`php artisan db:seed --class=DemoSeeder`與`tasktracker:seed-demo`共用，後者提供明確的`--reset`。只允許local／testing，其他環境拒絕；不在Services保存demo資料。新seed包含工時分析的跨成員／專案／日期示範，見review（歷次紀錄）。
 
-2026-11-09：本機與部署方向改MySQL；SQLite保留歷史匯入及快速隔離測試。交易鎖、UTC時間格式、秘密與驗證命令見[MySQL切換](../docs/mysql-migration-2026-11-09.md)。
+2026-11-09：本機與部署方向改MySQL；SQLite保留歷史匯入及快速隔離測試。交易鎖、UTC時間格式、秘密與驗證命令見MySQL切換（歷次紀錄）。

@@ -7,8 +7,8 @@ from types import SimpleNamespace
 spec = importlib.util.spec_from_file_location('migration', Path(__file__).with_name('fly-migrate.py'))
 m = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(m)
-CONFIG = {'app': 'tasktracker-josh', 'primary_region': 'nrt', 'env': {'APP_ENV': 'production'}, 'files': [{'guest_path': '/run/ca.pem', 'secret_name': 'MYSQL_CA_BASE64'}]}
-IMAGE = 'registry.fly.io/tasktracker-josh:v0.4.0'
+CONFIG = {'app': 'example-tasktracker', 'primary_region': 'nrt', 'env': {'APP_ENV': 'production'}, 'files': [{'guest_path': '/run/ca.pem', 'secret_name': 'MYSQL_CA_BASE64'}]}
+IMAGE = 'registry.fly.io/example-tasktracker:v0.4.0'
 
 
 class FakeMachines:
@@ -65,14 +65,14 @@ class MigrationTest(unittest.TestCase):
         self.assertEqual(sum(method == 'POST' for method, *_ in client.calls), 1)
 
     def test_rejects_wrong_registry_or_unversioned_image(self):
-        for image in ['registry.fly.io/tasktracker-josh:latest', 'registry.fly.io/other:v0.4.0', 'example.com/tasktracker:v0.4.0']:
+        for image in ['registry.fly.io/example-tasktracker:latest', 'registry.fly.io/other:v0.4.0', 'example.com/tasktracker:v0.4.0']:
             with self.assertRaises(ValueError):
                 m.migration_config(CONFIG, image)
 
     def test_deployment_requires_successful_migration_before_http(self):
         source = Path('tools/fly-tagged-release.sh').read_text()
         self.assertLess(source.index('python3 tools/fly-migrate.py'), source.index('flyctl deploy'))
-        self.assertNotIn('release_command', Path('fly.toml').read_text())
+        self.assertNotIn('release_command', Path('fly.toml.example').read_text())
         self.assertNotIn('MIGRATION_DB_PASSWORD', str(CONFIG))
 
 

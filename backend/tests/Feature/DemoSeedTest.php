@@ -73,7 +73,7 @@ class DemoSeedTest extends TestCase
         $store->put('workspaces', DemoSeeder::WORKSPACE_ID, ['id' => DemoSeeder::WORKSPACE_ID, 'name' => 'f-ws']);
         $store->put('demoSeeds', DemoSeeder::WORKSPACE_ID, ['id' => DemoSeeder::WORKSPACE_ID, 'version' => 1]);
         $tenant = $store->forWorkspace(DemoSeeder::WORKSPACE_ID);
-        $jack = User::create(['id' => '00000000-0000-4000-8000-000000000101', 'name' => 'Jack', 'email' => 'jack100398@gmail.com', 'password' => Hash::make('legacy-test-password')]);
+        $jack = User::create(['id' => '00000000-0000-4000-8000-000000000101', 'name' => 'Jack', 'email' => 'legacy-owner@example.test', 'password' => Hash::make('legacy-test-password')]);
         $tenant->put('members', $jack->id, ['id' => $jack->id, 'name' => 'Jack', 'role' => 'owner']);
         $tenant->put('projects', 'original', ['id' => 'original', 'name' => '手改保留', 'code' => 'ORIGINAL', 'revision' => 7]);
         $tenant->put('issues', 'original-issue', ['id' => 'original-issue', 'projectId' => 'original', 'identifier' => 'ORIGINAL-1', 'state' => 'open', 'title' => '保留卡片', 'assignee' => $jack->id, 'history' => [['actor' => 'Jack']]]);

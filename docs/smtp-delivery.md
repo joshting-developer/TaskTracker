@@ -1,6 +1,6 @@
 # 寄信（TT-189／TT-162）
 
-2026-11-14起預設改為commit後inline, 完整執行方式見[TT-162](synchronous-mail-and-maintenance-2026-11-14.md)。以下Queue是可選開發模式, 不是正式前置條件
+2026-11-14起預設改為commit後inline, 完整執行方式見TT-162（歷次紀錄）。以下Queue是可選開發模式, 不是正式前置條件
 
 使用Laravel Mail, 目前提供固定本機測試信與供TT-319串接的verification用例, 尚未寄送狀態變更／被指派等通知信
 

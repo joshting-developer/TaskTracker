@@ -38,5 +38,5 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Verify schema, HTTP contracts, downloaded examples and documentation
         run: |
-          python3 tools/test_fly_migrate.py
+          python3 -m unittest discover -s tools -p 'test_fly*.py'
           sh tools/api-contract-ci.sh

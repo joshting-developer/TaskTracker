@@ -21,7 +21,7 @@ docker compose --profile standalone up -d --build
 docker compose --profile standalone down
 ```
 
-停止時保留資料。已有共用資料服務的開發者可使用同一份 Compose 的 `shared` 模式, 連線設定與測試方式見開發說明
+停止時保留資料。已有共用資料服務的開發者可使用同一份 Compose 的 `shared` 模式, 連線設定與測試方式見[開發說明](docs/development.md)
 
 ## 開發用外部 Skills
 

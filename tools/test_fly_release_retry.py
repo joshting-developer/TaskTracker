@@ -16,8 +16,12 @@ class ReleaseRetryTest(unittest.TestCase):
             (root / 'tools/check-release-archive.sh').write_text('exit 0\n')
             commands = {
                 'curl': 'exit 0',
-                'python3': 'cat >/dev/null; exit 0',
-                'flyctl': 'exit 0',
+                'python3': """if test "$1" = tools/fly_config.py; then
+  case "$3" in app) echo example-tasktracker;; origin) echo https://tasks.example.test;; esac
+  exit 0
+fi
+cat >/dev/null; exit 0""",
+                'flyctl': 'echo private-provider-output; exit 0',
                 'docker': '''case "$1 $2" in
 "manifest inspect")
   if test "$EXISTING" = absent; then echo 'manifest unknown' >&2; exit 1; fi
@@ -33,7 +37,7 @@ esac''',
                    'FLY_API_TOKEN': 'synthetic', 'MIGRATION_DB_USERNAME': 'synthetic',
                    'MIGRATION_DB_PASSWORD': 'synthetic', 'RELEASE_ARCHIVE': 'synthetic',
                    'RELEASE_ARCHIVE_SHA': 'synthetic', 'RELEASE_IMAGE_ID': 'sha256:verified',
-                   'RELEASE_SOURCE_SHA': 'synthetic', 'RELEASE_TAG': 'v0.4.0',
+                   'FLY_CONFIG_PATH': str(root / 'private-config.toml'), 'RELEASE_SOURCE_SHA': 'synthetic', 'RELEASE_TAG': 'v0.4.0',
                    'EXISTING': existing, 'EXISTING_IMAGE': image,
                    'CALL_LOG': str(root / 'calls'), 'GITHUB_STEP_SUMMARY': str(root / 'summary')}
             result = subprocess.run(['sh', str(SCRIPT)], cwd=root, env=env, capture_output=True, text=True)
@@ -42,9 +46,12 @@ esac''',
     def test_identical_published_image_is_reused_without_push(self):
         result, calls = self.run_release('present')
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn('docker pull registry.fly.io/tasktracker-josh:v0.4.0', calls)
+        self.assertIn('docker pull registry.fly.io/example-tasktracker:v0.4.0', calls)
         self.assertNotIn('docker push', calls)
         self.assertIn('flyctl deploy', calls)
+        self.assertNotIn('private-provider-output', result.stdout + result.stderr)
+        self.assertNotIn('example-tasktracker', result.stdout + result.stderr)
+        self.assertIn('--config ', calls)
 
     def test_different_image_stops_before_migration_or_deployment(self):
         result, calls = self.run_release('present', 'sha256:different')
@@ -56,7 +63,7 @@ esac''',
     def test_missing_version_is_published(self):
         result, calls = self.run_release('absent')
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn('docker push registry.fly.io/tasktracker-josh:v0.4.0', calls)
+        self.assertIn('docker push registry.fly.io/example-tasktracker:v0.4.0', calls)
 
     def test_registry_denial_is_not_treated_as_missing_version(self):
         result, calls = self.run_release('denied')
