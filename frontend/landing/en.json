@@ -1,4 +1,5 @@
 {
+  "聯絡我們": "Contact us",
   "API 與權限": "API and permissions",
   "API 與權限｜TaskTracker": "API and permissions | TaskTracker",
   "Default 包含目前專案所有卡片, 自訂看板收錄指定任務或 Epic, 已完成的階段板可以封存": "The default board includes every card in the project. Custom boards collect selected issues or Epics. Archive a board when its phase is finished.",
