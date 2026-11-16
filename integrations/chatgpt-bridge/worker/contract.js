@@ -2006,5 +2006,144 @@ export const TOOLS = {
       "idempotentHint": true,
       "openWorldHint": true
     }
+  },
+  "list_issue_changes": {
+    "operationId": "listPublicIssueChanges",
+    "path": "/api/public/v1/projects/{project}/issue-changes",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "perPage": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 20
+        },
+        "search": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "identifier": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "state[]": {
+          "type": "array",
+          "maxItems": 30,
+          "items": {
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "priority": {
+          "enum": [
+            "urgent",
+            "high",
+            "normal",
+            "low"
+          ]
+        },
+        "type": {
+          "enum": [
+            "epic",
+            "task",
+            "bug"
+          ]
+        },
+        "assignee": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "epicId": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "condition": {
+          "enum": [
+            "overdue",
+            "unassigned"
+          ]
+        },
+        "scope": {
+          "enum": [
+            "all",
+            "mine"
+          ],
+          "default": "all"
+        },
+        "cursor": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "updatedSince": {
+          "type": "string",
+          "format": "date-time",
+          "maxLength": 40
+        },
+        "direction": {
+          "enum": [
+            "asc",
+            "desc"
+          ],
+          "default": "asc"
+        },
+        "tagIds": {
+          "type": "array",
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "required": [
+        "project"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "list_issue_deletions": {
+    "operationId": "listPublicIssueDeletions",
+    "path": "/api/public/v1/projects/{project}/issue-deletions",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 20
+        },
+        "after": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        }
+      },
+      "required": [
+        "project"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
   }
 };

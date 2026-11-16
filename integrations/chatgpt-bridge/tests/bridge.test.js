@@ -49,6 +49,8 @@ for (const [name, args, data] of [
   ['list_todo_comments', { todo: issue }, page([{ id: 'comment', author: 'Synthetic', content: 'Comment' }])],
   ['list_todo_handoffs', { todo: issue }, page([{ id: 'handoff', from: 'First', to: 'Next', kind: 'forwarded' }])],
   ['get_external_issue', { project, source: 'synthetic', externalId: 'item-1' }, issueRow],
+  ['list_issue_changes', { project }, { items: [issueRow], perPage: 20, nextCursor: null, syncUntil: '2026-11-16T00:00:00Z' }],
+  ['list_issue_deletions', { project }, { items: [{ issueId: issue, identifier: 'TT-1', deletedAt: '2026-11-16T00:00:00Z' }], nextAfter: '1' }],
 ]) test(`${name} projects only its required fields`, async () => {
   const f = fake({ ...data, password: 'never-return', secret: env.TASKTRACKER_PAT });
   const result = await callTool(name, args, env, f.transport);
@@ -68,7 +70,7 @@ test('contract operations, path and argument names match the backend specificati
     assert.deepEqual(tool.inputSchema.required, (op.parameters ?? []).filter(p => p.required).map(p => p.name));
     for (const parameter of (op.parameters ?? []).filter(p => p.in === 'query')) {
       const expected = { ...parameter.schema };
-      if (parameter.name === 'perPage') Object.assign(expected, { maximum: 20, default: 20 });
+      if (parameter.name === 'perPage' || parameter.name === 'limit') Object.assign(expected, { maximum: 20, default: 20 });
       assert.deepEqual(tool.inputSchema.properties[parameter.name], expected);
     }
     assert.equal(tool.inputSchema.additionalProperties, false);
@@ -199,6 +201,19 @@ test('todo scopes and conversation reads stay bounded and never interpret conten
   }
 });
 
+test('sync cursors and watermarks are preserved without automatic pagination', async () => {
+  const f = fake({ items: [{ ...issueRow, externalRefs: [{ source: 'synthetic', externalId: 'one', token: 'hidden' }], lastWrite: { sameToken: false, sameUser: true, clientReference: 'synthetic-run', tokenId: 'hidden' } }], perPage: 5, nextCursor: 'opaque-next', syncUntil: '2026-11-16T00:00:00Z' });
+  const result = await callTool('list_issue_changes', { project, perPage: 5, cursor: 'opaque+/value==' }, env, f.transport);
+  assert.equal(result.data.nextCursor, 'opaque-next');
+  assert.equal(result.data.syncUntil, '2026-11-16T00:00:00Z');
+  assert.equal(f.calls.length, 2);
+  assert.ok(f.calls[1].url.includes('cursor=opaque%2B%2Fvalue%3D%3D'));
+  assert.doesNotMatch(JSON.stringify(result), /hidden/);
+  const deleted = await callTool('list_issue_deletions', { project, after: '12', limit: 5 }, env,
+    fake({ items: [{ issueId: issue, identifier: 'TT-1', deletedAt: '2026-11-16T00:00:00Z' }], nextAfter: '13' }).transport);
+  assert.equal(deleted.data.nextAfter, '13');
+});
+
 test('missing secret makes no request', async () => {
   let calls = 0;
   await assert.rejects(callTool('who_am_i', {}, {}, async () => { calls++; }), reject('NOT_CONFIGURED')); assert.equal(calls, 0);
@@ -238,7 +253,7 @@ test('overlarge header, streamed body, invalid JSON and too many rows are reject
 test('MCP discovery and list expose the read-only contract and no environment', async () => {
   const listed = await (await handle(request('tools/list'), env)).json();
   assert.equal(listed.result.tools.length, Object.keys(TOOLS).length);
-  assert.equal(listed.result.tools.filter(t => t.annotations.readOnlyHint).length, 17);
+  assert.equal(listed.result.tools.filter(t => t.annotations.readOnlyHint).length, 19);
   assert.doesNotMatch(JSON.stringify(listed), /synthetic-private-token|owner@example/);
   const discovered = await (await handle(request('server/discover'), env)).json();
   assert.deepEqual(discovered.result.supportedVersions, ['2026-07-28']);

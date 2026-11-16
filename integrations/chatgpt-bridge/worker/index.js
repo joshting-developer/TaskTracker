@@ -179,7 +179,11 @@ function shape(name, data, args) {
   if (name === 'get_todo') return { ...pick(data, [...TODO_FIELDS, 'content', 'note']),
     capabilities: pick(data.capabilities ?? {}, ['edit', 'cancel', 'complete', 'reopen', 'return', 'convert', 'comment', 'forward']),
     convertedIssue: data.convertedIssue ? pick(data.convertedIssue, ['id', 'identifier', 'title', 'projectId']) : null };
-  if (!Array.isArray(data.items) || data.items.length > (args.perPage ?? 20)) throw new BridgeError('INVALID_RESPONSE', 502);
+  if (!Array.isArray(data.items) || data.items.length > (args.perPage ?? args.limit ?? 20)) throw new BridgeError('INVALID_RESPONSE', 502);
+  if (name === 'list_issue_changes') return { ...pick(data, ['perPage', 'nextCursor', 'syncUntil']), items: data.items.map(row => ({
+    ...pick(row, ISSUE_FIELDS), externalRefs: (row.externalRefs ?? []).map(ref => pick(ref, ['source', 'externalId'])),
+    ...(row.lastWrite ? { lastWrite: pick(row.lastWrite, ['sameToken', 'sameUser', 'clientReference']) } : {}) })) };
+  if (name === 'list_issue_deletions') return { ...pick(data, ['nextAfter']), items: data.items.map(row => pick(row, ['issueId', 'identifier', 'deletedAt'])) };
   const fields = name === 'list_projects' ? ['id', 'name', 'code', 'description', 'revision', 'permissions']
     : name === 'list_project_members' ? ['id', 'name']
       : name === 'list_project_statuses' ? STATUS_FIELDS
