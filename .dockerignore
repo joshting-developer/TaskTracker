@@ -11,6 +11,11 @@
 !frontend/src/**
 !frontend/app/
 !frontend/app/**
+!frontend/admin/
+!frontend/admin/**
+!frontend/features/
+!frontend/features/**
+!frontend/locale-preference.js
 !frontend/landing/
 !frontend/landing/**
 !frontend/public-assets/

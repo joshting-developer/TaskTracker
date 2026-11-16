@@ -5,7 +5,7 @@ import { mkdirSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import { contextKey, taskScope, timeSelection, writeContext } from '../src/ui/workContext.js';
-const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // Set E2E_FRONTEND_PORT for this test instance.
 const values = new Map();
 globalThis.sessionStorage = { getItem: key => values.get(key), setItem: (key, value) => values.set(key, value) };
 const key = contextKey('u', 'w', 'p');

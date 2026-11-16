@@ -1,11 +1,13 @@
 <?php
 
+require_once __DIR__.'/isolated-test-connection.php';
+
 use App\Models\MailDelivery;
 use App\Models\User;
 use Illuminate\Contracts\Console\Kernel;
 
 // CLI only: never expose a recovery token through a product HTTP endpoint.
-if (getenv('APP_ENV') !== 'testing' || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || getenv('DB_DATABASE') !== 'tasktracker_test' || getenv('DB_USERNAME') !== 'tasktracker_test') {
+if (getenv('APP_ENV') !== 'testing' || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || ! isIsolatedTestConnection()) {
     fwrite(STDERR, "Only isolated recovery fixtures are allowed\n");
     exit(1);
 }

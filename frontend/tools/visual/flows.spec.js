@@ -69,7 +69,7 @@ async function fixture(page, browser) {
     const invite = await call(otherContext.request, 'inviteMember', { email });
     await call(page.request, 'acceptWorkspaceInvite', { inviteToken: invite.token }, 'auth');
     await call(page.request, 'switchWorkspace', { workspaceId: identity.workspace.id }, 'auth');
-    execFileSync('docker', ['compose', '-p', 'tasktracker-codex-visual', '-f', resolve(import.meta.dirname, '../../../docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', 'tools/visual-fixture-clock.php'], { cwd: resolve(import.meta.dirname, '../../..'), input: JSON.stringify({ userId: identity.user.id, workspaceId: identity.workspace.id, projectId: project.id, emptyId: empty.id }), stdio: ['pipe', 'pipe', 'pipe'] });
+    execFileSync('docker', ['compose', '--env-file', '/dev/null', '-p', (process.env.E2E_COMPOSE_PROJECT || 'tasktracker-visual'), '-f', resolve(import.meta.dirname, '../../../docker-compose.yml'), '--profile', 'standalone', 'exec', '-T', 'backend', 'php', 'tools/visual-fixture-clock.php'], { cwd: resolve(import.meta.dirname, '../../..'), input: JSON.stringify({ userId: identity.user.id, workspaceId: identity.workspace.id, projectId: project.id, emptyId: empty.id }), stdio: ['pipe', 'pipe', 'pipe'] });
     return { identity, project, empty, tasks, board, other, privateProject };
   } finally { await otherContext.close(); }
 }
@@ -112,7 +112,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   expect(await page.getByLabel('Email', { exact: true }).evaluate(element => element.validity.valid)).toBe(false);
   await shot(page, '02-validation');
   // Change only our ephemeral visual topology's compiled config; no product test endpoint.
-  const compose = ['compose', '-p', 'tasktracker-codex-visual', '-f', resolve(import.meta.dirname, '../../../docker-compose.mysql-test.yml'), 'exec', '-T'];
+  const compose = ['compose', '--env-file', '/dev/null', '-p', (process.env.E2E_COMPOSE_PROJECT || 'tasktracker-visual'), '-f', resolve(import.meta.dirname, '../../../docker-compose.yml'), '--profile', 'standalone', 'exec', '-T'];
   try {
     execFileSync('docker', [...compose, '-e', 'TASKTRACKER_PUBLIC_REGISTRATION=false', 'backend', 'php', 'artisan', 'config:cache'], { stdio: 'pipe' });
     await page.goto('/login?mode=register');
@@ -188,7 +188,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   await shot(page, '03-notes-list');
   const todo = (await (await page.request.get('/api/v1/todos?scope=mine&state=open')).json()).data.items[0];
   await call(page.request, 'commentTodo', { id: todo.id, expectedRevision: todo.revision, content: '已確認測試資料, 接著補上手機版驗證\n\n請確認VRT-2與#VRT-2' });
-  execFileSync('docker', ['compose', '-p', 'tasktracker-codex-visual', '-f', resolve(import.meta.dirname, '../../../docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', 'tools/visual-fixture-clock.php'], { cwd: resolve(import.meta.dirname, '../../..'), input: JSON.stringify({ userId: data.identity.user.id, workspaceId: data.identity.workspace.id, projectId: data.project.id, emptyId: data.empty.id }), stdio: ['pipe', 'pipe', 'pipe'] });
+  execFileSync('docker', ['compose', '--env-file', '/dev/null', '-p', (process.env.E2E_COMPOSE_PROJECT || 'tasktracker-visual'), '-f', resolve(import.meta.dirname, '../../../docker-compose.yml'), '--profile', 'standalone', 'exec', '-T', 'backend', 'php', 'tools/visual-fixture-clock.php'], { cwd: resolve(import.meta.dirname, '../../..'), input: JSON.stringify({ userId: data.identity.user.id, workspaceId: data.identity.workspace.id, projectId: data.project.id, emptyId: data.empty.id }), stdio: ['pipe', 'pipe', 'pipe'] });
   await page.reload();
   await page.locator(`[data-todo-id="${todo.id}"]`).getByRole('button', { name: /^更多：/ }).click();
   const conversation = page.getByRole('dialog', { name: '紙條', exact: true });
@@ -294,7 +294,7 @@ test('representative workspace flows', async ({ page, browser }) => {
     const invitation = await call(page.request, 'inviteMember', { email: recipientEmail });
     await call(replyContext.request, 'register', { name: '協作成員', email: recipientEmail, password, inviteToken: invitation.token }, 'auth');
     const replyNote = await call(replyContext.request, 'createTodo', { content: '回覆上一手驗收\n\n請確認VRT-2與#VRT-2', assigneeId: data.identity.user.id });
-    execFileSync('docker', ['compose', '-p', 'tasktracker-codex-visual', '-f', resolve(import.meta.dirname, '../../../docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', 'tools/visual-fixture-clock.php'], { cwd: resolve(import.meta.dirname, '../../..'), input: JSON.stringify({ userId: data.identity.user.id, workspaceId: data.identity.workspace.id, projectId: data.project.id, emptyId: data.empty.id }), stdio: ['pipe', 'pipe', 'pipe'] });
+    execFileSync('docker', ['compose', '--env-file', '/dev/null', '-p', (process.env.E2E_COMPOSE_PROJECT || 'tasktracker-visual'), '-f', resolve(import.meta.dirname, '../../../docker-compose.yml'), '--profile', 'standalone', 'exec', '-T', 'backend', 'php', 'tools/visual-fixture-clock.php'], { cwd: resolve(import.meta.dirname, '../../..'), input: JSON.stringify({ userId: data.identity.user.id, workspaceId: data.identity.workspace.id, projectId: data.project.id, emptyId: data.empty.id }), stdio: ['pipe', 'pipe', 'pipe'] });
     await page.goto('/app/#/notes');
     await page.locator(`[data-todo-id="${replyNote.id}"]`).getByRole('button', { name: /^更多：/ }).click();
     const replyDrawer = page.getByRole('dialog', { name: '紙條', exact: true });
@@ -308,7 +308,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   await page.goto('/app/#/workspace/settings/members');
   await page.getByRole('region', { name: '待接受邀請', exact: true }).waitFor();
   await call(page.request, 'inviteMember', { email: 'pending-visual@example.test' });
-  execFileSync('docker', ['compose', '-p', 'tasktracker-codex-visual', '-f', resolve(import.meta.dirname, '../../../docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', 'tools/visual-fixture-clock.php'], { cwd: resolve(import.meta.dirname, '../../..'), input: JSON.stringify({ userId: data.identity.user.id, workspaceId: data.identity.workspace.id, projectId: data.project.id, emptyId: data.empty.id, normalizeInvitations: true, profile: test.info().project.name }), stdio: ['pipe', 'pipe', 'pipe'] });
+  execFileSync('docker', ['compose', '--env-file', '/dev/null', '-p', (process.env.E2E_COMPOSE_PROJECT || 'tasktracker-visual'), '-f', resolve(import.meta.dirname, '../../../docker-compose.yml'), '--profile', 'standalone', 'exec', '-T', 'backend', 'php', 'tools/visual-fixture-clock.php'], { cwd: resolve(import.meta.dirname, '../../..'), input: JSON.stringify({ userId: data.identity.user.id, workspaceId: data.identity.workspace.id, projectId: data.project.id, emptyId: data.empty.id, normalizeInvitations: true, profile: test.info().project.name }), stdio: ['pipe', 'pipe', 'pipe'] });
   await page.reload();
   await page.getByRole('region', { name: '待接受邀請', exact: true }).getByText('pending-visual@example.test', { exact: true }).waitFor();
   await shot(page, '29-workspace-pending-invitations');
@@ -319,7 +319,7 @@ test('representative workspace flows', async ({ page, browser }) => {
   await call(page.request, 'logout', {}, 'auth');
   const detachedEmail = `detached-${crypto.randomUUID()}@example.test`;
   await call(page.request, 'register', { name: '測試成員', email: detachedEmail, password, workspaceName: '原工作區' }, 'auth');
-  execFileSync('docker', ['compose', '-p', 'tasktracker-codex-visual', '-f', resolve(import.meta.dirname, '../../../docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', 'tools/detach-workspace-fixture.php', detachedEmail], { cwd: resolve(import.meta.dirname, '../../..'), stdio: 'pipe' });
+  execFileSync('docker', ['compose', '--env-file', '/dev/null', '-p', (process.env.E2E_COMPOSE_PROJECT || 'tasktracker-visual'), '-f', resolve(import.meta.dirname, '../../../docker-compose.yml'), '--profile', 'standalone', 'exec', '-T', 'backend', 'php', 'tools/detach-workspace-fixture.php', detachedEmail], { cwd: resolve(import.meta.dirname, '../../..'), stdio: 'pipe' });
   await page.goto('/app/#/');
   const detachedHome = page.getByRole('region', { name: '無隸屬工作區首頁', exact: true });
   await detachedHome.waitFor();

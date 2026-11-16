@@ -1,13 +1,15 @@
 <?php
 
+require_once __DIR__.'/isolated-test-connection.php';
+
 /** 隔離MySQL雙程序驗唯一事件與寄送claim, SMTP完全替換為人造邊界 */
-if (getenv('APP_ENV') !== 'testing' || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || getenv('DB_DATABASE') !== 'tasktracker_test' || getenv('DB_USERNAME') !== 'tasktracker_test') {
+if (getenv('APP_ENV') !== 'testing' || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || ! isIsolatedTestConnection()) {
     throw new RuntimeException('Isolated MySQL testing configuration required');
 }
 require __DIR__.'/../vendor/autoload.php';
 $app = require __DIR__.'/../bootstrap/app.php';
 $app->make(Kernel::class)->bootstrap();
-if (DB::connection()->getDatabaseName() !== 'tasktracker_test') {
+if (! isIsolatedTestConnection(DB::connection()->getDatabaseName())) {
     throw new RuntimeException('Unexpected schema');
 }
 

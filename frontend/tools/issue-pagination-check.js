@@ -22,7 +22,7 @@ try {
   // The random project belongs to this test alone; never reset a business database.
   assert.match(project.id, /^[a-f0-9-]{36}$/);
   const php = `require 'vendor/autoload.php'; $app=require 'bootstrap/app.php'; $app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap();
-    if(!$app->environment('testing')||getenv('TASKTRACKER_MYSQL_TEST')!=='1'||config('database.connections.mysql.database')!=='${topology.database}'||config('database.connections.mysql.username')!=='tasktracker_test')throw new RuntimeException('Isolation required');
+    if(!$app->environment('testing')||getenv('TASKTRACKER_MYSQL_TEST')!=='1'||config('database.connections.mysql.database')!=='${topology.database}'||config('database.connections.mysql.username')!=='${topology.username}')throw new RuntimeException('Isolation required');
     $project=Illuminate\\Support\\Facades\\DB::table('projects')->where('public_id','${project.id}')->sole();
     $row=(array)Illuminate\\Support\\Facades\\DB::table('issues')->where('project_id',$project->id)->sole(); unset($row['id']);
     for($first=2;$first<=10025;$first+=500){$batch=[];for($id=$first;$id<=min(10025,$first+499);$id++)$batch[]=[...$row,'public_id'=>(string)Illuminate\\Support\\Str::uuid(),'identifier'=>'PAGE-'.$id,'storage_position'=>$id];Illuminate\\Support\\Facades\\DB::table('issues')->insert($batch);}`;

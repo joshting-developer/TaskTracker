@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__.'/isolated-test-connection.php';
+
 use App\Factories\SessionLockFactory;
 use Illuminate\Contracts\Console\Kernel;
 
@@ -7,7 +9,7 @@ use Illuminate\Contracts\Console\Kernel;
 require __DIR__.'/../vendor/autoload.php';
 $app = require __DIR__.'/../bootstrap/app.php';
 $app->make(Kernel::class)->bootstrap();
-if (! $app->environment('testing') || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || config('database.connections.mysql.database') !== 'tasktracker_test' || config('database.connections.mysql.username') !== 'tasktracker_test') {
+if (! $app->environment('testing') || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || ! isIsolatedTestConnection(config('database.connections.mysql.database'), config('database.connections.mysql.username'), config('database.connections.mysql.host'))) {
     throw new RuntimeException('不是隔離Session競態環境');
 }
 $lease = $app->make(SessionLockFactory::class)->acquire('test', $argv[1], 1);

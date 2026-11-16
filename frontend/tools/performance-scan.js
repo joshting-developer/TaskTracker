@@ -3,7 +3,7 @@ import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'n
 import { gzipSync } from 'node:zlib';
 import { preview } from 'vite';
 import { chromium, request } from 'playwright';
-const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // Set E2E_FRONTEND_PORT for this test instance.
 
 // 只量測讀取與本地UI切換；API資料由外部明確啟動的隔離seed服務提供。
 const target = new URL(process.env.E2E_API_URL || 'http://invalid');

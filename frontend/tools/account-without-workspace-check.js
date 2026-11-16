@@ -2,11 +2,9 @@ import { ownedDefaultTopology } from './fixtures/owned-topology.js';
 import { fixtureResponse } from './fixtures/verification.js';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
-import { execFileSync } from 'node:child_process';
-import { resolve } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
-ownedDefaultTopology();
+const topology = ownedDefaultTopology();
 const base = `http://127.0.0.1:${Number(process.env.E2E_FRONTEND_PORT || 5199)}`;
 let server, browser;
 try {
@@ -23,7 +21,7 @@ try {
   const actor = await call('register', { name: '測試成員', email, password, workspaceName: '原工作區' });
   const project = await call('createProject', { name: '原專案', code: 'DETACH' }, 'rpc');
   await page.goto(`${base}/app/#/projects/${project.id}`); await page.getByRole('heading', { name: '原專案', exact: true }).waitFor(); await page.waitForLoadState('networkidle');
-  execFileSync('docker', ['compose', '-p', 'tasktracker-codex-test', '-f', resolve('../docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', 'tools/detach-workspace-fixture.php', email], { cwd: resolve('..'), stdio: 'pipe' });
+  topology.phpFile('tools/detach-workspace-fixture.php', email);
   calls.length = 0;
   await page.getByRole('button', { name: '重新整理工作空間', exact: true }).click();
   const home = page.getByRole('region', { name: '無隸屬工作區首頁', exact: true }); await home.waitFor(); calls.length = 0;

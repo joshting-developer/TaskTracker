@@ -17,11 +17,61 @@ vendor/
 __pycache__/
 .phpunit.cache/
 
-# UI/UX skill 的上游原始碼副本需納入版本控制, 不屬於 Composer vendor 或使用者 data
-!skills/vendor/
-!skills/vendor/ui-ux-pro-max/data/
-!skills/vendor/ui-ux-pro-max/data/**
-
 # Laravel DTO原始碼（大小寫不敏感的檔案系統會匹配data/）
 !backend/app/Data/
 !backend/app/Data/**
+
+# Personal agent setup and work records (kept locally).
+/AGENTS.md
+/CLAUDE.md
+/Memory.md
+/frontend/AGENTS.md
+/frontend/CLAUDE.md
+/backend/AGENTS.md
+/backend/CLAUDE.md
+/.agents/
+/skills/
+/plans/
+/Multi-Agent-To-Tracker.md
+/docs/project-workflow.md
+/docs/test-environments.md
+/docs/local-development.md
+/docs/local-regression.md
+/docs/shared-environment-migration.md
+/docs/skills-and-development-workflow.md
+/docs/development-skills.md
+/docs/anti-slop-skills.md
+/docs/performance-skills.md
+/docs/performance-skills-*.md
+/docs/performance-skills-*.json
+/docs/shared-skills-migration-*.md
+/docs/skill-*.md
+/docs/skill-*.json
+/docs/evidence/skill-*
+/docs/planning/
+
+.env.shared
+
+/docs/tasktracker-self-tracking.md
+
+# Product ideas and planning are archived outside this product repository.
+/docs/產品討論紀錄.md
+/docs/competitor-survey.md
+/docs/競品使用流程與功能缺口研究-2026-10-30.md
+/docs/third-party-api-documentation-plan.md
+/docs/backend-di-phpdoc-refactor-plan.md
+/docs/issue-experience-and-attachments-roadmap-2026-11-13.md
+/docs/issue-experience-roadmap-card-mapping-2026-11-13.md
+/docs/gpt-plugin-roadmap-2026-11-16.md
+/docs/chatgpt-tasktracker-plugin-plan-2026-11-14.md
+/docs/public-login-landing-seo-plan-2026-11-11.md
+/docs/public-login-landing-seo-cards-2026-11-11.md
+/docs/season-roadmap-status-2026-11-15.md
+/docs/invitation-account-workspace-lifecycle-plan-2026-11-15.md
+/docs/tasktracker-brand-icon-unification-agent-instructions-2026-11-15.md
+/docs/前端後續改善與PHP版本檢查-2026-11-04.md
+/docs/可用性驗證方案-2026-11-04.md
+/docs/app-coordination-evaluation-2026-11-13.md
+/docs/api-documentation-gap-review-2026-11-12.md
+/docs/refactor-gap-review-2026-11-12.md
+/docs/hci/

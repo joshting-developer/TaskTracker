@@ -40,7 +40,7 @@ DNS已生效並經fly certs check驗憑證, APP_URL已切正式網域且驗登�
 - 本地開發／測試：程式碼在本地修改, 用各Agent隔離Compose、MySQL及合成資料驗證, 不把測試資料同步回正式庫, 不使用正式帳號／PAT跑fixture或回歸
 - 保留的原本機MySQL：這是搬移前的唯讀備份, 不是可以seed／reset的測試庫；不解除super_read_only來方便測試。要另開本地開發服務先配置獨立新庫, 不直接重新啟動舊Compose
 
-線上暫時不可用時先保留工作草稿, 不回舊庫記另一份進度；恢復後讀最新revision再補登。具體隔離埠及測試命令以專案tasktracker-test-environments Skill為準
+線上暫時不可用時先保留工作草稿, 不回舊庫記另一份進度；恢復後讀最新revision再補登。本地啟動與測試方式見開發說明, 個人共用環境設定留在本機工作流
 
 ## v0.3.0 整批發布（2026-11-14）
 

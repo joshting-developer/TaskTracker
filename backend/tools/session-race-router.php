@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__.'/isolated-test-connection.php';
+
 use App\Data\WorkspaceContext;
 use App\Http\WorkspaceRpc;
 use App\Http\WorkspaceTransaction;
@@ -12,7 +14,7 @@ require __DIR__.'/../vendor/autoload.php';
 $app = require __DIR__.'/../bootstrap/app.php';
 $kernel = $app->make(Kernel::class);
 $kernel->bootstrap();
-if (! $app->environment('testing') || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || config('database.connections.mysql.database') !== 'tasktracker_test' || config('database.connections.mysql.username') !== 'tasktracker_test' || ! getenv('TASKTRACKER_SESSION_RACE_PREFIX')) {
+if (! $app->environment('testing') || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || ! isIsolatedTestConnection(config('database.connections.mysql.database'), config('database.connections.mysql.username'), config('database.connections.mysql.host')) || ! getenv('TASKTRACKER_SESSION_RACE_PREFIX')) {
     throw new RuntimeException('不是隔離Session競態環境');
 }
 Route::post('/api/test/session-slow', function (Request $request) use ($app) {

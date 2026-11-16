@@ -1,6 +1,6 @@
 # 自有後端PHPDoc盤點與統一（TT-235，2026-11-12）
 
-依[PHPDoc規範](../skills/tasktracker-development-standards/references/phpdoc.md)與[重構規格](backend-di-phpdoc-refactor-plan.md)第4、6節。
+依PHPDoc規範與重構規格（歷次規劃紀錄）第4、6節。
 
 ## 工具
 

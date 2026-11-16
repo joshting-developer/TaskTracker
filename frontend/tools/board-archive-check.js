@@ -1,12 +1,12 @@
+import { loadDesignAudit } from './fixtures/optional-design-audit.js';
+const designAudit = await loadDesignAudit();
 import { acceptInvitationFixture } from './fixtures/verification.js';
 // TT-283：看板封存→已封存清單→唯讀查看→還原（看板頁與清單兩個入口）；三尺寸版面。只接受隔離API。
 import assert from 'node:assert/strict';
-import { app as inspectApp } from '../../.agents/skills/design-taste-frontend/scripts/lib/probe.mjs';
-import { judgeApp } from '../../.agents/skills/design-taste-frontend/scripts/lib/rules.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
-const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // Set E2E_FRONTEND_PORT for this test instance.
 const api = process.env.E2E_API_URL || '';
 if (!/^http:\/\/127\.0\.0\.1:13\d{3}$/.test(api)) throw new Error('請設定隔離E2E_API_URL（127.0.0.1:13xxx），不可使用業務資料庫');
 const folder = 'artifacts/tt333';
@@ -107,8 +107,8 @@ try {
     await page.getByRole('dialog', { name: '封存看板「第一階段」？' }).waitFor();
     await page.getByRole('menu', { name: '看板操作選項' }).waitFor({ state: 'hidden' });
     assert.equal(await page.getByRole('menu', { name: '看板操作選項' }).count(), 0, '確認視窗出現後選單已關閉');
-    const design = await page.evaluate(inspectApp);
-    measurements.push({ view: 'design-review', width, findings: judgeApp(design) });
+    const design = designAudit ? await page.evaluate(designAudit.app) : null;
+    measurements.push({ view: 'design-review', width, designAudit: !!designAudit, findings: designAudit ? designAudit.judgeApp(design) : null });
     const confirm = page.getByRole('dialog', { name: '封存看板「第一階段」？' });
     await confirm.waitFor();
     await page.screenshot({ path: `${folder}/${width}-archive-confirm.png`, animations: 'disabled' });

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
-const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // Set E2E_FRONTEND_PORT for this test instance.
 
 if (!process.env.E2E_API_URL) throw new Error('請設定隔離 E2E_API_URL');
 const before = process.env.E2E_BEFORE === '1';

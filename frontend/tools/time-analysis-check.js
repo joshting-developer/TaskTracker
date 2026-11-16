@@ -1,7 +1,7 @@
+import { ownedDefaultTopology } from './fixtures/owned-topology.js';
 import { acceptInvitationFixture } from './fixtures/verification.js';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { resolve } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
@@ -44,7 +44,8 @@ try {
   await call(member, 'logTime', { issueId: task.id, minutes: 30, workDate: today });
   if (process.env.E2E_VISUAL_FIXTURE === '1') {
     if (!process.env.E2E_COMPOSE_PROJECT) throw new Error('Visual fixture requires explicit isolated E2E_COMPOSE_PROJECT');
-    execFileSync('docker', ['compose', '-p', process.env.E2E_COMPOSE_PROJECT, '-f', resolve(import.meta.dirname, '../../docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', 'tools/time-analysis-fixture.php'], { cwd: resolve(import.meta.dirname, '../..'), input: JSON.stringify({ userId: identity.user.id, workspaceId: identity.workspace.id, first: first.id, second: second.id }), stdio: ['pipe', 'pipe', 'pipe'] });
+    const [binary, args] = ownedDefaultTopology().command('exec', '-T', 'backend', 'php', 'tools/time-analysis-fixture.php');
+    execFileSync(binary, args, { input: JSON.stringify({ userId: identity.user.id, workspaceId: identity.workspace.id, first: first.id, second: second.id }), stdio: ['pipe', 'pipe', 'pipe'] });
     first.id = 'analysis-2'; second.id = 'analysis-1';
   }
   await owner.reload(); await owner.getByRole('link', { name: '工時分析', exact: true }).click();

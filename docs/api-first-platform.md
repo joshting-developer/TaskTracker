@@ -65,7 +65,7 @@ flowchart TD
 - 外部Token不應依賴人類瀏覽器Session的「目前工作區」。請求的目標資源、Token範圍與使用者有效成員資格必須一致；具體路徑／header形式於契約設計時定案。
 - 共用邏輯不等於必須同一條HTTP路由。先盤點現有API，適合的能力直接重用，格式或認證不適合公開的入口才補薄REST adapter；不強迫另開一個後端服務，也不讓所有SPA RPC自動對Token開放。
 - 2026-11-12契約修正：Session／CSRF、camelCase／ok-data、錯誤及revision／requestId語意維持；使用者已授權依資料存取審查調整路徑／DTO與前端依賴、退役整包RPC。一般頁面不得預設取整個Workspace，列表SQL篩選／分頁、詳細活動按需；版本與移轉步驟見[分責契約](query-api-v1.md)，不能為相容永久保留過量載入。
-- Repo只負責資料存取；既有Service不因外部入口繞過權限、作者限制或MySQL寫入鎖。遵循本專案[Laravel Architecture](../skills/laravel-architecture/SKILL.md)，不機械增加空層。
+- Repo只負責資料存取；既有Service不因外部入口繞過權限、作者限制或MySQL寫入鎖。遵循本專案Laravel Architecture，不機械增加空層。
 
 ## Token的授權語意
 
@@ -93,7 +93,7 @@ Laravel Sanctum是優先評估的既有認證機制；套件版本、Token儲存
 
 1. **盤點與契約**：對照現有查詢／寫入用例與授權入口，決定資源、版本、錯誤、分頁與認證邊界；列出最小必要調整。
 2. **PAT與必要REST能力**：Token管理、Scope、到期／撤銷，身分／權限metadata、專案與狀態清單、單卡／可篩選分頁查詢，以及必要寫入／留言／關聯操作。未授權與跨專案拒絕、撤權、衝突及重送可驗證。
-3. **文件與互通驗收**：交付工具中立的HTTP範例、正式OpenAPI機器契約與第三方／Agent使用指南，讓任意受限客戶端可只憑文件完成查詢、建卡、修改、留言與錯誤處理；不依賴特定模型、DOM或Vite模組。詳細交付清單、文件同步規則與E2E完成定義見[第三方 API 文件規劃](third-party-api-documentation-plan.md)。
+3. **文件與互通驗收**：交付工具中立的HTTP範例、正式OpenAPI機器契約與第三方／Agent使用指南，讓任意受限客戶端可只憑文件完成查詢、建卡、修改、留言與錯誤處理；不依賴特定模型、DOM或Vite模組。詳細交付清單、文件同步規則與E2E完成定義見第三方 API 文件規劃（歷次規劃紀錄）。
 4. **後續增量能力**：externalId、批次／增量與可靠Webhook按需求逐項排程。Webhook要有獨立可靠投遞設計，不能把Reverb視為替代品。MCP與工具端adapter留給外部。
 
 「完整CRUD」中的刪除已於2026-11-13（TT-250）定義並提供：永久刪除、無封存，需`issue.delete`，有工時或子卡時拒絕，同步端以issue-deletions墓碑移除；語意見[卡片刪除](issue-deletion.md)。
@@ -104,9 +104,9 @@ Laravel Sanctum是優先評估的既有認證機制；套件版本、Token儲存
 - TT-171～173的外部識別／批次／增量仍是後續平台能力，未因本次方向直接實作。
 - TT-174／175的Webhook與TT-177外部客戶端聯調暫緩；TT-176保留通用整合來源稽核，排除內建Agent工作流。
 - TT-203只追蹤本輪架構決策與卡片同步，規劃交付完成才結案；不以它結案宣稱PAT或REST已完成。
-- 初次202卡的[來源清單](planning/tasktracker-backlog.json)及[匯入結果](planning/tasktracker-import-result.json)保留為歷史快照，實際進度以Tracker為準。本輪不修改原始Multi-Agent交接報告或他專案卡片。
+- 初次202卡的來源清單（歷次規劃紀錄）及匯入結果（歷次規劃紀錄）保留為歷史快照，實際進度以Tracker為準。本輪不修改原始Multi-Agent交接報告或他專案卡片。
 
-來源：[使用者先前產品討論](產品討論紀錄.md)、[Multi-Agent實測交接](../Multi-Agent-To-Tracker.md)與本輪最後確認。部署重構是另一條工作線，本次沒有調整Compose、Reverb、主庫或雲端環境。
+來源：使用者先前產品討論（歷次規劃紀錄）、Multi-Agent實測交接（歷次規劃紀錄）與本輪最後確認。部署重構是另一條工作線，本次沒有調整Compose、Reverb、主庫或雲端環境。
 
 ## 本輪規劃交付驗證
 
@@ -114,7 +114,7 @@ Laravel Sanctum是優先評估的既有認證機制；套件版本、Token儲存
 
 ## 2026-11-12 文件工作拆卡
 
-OpenAPI與第三方文件已確認為整合階段必要交付。TT-167承接正式REST／機器契約，TT-252提供開發者入口／PAT與Agent指南及可執行範例，TT-253驗契約CI，TT-254做只憑公開文件／有效PAT的必要通用客戶端E2E。TT-177仍是選配特定工具聯調，維持deferred；不能因其暫緩而省略TT-254。新工作均open、尚未實作，並收錄AI整合/API；完整[查重與讀回證據](api-documentation-gap-review-2026-11-12.md)。
+OpenAPI與第三方文件已確認為整合階段必要交付。TT-167承接正式REST／機器契約，TT-252提供開發者入口／PAT與Agent指南及可執行範例，TT-253驗契約CI，TT-254做只憑公開文件／有效PAT的必要通用客戶端E2E。TT-177仍是選配特定工具聯調，維持deferred；不能因其暫緩而省略TT-254。新工作均open、尚未實作，並收錄AI整合/API；完整查重與讀回證據（歷次規劃紀錄）。
 
 
 ## 2026-11-12 寫入結果與重播容量分析（TT-227）

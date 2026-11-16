@@ -1,20 +1,35 @@
 #!/bin/sh
 # 固定隔離專案；不繼承主服務的Compose設定／資料卷／憑證。
 set -eu
+unset COMPOSE_FILE COMPOSE_PROFILES COMPOSE_PROJECT_NAME DB_PASSWORD REDIS_HOST REDIS_USERNAME REDIS_PASSWORD REDIS_PREFIX MAIL_HOST TASKTRACKER_DATA_NETWORK_EXTERNAL TASKTRACKER_MAIL_CA_VOLUME TASKTRACKER_TEST_DATABASE TASKTRACKER_TEST_USERNAME TASKTRACKER_TEST_PASSWORD TASKTRACKER_IMPORT_DATABASE TASKTRACKER_IMPORT_USERNAME TASKTRACKER_IMPORT_PASSWORD
 cd "$(dirname "$0")/.."
 export TASKTRACKER_TEST_PORT=13049
 export E2E_DOCS_PORT=5185
 export E2E_API_URL=http://127.0.0.1:13049
 export E2E_ISOLATED=1
-compose() { docker compose -p tasktracker-contract-ci -f docker-compose.mysql-test.yml "$@"; }
-cleanup() { compose down --volumes --remove-orphans; }
+export APP_ENV=testing
+export TASKTRACKER_MYSQL_TEST=1
+export TASKTRACKER_STANDALONE_TEST=1
+export DB_HOST=mysql
+export DB_DATABASE=tasktracker_test
+export DB_USERNAME=tasktracker_test
+export DB_PASSWORD_FILE=/run/tasktracker-app/password
+export TASKTRACKER_API_PORT=13049
+export TASKTRACKER_MAIL_UI_PORT=14049
+export TASKTRACKER_DATA_NETWORK=tasktracker-contract-ci-data
+export APP_URL=http://127.0.0.1:5185
+export ALLOWED_ORIGINS=http://127.0.0.1:5185,http://127.0.0.1:5175
+export TASKTRACKER_AUTH_THROTTLE_SCALE=50
+export CACHE_STORE=file
+export QUEUE_CONNECTION=sync
+export BROADCAST_CONNECTION=null
+compose() { docker compose --env-file /dev/null -p tasktracker-contract-ci -f docker-compose.yml --profile standalone "$@"; }
+cleanup() { compose down; }
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
-# 只重設本腳本擁有的隔離測試環境，包含前次中斷的tmpfs資料。
 cleanup
-docker build -t tasktracker-backend -f backend/Dockerfile .
-compose up -d
+compose up -d --build --wait backend mysql redis mailpit
 python3 - <<'HEALTH'
 import time, urllib.error, urllib.request
 for attempt in range(90):

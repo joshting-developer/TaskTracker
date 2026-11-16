@@ -1,10 +1,10 @@
+import { loadDesignAudit } from './fixtures/optional-design-audit.js';
+const designAudit = await loadDesignAudit();
 import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
-const { probe, layout } = await import('../../.agents/skills/design-taste-frontend/scripts/lib/probe.mjs');
-const { judge, judgeLayout } = await import('../../.agents/skills/design-taste-frontend/scripts/lib/rules.mjs');
 assert.equal(process.env.E2E_ISOLATED, '1');
 assert.equal(process.env.E2E_API_URL, 'http://127.0.0.1:13199');
 const out = '../artifacts/tt365'; await mkdir(out, { recursive: true });
@@ -33,8 +33,8 @@ try {
       await page.evaluate(() => document.fonts.ready);
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       await page.screenshot({ path: `${out}/public-en-${index}-${width}.png`, fullPage: true });
-      const metrics = await page.evaluate(probe), options = { width, allow: ['palette-purple'] };
-      findings.push({ path, width, rows: [...judge(metrics,options),...judgeLayout(await page.evaluate(layout),options)] });
+      const metrics = designAudit ? await page.evaluate(designAudit.probe) : null, options = { width, allow: ['palette-purple'] };
+      findings.push({ path, width, designAudit: !!designAudit, rows: designAudit ? [...designAudit.judge(metrics,options),...designAudit.judgeLayout(await page.evaluate(designAudit.layout),options)] : [] });
       const before = requests.length;
       await page.locator('[data-public-locale]').selectOption('zh-TW');
       assert.equal(await page.locator('html').getAttribute('lang'), 'zh-Hant');

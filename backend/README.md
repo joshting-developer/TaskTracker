@@ -2,7 +2,7 @@
 
 Laravel 13 JSON API, 獨立於 `../frontend` 的 Vue SPA, 不使用 Blade／Inertia 渲染產品畫面
 
-安裝、Compose、舊資料匯入與完整驗證方式見[根 README](../README.md)
+啟動與測試見開發說明, 資料搬移見[搬移手冊](../docs/mysql-transfer-runbook.md)
 
 - `routes/web.php`：JSON API 路由, 使用 Laravel session／CSRF middleware
 - `app/Http/Controllers`：依專案、任務、工時、看板、成員、待辦分開的HTTP入口
@@ -16,9 +16,8 @@ Laravel 13 JSON API, 獨立於 `../frontend` 的 Vue SPA, 不使用 Blade／Iner
 
 目前主庫為MySQL 8.4 LTS／InnoDB，使用獨立關聯式業務表、外鍵及索引，保留既有 JSON API DTO；舊 records 保留封存，正常業務不雙寫。Project ACL 已落地。Reverb已接上看板私有Project頻道, Queue 不寄送真實郵件
 
-PHP：Composer最低需求8.3，Docker指定8.5.12；目前以Docker為驗證環境，未宣稱8.3／8.4均已測試。版本更新紀錄及檢查結果見[版本報告](../docs/前端後續改善與PHP版本檢查-2026-11-04.md)。
+PHP：Composer最低需求8.3，Docker指定8.5.12；目前以Docker為驗證環境，未宣稱8.3／8.4均已測試。版本更新紀錄及檢查結果見版本報告（歷次規劃紀錄）。
 
-開發規範：先讀 [AGENTS.md](AGENTS.md)、[ECC laravel-patterns](../skills/vendor/laravel-patterns/SKILL.md) 與 [Laravel Architecture](../skills/laravel-architecture/SKILL.md)。後者補充分層／命名／回傳／交易／測試；舊後端skill已移除。2026-11-06本輪只配置skills，使用者已暫緩重構，既有程式不宣稱全面符合新規範。詳見[配置與衝突處理](../docs/development-skills.md)。
 
 閱讀入口：見[後端程式導覽](../docs/backend-development.md)，包含請求流程、各class責任、相容邊界及驗證紀錄。
 

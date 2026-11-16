@@ -1,9 +1,30 @@
 {
-  "policy": { "service": "policy-closed", "database": "tasktracker_test_policy", "apiPort": 13202 },
-  "inline": { "service": "inline", "database": "tasktracker_test_inline", "apiPort": 13203 },
-  "pagination": { "service": "pagination", "database": "tasktracker_test_pagination", "apiPort": 13204 },
-  "seed": { "service": "seed", "database": "tasktracker_test_seed", "apiPort": 13205 },
-  "realtime": { "service": "realtime", "database": "tasktracker_test_realtime", "apiPort": 13206 },
-  "r2": { "service": "r2", "database": "tasktracker_test_r2", "apiPort": 13207 },
-  "runtime": { "service": "runtime", "database": "tasktracker_test_runtime", "apiPort": 13208 }
+  "policy": {
+    "service": "policy-closed",
+    "apiPort": 13202
+  },
+  "inline": {
+    "service": "inline",
+    "apiPort": 13203
+  },
+  "pagination": {
+    "service": "pagination",
+    "apiPort": 13204
+  },
+  "seed": {
+    "service": "seed",
+    "apiPort": 13205
+  },
+  "realtime": {
+    "service": "realtime",
+    "apiPort": 13206
+  },
+  "r2": {
+    "service": "r2",
+    "apiPort": 13207
+  },
+  "runtime": {
+    "service": "runtime",
+    "apiPort": 13208
+  }
 }

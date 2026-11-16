@@ -1,58 +1,79 @@
+name: tasktracker-standalone
+
 x-backend: &backend
-  image: ${COMPOSE_PROJECT_NAME:-tasktracker}-backend
+  image: ${TASKTRACKER_BACKEND_IMAGE:-tasktracker-dev-backend}
   build:
     context: .
     dockerfile: backend/Dockerfile
   init: true
+  profiles: [standalone, shared]
+  networks: [default, data-services]
   env_file:
-    - ${TASKTRACKER_MAIL_ENV_FILE:-./backend/docker/mail.env.example}
+    - ./backend/docker/mail.env.example
   environment: &backend-env
     APP_NAME: TaskTracker
-    APP_ENV: local
+    APP_ENV: ${APP_ENV:-local}
     APP_DEBUG: 'false'
-    APP_URL: http://127.0.0.1:${TASKTRACKER_PORT:-5174}
+    APP_URL: ${APP_URL:-http://127.0.0.1:5174}
     TASKTRACKER_ENV_PATH: /data
     DB_CONNECTION: mysql
-    DB_HOST: mysql
+    DB_HOST: ${DB_HOST:-mysql}
     DB_PORT: 3306
-    DB_DATABASE: tasktracker
-    DB_USERNAME: tasktracker
-    DB_PASSWORD_FILE: /run/tasktracker-app/password
+    DB_DATABASE: ${DB_DATABASE:-tasktracker}
+    DB_USERNAME: ${DB_USERNAME:-tasktracker}
+    DB_PASSWORD_FILE: ${DB_PASSWORD_FILE-/run/tasktracker-app/password}
+    DB_PASSWORD: ${DB_PASSWORD:-}
+    DB_URL: ''
+    TASKTRACKER_MYSQL_TEST: ${TASKTRACKER_MYSQL_TEST:-0}
+    TASKTRACKER_STANDALONE_TEST: ${TASKTRACKER_STANDALONE_TEST:-0}
+    TASKTRACKER_TEST_AGENT: ${TASKTRACKER_TEST_AGENT:-}
+    TASKTRACKER_TEST_DATABASE: ${TASKTRACKER_TEST_DATABASE:-tasktracker_test}
+    TASKTRACKER_TEST_USERNAME: ${TASKTRACKER_TEST_USERNAME:-tasktracker_test}
+    TASKTRACKER_TEST_PASSWORD: ${TASKTRACKER_TEST_PASSWORD:-}
+    TASKTRACKER_IMPORT_DATABASE: ${TASKTRACKER_IMPORT_DATABASE:-tasktracker_test_import}
+    TASKTRACKER_IMPORT_USERNAME: ${TASKTRACKER_IMPORT_USERNAME:-tasktracker_test}
+    TASKTRACKER_IMPORT_PASSWORD: ${TASKTRACKER_IMPORT_PASSWORD:-}
+    TASKTRACKER_AUTH_THROTTLE_SCALE: ${TASKTRACKER_AUTH_THROTTLE_SCALE:-1}
     SESSION_DRIVER: database
     SESSION_COOKIE: tasktracker_session
     SESSION_LIFETIME: 480
-    CACHE_STORE: redis
-    QUEUE_CONNECTION: redis
-    BROADCAST_CONNECTION: reverb
+    CACHE_STORE: ${CACHE_STORE:-redis}
+    QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+    BROADCAST_CONNECTION: ${BROADCAST_CONNECTION:-reverb}
     REDIS_CLIENT: predis
-    REDIS_HOST: redis
+    REDIS_HOST: ${REDIS_HOST:-redis}
+    REDIS_USERNAME: ${REDIS_USERNAME:-}
+    REDIS_PASSWORD: ${REDIS_PASSWORD:-}
     REDIS_DB: 0
     REDIS_CACHE_DB: 0
-    REDIS_PREFIX: "${TASKTRACKER_REDIS_NAMESPACE:-tasktracker:local}:"
+    REDIS_PREFIX: ${REDIS_PREFIX:-tasktracker:local:}
     CACHE_PREFIX: "cache:"
     REDIS_QUEUE: default
-    REVERB_SCALING_CHANNEL: "${TASKTRACKER_REDIS_NAMESPACE:-tasktracker:local}:reverb"
+    REVERB_SCALING_CHANNEL: ${REVERB_SCALING_CHANNEL:-tasktracker:local:reverb}
     REVERB_SERVER_HOST: 0.0.0.0
     REVERB_SERVER_PORT: 8080
     REVERB_HOST: websocket
     REVERB_PORT: 8080
     REVERB_SCHEME: http
     REVERB_ALLOWED_ORIGINS: 127.0.0.1,localhost
-    ALLOWED_ORIGINS: http://127.0.0.1:${TASKTRACKER_PORT:-5174},http://localhost:${TASKTRACKER_PORT:-5174},http://127.0.0.1:5175
-    ATTACHMENTS_DISK: ${ATTACHMENTS_DISK:-attachments}
-    R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
-    R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
-    R2_BUCKET: ${R2_BUCKET:-}
-    R2_ENDPOINT: ${R2_ENDPOINT:-}
-    R2_REGION: ${R2_REGION:-auto}
-    R2_CONNECT_TIMEOUT: ${R2_CONNECT_TIMEOUT:-3}
-    R2_TIMEOUT: ${R2_TIMEOUT:-15}
-    SMTP_HOST: ${SMTP_HOST:-}
-    SMTP_PORT: ${SMTP_PORT:-587}
-    SMTP_SECURE: ${SMTP_SECURE:-false}
-    SMTP_USER: ${SMTP_USER:-}
-    SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-    SMTP_FROM: ${SMTP_FROM:-}
+    ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://127.0.0.1:5174,http://localhost:5174,http://127.0.0.1:5175}
+    ATTACHMENTS_DISK: attachments
+    MAIL_DELIVERY_MODE: ${MAIL_DELIVERY_MODE:-inline}
+    MAIL_MAILER: ${MAIL_MAILER:-smtp}
+    MAIL_HOST: ${MAIL_HOST:-mailpit}
+    MAIL_PORT: 1025
+    MAIL_SCHEME: smtp
+    MAIL_URL: smtp://${MAIL_HOST:-mailpit}:1025
+    MAIL_USERNAME: ''
+    MAIL_PASSWORD: ''
+    MAIL_FROM_ADDRESS: tasktracker@local.test
+    MAIL_FROM_NAME: TaskTracker Local
+    SSL_CERT_FILE: /run/local-mail-ca/cert.pem
+    SMTP_HOST: ''
+    SMTP_USER: ''
+    SMTP_PASSWORD: ''
+    TASKTRACKER_LOCAL_DEV: ${TASKTRACKER_LOCAL_DEV:-0}
+    TASKTRACKER_SEED_PASSWORD: ${TASKTRACKER_SEED_PASSWORD:-}
   volumes:
     - ./backend/app:/app/app:ro
     - ./backend/routes:/app/routes:ro
@@ -60,12 +81,14 @@ x-backend: &backend
     - ./backend/config:/app/config:ro
     - ./backend/database/migrations:/app/database/migrations:ro
     - ./backend/database/seeders:/app/database/seeders:ro
+    - ./backend/tools:/app/tools:ro
+    - ./backend/docker:/app/docker:ro
     - ./backend/tests:/app/tests:ro
     - ./backend/phpunit.xml:/app/phpunit.xml:ro
-    - ./data:/legacy:ro
     - laravel-data:/data
     - laravel-storage:/app/storage
     - mysql-app-secret:/run/tasktracker-app:ro
+    - ${TASKTRACKER_MAIL_CA_VOLUME:-mail-ca}:/run/local-mail-ca:ro
 
 services:
   backend:
@@ -73,13 +96,9 @@ services:
     environment:
       <<: *backend-env
       TASKTRACKER_BOOTSTRAP: '1'
+    restart: unless-stopped
     ports:
       - "127.0.0.1:${TASKTRACKER_API_PORT:-3002}:3002"
-    depends_on:
-      redis:
-        condition: service_healthy
-      mysql:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:3002/api/health') === false ? 1 : 0);"]
       interval: 5s
@@ -121,41 +140,75 @@ services:
       timeout: 3s
       retries: 10
 
-  mysql-secrets:
-    image: ${COMPOSE_PROJECT_NAME:-tasktracker}-backend
+  secrets:
+    profiles: [standalone]
+    image: ${TASKTRACKER_BACKEND_IMAGE:-tasktracker-dev-backend}
     build:
       context: .
       dockerfile: backend/Dockerfile
     user: '0:0'
     entrypoint: ["php", "/app/docker/initialize-mysql.php"]
     network_mode: none
+    environment:
+      TASKTRACKER_INITIALIZE_MAIL: '1'
     volumes:
+      - mail-private:/run/mail-private
+      - mail-ca:/run/mail-ca
       - mysql-root-secret:/run/tasktracker-root
       - mysql-app-secret:/run/tasktracker-app
 
   mysql:
+    profiles: [standalone]
+    networks: [data-services]
     image: mysql:8.4
     environment:
-      MYSQL_DATABASE: tasktracker
-      MYSQL_USER: tasktracker
+      MYSQL_DATABASE: ${DB_DATABASE:-tasktracker}
+      MYSQL_USER: ${DB_USERNAME:-tasktracker}
       MYSQL_PASSWORD_FILE: /run/tasktracker-app/password
       MYSQL_ROOT_PASSWORD_FILE: /run/tasktracker-root/password
     command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_bin"]
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./backend/docker/init-test-databases.sql:/docker-entrypoint-initdb.d/99-tests.sql:ro
       - mysql-root-secret:/run/tasktracker-root:ro
       - mysql-app-secret:/run/tasktracker-app:ro
     depends_on:
-      mysql-secrets:
+      secrets:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD-SHELL", "MYSQL_PWD=$$(cat /run/tasktracker-app/password) mysql --protocol=TCP -h127.0.0.1 -utasktracker tasktracker -e 'SELECT 1' >/dev/null 2>&1"]
+      test: ["CMD-SHELL", "MYSQL_PWD=$$(cat /run/tasktracker-app/password) mysql --protocol=TCP -h127.0.0.1 -u$$MYSQL_USER $$MYSQL_DATABASE -e 'SELECT 1' >/dev/null 2>&1"]
       interval: 5s
       timeout: 3s
       retries: 30
       start_period: 30s
 
+  mailpit:
+    profiles: [standalone]
+    networks: [data-services]
+    image: axllent/mailpit:v1.33.1
+    depends_on:
+      secrets:
+        condition: service_completed_successfully
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_MAX_MESSAGES: 1000
+      MP_SMTP_TLS_CERT: /certs/cert.pem
+      MP_SMTP_TLS_KEY: /certs/key.pem
+      MP_SMTP_REQUIRE_STARTTLS: 'true'
+    ports:
+      - "127.0.0.1:${TASKTRACKER_MAIL_UI_PORT:-8025}:8025"
+    volumes:
+      - mailpit-data:/data
+      - mail-private:/certs:ro
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   redis:
+    profiles: [standalone]
+    networks: [data-services]
     image: redis:8-alpine
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
@@ -167,6 +220,7 @@ services:
       retries: 10
 
   frontend:
+    profiles: [standalone, shared]
     build:
       context: .
       dockerfile: frontend/Dockerfile
@@ -179,6 +233,14 @@ services:
       - "127.0.0.1:${TASKTRACKER_PORT:-5174}:5174"
     volumes:
       - ./frontend/src:/app/src:ro
+      - ./frontend/vite.config.js:/app/vite.config.js:ro
+      - ./frontend/index.html:/app/index.html:ro
+      - ./frontend/app:/app/app:ro
+      - ./frontend/admin:/app/admin:ro
+      - ./frontend/features:/app/features:ro
+      - ./frontend/public-assets:/app/public-assets:ro
+      - ./frontend/locale-preference.js:/app/locale-preference.js:ro
+      - ./frontend/landing:/app/landing:ro
     depends_on:
       backend:
         condition: service_healthy
@@ -197,3 +259,11 @@ volumes:
   mysql-data:
   mysql-root-secret:
   mysql-app-secret:
+  mailpit-data:
+  mail-private:
+  mail-ca:
+
+networks:
+  data-services:
+    name: ${TASKTRACKER_DATA_NETWORK:-tasktracker-standalone-data}
+    external: ${TASKTRACKER_DATA_NETWORK_EXTERNAL:-false}

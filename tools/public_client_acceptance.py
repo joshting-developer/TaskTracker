@@ -77,8 +77,8 @@ def main():
             payload = {'userId': first.identity['user']['id'], 'projectId': project['id'],
                        'action': action, **extra}
             subprocess.run([
-                'docker', 'compose', '-p', 'tasktracker-contract-ci', '-f',
-                str(ROOT / 'docker-compose.mysql-test.yml'), 'exec', '-T', 'backend',
+                'docker', 'compose', '--env-file', '/dev/null', '-p', 'tasktracker-contract-ci', '-f',
+                str(ROOT / 'docker-compose.yml'), '--profile', 'standalone', 'exec', '-T', 'backend',
                 'php', '/app/tools/public-client-fixture.php'],
                 cwd=ROOT, input=json.dumps(payload), text=True, check=True, capture_output=True)
 

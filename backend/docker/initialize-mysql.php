@@ -22,3 +22,25 @@ foreach (['/run/tasktracker-root', '/run/tasktracker-app'] as $directory) {
     flock($handle, LOCK_UN);
     fclose($handle);
 }
+
+if (getenv('TASKTRACKER_INITIALIZE_MAIL') === '1') {
+    foreach (['/run/mail-private', '/run/mail-ca'] as $directory) {
+        if (! is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+    }
+    $certificate = '/run/mail-private/cert.pem';
+    $key = '/run/mail-private/key.pem';
+    if (is_file($certificate) !== is_file($key)) {
+        throw new RuntimeException('Incomplete local SMTP certificate; preserve the existing files');
+    }
+    if (! is_file($certificate)) {
+        exec('openssl req -x509 -newkey rsa:2048 -nodes -keyout '.escapeshellarg($key).' -out '.escapeshellarg($certificate).' -sha256 -days 3650 -subj /CN=mailpit -addext '.escapeshellarg('subjectAltName=DNS:mailpit').' -addext '.escapeshellarg('basicConstraints=critical,CA:TRUE').' 2>&1', $output, $code);
+        if ($code !== 0) {
+            throw new RuntimeException('Local SMTP certificate initialization failed');
+        }
+        chmod($key, 0600);
+    }
+    copy($certificate, '/run/mail-ca/cert.pem');
+    chmod('/run/mail-ca/cert.pem', 0444);
+}

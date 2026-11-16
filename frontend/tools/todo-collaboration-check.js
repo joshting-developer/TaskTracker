@@ -49,13 +49,14 @@ try {
   assert.equal(await detail.getByLabel('回覆內容',{exact:true}).count(),0);
   for (const width of [1440,768,390]) { await josh.setViewportSize({width,height:1000}); assert.equal(await josh.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false); await josh.screenshot({path:`${dir}/collaboration-${width}.png`,fullPage:true}); }
   // A separate synthetic assignment verifies the actual PAT CLI against these HTTP routes.
+  if (process.env.TASKTRACKER_PUBLIC_CLI) {
   const cliDir = `${dir}/cli-private`; mkdirSync(cliDir, { recursive:true, mode:0o700 });
   try {
     const token = await codex.evaluate(async () => (await import('/src/api/index.js')).api.createPersonalToken({name:'TT325 isolated CLI',abilities:['write'],requestId:crypto.randomUUID()}));
     writeFileSync(`${cliDir}/codex.json`, JSON.stringify({agent:'codex',baseUrl:process.env.E2E_API_URL,userId:people.Codex.id,workspaceId:owner.workspace.id,token:token.plainTextToken,expiresAt:token.token.expiresAt}), {mode:0o600});
     const created = await call(claude,'createTodo',{title:'CLI follow-up',assigneeId:people.Josh.id});
     await call(josh,'forwardTodo',{id:created.id,expectedRevision:1,assigneeId:people.Codex.id,reply:'CLI handoff decision'});
-    const run = args => JSON.parse(execFileSync('python3',['-c',"import importlib.util,sys;from pathlib import Path;s=importlib.util.spec_from_file_location('api','.agents/skills/task-tracker-usage/scripts/tasktracker_api.py');m=importlib.util.module_from_spec(s);s.loader.exec_module(m);m.PRIVATE=Path(sys.argv.pop(1));m.main()",cliDir,'--agent','codex',...args],{cwd:new URL('../..',import.meta.url).pathname,encoding:'utf8',stdio:['pipe','pipe','pipe']}));
+    const run = args => JSON.parse(execFileSync('python3',['-c',"import importlib.util,sys;from pathlib import Path;s=importlib.util.spec_from_file_location('api',sys.argv.pop(1));m=importlib.util.module_from_spec(s);s.loader.exec_module(m);m.PRIVATE=Path(sys.argv.pop(1));m.main()",process.env.TASKTRACKER_PUBLIC_CLI,cliDir,'--agent','codex',...args],{cwd:new URL('../..',import.meta.url).pathname,encoding:'utf8',stdio:['pipe','pipe','pipe']}));
     assert.equal(run(['todo-get','--todo',created.id]).state,'open');
     assert.equal(run(['todo-comments','--todo',created.id]).items[0].content,'CLI handoff decision');
     writeFileSync(`${cliDir}/reply.txt`,'CLI completed and tested',{mode:0o600});
@@ -66,6 +67,7 @@ try {
     assert.deepEqual(result.items.map(x=>x.author),['Josh','Codex']);
     await codex.evaluate(async id=>(await import('/src/api/index.js')).api.revokePersonalToken(id),token.token.id);
   } finally { rmSync(cliDir,{recursive:true,force:true}); }
+  }
   assert.equal(network.some(p=>/\/(getWorkspace|getTodos)$/.test(p)),false); assert.deepEqual(errors,[]);
-  console.log('PASS 3-person forward/reply/complete, former-handler read-only history, 3 widths, actual PAT CLI handoff/completion and no bulk workspace read');
+  console.log('PASS 3-person forward/reply/complete, former-handler read-only history, 3 widths, no bulk workspace read; external CLI integration is opt-in');
 } finally { await browser?.close(); await server?.close(); }

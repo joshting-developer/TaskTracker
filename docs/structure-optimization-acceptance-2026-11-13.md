@@ -6,7 +6,7 @@
 
 - 12份原Skill搬至Side Project分類庫，加既有任務操作及固定Ponytail共14份；358原vendor檔hash一致、379公開canonical檔及入口／owned links校驗通過。相同LICENSE合法保留，並非重複Skill。
 - TaskTracker只保留symlink與短入口；自有工程與Laravel規範泛化，產品設定留工程綁定／Memory。AGENTS保留規範，不累加歷史。
-- registry唯一矩陣、框架偵測與加法tags；8個新host session實測選用與工具讀取，對應[證據](evidence/skill-host-selection-2026-11-13.json)。缺檢查、失敗、過期來源及未核准visual不得PASS。
+- registry唯一矩陣、框架偵測與加法tags；8個新host session實測選用與工具讀取，對應證據。缺檢查、失敗、過期來源及未核准visual不得PASS。
 - 使用者追加的「每次前端新增修改都需Skill審查驗證」及執行頻率已由共用baseline／verification統一維護，frontend/AGENTS只作入口。按提交階段驗受影響流程，共用變更擴大，大階段再跑完整回歸。
 
 共用庫階段commit：53bb5a4搬移、43c0382矩陣、be12b56前端頻率與證據綁定、1406d35完整來源集合檢查；TaskTracker前段為e1e0f82／b480832／40c3453／b8bffc3。各repo保留原歷史，未push。

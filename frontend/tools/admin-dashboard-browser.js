@@ -1,10 +1,10 @@
+import { loadDesignAudit } from './fixtures/optional-design-audit.js';
+const designAudit = await loadDesignAudit();
 import assert from 'node:assert/strict';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
-const { probe, layout, app } = await import('../../.agents/skills/design-taste-frontend/scripts/lib/probe.mjs');
-const { judge, judgeLayout, judgeApp, APP_SKIP } = await import('../../.agents/skills/design-taste-frontend/scripts/lib/rules.mjs');
 assert.equal(process.env.E2E_ISOLATED, '1');
 assert.equal(process.env.E2E_API_URL, 'http://127.0.0.1:13199');
 const port = Number(process.env.E2E_FRONTEND_PORT || 5199);
@@ -48,9 +48,9 @@ try {
     await candidate.goto(base + '/admin/'); await candidate.locator('.admin-workspace-list li').first().waitFor();
     await candidate.waitForFunction(() => document.querySelector('.admin-summary strong')?.textContent && document.querySelector('.admin-summary strong').textContent !== '—' && !document.querySelector('.admin-controls button').disabled); await settled(candidate);
     assert.equal(await candidate.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-    const metrics = await candidate.evaluate(probe);
-    const options = { width, allow: [...APP_SKIP, 'palette-purple'] };
-    findings.push(...judge(metrics, options).filter(row => !['no-title','small-title'].includes(row.id)), ...judgeLayout(await candidate.evaluate(layout), options), ...judgeApp(await candidate.evaluate(app), metrics, options));
+    const metrics = designAudit ? await candidate.evaluate(designAudit.probe) : null;
+    const options = { width, allow: [...(designAudit?.APP_SKIP || []), 'palette-purple'] };
+    if (designAudit) findings.push(...designAudit.judge(metrics, options).filter(row => !['no-title','small-title'].includes(row.id)), ...designAudit.judgeLayout(await candidate.evaluate(designAudit.layout), options), ...designAudit.judgeApp(await candidate.evaluate(designAudit.app), metrics, options));
     const first = await candidate.screenshot({ path: `${out}/admin-overview-${width}.png`, fullPage: true });
     await candidate.close();
     const repeat = await context.newPage(); await repeat.setViewportSize({ width, height: 1000 });
@@ -81,7 +81,7 @@ try {
   assert.equal(await page.locator('.admin-dashboard').count(), 0);
   assert.equal((await context.request.get(base + '/api/admin/statistics')).status(), 401);
   assert.deepEqual(errors, []);
-  await writeFile(`${out}/design-inspection.json`, JSON.stringify({ findings, allowance: 'Existing TaskTracker purple brand, explicitly preserved by product contract' }, null, 2));
+  await writeFile(`${out}/design-inspection.json`, JSON.stringify({ designAudit: !!designAudit, findings, allowance: 'Existing TaskTracker purple brand, explicitly preserved by product contract' }, null, 2));
   assert.equal(findings.filter(row => row.level === 'FAIL').length, 0, JSON.stringify(findings));
   await writeFile(`${out}/browser-summary.json`, JSON.stringify({ passed: true, isolated: true, widths: [1440,768,390], checks: ['separate-login','anonymous-rejected','noindex','period-7-and-30','keyset-pagination','zero-days','definitions','locale','logout-clears-protected-data','no-polling','no-workspace-snapshot','independent-render-repeat'], requests }, null, 2));
   if (process.env.ADMIN_VISUAL_COMPARE === '1') {

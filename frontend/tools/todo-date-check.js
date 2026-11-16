@@ -6,7 +6,7 @@ import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import { setWorkspaceTimeZone } from '../src/i18n/index.js';
 import { todoDate } from '../src/domain/todoContent.js';
-const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // Set E2E_FRONTEND_PORT for this test instance.
 
 setWorkspaceTimeZone('Asia/Taipei');
 const now = new Date('2026-11-13T12:00:00Z');

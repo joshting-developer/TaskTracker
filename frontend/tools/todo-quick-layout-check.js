@@ -1,6 +1,6 @@
+import { loadDesignAudit } from './fixtures/optional-design-audit.js';
+const designAudit = await loadDesignAudit();
 import assert from 'node:assert/strict';
-import { app as inspectApp } from '../../.agents/skills/design-taste-frontend/scripts/lib/probe.mjs';
-import { judgeApp } from '../../.agents/skills/design-taste-frontend/scripts/lib/rules.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
@@ -28,8 +28,8 @@ try {
       assert.ok(field.height >= 44 && field.height <= 46); assert.ok(button.height >= 44 && button.height <= 46);
       assert.ok(width >= 480 ? Math.abs(field.y - button.y) <= 1 : button.y >= field.y + field.height);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-      const design = await page.evaluate(inspectApp);
-      measurements.push({ width, expanded, field, button, designFindings: judgeApp(design) });
+      const design = designAudit ? await page.evaluate(designAudit.app) : null;
+      measurements.push({ width, expanded, field, button, designAudit: !!designAudit, designFindings: designAudit ? designAudit.judgeApp(design) : null });
       await page.screenshot({ path: `../artifacts/tt331/layout/create-${width}-${expanded}.png` });
       if (expanded) await page.getByRole('button', { name: '搜尋交給誰選項', exact: true }).click();
     }

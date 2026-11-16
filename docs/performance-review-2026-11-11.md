@@ -70,7 +70,7 @@ TT-180承接首頁身分／導航及頁面載入協調，列表／詳情／Todo�
 | TT-228 | P1 | 健康檢查移除Session與業務資料庫寫入副作用 | /api/health位於routes/web.php，沿用web Session middleware；Compose的backend與frontend每5s呼叫，SESSION_DRIVER=database。StartSession會保存Session，健康檢查可能持續製造資料庫Session寫入與往返。 前輪遷移停寫快照有11,176筆sessions；這只是全庫數量，不能據此將來源全部歸因於health。 |
 | TT-229 | P1 | 看板收錄以批次驗證與差量保存避免逐卡完整查詢 | ProjectBoards::fields對每個selectedIssueId呼叫store->require(issues)，每次還prepare留言／歷史；RelationalChildren::write對board_issues整批delete再逐筆insert。收錄上限1000，但驗證成本隨選取數成長。 |
 
-各卡完整驗收與分工見[建卡清單](planning/performance-review-2026-11-11.json)。Session鎖卡是風險驗證：HTTP總時長不等同持鎖時長；目前沒有證明已發生跨空間錯寫，不能只拉長鎖或刪Session blocking當作修復。Todo轉卡連結、請求內重複查詢、receipt容量卡需要隔離量測後再決定實作，不預設加cache就有效。
+各卡完整驗收與分工見建卡清單（歷次規劃紀錄）。Session鎖卡是風險驗證：HTTP總時長不等同持鎖時長；目前沒有證明已發生跨空間錯寫，不能只拉長鎖或刪Session blocking當作修復。Todo轉卡連結、請求內重複查詢、receipt容量卡需要隔離量測後再決定實作，不預設加cache就有效。
 
 ## API職責邊界建議
 
@@ -97,7 +97,7 @@ TT-180承接首頁身分／導航及頁面載入協調，列表／詳情／Todo�
 - [WorkspaceQuery](../backend/app/Services/WorkspaceQuery.php)、[RelationalRecords](../backend/app/Repositories/RelationalRecords.php)與[RelationalChildren](../backend/app/Repositories/RelationalChildren.php)：全量讀取、DTO子集合及重寫行為。
 - [App](../frontend/src/App.vue)、[WorkspaceClock](../frontend/src/composables/useWorkspaceClock.js)、[RefreshQueue](../frontend/src/composables/useRefreshQueue.js)與[看板即時同步](../frontend/src/ui/boardRealtime.js)：固定排程、資料耦合及已有的single-flight。
 - [Todos](../backend/app/Services/Todos.php)、[TimeEntryService](../backend/app/Services/TimeEntryService.php)、[TimeReportRepository](../backend/app/Repositories/TimeReportRepository.php)與[ProjectBoards](../backend/app/Services/ProjectBoards.php)：各領域查詢／寫入範圍。
-- [路由](../backend/routes/web.php)、[bootstrap](../backend/bootstrap/app.php)與[外部Compose](../docker-compose.remote-db.yml)：Session鎖、健康檢查middleware與探針頻率。
+- [路由](../backend/routes/web.php)、[bootstrap](../backend/bootstrap/app.php)與共用服務模式：Session鎖、健康檢查middleware與探針頻率。
 
 ## 執行順序與驗收
 

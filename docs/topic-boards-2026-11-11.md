@@ -24,7 +24,7 @@ Default保留全部210張（原209張＋本輪整理卡TT-210）。原卡片狀�
 
 原有4張跨主題總覽Epic（TT-1歷史、TT-2部署與同步、TT-4架構品質、TT-5產品候選）只留Default。若直接收錄它們，現有Epic展開規則會把其他主題卡片一起拉入，所以本輪以實際工作卡明確收錄。各主題不重複，206張主題卡＋4張跨主題總覽=210。
 
-AI看板收錄TT-3這個專屬API Epic，依既有產品規則動態展開其14張所屬卡，另外明確收錄歷史API／AI工程卡；28個選取項目實際顯示42張。分類與所有ID／標題見[本次清單](planning/topic-boards-2026-11-11.json)。
+AI看板收錄TT-3這個專屬API Epic，依既有產品規則動態展開其14張所屬卡，另外明確收錄歷史API／AI工程卡；28個選取項目實際顯示42張。分類與所有ID／標題見本次清單（歷次規劃紀錄）。
 
 這些是主題看板，不是狀態篩選或新的自訂Issue type。除了TT-3的動態Epic收錄，其餘收錄是目前快照，沒有自動文字分類器。未來建卡時應帶入對應boardId或更新收錄；不要重跑本次清單覆蓋之後人工調整。
 
@@ -34,7 +34,7 @@ AI看板收錄TT-3這個專屬API Epic，依既有產品規則動態展開其14�
 
 目前有效資格是Workspace user＋TaskTracker Project maintainer；具board.manage／project.statuses.update／project.members.manage等專案管理權，仍不是Workspace Owner／Manager，也不能存取Multi-Agent。實際權限由後端permission＋scope判斷，不依本機設定檔的角色文字放行。Owner密碼未寫入檔案、卡片或Git，既有AI私有登入檔仍以0600／目錄0700保存。
 
-初次Developer的[交接與驗證快照](tasktracker-self-tracking.md)保留沿革，本次最新資格在該文件及AGENTS說明，未重寫最初匯入manifest。
+初次Developer的交接與驗證快照保留沿革，本次最新資格在該文件及AGENTS說明，未重寫最初匯入manifest。
 
 ## 驗證
 

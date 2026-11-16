@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__.'/isolated-test-connection.php';
+
 use App\Domain\DomainError;
 use App\Http\WorkspaceRpc;
 use App\Models\User;
@@ -12,7 +14,7 @@ use Illuminate\Session\Store;
 require __DIR__.'/../vendor/autoload.php';
 $app = require __DIR__.'/../bootstrap/app.php';
 $app->make(Kernel::class)->bootstrap();
-if (! $app->environment('testing') || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || config('database.default') !== 'mysql' || config('database.connections.mysql.database') !== 'tasktracker_test' || config('database.connections.mysql.username') !== 'tasktracker_test') {
+if (! $app->environment('testing') || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || config('database.default') !== 'mysql' || ! isIsolatedTestConnection(config('database.connections.mysql.database'), config('database.connections.mysql.username'), config('database.connections.mysql.host'))) {
     throw new RuntimeException('不是隔離MySQL競態環境');
 }
 $fixture = json_decode(file_get_contents($argv[1]), true, flags: JSON_THROW_ON_ERROR);

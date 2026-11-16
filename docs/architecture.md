@@ -10,13 +10,13 @@
 
 2026-10-30 最新權限實作：固定 Workspace／Project 角色映射集中 permission, 由 ProjectAccess 判斷 scope、有效成員及資源條件；Project 成員獨立 revision／授權歷史, 所有衍生資料及 requestId 重試均授權。已取代下方歷史共享原型, 見 [ACL 契約](project-acl.md)。真實寄信、自訂角色與即時私有推播仍待後續
 
-2026-10-19 最新實作：原始碼已拆分為 `frontend/`（Vue＋Vuetify）與 `backend/`（Laravel JSON API）, 不用 Inertia, Node API 由 PHP 取代。Compose 提供 API／前端／Queue／Reverb／Redis, 詳見[根 README](../README.md)及[產品討論紀錄](產品討論紀錄.md)。下方 Node／GAS 舊提案及當時功能界線保留作歷史參考, 不覆蓋最新選型；當時 Project ACL 與真實寄信待完成, ACL 現況見上方 2026-10-30 更新
+2026-10-19 最新實作：原始碼已拆分為 `frontend/`（Vue＋Vuetify）與 `backend/`（Laravel JSON API）, 不用 Inertia, Node API 由 PHP 取代。Compose 提供 API／前端／Queue／Reverb／Redis, 詳見[根 README](../README.md)及產品討論紀錄（歷次規劃紀錄）。下方 Node／GAS 舊提案及當時功能界線保留作歷史參考, 不覆蓋最新選型；當時 Project ACL 與真實寄信待完成, ACL 現況見上方 2026-10-30 更新
 
 日期：2026-10-05（Asia/Taipei）
 
-2026-10-19 產品方向補充：目前已確認 Workspace → Project → Issue 的層級, 並將方便 SaaS／自建版交付列為設計目標。建議共用核心程式與空間隔離, 依部署設定處理註冊、郵件與外部服務差異；具體版本規格待確認, 見 [產品討論紀錄](產品討論紀錄.md)。目前 Compose 僅是本機開發配置, 不代表正式自建版已完成, GAS 產檔仍暫緩
+2026-10-19 產品方向補充：目前已確認 Workspace → Project → Issue 的層級, 並將方便 SaaS／自建版交付列為設計目標。建議共用核心程式與空間隔離, 依部署設定處理註冊、郵件與外部服務差異；具體版本規格待確認, 見 產品討論紀錄（歷次規劃紀錄）。目前 Compose 僅是本機開發配置, 不代表正式自建版已完成, GAS 產檔仍暫緩
 
-2026-10-19 權限架構最新確認：Workspace 角色為 owner／manager／user。建立者為 owner, owner／manager 可操作所屬空間所有專案；user 必須加入 Project 並授權才可查看或操作, 第一版不開放空間內可見。採角色映射權限＋集中 policy／authorize 的方向, 由 permission ID、作用範圍與資源條件判斷, 不比對角色顯示名稱。專案角色與完整操作矩陣待細定；現有 admin／member 及共享專案仍須遷移, 尚未實作新規則。最新契約與驗收見 [產品討論紀錄](產品討論紀錄.md)
+2026-10-19 權限架構最新確認：Workspace 角色為 owner／manager／user。建立者為 owner, owner／manager 可操作所屬空間所有專案；user 必須加入 Project 並授權才可查看或操作, 第一版不開放空間內可見。採角色映射權限＋集中 policy／authorize 的方向, 由 permission ID、作用範圍與資源條件判斷, 不比對角色顯示名稱。專案角色與完整操作矩陣待細定；現有 admin／member 及共享專案仍須遷移, 尚未實作新規則。最新契約與驗收見 產品討論紀錄（歷次規劃紀錄）
 
 2026-10-06 協作更新：使用者要求按 SaaS 服務設計, 不限定 Google 網域。已加入本機帳號／工作空間隔離、Epic、自訂狀態、個人工時及通知預覽, 最新規則與 SMTP／GAS 取捨見 [協作設計](collaboration-design.md)。下方保留初次提案, 涉及單人或未決登入的段落是當時的規劃快照, 不覆蓋最新設計
 

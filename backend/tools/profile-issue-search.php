@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__.'/isolated-test-connection.php';
+
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
 
@@ -7,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 require __DIR__.'/../vendor/autoload.php';
 $app = require __DIR__.'/../bootstrap/app.php';
 $app->make(Kernel::class)->bootstrap();
-if (! $app->environment('testing') || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || config('database.default') !== 'mysql' || config('database.connections.mysql.database') !== 'tasktracker_test' || config('database.connections.mysql.username') !== 'tasktracker_test') {
+if (! $app->environment('testing') || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || config('database.default') !== 'mysql' || ! isIsolatedTestConnection(config('database.connections.mysql.database'), config('database.connections.mysql.username'), config('database.connections.mysql.host'))) {
     throw new RuntimeException('Only isolated tasktracker_test MySQL is allowed');
 }
 $table = 'tt_search_probe_'.bin2hex(random_bytes(5));

@@ -6,6 +6,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Tests\Concerns\RegistersVerifiedFixtures;
 
+require_once __DIR__.'/../tools/isolated-test-connection.php';
+
 /** 只接受獨立Compose測試帳號，預設測試仍由TestCase強制memory SQLite。 */
 abstract class MySqlTestCase extends BaseTestCase
 {
@@ -49,7 +51,7 @@ abstract class MySqlTestCase extends BaseTestCase
     }
 
     /**
-     * 只接受獨立Compose的tasktracker_test帳號與允許的schema，強制改用隔離MySQL連線後建立應用程式。
+     * 只接受目前Agent的共用MySQL專用帳號與允許的schema，強制改用隔離MySQL連線後建立應用程式。
      *
      * @return Application 測試用應用程式
      */
@@ -58,15 +60,35 @@ abstract class MySqlTestCase extends BaseTestCase
         if (! in_array($this->testDatabase, ['tasktracker_test', 'tasktracker_test_import'], true)) {
             throw new \RuntimeException('不允許的測試資料庫');
         }
-        if (getenv('TASKTRACKER_MYSQL_TEST') !== '1' || getenv('DB_USERNAME') !== 'tasktracker_test') {
+        if (getenv('TASKTRACKER_MYSQL_TEST') !== '1') {
             throw new \RuntimeException('不是隔離MySQL帳號');
         }
-        foreach (['APP_ENV' => 'testing', 'DB_CONNECTION' => 'mysql', 'DB_HOST' => 'mysql', 'DB_DATABASE' => $this->testDatabase, 'DB_URL' => '', 'SESSION_DRIVER' => 'array', 'CACHE_STORE' => 'array', 'QUEUE_CONNECTION' => 'sync', 'MAIL_DELIVERY_MODE' => 'queue', 'BROADCAST_CONNECTION' => 'null'] as $key => $value) {
+        // Preserve both credentials before replacing the application's DB_PASSWORD_FILE.
+        $passwordFile = getenv('DB_PASSWORD_FILE');
+        if ($passwordFile && is_file($passwordFile)) {
+            foreach (['TEST', 'IMPORT'] as $target) {
+                $key = 'TASKTRACKER_'.$target.'_PASSWORD';
+                if (! getenv($key)) {
+                    $value = trim(file_get_contents($passwordFile));
+                    putenv($key.'='.$value);
+                    $_ENV[$key] = $_SERVER[$key] = $value;
+                }
+            }
+        }
+        $purpose = $this->testDatabase === 'tasktracker_test_import' ? 'IMPORT' : 'TEST';
+        $database = getenv('TASKTRACKER_'.$purpose.'_DATABASE') ?: '';
+        $username = getenv('TASKTRACKER_'.$purpose.'_USERNAME') ?: '';
+        $password = getenv('TASKTRACKER_'.$purpose.'_PASSWORD') ?: (getenv('DB_PASSWORD_FILE') && is_file(getenv('DB_PASSWORD_FILE')) ? trim(file_get_contents(getenv('DB_PASSWORD_FILE'))) : '');
+        $host = getenv('TASKTRACKER_STANDALONE_TEST') === '1' ? 'mysql' : 'side-project-mysql';
+        if (! isIsolatedTestConnection($database, $username, $host)) {
+            throw new \RuntimeException('不是目前 Agent 的共用隔離測試庫');
+        }
+        foreach (['APP_ENV' => 'testing', 'DB_CONNECTION' => 'mysql', 'DB_HOST' => $host, 'DB_DATABASE' => $database, 'DB_USERNAME' => $username, 'DB_PASSWORD' => $password, 'DB_PASSWORD_FILE' => '', 'DB_URL' => '', 'SESSION_DRIVER' => 'array', 'CACHE_STORE' => 'array', 'QUEUE_CONNECTION' => 'sync', 'MAIL_DELIVERY_MODE' => 'queue', 'BROADCAST_CONNECTION' => 'null'] as $key => $value) {
             putenv($key.'='.$value);
             $_ENV[$key] = $_SERVER[$key] = $value;
         }
         $app = parent::createApplication();
-        if ($app['db']->connection()->getDatabaseName() !== $this->testDatabase || $app['db']->connection()->getDriverName() !== 'mysql') {
+        if ($app['db']->connection()->getDatabaseName() !== $database || $app['db']->connection()->getDriverName() !== 'mysql') {
             throw new \RuntimeException('MySQL測試未隔離');
         }
 

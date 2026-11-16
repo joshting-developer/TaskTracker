@@ -1,10 +1,12 @@
 <?php
 
+require_once __DIR__.'/isolated-test-connection.php';
+
 // Diagnostic fixture only: deterministic project IDs keep chart colour ordering stable.
 require __DIR__.'/../vendor/autoload.php';
 $app = require __DIR__.'/../bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-if (! app()->environment('testing') || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || getenv('DB_USERNAME') !== 'tasktracker_test' || Illuminate\Support\Facades\DB::getDatabaseName() !== 'tasktracker_test') {
+if (! app()->environment('testing') || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || ! isIsolatedTestConnection(Illuminate\Support\Facades\DB::getDatabaseName())) {
     throw new RuntimeException('Isolated MySQL fixture only');
 }
 $input = json_decode(stream_get_contents(STDIN), true, flags: JSON_THROW_ON_ERROR);

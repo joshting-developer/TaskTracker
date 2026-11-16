@@ -4,11 +4,11 @@
 
 2026-11-04 儲存更新：Workspace／成員、Project／ACL／狀態、Issue／關聯／留言、看板／工時及待辦改用關聯表；原prototype資料保留。最新資料邊界、外鍵及遷移見[關聯式資料設計](database-design.md)，Project ACL已落地，早期共享／Node／GAS內容保留沿革。
 
-2026-10-20 最新類型決策：目前固定 Epic／Task／Bug, 舊 Feature 轉 Task；自訂類型只記未來方向。下方早期 Feature 敘述屬沿革, 現行以[產品討論紀錄](產品討論紀錄.md) D-022 為準
+2026-10-20 最新類型決策：目前固定 Epic／Task／Bug, 舊 Feature 轉 Task；自訂類型只記未來方向。下方早期 Feature 敘述屬沿革, 現行以產品討論紀錄（歷次規劃紀錄） D-022 為準
 
 2026-10-20 更新：使用者已確認子任務與雙向關聯, 前置依賴取消。Task／Bug／Feature 可有一層子任務, 各自狀態／工時、繼承父項 Epic；一般父項不自動加上子項工時, Epic 仍按實際 Issue 各計一次。下方早期「子任務」多指 Epic 的執行項目, 新的一般父子關係及升級契約見[日常流程](workflow-design.md)
 
-2026-10-19 最新實作：原始碼已拆分為 `frontend/`（Vue＋Vuetify）與 `backend/`（Laravel JSON API）, 不用 Inertia, Node API 由 PHP 取代。Compose 提供 API／前端／Queue／Reverb／Redis, 詳見[根 README](../README.md)及[產品討論紀錄](產品討論紀錄.md)。下方 Node／GAS 舊提案及當時功能界線保留作歷史參考, 不覆蓋最新選型；Project ACL 與真實寄信仍待後續完成
+2026-10-19 最新實作：原始碼已拆分為 `frontend/`（Vue＋Vuetify）與 `backend/`（Laravel JSON API）, 不用 Inertia, Node API 由 PHP 取代。Compose 提供 API／前端／Queue／Reverb／Redis, 詳見[根 README](../README.md)及產品討論紀錄（歷次規劃紀錄）。下方 Node／GAS 舊提案及當時功能界線保留作歷史參考, 不覆蓋最新選型；Project ACL 與真實寄信仍待後續完成
 
 調研日期：2026-10-06, 產品定位依使用者補充採 SaaS 服務, 不限定 Google 帳號或網域
 
@@ -18,7 +18,7 @@
 
 ## 本次方向
 
-2026-10-19 使用者確認主要流程為：工作空間 → 建立／選擇專案 → 在專案內開 Issue。專案裡有任務看板、Epic、工時與設定, 不要求使用甘特圖。成員邀請可按協作需要處理, 不要求先邀請才建立專案；帳號與個人／企業使用方案持續整理於 [產品討論紀錄](產品討論紀錄.md)
+2026-10-19 使用者確認主要流程為：工作空間 → 建立／選擇專案 → 在專案內開 Issue。專案裡有任務看板、Epic、工時與設定, 不要求使用甘特圖。成員邀請可按協作需要處理, 不要求先邀請才建立專案；帳號與個人／企業使用方案持續整理於 產品討論紀錄（歷次規劃紀錄）
 
 這份文件區分競品事實、建議規則與本機試作範圍。正式登入、帳單、部署規模仍待確認；本機確認前不產生 `.gs`
 
@@ -43,7 +43,7 @@
 - 使用 email＋密碼試作本機登入, 正式可接 OIDC／其他供應商, 不以 Google 群組判斷會員
 - 2026-10-19 已確認 Workspace 固定角色為 owner／manager／user：owner 是建立空間者, owner／manager 可操作該空間所有專案；user 必須被加入 Project 並授權, 才能查看或操作。第一版不提供空間內可見途徑, 取代先前 Admin／Member 與空間內可見／私人兩模式提案
 - 邀請須有權限已確認；哪些角色可邀請、可授予哪些角色等細項待定。現有原型仍以 admin／member 運作、空間內專案與工時共享, 新角色與 Project ACL 尚未實作, 既有資料遷移需明定
-- 已採納授權方向：角色映射 permission ID, 業務操作經集中 authorize 檢查資源 Workspace／Project 與操作條件。owner／manager 的全專案操作須展開為明確的範圍權限, 不限於讀取, 也不使用角色名稱全域放行。專案角色、資源作者例外與完整操作矩陣待細定, 詳見 [兩層權限紀錄](產品討論紀錄.md#workspace-與專案的兩層權限)
+- 已採納授權方向：角色映射 permission ID, 業務操作經集中 authorize 檢查資源 Workspace／Project 與操作條件。owner／manager 的全專案操作須展開為明確的範圍權限, 不限於讀取, 也不使用角色名稱全域放行。專案角色、資源作者例外與完整操作矩陣待細定, 詳見 兩層權限紀錄（歷次規劃紀錄）
 - 角色表描述預設權限組合, 可見性與操作一律由有效權限及範圍決定。registry 只把角色指派解析成權限, policy／API／畫面不得另以 owner、manager、PM、開發者、讀者等角色名放行；同權限、同 scope、同條件的授權結果必須一致
 - 正式 SaaS 須支援一個 Account 加入多個 Workspace、切換空間、成員停用／撤銷、最後一位管理員保護與帳號復原
 - 每次 API 操作由 session 推導 workspaceId／userId, 不接受前端傳入角色或租戶 ID 作授權

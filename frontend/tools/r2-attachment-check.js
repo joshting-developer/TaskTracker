@@ -57,7 +57,7 @@ try {
   if (project) {
     assert.match(project.id, /^[a-f0-9-]{36}$/);
     const php = String.raw`require 'vendor/autoload.php'; $app=require 'bootstrap/app.php'; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-      if(!$app->environment('testing')||getenv('TASKTRACKER_MYSQL_TEST')!=='1'||config('database.connections.mysql.database')!=='${topology.database}'||config('database.connections.mysql.username')!=='tasktracker_test'||config('filesystems.disks.r2-attachments.bucket')!=='task-tracker-local')throw new RuntimeException('Isolation required');
+      if(!$app->environment('testing')||getenv('TASKTRACKER_MYSQL_TEST')!=='1'||config('database.connections.mysql.database')!=='${topology.database}'||config('database.connections.mysql.username')!=='${topology.username}'||config('filesystems.disks.r2-attachments.bucket')!=='task-tracker-local')throw new RuntimeException('Isolation required');
       $p=Illuminate\Support\Facades\DB::table('projects')->where('public_id','${project.id}')->sole();
       foreach(App\Models\Attachment::where('project_id',$p->id)->get() as $row){if($row->storage_disk!=='r2-attachments')throw new RuntimeException('Unexpected disk');if(!Illuminate\Support\Facades\Storage::disk($row->storage_disk)->delete($row->storage_key))throw new RuntimeException('Cleanup failed');$row->update(['status'=>'purged','storage_key'=>'','expires_at'=>null]);}`;
   topology.php(php);

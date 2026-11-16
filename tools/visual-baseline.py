@@ -29,7 +29,7 @@ def source_rows():
     paths = []
     for folder in SOURCE_ROOTS:
         paths += [p for p in (ROOT / folder).rglob('*') if p.is_file()]
-    paths += [ROOT / name for name in ['backend/composer.json', 'backend/composer.lock', 'docker-compose.mysql-test.yml', 'frontend/index.html', 'frontend/locale-preference.js', 'frontend/vite.config.js', 'frontend/package.json', 'frontend/package-lock.json', 'frontend/playwright.visual.config.js', 'backend/tools/visual-fixture-clock.php', 'tools/visual-baseline.py', 'tools/visual-check.sh', 'frontend/tools/navigation.js', 'frontend/tools/board-actions.js']]
+    paths += [ROOT / name for name in ['backend/composer.json', 'backend/composer.lock', 'docker-compose.yml', 'frontend/index.html', 'frontend/locale-preference.js', 'frontend/vite.config.js', 'frontend/package.json', 'frontend/package-lock.json', 'frontend/playwright.visual.config.js', 'backend/tools/visual-fixture-clock.php', 'tools/visual-baseline.py', 'tools/visual-check.sh', 'frontend/tools/navigation.js', 'frontend/tools/board-actions.js']]
     return [{'path': str(p.relative_to(ROOT)), 'sha256': digest(p)} for p in sorted(paths)]
 
 
@@ -38,7 +38,7 @@ def source_fingerprint():
 
 
 def harness_fingerprint():
-    paths = [ROOT / name for name in ['backend/composer.json', 'backend/composer.lock', 'docker-compose.mysql-test.yml', 'frontend/playwright.visual.config.js', 'tools/visual-baseline.py', 'tools/visual-check.sh', 'backend/tools/visual-fixture-clock.php', 'frontend/tools/navigation.js', 'frontend/tools/board-actions.js']]
+    paths = [ROOT / name for name in ['backend/composer.json', 'backend/composer.lock', 'docker-compose.yml', 'frontend/playwright.visual.config.js', 'tools/visual-baseline.py', 'tools/visual-check.sh', 'backend/tools/visual-fixture-clock.php', 'frontend/tools/navigation.js', 'frontend/tools/board-actions.js']]
     paths += [p for p in (ROOT / 'frontend/tools/visual').rglob('*') if p.is_file()]
     return hashlib.sha256(json.dumps([(str(p.relative_to(ROOT)), digest(p)) for p in sorted(paths)]).encode()).hexdigest()
 
@@ -57,15 +57,16 @@ def verify_bundle(bundle, manifest):
 
 
 CALIBRATION_RESET_GUARD = r"""if(getenv('APP_ENV')!=='testing'||getenv('TASKTRACKER_MYSQL_TEST')!=='1')throw new RuntimeException('Isolated visual testing required');
+require_once 'tools/isolated-test-connection.php';
 require 'vendor/autoload.php';$app=require 'bootstrap/app.php';$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-if(!$app->environment('testing')||config('database.default')!=='mysql'||config('database.connections.mysql.host')!=='mysql'||config('database.connections.mysql.database')!=='tasktracker_test'||config('database.connections.mysql.username')!=='tasktracker_test')throw new RuntimeException('Owned visual database required');
+if(!$app->environment('testing')||config('database.default')!=='mysql'||!isIsolatedTestConnection(config('database.connections.mysql.database'),config('database.connections.mysql.username'),config('database.connections.mysql.host')))throw new RuntimeException('Owned visual database required');
 Illuminate\Support\Facades\Artisan::call('migrate:fresh',['--force'=>true]);"""
 
 
 def reset_calibration_fixtures():
     # Each fault run needs fresh synthetic accounts; fixed screenshot emails cannot be reused.
 
-    subprocess.run(['docker', 'compose', '-p', 'tasktracker-codex-visual', '-f', str(ROOT / 'docker-compose.mysql-test.yml'), 'exec', '-T', 'backend', 'php', '-r', CALIBRATION_RESET_GUARD], cwd=ROOT, check=True, capture_output=True, timeout=90)
+    subprocess.run(['docker', 'compose', '--env-file', '/dev/null', '-p', os.environ.get('E2E_COMPOSE_PROJECT', 'tasktracker-visual'), '-f', str(ROOT / 'docker-compose.yml'), '--profile', 'standalone', 'exec', '-T', 'backend', 'php', '-r', CALIBRATION_RESET_GUARD], cwd=ROOT, check=True, capture_output=True, timeout=90)
 
 
 def run_tests(bundle, label, update=False, inject=None, desktop=False):

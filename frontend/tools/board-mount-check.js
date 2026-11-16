@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
-const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // Set E2E_FRONTEND_PORT for this test instance.
 // TT-256：大型看板初次掛載量測。production build、CDP CPU節流、真實API與100筆分頁；A／B兩份build交錯取樣。
 // MOUNT_DIST_A／MOUNT_DIST_B為build輸出目錄（未給B時只量A）。只連隔離E2E服務。
 if (!process.env.E2E_API_URL) throw new Error('必須指定隔離E2E_API_URL');

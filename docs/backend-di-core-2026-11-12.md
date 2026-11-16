@@ -1,6 +1,6 @@
 # 後端核心依賴鏈DI（TT-233，2026-11-12）
 
-依[DI／PHPDoc重構規格](backend-di-phpdoc-refactor-plan.md)第3階段與[DI規範](../skills/tasktracker-development-standards/references/dependency-injection.md)。前置TT-232的WorkspaceContext與Factory邊界見[backend-context-boundaries](backend-context-boundaries-2026-11-12.md)。不改API路由、ok/data envelope、DomainError、DTO或資料模型。
+依DI／PHPDoc重構規格（歷次規劃紀錄）第3階段與DI規範。前置TT-232的WorkspaceContext與Factory邊界見[backend-context-boundaries](backend-context-boundaries-2026-11-12.md)。不改API路由、ok/data envelope、DomainError、DTO或資料模型。
 
 ## 依賴圖（之後）
 

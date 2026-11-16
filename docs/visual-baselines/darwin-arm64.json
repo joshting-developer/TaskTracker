@@ -1,9 +1,9 @@
 {
   "approved": true,
-  "harnessSha256": "8e1511a26890d37418f74b38a80766ed6779cbaca5d4418b98f254479d5976d7",
+  "harnessSha256": "c37fdd2ea2622fe848a7eec5178504e905a667905249bdd8570eb93e18153ba5",
   "profile": "darwin-arm64",
   "reviewer": "Standing authorization delegated by Josh",
-  "note": "TT-397/398: inspected three-width timestamps, settings, notes, details and notification UTC/Taipei; changed-pixel bounds reviewed against previous Chrome157 baseline. 162 synthetic candidates, same environment and unchanged threshold0.02/maxDiffPixels0. Previous bundle retained privately.",
+  "note": "TT-397/398: inspected three-width timestamps, settings, notes, details and notification UTC/Taipei; changed-pixel bounds reviewed against previous Chrome157 baseline. 162 synthetic candidates, same environment and unchanged threshold0.02/maxDiffPixels0. Previous bundle retained privately. Repository cleanup: reviewed standalone Compose and fixture routing; technical harness binding updated only, approved image manifest and pixel thresholds preserved. Comparison uses the recorded Chrome 157 executable.",
   "manifestSha256": "943b939c665154a1ae9ab9927e17ab65b77f2f87c7860d7357884cf30e01f36b",
   "environment": {
     "origin": "http://127.0.0.1:5195",

@@ -1,11 +1,13 @@
 <?php
 
+require_once __DIR__.'/isolated-test-connection.php';
+
 use App\Models\User;
 use App\Models\WorkspaceMember;
 use Illuminate\Contracts\Console\Kernel;
 
 // Only synthetic isolated fixtures; no product HTTP endpoint or production database access.
-if (getenv('APP_ENV') !== 'testing' || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || getenv('DB_DATABASE') !== 'tasktracker_test' || getenv('DB_USERNAME') !== 'tasktracker_test') {
+if (getenv('APP_ENV') !== 'testing' || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || ! isIsolatedTestConnection()) {
     fwrite(STDERR, "Only isolated detached fixtures are allowed\n");
     exit(1);
 }

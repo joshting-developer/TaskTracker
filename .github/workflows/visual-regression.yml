@@ -8,7 +8,7 @@ on:
       - 'backend/config/**'
       - 'backend/tools/visual-fixture-clock.php'
       - 'backend/tests/Unit/VisualFixtureGuardTest.php'
-      - 'docker-compose.mysql-test.yml'
+      - 'docker-compose.yml'
       - 'docs/visual-baselines/**'
       - 'tools/visual*'
       - '.github/workflows/visual-regression.yml'

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
-const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // Set E2E_FRONTEND_PORT for this test instance.
 // TT-226：各頁允許的API、初次請求數／回應bytes門檻與背景請求回歸；500卡隔離資料，只連隔離E2E服務。
 // 門檻來自本工具在隔離MySQL的實測值再留餘裕（見docs/api-budgets-2026-11-12.md），不是正式SLO。
 if (!process.env.E2E_API_URL) throw new Error('必須指定隔離E2E_API_URL');

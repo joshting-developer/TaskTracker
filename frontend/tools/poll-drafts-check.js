@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import { moveBoardCard } from './board-actions.js';
-const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
+const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // Set E2E_FRONTEND_PORT for this test instance.
 // TT-149：拖曳立即回饋、送出中暫停背景換列、失敗／衝突還原；只連隔離E2E服務。
 if (!process.env.E2E_API_URL) throw new Error('必須指定隔離E2E_API_URL');
 // 看板輪詢縮為10秒，讓背景輪次落在HTTP 20秒逾時之前，同時驗證VITE_POLL_BOARD_MS覆寫。

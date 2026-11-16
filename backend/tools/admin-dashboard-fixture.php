@@ -1,18 +1,20 @@
 <?php
 
+require_once __DIR__.'/isolated-test-connection.php';
+
 use App\Models\HttpOperationLog;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Contracts\Console\Kernel;
 
 /** 僅在指定隔離MySQL追加管理畫面人造資料, 不清空任何庫或改現用帳號 */
-if (getenv('APP_ENV') !== 'testing' || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || getenv('DB_DATABASE') !== 'tasktracker_test' || getenv('DB_USERNAME') !== 'tasktracker_test') {
+if (getenv('APP_ENV') !== 'testing' || getenv('TASKTRACKER_MYSQL_TEST') !== '1' || ! isIsolatedTestConnection()) {
     throw new RuntimeException('Only isolated testing is allowed');
 }
 require __DIR__.'/../vendor/autoload.php';
 $app = require __DIR__.'/../bootstrap/app.php';
 $app->make(Kernel::class)->bootstrap();
-if (! $app->environment('testing') || config('database.default') !== 'mysql' || config('database.connections.mysql.database') !== 'tasktracker_test' || config('database.connections.mysql.username') !== 'tasktracker_test' || config('admin.username') !== 'isolated_admin') {
+if (! $app->environment('testing') || config('database.default') !== 'mysql' || ! isIsolatedTestConnection(config('database.connections.mysql.database'), config('database.connections.mysql.username'), config('database.connections.mysql.host')) || config('admin.username') !== 'isolated_admin') {
     throw new RuntimeException('Only the isolated admin fixture is allowed');
 }
 if (Workspace::query()->where('public_id', 'not like', '36400000-%')->exists() || User::query()->where('email', '!=', 'admin-visual@example.test')->exists()) {
