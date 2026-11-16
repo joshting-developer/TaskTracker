@@ -1027,5 +1027,396 @@ export const TOOLS = {
       "idempotentHint": true,
       "openWorldHint": true
     }
+  },
+  "create_todo": {
+    "operationId": "createPublicTodo",
+    "method": "POST",
+    "path": "/api/public/v1/todos",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 180,
+              "description": "\u6458\u8981\uff1b\u8207content\u4e8c\u9078\u4e00"
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "content": {
+              "type": "string",
+              "maxLength": 6000,
+              "description": "Markdown\u5168\u6587\uff1b\u7b2c\u4e00\u884c\u81ea\u52d5\u6210\u70ba\u6458\u8981"
+            },
+            "assigneeId": {
+              "type": "string",
+              "maxLength": 100,
+              "description": "\u4ea4\u8fa6\u5c0d\u8c61User ID\uff08\u5f9e/todo-assignees\u53d6\u5f97\uff09\uff1b\u7701\u7565\u6642\u662f\u81ea\u5df1\u7684\u7d19\u689d"
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "confirmation": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "update_todo": {
+    "operationId": "patchPublicTodo",
+    "method": "PATCH",
+    "path": "/api/public/v1/todos/{todo}",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "todo": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "body": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "expectedRevision"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 180,
+              "description": "\u6458\u8981\uff1b\u8207content\u4e8c\u9078\u4e00"
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "content": {
+              "type": "string",
+              "maxLength": 6000,
+              "description": "Markdown\u5168\u6587\uff1b\u7b2c\u4e00\u884c\u81ea\u52d5\u6210\u70ba\u6458\u8981"
+            },
+            "expectedRevision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "confirmation": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "todo",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "complete_todo": {
+    "operationId": "completePublicTodo",
+    "method": "POST",
+    "path": "/api/public/v1/todos/{todo}/complete",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "todo": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "body": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "expectedRevision"
+          ],
+          "properties": {
+            "expectedRevision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 2000,
+              "description": "\u9000\u56de\u6642\u53ef\u9644\u539f\u56e0"
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "reply": {
+              "type": "string",
+              "maxLength": 2000,
+              "description": "\u5b8c\u6210\u6216\u9000\u56de\u6642\u9078\u586b\u7684\u7559\u8a00, \u8207\u72c0\u614b\u540c\u4ea4\u6613\u4fdd\u5b58"
+            }
+          }
+        },
+        "confirmation": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "todo",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "reopen_todo": {
+    "operationId": "reopenPublicTodo",
+    "method": "POST",
+    "path": "/api/public/v1/todos/{todo}/reopen",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "todo": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "body": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "expectedRevision"
+          ],
+          "properties": {
+            "expectedRevision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 2000,
+              "description": "\u9000\u56de\u6642\u53ef\u9644\u539f\u56e0"
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "reply": {
+              "type": "string",
+              "maxLength": 2000,
+              "description": "\u5b8c\u6210\u6216\u9000\u56de\u6642\u9078\u586b\u7684\u7559\u8a00, \u8207\u72c0\u614b\u540c\u4ea4\u6613\u4fdd\u5b58"
+            }
+          }
+        },
+        "confirmation": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "todo",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "return_todo": {
+    "operationId": "returnPublicTodo",
+    "method": "POST",
+    "path": "/api/public/v1/todos/{todo}/return",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "todo": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "body": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "expectedRevision"
+          ],
+          "properties": {
+            "expectedRevision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 2000,
+              "description": "\u9000\u56de\u6642\u53ef\u9644\u539f\u56e0"
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "reply": {
+              "type": "string",
+              "maxLength": 2000,
+              "description": "\u5b8c\u6210\u6216\u9000\u56de\u6642\u9078\u586b\u7684\u7559\u8a00, \u8207\u72c0\u614b\u540c\u4ea4\u6613\u4fdd\u5b58"
+            }
+          }
+        },
+        "confirmation": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "todo",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "comment_todo": {
+    "operationId": "commentPublicTodo",
+    "method": "POST",
+    "path": "/api/public/v1/todos/{todo}/comments",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "todo": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "body": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "expectedRevision",
+            "content"
+          ],
+          "properties": {
+            "expectedRevision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "content": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            }
+          }
+        },
+        "confirmation": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "todo",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "forward_todo": {
+    "operationId": "forwardPublicTodo",
+    "method": "POST",
+    "path": "/api/public/v1/todos/{todo}/forward",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "todo": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "body": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "expectedRevision",
+            "assigneeId"
+          ],
+          "properties": {
+            "expectedRevision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "assigneeId": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "reply": {
+              "type": "string",
+              "maxLength": 2000
+            }
+          }
+        },
+        "confirmation": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "todo",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
   }
 };

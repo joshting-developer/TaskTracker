@@ -115,7 +115,8 @@ async function confirmedWrite(name, tool, args, identity, env, transport) {
   const key = await crypto.subtle.importKey('raw', bytes(env.TASKTRACKER_PAT), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
   if (!confirmation) {
     if (Object.hasOwn(args.body, 'expectedRevision')) {
-      const current = await api(`/api/public/v1/projects/${args.project}/issues/${args.issue}`, env, transport);
+      const revisionPath = args.todo ? `/api/public/v1/todos/${args.todo}` : `/api/public/v1/projects/${args.project}/issues/${args.issue}`;
+      const current = await api(revisionPath, env, transport);
       if (current.revision !== args.body.expectedRevision) throw new BridgeError('CONFLICT', 409);
     }
     const ticket = btoa(JSON.stringify({ digest, requestId: args.body.requestId ?? crypto.randomUUID(), expires: Date.now() + 10 * 60 * 1000 }));

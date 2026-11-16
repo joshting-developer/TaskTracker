@@ -6,8 +6,10 @@ import { callTool, ORIGIN } from '../worker/index.js';
 const fixture = JSON.parse(readFileSync(0, 'utf8'));
 assert.equal(fixture.baseUrl, 'http://127.0.0.1:13049');
 const env = { TASKTRACKER_PAT: fixture.token, TASKTRACKER_WORKSPACE_ID: fixture.workspaceId };
-const transport = (url, options) => {
+const transport = async (url, options) => {
   assert.ok(url.startsWith(ORIGIN + '/api/public/v1/'));
+  // Stay below the real 120/minute limit without changing server policy.
+  await new Promise(resolve => setTimeout(resolve, 600));
   return fetch(fixture.baseUrl + url.slice(ORIGIN.length), options);
 };
 const read = async (name, args = {}) => (await callTool(name, args, env, transport)).data;
@@ -50,3 +52,21 @@ assert.ok(Array.isArray((await read('list_todo_assignees')).items));
 assert.equal((await read('list_todo_comments', { todo })).items.length, 0);
 assert.equal((await read('list_todo_handoffs', { todo })).items.length, 0);
 console.log('Isolated MySQL/HTTP: all five todo read tools passed');
+
+const { result: ownTodo } = await write('create_todo', { body: { content: 'Synthetic writable note' } });
+const { result: revisedTodo } = await write('update_todo', { todo: ownTodo.id, body: { expectedRevision: ownTodo.revision, content: 'Revised synthetic note' } });
+const { result: repliedTodo } = await write('comment_todo', { todo: ownTodo.id, body: { expectedRevision: revisedTodo.revision, content: 'Synthetic reply' } });
+const { result: completedTodo } = await write('complete_todo', { todo: ownTodo.id, body: { expectedRevision: repliedTodo.revision, reply: 'Synthetic done' } });
+assert.equal((await read('get_todo', { todo: ownTodo.id })).state, 'done');
+const { result: reopenedTodo } = await write('reopen_todo', { todo: ownTodo.id, body: { expectedRevision: completedTodo.revision } });
+assert.equal((await read('get_todo', { todo: ownTodo.id })).state, 'open');
+assert.equal((await read('list_todo_comments', { todo: ownTodo.id })).items.length, 2);
+console.log('Isolated MySQL/HTTP: create/update/comment/complete/reopen todo passed');
+const { result: forwardedTodo } = await write('forward_todo', { todo: ownTodo.id,
+  body: { expectedRevision: reopenedTodo.revision, assigneeId: fixture.recipientId, reply: 'Synthetic handoff' } });
+const recipientEnv = { ...env, TASKTRACKER_PAT: fixture.recipientToken };
+const returnArgs = { todo: ownTodo.id, body: { expectedRevision: forwardedTodo.revision, note: 'Synthetic return' } };
+const returnPreview = (await callTool('return_todo', returnArgs, recipientEnv, transport)).data;
+await callTool('return_todo', { ...returnArgs, confirmation: returnPreview.confirmation }, recipientEnv, transport);
+assert.equal((await read('list_todo_handoffs', { todo: ownTodo.id })).items.length, 2);
+console.log('Isolated MySQL/HTTP: todo forward and return between two synthetic members passed');

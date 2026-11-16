@@ -28,6 +28,13 @@ for (const [name, args] of [
   ['create_issue', { project, body: { title: 'Synthetic task', type: 'task', priority: 'normal' } }],
   ['update_issue', { project, issue, body: { expectedRevision: 3, title: 'Revised' } }],
   ['comment_issue', { project, issue, body: { expectedRevision: 3, content: 'Synthetic comment' } }],
+  ['create_todo', { body: { content: 'Synthetic note' } }],
+  ['update_todo', { todo: issue, body: { expectedRevision: 3, content: 'Revised note' } }],
+  ['complete_todo', { todo: issue, body: { expectedRevision: 3, reply: 'Done' } }],
+  ['reopen_todo', { todo: issue, body: { expectedRevision: 3 } }],
+  ['return_todo', { todo: issue, body: { expectedRevision: 3, note: 'Missing information' } }],
+  ['comment_todo', { todo: issue, body: { expectedRevision: 3, content: 'Synthetic reply' } }],
+  ['forward_todo', { todo: issue, body: { expectedRevision: 3, assigneeId: 'synthetic-recipient', reply: 'Please check' } }],
 ]) test(`${name} previews without writing and confirms the identical payload with a stable requestId`, async () => {
   const f = fixture();
   const preview = (await callTool(name, args, env, f.transport)).data;
