@@ -39,3 +39,6 @@ __pycache__/
 # Private deployment identity and configuration
 /fly.toml
 /integrations/chatgpt-bridge/.openai/hosting.json
+
+# Generated scan, skill evidence and acceptance reports remain local
+/docs/evidence/
