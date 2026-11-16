@@ -70,3 +70,11 @@ const returnPreview = (await callTool('return_todo', returnArgs, recipientEnv, t
 await callTool('return_todo', { ...returnArgs, confirmation: returnPreview.confirmation }, recipientEnv, transport);
 assert.equal((await read('list_todo_handoffs', { todo: ownTodo.id })).items.length, 2);
 console.log('Isolated MySQL/HTTP: todo forward and return between two synthetic members passed');
+
+const { result: newBoard } = await write('create_board', { project, body: { name: 'Synthetic MCP board', description: 'Only synthetic HTTP checks' } });
+const { result: collectedBoard } = await write('update_board', { project, board: newBoard.id,
+  body: { expectedRevision: newBoard.revision, addIssueIds: [created.id] } });
+assert.ok((await read('list_board_issues', { project, board: newBoard.id })).items.some(i => i.id === created.id));
+await write('update_board', { project, board: newBoard.id, body: { expectedRevision: collectedBoard.revision, removeIssueIds: [created.id] } });
+assert.equal((await read('list_board_issues', { project, board: newBoard.id })).items.length, 0);
+console.log('Isolated MySQL/HTTP: board create and differential issue collection passed');

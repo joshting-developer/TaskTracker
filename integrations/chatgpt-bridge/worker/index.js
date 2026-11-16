@@ -20,7 +20,15 @@ const json = (body, status = 200) => new Response(JSON.stringify(body), { status
   headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' } });
 
 function validateValue(value, schema) {
+  if (schema === true) return true;
+  if (schema === false) return false;
+  if (Object.hasOwn(schema, 'const')) return Object.is(value, schema.const);
+  if (schema.anyOf && !schema.anyOf.some(option => validateValue(value, option))) return false;
+  if (schema.allOf && !schema.allOf.every(option => validateValue(value, option))) return false;
+  if (schema.required && (!value || typeof value !== 'object' || schema.required.some(k => !Object.hasOwn(value, k)))) return false;
   if (schema.enum && !schema.enum.includes(value)) return false;
+  if (schema.type === 'boolean') return typeof value === 'boolean';
+  if (schema.type === 'null') return value === null;
   if (schema.type === 'string') return typeof value === 'string' && value.length >= (schema.minLength ?? 0) && value.length <= (schema.maxLength ?? 200)
     && (schema.format !== 'uuid' || UUID.test(value))
     && (!schema.pattern || new RegExp(schema.pattern).test(value));
@@ -30,7 +38,7 @@ function validateValue(value, schema) {
   if (schema.type === 'object') return value !== null && typeof value === 'object' && !Array.isArray(value)
     && (schema.required ?? []).every(k => Object.hasOwn(value, k))
     && Object.entries(value).every(([k, v]) => Object.hasOwn(schema.properties, k) && validateValue(v, schema.properties[k]));
-  return schema.enum !== undefined;
+  return schema.enum !== undefined || schema.anyOf !== undefined || schema.allOf !== undefined || schema.required !== undefined;
 }
 
 function argumentsFor(tool, args) {
@@ -115,7 +123,8 @@ async function confirmedWrite(name, tool, args, identity, env, transport) {
   const key = await crypto.subtle.importKey('raw', bytes(env.TASKTRACKER_PAT), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
   if (!confirmation) {
     if (Object.hasOwn(args.body, 'expectedRevision')) {
-      const revisionPath = args.todo ? `/api/public/v1/todos/${args.todo}` : `/api/public/v1/projects/${args.project}/issues/${args.issue}`;
+      const revisionPath = args.todo ? `/api/public/v1/todos/${args.todo}`
+        : args.board ? `/api/public/v1/projects/${args.project}/boards/${args.board}` : `/api/public/v1/projects/${args.project}/issues/${args.issue}`;
       const current = await api(revisionPath, env, transport);
       if (current.revision !== args.body.expectedRevision) throw new BridgeError('CONFLICT', 409);
     }

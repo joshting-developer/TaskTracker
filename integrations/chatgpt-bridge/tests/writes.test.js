@@ -35,6 +35,8 @@ for (const [name, args] of [
   ['return_todo', { todo: issue, body: { expectedRevision: 3, note: 'Missing information' } }],
   ['comment_todo', { todo: issue, body: { expectedRevision: 3, content: 'Synthetic reply' } }],
   ['forward_todo', { todo: issue, body: { expectedRevision: 3, assigneeId: 'synthetic-recipient', reply: 'Please check' } }],
+  ['create_board', { project, body: { name: 'Synthetic board', description: 'Synthetic only' } }],
+  ['update_board', { project, board: issue, body: { expectedRevision: 3, addIssueIds: [issue], removeIssueIds: [] } }],
 ]) test(`${name} previews without writing and confirms the identical payload with a stable requestId`, async () => {
   const f = fixture();
   const preview = (await callTool(name, args, env, f.transport)).data;
@@ -93,6 +95,14 @@ test('write schemas reject spoofed identity, bad revisions and unknown payload f
     { project, body: { title: '' } },
     { project, issue, body: { expectedRevision: '3', title: 'Synthetic' } },
   ]) await assert.rejects(callTool(args.issue ? 'update_issue' : 'create_issue', args, env, async () => assert.fail('no fetch')), errorCode('INVALID_ARGUMENTS'));
+});
+
+test('board updates require a change and reject Default and whole-selection replacement', async () => {
+  for (const args of [
+    { project, board: issue, body: { expectedRevision: 3 } },
+    { project, board: 'default', body: { expectedRevision: 3, name: 'Default changed' } },
+    { project, board: issue, body: { expectedRevision: 3, selectedIssueIds: [issue] } },
+  ]) await assert.rejects(callTool('update_board', args, env, async () => assert.fail('no fetch')), errorCode('INVALID_ARGUMENTS'));
 });
 
 test('mutation payload contracts match official schemas with optional generated requestId', async () => {
