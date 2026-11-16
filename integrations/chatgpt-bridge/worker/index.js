@@ -184,6 +184,7 @@ function shape(name, data, args) {
     ...pick(row, ISSUE_FIELDS), externalRefs: (row.externalRefs ?? []).map(ref => pick(ref, ['source', 'externalId'])),
     ...(row.lastWrite ? { lastWrite: pick(row.lastWrite, ['sameToken', 'sameUser', 'clientReference']) } : {}) })) };
   if (name === 'list_issue_deletions') return { ...pick(data, ['nextAfter']), items: data.items.map(row => pick(row, ['issueId', 'identifier', 'deletedAt'])) };
+  if (name === 'list_notifications') return { ...pick(data, ['nextAfter', 'hasMore']), items: data.items.map(row => pick(row, ['id', 'kind', 'subject', 'projectId', 'issueId', 'identifier', 'createdAt'])) };
   const fields = name === 'list_projects' ? ['id', 'name', 'code', 'description', 'revision', 'permissions']
     : name === 'list_project_members' ? ['id', 'name']
       : name === 'list_project_statuses' ? STATUS_FIELDS
