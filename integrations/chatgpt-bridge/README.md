@@ -25,3 +25,5 @@ Site伺服器設定：TASKTRACKER_OWNER_EMAIL為目前Site owner的已驗證信�
 TT-349已完成合成工具, 私人發布、安裝與正式唯讀驗收仍由TT-350執行, 尚未連線正式資料
 
 2026-11-16 TT-399新增get_project、list_project_members及list_project_statuses, 使用正式Project詳細及有界候選API。合計11個唯讀工具, 每次重驗身分／工作區, 成員最多20筆、狀態最多20筆。發布與真實驗證結果留卡片
+
+TT-351卡片寫入：create_issue、update_issue、comment_issue輸入project／issue與body。先不帶confirmation取得預覽, 展示完整對象及內容並請使用者確認後, 以相同參數附回confirmation執行。票據10分鐘有效且綁定本人、空間、工具與payload；不可更動內容或自行替換requestId。API錯誤不自動重試, 逾時後保留原參數與requestId, 先核對結果。此為Plugin工作流程, 不取代後端即時權限及版本檢查

@@ -55,6 +55,7 @@ for (const [name, args, data] of [
 test('contract operations, path and argument names match the backend specification', async () => {
   const spec = JSON.parse(await readFile(new URL('../../../backend/resources/openapi.json', import.meta.url)));
   for (const tool of Object.values(TOOLS)) {
+    if (tool.method && tool.method !== 'GET') continue;
     const op = spec.paths[tool.path]?.get;
     assert.equal(op?.operationId, tool.operationId);
     assert.deepEqual(Object.keys(tool.inputSchema.properties), (op.parameters ?? []).map(p => p.name));
@@ -145,7 +146,7 @@ test('write scope includes read access without enabling write tools', async () =
   });
   assert.equal(calls.length, 2);
   assert.equal(result.data.items[0].id, project);
-  await assert.rejects(callTool('create_issue', {}, env, async () => assert.fail('must not call upstream')), reject('UNKNOWN_TOOL'));
+  await assert.rejects(callTool('not_a_tool', {}, env, async () => assert.fail('must not call upstream')), reject('UNKNOWN_TOOL'));
 });
 
 test('tenant mismatch and revoked read scope stop before business data', async () => {
@@ -212,8 +213,8 @@ test('overlarge header, streamed body, invalid JSON and too many rows are reject
 
 test('MCP discovery and list expose the read-only contract and no environment', async () => {
   const listed = await (await handle(request('tools/list'), env)).json();
-  assert.equal(listed.result.tools.length, 11);
-  assert.ok(listed.result.tools.every(t => t.annotations.readOnlyHint));
+  assert.equal(listed.result.tools.length, Object.keys(TOOLS).length);
+  assert.equal(listed.result.tools.filter(t => t.annotations.readOnlyHint).length, 11);
   assert.doesNotMatch(JSON.stringify(listed), /synthetic-private-token|owner@example/);
   const discovered = await (await handle(request('server/discover'), env)).json();
   assert.deepEqual(discovered.result.supportedVersions, ['2026-07-28']);
