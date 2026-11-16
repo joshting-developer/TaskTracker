@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import { displayTimeZone, setWorkspaceTimeZone } from '../src/i18n/index.js';
+import { todoDate } from '../src/domain/todoContent.js';
+const item = at => ({ createdAt: at, createdBy: 'u', initialAssigneeId: 'u', state: 'open' });
+const now = new Date('2026-11-16T00:00:00Z');
+assert.equal(displayTimeZone.value, 'UTC');
+assert.equal(todoDate(item('2025-12-31T17:01:02Z'), 'u', now).label, '2025/12/31 17:01:02 建立');
+setWorkspaceTimeZone('Asia/Taipei');
+assert.equal(todoDate(item('2025-12-31T17:01:02Z'), 'u', now).label, '1/1 01:01:02 建立');
+setWorkspaceTimeZone('America/New_York');
+assert.equal(todoDate(item('2026-03-08T06:59:59Z'), 'u', now).label, '3/8 01:59:59 建立');
+assert.equal(todoDate(item('2026-03-08T07:00:00Z'), 'u', now).label, '3/8 03:00:00 建立');
+setWorkspaceTimeZone('Invalid/Zone');
+assert.equal(displayTimeZone.value, 'UTC');
+setWorkspaceTimeZone('Asia/Taipei');
+setWorkspaceTimeZone(undefined);
+assert.equal(displayTimeZone.value, 'UTC', 'Leaving a workspace resets display preferences');
+console.log('PASS: UTC default, Taipei cross-year, New York DST and workspace reset');

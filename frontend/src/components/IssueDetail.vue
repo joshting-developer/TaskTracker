@@ -1,5 +1,5 @@
 <script setup>
-import { locale, t } from '../i18n/index.js';
+import { displayTimeZone, locale, t } from '../i18n/index.js';
 import { computed, ref, watch } from 'vue';
 import { toRef } from 'vue';
 import { useIssueActivity } from '../composables/useIssueActivity.js';
@@ -53,7 +53,7 @@ const work = computed(() => (props.activityLoader ? activity.time.value : props.
 const spent = computed(() => props.issue.spentMinutes ?? work.value.reduce((sum, entry) => sum + entry.minutes, 0));
 const estimate = computed(() => props.activityLoader ? props.issue.estimateMinutes : props.issue.type === 'epic' ? children.value.reduce((sum, issue) => sum + (issue.estimateMinutes || 0), 0) : props.issue.estimateMinutes);
 function timestamp(value) {
-  return new Intl.DateTimeFormat(locale.value, { timeZone: 'Asia/Taipei', year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+  return new Intl.DateTimeFormat(locale.value, { timeZone: displayTimeZone.value, year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 }
 function display(field, value) {
   if (field === 'tags') return (value || []).map(tag => tag.name || tag.id).join('、') || t('無');

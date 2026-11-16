@@ -1,0 +1,9 @@
+{
+  "approved": true,
+  "reviewer": "Standing authorization delegated by Josh",
+  "authorization": "Before and after inspected at desktop, tablet and mobile; settings and UTC/Taipei notification rendering verified. Existing comparison policy unchanged.",
+  "manifestFile": "docs/evidence/tt398-visual-manifest.json",
+  "manifestSha256": "31d4645efc1995febfffdd9f786a8bd7ca95390b91fdcd45f75fedb2f12c6182",
+  "harnessSha256": "6e10f23975390c0b08063491fb8488e28ea5ca17e5b0bbc35a04f5cfd4585849",
+  "images": 9
+}

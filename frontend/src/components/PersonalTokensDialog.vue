@@ -1,5 +1,5 @@
 <script setup>
-import { locale, t } from '../i18n/index.js';
+import { displayTimeZone, locale, t } from '../i18n/index.js';
 import { computed, onBeforeUnmount, onMounted, shallowRef } from 'vue';
 import { api } from '../api/index.js';
 import { useLeaveGuard } from '../ui/leaveGuard.js';
@@ -61,7 +61,7 @@ onMounted(() => { root.value.focus(); load(); });
         <label>{{ t('到期日') }}<input :aria-label="t('到期日')" v-model="expiresAt" type="date" :disabled="busy" /><span>{{ t('預設一個月，最長兩年；到期日台北時間 00:00 失效。') }}</span></label>
         <button type="submit" class="button primary" :disabled="busy">{{ t('建立 Token') }}</button>
       </form>
-      <ul :aria-label="t('Token清單')"><li v-for="row in rows" :key="row.id"><div><strong>{{ row.name }}</strong><span>{{ row.abilities.join(', ') }} · {{ t(status(row.status)) }} · {{ new Date(row.expiresAt).toLocaleDateString(locale, { timeZone: 'Asia/Taipei' }) }}</span></div><button v-if="row.status !== 'revoked'" class="button secondary" :disabled="busy" @click="revoke(row)">{{ t('撤銷') }}</button></li></ul>
+      <ul :aria-label="t('Token清單')"><li v-for="row in rows" :key="row.id"><div><strong>{{ row.name }}</strong><span>{{ row.abilities.join(', ') }} · {{ t(status(row.status)) }} · {{ new Date(row.expiresAt).toLocaleDateString(locale, { timeZone: displayTimeZone }) }}</span></div><button v-if="row.status !== 'revoked'" class="button secondary" :disabled="busy" @click="revoke(row)">{{ t('撤銷') }}</button></li></ul>
       <p v-if="!rows.length && !busy">{{ t('尚無 Token') }}</p>
       <footer><button class="button secondary" :disabled="busy || page <= 1" @click="load(page - 1)">{{ t('上一頁') }}</button><span>{{ page }} / {{ last }}</span><button class="button secondary" :disabled="busy || page >= last" @click="load(page + 1)">{{ t('下一頁') }}</button></footer>
     </section>

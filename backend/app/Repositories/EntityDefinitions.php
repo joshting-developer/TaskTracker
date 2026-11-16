@@ -16,6 +16,7 @@ class EntityDefinitions
             'scope' => null,
             'fields' => [
                 ['name', 'name', 'string', null, null],
+                ['timeZone', 'timezone', 'string', 'UTC', null],
                 ['createdAt', 'created_at', 'time', null, null],
             ],
         ],

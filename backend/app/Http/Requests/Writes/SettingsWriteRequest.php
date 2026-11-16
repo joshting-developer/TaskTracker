@@ -14,7 +14,7 @@ class SettingsWriteRequest extends DomainWriteRequest
      */
     public function rules(): array
     {
-        return [...$this->commonRules(), 'name' => ['sometimes', 'nullable', 'string'], 'userId' => ['sometimes', 'nullable', 'string'], 'roleId' => ['sometimes', 'nullable', 'string']];
+        return [...$this->commonRules(), 'name' => ['sometimes', 'nullable', 'string'], 'userId' => ['sometimes', 'nullable', 'string'], 'roleId' => ['sometimes', 'nullable', 'string'], 'timeZone' => ['sometimes', 'nullable', 'string']];
     }
 
     /**
@@ -26,6 +26,6 @@ class SettingsWriteRequest extends DomainWriteRequest
     {
         $input = $this->payload();
 
-        return new SettingsWriteData($this->operation(), (string) ($input['requestId'] ?? ''), $input['id'] ?? null, isset($input['expectedRevision']) ? (int) $input['expectedRevision'] : null, $input['name'] ?? null, $input['userId'] ?? null, $input['roleId'] ?? null, $input);
+        return new SettingsWriteData($this->operation(), (string) ($input['requestId'] ?? ''), $input['id'] ?? null, isset($input['expectedRevision']) ? (int) $input['expectedRevision'] : null, $input['name'] ?? null, $input['userId'] ?? null, $input['roleId'] ?? null, $input['timeZone'] ?? null, $input);
     }
 }

@@ -158,6 +158,7 @@ class RelationalStorageTest extends TestCase
     public function test_backfill_and_rollback_preserve_business_data_and_archive(): void
     {
         $this->seedWorkspace();
+        DB::table('workspaces')->update(['timezone' => 'Asia/Taipei']);
         $before = $this->snapshot();
         $migration = require database_path('migrations/2026_11_04_000000_create_relational_business_tables.php');
         (require database_path('migrations/2026_11_15_060000_create_project_tags.php'))->down();
@@ -176,6 +177,7 @@ class RelationalStorageTest extends TestCase
         // TT-314：只重跑基礎migration時, 後來才加的建卡者欄位要靠後續migration補回（照真實升級順序）。
         (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->up();
         (require database_path('migrations/2026_11_15_050000_add_issue_planned_dates.php'))->up();
+        (require database_path('migrations/2026_11_16_000000_add_workspace_display_timezone.php'))->up();
         $this->assertEquals($before, $this->snapshot());
         $this->assertSame($archive, DB::table('records')->orderBy('kind')->orderBy('id')->get()->toJson());
         $tenant = (new RecordStore)->forWorkspace(DemoSeeder::WORKSPACE_ID);
@@ -195,6 +197,7 @@ class RelationalStorageTest extends TestCase
         // TT-314：只重跑基礎migration時, 後來才加的建卡者欄位要靠後續migration補回（照真實升級順序）。
         (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->up();
         (require database_path('migrations/2026_11_15_050000_add_issue_planned_dates.php'))->up();
+        (require database_path('migrations/2026_11_16_000000_add_workspace_display_timezone.php'))->up();
         $this->assertEquals($latest, $this->snapshot());
         $this->rpc('getWorkspace', []);
         $this->assertSame([], DB::select('PRAGMA foreign_key_check'));

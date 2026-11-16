@@ -4,9 +4,11 @@ import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
+import { setWorkspaceTimeZone } from '../src/i18n/index.js';
 import { todoDate } from '../src/domain/todoContent.js';
 const e2ePort = Number(process.env.E2E_FRONTEND_PORT || 5175); // TT-335：Claude 5198、Codex 5199, 見.agents/skills/tasktracker-test-environments
 
+setWorkspaceTimeZone('Asia/Taipei');
 const now = new Date('2026-11-13T12:00:00Z');
 for (const [item, user, want] of [
   [{ createdAt: '2026-11-12T16:30:00Z', createdBy: 'a', initialAssigneeId: 'b', state: 'open' }, 'b', '11/13 00:30:00 交辦'],

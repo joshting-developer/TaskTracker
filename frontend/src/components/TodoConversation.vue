@@ -1,5 +1,5 @@
 <script setup>
-import { locale, t } from '../i18n/index.js';
+import { displayTimeZone, locale, t } from '../i18n/index.js';
 import { onBeforeUnmount, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import MarkdownContent from './MarkdownContent.vue';
@@ -7,7 +7,7 @@ const props = defineProps({ item: Object });
 const loading = shallowRef(false), error = shallowRef('');
 const comments = shallowRef(null), handoffs = shallowRef(null);
 let controller, generation = 0;
-const stamp = value => new Date(value).toLocaleString(locale.value, { timeZone: 'Asia/Taipei', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+const stamp = value => new Date(value).toLocaleString(locale.value, { timeZone: displayTimeZone.value, month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
 async function load(kind, next = false) {
   controller?.abort(); controller = new AbortController(); const current = ++generation;
   loading.value = true; error.value = '';

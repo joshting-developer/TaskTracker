@@ -53,8 +53,8 @@ try {
   await settings.getByLabel('工作空間名稱', { exact: true }).waitFor();
   assert.equal(requests.filter(path => /\/workspace\/(members|member-roles)$/.test(path)).length, 0, '一般設定未開名單');
   await settings.getByLabel('工作空間名稱', { exact: true }).fill('Renamed Workspace');
-  await settings.getByRole('button', { name: '儲存工作空間名稱', exact: true }).click();
-  await settings.getByRole('status').filter({ hasText: '工作空間名稱已儲存' }).waitFor();
+  await settings.getByRole('button', { name: '儲存工作空間設定', exact: true }).click();
+  await settings.getByRole('status').filter({ hasText: '工作空間設定已儲存' }).waitFor();
   assert.equal(requests.filter(path => path.endsWith('/workspace/members')).length, 0, '改名不刷新成員');
   await settings.getByRole('tab', { name: '成員與權限', exact: true }).click();
   await settings.locator('.member-list li').first().waitFor();

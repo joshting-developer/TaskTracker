@@ -1,4 +1,5 @@
 {
+  "顯示時區": "Display time zone",
   ", 請切換成受邀帳號": ", please sign in with the invited account",
   ", 請重新選擇或清除條件。原條件保留, 沒有放寬搜尋": ", select another value or clear the filter. Your original filters have been kept",
   "· 工時明細": "· Time entries",
@@ -66,7 +67,7 @@
   "工作空間已在其他分頁切換": "Workspace changed in another tab",
   "工作空間分析": "Workspace analytics",
   "工作空間名稱": "Workspace name",
-  "工作空間名稱已儲存": "Workspace name saved",
+  "工作空間設定已儲存": "Workspace settings saved",
   "工作空間成員分頁": "Workspace members pagination",
   "工作空間角色已儲存": "Workspace role saved",
   "工作空間身份 {0}": "Workspace role: {0}",
@@ -775,7 +776,7 @@
   "選擇關聯任務": "Select related issue",
   "優先級": "Priority",
   "優先級：{0}": "Priority: {0}",
-  "儲存工作空間名稱": "Save workspace name",
+  "儲存工作空間設定": "Save workspace settings",
   "儲存工時修改": "Save time entry changes",
   "儲存中…": "Saving…",
   "儲存狀態設定": "Save status settings",

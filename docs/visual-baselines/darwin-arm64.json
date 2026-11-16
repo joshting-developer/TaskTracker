@@ -2,9 +2,9 @@
   "approved": true,
   "harnessSha256": "8e1511a26890d37418f74b38a80766ed6779cbaca5d4418b98f254479d5976d7",
   "profile": "darwin-arm64",
-  "reviewer": "Josh standing delegated review",
-  "note": "TT-396 Season 0: reviewed three-width before/after login navigation, new tags sidebar/filter, planned dates and form details. Prior bundle archived, same Chrome157 environment and unchanged threshold0.02/maxDiffPixels0. Physical device installation not claimed.",
-  "manifestSha256": "46f74cc8960e9b2a02c0a03223d42d0a879c56e48edec4b0cbfbb2cfb5530737",
+  "reviewer": "Standing authorization delegated by Josh",
+  "note": "TT-397/398: inspected three-width timestamps, settings, notes, details and notification UTC/Taipei; changed-pixel bounds reviewed against previous Chrome157 baseline. 162 synthetic candidates, same environment and unchanged threshold0.02/maxDiffPixels0. Previous bundle retained privately.",
+  "manifestSha256": "943b939c665154a1ae9ab9927e17ab65b77f2f87c7860d7357884cf30e01f36b",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

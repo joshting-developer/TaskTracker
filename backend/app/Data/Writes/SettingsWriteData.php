@@ -15,9 +15,10 @@ final readonly class SettingsWriteData extends RpcWriteData
      * @param  ?string  $name  傳輸的name欄位，未提供時為null
      * @param  ?string  $userId  傳輸的userId欄位，未提供時為null
      * @param  ?string  $roleId  傳輸的roleId欄位，未提供時為null
+     * @param  ?string  $timeZone  顯示時區, 省略時保留目前設定
      * @param  array<string,mixed>  $original  原始輸入及未知欄位，禁止日誌輸出
      */
-    public function __construct(string $operation, string $requestId, ?string $id, ?int $expectedRevision, public ?string $name, public ?string $userId, public ?string $roleId, array $original)
+    public function __construct(string $operation, string $requestId, ?string $id, ?int $expectedRevision, public ?string $name, public ?string $userId, public ?string $roleId, public ?string $timeZone, array $original)
     {
         parent::__construct($operation, $requestId, $id, $expectedRevision, $original);
     }

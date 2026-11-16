@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Schema;
 class RelationalRecords
 {
     /** 晚於關聯表建立才新增的欄位；早期migration內的舊資料匯入發生時表上可能還沒有。 */
-    public const LATER_COLUMNS = ['issues' => ['created_by_id', 'start_date', 'end_date'], 'notifications' => ['kind'], 'boards' => ['description']];
+    public const LATER_COLUMNS = ['workspaces' => ['timezone'], 'issues' => ['created_by_id', 'start_date', 'end_date'], 'notifications' => ['kind'], 'boards' => ['description']];
 
     /** 舊資料匯入期間, 資料表上還不存在而要跳過的欄位（RelationalDataMigration::import設定, 平常為空）。 */
     public static array $skipColumns = [];

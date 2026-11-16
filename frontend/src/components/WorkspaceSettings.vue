@@ -9,6 +9,8 @@ import WorkspaceInvitationManager from './WorkspaceInvitationManager.vue';
 const props = defineProps({ meta: Object, activeTab: { type: String, default: 'general' } });
 const emit = defineEmits(['navigate', 'saved', 'access']);
 const tab = ref(props.activeTab), data = shallowRef(null), roleChoices = shallowRef([]);
+const timeZone = ref('UTC');
+const timeZones = ['UTC', ...Intl.supportedValuesOf('timeZone')];
 const name = ref(''), loading = ref(true), busy = ref(false), error = ref(''), conflict = ref(false), success = ref('');
 const invitationManager = ref(null);
 const working = computed(() => busy.value || Boolean(invitationManager.value?.busy));
@@ -18,7 +20,7 @@ const permissions = computed(() => props.meta.permissions || []);
 const canUpdate = computed(() => permissions.value.includes('workspace.update'));
 const canManage = computed(() => permissions.value.includes('workspace.members.manage'));
 const canReadMembers = computed(() => permissions.value.includes('workspace.members.read'));
-const dirty = computed(() => Boolean(data.value && name.value !== data.value.workspace.name || invitationManager.value?.dirty));
+const dirty = computed(() => Boolean(data.value && (name.value !== data.value.workspace.name || timeZone.value !== data.value.workspace.timeZone) || invitationManager.value?.dirty));
 const roles = computed(() => roleChoices.value);
 const memberStatus = shallowRef('active');
 const memberContext = computed(() => `${context.value}:${memberStatus.value}`);
@@ -38,7 +40,7 @@ function handleFailure(failure) {
 function switchTab(next) {
   if (next === tab.value || working.value) return;
   if (dirty.value && !window.confirm(t('切換設定分區會捨棄尚未儲存的內容，要繼續嗎？'))) return;
-  if (data.value) name.value = data.value.workspace.name;
+  if (data.value) { name.value = data.value.workspace.name; timeZone.value = data.value.workspace.timeZone; }
   pending = null; invitationManager.value?.reset();
   emit('navigate', next);
 }
@@ -64,7 +66,7 @@ async function load(confirm = false) {
     const result = await api.workspaceSettings({ signal: controller.signal });
     if (current !== generation) return;
     data.value = result;
-    name.value = result.workspace.name;
+    name.value = result.workspace.name; timeZone.value = result.workspace.timeZone;
     pending = null;
     await loadMembers();
   } catch (failure) {
@@ -82,7 +84,7 @@ async function save(operation, payload) {
     pending = null;
     if (operation === 'updateWorkspace') await load();
     else await members.reload();
-    success.value = operation === 'updateWorkspace' ? t('工作空間名稱已儲存') : operation === 'setWorkspaceMemberStatus' ? (payload.status === 'disabled' ? t('成員已停用') : t('成員已恢復')) : t('工作空間角色已儲存');
+    success.value = operation === 'updateWorkspace' ? t('工作空間設定已儲存') : operation === 'setWorkspaceMemberStatus' ? (payload.status === 'disabled' ? t('成員已停用') : t('成員已恢復')) : t('工作空間角色已儲存');
     emit('saved');
   } catch (failure) { error.value = failure.message; conflict.value = failure.code === 'REVISION_CONFLICT'; handleFailure(failure); }
   finally { busy.value = false; }
@@ -101,7 +103,7 @@ function changeMemberStatus(member) {
 }
 watch(() => props.activeTab, next => {
   tab.value = next;
-  if (data.value) name.value = data.value.workspace.name;
+  if (data.value) { name.value = data.value.workspace.name; timeZone.value = data.value.workspace.timeZone; }
   pending = null; success.value = '';
   if (next === 'members' && data.value) loadMembers();
 });
@@ -119,7 +121,7 @@ defineExpose({ refresh: () => load(true) });
     <div v-if="error" class="error-box" role="alert">{{ t(error) }}<button v-if="!working" class="text-button" @click="load(true)">{{ conflict ? t('載入最新設定') : t('重試載入') }}</button></div>
     <p v-if="success" class="settings-success" role="status">{{ success }}</p>
     <section v-show="tab === 'general'" :id="`${id}-general-panel`" role="tabpanel" :aria-labelledby="`${id}-general`" tabindex="0">
-      <form v-if="data" @submit.prevent="save('updateWorkspace', { name, expectedRevision: data.workspace.revision })"><label class="field">{{ t('工作空間名稱') }}<input v-model="name" maxlength="60" required :readonly="!canUpdate" :disabled="working || loading" /></label><button v-if="canUpdate" class="button primary" :disabled="working || loading || !name.trim() || name === data.workspace.name">{{ t('儲存工作空間名稱') }}</button><p v-else class="subtle">{{ t('你目前可查看設定；修改名稱需要工作空間管理權限。') }}</p></form>
+      <form v-if="data" @submit.prevent="save('updateWorkspace', { name, timeZone, expectedRevision: data.workspace.revision })"><label class="field">{{ t('工作空間名稱') }}<input v-model="name" maxlength="60" required :readonly="!canUpdate" :disabled="working || loading" /></label><label class="field">{{ t('顯示時區') }}<select :aria-label="t('顯示時區')" v-model="timeZone" :disabled="!canUpdate || working || loading"><option v-for="zone in timeZones" :key="zone" :value="zone">{{ zone }}</option></select></label><button v-if="canUpdate" class="button primary" :disabled="working || loading || !name.trim() || (name === data.workspace.name && timeZone === data.workspace.timeZone)">{{ t('儲存工作空間設定') }}</button><p v-else class="subtle">{{ t('你目前可查看設定；修改名稱需要工作空間管理權限。') }}</p></form>
     </section>
     <section v-show="tab === 'members'" :id="`${id}-members-panel`" role="tabpanel" :aria-labelledby="`${id}-members`" tabindex="0">
 

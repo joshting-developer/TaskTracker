@@ -9,7 +9,7 @@ use App\Factories\RecordStoreFactory;
 use App\Models\WorkspaceMember;
 use App\Repositories\SettingsRepository;
 
-/** 管理本人資料、工作空間名稱及固定角色指派；由WorkspaceRpc經WorkspaceTransaction提供交易。 */
+/** 管理本人資料、工作空間名稱／顯示時區及固定角色指派；由WorkspaceRpc經WorkspaceTransaction提供交易。 */
 class AccountSettings
 {
     public const OPERATIONS = ['getProfile', 'updateProfile', 'updateWorkspace', 'setWorkspaceMemberRole'];
@@ -102,7 +102,12 @@ class AccountSettings
             $workspace = $this->repository->workspace($this->context['workspace']['id']);
             $this->checkRevision($input, (int) $workspace->settings_revision);
             $name = Fields::text($input['name'] ?? null, '工作空間名稱', 60, true);
-            $saved = $this->repository->renameWorkspace($workspace, $name);
+            $timeZone = array_key_exists('timeZone', $input)
+                ? Fields::text($input['timeZone'], '顯示時區', 64, true) : $workspace->timezone;
+            if ($timeZone === 'Factory' || ! in_array($timeZone, \DateTimeZone::listIdentifiers(\DateTimeZone::ALL_WITH_BC), true)) {
+                DomainError::fail('INVALID_INPUT', '請選擇有效的 IANA 時區');
+            }
+            $saved = $this->repository->updateWorkspace($workspace, $name, $timeZone);
             $result = [
                 'id' => $workspace->public_id,
                 'revision' => $workspace->settings_revision + 1,

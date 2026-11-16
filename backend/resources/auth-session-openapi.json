@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "TaskTracker Session Authentication",
-    "version": "1.9.0",
+    "version": "1.10.0",
     "description": "Session and CSRF only; not the PAT API. Legacy accounts keep their existing eligibility. New public registration requires an activation link; valid invitations verify the exact invited email during new-account registration. Activation GET only renders the page, with token in URL fragment. A verified account may have no active workspace; workspace and role are then null and permissions is empty. Workspace APIs still require active membership. Invitation login and registration never join implicitly; acceptance is a separate authenticated decision."
   },
   "paths": {
@@ -1458,6 +1458,146 @@
           }
         }
       }
+    },
+    "/api/v1/workspace/settings": {
+      "get": {
+        "summary": "Read current workspace settings without members or history",
+        "description": "Requires current active membership and workspace.read. Returns the authenticated workspace only; no caller-selected tenant.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workspace display settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "workspace"
+                      ],
+                      "properties": {
+                        "workspace": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "name",
+                            "timeZone",
+                            "revision"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "timeZone": {
+                              "type": "string",
+                              "maxLength": 64,
+                              "examples": [
+                                "UTC",
+                                "Asia/Taipei"
+                              ]
+                            },
+                            "revision": {
+                              "type": "integer"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "409": {
+            "description": "Workspace context changed"
+          }
+        }
+      }
+    },
+    "/api/rpc/updateWorkspace": {
+      "post": {
+        "summary": "Update workspace name and optional IANA display timezone",
+        "description": "Requires workspace.update, Session/CSRF, current revision and a stable requestId. Omitted timeZone preserves its existing value. Invalid or null timezone, stale revision and permission failure leave data unchanged. UTC storage and Asia/Taipei work dates are unchanged. Replays reauthorize and do not reapply updates.",
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrf": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "expectedRevision",
+                  "requestId"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60
+                  },
+                  "timeZone": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "examples": [
+                      "UTC",
+                      "Asia/Taipei",
+                      "America/New_York"
+                    ]
+                  },
+                  "expectedRevision": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "requestId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated workspace id and revision"
+          },
+          "400": {
+            "description": "Invalid name or IANA timezone"
+          },
+          "401": {
+            "description": "Not authenticated"
+          },
+          "403": {
+            "description": "Permission denied"
+          },
+          "409": {
+            "description": "Revision or request conflict"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1537,7 +1677,23 @@
             "type": [
               "object",
               "null"
-            ]
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "timeZone": {
+                "type": "string",
+                "description": "IANA display timezone, default UTC. Does not change stored UTC instants or the Asia/Taipei work-date contract.",
+                "examples": [
+                  "UTC",
+                  "Asia/Taipei"
+                ]
+              }
+            }
           },
           "role": {
             "type": [

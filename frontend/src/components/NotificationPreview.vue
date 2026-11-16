@@ -1,5 +1,5 @@
 <script setup>
-import { locale, t } from '../i18n/index.js';
+import { displayTimeZone, locale, t } from '../i18n/index.js';
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { usePolling } from '../composables/usePolling.js';
@@ -74,7 +74,7 @@ async function verify() {
   finally { busy.value = false; }
 }
 function timestamp(value) {
-  return new Intl.DateTimeFormat(locale.value, { timeZone: 'Asia/Taipei', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+  return new Intl.DateTimeFormat(locale.value, { timeZone: displayTimeZone.value, month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 }
 // 背景更新交由共用輪詢生命週期；隱藏／離線時只中止請求，讓finally收回loading。
 const poller = usePolling({

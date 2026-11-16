@@ -1,5 +1,5 @@
 <script setup>
-import { locale, t } from '../i18n/index.js';
+import { displayTimeZone, locale, t } from '../i18n/index.js';
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, useId, watch } from 'vue';
 import { toRef } from 'vue';
 import { useIssueActivity } from '../composables/useIssueActivity.js';
@@ -206,7 +206,7 @@ function display(field, value) {
   return options?.find((item) => item.id === value)?.label || value || t('未設定');
 }
 function timestamp(value) {
-  return new Intl.DateTimeFormat(locale.value, { timeZone: 'Asia/Taipei', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+  return new Intl.DateTimeFormat(locale.value, { timeZone: displayTimeZone.value, month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 }
 </script>
 

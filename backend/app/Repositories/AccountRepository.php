@@ -74,14 +74,14 @@ class AccountRepository
     }
 
     /**
-     * 最小投影解析Workspace名稱與內部鍵。
+     * 最小投影解析Workspace名稱、顯示時區與內部鍵。
      *
      * @param  string  $publicId  Workspace公開ID
      * @return ?Workspace 存在時的Workspace
      */
     public function workspace(string $publicId): ?Workspace
     {
-        return Workspace::where('public_id', $publicId)->first(['id', 'name']);
+        return Workspace::where('public_id', $publicId)->first(['id', 'name', 'timezone']);
     }
 
     /**

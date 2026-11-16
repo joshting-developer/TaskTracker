@@ -94,6 +94,7 @@ class AccountService
             'workspace' => [
                 'id' => $workspaceId,
                 'name' => $workspace->name,
+                'timeZone' => $workspace->timezone,
             ],
             'role' => $member->role,
             'permissions' => WorkspacePermissions::resolve($member->role),
@@ -249,7 +250,7 @@ class AccountService
             return ['user' => $this->publicUser($user), 'workspace' => null, 'role' => null, 'permissions' => [], 'hasWorkspaces' => $this->accounts->firstWorkspace($user->id) !== null];
         }
 
-        return ['user' => $this->publicUser($user), 'workspace' => ['id' => $workspaceId, 'name' => $workspace->name], 'role' => $member->role, 'permissions' => WorkspacePermissions::resolve($member->role), 'hasWorkspaces' => true];
+        return ['user' => $this->publicUser($user), 'workspace' => ['id' => $workspaceId, 'name' => $workspace->name, 'timeZone' => $workspace->timezone], 'role' => $member->role, 'permissions' => WorkspacePermissions::resolve($member->role), 'hasWorkspaces' => true];
     }
 
     /**

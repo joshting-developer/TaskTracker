@@ -9,6 +9,14 @@ const storageKey = () => `tasktracker:locale:${account}`;
 function stored() { try { return language(globalThis.localStorage?.getItem(storageKey())); } catch { return ''; } }
 const current = shallowRef(explicitLocale() || stored() || preferred());
 export const locale = readonly(current);
+const workspaceZone = shallowRef('UTC');
+export const displayTimeZone = readonly(workspaceZone);
+export function setWorkspaceTimeZone(value) {
+  try {
+    new Intl.DateTimeFormat('en', { timeZone: value || 'UTC' }).format(0);
+    workspaceZone.value = value || 'UTC';
+  } catch { workspaceZone.value = 'UTC'; }
+}
 export const supportedLocales = [{ id: 'zh-TW', name: '繁體中文' }, { id: 'en', name: 'English' }];
 export function setLocale(value) {
   if (!Object.hasOwn(dictionaries, value)) return false;
@@ -38,7 +46,7 @@ export function t(key, values = []) {
 }
 export function formatNumber(value, options = {}) { return new Intl.NumberFormat(current.value, options).format(value); }
 export function formatDate(value, options = {}) {
-  return new Intl.DateTimeFormat(current.value, { timeZone: 'Asia/Taipei', ...options }).format(new Date(value));
+  return new Intl.DateTimeFormat(current.value, { timeZone: workspaceZone.value, ...options }).format(new Date(value));
 }
 const errorMessages = {
   UNAUTHENTICATED: '請先登入', FORBIDDEN: '你沒有執行此操作的權限', NOT_FOUND: '找不到要求的資料',

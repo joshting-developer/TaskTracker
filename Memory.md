@@ -16,6 +16,8 @@
 
 ## 目前有效摘要與查閱入口
 
+- 工作區顯示時區與 UTC 儲存界線：docs/workspace-timezones.md（TT-398, 本地實作驗收中, 尚未正式部署）；工時工作日仍為 Asia/Taipei
+
 - Skill／AGENTS記憶分工、前端按階段驗證與本機三尺寸基準：docs/structure-optimization-acceptance-2026-11-13.md、docs/visual-regression.md；長期規範仍在Side Project共用庫。核准影像不入Git，跨平台／遠端啟用不可沿用本機圖。
 
 - Skill已統一到 `/Users/josh/workspace/side-project/skills`；原專案路徑為連結，不再維護副本。舊project-only決策已被取代，見docs/shared-skills-migration-2026-11-12.md。

@@ -52,15 +52,17 @@ class SettingsRepository
         ]) === 1;
     }
 
-    /** 用條件版本更新空間名稱。
+    /** 用條件版本更新空間名稱與顯示時區。
      * @param  Workspace  $workspace  已授權空間
      * @param  string  $name  新名稱
+     * @param  string  $timeZone  已驗證的 IANA 顯示時區
      * @return bool
      */
-    public function renameWorkspace(Workspace $workspace, string $name): bool
+    public function updateWorkspace(Workspace $workspace, string $name, string $timeZone): bool
     {
         return Workspace::whereKey($workspace->id)->where('settings_revision', $workspace->settings_revision)->update([
             'name' => $name,
+            'timezone' => $timeZone,
             'settings_revision' => $workspace->settings_revision + 1,
         ]) === 1;
     }
@@ -79,14 +81,14 @@ class SettingsRepository
     }
 
     /**
-     * 一般設定只讀三個公開屬性及內部scope，不預載成員。
+     * 一般設定只讀名稱、顯示時區、版本及內部scope，不預載成員。
      *
      * @param  string  $workspaceId  可信Workspace公開ID
      * @return Workspace 工作區設定投影
      */
     public function summary(string $workspaceId): Workspace
     {
-        return Workspace::where('public_id', $workspaceId)->firstOrFail(['id', 'public_id', 'name', 'settings_revision']);
+        return Workspace::where('public_id', $workspaceId)->firstOrFail(['id', 'public_id', 'name', 'timezone', 'settings_revision']);
     }
 
     /**

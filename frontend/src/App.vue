@@ -1,5 +1,5 @@
 <script setup>
-import { setLocaleAccount, t } from './i18n/index.js';
+import { setLocaleAccount, setWorkspaceTimeZone, t } from './i18n/index.js';
 import { computed, nextTick, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch } from 'vue';
 import Icon from './components/Icon.vue';
 import BrandMark from './components/BrandMark.vue';
@@ -92,6 +92,7 @@ const creationBoardId = computed(() => section.value === 'tasks' && view.value =
 const canCreateIssue = computed(() => canWrite.value && (creationBoardId.value === 'default' || can('board.manage')));
 const showNewIssueAction = computed(() => selectedProject.value && section.value === 'tasks' && view.value === 'list' && scope.value === 'all' && canCreateIssue.value);
 const currentUserId = computed(() => workspace.value.meta.userId);
+watch(() => workspace.value.meta.workspace?.timeZone, setWorkspaceTimeZone, { immediate: true, flush: 'sync' });
 watch([authenticated, currentUserId], ([signedIn, id]) => {
   if (signedIn && id) setLocaleAccount(id);
   else if (!signedIn && !loading.value) setLocaleAccount('');

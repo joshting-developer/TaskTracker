@@ -1,5 +1,5 @@
 <script setup>
-import { locale, t } from '../i18n/index.js';
+import { displayTimeZone, locale, t } from '../i18n/index.js';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { api } from '../api/index.js';
 import { usePagedLookup } from '../composables/usePagedLookup.js';
@@ -21,7 +21,7 @@ const invitations = usePagedLookup({ context, load: async (filters, options) => 
   catch (failure) { fail(failure); throw failure; }
 } });
 const items = computed(() => invitations.result.value?.items || []);
-const date = value => new Date(value).toLocaleDateString(locale.value, { timeZone: 'Asia/Taipei' });
+const date = value => new Date(value).toLocaleDateString(locale.value, { timeZone: displayTimeZone.value });
 async function invite() {
   if (working.value) return;
   const scope = context.value, address = email.value;

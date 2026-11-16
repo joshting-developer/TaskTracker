@@ -90,7 +90,7 @@ ProjectTasksWorkspace與useProjectTaskQueries已取代原BoardWorkspace／useBoa
 
 ## 2026-11-12 工作區設定（TT-241）
 
-`GET /api/v1/workspace/settings`只回Workspace的id／name／revision，要求workspace.read；`/workspace/members`要求workspace.members.read，姓名／email SQL搜尋及管理摘要分頁；`/workspace/member-roles`要求workspace.members.manage，只回可授予非ownership角色id／label。成員20筆預設／最大100，canChange與寫入共用規則，前端Owner設定入口不變。
+`GET /api/v1/workspace/settings`只回Workspace的id／name／timeZone／revision（TT-398 新增 IANA 顯示時區, 預設 UTC），要求workspace.read；`/workspace/members`要求workspace.members.read，姓名／email SQL搜尋及管理摘要分頁；`/workspace/member-roles`要求workspace.members.manage，只回可授予非ownership角色id／label。成員20筆預設／最大100，canChange與寫入共用規則，前端Owner設定入口不變。
 
 舊`POST /api/rpc/getWorkspaceSettings`整包讀取已退役，已登入且有效JSON請求返回404；前後端及測試已改分責GET，不保留全員名單相容支線。詳見[設定資料分責](performance-workspace-settings-2026-11-12.md)。
 

@@ -24,14 +24,14 @@ class WorkspaceSettingsReadService
      * 只有Workspace設定屬性，不附任何成員或角色全集。
      *
      * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
-     * @return array{workspace:array{id:string,name:string,revision:int}} 最小設定
+     * @return array{workspace:array{id:string,name:string,timeZone:string,revision:int}} 最小設定
      */
     public function show(WorkspaceContext $context): array
     {
         WorkspacePermissions::authorize($context->legacyIdentity(), 'workspace.read');
         $workspace = $this->settings->summary($context->workspaceId);
 
-        return ['workspace' => ['id' => $workspace->public_id, 'name' => $workspace->name, 'revision' => (int) $workspace->settings_revision]];
+        return ['workspace' => ['id' => $workspace->public_id, 'name' => $workspace->name, 'timeZone' => $workspace->timezone, 'revision' => (int) $workspace->settings_revision]];
     }
 
     /**
