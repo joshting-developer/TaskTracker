@@ -8,7 +8,7 @@
 
 - 獨立管理後台：docs/admin-dashboard-contract.md, TT-364已隨v0.5.0發布並通過正式獨立管理驗收
 - 公開頁與上方語言入口：docs/public-language-contract.md, TT-365／366已隨v0.5.0同批發布與正式驗收
-- GPT私人串接2026-11-16已恢復並驗證joshting.1999唯一owner, 版本2實際身分／專案／卡號查詢成功。Josh確認原連線目標完成, TT-350已closed。後續功能另收GPT / MCP Plugin看板：3張完成、11張open未指派, 沿用TT-351、新增TT-399～408, 覆蓋正式OpenAPI 0.22.0全部41個PAT操作。規劃及未重驗項目見docs/gpt-plugin-roadmap-2026-11-16.md, 不將已建卡當成新工具已實作
+- GPT私人串接2026-11-16已驗joshting.1999唯一owner, TT-350已closed。後續41個PAT工具已完成Adapter並私人發布版本3, 77項Adapter測試及契約覆蓋通過；原生身分／查卡冒煙成功。看板現12張closed、TT-406與TT-408兩張review；本對話仍只載入舊8工具, 新工具需新對話確認, 附件Host選檔／呈現及正式撤銷／過期與log未重驗。附件6MiB。交付與限制見docs/gpt-plugin-delivery-2026-11-16.md
 
 # TaskTracker 專案記憶
 

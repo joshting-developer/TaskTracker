@@ -2,6 +2,14 @@
 
 2026-11-16。依Josh開工與精簡驗證指示, 只做私人Adapter薄轉接, 不重做已驗證的API業務。41個正式PAT操作逐項對應, 24個讀取工具與17個寫入工具
 
+## 私人發布與進度
+
+第3版已部署成功：https://tasktracker-joshting-bridge.joshting-1999.chatgpt.site 。deployment為appgdep_6afa7331b2708191b4b90d67146d17d4, env revision20, source SHA為3f8a750054b096de27c1bd472a02574081242918, 主repository交付至82d86e7已推送。只保留joshting.1999@gmail.com唯一owner, 無群組／外部訪客
+
+原生who_am_i與get_issue(TT-408)已成功。當前對話工具表仍只有原8工具；Site服務憑證的tools/list探查回401, 未繞過身份或假稱線上已逐一呼叫41工具。請在新對話使用既有Plugin確認新工具載入, 不另建或重裝另一個Plugin
+
+已結案TT-351、TT-399～405及TT-407共9張功能轉接卡；TT-406附件Host體驗與TT-408整體Host工具載入／剩餘安全實測保留review。加上原連線3張, 看板讀回12張closed、2張review。本輪專用13049隔離容器與網路已清理, 其他對話及本地開發服務未停
+
 ## 驗證與限制
 
 - 77項Adapter測試及build通過；線上0.22.0的41個operationId、method與path一對一核對通過

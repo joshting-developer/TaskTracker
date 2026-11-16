@@ -1,5 +1,7 @@
 # GPT / MCP Plugin功能規劃
 
+最新：本規劃已交付私人第3版, 看板現12張closed、TT-406與TT-408兩張review；完整工具與Host未驗限制見[gpt-plugin-delivery-2026-11-16.md](gpt-plugin-delivery-2026-11-16.md)。下方是建卡當時快照, 不再代表仍未開工
+
 2026-11-16 Josh確認原GPT連線目標完成, TT-350結案。新看板只規劃PAT功能擴充, 本輪未開始實作新工具
 
 看板：[GPT / MCP Plugin](https://task-tracker.josh-ting.com/app/#/projects/5a451d5c-2fff-4110-aa49-4998ec9dbff2/board/5c227e22-7b6e-4300-8f5c-07ca85d551c2)
