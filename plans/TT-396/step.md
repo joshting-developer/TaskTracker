@@ -17,3 +17,6 @@
 - Docker 恢復後另由既有 helper 恢復 tasktracker-local-dev, 5174／3002／8025 及原資料保留, 沒有 seed 或重啟舊主庫
 - 使用者中斷後原回歸程序已停止, seed-roles 雖留下完成文字但未記錄 exit code, 不算已驗收。已確認無原程序, 只清理本人的 seed 容器與殘留鎖, 重跑 seed 後接 realtime／r2／runtime；既有通過組別不全部重跑
 - 共用 Skill 完整性檢查另抓到 TT-193 CLI 更新後漏同步三份 canonical hash, 已補清冊並重新通過, 共用庫 commit 3594c7a；未改驗證器或 vendor, 先前未核對錯誤的證據不再沿用
+
+- seed 第二輪確認是測試在邀請 refresh 完成前點導覽, 被 switchingWorkspace 保護拒絕；補等候既有成功提示後整組通過, 不修改產品或加大 timeout。realtime 與 R2 專用流程亦已通過, runtime 尚在跑
+- 看板新增 TT-397／398, 暫停 TT-396 並改回 open, 先依序處理新 Season 0 卡片；發布仍未執行

@@ -873,6 +873,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await teammate.getByRole('button', { name: '建立帳號', exact: true }).click();
   await teammate.locator('.app-shell').waitFor();
   await teammate.getByRole('dialog', { name: '工作空間邀請', exact: true }).getByRole('button', { name: '接受邀請並進入', exact: true }).click();
+  await teammate.locator('.toast-message').filter({ hasText: '已進入 產品團隊' }).waitFor();
   await openProjectList(teammate);
   await teammate.getByRole('heading', { name: '尚未加入任何專案', exact: true }).waitFor();
   await openProjectList(teammate);
