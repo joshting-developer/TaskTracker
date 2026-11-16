@@ -257,7 +257,7 @@ test('overlarge header, streamed body, invalid JSON and too many rows are reject
 test('MCP discovery and list expose the read-only contract and no environment', async () => {
   const listed = await (await handle(request('tools/list'), env)).json();
   assert.equal(listed.result.tools.length, Object.keys(TOOLS).length);
-  assert.equal(listed.result.tools.filter(t => t.annotations.readOnlyHint).length, 24);
+  assert.equal(listed.result.tools.filter(t => t.annotations.readOnlyHint).length, 26);
   assert.doesNotMatch(JSON.stringify(listed), /synthetic-private-token|owner@example/);
   const discovered = await (await handle(request('server/discover'), env)).json();
   assert.deepEqual(discovered.result.supportedVersions, ['2026-07-28']);
