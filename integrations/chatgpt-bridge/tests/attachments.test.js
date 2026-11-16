@@ -9,8 +9,8 @@ const env = { TASKTRACKER_PAT: 'synthetic-file-token', TASKTRACKER_WORKSPACE_ID:
 const identity = { userId: 'synthetic-user', workspaceId: workspace, abilities: ['write'] };
 const response = data => new Response(JSON.stringify({ ok: true, data }));
 
-test('upload previews only file metadata and converts confirmed bytes to multipart with stable requestId', async () => {
-  const args = { project, body: { name: 'Synthetic.txt', mime: 'text/plain', fileBase64: btoa('hello') } };
+test('upload executes directly as multipart with the supplied stable requestId', async () => {
+  const args = { project, body: { requestId: attachment, name: 'Synthetic.txt', mime: 'text/plain', fileBase64: btoa('hello') } };
   const calls = [];
   const transport = async (url, options) => {
     calls.push({ url, options });
@@ -24,15 +24,14 @@ test('upload previews only file metadata and converts confirmed bytes to multipa
     assert.equal(await file.text(), 'hello');
     return response({ id: attachment, name: file.name, mime: file.type, bytes: file.size, revision: 1 });
   };
-  const preview = (await callTool('upload_attachment', args, env, transport)).data;
-  assert.equal(calls.length, 1);
-  assert.equal(preview.preview.body.bytes, 5);
-  assert.match(preview.preview.body.sha256, /^[a-f0-9]{64}$/);
-  assert.doesNotMatch(JSON.stringify(preview), /aGVsbG8=|synthetic-file-token/);
-  const result = await callTool('upload_attachment', { ...args, confirmation: preview.confirmation }, env, transport);
+  const result = await callTool('upload_attachment', args, env, transport);
+  assert.equal(calls.length, 2);
   assert.equal(result.data.id, attachment);
-  assert.equal(calls.at(-1).options.body.get('requestId'), preview.preview.body.requestId);
-  await assert.rejects(callTool('upload_attachment', { ...args, body: { ...args.body, fileBase64: btoa('changed') }, confirmation: preview.confirmation }, env, transport), e => e.code === 'CONFIRMATION_INVALID');
+  assert.equal(result.data.requiresConfirmation, undefined);
+  assert.equal(calls.at(-1).options.body.get('requestId'), attachment);
+  assert.doesNotMatch(JSON.stringify(result), /aGVsbG8=|synthetic-file-token/);
+  await callTool('upload_attachment', args, env, transport);
+  assert.equal(calls.at(-1).options.body.get('requestId'), attachment);
 });
 
 test('binary download returns actual bounded bytes as an MCP embedded resource', async () => {
@@ -58,6 +57,6 @@ test('file URLs, path injection and invalid base64 are rejected without uploadin
     { name: '../bad.txt', mime: 'text/plain', fileBase64: btoa('hello') },
     { name: 'bad.txt', mime: 'text/plain', fileUrl: 'https://evil.test/file' },
   ]) await assert.rejects(callTool('upload_attachment', { project, body }, env, async () => assert.fail('no fetch')), e => e.code === 'INVALID_ARGUMENTS');
-  await assert.rejects(callTool('upload_attachment', { project, body: { name: 'bad.txt', mime: 'text/plain', fileBase64: 'not-base64!' } }, env,
+  await assert.rejects(callTool('upload_attachment', { project, body: { requestId: attachment, name: 'bad.txt', mime: 'text/plain', fileBase64: 'not-base64!' } }, env,
     async () => response(identity)), e => e.code === 'INVALID_FILE');
 });

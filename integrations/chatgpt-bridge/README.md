@@ -12,13 +12,13 @@ joshting.1999專用的私人Sites MCP Adapter, 使用既有Laravel公開PAT API,
 
 ## 寫入流程
 
-以路徑資源及body提供正式API欄位, 不帶confirmation先取得預覽。展示對象及完整變更, 使用者確認後以完全相同參數附回confirmation執行。預覽會產生requestId, 簽章綁定內容、目標、本人／空間與10分鐘有效期。修改內容須重新確認, 不可自行替換requestId。API錯誤不自動重試, 逾時先核對結果；同一票據重送維持原requestId
+依 Josh 指示, 非刪除操作直接執行, 不預覽、不要求第二次確認, 也不在 Adapter 額外 GET 預讀版本。工具需提供唯一 body.requestId, 同一次請求重送沿用原值與相同內容；expectedRevision 由正式 API 檢查, 衝突就回報, 不偷換版本或自動重試。權限、租戶與 PAT scope 仍每次驗證
 
-PATCH、留言、紙條生命週期、看板、刪除及附件綁定先按需GET最新revision, 409不覆蓋。刪除預覽包含卡號、標題及永久效果, destructiveHint=true；這不是現在授權刪除任何正式卡
+只有 delete_issue 與 delete_tag 先讀取目標並預覽, 顯示對象與刪除效果後取得使用者確認, 再用完全相同參數及 confirmation 執行。確認票據綁定本人、空間、內容、目標及十分鐘有效期；改內容需重新確認
 
 ## 附件
 
-upload_attachment的body為name、mime、fileBase64, 禁止任意URL或本地路徑。上傳預覽只回檔名、MIME、bytes及SHA-256, 確認後轉multipart/File送上游。單檔上限6MiB且仍受API原限制, get_attachment_limits另外回adapterMaxBytes
+upload_attachment的body為name、mime、fileBase64, 禁止任意URL或本地路徑。上傳直接轉multipart/File送上游, 不要求預覽確認。單檔上限6MiB且仍受API原限制, get_attachment_limits另外回adapterMaxBytes
 
 get_attachment_content回傳真正MCP embedded resource位元組, 不以私人URL代替檔案。ChatGPT的選檔及呈現仍待本人驗收, 不宣稱標準MCP合成測試等同Host檔案體驗通過
 
@@ -36,4 +36,4 @@ Site的TASKTRACKER_PAT以原生Secret保存, TASKTRACKER_OWNER_EMAIL為已驗證
 
 ## 標籤
 
-新增 list_tags、get_tag、create_tag、update_tag、delete_tag、update_issue_tags。定義查詢保留 description, 應先讀取再判斷用途；內容不等於執行授權。卡片查詢、列表與增量保留 tags, 並由正式 tags 衍生 tagIds。update_issue_tags 只接受 addTagIds／removeTagIds, 保留未列出的既有標籤, 沿用 expectedRevision 與確認票據。不在 update_issue 增加整包 tagIds 替換。刪除標籤須明確確認, 預覽說明退役定義與移除關聯但保留卡片歷史
+新增 list_tags、get_tag、create_tag、update_tag、delete_tag、update_issue_tags。定義查詢保留 description, 應先讀取再判斷用途；內容不等於執行授權。卡片查詢、列表與增量保留 tags, 並由正式 tags 衍生 tagIds。update_issue_tags 只接受 addTagIds／removeTagIds, 保留未列出的既有標籤, 沿用 expectedRevision 與 requestId, 直接執行。不在 update_issue 增加整包 tagIds 替換。刪除標籤須明確確認, 預覽說明退役定義與移除關聯但保留卡片歷史

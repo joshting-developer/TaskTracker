@@ -627,14 +627,11 @@ export const TOOLS = {
             }
           },
           "required": [
-            "title"
+            "title",
+            "requestId"
           ],
           "description": "JSON\u7269\u4ef6\u6700\u591a50000 bytes\uff1b\u672a\u77e5\u6b04\u4f4d\u5ffd\u7565\uff0c\u8def\u5f91\u63a7\u5236\u8cc7\u6e90\uff0cactor\uff0fWorkspace\u4e0d\u53ef\u7531payload\u8b8a\u66f4\u3002",
           "additionalProperties": false
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -770,14 +767,11 @@ export const TOOLS = {
             }
           },
           "required": [
+            "requestId",
             "expectedRevision"
           ],
           "description": "JSON\u7269\u4ef6\u6700\u591a50000 bytes\uff1b\u672a\u77e5\u6b04\u4f4d\u5ffd\u7565\uff0c\u8def\u5f91\u63a7\u5236\u8cc7\u6e90\uff0cactor\uff0fWorkspace\u4e0d\u53ef\u7531payload\u8b8a\u66f4\u3002",
           "additionalProperties": false
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -830,14 +824,11 @@ export const TOOLS = {
           },
           "required": [
             "content",
+            "requestId",
             "expectedRevision"
           ],
           "description": "JSON\u7269\u4ef6\u6700\u591a50000 bytes\uff1b\u672a\u77e5\u6b04\u4f4d\u5ffd\u7565\uff0c\u8def\u5f91\u63a7\u5236\u8cc7\u6e90\uff0cactor\uff0fWorkspace\u4e0d\u53ef\u7531payload\u8b8a\u66f4\u3002",
           "additionalProperties": false
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -1038,7 +1029,9 @@ export const TOOLS = {
         "body": {
           "type": "object",
           "additionalProperties": false,
-          "required": [],
+          "required": [
+            "requestId"
+          ],
           "properties": {
             "title": {
               "type": "string",
@@ -1065,10 +1058,6 @@ export const TOOLS = {
               "format": "uuid"
             }
           }
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -1098,7 +1087,8 @@ export const TOOLS = {
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "expectedRevision"
+            "expectedRevision",
+            "requestId"
           ],
           "properties": {
             "title": {
@@ -1125,10 +1115,6 @@ export const TOOLS = {
               "format": "uuid"
             }
           }
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -1159,7 +1145,8 @@ export const TOOLS = {
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "expectedRevision"
+            "expectedRevision",
+            "requestId"
           ],
           "properties": {
             "expectedRevision": {
@@ -1181,10 +1168,6 @@ export const TOOLS = {
               "description": "\u5b8c\u6210\u6216\u9000\u56de\u6642\u9078\u586b\u7684\u7559\u8a00, \u8207\u72c0\u614b\u540c\u4ea4\u6613\u4fdd\u5b58"
             }
           }
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -1215,7 +1198,8 @@ export const TOOLS = {
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "expectedRevision"
+            "expectedRevision",
+            "requestId"
           ],
           "properties": {
             "expectedRevision": {
@@ -1237,10 +1221,6 @@ export const TOOLS = {
               "description": "\u5b8c\u6210\u6216\u9000\u56de\u6642\u9078\u586b\u7684\u7559\u8a00, \u8207\u72c0\u614b\u540c\u4ea4\u6613\u4fdd\u5b58"
             }
           }
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -1271,7 +1251,8 @@ export const TOOLS = {
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "expectedRevision"
+            "expectedRevision",
+            "requestId"
           ],
           "properties": {
             "expectedRevision": {
@@ -1293,10 +1274,6 @@ export const TOOLS = {
               "description": "\u5b8c\u6210\u6216\u9000\u56de\u6642\u9078\u586b\u7684\u7559\u8a00, \u8207\u72c0\u614b\u540c\u4ea4\u6613\u4fdd\u5b58"
             }
           }
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -1328,6 +1305,7 @@ export const TOOLS = {
           "additionalProperties": false,
           "required": [
             "expectedRevision",
+            "requestId",
             "content"
           ],
           "properties": {
@@ -1345,10 +1323,6 @@ export const TOOLS = {
               "maxLength": 2000
             }
           }
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -1380,6 +1354,7 @@ export const TOOLS = {
           "additionalProperties": false,
           "required": [
             "expectedRevision",
+            "requestId",
             "assigneeId"
           ],
           "properties": {
@@ -1400,10 +1375,6 @@ export const TOOLS = {
               "maxLength": 2000
             }
           }
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -1433,7 +1404,8 @@ export const TOOLS = {
         "body": {
           "type": "object",
           "required": [
-            "name"
+            "name",
+            "requestId"
           ],
           "additionalProperties": false,
           "properties": {
@@ -1451,10 +1423,6 @@ export const TOOLS = {
               "maxLength": 300
             }
           }
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -1488,6 +1456,7 @@ export const TOOLS = {
         "body": {
           "type": "object",
           "required": [
+            "requestId",
             "expectedRevision"
           ],
           "additionalProperties": false,
@@ -1552,10 +1521,6 @@ export const TOOLS = {
               }
             }
           }
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -1779,13 +1744,11 @@ export const TOOLS = {
               "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
             }
           },
-          "required": [],
+          "required": [
+            "requestId"
+          ],
           "description": "JSON\u7269\u4ef6\u6700\u591a50000 bytes\uff1b\u6b04\u4f4d\u540cPATCH\uff0c\u5efa\u7acb\u6642title\u5fc5\u586b\u3002\u5916\u90e8\u8b58\u5225\u53ea\u53d6\u8def\u5f91\uff0cpayload\u540c\u540d\u6b04\u4f4d\u4e0d\u751f\u6548\u3002",
           "additionalProperties": false
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -1984,14 +1947,11 @@ export const TOOLS = {
             }
           },
           "required": [
+            "requestId",
             "items"
           ],
           "description": "JSON\u7269\u4ef6\u6700\u591a50000 bytes\uff1b\u540c\u6279\u5916\u90e8\u8b58\u5225\u4e0d\u53ef\u91cd\u8907\u3002",
           "additionalProperties": false
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -2325,15 +2285,12 @@ export const TOOLS = {
             }
           },
           "required": [
+            "requestId",
             "expectedRevision",
             "issueId",
             "issueRevision"
           ],
           "additionalProperties": false
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -2389,15 +2346,12 @@ export const TOOLS = {
             }
           },
           "required": [
+            "requestId",
             "name",
             "mime",
             "fileBase64"
           ],
           "additionalProperties": false
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -2467,6 +2421,7 @@ export const TOOLS = {
           "type": "object",
           "additionalProperties": false,
           "required": [
+            "requestId",
             "name"
           ],
           "properties": {
@@ -2489,10 +2444,6 @@ export const TOOLS = {
               "maxLength": 300
             }
           }
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -2571,6 +2522,7 @@ export const TOOLS = {
           "type": "object",
           "additionalProperties": false,
           "required": [
+            "requestId",
             "expectedRevision"
           ],
           "anyOf": [
@@ -2614,10 +2566,6 @@ export const TOOLS = {
               "maxLength": 300
             }
           }
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [
@@ -2704,6 +2652,7 @@ export const TOOLS = {
           "type": "object",
           "additionalProperties": false,
           "required": [
+            "requestId",
             "expectedRevision"
           ],
           "properties": {
@@ -2734,10 +2683,6 @@ export const TOOLS = {
               }
             }
           }
-        },
-        "confirmation": {
-          "type": "string",
-          "maxLength": 2000
         }
       },
       "required": [

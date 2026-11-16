@@ -27,29 +27,34 @@ test('tag definitions retain descriptions and revisions; issue reads retain exis
   assert.deepEqual((await callTool('get_issue', { project, issue }, env, f.transport)).data.tagIds, [tag]);
   assert.ok(f.calls.every(c => c.options.method === 'GET'));
 });
-for (const [name, args, revisionPath] of [
+for (let [name, args, revisionPath] of [
   ['create_tag', { project, body: { name: 'Synthetic', description: 'Policy' } }, null],
   ['update_tag', { project, tag, body: { expectedRevision: 3, description: 'Revised' } }, `/tags/${tag}`],
   ['delete_tag', { project, tag, body: { expectedRevision: 3 } }, `/tags/${tag}`],
   ['update_issue_tags', { project, issue, body: { expectedRevision: 3, addTagIds: [tag], removeTagIds: [] } }, `/issues/${issue}`],
 ]) test(`${name}: preview, exact revision target, stable replay and scope`, async () => {
   const f = fixture();
-  const preview = (await callTool(name, args, env, f.transport)).data;
-  assert.ok(f.calls.every(c => c.options.method === 'GET'));
-  if (revisionPath) assert.ok(f.calls.at(-1).url.endsWith(revisionPath));
-  if (name === 'delete_tag') assert.match(preview.preview.effect, /Issue history is preserved/);
-  if (name === 'update_issue_tags') {
-    assert.deepEqual(preview.preview.target.tagIds, [tag]);
-    assert.deepEqual(preview.preview.body.addTagIds, [tag]);
-    assert.equal(preview.preview.body.tagIds, undefined);
+  args = { ...args, body: { ...args.body, requestId: tag } };
+  let input = args;
+  if (name === 'delete_tag') {
+    const preview = (await callTool(name, args, env, f.transport)).data;
+    assert.ok(f.calls.every(c => c.options.method === 'GET'));
+    assert.ok(f.calls.at(-1).url.endsWith(revisionPath));
+    assert.match(preview.preview.effect, /Issue history is preserved/);
+    input = { ...args, confirmation: preview.confirmation };
   }
-  const confirmed = { ...args, confirmation: preview.confirmation };
-  await callTool(name, confirmed, env, f.transport);
+  const result = await callTool(name, input, env, f.transport);
+  assert.equal(result.data.requiresConfirmation, undefined);
   const body = f.calls.at(-1).options.body;
-  await callTool(name, confirmed, env, f.transport);
+  if (name !== 'delete_tag') assert.equal(f.calls.length, 2);
+  if (name === 'update_issue_tags') {
+    assert.deepEqual(JSON.parse(body).addTagIds, [tag]);
+    assert.equal(JSON.parse(body).tagIds, undefined);
+  }
+  await callTool(name, input, env, f.transport);
   assert.equal(f.calls.at(-1).options.body, body);
   await assert.rejects(callTool(name, args, env, fixture(['read']).transport), e => e.code === 'WRITE_SCOPE_REQUIRED');
-  if (revisionPath) await assert.rejects(callTool(name, { ...args, body: { ...args.body, expectedRevision: 2 } }, env, f.transport), e => e.code === 'CONFLICT');
+  if (name === 'delete_tag') await assert.rejects(callTool(name, { ...args, body: { ...args.body, expectedRevision: 2 } }, env, f.transport), e => e.code === 'CONFLICT');
 });
 test('delta rejects replacement, duplicate IDs and out-of-bound arrays before any API call', async () => {
   for (const body of [{ tagIds: [tag] }, { addTagIds: [tag, tag] }, { addTagIds: Array(21).fill(tag) }]) {

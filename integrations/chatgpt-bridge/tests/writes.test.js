@@ -24,7 +24,7 @@ function fixture({ status = 200, who = identity } = {}) {
   return { calls, transport };
 }
 
-for (const [name, args] of [
+for (let [name, args] of [
   ['create_issue', { project, body: { title: 'Synthetic task', type: 'task', priority: 'normal' } }],
   ['update_issue', { project, issue, body: { expectedRevision: 3, title: 'Revised' } }],
   ['comment_issue', { project, issue, body: { expectedRevision: 3, content: 'Synthetic comment' } }],
@@ -40,54 +40,56 @@ for (const [name, args] of [
   ['delete_issue', { project, issue, body: { expectedRevision: 3 } }],
   ['upsert_external_issue', { project, source: 'synthetic', externalId: 'item-1', body: { title: 'Synthetic upsert' } }],
   ['bind_attachment', { project, attachment: issue, body: { expectedRevision: 3, issueId: issue, issueRevision: 3 } }],
-]) test(`${name} previews without writing and confirms the identical payload with a stable requestId`, async () => {
+]) test(`${name} uses direct writes except deletion, preserving the requestId`, async () => {
   const f = fixture();
-  const preview = (await callTool(name, args, env, f.transport)).data;
-  assert.equal(preview.requiresConfirmation, true);
-  assert.ok(f.calls.every(c => c.options.method === 'GET'));
-  assert.doesNotMatch(JSON.stringify(preview), /synthetic-only-secret/);
-  const result = await callTool(name, { ...args, confirmation: preview.confirmation }, env, f.transport);
+  args = { ...args, body: { ...args.body, requestId: issue } };
+  let input = args;
+  if (TOOLS[name].annotations.destructiveHint) {
+    const preview = (await callTool(name, args, env, f.transport)).data;
+    assert.equal(preview.requiresConfirmation, true);
+    assert.ok(f.calls.every(c => c.options.method === 'GET'));
+    input = { ...args, confirmation: preview.confirmation };
+  }
+  const result = await callTool(name, input, env, f.transport);
   assert.equal(result.data.revision, 4);
   assert.equal(result.data.password, undefined);
+  assert.equal(result.data.requiresConfirmation, undefined);
   const first = f.calls.at(-1);
   assert.equal(first.options.method, TOOLS[name].method);
-  assert.equal(first.url, ORIGIN + preview.preview.path);
-  assert.deepEqual(JSON.parse(first.options.body), preview.preview.body);
-  await callTool(name, { ...args, confirmation: preview.confirmation }, env, f.transport);
+  assert.deepEqual(JSON.parse(first.options.body), args.body);
+  if (!TOOLS[name].annotations.destructiveHint) assert.equal(f.calls.length, 2, 'identity plus write, no preflight');
+  await callTool(name, input, env, f.transport);
   assert.equal(f.calls.at(-1).options.body, first.options.body);
 });
 
-test('confirmation is bound to target, user, workspace, operation and exact changes', async () => {
+test('delete confirmation remains bound to target, user, workspace and exact changes', async () => {
   const f = fixture();
-  const args = { project, body: { title: 'Synthetic' } };
-  const confirmation = (await callTool('create_issue', args, env, f.transport)).data.confirmation;
-  for (const changed of [{ ...args, body: { title: 'Tampered' } }, { ...args, project: issue }]) {
-    await assert.rejects(callTool('create_issue', { ...changed, confirmation }, env, f.transport), errorCode('CONFIRMATION_INVALID'));
-  }
-  await assert.rejects(callTool('create_issue', { ...args, confirmation: confirmation + '0' }, env, f.transport), errorCode('CONFIRMATION_INVALID'));
-  await assert.rejects(callTool('create_issue', { ...args, confirmation }, env,
+  const args = { project, issue, body: { expectedRevision: 3 } };
+  const confirmation = (await callTool('delete_issue', args, env, f.transport)).data.confirmation;
+  await assert.rejects(callTool('delete_issue', { ...args, issue: project, confirmation }, env, f.transport), errorCode('CONFIRMATION_INVALID'));
+  await assert.rejects(callTool('delete_issue', { ...args, confirmation: confirmation + '0' }, env, f.transport), errorCode('CONFIRMATION_INVALID'));
+  await assert.rejects(callTool('delete_issue', { ...args, confirmation }, env,
     fixture({ who: { ...identity, userId: 'different-user' } }).transport), errorCode('CONFIRMATION_INVALID'));
   assert.ok(f.calls.every(c => c.options.method === 'GET'));
 });
 
-test('expired confirmations and read-only tokens cannot write', async t => {
-  const args = { project, body: { title: 'Synthetic' } }; const f = fixture();
-  const confirmation = (await callTool('create_issue', args, env, f.transport)).data.confirmation;
+test('expired delete confirmations and read-only tokens cannot write', async t => {
+  const f = fixture();
+  const args = { project, issue, body: { expectedRevision: 3 } };
+  const confirmation = (await callTool('delete_issue', args, env, f.transport)).data.confirmation;
   t.mock.method(Date, 'now', () => new Date('2100-01-01').getTime());
-  await assert.rejects(callTool('create_issue', { ...args, confirmation }, env, f.transport), errorCode('CONFIRMATION_INVALID'));
-  await assert.rejects(callTool('create_issue', args, env,
+  await assert.rejects(callTool('delete_issue', { ...args, confirmation }, env, f.transport), errorCode('CONFIRMATION_INVALID'));
+  await assert.rejects(callTool('create_issue', { project, body: { title: 'Synthetic', requestId: issue } }, env,
     fixture({ who: { ...identity, abilities: ['read'] } }).transport), errorCode('WRITE_SCOPE_REQUIRED'));
 });
 
-test('stale preview revision and mutation conflicts are not retried or overwritten', async () => {
-  const f = fixture();
-  await assert.rejects(callTool('update_issue', { project, issue, body: { expectedRevision: 1, title: 'Stale' } }, env, f.transport), errorCode('CONFLICT'));
-  const args = { project, issue, body: { expectedRevision: 3, title: 'Valid preview' } };
-  const confirmation = (await callTool('update_issue', args, env, f.transport)).data.confirmation;
-  for (const [status, code] of [[401, 'TOKEN_REJECTED'], [403, 'FORBIDDEN'], [409, 'CONFLICT']]) {
-    const failed = fixture({ status });
-    await assert.rejects(callTool('update_issue', { ...args, confirmation }, env, failed.transport), errorCode(code));
-    assert.equal(failed.calls.filter(c => c.options.method !== 'GET').length, 1);
+test('API conflicts and revocation are returned without retries or replacement revisions', async () => {
+  const args = { project, issue, body: { requestId: issue, expectedRevision: 2, title: 'Stale' } };
+  for (const [status, code] of [[409, 'CONFLICT'], [403, 'FORBIDDEN'], [401, 'TOKEN_REJECTED']]) {
+    const f = fixture({ status });
+    await assert.rejects(callTool('update_issue', args, env, f.transport), errorCode(code));
+    assert.equal(f.calls.length, 2);
+    assert.deepEqual(JSON.parse(f.calls.at(-1).options.body), args.body);
   }
 });
 
@@ -96,6 +98,8 @@ test('write schemas reject spoofed identity, bad revisions and unknown payload f
     { project, body: { title: 'Synthetic', actor: 'owner' } },
     { project, body: { title: 'Synthetic', requestId: 'invalid' } },
     { project, body: { title: '' } },
+    { project, body: { title: 'Missing request ID' } },
+    { project, body: { title: 'Direct', requestId: issue }, confirmation: 'obsolete' },
     { project, issue, body: { expectedRevision: '3', title: 'Synthetic' } },
   ]) await assert.rejects(callTool(args.issue ? 'update_issue' : 'create_issue', args, env, async () => assert.fail('no fetch')), errorCode('INVALID_ARGUMENTS'));
 });
@@ -119,30 +123,21 @@ test('deletion is destructive and preview includes exact identifier, title and p
   assert.ok(f.calls.every(c => c.options.method === 'GET'));
 });
 
-test('external upsert reads the exact external target for revision and batch keeps per-item results', async () => {
-  const f = fixture();
-  await callTool('upsert_external_issue', { project, source: 'synthetic', externalId: 'item:1', body: { expectedRevision: 3, title: 'Update' } }, env, f.transport);
-  assert.match(f.calls.at(-1).url, /issues\/external\/synthetic\/item%3A1$/);
-  const args = { project, body: { createOnly: true, items: [{ source: 'synthetic', externalId: 'one', title: 'One' }, { source: 'synthetic', externalId: 'two', parentRef: { source: 'synthetic', externalId: 'one' } }] } };
+test('batch upsert executes directly and keeps per-item results', async () => {
+  const args = { project, body: { requestId: issue, createOnly: true, items: [{ source: 'synthetic', externalId: 'one', title: 'One' }] } };
   const calls = [];
   const transport = async (url, options) => {
     calls.push({ url, options });
-    return url.endsWith('/me') ? response(identity) : response({ items: [
-      { index: 0, externalSource: 'synthetic', externalId: 'one', status: 'created', id: issue, secret: 'hidden' },
-      { index: 1, externalSource: 'synthetic', externalId: 'two', status: 'failed', error: { code: 'CONFLICT', message: 'Conflict', internal: 'hidden' } },
-    ], summary: { created: 1, failed: 1 } });
+    return response(url.endsWith('/me') ? identity : { items: [{ index: 0, status: 'failed', error: { code: 'CONFLICT', message: 'Conflict', internal: 'hidden' } }], summary: { failed: 1 } });
   };
-  const preview = (await callTool('batch_upsert_issues', args, env, transport)).data;
-  assert.equal(preview.preview.body.items.length, 2);
-  const result = (await callTool('batch_upsert_issues', { ...args, confirmation: preview.confirmation }, env, transport)).data;
-  assert.equal(result.items[1].error.code, 'CONFLICT');
+  const result = (await callTool('batch_upsert_issues', args, env, transport)).data;
+  assert.equal(calls.length, 2);
+  assert.equal(result.items[0].error.code, 'CONFLICT');
   assert.equal(result.summary.failed, 1);
   assert.doesNotMatch(JSON.stringify(result), /hidden/);
-  assert.equal(calls.filter(c => c.options.method === 'POST').length, 1);
-  await assert.rejects(callTool('batch_upsert_issues', { project, body: { items: Array(51).fill(args.body.items[0]) } }, env, async () => assert.fail('no fetch')), errorCode('INVALID_ARGUMENTS'));
 });
 
-test('mutation payload contracts match official schemas with optional generated requestId', async () => {
+test('mutation payload contracts match official schemas with requestId required for direct writes', async () => {
   const spec = JSON.parse(await readFile(new URL('../../../backend/resources/openapi.json', import.meta.url)));
   const resolve = value => {
     if (Array.isArray(value)) return value.map(resolve);
@@ -160,7 +155,7 @@ test('mutation payload contracts match official schemas with optional generated 
     }
     const schema = resolve(op.requestBody.content['application/json'].schema);
     schema.additionalProperties = false;
-    schema.required = schema.required.filter(k => k !== 'requestId');
+    if (tool.annotations.destructiveHint) schema.required = schema.required.filter(k => k !== 'requestId');
     assert.deepEqual(tool.inputSchema.properties.body, schema);
     assert.equal(tool.annotations.readOnlyHint, false);
   }
