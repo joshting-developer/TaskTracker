@@ -11,8 +11,8 @@ GPT 的目標帳號、Plugin、Secret 與 PAT 在主站正式驗收後另外處�
 ## 已完成的準備
 
 - 正式 MySQL 唯讀一致備份保留私有 SQL 與雜湊, 不進 Git、映像或公開產物
-- 在無外部網路、無公開埠的獨立 MySQL 還原成功；三個加法 migration 預演通過, 主要業務表筆數不變。還原容器已清理, 備份保留
-- 三個待執行 migration 為 050000 計畫日期、060000 標籤資料表、070000 標籤關聯索引；正式庫尚未修改
+- 在無外部網路、無公開埠的獨立 MySQL 還原成功；四個加法 migration 預演通過, 主要業務表筆數不變。還原容器已清理, 備份保留
+- 四個待執行 migration 為 050000 計畫日期、060000 標籤資料表、070000 標籤關聯索引、2026_11_16_000000 工作區顯示時區；正式庫尚未修改
 - 原 Fly 映像保留 v0.5.0, digest `sha256:c26c78b09d14881b13cc6f8b332793c249f4e94f9ec0b279c9d6dd43353262ed`, 單台 nrt／512MB, 未新增付費資源
 
 ## 整批驗證進度
@@ -20,3 +20,14 @@ GPT 的目標帳號、Plugin、Secret 與 PAT 在主站正式驗收後另外處�
 完整後端 522 項、20,187 assertions 通過（R2 專用項目另驗）；一般前端 74 項這次全數通過。七組專用拓樸仍在進行。162 張核准視覺比較已通過, environmentMatches=true, threshold 0.02／maxDiffPixels 0 維持；spacing／overflow／hide-action 三種退化與原樣／還原全部通過, 每種退化均有真正 screenshot diff 證據。初輪曾因測試容器停止而未啟動, 第二輪一般前端又遇到管理固定日期跨日造成 Cookie／CSRF 失效；目前已恢復標準 serve 時鐘重跑, 原失敗紀錄保留
 
 正式 migration、tag CI、Fly 發布與正式 Session／PAT／標籤／日期／權限驗收尚未執行, 不宣稱發布完成。正式套標及 Josh 補標紙條的回填亦尚未執行
+
+
+## 2026-11-16 發版接手核對
+
+TT-398 已由另一 session 提交 3aa73bf, TT-409 調整驗證頻率為發版前跑冒煙與完整回歸, 最新 main CI 43801947371 成功。GPT 私人 Plugin 已另行交付, 不重做或混進主站部署
+
+新版完整後端 524 項／20,249 assertions 通過, 1 個 R2 專用另組驗證；75 項一般前端含兩項記錄原因後的精準重跑均通過。162 張 Chrome157／同環境視覺比較與退化注入通過, 閾值不變。接手本輪重新執行 routes／API／composables／build／真實瀏覽器的標準 smoke 通過, 前一 session 的 macOS 啟動限制本輪未重現
+
+正式資料已再取最新私有一致備份, 無網路副本還原及四個加法 migration 預演成功, 主要業務筆數不變。備份不進 Git。受新設定影響的四個專用拓樸新版全部驗收通過（seed／realtime／R2／runtime）, 保留每組退出碼與清理結果, 正式 migration、tag 與 Fly 尚未執行
+
+四個正式加法 migration 已於本輪成功執行, 專用 migration 帳號與 TLS CA 驗證維持, 無 seed／reset／匯入覆寫。舊 v0.5.0 仍可運作, 正式發布待單一 tag CI
