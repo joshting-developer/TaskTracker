@@ -21,3 +21,7 @@
 Josh於2026-11-15確認現在登入的joshting.1999為目標帳號。舊Site在目前帳號not found且owner清單空, 不刪舊服務。此份來源依明確重建要求解除舊project_id, 下一次create回傳立即原樣保存新ID, 不重複建立。舊ID仍留docs/chatgpt-bridge-deployment.md沿革
 
 新帳號owner-only已讀回, 私人版本1發布成功, Plugin已安裝但當前對話尚無工具。32項Adapter測試通過, 匿名HTTP401。沒有TASKTRACKER_PAT, 真實唯讀E2E及撤銷驗收仍受阻；發紙條給Josh後回TT-364
+
+## 2026-11-16 連線驗收結案與後續功能規劃
+
+Josh確認原連線目標完成, TT-350已closed。新建GPT / MCP Plugin看板並讀回14張：3張closed、11張open未指派。沿用TT-351, 新建TT-399～408；正式OpenAPI 0.22.0的41個操作逐項比對全覆蓋, 本輪只有規劃, 沒有開始實作新功能。明細見docs/gpt-plugin-roadmap-2026-11-16.md；未重驗安全項目轉TT-408。既有正式工時保留, 不補造紀錄

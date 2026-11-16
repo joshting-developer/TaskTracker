@@ -4,11 +4,11 @@
 
 - 本地 5174／3002 已由 TT-370 恢復為全新 tasktracker-local-dev 隔離服務, 啟停與合成帳號位置見 docs/local-development.md；原 tasktracker MySQL 仍是唯讀備份, 不重啟舊 Compose
 
-- Season查重／看板／Future與補標紙條索引：docs/season-roadmap-status-2026-11-15.md, TT-367；Future不自動領卡, 私人GPT仍暫停
+- Season查重／看板／Future與補標紙條索引：docs/season-roadmap-status-2026-11-15.md, TT-367；Future不自動領卡。私人GPT最新狀態見下方2026-11-16交接
 
 - 獨立管理後台：docs/admin-dashboard-contract.md, TT-364已隨v0.5.0發布並通過正式獨立管理驗收
 - 公開頁與上方語言入口：docs/public-language-contract.md, TT-365／366已隨v0.5.0同批發布與正式驗收
-- GPT私人串接依Josh最新交接暫停：目標joshting.1999並非目前登入帳號, 先前歸屬推定撤回, TT-350 blocked；待切回目標帳號且明確要求恢復, 才重驗所有者／安裝並操作Plugin／Secret／PAT。歷史見docs/chatgpt-bridge-deployment.md, 舊催促紙條不構成恢復授權
+- GPT私人串接2026-11-16已恢復並驗證joshting.1999唯一owner, 版本2實際身分／專案／卡號查詢成功。Josh確認原連線目標完成, TT-350已closed。後續功能另收GPT / MCP Plugin看板：3張完成、11張open未指派, 沿用TT-351、新增TT-399～408, 覆蓋正式OpenAPI 0.22.0全部41個PAT操作。規劃及未重驗項目見docs/gpt-plugin-roadmap-2026-11-16.md, 不將已建卡當成新工具已實作
 
 # TaskTracker 專案記憶
 
