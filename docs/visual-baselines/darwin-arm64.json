@@ -2,9 +2,9 @@
   "approved": true,
   "harnessSha256": "8e1511a26890d37418f74b38a80766ed6779cbaca5d4418b98f254479d5976d7",
   "profile": "darwin-arm64",
-  "reviewer": "Codex under Josh standing authorization",
-  "note": "TT-365/366: reviewed public language selector, login/header placement, shortened account menu and responsive controls. Existing snapshot policy unchanged; all three fault injections failed with visual diffs and both clean runs passed. Prior approval archived; 10 screens byte-identical and 102 changes confined to header.",
-  "manifestSha256": "7993a326eca956c53e3e60642ea1d8a794063667650e823bc13354039f4d5144",
+  "reviewer": "Josh standing delegated review",
+  "note": "TT-396 Season 0: reviewed three-width before/after login navigation, new tags sidebar/filter, planned dates and form details. Prior bundle archived, same Chrome157 environment and unchanged threshold0.02/maxDiffPixels0. Physical device installation not claimed.",
+  "manifestSha256": "46f74cc8960e9b2a02c0a03223d42d0a879c56e48edec4b0cbfbb2cfb5530737",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",
