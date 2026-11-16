@@ -2172,5 +2172,245 @@ export const TOOLS = {
       "idempotentHint": true,
       "openWorldHint": true
     }
+  },
+  "get_attachment_limits": {
+    "operationId": "getPublicAttachmentLimits",
+    "path": "/api/public/v1/projects/{project}/attachments/limits",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        }
+      },
+      "required": [
+        "project"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "get_attachment": {
+    "operationId": "getPublicAttachment",
+    "path": "/api/public/v1/projects/{project}/attachments/{attachment}",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "attachment": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        }
+      },
+      "required": [
+        "project",
+        "attachment"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "list_issue_attachments": {
+    "operationId": "listPublicIssueAttachments",
+    "path": "/api/public/v1/projects/{project}/issues/{issue}/attachments",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "issue": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      "required": [
+        "project",
+        "issue"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "get_attachment_content": {
+    "operationId": "getPublicAttachmentContent",
+    "path": "/api/public/v1/projects/{project}/attachments/{attachment}/content",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "attachment": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "download": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "project",
+        "attachment"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "bind_attachment": {
+    "operationId": "bindPublicAttachment",
+    "path": "/api/public/v1/projects/{project}/attachments/{attachment}/bind",
+    "method": "POST",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "attachment": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "expectedRevision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "issueId": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "issueRevision": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "expectedRevision",
+            "issueId",
+            "issueRevision"
+          ],
+          "additionalProperties": false
+        },
+        "confirmation": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "project",
+        "attachment",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "upload_attachment": {
+    "operationId": "uploadPublicAttachment",
+    "path": "/api/public/v1/projects/{project}/attachments",
+    "encoding": "multipart",
+    "method": "POST",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "body": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 180,
+              "pattern": "^[^\\x00-\\x1f/\\\\]+$"
+            },
+            "mime": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "pattern": "^[a-zA-Z0-9.+-]+/[a-zA-Z0-9.+-]+$"
+            },
+            "fileBase64": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8388608,
+              "contentEncoding": "base64"
+            },
+            "requestId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "name",
+            "mime",
+            "fileBase64"
+          ],
+          "additionalProperties": false
+        },
+        "confirmation": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "project",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
   }
 };

@@ -52,6 +52,9 @@ for (const [name, args, data] of [
   ['list_issue_changes', { project }, { items: [issueRow], perPage: 20, nextCursor: null, syncUntil: '2026-11-16T00:00:00Z' }],
   ['list_issue_deletions', { project }, { items: [{ issueId: issue, identifier: 'TT-1', deletedAt: '2026-11-16T00:00:00Z' }], nextAfter: '1' }],
   ['list_notifications', {}, { items: [{ id: 'one', kind: 'assigned', subject: 'Synthetic', projectId: project, issueId: issue }], nextAfter: '1', hasMore: false }],
+  ['get_attachment_limits', { project }, { maxBytes: 10000000, mimeTypes: ['text/plain'] }],
+  ['get_attachment', { project, attachment: issue }, { id: issue, name: 'Synthetic.txt', mime: 'text/plain', bytes: 5, revision: 1 }],
+  ['list_issue_attachments', { project, issue }, page([{ id: issue, name: 'Synthetic.txt', mime: 'text/plain', bytes: 5 }])],
 ]) test(`${name} projects only its required fields`, async () => {
   const f = fake({ ...data, password: 'never-return', secret: env.TASKTRACKER_PAT });
   const result = await callTool(name, args, env, f.transport);
@@ -254,7 +257,7 @@ test('overlarge header, streamed body, invalid JSON and too many rows are reject
 test('MCP discovery and list expose the read-only contract and no environment', async () => {
   const listed = await (await handle(request('tools/list'), env)).json();
   assert.equal(listed.result.tools.length, Object.keys(TOOLS).length);
-  assert.equal(listed.result.tools.filter(t => t.annotations.readOnlyHint).length, 20);
+  assert.equal(listed.result.tools.filter(t => t.annotations.readOnlyHint).length, 24);
   assert.doesNotMatch(JSON.stringify(listed), /synthetic-private-token|owner@example/);
   const discovered = await (await handle(request('server/discover'), env)).json();
   assert.deepEqual(discovered.result.supportedVersions, ['2026-07-28']);

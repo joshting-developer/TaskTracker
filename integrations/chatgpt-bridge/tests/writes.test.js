@@ -39,6 +39,7 @@ for (const [name, args] of [
   ['update_board', { project, board: issue, body: { expectedRevision: 3, addIssueIds: [issue], removeIssueIds: [] } }],
   ['delete_issue', { project, issue, body: { expectedRevision: 3 } }],
   ['upsert_external_issue', { project, source: 'synthetic', externalId: 'item-1', body: { title: 'Synthetic upsert' } }],
+  ['bind_attachment', { project, attachment: issue, body: { expectedRevision: 3, issueId: issue, issueRevision: 3 } }],
 ]) test(`${name} previews without writing and confirms the identical payload with a stable requestId`, async () => {
   const f = fixture();
   const preview = (await callTool(name, args, env, f.transport)).data;
@@ -152,6 +153,11 @@ test('mutation payload contracts match official schemas with optional generated 
   for (const tool of Object.values(TOOLS).filter(t => t.method)) {
     const op = spec.paths[tool.path][tool.method.toLowerCase()];
     assert.equal(tool.operationId, op.operationId);
+    if (tool.encoding === 'multipart') {
+      assert.ok(op.requestBody.content['multipart/form-data']);
+      assert.ok(tool.inputSchema.properties.body.properties.fileBase64);
+      continue;
+    }
     const schema = resolve(op.requestBody.content['application/json'].schema);
     schema.additionalProperties = false;
     schema.required = schema.required.filter(k => k !== 'requestId');
