@@ -9,3 +9,10 @@
 - 用 Codex 本人 PAT 唯讀實測新 Adapter：取得 4 個正式標籤定義, TT-193 revision16 回傳 tags／tagIds。沒有正式建標／貼標／刪標, 沒有使用或輸出 GPT Secret
 - 共用 Skill 完整性通過, 本次為 Adapter 契約與投影修正, 無產品畫面或核心 Laravel 改動；不重跑核心 API 與無關全站瀏覽器回歸
 - 已提出既有私人 Bridge 的部署授權問題, 等明確答覆才部署；本輪未宣稱 Host 已載入新工具
+
+## 私人部署
+
+- Josh 明確指示「部署吧」後執行, 原 repository subtree 11da7463a7d3c7381eab4bb942140066f0eab34f 正常推至既有 Site main, 未另建 clone／worktree
+- 官方 package-site helper 產出完成後僅清理暫存目錄遇 EPERM；核對 archive 僅兩個檔案, Worker 位元組相同, hosting manifest JSON 相同（只有格式差異）, 原生 save 亦確認 file_count=2
+- 第 4 版部署 appgdep_6afab548d5108191bb0e5d4a73300d50 成功, has_mcp=true, env revision20。唯一 owner joshting.1999@gmail.com、無群組／外部訪客, Secret 未改
+- 原生既有 Plugin get_issue(TT-193) 成功回傳 Season 0 的 tags 及 tagIds, revision16；證實線上新投影生效。當前對話尚無六個新 Tag 工具, 新對話載入與正式寫入體驗仍待驗收, 保持 review
