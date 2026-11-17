@@ -85,7 +85,10 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutside
         </div>
       </details>
     </div>
-    <TagPicker v-if="lookupContext" v-model="tagIds" :project-id="lookupContext" :label="t('篩選標籤')" />
+    <div v-if="lookupContext">
+      <TagPicker v-model="tagIds" :project-id="lookupContext" :label="t('篩選標籤')" />
+      <p v-if="tagIds.length > 1" class="tag-filter-hint">{{ t('同時符合所有選取標籤') }}</p>
+    </div>
     <label>{{ t('優先級') }}
       <select v-model="priorityFilter" :aria-label="t('篩選優先級')">
         <option value="">{{ t('所有優先級') }}</option>
@@ -129,3 +132,7 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutside
   </div>
   <div v-if="filterWarnings.length" class="filter-warning" role="alert">{{ filterWarnings.join('、') }}{{ t(', 請重新選擇或清除條件。原條件保留, 沒有放寬搜尋') }}</div>
 </template>
+
+<style scoped>
+.tag-filter-hint { margin-top: 6px; color: var(--muted); font-size: 12px; }
+</style>

@@ -1,0 +1,9 @@
+{
+  "approved": true,
+  "reviewer": "Standing authorization delegated by Josh",
+  "authorization": "Josh standing authorization in project-workflow.md; reviewed real browser before/after, independent comparison required",
+  "manifestFile": "docs/evidence/tt419-visual-manifest.json",
+  "manifestSha256": "563e1588eb49d3e52235e83a919a3d749adced66376cafd56e9b5602e0e2522b",
+  "harnessSha256": "9a05678cf2562d11b90e073c0cc8f85aaf2d450c673eb6f037b05a97b9c3182f",
+  "images": 6
+}

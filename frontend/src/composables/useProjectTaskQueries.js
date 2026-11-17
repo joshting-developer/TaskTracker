@@ -46,17 +46,18 @@ export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId
         const meta = await api.board(projectId.value, boardId.value, options);
         if (current !== generation) return;
         board.value = meta; loadingCards.value = true;
+        const tagIds = listQuery.value.tagIds || [];
         // 每個HTTP／SQL頁最多100筆；完成同一次載入後才交換，避免畫面漏剩餘頁。
-        const collected = new Map(); let page = 1, last = 1;
+        const collected = new Map(); let page = 1, last = 1, total = tagIds.length ? null : meta.issueCount;
         do {
-          const data = await api.boardIssues(projectId.value, boardId.value, { page, perPage: 100 }, options);
+          const data = await api.boardIssues(projectId.value, boardId.value, { tagIds, page, perPage: 100 }, options);
           if (current !== generation) return;
           data.items.forEach(item => collected.set(item.id, item));
-          if (page === 1) last = data.lastPage;
-          if (data.total !== meta.issueCount) throw Object.assign(new Error(t('看板資料已變更，請重新整理')), { code: 'DATA_CHANGED' });
+          if (page === 1) { last = data.lastPage; total ??= data.total; }
+          if (data.total !== total) throw Object.assign(new Error(t('看板資料已變更，請重新整理')), { code: 'DATA_CHANGED' });
           page++;
         } while (page <= last);
-        if (collected.size !== meta.issueCount) throw Object.assign(new Error(t('看板資料已變更，請重新整理')), { code: 'DATA_CHANGED' });
+        if (collected.size !== total) throw Object.assign(new Error(t('看板資料已變更，請重新整理')), { code: 'DATA_CHANGED' });
         rows.value = [...collected.values()];
         knownVersion = version;
       }
@@ -78,6 +79,11 @@ export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId
   watch(listArchived, () => { listPage.value = 1; });
   watch([listPage, listSearch, listArchived], () => { clearTimeout(debounce); debounce = setTimeout(() => reload(), 250); });
   watch(() => mode.value === 'list' ? JSON.stringify(listQuery.value) : '', () => { if (mode.value !== 'list') return; clearTimeout(debounce); debounce = setTimeout(() => reload(), 250); });
+  watch(() => mode.value === 'board' ? JSON.stringify(listQuery.value.tagIds || []) : '', () => {
+    if (mode.value !== 'board') return;
+    knownVersion = ''; // Tag 改變時, 相同看板版本仍需讀取新的 SQL 交集
+    clearTimeout(debounce); debounce = setTimeout(() => reload(), 250);
+  });
   onScopeDispose(() => { generation++; request?.abort(); clearTimeout(debounce); });
   return { rows, board, boardPage, issuePage, listPage, listSearch, listArchived, loading, loadingCards, pageVisible: poller.visible, reload };
 }

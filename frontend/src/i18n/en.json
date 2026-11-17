@@ -927,6 +927,7 @@
   "移除標籤 {0}": "Remove tag {0}",
   "編輯標籤 {0}": "Edit tag {0}",
   "套用標籤": "Apply tags",
+  "同時符合所有選取標籤": "Matches all selected tags",
   "篩選標籤": "Filter tags",
   "已選 {0} 個標籤": "{0} tags selected",
   "尚無標籤": "No tags",
