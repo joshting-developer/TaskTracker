@@ -98,9 +98,9 @@ try {
   }
   const last = await furthestCard();
   await last.scrollIntoViewIfNeeded();
-  await last.focus();
+  await last.locator('.card-edit').focus();
   assert.equal(await last.evaluate(element => getComputedStyle(element).contentVisibility), 'visible');
-  await last.press('F2');
+  await last.locator('.card-edit').press('Enter');
   const editor = page.locator('.issue-dialog'); await editor.waitFor();
   await editor.getByRole('button', { name: '關閉任務', exact: true }).click();
   await editor.waitFor({ state: 'detached' });
@@ -141,5 +141,5 @@ try {
   const report = { interactionVariant: process.env.E2E_CANDIDATE_INTERACTIONS === '1' ? 'containment-candidate' : 'unchanged-production', build: process.env.E2E_BUILD_LABEL || 'baseline', browser: await browser.version(), viewport: '1440x1000', samples, cpuRate, totalCards: 500, data: '5 Epic + 495 tasks, real isolated MySQL HTTP 100/page', cache: 'warm Chrome assets; API requests are real; CSS experiment added after load; drag feedback uses20 alternating dragover events plus real DnD below', note: 'CDP layout/style/script counters measure scroll+resize; initialLongTasks end before settled500-card readyAtMs; scenarioLongTasks are scroll/resize/drag feedback; not RUM/INP.' };
   writeFileSync(new URL(process.env.E2E_INTERACTIONS_ONLY === '1' ? 'interactions.json' : 'measurements.json', artifacts), JSON.stringify(report, null, 2));
   console.log(JSON.stringify(report, null, 2));
-  console.log('PASS: all500 / bottom / F2 / drag / lanes / density / mobile / bulkReads=0');
+  console.log('PASS: all500 / bottom / edit-button-keyboard / drag / lanes / density / mobile / bulkReads=0');
 } finally { await browser?.close(); await server?.httpServer.close(); }
