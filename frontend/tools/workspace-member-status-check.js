@@ -1,4 +1,5 @@
 import { ownedDefaultTopology } from './fixtures/owned-topology.js';
+import { expandIssueProperties } from './issue-form-actions.js';
 import { fixtureResponse } from './fixtures/verification.js';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
@@ -69,7 +70,7 @@ try {
   await admin.locator('.assignee').filter({ hasText: '待停用成員（已停用）' }).waitFor();
   await admin.getByRole('button', { name: '新增任務', exact: true }).click();
   const editor = admin.getByRole('dialog', { name: '新增一個任務', exact: true });
-  await editor.locator('summary').filter({ hasText: '任務屬性' }).click();
+  await expandIssueProperties(editor);
   await editor.getByLabel('負責人', { exact: true }).waitFor();
   assert.equal(await editor.getByLabel('負責人', { exact: true }).locator(`option[value="${actor.user.id}"]`).count(), 0);
   await editor.getByRole('button', { name: '關閉任務', exact: true }).click();

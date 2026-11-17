@@ -9,7 +9,7 @@ let vite, browser;
 try {
   vite = await createServer({ root: new URL('../', import.meta.url).pathname, server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } }); await vite.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
-  const context = await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } }), page = await context.newPage(), errors = []; page.setDefaultTimeout(15000); page.on('pageerror', e => errors.push(e.message));
+  const context = await browser.newContext({ locale: 'zh-TW', reducedMotion: 'reduce', viewport: { width: 1440, height: 1000 } }), page = await context.newPage(), errors = []; page.setDefaultTimeout(15000); page.on('pageerror', e => errors.push(e.message));
   async function call(operation, input, group = 'rpc', client = context) {
     const csrf = await (await client.request.get(`${base}/api/csrf-cookie`)).json(); const response = await client.request.post(`${base}/api/${group}/${operation}`, { headers: { 'X-CSRF-TOKEN': csrf.csrfToken }, data: { requestId: crypto.randomUUID(), ...input } }); assert.equal(response.status(), 200, await response.text()); return (await fixtureResponse(client.request, response, input)).data;
   }
@@ -17,23 +17,23 @@ try {
   const project = await call('createProject', { name: '會員介面', code: 'FORM' }); const root = `${base}/app/#/projects/${project.id}`; await page.goto(root);
   await page.getByRole('button', { name: '新增任務', exact: false }).first().click();
   let editor = page.getByRole('dialog', { name: '新增一個任務', exact: true }); const title = () => editor.getByLabel(/任務標題/), description = () => editor.getByLabel('描述', { exact: true });
-  await editor.waitFor(); assert.equal(await editor.locator('.issue-properties').getAttribute('open'), null); assert.equal(await editor.getByRole('heading', { level: 2 }).count(), 1);
+  await editor.waitFor(); assert.equal(await editor.locator('.issue-properties').evaluate(el => el.open), true); assert.equal(await editor.getByRole('heading', { level: 2 }).count(), 1);
   await editor.getByRole('button', { name: '建立任務', exact: true }).click(); await editor.getByText('請輸入任務標題', { exact: true }).waitFor(); assert.equal(await title().evaluate(el => el === document.activeElement), true);
   await title().fill('   '); await editor.getByRole('button', { name: '建立任務', exact: true }).click(); await editor.getByText('請輸入任務標題', { exact: true }).waitFor();
   await title().fill('表單體驗驗證'); await description().fill('保留的草稿內容');
   async function capture(name) {
     for (const width of [1440, 768, 390]) {
-      await page.setViewportSize({ width, height: 1000 }); await editor.locator('.panel-content').evaluate(el => el.scrollTop = 0); await page.mouse.move(1, 1); await page.evaluate(() => document.activeElement?.blur()); await page.waitForLoadState('networkidle');
+      await page.setViewportSize({ width, height: 1000 }); await editor.locator('.panel-content').evaluate(el => el.scrollTop = 0); await page.mouse.move(1, 1); await page.evaluate(() => document.activeElement?.blur()); await page.waitForLoadState('networkidle'); await page.evaluate(() => document.fonts.ready); if (name === 'properties') await editor.locator('.issue-properties').scrollIntoViewIfNeeded(); await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       assert.equal(await editor.evaluate(el => el.scrollWidth <= el.clientWidth), true);
       const save = editor.getByRole('button', { name: /^(建立任務|儲存修改)$/ });
       assert.equal(await save.evaluate(el => { const r = el.getBoundingClientRect(); return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2) === el || el.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)); }), true);
-      await editor.screenshot({ path: new URL(`${name}-${width}.png`, folder).pathname });
+      await editor.screenshot({ animations: 'disabled', caret: 'hide', path: new URL(`${name}-${width}.png`, folder).pathname });
       if (name === 'properties' && width === 390) writeFileSync(new URL('inspect.html', folder), await editor.evaluate(el => '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' + [...document.querySelectorAll('style')].map(style => style.outerHTML).join('') + '<div class="v-application v-theme--light">' + el.outerHTML + '</div>'));
     }
     await page.setViewportSize({ width: 1440, height: 1000 });
   }
   await capture('primary');
-  await editor.locator('.issue-properties > summary').focus(); await page.keyboard.press('Space'); assert.equal(await editor.locator('.issue-properties').evaluate(el => el.open), true); await editor.getByLabel('類型', { exact: true }).selectOption('bug'); await editor.getByLabel('優先級', { exact: true }).selectOption('high'); await editor.getByLabel('到期日', { exact: true }).fill('2026-11-20');
+  await editor.locator('.issue-properties > summary').focus(); await page.keyboard.press('Space'); assert.equal(await editor.locator('.issue-properties').evaluate(el => el.open), false); await page.keyboard.press('Space'); assert.equal(await editor.locator('.issue-properties').evaluate(el => el.open), true); await editor.getByLabel('類型', { exact: true }).selectOption('bug'); await editor.getByLabel('優先級', { exact: true }).selectOption('high'); await editor.getByLabel('到期日', { exact: true }).fill('2026-11-20');
   await capture('properties');
   const requests = []; let fail = true;
   await page.route('**/api/rpc/createIssue', async route => {
@@ -49,7 +49,7 @@ try {
   const list = await (await context.request.get(`${base}/api/v1/projects/${project.id}/issues?perPage=20&page=1`)).json(); const issue = list.data.items.find(row => row.title === '表單體驗驗證'); assert.ok(issue);
   // Two actors editing the same version: the browser's unsaved source must survive the 409.
   await page.getByRole('button', { name: `快速編輯 ${issue.identifier}`, exact: true }).click();
-  editor = page.getByRole('dialog', { name: '任務詳細內容', exact: true }); await editor.waitFor(); await description().fill('衝突後仍保留的內容');
+  editor = page.getByRole('dialog', { name: '任務詳細內容', exact: true }); await editor.waitFor(); assert.equal(await editor.locator('.issue-properties').evaluate(el => el.open), true); await description().fill('衝突後仍保留的內容');
   await call('updateIssue', { id: issue.id, expectedRevision: issue.revision, title: '另一個人的更新' });
   await editor.getByRole('button', { name: '儲存修改', exact: true }).click(); await editor.getByText('目前修改仍保留, 重新載入會捨棄這份修改').waitFor(); assert.equal(await description().inputValue(), '衝突後仍保留的內容');
   await capture('conflict');

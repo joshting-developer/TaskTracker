@@ -17,7 +17,7 @@ const props = defineProps({ projectLoader: Function, projectOptionsLoader: Funct
 const emit = defineEmits(['close', 'saved', 'converted', 'reload', 'open', 'expand']);
 const tagsTool = ref(null);
 const dialog = ref(null), descriptionEditor = ref(null), saveError = ref(null);
-const propertiesOpen = ref(props.inline), titleError = ref('');
+const propertiesOpen = ref(true), titleError = ref('');
 const formId = useId();
 const form = reactive({ parentIssueId: '', relatedIssueIds: [] });
 const relationsTool = ref(null), picked = ref([]), pickedMembers = ref([]), pickedProjects = ref([]), hydratedProject = ref(null), projectLoading = ref(false);

@@ -3,7 +3,9 @@
   "reviewer": "Josh",
   "authorization": "Standing authorization: directly approve future UI candidates while retaining real browser and regression checks; not per-image human review",
   "manifestFile": "docs/evidence/tt288-visual-manifest.json",
-  "manifestSha256": "0c8bd00d920c12286f63feaf19be604c3119d3542c2f026bbf2f5a71181d6539",
-  "harnessSha256": "d44daac41363077ebf6234afdf341269cc1bbc15ca2f8de038b8f1932200cae4",
-  "images": 9
+  "manifestSha256": "b21015fd190b9fd735e73878fc64d6aa3cda040d05a46bd1faa077a77be823d8",
+  "harnessSha256": "08beb47f0e4f5888fc1b930737927d2c28cae33e282c707bea1c65b2de8c425c",
+  "images": 9,
+  "harnessHashFormat": "sha256(JSON harness sorted keys)",
+  "updatedBy": "TT-415"
 }
