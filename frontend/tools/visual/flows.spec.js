@@ -30,7 +30,7 @@ async function shot(page, name) {
   if (name === '07-detail') {
     const activity = page.getByRole('region', { name: '任務完整頁', exact: true }).locator('.issue-detail-activity');
     await activity.getByText('尚無留言', { exact: true }).waitFor();
-    await activity.getByRole('button', { name: '選擇新增留言圖片', exact: true }).waitFor();
+    await activity.getByRole('button', { name: '選擇新增留言附件', exact: true }).waitFor();
   }
   await page.evaluate(() => document.fonts.ready);
   await page.mouse.move(0, 0);
@@ -243,6 +243,8 @@ test('representative workspace flows', async ({ page, browser }) => {
   await moveBoardCard(page, 'VRT-2', 'inprogress');
   await page.locator('[data-column="inprogress"] [data-issue="VRT-2"]').waitFor();
   await page.locator('.board-scroll').evaluate(element => { element.scrollLeft = 0; });
+  // The drag may scroll the page by a varying amount with Epic swimlanes; capture from the top.
+  await page.evaluate(() => { for (const element of [document.scrollingElement, ...document.querySelectorAll('*')]) if (element.scrollTop) element.scrollTop = 0; });
   await shot(page, '10-board-dragged');
   await page.goto(`/app/#/projects/${data.empty.id}/board`);
   await page.getByLabel('看板泳道').waitFor();

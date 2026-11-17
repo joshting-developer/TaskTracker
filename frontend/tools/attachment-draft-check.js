@@ -26,9 +26,9 @@ try {
   await page.setViewportSize({ width: 1440, height: 1050 }); const root = `${base}/app/#/projects/${project.id}`; await page.goto(root);
   await page.getByRole('button', { name: '新增任務', exact: false }).first().click();
   const editor = page.getByRole('dialog').first(); await editor.getByLabel(/任務標題/).fill('描述貼圖驗證');
-  const input = editor.getByLabel('描述', { exact: true }), file = editor.getByLabel('上傳描述圖片', { exact: true });
-  await editor.getByRole('button', { name: '選擇描述圖片' }).waitFor();
-  await page.waitForFunction(() => document.querySelector('button[aria-label="選擇描述圖片"]:not(:disabled)'));
+  const input = editor.getByLabel('描述', { exact: true }), file = editor.getByLabel('上傳描述附件', { exact: true });
+  await editor.getByRole('button', { name: '選擇描述附件' }).waitFor();
+  await page.waitForFunction(() => document.querySelector('button[aria-label="選擇描述附件"]:not(:disabled)'));
   await input.fill('前段\n後段'); await input.evaluate(element => element.setSelectionRange(3, 3));
   let failed = false; const retryIds = [];
   await page.route(`**/api/v1/projects/${project.id}/attachments`, async route => {
@@ -39,7 +39,7 @@ try {
     await new Promise(resolve => setTimeout(resolve, 300)); await route.continue();
   });
   await file.setInputFiles({ name: 'login.webp', mimeType: 'image/webp', buffer: Buffer.from(formats.webp, 'base64') });
-  const uploads = editor.getByRole('list', { name: '圖片上傳狀態' }); await uploads.getByRole('button', { name: '重試' }).waitFor();
+  const uploads = editor.getByRole('list', { name: '附件上傳狀態' }); await uploads.getByRole('button', { name: '重試' }).waitFor();
   assert.equal(await input.inputValue(), '前段\n後段'); assert.equal(await editor.getByRole('button', { name: '建立任務', exact: true }).isDisabled(), true);
   await uploads.getByRole('button', { name: '重試' }).click(); await input.evaluate(el => { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }); await input.type('保留新文字');
   await uploads.getByText('已加入內容', { exact: true }).waitFor(); assert.equal(retryIds.length, 2); assert.equal(retryIds[0], retryIds[1]);
@@ -70,7 +70,7 @@ try {
   await page.locator('.issue-detail-description .image-preview').first().waitFor();
   await page.goto(root); await page.getByRole('button', { name: '新增任務', exact: false }).first().click();
   await editor.getByLabel(/任務標題/).fill('取消與輸入法'); await input.fill('保留取消草稿');
-  await page.waitForFunction(() => document.querySelector('button[aria-label="選擇描述圖片"]:not(:disabled)'));
+  await page.waitForFunction(() => document.querySelector('button[aria-label="選擇描述附件"]:not(:disabled)'));
   await page.route(`**/api/v1/projects/${project.id}/attachments`, async route => { await new Promise(resolve => setTimeout(resolve, 500)); await route.continue().catch(() => {}); });
   await file.setInputFiles({ name: 'cancel.png', mimeType: 'image/png', buffer: png });
   await uploads.getByRole('button', { name: '取消', exact: true }).click();

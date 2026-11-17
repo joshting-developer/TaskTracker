@@ -44,10 +44,10 @@ try {
   }
   await checkGrowth(form, input, '新增留言');
   const uploadUrl = `**/api/v1/projects/${project.id}/attachments`;
-  await page.waitForFunction(() => document.querySelector('button[aria-label="選擇新增留言圖片"]:not(:disabled)'));
+  await page.waitForFunction(() => document.querySelector('button[aria-label="選擇新增留言附件"]:not(:disabled)'));
   await input.fill('保留文字');
   await page.route(uploadUrl, route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ ok: false, error: { code: 'TEMPORARY', message: '上傳失敗測試' } }) }));
-  await form.getByLabel('上傳新增留言圖片', { exact: true }).setInputFiles({ name: 'comment.png', mimeType: 'image/png', buffer: png });
+  await form.getByLabel('上傳新增留言附件', { exact: true }).setInputFiles({ name: 'comment.png', mimeType: 'image/png', buffer: png });
   await form.getByRole('button', { name: '重試', exact: true }).waitFor();
   assert.equal(await input.inputValue(), '保留文字'); assert.ok(await form.getByRole('button', { name: '送出留言', exact: true }).isDisabled());
   await form.getByRole('button', { name: '取消', exact: true }).click(); assert.equal(await input.inputValue(), '保留文字');
@@ -76,11 +76,11 @@ try {
   }
   await page.screenshot({ path: new URL('expanded-description.png', artifacts).pathname });
   form = drawer.locator('.comment-form'); input = form.getByLabel('新增留言', { exact: true });
-  await input.fill('抽屜留言'); await page.waitForFunction(() => document.querySelector('button[aria-label="選擇新增留言圖片"]:not(:disabled)'));
+  await input.fill('抽屜留言'); await page.waitForFunction(() => document.querySelector('button[aria-label="選擇新增留言附件"]:not(:disabled)'));
   const transfer = await page.evaluateHandle(data => { const t = new DataTransfer(); t.items.add(new File([Uint8Array.from(atob(data), c => c.charCodeAt(0))], 'drawer.png', { type: 'image/png' })); return t; }, png.toString('base64'));
   await input.dispatchEvent('drop', { dataTransfer: transfer }); await form.getByText('已加入內容', { exact: true }).waitFor();
   await form.getByRole('button', { name: /送出留言/ }).click(); await drawer.locator('.comment .image-preview img').nth(1).waitFor();
-  assert.equal(await form.getByRole('list', { name: '圖片上傳狀態' }).count(), 0, 'Successful submission resets draft upload rows');
+  assert.equal(await form.getByRole('list', { name: '附件上傳狀態' }).count(), 0, 'Successful submission resets draft upload rows');
   assert.deepEqual(errors, []);
   writeFileSync(new URL('browser-result.json', artifacts), JSON.stringify({ passed: true, widths: [1440, 768, 390], checks: ['clipboard paste', 'failure/cancel preserve draft', 'unsettled blocks send', 'private preview', 'raw 2000 limit', 'send/reload', 'drawer drop/send', 'reset uploads'] }, null, 2));
   console.log('PASS: comment private images, detail/drawer, clipboard/drop, failure/cancel, raw limit, reset and three widths');

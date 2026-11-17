@@ -5,7 +5,7 @@ import { useAttachmentUpload } from '../composables/useAttachmentUpload.js';
 import { onTabKeydown } from '../ui/tabs.js';
 import MarkdownContent from './MarkdownContent.vue';
 
-const props = defineProps({ modelValue: { type: String, default: '' }, label: { type: String, required: true }, placeholder: String, maxlength: { type: Number, default: 6000 }, rows: { type: Number, default: 4 }, disabled: Boolean, required: Boolean, name: String, spacious: Boolean, allowAttachments: Boolean, projectId: { type: String, default: '' } });
+const props = defineProps({ modelValue: { type: String, default: '' }, label: { type: String, required: true }, placeholder: String, maxlength: { type: Number, default: 6000 }, rows: { type: Number, default: 4 }, disabled: Boolean, required: Boolean, name: String, spacious: Boolean, allowAttachments: Boolean, allowFiles: Boolean, fileNote: String, projectId: { type: String, default: '' } });
 const emit = defineEmits(['update:modelValue']);
 const fileInput = ref(null);
 const id = useId(), input = ref(null), mode = ref('write'), composing = ref(false), message = ref('');
@@ -40,10 +40,20 @@ onBeforeUnmount(() => resizeObserver?.disconnect());
 watch(() => props.modelValue, value => { if (!value) mode.value = 'write'; });
 
 async function focus() { mode.value = 'write'; await nextTick(); input.value?.scrollIntoView({ block: 'nearest' }); input.value?.focus({ preventScroll: true }); }
-const uploads = useAttachmentUpload({ projectId: computed(() => props.allowAttachments ? props.projectId : ''), source: computed(() => props.modelValue), maxlength: computed(() => props.maxlength), insert: insertAttachment });
+const uploads = useAttachmentUpload({ projectId: computed(() => props.allowAttachments ? props.projectId : ''), source: computed(() => props.modelValue), maxlength: computed(() => props.maxlength), allowFiles: computed(() => props.allowFiles), insert: insertAttachment });
 const uploadRows = uploads.rows, uploadError = uploads.error, uploadLimits = uploads.limits;
-const attachmentBlocked = uploads.unsettled;
-defineExpose({ focus, uploadBusy: uploads.busy, attachmentDirty: uploads.unsettled, attachmentBlocked });
+const visibleRows = computed(() => uploadRows.value.filter(row => row.state !== 'canceled'));
+defineExpose({ focus, uploadBusy: uploads.busy, attachmentDirty: uploads.unsettled, attachmentBlocked: uploads.blocked, filesPending: computed(() => uploads.pendingFiles.value.length), bindFiles: uploads.bind });
+const accept = computed(() => `image/png,image/jpeg,image/webp${props.allowFiles ? ',application/pdf,application/zip,.pdf,.zip' : ''}`);
+function rowType(row) { return row.kind === 'image' ? t('圖片') : row.kind === 'file' ? (/pdf/i.test(row.upload?.mime || row.file.type) ? 'PDF' : 'ZIP') : t('不支援'); }
+function rowStatus(row) {
+  if (row.state === 'queued') return t('等待上傳');
+  if (row.state === 'uploading') return `${row.progress}%`;
+  if (row.state === 'binding') return t('正在附加到任務');
+  if (row.state === 'uploaded') return row.error ? t('尚未附到任務：{0}', [row.error]) : props.fileNote || t('儲存後附到任務');
+  if (row.state === 'done') return row.kind === 'file' ? t('已附到任務') : t('已加入內容');
+  return row.error;
+}
 async function insertAttachment(text, anchor) {
   if (composing.value) await new Promise(resolve => { const stop = watch(composing, value => { if (!value) { stop(); resolve(); } }); });
   if (!input.value || props.disabled) return false;
@@ -53,19 +63,30 @@ async function insertAttachment(text, anchor) {
   if (!document.execCommand('insertText', false, text)) await replace(props.modelValue.slice(0, start) + text + props.modelValue.slice(start), start + text.length, start + text.length);
   return true;
 }
-function addImages(files) {
+function addFiles(files) {
   if (props.disabled || !props.allowAttachments) return;
   uploads.add([...files], input.value?.selectionStart ?? props.modelValue.length);
 }
-function pasteImage(event) {
-  const images = [...(event.clipboardData?.files || [])];
-  if (!props.allowAttachments || !images.length) return;
-  event.preventDefault(); addImages(images);
+function pasteFiles(event) {
+  const files = [...(event.clipboardData?.files || [])];
+  if (!props.allowAttachments || !files.length) return;
+  event.preventDefault(); addFiles(files);
 }
-function dropImage(event) {
+// Count enter/leave pairs because dragging across the toolbar and textarea fires both.
+const dragging = ref(false);
+let dragDepth = 0;
+function carriesFiles(event) { return props.allowAttachments && event.dataTransfer?.types.includes('Files'); }
+function dragEnter(event) { if (!carriesFiles(event)) return; dragDepth++; dragging.value = !props.disabled; }
+function dragLeave(event) { if (carriesFiles(event) && --dragDepth <= 0) { dragDepth = 0; dragging.value = false; } }
+function dropFiles(event) {
+  dragDepth = 0; dragging.value = false;
   if (!props.allowAttachments || !event.dataTransfer?.files.length) return;
-  event.preventDefault(); addImages(event.dataTransfer.files);
+  event.preventDefault(); addFiles(event.dataTransfer.files);
 }
+// A file dropped beside the editor must not replace the page and lose the draft.
+function guardWindow(event) { if (event.dataTransfer?.types.includes('Files')) event.preventDefault(); }
+onMounted(() => { if (props.allowAttachments) { window.addEventListener('dragover', guardWindow); window.addEventListener('drop', guardWindow); } });
+onBeforeUnmount(() => { window.removeEventListener('dragover', guardWindow); window.removeEventListener('drop', guardWindow); });
 
 async function replace(next, start, end) {
   emit('update:modelValue', next);
@@ -120,25 +141,28 @@ function onKeydown(event) {
         <button :id="`${id}-preview`" type="button" role="tab" :aria-selected="mode === 'preview'" :aria-controls="`${id}-reading`" :tabindex="mode === 'preview' ? 0 : -1" :disabled="disabled" @click="mode = 'preview'">{{ t('預覽') }}</button>
       </div>
     </div>
-    <div v-show="mode === 'write'" @dragover="event => allowAttachments && event.dataTransfer?.types.includes('Files') && event.preventDefault()" @drop="dropImage" :id="`${id}-writing`" role="tabpanel" :aria-labelledby="`${id}-write`">
+    <div v-show="mode === 'write'" class="editor-writing" :class="{ dragging }" @dragenter="dragEnter" @dragleave="dragLeave" @dragover="event => carriesFiles(event) && event.preventDefault()" @drop="dropFiles" :id="`${id}-writing`" role="tabpanel" :aria-labelledby="`${id}-write`">
       <div class="editor-tools" role="group" :aria-label="t('{0}格式', [label])">
         <button v-for="item in formats" :key="item.id" type="button" :disabled="disabled || composing" :aria-label="`${label}：${item.id === 'checklist' ? t('待辦清單') : t(item.label)}`" :title="t(item.label)" @mousedown.prevent @click="format(item)">{{ t(item.label) }}</button>
-        <button v-if="allowAttachments" type="button" :disabled="disabled || !uploadLimits" :aria-label="t('選擇{0}圖片', [label])" @click="fileInput.click()">{{ t('圖片') }}</button>
-        <input v-if="allowAttachments" ref="fileInput" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden :aria-label="t('上傳{0}圖片', [label])" @change="event => { addImages(event.target.files); event.target.value = ''; }" />
+        <button v-if="allowAttachments" type="button" :disabled="disabled || !uploadLimits" :aria-label="allowFiles ? t('選擇{0}附件', [label]) : t('選擇{0}圖片', [label])" @click="fileInput.click()">{{ allowFiles ? t('附件') : t('圖片') }}</button>
+        <input v-if="allowAttachments" ref="fileInput" type="file" :accept="accept" multiple hidden :aria-label="allowFiles ? t('上傳{0}附件', [label]) : t('上傳{0}圖片', [label])" @change="event => { addFiles(event.target.files); event.target.value = ''; }" />
       </div>
-      <textarea :id="`${id}-input`" ref="input" v-model="model" :name="name" :aria-label="label" :aria-describedby="`${id}-help${allowAttachments && uploadError ? ` ${id}-upload-error` : ''}`" :placeholder="placeholder" :maxlength="maxlength" :rows="rows" :disabled="disabled" :required="required" @paste="pasteImage" @keydown="onKeydown" @compositionstart="composing = true" @compositionend="composing = false"></textarea>
+      <textarea :id="`${id}-input`" ref="input" v-model="model" :name="name" :aria-label="label" :aria-describedby="`${id}-help${allowAttachments && uploadError ? ` ${id}-upload-error` : ''}`" :placeholder="placeholder" :maxlength="maxlength" :rows="rows" :disabled="disabled" :required="required" @paste="pasteFiles" @keydown="onKeydown" @compositionstart="composing = true" @compositionend="composing = false"></textarea>
+      <p v-if="dragging" class="drop-hint" aria-hidden="true">{{ allowFiles ? t('放開即可加入圖片或 PDF、ZIP 附件') : t('放開即可加入圖片') }}</p>
     </div>
     <div v-show="mode === 'preview'" :id="`${id}-reading`" class="editor-preview" role="tabpanel" tabindex="0" :aria-labelledby="`${id}-preview`">
       <MarkdownContent v-if="mode === 'preview' && modelValue.trim()" :source="modelValue" :project-id="projectId" />
       <p v-else class="editor-empty">{{ t('尚無內容') }}</p>
     </div>
-    <ul v-if="allowAttachments && uploadRows.some(row => row.state !== 'canceled')" class="attachment-uploads" :aria-label="t('圖片上傳狀態')">
-      <li v-for="row in uploadRows.filter(item => item.state !== 'canceled')" :key="row.id">
-        <span>{{ row.file.name || t('圖片') }}</span>
+    <ul v-if="allowAttachments && visibleRows.length" class="attachment-uploads" :aria-label="allowFiles ? t('附件上傳狀態') : t('圖片上傳狀態')">
+      <li v-for="row in visibleRows" :key="row.id" :class="row.state">
+        <span class="upload-name">{{ row.file.name || t('圖片') }}</span>
+        <span class="upload-type">{{ rowType(row) }}</span>
         <progress v-if="row.state === 'uploading'" :value="row.progress" max="100" :aria-label="t('{0}上傳進度', [row.file.name])"></progress>
-        <span :role="row.state === 'failed' ? 'alert' : 'status'">{{ row.state === 'done' ? t('已加入內容') : row.state === 'queued' ? t('等待上傳') : row.state === 'failed' ? row.error : `${row.progress}%` }}</span>
+        <span :role="row.state === 'failed' || row.state === 'rejected' || row.error ? 'alert' : 'status'">{{ rowStatus(row) }}</span>
         <button v-if="row.state === 'failed'" type="button" @click="uploads.retry(row)">{{ t('重試') }}</button>
-        <button v-if="row.state !== 'done'" type="button" @click="uploads.cancel(row)">{{ t('取消') }}</button>
+        <button v-if="row.state === 'rejected'" type="button" @click="uploads.cancel(row)">{{ t('移除') }}</button>
+        <button v-else-if="row.state !== 'done' && row.state !== 'binding'" type="button" @click="uploads.cancel(row)">{{ t('取消') }}</button>
       </li>
     </ul>
     <p v-if="allowAttachments && uploadError" :id="`${id}-upload-error`" class="attachment-error" role="alert">{{ uploadError }}</p>
@@ -150,7 +174,12 @@ function onKeydown(event) {
 <style scoped>
 .attachment-uploads { padding: 0; margin: 8px 0; list-style: none; font-size: 13px; }
 .attachment-uploads li { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 4px 0; overflow-wrap: anywhere; }
-.attachment-uploads li > :first-child { flex: 1; min-width: 100px; }
+.attachment-uploads .upload-name { flex: 1; min-width: 100px; }
+.attachment-uploads .upload-type { padding: 1px 6px; border: 1px solid #d6d1ee; border-radius: 4px; color: #5844a0; font-size: 12px; }
+.attachment-uploads li.rejected .upload-name, .attachment-uploads li.failed .upload-name { color: #a52c3d; }
+.editor-writing { position: relative; }
+.editor-writing.dragging textarea { border: 2px dashed #6653bd; background: #f6f4fd; }
+.drop-hint { position: absolute; inset: auto 12px 12px; margin: 0; padding: 8px 12px; border-radius: 6px; background: #5844a0; color: #fff; font-size: 13px; text-align: center; pointer-events: none; }
 .attachment-uploads progress { width: 100px; accent-color: #6653bd; }
 .attachment-uploads button { min-height: 44px; padding: 8px; color: #5844a0; }
 .attachment-error { color: #a52c3d; font-size: 13px; }

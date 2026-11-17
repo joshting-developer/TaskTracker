@@ -27,10 +27,10 @@ try {
   await page.getByRole('button', { name: '新增任務', exact: false }).first().click();
   const editor = page.getByRole('dialog').first();
   await editor.getByLabel(/任務標題/).fill('R2附件測試');
-  await page.getByRole('button', { name: '選擇描述圖片', exact: true }).waitFor({ state: 'visible' });
+  await page.getByRole('button', { name: '選擇描述附件', exact: true }).waitFor({ state: 'visible' });
   await page.waitForFunction(() => !document.querySelector('.editor-tools button:last-of-type')?.disabled);
   const uploading = page.waitForResponse(response => response.request().method() === 'POST' && new URL(response.url()).pathname === `/api/v1/projects/${project.id}/attachments`);
-  await editor.getByLabel('上傳描述圖片', { exact: true }).setInputFiles({ name: 'r2-browser.png', mimeType: 'image/png', buffer: png });
+  await editor.getByLabel('上傳描述附件', { exact: true }).setInputFiles({ name: 'r2-browser.png', mimeType: 'image/png', buffer: png });
   assert.equal((await uploading).status(), 200, 'R2 upload response');
   await page.waitForFunction(() => document.querySelector('textarea[name=description]')?.value.includes('attachment:'));
   await editor.getByRole('tab', { name: '預覽', exact: true }).first().click();

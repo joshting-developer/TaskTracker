@@ -72,7 +72,7 @@ try {
     await scratch.setContent('<p>就地編輯描述圖片</p>');
     const png = await scratch.screenshot();
     await scratch.close();
-    await editor.getByLabel('上傳描述圖片').setInputFiles({ name: 'inline.png', mimeType: 'image/png', buffer: png });
+    await editor.getByLabel('上傳描述附件').setInputFiles({ name: 'inline.png', mimeType: 'image/png', buffer: png });
     await editor.getByText('已加入內容', { exact: true }).waitFor();
     const source = await editor.getByLabel('描述', { exact: true }).inputValue();
     assert.match(source, /attachment:/);

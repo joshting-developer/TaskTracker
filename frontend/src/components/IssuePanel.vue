@@ -39,6 +39,8 @@ const baseRevision = ref(0);
 const todoRevision = ref(0);
 let childRequest = null;
 let pending = null;
+// A new issue that saved while some files failed to attach; saving again only retries the attach.
+const created = ref(null);
 let commentRequest = null;
 
 function values() {
@@ -97,9 +99,9 @@ const propertySummary = computed(() => [
 ].filter(Boolean).join(' · '));
 const saveStatus = computed(() => {
   if (saving.value) return t('儲存中…');
-  if (descriptionEditor.value?.uploadBusy) return t('圖片上傳中…');
+  if (descriptionEditor.value?.uploadBusy) return t('附件上傳中…');
   if (error.value) return t('操作未完成, 修改已保留');
-  if (descriptionEditor.value?.attachmentBlocked) return t('請重試或取消未完成的圖片');
+  if (descriptionEditor.value?.attachmentBlocked) return t('請重試或取消未完成的附件');
   if (dirty.value) return t('尚未儲存');
   return props.issue ? t('版本 {0} · 已儲存', [baseRevision.value]) : t('尚未建立');
 });
@@ -118,7 +120,7 @@ watch(() => props.issue, () => { if (!dirty.value) resetForm(); });
 function close() {
   if (inputDisabled.value) return;
   if ((dirty.value || comment.value.trim() || commentEditor.value?.attachmentDirty || relationsTool.value?.dirty) && !window.confirm(t('還有未儲存的內容, 確定要關閉嗎？'))) return;
-  emit('close');
+  if (created.value) emit('saved', created.value, true); else emit('close');
 }
 function jump(issue) {
   if (saving.value || ((dirty.value || comment.value.trim() || commentEditor.value?.attachmentDirty || relationsTool.value?.dirty) && !window.confirm(t('還有未儲存的內容, 確定要切換任務嗎？')))) return;
@@ -136,6 +138,11 @@ onMounted(async () => {
 });
 onBeforeUnmount(() => { projectGeneration++;projectRequest?.abort();window.removeEventListener('beforeunload', beforeUnload); });
 
+/** Attach description files after the issue write, so binding never races the form's own revision. */
+async function attachFiles(issue) {
+  const attached = descriptionEditor.value?.filesPending ? await descriptionEditor.value.bindFiles(issue.id, issue.revision) : { revision: issue.revision, failed: 0 };
+  return { ...issue, revision: attached.revision, failed: attached.failed };
+}
 async function save() {
   if (inputDisabled.value || descriptionEditor.value?.attachmentBlocked) return;
   if (!form.title?.trim()) { titleError.value = t('請輸入任務標題'); await nextTick(); dialog.value.querySelector('[name=title]')?.focus(); return; }
@@ -147,11 +154,21 @@ async function save() {
   const signature = JSON.stringify(payload);
   if (pending?.signature !== signature) pending = { signature, requestId: crypto.randomUUID() };
   try {
-    const result = await api[props.todo ? 'convertTodo' : props.issue ? 'updateIssue' : 'createIssue']({ ...payload, requestId: pending.requestId });
+    const fieldsChanged = JSON.stringify(values()) !== savedValues.value;
+    const written = created.value || (props.issue && !fieldsChanged ? { id: props.issue.id, revision: baseRevision.value } : await api[props.todo ? 'convertTodo' : props.issue ? 'updateIssue' : 'createIssue']({ ...payload, requestId: pending.requestId }));
     savedValues.value = JSON.stringify(values());
-    baseRevision.value = result.revision;
     pending = null;
-    if (props.todo) emit('converted', result); else emit('saved', result, !props.issue);
+    if (props.todo) { baseRevision.value = written.revision; emit('converted', written); }
+    else {
+      const { failed, ...result } = await attachFiles(written);
+      baseRevision.value = result.revision;
+      if (!failed) { created.value = null; emit('saved', result, !props.issue); }
+      else {
+        // Keep the panel open: closing a new issue here would drop the files that still need attaching.
+        if (!props.issue) created.value = result; else emit('saved', result, false);
+        error.value = t('任務已儲存, 但有 {0} 個檔案尚未附加, 可再按儲存重試', [failed]);
+      }
+    }
   } catch (failure) {
     error.value = failure.message;
     conflict.value = failure.code === 'REVISION_CONFLICT';
@@ -175,17 +192,24 @@ async function createChild(title) {
   finally { saving.value = false; }
 }
 async function sendComment() {
-  if (saving.value || commentEditor.value?.attachmentBlocked || !comment.value.trim()) return;
+  const files = commentEditor.value?.filesPending || 0;
+  if (saving.value || commentEditor.value?.attachmentBlocked || !(comment.value.trim() || files)) return;
   saving.value = true;
   error.value = '';
-  const payload = { id: props.issue.id, content: comment.value, expectedRevision: props.issue.revision };
-  const signature = JSON.stringify(payload);
-  if (commentRequest?.signature !== signature) commentRequest = { signature, requestId: crypto.randomUUID() };
   try {
-    const result = await api.addComment({ ...payload, requestId: commentRequest.requestId });
-    comment.value = ''; commentEditorKey.value++;
-    commentRequest = null;
-    emit('saved', result, false);
+    let result = { id: props.issue.id, revision: props.issue.revision };
+    if (comment.value.trim()) {
+      const payload = { id: props.issue.id, content: comment.value, expectedRevision: props.issue.revision };
+      const signature = JSON.stringify(payload);
+      if (commentRequest?.signature !== signature) commentRequest = { signature, requestId: crypto.randomUUID() };
+      result = await api.addComment({ ...payload, requestId: commentRequest.requestId });
+      comment.value = ''; commentRequest = null;
+    }
+    // Comment files can only attach to the issue; keep the editor while any still needs a retry.
+    const attached = files ? await commentEditor.value.bindFiles(props.issue.id, result.revision) : { revision: result.revision, failed: 0 };
+    if (attached.failed) error.value = t('有 {0} 個檔案尚未附到任務, 可再按送出重試', [attached.failed]);
+    else commentEditorKey.value++;
+    emit('saved', { ...result, revision: attached.revision }, false);
   } catch (failure) {
     error.value = failure.message;
     conflict.value = failure.code === 'REVISION_CONFLICT';
@@ -225,7 +249,7 @@ function timestamp(value) {
         <form id="issue-form" @submit.prevent="save" @invalid.capture="invalidField" :aria-busy="saving">
           <label class="field">{{ t('任務標題') }} <span class="required">*</span><input v-model="form.title" name="title" :placeholder="t('輸入任務標題…')" maxlength="180" required :disabled="inputDisabled" :aria-invalid="Boolean(titleError)" :aria-describedby="titleError ? `${formId}-title-error` : undefined" /><span v-if="titleError" :id="`${formId}-title-error`" class="issue-field-error" role="alert">{{ titleError }}</span></label>
           <div v-if="todo" class="issue-conversion-project"><PagedSelect autoload v-if="projectOptionsLoader" v-model="projectModel" :label="t('專案')" :options="availableProjects" :context="todo?.id || 'new'" :load="projectOptionsLoader" :disabled="inputDisabled || !todo" :empty-label="t('選擇所屬專案')" required @choose="item => { pickedProjects = [...pickedProjects.filter(project=>project.id!==item.id),item]; }" /><label v-else class="field">{{ t('專案') }}<select v-model="projectModel" :aria-label="t('專案')" :disabled="!todo || saving" required><option v-if="todo" value="" disabled>{{ t('選擇所屬專案') }}</option><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option></select></label></div>
-          <MarkdownEditor ref="descriptionEditor" spacious allow-attachments v-model="form.description" :project-id="form.projectId" :label="t('描述')" name="description" :placeholder="t('輸入描述…')" :rows="5" :maxlength="6000" :disabled="inputDisabled" />
+          <MarkdownEditor ref="descriptionEditor" spacious allow-attachments :allow-files="!todo" :file-note="t('儲存後附到任務')" v-model="form.description" :project-id="form.projectId" :label="t('描述')" name="description" :placeholder="t('輸入描述…')" :rows="5" :maxlength="6000" :disabled="inputDisabled" />
           <details class="issue-properties" :open="propertiesOpen" @toggle="propertiesOpen = $event.target.open"><summary><span>{{ t('任務屬性') }}</span><span>{{ propertySummary }}</span></summary>
           <div class="form-grid">
             <div v-if="!todo"><PagedSelect autoload v-if="projectOptionsLoader" v-model="projectModel" :label="t('專案')" :options="availableProjects" :context="todo?.id || 'new'" :load="projectOptionsLoader" :disabled="inputDisabled || !todo" :empty-label="t('選擇所屬專案')" required @choose="item => { pickedProjects = [...pickedProjects.filter(project=>project.id!==item.id),item]; }" /><label v-else class="field">{{ t('專案') }}<select v-model="projectModel" :aria-label="t('專案')" :disabled="!todo || saving" required><option v-if="todo" value="" disabled>{{ t('選擇所屬專案') }}</option><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option></select></label></div>
@@ -255,8 +279,8 @@ function timestamp(value) {
               <div class="avatar small">{{ entry.author.slice(0, 1) }}</div><div><div class="comment-meta"><strong>{{ entry.author }}</strong><time>{{ timestamp(entry.createdAt) }}</time></div><MarkdownContent :source="entry.content" :project-id="issue.projectId" /></div>
             </article>
             <form @submit.prevent="sendComment" class="comment-form">
-              <MarkdownEditor ref="commentEditor" :key="commentEditorKey" allow-attachments :project-id="issue.projectId" v-model="comment" :label="t('新增留言')" :placeholder="t('輸入留言…')" :maxlength="2000" :rows="3" :disabled="inputDisabled" />
-              <button class="button secondary" :disabled="inputDisabled || commentEditor?.attachmentBlocked || !comment.trim()">{{ t('送出留言') }} <Icon name="arrow" :size="16" /></button>
+              <MarkdownEditor ref="commentEditor" :key="commentEditorKey" allow-attachments allow-files :file-note="t('送出後附到任務')" :project-id="issue.projectId" v-model="comment" :label="t('新增留言')" :placeholder="t('輸入留言…')" :maxlength="2000" :rows="3" :disabled="inputDisabled" />
+              <button class="button secondary" :disabled="inputDisabled || commentEditor?.attachmentBlocked || !(comment.trim() || commentEditor?.filesPending)">{{ t('送出留言') }} <Icon name="arrow" :size="16" /></button>
             </form>
           </div>
           <div v-else class="history-list">
@@ -267,7 +291,7 @@ function timestamp(value) {
           </div>
         </section>
       </div>
-      <footer class="panel-footer"><span class="subtle" role="status">{{ saveStatus }}</span><button type="submit" form="issue-form" class="button primary" :disabled="inputDisabled || descriptionEditor?.attachmentBlocked || (Boolean(issue) && !dirty) || (Boolean(todo) && !form.projectId)"><Icon :name="saving ? 'clock' : 'check'" :size="17" />{{ saving ? t('儲存中…') : todo ? t('建立卡片並完成轉換') : issue ? t('儲存修改') : t('建立任務') }}</button></footer>
+      <footer class="panel-footer"><span class="subtle" role="status">{{ saveStatus }}</span><button type="submit" form="issue-form" class="button primary" :disabled="inputDisabled || descriptionEditor?.attachmentBlocked || (Boolean(issue) && !dirty) || (Boolean(todo) && !form.projectId)"><Icon :name="saving ? 'clock' : 'check'" :size="17" />{{ saving ? t('儲存中…') : todo ? t('建立卡片並完成轉換') : issue ? t('儲存修改') : created ? t('重試附加檔案') : t('建立任務') }}</button></footer>
     </div>
     <div v-if="!inline && activityLoader && ['comments','history'].includes(tab)" class="activity-pagination">
     <p v-if="activity.error.value" class="error-box" role="alert">{{ activity.error.value }}</p>

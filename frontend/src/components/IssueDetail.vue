@@ -73,14 +73,23 @@ function changeState(event) {
   emit('state', nextState);
 }
 async function sendComment() {
-  if (!props.canWrite || saving.value || props.busy || commentEditor.value?.attachmentBlocked || !commentDirty.value) return;
+  const files = commentEditor.value?.filesPending || 0;
+  if (!props.canWrite || saving.value || props.busy || commentEditor.value?.attachmentBlocked || !(commentDirty.value || files)) return;
   saving.value = true; error.value = ''; conflict.value = false;
-  const payload = { id: props.issue.id, content: comment.value, expectedRevision: props.issue.revision };
-  const signature = JSON.stringify(payload);
-  if (pending?.signature !== signature) pending = { signature, requestId: crypto.randomUUID() };
   try {
-    const result = await api.addComment({ ...payload, requestId: pending.requestId });
-    comment.value = ''; commentEditorKey.value++; pending = null; emit('saved', result, false);
+    let result = { id: props.issue.id, revision: props.issue.revision };
+    if (commentDirty.value) {
+      const payload = { id: props.issue.id, content: comment.value, expectedRevision: props.issue.revision };
+      const signature = JSON.stringify(payload);
+      if (pending?.signature !== signature) pending = { signature, requestId: crypto.randomUUID() };
+      result = await api.addComment({ ...payload, requestId: pending.requestId });
+      comment.value = ''; pending = null;
+    }
+    // Comment files can only attach to the issue; keep the editor while any still needs a retry.
+    const attached = files ? await commentEditor.value.bindFiles(props.issue.id, result.revision) : { revision: result.revision, failed: 0 };
+    if (attached.failed) error.value = t('有 {0} 個檔案尚未附到任務, 可再按送出重試', [attached.failed]);
+    else commentEditorKey.value++;
+    emit('saved', { ...result, revision: attached.revision }, false);
   } catch (failure) { error.value = failure.message; conflict.value = failure.code === 'REVISION_CONFLICT'; }
   finally { saving.value = false; }
 }
@@ -152,8 +161,8 @@ function timeSaved() {
           </div>
           <form v-if="canWrite" v-show="tab === 'comments'" class="comment-form" @submit.prevent="sendComment">
             <div v-if="error" class="error-box" role="alert">{{ t(error) }}<button v-if="conflict" class="text-button" type="button" :disabled="saving || busy" @click="emit('reload')">{{ t('更新任務資料（保留留言）') }}</button></div>
-            <MarkdownEditor ref="commentEditor" :key="commentEditorKey" allow-attachments :project-id="issue.projectId" v-model="comment" :label="t('新增留言')" :rows="3" :maxlength="2000" :placeholder="t('輸入留言…')" :disabled="saving || busy" />
-            <button class="button secondary" :disabled="saving || busy || commentEditor?.attachmentBlocked || !commentDirty">{{ saving ? t('送出中…') : t('送出留言') }}</button>
+            <MarkdownEditor ref="commentEditor" :key="commentEditorKey" allow-attachments allow-files :file-note="t('送出後附到任務')" :project-id="issue.projectId" v-model="comment" :label="t('新增留言')" :rows="3" :maxlength="2000" :placeholder="t('輸入留言…')" :disabled="saving || busy" />
+            <button class="button secondary" :disabled="saving || busy || commentEditor?.attachmentBlocked || !(commentDirty || commentEditor?.filesPending)">{{ saving ? t('送出中…') : t('送出留言') }}</button>
           </form>
         </section>
       </div>
