@@ -128,3 +128,15 @@ Route::prefix('/api/public/v1/projects/{project}')->middleware(['throttle:public
     Route::delete('/tags/{tag}', [$tags, 'write'])->defaults('tagAction', 'delete')->name('public.tags.delete');
     Route::patch('/issues/{issue}/tags', [$tags, 'write'])->defaults('tagAction', 'apply')->name('public.tags.apply');
 });
+
+// 本人工時與單卡可見工時, 不提供工作空間無界匯出。
+Route::prefix('/api/public/v1/projects/{project}')->middleware(['throttle:public-api-v1', RecordHttpOperation::class])->withoutMiddleware([
+    StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class,
+])->group(function () {
+    $time = \App\Http\Controllers\Integrations\PublicTimeEntriesController::class;
+    Route::get('/time-entries', [$time, 'index'])->name('public.time.index');
+    Route::get('/issues/{issue}/time-entries', [$time, 'issue'])->name('public.time.issue');
+    Route::post('/time-entries', [$time, 'write'])->name('public.time.create');
+    Route::patch('/time-entries/{entry}', [$time, 'write'])->name('public.time.update');
+    Route::post('/time-entries/{entry}/void', [$time, 'write'])->name('public.time.void');
+});

@@ -55,3 +55,7 @@ curl --fail-with-body -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
 ```
 
 保留回傳的reference, 將`![說明](attachment:<UUID>)`放進建卡description, 即可和新卡同交易綁定。明確綁定現有卡時使用OpenAPI的bindPublicAttachment, 同時帶附件與卡片的最新revision；409先讀回再決定, 不盲目重送新版本。上傳大小／格式／配額與24小時到期見Agent指南及limits, 不提供遠端URL匯入
+
+## 選用的工時範例
+
+Python範例只有額外設定 `WORK_DATE=YYYY-MM-DD` 時才填報工時, 並完成新增→讀回→修改→作廢。日期須為台北當日或過去日期, 需要timeEntry.writeOwn資格；作廢保留歷史。沒設定WORK_DATE時維持原本卡片與紙條範例, 不自動替使用者填報工時

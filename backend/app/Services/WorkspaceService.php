@@ -67,6 +67,38 @@ class WorkspaceService
         return ['id' => $result['id'], 'projectId' => $result['projectId'], 'identifier' => $result['identifier'], 'revision' => $result['revision']];
     }
 
+    /** 公開工時在receipt前重驗作者、Project與操作資格
+     * @param  array  $identity  鎖後可信身分
+     * @param  string  $operation  工時操作
+     * @param  array  $input  路徑與已驗證欄位
+     * @return void
+     */
+    public function authorizePublicTime(array $identity, string $operation, array $input): void
+    {
+        $services = $this->services->forSession($identity);
+        $services->operationAccess()->authorize($operation, $input);
+        $resource = $services->store->require($operation === 'logTime' ? 'issues' : 'timeEntries', $input[$operation === 'logTime' ? 'issueId' : 'id']);
+        if ($resource['projectId'] !== $input['projectId']) {
+            DomainError::fail('NOT_FOUND', '找不到這個專案內的工時或任務');
+        }
+    }
+
+    /** 沿用網頁工時業務與訊號, receipt交由Bearer邊界保存
+     * @param  array  $identity  可信身分
+     * @param  string  $operation  logTime、updateTime或voidTime
+     * @param  array  $input  已驗證工時欄位
+     * @return array 有界工時寫入結果
+     */
+    public function executePublicTime(array $identity, string $operation, array $input): array
+    {
+        if (! in_array($operation, ['logTime', 'updateTime', 'voidTime'], true)) {
+            DomainError::fail('NOT_FOUND', '找不到這個操作');
+        }
+        $this->authorizePublicTime($identity, $operation, $input);
+
+        return $this->write($this->services->forSession($identity), $operation, $input);
+    }
+
     /**
      * 建卡附帶收錄時, 在讀取receipt前重驗看板管理資格
      *

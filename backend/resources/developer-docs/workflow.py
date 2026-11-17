@@ -119,6 +119,16 @@ def main():
     assert [item['id'] for item in mine['items']].count(todo['id']) == 1
     done = call('POST', '/api/public/v1/todos/' + todo['id'] + '/complete', {'expectedRevision': todo['revision'], 'requestId': str(uuid.uuid4())})
     assert call('GET', '/api/public/v1/todos/' + todo['id'])['state'] == 'done' and done['revision'] == todo['revision'] + 1
+    # 工時為明確選用：只有指定WORK_DATE才新增、修改並作廢本次合成紀錄。
+    if os.environ.get('WORK_DATE'):
+        time_path = '/api/public/v1/projects/' + project + '/time-entries'
+        time_input = {'requestId': str(uuid.uuid4()), 'issueId': created['id'], 'workDate': os.environ['WORK_DATE'], 'minutes': 15, 'note': 'HTTP example'}
+        entry = call('POST', time_path, time_input)
+        assert entry == call('POST', time_path, time_input)
+        listed = call('GET', time_path + '?' + urllib.parse.urlencode({'from': os.environ['WORK_DATE'], 'to': os.environ['WORK_DATE'], 'issueId': created['id'], 'perPage': 100}))
+        assert any(item['id'] == entry['id'] for item in listed['items'])
+        changed = call('PATCH', time_path + '/' + entry['id'], {'requestId': str(uuid.uuid4()), 'expectedRevision': entry['revision'], 'workDate': os.environ['WORK_DATE'], 'minutes': 20, 'note': 'Revised HTTP example'})
+        call('POST', time_path + '/' + entry['id'] + '/void', {'requestId': str(uuid.uuid4()), 'expectedRevision': changed['revision']})
     print(json.dumps({'result': 'PASS', 'createdOnce': True, 'commentedOnce': True, 'finalRevision': final['revision'], 'closed': True, 'todoCompleted': True, 'attachmentVerified': bool(image)}))
 
 

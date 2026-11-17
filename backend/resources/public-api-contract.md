@@ -264,3 +264,9 @@ PDF／ZIP與圖片共用既有附件路由及授權, 但一般附件只能下載
 - 差量只調整明確收錄, 移除一張仍由Epic動態收錄的卡片不會讓它消失。需排除它時先重新考慮Epic收錄, 沒有隱藏的排除清單
 - 兩個呼叫端拿相同revision修改時只有第一個成功, 另一個回409；重讀後保留原意並使用新requestId套用差量, 不送完整selectedIssueIds蓋掉別人的收錄
 - `POST .../issues`可帶boardIds, 最多20個不同且使用中的同Project自訂看板, 另需board.manage。任何一個不合法都回滾卡片、編號及所有收錄；Default自動全收不用指定。只有單筆建卡支援, PATCH／upsert／batch不提供這個欄位
+
+## 0.25.0：公開工時
+
+公開PAT新增本人工時建立、查詢、完整更新及作廢, 與網頁共用同一TimeEntryService與儲存。端點、operationId與欄位以OpenAPI為準, Agent用法見 `/api/public/docs/agents.md` 的本人工時章節
+
+個人工時查詢以Project路徑為範圍, 日期最多366天、每頁最多100筆、page最多100。只回有效紀錄與必要欄位, 不回歷史。單卡工時沿issue.read現有資格, Epic包含子卡, 不擴大月曆或工作空間報表權限。寫入前及receipt重播前重驗Bearer／Project／作者, User→Workspace鎖與每日1440分鐘限制不變

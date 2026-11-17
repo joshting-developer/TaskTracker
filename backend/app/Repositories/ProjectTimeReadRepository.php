@@ -90,13 +90,15 @@ class ProjectTimeReadRepository
      * @param  Project  $project  已授權專案
      * @param  ProjectTimeQueryData  $range  單日條件與分頁
      * @param  string  $author  限定作者User ID
+     * @param  string  $issueId  選填單卡公開ID, 不含其他Project
      * @return LengthAwarePaginator 穩定倒序分頁
      */
-    public function day(Project $project, ProjectTimeQueryData $range, string $author): LengthAwarePaginator
+    public function day(Project $project, ProjectTimeQueryData $range, string $author, string $issueId = ''): LengthAwarePaginator
     {
         return $this->entries($project, $range, $author)
             ->join('issues as target', fn ($join) => $join->on('target.id', '=', 'entry.issue_id')->on('target.project_id', '=', 'entry.project_id'))
             ->join('users', 'users.id', '=', 'author.user_id')->join('projects as source_project', 'source_project.id', '=', 'entry.project_id')
+            ->when($issueId !== '', fn ($query) => $query->where('target.public_id', $issueId))
             ->orderByDesc('entry.created_at')->orderByDesc('entry.id')
             ->paginate($range->page->perPage, ['entry.public_id as id', 'source_project.public_id as projectId', 'target.public_id as issueId', 'target.identifier as issueIdentifier', 'target.title as issueTitle', 'target.type as issueType', 'users.id as userId', 'users.name as userName', 'entry.work_date as workDate', 'entry.minutes', 'entry.note', 'entry.revision', 'entry.created_at', 'entry.updated_at'], 'page', $range->page->page);
     }

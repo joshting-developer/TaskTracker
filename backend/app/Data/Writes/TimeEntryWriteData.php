@@ -9,7 +9,7 @@ namespace App\Data\Writes;
 final readonly class TimeEntryWriteData
 {
     /**
-     * 只由TimeEntryWriteRequest以已通過型別檢查的輸入建立。
+     * 由Session或公開PAT專用Request以已通過型別檢查的輸入建立。
      *
      * @param  string  $operation  logTime、updateTime或voidTime
      * @param  string  $requestId  防重複提交識別碼

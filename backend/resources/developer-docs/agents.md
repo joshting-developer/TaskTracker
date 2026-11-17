@@ -120,3 +120,17 @@ Issue詳細新增activityCounts.comments／history／time, 為SQL總數, 不附�
 409後先重讀, 確認別人的收錄與自己的目標, 再用新revision和新requestId重送差量。逾時則保留原payload與requestId核對, 不盲重建。讀回單板及`.../boards/{board}/issues`確認結果；Epic下卡片是動態收錄, 移除明確ID不會覆蓋Epic帶入的結果
 
 可POST建立自訂看板, PATCH名稱與簡述；Default不可寫, 已封存只讀, 封存和還原仍用網頁
+
+## 本人工時（OpenAPI 0.25.0 起）
+
+先確認部署規格包含 `createPublicTimeEntry` 等 operation, 舊版本尚未提供時不要猜端點。這些是 REST API, 不代表 GPT／MCP Plugin 自動增加工具
+
+- `POST /projects/{project}/time-entries`：`requestId`、`issueId`、`workDate`（YYYY-MM-DD）、`minutes`（正整數）, 選填 `note`（最多1000字）。作者只從PAT取得, 不接受userId／workspaceId／projectId覆寫
+- `GET /projects/{project}/time-entries`：只查Token本人有效紀錄, 以路徑選Project, 可帶from／to／issueId／page／perPage。預設台北當月1日至今天, 範圍最多366天、page最多100、每頁最多100筆；依created_at DESC、id DESC穩定排序, 不包含歷史或作廢紀錄
+- `GET /projects/{project}/issues/{issue}/time-entries`：沿網頁單卡issue.read可見性, 可讀卡片所有成員有效紀錄, Epic含其子卡；page／perPage分頁。這不是工作空間團隊報表
+- `PATCH /projects/{project}/time-entries/{entry}`：`requestId`、`expectedRevision`、`workDate`、`minutes`, 選填note。完整替換日期／分鐘／說明, note省略會清空, 不能改作者或Issue
+- `POST /projects/{project}/time-entries/{entry}/void`：`requestId`和`expectedRevision`, 沿用網頁作廢語意, 保留歷史, 不提供刪除入口
+
+寫入需write Scope與當下timeEntry.writeOwn, 修改／作廢仍限本人。查詢本人需timeEntry.readOwn；read PAT不能寫入。日期依Asia/Taipei工作日, 禁止未來日期, 同人在工作空間同日有效總分鐘最多1440。相同requestId與payload重播首次結果, 每次仍先重驗作者／專案／Token資格；更新前從GET讀目前revision。回應是id／projectId／issueId／workDate／minutes／revision的有界結果, 用GET讀最新說明與狀態
+
+這裡的路徑均在 `/api/public/v1` 下。未提供無界匯出或任意作者的查詢。網頁工時頁會讀到相同資料, 因為儲存與規則和網頁共用

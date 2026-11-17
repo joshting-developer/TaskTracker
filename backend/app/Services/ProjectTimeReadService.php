@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Data\WorkspaceContext;
 use App\Data\ProjectTimeQueryData;
+use App\Data\WorkspaceContext;
 use App\Domain\DomainError;
 use App\Models\Project;
 use App\Repositories\ProjectTimeReadRepository;
@@ -68,5 +68,19 @@ class ProjectTimeReadService
         [$project, $author] = $this->scope($context, $projectId, $range);
 
         return $this->entries->day($project, $range, $author);
+    }
+
+    /** 公開本人工時查詢, 不因團隊資格擴大此入口的作者範圍
+     * @param  WorkspaceContext  $context  可信身分
+     * @param  string  $projectId  Project公開ID
+     * @param  ProjectTimeQueryData  $range  有界日期與分頁
+     * @param  string  $issueId  選填Issue篩選
+     * @return LengthAwarePaginator 本人有效工時
+     */
+    public function own(WorkspaceContext $context, string $projectId, ProjectTimeQueryData $range, string $issueId): LengthAwarePaginator
+    {
+        $access = $this->projects->authorized($context, $projectId, 'timeEntry.readOwn');
+
+        return $this->entries->day($access->project, $range, $context->userId, $issueId);
     }
 }
