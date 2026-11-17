@@ -9,7 +9,7 @@ import { isClosed, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
 const props = defineProps({ syncState: { type: String, default: 'polling' }, project: Object, issues: Array, visibleIssues: Array, entries: Array, members: Array, userId: String, moving: String, today: String, boardKey: String, includedEpicIds: Array, canWrite: { type: Boolean, default: true }, canCreate: { type: Boolean, default: true } });
 const emit = defineEmits(['open', 'move', 'create', 'drag']);
-const group = ref('none');
+const group = ref('type');
 const density = ref('comfortable');
 const collapsed = ref([]);
 const dragOver = ref('');
@@ -18,12 +18,13 @@ const preferenceKey = computed(() => `tasktracker-board:${props.userId}:${props.
 watch(preferenceKey, () => {
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(preferenceKey.value) || '{}'); } catch {}
-  group.value = saved?.group === 'epic' ? 'epic' : 'none';
+  // 舊版會自動保存none, 不能視為使用者明選；新版才保留明選的不分組。
+  group.value = saved?.group === 'epic' ? 'epic' : saved?.version === 2 && saved?.group === 'none' ? 'none' : 'type';
   density.value = saved?.density === 'compact' ? 'compact' : 'comfortable';
   collapsed.value = Array.isArray(saved?.collapsed) ? saved.collapsed.filter(id => typeof id === 'string') : [];
 }, { immediate: true });
 watch([group, density, collapsed], () => {
-  try { localStorage.setItem(preferenceKey.value, JSON.stringify({ group: group.value, density: density.value, collapsed: collapsed.value })); } catch {}
+  try { localStorage.setItem(preferenceKey.value, JSON.stringify({ version: 2, group: group.value, density: density.value, collapsed: collapsed.value })); } catch {}
 });
 const contextIndex = computed(() => buildIssueIndex(props.issues, props.entries));
 const membersById = computed(() => new Map(props.members.map(member => [member.id, member.name])));
@@ -53,7 +54,11 @@ const renderingAll = computed(() => renderLimit.value >= props.visibleIssues.len
 const lanes = computed(() => {
   const rendered = renderingAll.value ? null : new Set(props.visibleIssues.slice(0, renderLimit.value).map(issue => issue.id));
   let rows;
-  if (group.value === 'none') rows = [{ id: '', label: t('全部任務'), issues: props.visibleIssues }];
+  if (group.value === 'type') rows = [
+    { id: 'type:epic', label: 'Epic', issues: props.visibleIssues.filter(issue => issue.type === 'epic') },
+    { id: 'type:other', label: t('其他卡片'), issues: props.visibleIssues.filter(issue => issue.type !== 'epic') },
+  ];
+  else if (group.value === 'none') rows = [{ id: '', label: t('全部任務'), issues: props.visibleIssues }];
   else {
     const included = props.includedEpicIds ? new Set(props.includedEpicIds) : null;
     const epics = props.issues.filter(issue => issue.type === 'epic' && (!included || included.has(issue.id)));
@@ -67,10 +72,17 @@ const lanes = computed(() => {
   }
   return rows.map(row => {
     const columns = new Map(states.value.map(state => [state.id, []]));
-    for (const issue of row.issues) if (!rendered || rendered.has(issue.id)) columns.get(issue.state)?.push(issue);
-    return { ...row, columns };
+    const counts = new Map();
+    for (const issue of row.issues) {
+      counts.set(issue.state, (counts.get(issue.state) || 0) + 1);
+      if (!rendered || rendered.has(issue.id)) columns.get(issue.state)?.push(issue);
+    }
+    return { ...row, columns, counts };
   });
 });
+function creationDefaults(lane, state) {
+  return { state, epicId: group.value === 'epic' ? lane.id : '', type: group.value === 'type' && lane.id === 'type:epic' ? 'epic' : 'task' };
+}
 function read(issue, event) {
   if (props.moving || event?.target.closest('button:not(.card-title), select, label, a')) return;
   emit('open', issue, true);
@@ -84,47 +96,57 @@ function startDrag(event, issue) { emit('drag', true); event.dataTransfer.setDat
 function drop(event, state, lane) {
   dragOver.value = '';
   const issue = !props.moving && props.canWrite && props.visibleIssues.find(item => item.id === event.dataTransfer.getData('text/plain'));
-  if (issue) emit('move', issue, { state, ...(group.value === 'epic' && issue.type !== 'epic' ? { epicId: lane.id } : {}) });
+  if (issue && (group.value !== 'type' || (issue.type === 'epic') === (lane.id === 'type:epic'))) emit('move', issue, { state, ...(group.value === 'epic' && issue.type !== 'epic' ? { epicId: lane.id } : {}) });
   // 先送move讓送出中狀態接手暫停，再解除拖曳；卡片被樂觀移動後dragend可能不會觸發。
   emit('drag', false);
 }
 </script>
 
 <template>
-  <div class="visual-board" :class="{ 'compact-cards': density === 'compact' }" :aria-label="t('任務看板')" :aria-busy="!renderingAll">
+  <div class="visual-board" :class="{ 'compact-cards': density === 'compact', 'type-sections': group === 'type' }" :aria-label="t('任務看板')" :aria-busy="!renderingAll">
     <div class="board-tools">
-      <div><span class="board-sync" :class="{ live: syncState === 'live' }" role="status" :aria-label="t('看板同步狀態')"><i></i>{{ syncState === 'live' ? t('即時同步') : syncState === 'connecting' ? t('連線中…') : t('定期更新') }}</span><span v-if="!renderingAll" class="board-sync" role="status" :aria-label="t('看板卡片呈現進度')">{{ t('顯示中') }} {{ Math.min(renderLimit, visibleIssues.length) }} / {{ visibleIssues.length }}</span><label>{{ t('泳道') }}<select v-model="group" :aria-label="t('看板泳道')"><option value="epic">{{ t('依 Epic 分組') }}</option><option value="none">{{ t('不分組') }}</option></select></label><label>{{ t('卡片') }}<select v-model="density" :aria-label="t('看板卡片密度')"><option value="comfortable">{{ t('詳細') }}</option><option value="compact">{{ t('精簡') }}</option></select></label></div>
+      <div><span class="board-sync" :class="{ live: syncState === 'live' }" role="status" :aria-label="t('看板同步狀態')"><i></i>{{ syncState === 'live' ? t('即時同步') : syncState === 'connecting' ? t('連線中…') : t('定期更新') }}</span><span v-if="!renderingAll" class="board-sync" role="status" :aria-label="t('看板卡片呈現進度')">{{ t('顯示中') }} {{ Math.min(renderLimit, visibleIssues.length) }} / {{ visibleIssues.length }}</span><label>{{ t('泳道') }}<select v-model="group" :aria-label="t('看板泳道')"><option value="type">{{ t('Epic 與其他卡片') }}</option><option value="epic">{{ t('依 Epic 分組') }}</option><option value="none">{{ t('不分組') }}</option></select></label><label>{{ t('卡片') }}<select v-model="density" :aria-label="t('看板卡片密度')"><option value="comfortable">{{ t('詳細') }}</option><option value="compact">{{ t('精簡') }}</option></select></label></div>
     </div>
     <div class="board-scroll" tabindex="0" :aria-label="t('看板橫向捲動區')">
       <div class="board-canvas" :style="{ '--board-columns': states.length }">
-        <div class="board-headings">
+        <div v-if="group !== 'type'" class="board-headings">
           <div v-for="state in states" :key="state.id" :data-state="state.id">
             <header class="column-header"><span><i :style="{ background: state.color }"></i>{{ state.label }}<b>{{ stateCounts.get(state.id) || 0 }}</b></span><button v-if="canCreate" class="icon-button" :aria-label="t('新增{0}任務', [state.label])" :disabled="Boolean(moving) || !canWrite" @click="emit('create', { state: state.id, epicId: '' })"><Icon name="plus" :size="16" /></button></header>
           </div>
         </div>
         <section v-for="lane in lanes" :key="lane.id" class="board-lane" :aria-label="t('泳道 {0}', [lane.label])">
-          <header v-if="group === 'epic'" class="lane-header">
+          <header v-if="group !== 'none'" class="lane-header">
             <button class="lane-toggle" :aria-label="t('收合或展開 {0}', [lane.label])" :aria-expanded="!collapsed.includes(lane.id)" @click="toggle(lane.id)"><Icon name="chevron" :size="14" :class="{ expanded: !collapsed.includes(lane.id) }" /><strong>{{ lane.label }}</strong></button>
             <button v-if="lane.epic" class="lane-epic-link" :aria-label="t('查看 Epic {0}', [lane.epic.identifier])" @click="emit('open', lane.epic, true)">{{ lane.epic.identifier }}</button>
             <span class="lane-total">{{ lane.issues.length }} {{ t('張卡片') }}</span>
           </header>
-          <div v-if="group === 'none' || !collapsed.includes(lane.id)" class="lane-columns">
-            <div v-for="state in states" :key="state.id" class="board-cell" :class="{ 'drag-over': dragOver === `${lane.id}:${state.id}` }" :data-column="state.id" @dragover.prevent="dragOver = `${lane.id}:${state.id}`" @dragleave.self="dragOver = ''" @drop.prevent="drop($event, state.id, lane)">
-              <article v-for="issue in lane.columns.get(state.id)" :key="issue.id" class="issue-card" :class="{ moving: moving === issue.id }" :draggable="canWrite && !moving" :data-issue="issue.identifier" :aria-label="`${issue.identifier} ${issue.title} · ${state.label}`" @dblclick="read(issue, $event)" @dragstart="startDrag($event, issue)" @dragend="dragOver = ''; emit('drag', false)">
-                <div class="card-top"><span class="identifier">{{ issue.identifier }}</span><span class="type-tag">{{ option(TYPES, issue.type)?.label }}</span><span v-if="density === 'comfortable'" class="priority-label" :style="{ '--priority-color': option(PRIORITIES, issue.priority)?.color }" :title="t('優先級：{0}', [t(option(PRIORITIES, issue.priority)?.label)])"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span></span><button v-if="canWrite" type="button" class="icon-button card-edit" :aria-label="t('編輯 {0}', [issue.identifier])" :title="t('編輯任務')" :disabled="Boolean(moving)" @click.stop="emit('open', issue, false)" @dblclick.stop><Icon name="edit" :size="15" /></button></div>
-                <button class="card-title" :title="issue.title" @click="$event.detail === 0 && read(issue, $event)">{{ issue.title }}</button>
-                <p v-if="density === 'comfortable' && issue.description" class="board-card-description">{{ issue.description }}</p>
-                <TagLabels :tags="issue.tags || []" />
-                <div class="card-bottom"><span v-if="density === 'comfortable' && issue.dueDate" :class="['due-date', { overdue: overdue(issue) }]"><Icon name="clock" :size="12" />{{ issue.dueDate.slice(5).replace('-', '/') }}</span><span v-if="density === 'comfortable' && (issue.commentCount ?? issue.comments?.length ?? 0)" class="comment-count"><Icon name="message" :size="13" />{{ (issue.commentCount ?? issue.comments?.length ?? 0) }}</span><span class="board-assignee" :title="memberName(issue.assignee)"><span v-if="issue.assignee" class="avatar small">{{ memberName(issue.assignee).slice(0, 1) }}</span>{{ memberName(issue.assignee) }}</span></div>
-                <IssueContext v-if="density === 'comfortable'" :issue="issue" :index="contextIndex" :can-read-time="project.permissions?.includes('timeEntry.readOwn')" @open="emit('open', $event, true)" />
-              </article>
-              <button v-if="canCreate" class="lane-add" :aria-label="t('在{0}新增{1}任務', [lane.label, state.label])" :disabled="Boolean(moving) || !canWrite" @click="emit('create', { state: state.id, epicId: group === 'epic' ? lane.id : '' })"><Icon name="plus" :size="15" /><span>{{ t('新增卡片') }}</span></button>
-            </div>
-          </div>
+          <template v-if="group === 'none' || !collapsed.includes(lane.id)">
+            <p v-if="group === 'type' && !lane.issues.length" class="lane-empty">{{ t('沒有符合條件的卡片') }}<button v-if="canCreate" type="button" class="lane-add" :disabled="Boolean(moving) || !canWrite" :aria-label="t('在{0}新增{1}任務', [lane.label, states[0].label])" @click="emit('create', creationDefaults(lane, states[0].id))"><Icon name="plus" :size="15" />{{ t('新增卡片') }}</button></p>
+            <template v-else>
+              <div v-if="group === 'type'" class="board-headings">
+                <div v-for="state in states" :key="state.id" :data-state="state.id">
+                  <header class="column-header"><span><i :style="{ background: state.color }"></i>{{ state.label }}<b>{{ lane.counts.get(state.id) || 0 }}</b></span><button v-if="canCreate" class="icon-button" :aria-label="t('在{0}新增{1}任務', [lane.label, state.label])" :disabled="Boolean(moving) || !canWrite" @click="emit('create', creationDefaults(lane, state.id))"><Icon name="plus" :size="16" /></button></header>
+                </div>
+              </div>
+              <div class="lane-columns">
+                <div v-for="state in states" :key="state.id" class="board-cell" :class="{ 'drag-over': dragOver === `${lane.id}:${state.id}` }" :data-column="state.id" @dragover.prevent="dragOver = `${lane.id}:${state.id}`" @dragleave.self="dragOver = ''" @drop.prevent="drop($event, state.id, lane)">
+                  <article v-for="issue in lane.columns.get(state.id)" :key="issue.id" class="issue-card" :class="{ moving: moving === issue.id }" :draggable="canWrite && !moving" :data-issue="issue.identifier" :aria-label="`${issue.identifier} ${issue.title} · ${state.label}`" @dblclick="read(issue, $event)" @dragstart="startDrag($event, issue)" @dragend="dragOver = ''; emit('drag', false)">
+                    <div class="card-top"><span class="identifier">{{ issue.identifier }}</span><span class="type-tag">{{ option(TYPES, issue.type)?.label }}</span><span v-if="density === 'comfortable'" class="priority-label" :style="{ '--priority-color': option(PRIORITIES, issue.priority)?.color }" :title="t('優先級：{0}', [t(option(PRIORITIES, issue.priority)?.label)])"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span></span><button v-if="canWrite" type="button" class="icon-button card-edit" :aria-label="t('編輯 {0}', [issue.identifier])" :title="t('編輯任務')" :disabled="Boolean(moving)" @click.stop="emit('open', issue, false)" @dblclick.stop><Icon name="edit" :size="15" /></button></div>
+                    <button class="card-title" :title="issue.title" @click="$event.detail === 0 && read(issue, $event)">{{ issue.title }}</button>
+                    <p v-if="density === 'comfortable' && issue.description" class="board-card-description">{{ issue.description }}</p>
+                    <TagLabels :tags="issue.tags || []" />
+                    <div class="card-bottom"><span v-if="density === 'comfortable' && issue.dueDate" :class="['due-date', { overdue: overdue(issue) }]"><Icon name="clock" :size="12" />{{ issue.dueDate.slice(5).replace('-', '/') }}</span><span v-if="density === 'comfortable' && (issue.commentCount ?? issue.comments?.length ?? 0)" class="comment-count"><Icon name="message" :size="13" />{{ (issue.commentCount ?? issue.comments?.length ?? 0) }}</span><span class="board-assignee" :title="memberName(issue.assignee)"><span v-if="issue.assignee" class="avatar small">{{ memberName(issue.assignee).slice(0, 1) }}</span>{{ memberName(issue.assignee) }}</span></div>
+                    <IssueContext v-if="density === 'comfortable'" :issue="issue" :index="contextIndex" :can-read-time="project.permissions?.includes('timeEntry.readOwn')" @open="emit('open', $event, true)" />
+                  </article>
+                  <button v-if="canCreate" class="lane-add" :aria-label="t('在{0}新增{1}任務', [lane.label, state.label])" :disabled="Boolean(moving) || !canWrite" @click="emit('create', creationDefaults(lane, state.id))"><Icon name="plus" :size="15" /><span>{{ t('新增卡片') }}</span></button>
+                </div>
+              </div>
+            </template>
+          </template>
         </section>
       </div>
     </div>
-    <p v-if="!visibleIssues.length" class="board-empty-note">{{ t('沒有符合條件的卡片') }}</p>
+    <p v-if="group !== 'type' && !visibleIssues.length" class="board-empty-note">{{ t('沒有符合條件的卡片') }}</p>
   </div>
 </template>
 
@@ -149,7 +171,9 @@ function drop(event, state, lane) {
 .lane-toggle svg { flex-shrink: 0; transition: transform .15s; }
 .lane-toggle .expanded { transform: rotate(90deg); }
 .lane-epic-link { font-size: 12px; color: #5f6673; white-space: nowrap; }
+.type-sections .lane-header { padding-right: 20px; }
 .lane-total { margin-left: auto; font-size: 12px; color: #5f6673; white-space: nowrap; }
+.lane-empty { display: flex; align-items: center; gap: 16px; padding: 12px; margin: 0; font-size: 13px; color: #5f6673; }
 .board-cell { padding: 9px; min-height: 115px; border-right: 1px solid #e3e5ec; border-bottom: 1px solid #e3e5ec; }
 .board-cell.drag-over { background: #eee7fb; box-shadow: inset 0 0 0 2px #b3a0dd; }
 .issue-card { background: white; border: 1px solid #e0e3eb; border-radius: 5px; box-shadow: 0 1px 3px #262b3910; padding: 12px; margin-bottom: 9px; }

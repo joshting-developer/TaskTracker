@@ -47,7 +47,7 @@ try {
       await page.mouse.wheel(0, 500); await page.waitForFunction(() => scrollY > 0);
       assert.ok(m.scrollHeight <= m.height + 1, '看板沒有第二層垂直捲動');
       await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-      const last = page.locator('.board-cell').first().locator('.issue-card').last();
+      const last = board.locator('.issue-card').last();
       const box = await last.boundingBox(); assert.ok(box.y >= 0 && box.y + box.height <= (width === 390 ? 844 : 1000), JSON.stringify(box));
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       await page.screenshot({ path: `${artifacts}/bottom-${width}.png` });
@@ -55,7 +55,7 @@ try {
   }
   if (!before) {
     await page.setViewportSize({ width: 1440, height: 1000 });
-    assert.equal(await page.getByLabel('看板泳道').inputValue(), 'none');
+    assert.equal(await page.getByLabel('看板泳道').inputValue(), 'type');
     assert.equal(await board.locator(`[data-issue="${epic.identifier}"]`).count(), 1, 'Default顯示Epic本身');
     assert.ok((await board.locator(`[data-issue="${epic.identifier}"] .context-hours`).innerText()).includes('36 h'), 'Epic工時／估時依所屬卡片加總');
     await page.getByRole('button', { name: '任務篩選', exact: true }).click();
@@ -75,7 +75,7 @@ try {
     }
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.getByLabel('看板泳道').selectOption('none'); await page.reload(); assert.equal(await page.getByLabel('看板泳道').inputValue(), 'none');
-    await page.evaluate(key => localStorage.setItem(key, '{invalid'), key); await page.reload(); assert.equal(await page.getByLabel('看板泳道').inputValue(), 'none');
+    await page.evaluate(key => localStorage.setItem(key, '{invalid'), key); await page.reload(); assert.equal(await page.getByLabel('看板泳道').inputValue(), 'type');
     await page.getByLabel('看板卡片密度').selectOption('comfortable');
     const detailed = await first.boundingBox(); await first.locator('.issue-context').waitFor();
     await page.getByLabel('看板卡片密度').selectOption('compact');
@@ -131,7 +131,7 @@ try {
     const moved = (await call(page, 'getWorkspace')).issues.find(issue => issue.id === otherEpic.id); assert.equal(moved.epicId, ''); assert.equal(moved.state, 'inprogress');
     await page.goto(boardUrl); await page.getByLabel('看板泳道').waitFor(); assert.equal(await page.getByLabel('看板泳道').inputValue(), 'epic', '看板偏好獨立保存');
     await page.addInitScript(() => { Storage.prototype.getItem = () => { throw new Error('storage disabled'); }; Storage.prototype.setItem = () => { throw new Error('storage disabled'); }; });
-    await page.reload(); assert.equal(await page.getByLabel('看板泳道').inputValue(), 'none'); await page.getByLabel('看板泳道').selectOption('epic');
+    await page.reload(); assert.equal(await page.getByLabel('看板泳道').inputValue(), 'type'); await page.getByLabel('看板泳道').selectOption('epic');
     const email = `board-reader-${crypto.randomUUID()}@example.test`;
     const invite = await call(page, 'inviteMember', { email, requestId: crypto.randomUUID() });
     const reader = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 1000 } });
