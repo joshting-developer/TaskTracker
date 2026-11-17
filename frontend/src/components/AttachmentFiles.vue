@@ -2,12 +2,14 @@
 import { t } from '../i18n/index.js';
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { queryApi, requestAttachment, requestJson, requestUpload } from '../api/http.js';
+import { releaseUploads, trackUploads } from '../composables/useUploadTray.js';
 
 const props = defineProps({ issue: { type: Object, required: true }, canWrite: Boolean });
 const emit = defineEmits(['changed']);
 const rows = ref([]), page = ref(1), lastPage = ref(1), loading = ref(false), saving = ref(false), error = ref(''), progress = ref(0), draft = ref(null), fileInput = ref(null), limits = ref(null);
 const root = computed(() => `projects/${encodeURIComponent(props.issue.projectId)}`);
 let controller = new AbortController(), alive = true;
+const owner = Symbol('issue-attachments');
 defineExpose({ dirty: computed(() => Boolean(draft.value)), saving });
 async function load(next = 1) {
   if (loading.value) return;
@@ -24,23 +26,33 @@ function choose(event) {
   const file = event.target.files?.[0]; event.target.value = '';
   if (!file || saving.value || !props.canWrite) return;
   if (!limits.value?.general?.mimeTypes.includes(file.type) || file.size > limits.value.general.maxBytes) { error.value = t('請選擇限制大小內的PDF或ZIP'); return; }
-  draft.value = { file, requestId: crypto.randomUUID(), upload: null, bind: null, issueRevision: props.issue.revision };
+  const requestId = crypto.randomUUID();
+  draft.value = { file, requestId, upload: null, bind: null, issueRevision: props.issue.revision, row: { id: requestId, file, kind: 'file', state: 'queued', progress: 0, error: '', upload: null } };
+  trackUploads(owner, [draft.value.row], { retry: () => save(), cancel: discard, abortable: false });
   save();
+}
+function discard() {
+  if (saving.value) return;
+  if (draft.value) draft.value.row.state = 'canceled';
+  draft.value = null; error.value = '';
 }
 async function save() {
   if (!draft.value || saving.value || !props.canWrite) return;
   const current = draft.value;
   saving.value = true; error.value = ''; progress.value = 0;
+  const row = current.row; row.state = 'uploading'; row.error = '';
   try {
     if (!current.upload) {
       const form = new FormData(); form.set('requestId', current.requestId); form.set('file', current.file, current.file.name);
-      current.upload = await requestUpload(`/api/v1/${root.value}/attachments`, form, { signal: controller.signal, onProgress: value => progress.value = value });
+      current.upload = await requestUpload(`/api/v1/${root.value}/attachments`, form, { signal: controller.signal, onProgress: value => progress.value = row.progress = value });
+      row.upload = current.upload;
     }
+    row.state = 'binding';
     if (!current.bind) current.bind = { requestId: crypto.randomUUID(), expectedRevision: current.upload.revision, issueId: props.issue.id, issueRevision: current.issueRevision };
     await requestJson(`/api/v1/${root.value}/attachments/${current.upload.id}/bind`, { method: 'POST', input: current.bind, signal: controller.signal });
     if (!alive) return;
-    draft.value = null; emit('changed'); await load();
-  } catch (failure) { if (alive) error.value = failure.message; }
+    row.state = 'done'; draft.value = null; emit('changed'); await load();
+  } catch (failure) { if (alive) { error.value = failure.message; row.state = 'failed'; row.error = failure.message; } }
   finally { if (alive) saving.value = false; }
 }
 function rebase() {
@@ -57,10 +69,10 @@ async function download(row) {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   } catch (failure) { if (alive) error.value = failure.message; }
 }
-function accessChanged() { controller.abort(); rows.value = []; draft.value = null; error.value = t('附件存取權限已變更'); }
+function accessChanged() { releaseUploads(owner); controller.abort(); rows.value = []; draft.value = null; error.value = t('附件存取權限已變更'); }
 window.addEventListener('tasktracker:access-changed', accessChanged);
 window.addEventListener('tasktracker:workspace-changed', accessChanged);
-onBeforeUnmount(() => { alive = false; controller.abort(); window.removeEventListener('tasktracker:access-changed', accessChanged); window.removeEventListener('tasktracker:workspace-changed', accessChanged); });
+onBeforeUnmount(() => { releaseUploads(owner); alive = false; controller.abort(); window.removeEventListener('tasktracker:access-changed', accessChanged); window.removeEventListener('tasktracker:workspace-changed', accessChanged); });
 load();
 </script>
 
@@ -76,7 +88,7 @@ load();
         <button class="text-button" type="button" @click="save">{{ t('重試') }}</button>
         <button v-if="draft.upload" class="text-button" type="button" @click="emit('changed')">{{ t('更新任務版本') }}</button>
         <button v-if="draft.issueRevision !== issue.revision" class="text-button" type="button" @click="rebase">{{ t('依目前任務版本重試') }}</button>
-        <button class="text-button" type="button" @click="draft = null; error = ''">{{ t('取消') }}</button>
+        <button class="text-button" type="button" @click="discard">{{ t('取消') }}</button>
       </template>
     </div>
     <p v-if="loading" role="status">{{ t('載入中…') }}</p>

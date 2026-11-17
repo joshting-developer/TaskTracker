@@ -17,6 +17,7 @@ import { syncEntryPath } from './entryPath.js';
 import { provideLeaveGuards } from './ui/leaveGuard.js';
 import { buildHash, parseHash, settingsHash } from './ui/hashRoutes.js';
 import WorkspaceSwitcher from './components/WorkspaceSwitcher.vue';
+import UploadTray from './components/UploadTray.vue';
 
 const ProjectDialog = lazyFeature(() => import('./components/ProjectDialog.vue'));
 const ProjectTasksWorkspace = lazyFeature(() => import('./components/ProjectTasksWorkspace.vue'));
@@ -501,6 +502,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
     <PersonalTokensDialog v-if="tokensOpen" :key="workspace.meta.workspace?.id" :workspace-name="workspace.meta.workspace?.name" @close="tokensOpen = false" />
     <ProfileDialog v-if="profileOpen" @close="closeSettings('profile')" @saved="savedProfile" />
     <ProjectDialog :lookup="(filters,options)=>api.projectLeads({...filters,project:editingProject?.id},options)" v-if="creatingProject || editingProject" :project="editingProject" :members="workspace.members" :user-id="currentUserId" @close="creatingProject = false; editingProject = null" @created="createdProject" />
+    <UploadTray />
     <Transition name="toast"><div v-if="toast" class="toast-message" role="status"><span><Icon name="check" :size="16" /></span>{{ t(toast) }}</div></Transition>
   </div>
   </v-app>

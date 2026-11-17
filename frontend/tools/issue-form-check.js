@@ -63,7 +63,7 @@ try {
   const conversion = page.getByRole('dialog', { name: '轉成正式卡片', exact: true }); const projectSelect = conversion.getByLabel('專案', { exact: true }); await projectSelect.selectOption(project.id);
   await page.waitForFunction(() => document.querySelector('button[aria-label="選擇描述圖片"]:not(:disabled)'));
   const scratch = await context.newPage(); await scratch.setViewportSize({ width: 320, height: 180 }); await scratch.setContent('<p>隔離圖片草稿</p>'); const png = await scratch.screenshot(); await scratch.close();
-  await conversion.getByLabel('上傳描述圖片').setInputFiles({ name: 'scope.png', mimeType: 'image/png', buffer: png }); await conversion.getByText('已加入內容', { exact: true }).waitFor();
+  await conversion.getByLabel('上傳描述圖片').setInputFiles({ name: 'scope.png', mimeType: 'image/png', buffer: png }); await conversion.getByRole('list', { name: '圖片上傳狀態' }).getByText('已加入內容', { exact: true }).waitFor();
   const draft = await conversion.getByLabel('描述', { exact: true }).inputValue();
   await projectSelect.selectOption(other.id); await conversion.getByText('描述仍有圖片或未完成上傳, 請先處理圖片再切換專案').waitFor();
   assert.equal(await projectSelect.inputValue(), project.id); assert.equal(await conversion.getByLabel('描述', { exact: true }).inputValue(), draft);

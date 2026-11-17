@@ -1,6 +1,7 @@
 import { t } from '../i18n/index.js';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { queryApi, requestJson, requestUpload } from '../api/http.js';
+import { releaseUploads, trackUploads } from './useUploadTray.js';
 
 // Windows reports ZIP under older names; the server still sniffs the real content.
 const ZIP_ALIASES = ['application/x-zip-compressed', 'application/x-zip'];
@@ -8,7 +9,7 @@ const MB = 1024 * 1024;
 
 /** One editor owns its draft files and stable retry IDs; no shared file/token cache.
  * Images go into the text; PDF/ZIP stay private until the owner form binds them after its save. */
-export function useAttachmentUpload({ projectId, source, insert, maxlength, allowFiles }) {
+export function useAttachmentUpload({ projectId, source, insert, maxlength, allowFiles, note }) {
   const rows = ref([]), limits = ref(null), error = ref('');
   const live = computed(() => rows.value.filter(row => row.state !== 'canceled' && row.state !== 'rejected'));
   const busy = computed(() => rows.value.some(row => row.state === 'uploading' || row.state === 'binding'));
@@ -17,9 +18,9 @@ export function useAttachmentUpload({ projectId, source, insert, maxlength, allo
   const unsettled = computed(() => live.value.some(row => row.state !== 'done'));
   const pendingFiles = computed(() => rows.value.filter(row => row.kind === 'file' && row.state === 'uploaded'));
   let generation = 0, limitsRequest, binding = false;
-  const controllers = new Map();
+  const controllers = new Map(), owner = Symbol('attachment-upload');
   const root = () => `/api/v1/projects/${encodeURIComponent(projectId.value)}/attachments`;
-  function clear() { generation++; limitsRequest?.abort(); for (const value of controllers.values()) value.abort(); controllers.clear(); rows.value = []; limits.value = null; error.value = ''; }
+  function clear() { releaseUploads(owner); generation++; limitsRequest?.abort(); for (const value of controllers.values()) value.abort(); controllers.clear(); rows.value = []; limits.value = null; error.value = ''; }
   watch(projectId, async project => {
     clear(); if (!project) return;
     limitsRequest = new AbortController(); const captured = generation;
@@ -97,6 +98,7 @@ export function useAttachmentUpload({ projectId, source, insert, maxlength, allo
       else if (kind === 'file' && live.value.filter(row => row.kind === 'file').length >= limits.value.general.perIssue) reason = t('一般附件數量已達上限');
       rows.value.push({ id: crypto.randomUUID(), file, kind, anchor, state: reason ? 'rejected' : 'queued', progress: 0, error: reason, upload: null, bindRequest: null });
     }
+    trackUploads(owner, rows.value.slice(rows.value.length - files.length), { retry, cancel, note: note?.value });
     drain();
   }
   onBeforeUnmount(clear);

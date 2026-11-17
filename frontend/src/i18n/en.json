@@ -991,5 +991,15 @@
   "重試附加檔案": "Retry attaching files",
   "附件上傳中…": "Uploading attachments…",
   "附件上傳狀態": "Attachment upload status",
-  "附件設定尚未載入": "Attachment settings have not loaded"
+  "附件設定尚未載入": "Attachment settings have not loaded",
+  "上傳中 {0}/{1}": "Uploading {0}/{1}",
+  "已加入 {0} 個檔案": "Added {0} files",
+  "{0} 個成功、{1} 個失敗": "{0} succeeded, {1} failed",
+  "{0} 個檔案待附加": "{0} files waiting to attach",
+  "{0} 個檔案已完成": "{0} files done",
+  "已取消上傳": "Upload canceled",
+  "上傳進度": "Upload progress",
+  "展開上傳進度": "Expand upload progress",
+  "收合上傳進度": "Collapse upload progress",
+  "關閉上傳進度": "Close upload progress"
 }

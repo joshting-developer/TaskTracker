@@ -75,8 +75,8 @@ try {
   await page.waitForFunction(() => document.querySelector('button[aria-label="選擇描述附件"]:not(:disabled)'));
   const before = await drawerInput.inputValue();
   await drop(drawerInput, [{ name: 'brief.pdf', type: 'application/pdf', buffer: pdf }]);
-  await drawer.getByText('儲存後附到任務', { exact: true }).waitFor(); assert.equal(await drawerInput.inputValue(), before);
-  await drawer.getByRole('button', { name: '儲存修改', exact: true }).click(); await drawer.getByText('已附到任務', { exact: true }).waitFor();
+  await drawer.getByRole('list', { name: '附件上傳狀態' }).getByText('儲存後附到任務', { exact: true }).waitFor(); assert.equal(await drawerInput.inputValue(), before);
+  await drawer.getByRole('button', { name: '儲存修改', exact: true }).click(); await drawer.getByRole('list', { name: '附件上傳狀態' }).getByText('已附到任務', { exact: true }).waitFor();
   assert.deepEqual(await attachments(issueId), ['brief.pdf:application/pdf', 'screen.png:image/png', 'spec.zip:application/zip']);
   await page.keyboard.press('Escape'); await drawer.waitFor({ state: 'hidden' }).catch(() => {});
 

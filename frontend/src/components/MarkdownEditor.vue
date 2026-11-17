@@ -40,7 +40,7 @@ onBeforeUnmount(() => resizeObserver?.disconnect());
 watch(() => props.modelValue, value => { if (!value) mode.value = 'write'; });
 
 async function focus() { mode.value = 'write'; await nextTick(); input.value?.scrollIntoView({ block: 'nearest' }); input.value?.focus({ preventScroll: true }); }
-const uploads = useAttachmentUpload({ projectId: computed(() => props.allowAttachments ? props.projectId : ''), source: computed(() => props.modelValue), maxlength: computed(() => props.maxlength), allowFiles: computed(() => props.allowFiles), insert: insertAttachment });
+const uploads = useAttachmentUpload({ projectId: computed(() => props.allowAttachments ? props.projectId : ''), source: computed(() => props.modelValue), maxlength: computed(() => props.maxlength), allowFiles: computed(() => props.allowFiles), note: computed(() => props.fileNote), insert: insertAttachment });
 const uploadRows = uploads.rows, uploadError = uploads.error, uploadLimits = uploads.limits;
 const visibleRows = computed(() => uploadRows.value.filter(row => row.state !== 'canceled'));
 defineExpose({ focus, uploadBusy: uploads.busy, attachmentDirty: uploads.unsettled, attachmentBlocked: uploads.blocked, filesPending: computed(() => uploads.pendingFiles.value.length), bindFiles: uploads.bind });

@@ -11,6 +11,7 @@ import IssueRelations from './IssueRelations.vue';
 import MarkdownEditor from './MarkdownEditor.vue';
 import MarkdownContent from './MarkdownContent.vue';
 import { api } from '../api/index.js';
+import UploadTray from './UploadTray.vue';
 import { FIELD_LABELS, hours, ISSUE_FIELDS, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
 const props = defineProps({ projectLoader: Function, projectOptionsLoader: Function, lookup: Function, activityLoader: Function, issue: Object, todo: Object, projects: Array, defaultProject: String, defaultState: String, defaultType: String, defaultEpicId: String, defaultBoardId: String, members: Array, issues: Array, entries: Array, canExpand: Boolean, inline: Boolean });
@@ -297,7 +298,7 @@ function timestamp(value) {
     <p v-if="activity.error.value" class="error-box" role="alert">{{ activity.error.value }}</p>
     <button v-if="activity.more.value" class="button secondary" :disabled="activity.loading.value" @click="activity.fetchPage(true)">{{ t('載入更多') }}</button>
   </div>
-
+  <UploadTray v-if="!inline" />
   </component>
 </template>
 
