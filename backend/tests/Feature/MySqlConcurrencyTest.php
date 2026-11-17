@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Database\WriteLocks;
 use App\Models\User;
+use App\Models\Workspace;
+use App\Models\WorkspaceMember;
 use App\Services\AccountService;
 use App\Services\WorkspaceService;
 use Illuminate\Support\Facades\DB;
@@ -35,15 +37,16 @@ class MySqlConcurrencyTest extends MySqlTestCase
      * @param  string  $operation  競爭執行的RPC名稱
      * @param  array  $inputs  各worker的原始請求
      * @param  ?\Closure  $whileRunning  釋放worker後的可選回呼，接收本次暫存檔前綴
+     * @param  array<int,string>  $actors  各worker的合成帳號, 未指定時使用同一操作者
      * @return list<array<string,mixed>> 各worker回應
      */
-    private function race(array $identity, string $operation, array $inputs, ?\Closure $whileRunning = null): array
+    private function race(array $identity, string $operation, array $inputs, ?\Closure $whileRunning = null, array $actors = []): array
     {
         $prefix = tempnam(sys_get_temp_dir(), 'tt-mysql-race-');
         $processes = [];
         try {
             foreach ($inputs as $i => $input) {
-                file_put_contents($prefix.'.'.$i.'.json', json_encode(['userId' => $identity['user']['id'], 'workspaceId' => $identity['workspace']['id'], 'operation' => $operation, 'input' => $input, 'ready' => $prefix.'.'.$i.'.ready', 'start' => $prefix.'.start', 'result' => $prefix.'.'.$i.'.result'], JSON_THROW_ON_ERROR));
+                file_put_contents($prefix.'.'.$i.'.json', json_encode(['userId' => $actors[$i] ?? $identity['user']['id'], 'workspaceId' => $identity['workspace']['id'], 'operation' => $operation, 'input' => $input, 'ready' => $prefix.'.'.$i.'.ready', 'start' => $prefix.'.start', 'result' => $prefix.'.'.$i.'.result'], JSON_THROW_ON_ERROR));
                 $process = new Process([PHP_BINARY, base_path('tools/mysql-race-worker.php'), $prefix.'.'.$i.'.json']);
                 $process->setTimeout(15)->start();
                 $processes[] = $process;
@@ -146,6 +149,38 @@ class MySqlConcurrencyTest extends MySqlTestCase
             if (DB::transactionLevel()) {
                 DB::rollBack();
             }
+        }
+    }
+
+    /** 兩個獨立帳號競爭最後一個名額, 接受邀請與恢復皆只能成功一次
+     * @return void
+     */
+    public function test_parallel_membership_acceptance_and_restoration_respect_capacity(): void
+    {
+        foreach (['acceptWorkspaceInvite', 'setWorkspaceMemberStatus'] as $operation) {
+            [$owner] = $this->fixture();
+            $workspace = Workspace::where('public_id', $owner['workspace']['id'])->value('id');
+            $inputs = $actors = [];
+            for ($i = 0; $i < 5; $i++) {
+                $user = User::create(['id' => (string) Str::uuid(), 'name' => 'Capacity racer', 'email' => Str::uuid().'@example.test', 'password' => 'capacity-race-password']);
+                if ($i < 3 || $operation === 'setWorkspaceMemberStatus') {
+                    $member = WorkspaceMember::create(['workspace_id' => $workspace, 'user_id' => $user->id, 'role' => 'user', 'joined_at' => now(), 'disabled_at' => $i < 3 ? null : now()]);
+                }
+                if ($i < 3) {
+                    continue;
+                }
+                if ($operation === 'acceptWorkspaceInvite') {
+                    $invite = $this->postJson('/api/rpc/inviteMember', ['email' => $user->email, 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+                    $inputs[] = ['inviteToken' => $invite['token']];
+                    $actors[] = $user->id;
+                } else {
+                    $inputs[] = ['userId' => $user->id, 'status' => 'active', 'expectedRevision' => (int) $member->role_revision, 'requestId' => (string) Str::uuid()];
+                }
+            }
+            $results = $this->race($owner, $operation, $inputs, actors: $actors);
+            $this->assertCount(1, array_filter($results, fn ($result) => $result['ok']), $operation.': '.json_encode($results));
+            $this->assertSame(['CONFLICT'], array_values(array_column(array_filter($results, fn ($result) => ! $result['ok']), 'code')));
+            $this->assertSame(5, WorkspaceMember::where('workspace_id', $workspace)->whereNull('disabled_at')->count());
         }
     }
 }

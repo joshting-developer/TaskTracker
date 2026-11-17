@@ -16,9 +16,10 @@ class WorkspaceMemberStatusService
     /** 注入資料及共用receipt協作者, 不在建構時查詢
      * @param  WorkspaceMemberStatusRepository  $members  成員狀態與事件資料
      * @param  RecordStoreFactory  $records  共用Workspace receipt儲存入口
+     * @param  WorkspaceMemberCapacity  $capacity  恢復前的人數規則
      * @param  RequestReplay  $replay  授權後重試
      */
-    public function __construct(private WorkspaceMemberStatusRepository $members, private RecordStoreFactory $records, private RequestReplay $replay) {}
+    public function __construct(private WorkspaceMemberStatusRepository $members, private RecordStoreFactory $records, private RequestReplay $replay, private WorkspaceMemberCapacity $capacity) {}
 
     /** 在HTTP已取鎖交易中先驗目前資格, 再執行或重播
      * @param  WorkspaceContext  $context  當次可信操作者與空間
@@ -41,6 +42,9 @@ class WorkspaceMemberStatusService
             }
             if (($member->disabled_at !== null) === ($status === 'disabled')) {
                 return ['id' => $member->user_id, 'revision' => (int) $member->role_revision, 'status' => $status, 'disabledAt' => DatabaseTimes::public($member->disabled_at)];
+            }
+            if ($status === 'active') {
+                $this->capacity->assertAvailable($context->workspaceId);
             }
             $time = now()->utc()->toISOString();
             $disabledAt = $status === 'disabled' ? $time : null;

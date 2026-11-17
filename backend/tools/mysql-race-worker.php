@@ -3,8 +3,11 @@
 require_once __DIR__.'/isolated-test-connection.php';
 
 use App\Domain\DomainError;
+use App\Http\AccountSessionBoundary;
 use App\Http\WorkspaceRpc;
+use App\Http\WorkspaceTransaction;
 use App\Models\User;
+use App\Services\WorkspaceMemberStatusService;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Http\Request;
 use Illuminate\Session\ArraySessionHandler;
@@ -18,7 +21,8 @@ if (! $app->environment('testing') || getenv('TASKTRACKER_MYSQL_TEST') !== '1' |
     throw new RuntimeException('不是隔離MySQL競態環境');
 }
 $fixture = json_decode(file_get_contents($argv[1]), true, flags: JSON_THROW_ON_ERROR);
-$request = Request::create('/api/rpc/'.$fixture['operation'], 'POST');
+$accountOperation = $fixture['operation'] === 'acceptWorkspaceInvite';
+$request = Request::create(($accountOperation ? '/api/auth/' : '/api/rpc/').$fixture['operation'], 'POST');
 $user = User::findOrFail($fixture['userId']);
 $request->setUserResolver(fn () => $user);
 $session = new Store('race', new ArraySessionHandler(120));
@@ -34,7 +38,12 @@ while (! is_file($fixture['start'])) {
     usleep(10000);
 }
 try {
-    $result = ['ok' => true, 'data' => $app->make(WorkspaceRpc::class)->execute($request, $fixture['operation'], $fixture['input'])];
+    $data = match ($fixture['operation']) {
+        'acceptWorkspaceInvite' => $app->make(AccountSessionBoundary::class)->handle($request, $fixture['operation'], $fixture['input']),
+        'setWorkspaceMemberStatus' => $app->make(WorkspaceTransaction::class)->write($request, fn ($context) => $app->make(WorkspaceMemberStatusService::class)->change($context, $fixture['input'])),
+        default => $app->make(WorkspaceRpc::class)->execute($request, $fixture['operation'], $fixture['input']),
+    };
+    $result = ['ok' => true, 'data' => $data];
 } catch (DomainError $error) {
     $result = ['ok' => false, 'code' => $error->errorCode];
 }

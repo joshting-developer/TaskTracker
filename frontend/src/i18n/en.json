@@ -943,5 +943,6 @@
   "標籤已更新, 請重新載入": "This tag has changed; reload the latest version",
   "相同標籤不能同時新增與移除": "The same tag cannot be added and removed at once",
   "請確認標籤欄位、expectedRevision 與 requestId": "Check tag fields, expectedRevision and requestId",
-  "標籤包含不支援的欄位或沒有修改內容": "Unsupported tag fields or no changes supplied"
+  "標籤包含不支援的欄位或沒有修改內容": "Unsupported tag fields or no changes supplied",
+  "工作空間最多5位有效成員（包含擁有者）, 請先停用或移除成員再加入": "A workspace supports up to 5 active members, including the owner. Disable or remove a member before adding another"
 }

@@ -20,9 +20,10 @@ class WorkspaceMemberships
      * @param  MembershipRepository  $memberships  有效工作區資格查詢
      * @param  RecordStoreFactory  $stores  依範圍建立資料入口
      * @param  WorkspaceInvitationRepository  $invitations  邀請者即時資格
+     * @param  WorkspaceMemberCapacity  $capacity  增加資格前的人數規則
      * @param  AccountRepository  $accounts  只在有效token後查帳號存在
      */
-    public function __construct(private MembershipRepository $memberships, private RecordStoreFactory $stores, private WorkspaceInvitationRepository $invitations, private AccountRepository $accounts) {}
+    public function __construct(private MembershipRepository $memberships, private RecordStoreFactory $stores, private WorkspaceInvitationRepository $invitations, private AccountRepository $accounts, private WorkspaceMemberCapacity $capacity) {}
 
     /**
      * 回傳本人的有效工作空間，不包含未加入或停用空間。
@@ -108,6 +109,7 @@ class WorkspaceMemberships
             DomainError::fail('INVALID_INPUT', '邀請已使用');
         }
         if (! $member) {
+            $this->capacity->assertAvailable($invite['workspaceId']);
             $tenant->put('members', $user->id, [
                 'id' => $user->id,
                 'name' => $user->name,

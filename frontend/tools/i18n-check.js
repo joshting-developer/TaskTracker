@@ -17,6 +17,7 @@ assert.equal(t('<img src=x onerror=alert(1)>'), '<img src=x onerror=alert(1)>');
 for (const key of ['__proto__', 'constructor', 'toString']) assert.equal(t(key), key);
 assert.equal(translateError('FORBIDDEN', '未列入字典的中文訊息'), 'You do not have permission for this action');
 assert.equal(translateError('UNKNOWN_NEW_CODE', '未列入字典的中文訊息'), 'Request failed');
+assert.equal(translateError('CONFLICT', '工作空間最多5位有效成員（包含擁有者）, 請先停用或移除成員再加入'), 'A workspace supports up to 5 active members, including the owner. Disable or remove a member before adding another');
 assert.equal(projectRoleLabel({ id: 'maintainer', label: '專案管理者' }), 'Project manager');
 assert.equal(projectRoleLabel({ id: 'custom', label: '使用者自訂角色' }), '使用者自訂角色');
 assert.equal(formatNumber(1234.5), '1,234.5');
