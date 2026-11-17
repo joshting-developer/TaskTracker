@@ -2,6 +2,8 @@
 
 namespace App\Data\Writes;
 
+use App\Data\BoardRuleData;
+
 /** Board領域已驗證傳輸資料；明確型別與原始簽章分開保存。 */
 final readonly class BoardWriteData extends RpcWriteData
 {
@@ -16,8 +18,10 @@ final readonly class BoardWriteData extends RpcWriteData
      * @param  ?string  $projectId  傳輸的projectId欄位，未提供時為null
      * @param  ?array  $selectedIssueIds  傳輸的selectedIssueIds欄位，未提供時為null
      * @param  array<string,mixed>  $original  原始輸入及未知欄位，禁止日誌輸出
+     * @param  BoardRuleData|null  $autoInclude  有界自動條件, 缺漏差異保留在原始輸入
+     * @param  list<string>|null  $excludedIssueIds  明確排除的純值輸入
      */
-    public function __construct(string $operation, string $requestId, ?string $id, ?int $expectedRevision, public ?string $name, public ?string $projectId, public ?array $selectedIssueIds, array $original)
+    public function __construct(string $operation, string $requestId, ?string $id, ?int $expectedRevision, public ?string $name, public ?string $projectId, public ?array $selectedIssueIds, array $original, public ?BoardRuleData $autoInclude = null, public ?array $excludedIssueIds = null)
     {
         parent::__construct($operation, $requestId, $id, $expectedRevision, $original);
     }

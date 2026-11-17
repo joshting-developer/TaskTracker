@@ -134,3 +134,14 @@ Issue詳細新增activityCounts.comments／history／time, 為SQL總數, 不附�
 寫入需write Scope與當下timeEntry.writeOwn, 修改／作廢仍限本人。查詢本人需timeEntry.readOwn；read PAT不能寫入。日期依Asia/Taipei工作日, 禁止未來日期, 同人在工作空間同日有效總分鐘最多1440。相同requestId與payload重播首次結果, 每次仍先重驗作者／專案／Token資格；更新前從GET讀目前revision。回應是id／projectId／issueId／workDate／minutes／revision的有界結果, 用GET讀最新說明與狀態
 
 這裡的路徑均在 `/api/public/v1` 下。未提供無界匯出或任意作者的查詢。網頁工時頁會讀到相同資料, 因為儲存與規則和網頁共用
+
+
+## 儲存看板條件（OpenAPI 0.26.0 起）
+
+先讀該部署 OpenAPI, 舊站不接受新欄位。自訂看板的 `autoInclude` 可設定 Tag、類型與狀態, Tag 是 AND、類型與狀態群組內 OR, 群組間 AND。設定只屬於看板, 不修改卡片的內容或標籤；Default 與舊看板不自動啟用
+
+儲存前可 `POST /api/public/v1/projects/{project}/boards/preview`, 以 `autoInclude`、`selectedIssueIds`、`excludedIssueIds` 看精確總數與前 20 張。此操作唯讀, 需要 read PAT 及即時 `board.manage`, 沒有 requestId 或寫入來源紀錄
+
+明確排除優先於手動加入、手動選取 Epic 所帶子卡與規則命中。要隱藏自動命中的卡, 在 PATCH 帶 `excludeIssueIds`；要恢復其正常判斷帶 `unexcludeIssueIds`, 不能只移除明確加入清單。兩個差量各最多 200 個, 同次不能重疊, 並帶最新 expectedRevision 與 requestId。自動命中的 Epic 不會額外展開子卡, 手動選取 Epic 則保留原本動態展開
+
+未帶規則保留現值, `autoInclude:null` 停用規則, 空物件明確代表全 Project。Tag 被刪除後舊規則不自動放寬, 需管理者修改；建立新規則不能使用已移除或其他 Project 的 Tag。正式更新前先跑 migration, 不因本地 API 已提供就宣稱 Plugin／Host 工具已支援

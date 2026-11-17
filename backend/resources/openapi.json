@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Pavenro API",
-    "version": "0.25.0",
+    "version": "0.26.0",
     "description": "公開Bearer v1提供卡片查建改、留言、刪除、外部識別與批次, 紙條協作、本人通知、私有附件, 以及看板讀取、建立和差量收錄。Session個人憑證管理獨立, 不提供公開看板封存／還原。[HTTP契約](/api/public/contract.md) 工時API提供本人工時寫入、查詢、修改與作廢, 沿用現有權限與每日上限。"
   },
   "servers": [
@@ -12920,7 +12920,10 @@
                     "archivedAt": null,
                     "issueCount": 0,
                     "closedCount": 0,
-                    "selectedIssueIds": []
+                    "selectedIssueIds": [],
+                    "autoInclude": null,
+                    "excludedIssueIds": [],
+                    "autoIncludeTags": []
                   }
                 }
               }
@@ -17361,6 +17364,317 @@
         },
         "x-required-token-ability": "write"
       }
+    },
+    "/api/public/v1/projects/{project}/boards/preview": {
+      "post": {
+        "operationId": "previewPublicBoard",
+        "summary": "Preview board rules and manual exceptions without saving",
+        "tags": [
+          "Boards"
+        ],
+        "security": [
+          {
+            "bearerPat": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bounded preview, no write performed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "data"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "items",
+                        "page",
+                        "perPage",
+                        "total",
+                        "lastPage"
+                      ],
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "maxItems": 20,
+                          "items": {
+                            "$ref": "#/components/schemas/BoardPreviewItem"
+                          }
+                        },
+                        "page": {
+                          "type": "integer",
+                          "const": 1
+                        },
+                        "perPage": {
+                          "type": "integer",
+                          "const": 20
+                        },
+                        "total": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "lastPage": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "data": {
+                    "items": [],
+                    "page": 1,
+                    "perPage": 20,
+                    "total": 0,
+                    "lastPage": 1
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認證／成員資格失效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "UNAUTHENTICATED"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "認證／成員資格失效"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "來源、Scope或操作權限不足",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "FORBIDDEN"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "來源、Scope或操作權限不足"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "請求超過限額",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "RATE_LIMIT"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "RATE_LIMIT",
+                    "message": "請求超過限額"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/RateLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/RateRemaining"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/RateReset"
+              }
+            }
+          },
+          "500": {
+            "description": "服務暫時無法處理請求",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "INTERNAL_ERROR"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "服務暫時無法處理請求"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "查詢條件不合法",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "請確認查詢範圍"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "資源不存在或不可見",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "ok": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "請確認查詢範圍"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Requires current board.manage and read PAT ability. Read-only POST; no requestId, cookie, CSRF or audit mutation. Returns only the first 20 issue identifiers/titles and exact total. Does not persist rules or change membership.",
+        "deprecated": false,
+        "x-tasktracker-context": "token-workspace",
+        "x-rate-limit": {
+          "requests": 120,
+          "windowSeconds": 60,
+          "key": "client IP; shared across public v1 routes",
+          "sharedWithOtherOperations": true
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "公開資源ID；不是內部SQL ID"
+          }
+        ],
+        "x-required-permission": "board.manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BoardSelection"
+              },
+              "example": {
+                "autoInclude": {
+                  "tagIds": [],
+                  "types": [
+                    "task"
+                  ],
+                  "states": [
+                    "open"
+                  ]
+                },
+                "selectedIssueIds": [],
+                "excludedIssueIds": []
+              }
+            }
+          }
+        },
+        "x-required-token-ability": "write"
+      }
     }
   },
   "components": {
@@ -20062,7 +20376,10 @@
           "archivedAt",
           "issueCount",
           "closedCount",
-          "selectedIssueIds"
+          "selectedIssueIds",
+          "autoInclude",
+          "excludedIssueIds",
+          "autoIncludeTags"
         ],
         "additionalProperties": false,
         "properties": {
@@ -20106,6 +20423,26 @@
             "items": {
               "type": "string",
               "maxLength": 100
+            }
+          },
+          "autoInclude": {
+            "$ref": "#/components/schemas/BoardRule"
+          },
+          "excludedIssueIds": {
+            "type": "array",
+            "maxItems": 1000,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          "autoIncludeTags": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/TagSummary"
             }
           }
         }
@@ -20151,6 +20488,19 @@
           "description": {
             "type": "string",
             "maxLength": 300
+          },
+          "autoInclude": {
+            "$ref": "#/components/schemas/BoardRule"
+          },
+          "excludeIssueIds": {
+            "type": "array",
+            "maxItems": 200,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
           }
         }
       },
@@ -20180,6 +20530,21 @@
           {
             "required": [
               "removeIssueIds"
+            ]
+          },
+          {
+            "required": [
+              "autoInclude"
+            ]
+          },
+          {
+            "required": [
+              "excludeIssueIds"
+            ]
+          },
+          {
+            "required": [
+              "unexcludeIssueIds"
             ]
           }
         ],
@@ -20212,6 +20577,29 @@
             }
           },
           "removeIssueIds": {
+            "type": "array",
+            "maxItems": 200,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          "autoInclude": {
+            "$ref": "#/components/schemas/BoardRule"
+          },
+          "excludeIssueIds": {
+            "type": "array",
+            "maxItems": 200,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          "unexcludeIssueIds": {
             "type": "array",
             "maxItems": 200,
             "uniqueItems": true,
@@ -20690,6 +21078,100 @@
           "lastPage"
         ],
         "additionalProperties": false
+      },
+      "BoardRule": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "additionalProperties": false,
+        "description": "null keeps manual collection. Tag IDs use AND; types and states each use OR; groups use AND. An explicit empty object matches all project issues. Explicit exclusions override manual selections, selected Epic children and automatic matches. Automatic Epic matches do not expand children.",
+        "properties": {
+          "tagIds": {
+            "type": "array",
+            "maxItems": 20,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "types": {
+            "type": "array",
+            "maxItems": 3,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "epic",
+                "task",
+                "bug"
+              ]
+            }
+          },
+          "states": {
+            "type": "array",
+            "maxItems": 30,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "maxLength": 40
+            }
+          }
+        }
+      },
+      "BoardSelection": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "autoInclude": {
+            "$ref": "#/components/schemas/BoardRule"
+          },
+          "selectedIssueIds": {
+            "type": "array",
+            "maxItems": 1000,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          "excludedIssueIds": {
+            "type": "array",
+            "maxItems": 1000,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          }
+        }
+      },
+      "BoardPreviewItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "identifier",
+          "title",
+          "type"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "identifier": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
       }
     },
     "headers": {

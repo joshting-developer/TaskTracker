@@ -10,6 +10,7 @@ use App\Domain\DomainError;
 use App\Models\Board;
 use App\Models\Project;
 use App\Repositories\BoardReadRepository;
+use App\Repositories\BoardSelectionRepository;
 use App\Repositories\IssueReadRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
@@ -21,9 +22,10 @@ class BoardReadService
      *
      * @param  ProjectReadService  $projects  單Project資格入口
      * @param  BoardReadRepository  $boards  有界看板讀取
+     * @param  BoardSelectionRepository  $selections  有界規則與手動例外
      * @param  IssueReadRepository  $issues  有界卡片讀取
      */
-    public function __construct(private ProjectReadService $projects, private BoardReadRepository $boards, private IssueReadRepository $issues) {}
+    public function __construct(private ProjectReadService $projects, private BoardReadRepository $boards, private IssueReadRepository $issues, private BoardSelectionRepository $selections) {}
 
     /**
      * 回傳自訂看板分頁及獨立Default摘要，不傳任何卡片內容。
@@ -54,7 +56,12 @@ class BoardReadService
         $project = $this->projects->require($context, $projectId, 'issue.read');
         $board = $this->find($project, $id);
 
-        return [...$this->summary($project, $board), 'selectedIssueIds' => $board ? $this->boards->selectedIds($board) : []];
+        $selection = $board ? $this->selections->selection($project, $board) : null;
+        $tags = $this->selections->tags($project, $selection?->autoInclude?->tagIds ?? []);
+
+        return [...$this->summary($project, $board), 'selectedIssueIds' => $selection?->selectedIssueIds ?? [],
+            'autoInclude' => $selection?->autoInclude?->toArray(), 'excludedIssueIds' => $selection?->excludedIssueIds ?? [],
+            'autoIncludeTags' => $tags->map(fn ($tag) => ['id' => $tag->public_id, 'name' => $tag->name, 'color' => $tag->color])->all()];
     }
 
     /**

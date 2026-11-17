@@ -3,10 +3,13 @@
 namespace App\Http\Requests\Writes;
 
 use App\Data\Writes\BoardWriteData;
+use App\Http\Requests\Concerns\BoardRuleFields;
 
 /** Board專用傳輸邊界；未知欄位保留原始receipt簽章，不直接mass assignment。 */
 class BoardWriteRequest extends DomainWriteRequest
 {
+    use BoardRuleFields;
+
     /**
      * 只檢查傳輸型別，必填／權限／業務上限留在交易內。
      *
@@ -14,7 +17,8 @@ class BoardWriteRequest extends DomainWriteRequest
      */
     public function rules(): array
     {
-        return [...$this->commonRules(), 'name' => ['sometimes', 'nullable', 'string'], 'description' => ['sometimes', 'nullable', 'string'], 'projectId' => ['sometimes', 'nullable', 'string'], 'selectedIssueIds' => ['sometimes', 'nullable', 'array'], 'selectedIssueIds.*' => ['string']];
+        return [...$this->commonRules(), ...$this->boardRuleFields(), 'name' => ['sometimes', 'nullable', 'string'], 'description' => ['sometimes', 'nullable', 'string'], 'projectId' => ['sometimes', 'nullable', 'string'], 'selectedIssueIds' => ['sometimes', 'nullable', 'array'], 'selectedIssueIds.*' => ['string'],
+            'excludedIssueIds' => ['sometimes', 'array', 'list', 'max:1000'], 'excludedIssueIds.*' => ['string', 'max:100', 'distinct']];
     }
 
     /**
@@ -26,6 +30,6 @@ class BoardWriteRequest extends DomainWriteRequest
     {
         $input = $this->payload();
 
-        return new BoardWriteData($this->operation(), (string) ($input['requestId'] ?? ''), $input['id'] ?? null, isset($input['expectedRevision']) ? (int) $input['expectedRevision'] : null, $input['name'] ?? null, $input['projectId'] ?? null, $input['selectedIssueIds'] ?? null, $input);
+        return new BoardWriteData($this->operation(), (string) ($input['requestId'] ?? ''), $input['id'] ?? null, isset($input['expectedRevision']) ? (int) $input['expectedRevision'] : null, $input['name'] ?? null, $input['projectId'] ?? null, $input['selectedIssueIds'] ?? null, $input, $this->boardRuleData(), $input['excludedIssueIds'] ?? null);
     }
 }

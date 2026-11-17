@@ -132,6 +132,7 @@ Route::prefix('/api/v1')->group(function () {
     Route::post('/todo-notifications/read-all', [TodoNotificationsController::class, 'readAll'])->name('v1.todo-notifications.read-all');
     Route::get('/todo-notifications/unread', [TodosController::class, 'unread'])->name('v1.todo-notifications.unread');
     Route::get('/todo-notifications', [TodosController::class, 'notifications'])->name('v1.todo-notifications');
+    Route::post('/projects/{project}/board-preview', [BoardsController::class, 'preview'])->name('v1.projects.board-preview');
     Route::get('/projects/{project}/boards', [BoardsController::class, 'index'])->name('v1.projects.boards');
     Route::get('/projects/{project}/boards/{board}', [BoardsController::class, 'show'])->name('v1.projects.boards.show');
     Route::get('/projects/{project}/boards/{board}/issues', [BoardsController::class, 'issues'])->name('v1.projects.boards.issues');

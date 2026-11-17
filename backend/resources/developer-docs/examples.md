@@ -59,3 +59,18 @@ curl --fail-with-body -H "Authorization: Bearer $TASKTRACKER_TOKEN" \
 ## 選用的工時範例
 
 Python範例只有額外設定 `WORK_DATE=YYYY-MM-DD` 時才填報工時, 並完成新增→讀回→修改→作廢。日期須為台北當日或過去日期, 需要timeEntry.writeOwn資格；作廢保留歷史。沒設定WORK_DATE時維持原本卡片與紙條範例, 不自動替使用者填報工時
+
+
+## Preview an automatic board (0.26.0+)
+
+Use the discovered project/tag IDs. The preview is read-only and needs the PAT owner's current `board.manage` permission:
+
+```http
+POST /api/public/v1/projects/{project}/boards/preview
+Authorization: Bearer <PAT>
+Content-Type: application/json
+
+{"autoInclude":{"tagIds":["<tag-id>"],"types":["task","bug"],"states":["open"]},"selectedIssueIds":[],"excludedIssueIds":[]}
+```
+
+After reviewing `total` and the first 20 items, create a board with the same `autoInclude`, a name and a new `requestId`. Update it with the latest `expectedRevision`. Use `excludeIssueIds` / `unexcludeIssueIds` for explicit exclusions; removing an explicit inclusion does not suppress an automatic match. Empty rule groups are unrestricted; `autoInclude:null` disables automatic collection.

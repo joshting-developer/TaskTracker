@@ -30,6 +30,22 @@ class MySqlConcurrencyTest extends MySqlTestCase
         return [$identity, $project, $issue];
     }
 
+    /** 同版本並行修改條件與排除只有一筆成功, 不混合兩份收錄設定
+     * @return void
+     */
+    public function test_parallel_board_rules_keep_one_atomic_revision(): void
+    {
+        [$identity, $project, $issue] = $this->fixture();
+        $board = $this->postJson('/api/rpc/createBoard', ['projectId' => $project['id'], 'name' => 'Rule race', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $inputs = array_map(fn ($type) => ['id' => $board['id'], 'name' => $type, 'expectedRevision' => 1, 'autoInclude' => ['types' => [$type]], 'excludedIssueIds' => $type === 'task' ? [$issue['id']] : [], 'requestId' => (string) Str::uuid()], ['task', 'bug']);
+        $results = $this->race($identity, 'updateBoard', $inputs);
+        $this->assertCount(1, array_filter($results, fn ($result) => $result['ok']));
+        $this->assertSame(['REVISION_CONFLICT'], array_values(array_column(array_filter($results, fn ($result) => ! $result['ok']), 'code')));
+        $saved = $this->getJson('/api/v1/projects/'.$project['id'].'/boards/'.$board['id'])->assertOk()->assertJsonPath('data.revision', 2)->json('data');
+        $this->assertSame([$saved['name']], $saved['autoInclude']['types']);
+        $this->assertSame($saved['name'] === 'task' ? [$issue['id']] : [], $saved['excludedIssueIds']);
+    }
+
     /**
      * 啟動獨立寫入程序，全部ready後才同時釋放；finally只清理本次檔案及程序。
      *

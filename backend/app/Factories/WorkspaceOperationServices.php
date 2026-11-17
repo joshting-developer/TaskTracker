@@ -9,6 +9,7 @@ use App\Repositories\ProjectReadRepository;
 use App\Repositories\RecordStore;
 use App\Repositories\TimeReportRepository;
 use App\Services\AttachmentService;
+use App\Services\BoardSelectionService;
 use App\Services\IssueService;
 use App\Services\ProjectBoards;
 use App\Services\ProjectMembers;
@@ -36,8 +37,9 @@ final class WorkspaceOperationServices
      * @param  ProjectReadRepository  $projects  訊號目標專案資料入口
      * @param  IssueChildrenRepository  $children  子任務最小投影與批次寫入
      * @param  AttachmentService  $attachments  描述附件用例
+     * @param  BoardSelectionService  $boardSelections  看板規則與排除用例
      */
-    public function __construct(public readonly RecordStore $store, public readonly array $workspaceSession, private TimeReportRepository $timeReports, private ProjectReadRepository $projects, private IssueChildrenRepository $children, private AttachmentService $attachments) {}
+    public function __construct(public readonly RecordStore $store, public readonly array $workspaceSession, private TimeReportRepository $timeReports, private ProjectReadRepository $projects, private IssueChildrenRepository $children, private AttachmentService $attachments, private BoardSelectionService $boardSelections) {}
 
     /**
      * 取得或建立指定協作者並記錄名稱。
@@ -120,7 +122,7 @@ final class WorkspaceOperationServices
      */
     public function boards(): ProjectBoards
     {
-        return $this->once('boards', fn () => new ProjectBoards($this->store, $this->workspaceSession, $this->access()));
+        return $this->once('boards', fn () => new ProjectBoards($this->store, $this->workspaceSession, $this->access(), $this->boardSelections));
     }
 
     /**

@@ -5,13 +5,16 @@ namespace App\Http\Controllers\Queries;
 use App\Data\WorkspaceContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BoardPageQueryRequest;
+use App\Http\Requests\BoardSelectionRequest;
 use App\Http\Requests\IssueQueryRequest;
 use App\Http\Resources\ApiResponse;
+use App\Http\Resources\Queries\BoardPreviewResource;
 use App\Http\Resources\Queries\BoardSummaryResource;
 use App\Http\Resources\Queries\IssueSummaryResource;
 use App\Http\Resources\Queries\PageResource;
 use App\Http\WorkspaceTransaction;
 use App\Services\BoardReadService;
+use App\Services\BoardSelectionService;
 use Illuminate\Http\Request;
 
 /** 看板摘要、指定看板與卡片分頁各自讀取。 */
@@ -21,9 +24,10 @@ class BoardsController extends Controller
      * 注入此Controller共用的交易邊界與應用用例，不在建構時取得租戶或查詢。
      *
      * @param  WorkspaceTransaction  $workspace  此Controller的穩定協作者
+     * @param  BoardSelectionService  $selections  有界條件預覽
      * @param  BoardReadService  $boards  此Controller的穩定協作者
      */
-    public function __construct(private WorkspaceTransaction $workspace, private BoardReadService $boards) {}
+    public function __construct(private WorkspaceTransaction $workspace, private BoardReadService $boards, private BoardSelectionService $selections) {}
 
     /**
      * 取得同Project的看板摘要分頁及Default。
@@ -79,5 +83,17 @@ class BoardsController extends Controller
         $data = $this->workspace->read($request, fn (WorkspaceContext $context) => ['page' => $this->boards->issues($context, $project, $board, $request->toDto())]);
 
         return new ApiResponse(PageResource::wrap($data['page'], IssueSummaryResource::collection($data['page']->items())->resolve()));
+    }
+
+    /** 預覽未儲存條件的數量與首 20 張卡片, 不修改任何資料
+     * @param  BoardSelectionRequest  $request  有界且型別化的條件
+     * @param  string  $project  Project 公開 ID
+     * @return ApiResponse 預覽摘要與總數
+     */
+    public function preview(BoardSelectionRequest $request, string $project): ApiResponse
+    {
+        $page = $this->workspace->read($request, fn (WorkspaceContext $context) => $this->selections->preview($context, $project, $request->toDto()));
+
+        return new ApiResponse(PageResource::wrap($page, BoardPreviewResource::collection($page->items())->resolve()));
     }
 }

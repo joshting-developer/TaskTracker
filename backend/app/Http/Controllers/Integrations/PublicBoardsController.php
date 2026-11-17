@@ -6,14 +6,17 @@ use App\Data\TokenContext;
 use App\Http\Controllers\Controller;
 use App\Http\Integrations\BearerTokenSession;
 use App\Http\Requests\BoardPageQueryRequest;
+use App\Http\Requests\BoardSelectionRequest;
 use App\Http\Requests\Integrations\PublicBoardWriteRequest;
 use App\Http\Requests\IssueQueryRequest;
 use App\Http\Resources\ApiResponse;
+use App\Http\Resources\Queries\BoardPreviewResource;
 use App\Http\Resources\Queries\BoardSummaryResource;
 use App\Http\Resources\Queries\IssueListPageResource;
 use App\Http\Resources\Queries\IssueListResource;
 use App\Http\Resources\Queries\PageResource;
 use App\Services\BoardReadService;
+use App\Services\BoardSelectionService;
 use App\Services\WorkspaceService;
 use Illuminate\Http\Request;
 
@@ -24,10 +27,11 @@ class PublicBoardsController extends Controller
      * 注入Bearer資格邊界與看板讀取用例, 不在建構時查資料
      *
      * @param  BearerTokenSession  $tokens  每次重驗PAT能力與資格
+     * @param  BoardSelectionService  $selections  有界條件預覽
      * @param  BoardReadService  $boards  同Project看板用例
      * @param  WorkspaceService  $workspaces  共用看板寫入與重播前授權
      */
-    public function __construct(private BearerTokenSession $tokens, private BoardReadService $boards, private WorkspaceService $workspaces) {}
+    public function __construct(private BearerTokenSession $tokens, private BoardReadService $boards, private WorkspaceService $workspaces, private BoardSelectionService $selections) {}
 
     /**
      * 取得看板摘要分頁及虛擬Default, 不附收錄ID或卡片內容
@@ -86,11 +90,23 @@ class PublicBoardsController extends Controller
      */
     public function write(PublicBoardWriteRequest $request, string $project, ?string $board = null): ApiResponse
     {
-        $input = [...$request->validated(), 'projectId' => $project, ...($board !== null ? ['id' => $board] : [])];
+        $input = $request->toDto($project, $board)->input();
 
         return new ApiResponse($this->tokens->writeOnce($request, $board !== null ? 'public.v1.patchBoard' : 'public.v1.createBoard', $input,
             fn (TokenContext $token) => $this->workspaces->authorizePublicBoard($token->workspace->legacyIdentity(), $input),
             fn (TokenContext $token) => $this->workspaces->executePublicBoard($token->workspace->legacyIdentity(), $input),
             $project, 'board.manage'));
+    }
+
+    /** 預覽未儲存條件的數量與首 20 張卡片, 不修改任何資料
+     * @param  BoardSelectionRequest  $request  有界且型別化的條件
+     * @param  string  $project  Project 公開 ID
+     * @return ApiResponse 預覽摘要與總數
+     */
+    public function preview(BoardSelectionRequest $request, string $project): ApiResponse
+    {
+        $page = $this->tokens->read($request, fn (TokenContext $token) => $this->selections->preview($token->workspace, $project, $request->toDto()), $project, 'board.manage');
+
+        return new ApiResponse(PageResource::wrap($page, BoardPreviewResource::collection($page->items())->resolve()));
     }
 }

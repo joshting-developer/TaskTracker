@@ -6,6 +6,7 @@ use App\Repositories\IssueChildrenRepository;
 use App\Repositories\ProjectReadRepository;
 use App\Repositories\TimeReportRepository;
 use App\Services\AttachmentService;
+use App\Services\BoardSelectionService;
 
 /**
  * 依交易內重驗的Session建立單次操作的服務組；本身不保存租戶狀態，可由Container自動解析。
@@ -20,8 +21,9 @@ class WorkspaceServicesFactory
      * @param  ProjectReadRepository  $projects  訊號目標專案資料入口
      * @param  IssueChildrenRepository  $children  子任務最小投影與批次寫入
      * @param  AttachmentService  $attachments  描述附件用例
+     * @param  BoardSelectionService  $boardSelections  看板規則與排除用例
      */
-    public function __construct(private RecordStoreFactory $stores, private TimeReportRepository $timeReports, private ProjectReadRepository $projects, private IssueChildrenRepository $children, private AttachmentService $attachments) {}
+    public function __construct(private RecordStoreFactory $stores, private TimeReportRepository $timeReports, private ProjectReadRepository $projects, private IssueChildrenRepository $children, private AttachmentService $attachments, private BoardSelectionService $boardSelections) {}
 
     /**
      * 建立本次操作專用的服務組；每次呼叫都是新的實例，不跨操作共用。
@@ -31,6 +33,6 @@ class WorkspaceServicesFactory
      */
     public function forSession(array $workspaceSession): WorkspaceOperationServices
     {
-        return new WorkspaceOperationServices($this->stores->forWorkspace($workspaceSession['workspace']['id']), $workspaceSession, $this->timeReports, $this->projects, $this->children, $this->attachments);
+        return new WorkspaceOperationServices($this->stores->forWorkspace($workspaceSession['workspace']['id']), $workspaceSession, $this->timeReports, $this->projects, $this->children, $this->attachments, $this->boardSelections);
     }
 }

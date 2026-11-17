@@ -19,8 +19,9 @@ class ProjectBoards
      * @param  RecordStore  $store  限定工作空間的資料存取入口
      * @param  array  $workspaceSession  從後端Session重新驗證的工作空間身分與權限
      * @param  ProjectAccess  $access  本次操作共用的Project權限檢查
+     * @param  BoardSelectionService  $selections  規則及排除的同專案驗證與保存
      */
-    public function __construct(private RecordStore $store, private array $workspaceSession, private ProjectAccess $access) {}
+    public function __construct(private RecordStore $store, private array $workspaceSession, private ProjectAccess $access, private BoardSelectionService $selections) {}
 
     /**
      * 回傳Default看板與尚未移除的自訂看板。
@@ -124,6 +125,7 @@ class ProjectBoards
             'updatedAt' => now()->utc()->toISOString(),
         ];
         $this->store->put('boards', $board['id'], $board);
+        $this->selections->apply($this->workspaceSession['workspace']['id'], $board['projectId'], $board['id'], $input);
 
         return $board;
     }
@@ -144,6 +146,7 @@ class ProjectBoards
             'updatedAt' => now()->utc()->toISOString(),
         ];
         $this->store->put('boards', $board['id'], $board);
+        $this->selections->apply($this->workspaceSession['workspace']['id'], $board['projectId'], $board['id'], $input);
 
         return $board;
     }

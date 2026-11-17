@@ -270,3 +270,14 @@ PDF／ZIP與圖片共用既有附件路由及授權, 但一般附件只能下載
 公開PAT新增本人工時建立、查詢、完整更新及作廢, 與網頁共用同一TimeEntryService與儲存。端點、operationId與欄位以OpenAPI為準, Agent用法見 `/api/public/docs/agents.md` 的本人工時章節
 
 個人工時查詢以Project路徑為範圍, 日期最多366天、每頁最多100筆、page最多100。只回有效紀錄與必要欄位, 不回歷史。單卡工時沿issue.read現有資格, Epic包含子卡, 不擴大月曆或工作空間報表權限。寫入前及receipt重播前重驗Bearer／Project／作者, User→Workspace鎖與每日1440分鐘限制不變
+
+
+## 0.26.0：看板自動收錄與明確排除
+
+- 舊看板與 Default 維持原行為。自訂看板可傳 `autoInclude`：`null` 為手動模式, 物件為自動條件；`tagIds` 最多 20 個且全部符合（AND）, `types` 最多 3 個、`states` 最多 30 個各自符合任一（OR）, 群組間 AND。未指定或空的群組表示不限, 明確的空物件表示此 Project 全部卡片
+- 優先順序：`excludedIssueIds` 排除 > 明確手動收錄與手動選取 Epic 的動態子卡 > 自動命中。結果去重, 不改卡片內容或 Tag。自動命中的 Epic 只收本身, 不額外帶入不符合條件的子卡
+- `GET .../boards/{board}` 多回 `autoInclude`、最多 20 個有效規則標籤名稱 `autoIncludeTags` 與最多 1000 個 `excludedIssueIds`。卡片數、已完成數與卡片分頁使用相同 SQL 條件；Tag、類型、狀態與新卡於正常重讀時反映, 不保存規則命中卡片的快照
+- `POST .../boards` 可帶 `autoInclude` 與至多 200 個 `excludeIssueIds`；`PATCH .../boards/{board}` 可部分更新 `autoInclude`、`excludeIssueIds`、`unexcludeIssueIds`, 排除／取消排除各最多 200 個, 同 ID 不可同時兩者。省略保留現值, `autoInclude:null` 明確停用規則；既有 `addIssueIds`／`removeIssueIds` 只調整明確加入清單, 移除明確加入不等於排除自動或 Epic 命中
+- `POST .../boards/preview` 為純唯讀：body 只接受 `autoInclude`、`selectedIssueIds`、`excludedIssueIds`, 兩個手動清單各最多 1000 個；回精確 `total` 與首 20 張的 id／identifier／title／type, 不建立暫存看板、不寫 receipt／audit, 不需要 requestId。需要 read PAT ability 及本人即時 `board.manage`；Session 對應入口為 `POST /api/v1/projects/{project}/board-preview`
+- 規則、手動 ID 與排除只能指向目前已授權 Project。新規則含已移除 Tag 或未知狀態拒絕整筆；既有規則所需 Tag 被刪除後保留條件並無法命中, 不默默放寬。看板仍不是權限邊界；儲存沿用 Workspace 交易、revision／requestId、重播前授權與封存唯讀限制
+- API JSON body 上限仍為 50000 bytes；大型差量請分批並每次重讀版本, 不放寬上限。看板規則與排除的新增資料表由 migration 建立, 正式發布需先遷移；回退此 migration 會移除新設定, 不改既有手動收錄或卡片

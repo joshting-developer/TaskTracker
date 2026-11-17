@@ -12,6 +12,7 @@ use App\Http\Controllers\Integrations\PublicNotificationsController;
 use App\Http\Controllers\Integrations\PublicProjectsController;
 use App\Http\Controllers\Integrations\PublicQueriesController;
 use App\Http\Controllers\Integrations\PublicTagsController;
+use App\Http\Controllers\Integrations\PublicTimeEntriesController;
 use App\Http\Controllers\Integrations\PublicTodosController;
 use App\Http\Controllers\Integrations\TokenIdentityController;
 use App\Http\Middleware\RecordHttpOperation;
@@ -111,6 +112,7 @@ Route::prefix('/api/public/v1/projects/{project}/boards')->middleware('throttle:
     StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class,
 ])->group(function () {
     Route::get('/', [PublicBoardsController::class, 'index'])->name('public.v1.boards');
+    Route::post('/preview', [PublicBoardsController::class, 'preview'])->name('public.v1.boards.preview');
     Route::post('/', [PublicBoardsController::class, 'write'])->name('public.boards.create');
     Route::patch('/{board}', [PublicBoardsController::class, 'write'])->name('public.boards.update');
     Route::get('/{board}', [PublicBoardsController::class, 'show'])->name('public.v1.boards.show');
@@ -133,7 +135,7 @@ Route::prefix('/api/public/v1/projects/{project}')->middleware(['throttle:public
 Route::prefix('/api/public/v1/projects/{project}')->middleware(['throttle:public-api-v1', RecordHttpOperation::class])->withoutMiddleware([
     StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class,
 ])->group(function () {
-    $time = \App\Http\Controllers\Integrations\PublicTimeEntriesController::class;
+    $time = PublicTimeEntriesController::class;
     Route::get('/time-entries', [$time, 'index'])->name('public.time.index');
     Route::get('/issues/{issue}/time-entries', [$time, 'issue'])->name('public.time.issue');
     Route::post('/time-entries', [$time, 'write'])->name('public.time.create');
