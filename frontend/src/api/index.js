@@ -39,6 +39,7 @@ export const api = {
   issue: (project, id, options) => queryApi(`projects/${encodeURIComponent(project)}/issues/${encodeURIComponent(id)}`, {}, options),
   boards: (project, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/boards`, filters, options),
   board: (project, id, options) => queryApi(`projects/${encodeURIComponent(project)}/boards/${encodeURIComponent(id)}`, {}, options),
+  boardPreview: (project, input, options = {}) => requestJson(`/api/v1/projects/${encodeURIComponent(project)}/board-preview`, { ...options, method: 'POST', input }),
   members: (project, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/member-options`, filters, options),
   activity: (project, issue, kind, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/issues/${encodeURIComponent(issue)}/${kind}`, filters, options),
   boardIssues: (project, id, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/boards/${encodeURIComponent(id)}/issues`, filters, options),
