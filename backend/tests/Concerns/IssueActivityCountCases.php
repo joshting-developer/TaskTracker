@@ -32,11 +32,17 @@ trait IssueActivityCountCases
         $time = $rpc('logTime', ['issueId' => $card['id'], 'workDate' => '2026-11-13', 'minutes' => 15, 'note' => 'activity-sentinel-time']);
         $void = $rpc('logTime', ['issueId' => $card['id'], 'workDate' => '2026-11-13', 'minutes' => 5, 'note' => 'voided']);
         $rpc('voidTime', ['id' => $void['id'], 'expectedRevision' => $void['revision']]);
+        // TT-426：網頁詳細頁計有效附件數, pending／deleted與其他卡片不算
+        $other = $rpc('createIssue', ['projectId' => $project['id'], 'title' => 'Other']);
+        $otherKey = Issue::where('public_id', $other['id'])->value('id');
+        foreach ([[$model->id, 'active'], [$model->id, 'active'], [$model->id, 'deleted'], [null, 'pending'], [$otherKey, 'active']] as [$issueKey, $status]) {
+            DB::table('attachments')->insert(['public_id' => (string) Str::uuid(), 'workspace_id' => $model->workspace_id, 'project_id' => $model->project_id, 'issue_id' => $issueKey, 'uploaded_by' => $identity['user']['id'], 'storage_disk' => 'local', 'storage_key' => 'activity-sentinel/'.Str::uuid(), 'mime_type' => 'application/pdf', 'byte_size' => 10, 'original_name' => 'activity-sentinel.pdf', 'checksum' => str_repeat('0', 64), 'status' => $status, 'upload_request_id' => (string) Str::uuid(), 'upload_signature' => str_repeat('0', 64), 'created_at' => now(), 'updated_at' => now()]);
+        }
         $root = '/api/v1/projects/'.$project['id'].'/issues/'.$card['id'];
         DB::enableQueryLog();
         DB::flushQueryLog();
         try {
-            $response = $this->getJson($root)->assertOk()->assertJsonPath('data.activityCounts', ['comments' => 21, 'history' => 21, 'time' => 1]);
+            $response = $this->getJson($root)->assertOk()->assertJsonPath('data.activityCounts', ['comments' => 21, 'history' => 21, 'time' => 1, 'attachments' => 2]);
             // TT-302：詳細只多帶最後一筆異動的操作者和時間, 留言、工時說明和異動內容仍然不帶。
             $this->assertSame(['actor' => 'activity-sentinel-history', 'at' => '2026-11-13T00:00:00Z'], $response->json('data.lastChange'));
             $this->assertStringNotContainsString('activity-sentinel', str_replace('"activity-sentinel-history"', '', $response->getContent()));
@@ -59,14 +65,12 @@ trait IssueActivityCountCases
         }
         $this->getJson($root.'/comments')->assertOk()->assertJsonPath('data.total', 21)->assertJsonCount(20, 'data.items');
         $this->getJson($root.'/history')->assertOk()->assertJsonPath('data.total', 21)->assertJsonCount(20, 'data.items');
-        $other = $rpc('createIssue', ['projectId' => $project['id'], 'title' => 'Other']);
-        $otherKey = Issue::where('public_id', $other['id'])->value('id');
         for ($n = 0; $n < 30; $n++) {
             DB::table('issue_comments')->insert(['issue_id' => $otherKey, 'public_id' => (string) Str::uuid(), 'content' => 'unrelated', 'author' => 'Other', 'position' => $n]);
         }
         $this->assertSame($response->getContent(), $this->getJson($root)->assertOk()->getContent());
         $token = $this->postJson('/api/v1/personal-tokens', ['name' => 'counts', 'abilities' => ['read'], 'requestId' => (string) Str::uuid()])->assertOk()->json('data.plainTextToken');
-        $this->getJson('/api/public/v1/projects/'.$project['id'].'/issues/'.$card['id'], ['Authorization' => 'Bearer '.$token])->assertOk()->assertJsonPath('data.activityCounts.comments', 21);
+        $this->getJson('/api/public/v1/projects/'.$project['id'].'/issues/'.$card['id'], ['Authorization' => 'Bearer '.$token])->assertOk()->assertJsonPath('data.activityCounts.comments', 21)->assertJsonMissingPath('data.activityCounts.attachments');
         $reader = User::factory()->create(['id' => (string) Str::uuid(), 'name' => 'Reader']);
         DB::table('workspace_members')->insert(['workspace_id' => $model->workspace_id, 'user_id' => $reader->id, 'role' => 'user']);
         $rpc('setProjectMember', ['projectId' => $project['id'], 'userId' => $reader->id, 'roleId' => 'reader', 'expectedRevision' => 0]);

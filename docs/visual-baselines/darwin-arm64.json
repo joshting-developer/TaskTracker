@@ -3,8 +3,8 @@
   "harnessSha256": "859426370e3d77189d7fd4a3c09d0f65d371a58e6be8d160509942a090603b6d",
   "profile": "darwin-arm64",
   "reviewer": "claude",
-  "note": "TT-424 附件工具列與拖曳截圖捲動歸零; Josh 常設授權候選可直接核准",
-  "manifestSha256": "0491b90236cf53cb99bed6ea0c73b18f9824616729e37683088d032b72f77756",
+  "note": "TT-426 詳細頁附件分頁顯示數量; Josh 常設授權候選可直接核准",
+  "manifestSha256": "5a8906a3628487dc43942a5fa3fe7a3187ba3a89d7da4097e419ede3e7d613ae",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

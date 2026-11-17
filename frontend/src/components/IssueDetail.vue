@@ -161,7 +161,7 @@ function timeSaved() {
           </div>
           <form v-if="canWrite" v-show="tab === 'comments'" class="comment-form" @submit.prevent="sendComment">
             <div v-if="error" class="error-box" role="alert">{{ t(error) }}<button v-if="conflict" class="text-button" type="button" :disabled="saving || busy" @click="emit('reload')">{{ t('更新任務資料（保留留言）') }}</button></div>
-            <MarkdownEditor ref="commentEditor" :key="commentEditorKey" allow-attachments allow-files :file-note="t('送出後附到任務')" :project-id="issue.projectId" v-model="comment" :label="t('新增留言')" :rows="3" :maxlength="2000" :placeholder="t('輸入留言…')" :disabled="saving || busy" />
+            <MarkdownEditor ref="commentEditor" :key="commentEditorKey" allow-attachments allow-files :existing-attachments="issue.activityCounts?.attachments || 0" :file-note="t('送出後附到任務')" :project-id="issue.projectId" v-model="comment" :label="t('新增留言')" :rows="3" :maxlength="2000" :placeholder="t('輸入留言…')" :disabled="saving || busy" />
             <button class="button secondary" :disabled="saving || busy || commentEditor?.attachmentBlocked || !(commentDirty || commentEditor?.filesPending)">{{ saving ? t('送出中…') : t('送出留言') }}</button>
           </form>
         </section>
@@ -174,7 +174,7 @@ function timeSaved() {
           <div class="sidebar-tabs" role="tablist" :aria-label="t('任務側欄')" @keydown="sidebarKeydown">
             <button id="detail-properties-tab" role="tab" aria-controls="detail-properties" :tabindex="sidebarTab === 'properties' ? 0 : -1" :aria-selected="sidebarTab === 'properties'" :class="{ active: sidebarTab === 'properties' }" @click="sidebarTab = 'properties'">{{ t('屬性') }}</button>
             <button id="detail-relations-tab" role="tab" aria-controls="detail-relations" :tabindex="sidebarTab === 'relations' ? 0 : -1" :aria-selected="sidebarTab === 'relations'" :class="{ active: sidebarTab === 'relations' }" @click="sidebarTab = 'relations'">{{ t('關聯') }}</button>
-            <button id="detail-attachments-tab" role="tab" aria-controls="detail-attachments" :tabindex="sidebarTab === 'attachments' ? 0 : -1" :aria-selected="sidebarTab === 'attachments'" :class="{ active: sidebarTab === 'attachments' }" @click="attachmentsOpened = true; sidebarTab = 'attachments'">{{ t('附件') }}</button>
+            <button id="detail-attachments-tab" role="tab" aria-controls="detail-attachments" :tabindex="sidebarTab === 'attachments' ? 0 : -1" :aria-selected="sidebarTab === 'attachments'" :class="{ active: sidebarTab === 'attachments' }" @click="attachmentsOpened = true; sidebarTab = 'attachments'">{{ t('附件') }} <span v-if="Number.isInteger(issue.activityCounts?.attachments)" class="tab-count">{{ issue.activityCounts.attachments }}</span></button>
           </div>
           <div v-if="attachmentsOpened" v-show="sidebarTab === 'attachments'" id="detail-attachments" class="sidebar-panel" role="tabpanel" tabindex="0" aria-labelledby="detail-attachments-tab"><AttachmentFiles ref="attachments" :issue="issue" :can-write="canWrite" @changed="emit('reload')" /></div>
           <div v-show="sidebarTab === 'properties'" id="detail-properties" class="sidebar-panel property-fields" role="tabpanel" tabindex="0" aria-labelledby="detail-properties-tab">
@@ -247,6 +247,7 @@ h2 span { color: #5f6673; font-weight: 400; margin-left: 8px; }
 .sidebar-tabs { display: flex; gap: 20px; overflow-x: auto; border-bottom: 1px solid #daddE5; margin-bottom: 20px; }
 .sidebar-tabs button { flex: none; min-height: 44px; padding: 10px 4px; border-bottom: 2px solid transparent; color: #5f6673; font-size: 14px; }
 .sidebar-tabs button.active { border-bottom-color: #6653bd; color: #5844a0; font-weight: 600; }
+.sidebar-tabs .tab-count { margin-left: 2px; padding: 1px 6px; border-radius: 4px; background: #f1eefa; color: #5844a0; font-size: 12px; }
 .sidebar-tabs button:hover { color: #5844a0; }
 .sidebar-panel { max-height: max(220px, calc(100dvh - 320px)); overflow-y: auto; scrollbar-gutter: stable; padding: 2px 4px 4px 0; overflow-wrap: anywhere; }
 .sidebar-panel:focus-visible { outline: 2px solid #6653bd; outline-offset: 2px; }

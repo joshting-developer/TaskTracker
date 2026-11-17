@@ -304,13 +304,17 @@ class IssueReadRepository
      * @param  string  $id  Issue公開ID
      * @param  ?string  $timeUser  本人工時資格，預設不讀
      * @param  bool  $teamTime  團隊工時資格，預設false
+     * @param  bool  $attachmentCount  TT-426：網頁詳細頁另外計有效附件數, 公開API不帶
      * @return ?Issue 存在時的任務
      */
-    public function find(Project $project, string $id, ?string $timeUser = null, bool $teamTime = false): ?Issue
+    public function find(Project $project, string $id, ?string $timeUser = null, bool $teamTime = false, bool $attachmentCount = false): ?Issue
     {
         $q = $this->query($project)->where('public_id', $id)->with([...$this->relations(), 'epic.status:id,code', 'parent.status:id,code', 'creator:id,user_id', 'creator.user:id,name', 'relatedIssues' => fn ($related) => $related->select(['issues.id', 'issues.public_id', 'issues.title', 'issues.identifier', 'issues.type', 'issues.project_id', 'issues.state_id'])->with('status:id,code')->orderBy('issues.public_id')->limit(201)]);
         $this->timeProjection($q, $timeUser, $teamTime, true);
         $q->selectSub(DB::table('issue_comments')->whereColumn('issue_id', 'issues.id')->selectRaw('COUNT(*)'), 'comment_count');
+        if ($attachmentCount) {
+            $q->selectSub(DB::table('attachments')->whereColumn('workspace_id', 'issues.workspace_id')->whereColumn('project_id', 'issues.project_id')->whereColumn('issue_id', 'issues.id')->where('status', 'active')->selectRaw('COUNT(*)'), 'attachment_count');
+        }
         $q->selectSub(DB::table('audit_events')->whereColumn('workspace_id', 'issues.workspace_id')->where('entity_type', 'issues')->whereColumn('entity_id', 'issues.id')->where('stream', 'history')->selectRaw('COUNT(*)'), 'history_count');
         // TT-302：最後一筆異動是誰、何時；與history分頁同一個排序, 在SQL只取actor和at兩個值, 不讀改了什麼。
         $last = fn () => DB::table('audit_events')->whereColumn('workspace_id', 'issues.workspace_id')->where('entity_type', 'issues')->whereColumn('entity_id', 'issues.id')->where('stream', 'history')->orderByDesc('position')->orderByDesc('id')->limit(1);

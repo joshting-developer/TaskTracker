@@ -1001,5 +1001,22 @@
   "上傳進度": "Upload progress",
   "展開上傳進度": "Expand upload progress",
   "收合上傳進度": "Collapse upload progress",
-  "關閉上傳進度": "Close upload progress"
+  "關閉上傳進度": "Close upload progress",
+  "任務附件已達 {0} 個上限": "This issue has reached its {0}-attachment limit",
+  "PDF/ZIP 已達 {0} 個上限": "PDF/ZIP files have reached the {0}-file limit",
+  "{0}：僅接受 PDF、ZIP": "{0}: only PDF and ZIP are accepted",
+  "{0}：超過 {1} MB 上限": "{0}: exceeds the {1} MB limit",
+  "下載中…": "Downloading…",
+  "已開始下載": "Download started",
+  "下載失敗：{0}": "Download failed: {0}",
+  "確定要刪除附件「{0}」嗎？": "Delete the attachment \"{0}\"?",
+  "任務已更新, 請重新載入後再刪除": "The issue was updated. Reload before deleting",
+  "刪除失敗：{0}": "Delete failed: {0}",
+  "{0}/{1} 個附件": "{0}/{1} attachments",
+  "{0}/{1} 個附件, 其中 PDF/ZIP {2}/{3}": "{0}/{1} attachments, PDF/ZIP {2}/{3}",
+  "還能再加 {0} 個": "{0} more allowed",
+  "PDF/ZIP 單檔 {0} MB 以內": "PDF/ZIP up to {0} MB each",
+  "重試下載{0}": "Retry downloading {0}",
+  "刪除{0}": "Delete {0}",
+  "刪除": "Delete"
 }

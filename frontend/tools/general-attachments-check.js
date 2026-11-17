@@ -24,7 +24,7 @@ try {
   const issue = await call('createIssue', { projectId: project.id, title: '附件驗收' });
   await page.goto(`${base}/app/#/projects/${project.id}`); await page.getByRole('button', { name: '附件驗收', exact: true }).click();
   assert.equal(await page.getByRole('region', { name: '任務附件', exact: true }).count(), 0, 'Attachment metadata remains lazy');
-  await page.getByRole('tab', { name: '附件', exact: true }).click();
+  await page.getByRole('tab', { name: /^附件/ }).click();
   const panel = page.getByRole('region', { name: '任務附件', exact: true }), file = panel.getByLabel('上傳任務附件', { exact: true });
   await panel.getByRole('button', { name: '加入檔案', exact: true }).waitFor(); await page.waitForFunction(() => [...document.querySelectorAll('button')].some(el => el.textContent === '加入檔案' && !el.disabled));
   const pdf = Buffer.from('%PDF-1.7\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n');
@@ -51,7 +51,7 @@ try {
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   }
   await page.reload(); await page.getByRole('heading', { name: '附件驗收', exact: true }).waitFor(); if (await page.getByRole('button', { name: '任務資訊', exact: true }).isVisible()) await page.getByRole('button', { name: '任務資訊', exact: true }).click();
-  await page.getByRole('tab', { name: '附件', exact: true }).click(); await panel.getByRole('button', { name: '下載notes.zip', exact: true }).waitFor();
+  await page.getByRole('tab', { name: /^附件/ }).click(); await panel.getByRole('button', { name: '下載notes.zip', exact: true }).waitFor();
   await panel.getByRole('button', { name: '下載notes.zip', exact: true }).focus(); const zipDownload = page.waitForEvent('download'); await page.keyboard.press('Enter'); assert.equal((await zipDownload).suggestedFilename(), 'notes.zip');
   assert.deepEqual(errors, []);
   writeFileSync(new URL('browser-result.json', artifacts), JSON.stringify({ passed: true, checks: ['lazy metadata', 'PDF/ZIP upload and bind', 'stable upload retry', 'no auto content preview', 'authorized download', 'reload', 'mobile expansion', 'keyboard download', 'three widths'] }, null, 2));

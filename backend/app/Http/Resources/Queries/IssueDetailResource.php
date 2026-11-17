@@ -27,7 +27,8 @@ class IssueDetailResource extends IssueSummaryResource
             'createdBy' => $creator?->user_id ?? '', 'createdByName' => $creator?->getRelation('user')?->name ?? '',
             'lastChange' => $issue->last_at === null ? null : ['actor' => (string) $issue->last_actor, 'at' => (string) $issue->last_at],
             'activityCounts' => ['comments' => (int) $issue->comment_count, 'history' => (int) $issue->history_count,
-                ...($issue->getAttribute('time_entry_count') !== null ? ['time' => (int) $issue->time_entry_count] : [])],
+                ...($issue->getAttribute('time_entry_count') !== null ? ['time' => (int) $issue->time_entry_count] : []),
+                ...($issue->getAttribute('attachment_count') !== null ? ['attachments' => (int) $issue->attachment_count] : [])],
             'relatedIssueIds' => $refs->pluck('public_id')->all(),
             'references' => $linked->map(fn ($i) => ['id' => $i->public_id, 'projectId' => $issue->getRelation('project')->public_id, 'identifier' => $i->identifier, 'title' => $i->title, 'type' => $i->type, 'state' => $i->getRelation('status')->code])->values()->all()];
     }

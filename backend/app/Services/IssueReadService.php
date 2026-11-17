@@ -59,13 +59,14 @@ class IssueReadService
      * @param  WorkspaceContext  $context  交易內重驗的身分、工作區與有效權限
      * @param  string  $projectId  Project公開ID
      * @param  string  $id  Issue公開ID
+     * @param  bool  $attachmentCount  是否另計有效附件數
      * @return Issue 已授權任務與最小關聯
      */
-    public function show(WorkspaceContext $context, string $projectId, string $id): Issue
+    public function show(WorkspaceContext $context, string $projectId, string $id, bool $attachmentCount = false): Issue
     {
         $access = $this->projects->authorized($context, $projectId, 'issue.read');
         // TT-317：已授權issue.read可看該卡片所有有效工時。
-        $issue = $this->issues->find($access->project, $id, teamTime: true) ?? DomainError::fail('NOT_FOUND', '找不到這個專案內的任務');
+        $issue = $this->issues->find($access->project, $id, teamTime: true, attachmentCount: $attachmentCount) ?? DomainError::fail('NOT_FOUND', '找不到這個專案內的任務');
         if ($issue->getRelation('relatedIssues')->count() > 200) {
             DomainError::fail('CONFLICT', '既有關聯超過支援上限，請先整理關聯資料');
         }

@@ -5,7 +5,7 @@ import { useAttachmentUpload } from '../composables/useAttachmentUpload.js';
 import { onTabKeydown } from '../ui/tabs.js';
 import MarkdownContent from './MarkdownContent.vue';
 
-const props = defineProps({ modelValue: { type: String, default: '' }, label: { type: String, required: true }, placeholder: String, maxlength: { type: Number, default: 6000 }, rows: { type: Number, default: 4 }, disabled: Boolean, required: Boolean, name: String, spacious: Boolean, allowAttachments: Boolean, allowFiles: Boolean, fileNote: String, projectId: { type: String, default: '' } });
+const props = defineProps({ modelValue: { type: String, default: '' }, label: { type: String, required: true }, placeholder: String, maxlength: { type: Number, default: 6000 }, rows: { type: Number, default: 4 }, disabled: Boolean, required: Boolean, name: String, spacious: Boolean, allowAttachments: Boolean, allowFiles: Boolean, fileNote: String, existingAttachments: { type: Number, default: 0 }, projectId: { type: String, default: '' } });
 const emit = defineEmits(['update:modelValue']);
 const fileInput = ref(null);
 const id = useId(), input = ref(null), mode = ref('write'), composing = ref(false), message = ref('');
@@ -40,7 +40,7 @@ onBeforeUnmount(() => resizeObserver?.disconnect());
 watch(() => props.modelValue, value => { if (!value) mode.value = 'write'; });
 
 async function focus() { mode.value = 'write'; await nextTick(); input.value?.scrollIntoView({ block: 'nearest' }); input.value?.focus({ preventScroll: true }); }
-const uploads = useAttachmentUpload({ projectId: computed(() => props.allowAttachments ? props.projectId : ''), source: computed(() => props.modelValue), maxlength: computed(() => props.maxlength), allowFiles: computed(() => props.allowFiles), note: computed(() => props.fileNote), insert: insertAttachment });
+const uploads = useAttachmentUpload({ projectId: computed(() => props.allowAttachments ? props.projectId : ''), source: computed(() => props.modelValue), maxlength: computed(() => props.maxlength), allowFiles: computed(() => props.allowFiles), note: computed(() => props.fileNote), existing: computed(() => props.existingAttachments), insert: insertAttachment });
 const uploadRows = uploads.rows, uploadError = uploads.error, uploadLimits = uploads.limits;
 const visibleRows = computed(() => uploadRows.value.filter(row => row.state !== 'canceled'));
 defineExpose({ focus, uploadBusy: uploads.busy, attachmentDirty: uploads.unsettled, attachmentBlocked: uploads.blocked, filesPending: computed(() => uploads.pendingFiles.value.length), bindFiles: uploads.bind });

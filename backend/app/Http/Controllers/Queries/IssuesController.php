@@ -70,7 +70,7 @@ class IssuesController extends Controller
      */
     public function show(Request $request, string $project, string $issue): ApiResponse
     {
-        $data = $this->workspace->read($request, fn (WorkspaceContext $context) => ['issue' => $this->issues->show($context, $project, $issue)]);
+        $data = $this->workspace->read($request, fn (WorkspaceContext $context) => ['issue' => $this->issues->show($context, $project, $issue, attachmentCount: true)]);
 
         return new ApiResponse((new IssueDetailResource($data['issue']))->resolve());
     }

@@ -9,7 +9,7 @@ const MB = 1024 * 1024;
 
 /** One editor owns its draft files and stable retry IDs; no shared file/token cache.
  * Images go into the text; PDF/ZIP stay private until the owner form binds them after its save. */
-export function useAttachmentUpload({ projectId, source, insert, maxlength, allowFiles, note }) {
+export function useAttachmentUpload({ projectId, source, insert, maxlength, allowFiles, note, existing }) {
   const rows = ref([]), limits = ref(null), error = ref('');
   const live = computed(() => rows.value.filter(row => row.state !== 'canceled' && row.state !== 'rejected'));
   const busy = computed(() => rows.value.some(row => row.state === 'uploading' || row.state === 'binding'));
@@ -27,6 +27,8 @@ export function useAttachmentUpload({ projectId, source, insert, maxlength, allo
     try { const result = await queryApi(`projects/${encodeURIComponent(project)}/attachments/limits`, {}, { signal: limitsRequest.signal }); if (generation === captured) limits.value = result; }
     catch (failure) { if (captured === generation) error.value = failure.message; }
   }, { immediate: true });
+  // A reloaded issue count already includes what this editor finished, so stop counting those rows twice.
+  if (existing) watch(existing, () => { for (const row of rows.value) if (row.state === 'done') row.counted = true; });
   // Move bookmarks with text edits so a slow upload does not overwrite newer typing.
   watch(source, (next, old) => {
     let start = 0, end = old.length, nextEnd = next.length;
@@ -94,7 +96,8 @@ export function useAttachmentUpload({ projectId, source, insert, maxlength, allo
       let reason = '';
       if (!kind) reason = allowFiles.value ? t('僅接受 PNG、JPEG、WebP、PDF、ZIP') : t('僅接受 PNG、JPEG、WebP');
       else if (file.size > maxBytes) reason = t('超過 {0} MB 上限', [Math.floor(maxBytes / MB)]);
-      else if (live.value.length >= limits.value.perIssue) reason = t('任務附件數量已達上限');
+      // Files already on the issue count too, so the 20th slot is refused here instead of after upload.
+      else if ((existing?.value || 0) + live.value.filter(row => !row.counted).length >= limits.value.perIssue) reason = t('任務附件數量已達上限');
       else if (kind === 'file' && live.value.filter(row => row.kind === 'file').length >= limits.value.general.perIssue) reason = t('一般附件數量已達上限');
       rows.value.push({ id: crypto.randomUUID(), file, kind, anchor, state: reason ? 'rejected' : 'queued', progress: 0, error: reason, upload: null, bindRequest: null });
     }
