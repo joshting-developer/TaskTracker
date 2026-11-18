@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Database\RelationalDataMigration;
 use App\Domain\DomainError;
 use App\Models\Board;
 use App\Models\Issue;
@@ -11,16 +12,16 @@ use App\Repositories\LegacyRecordStore;
 use App\Repositories\RecordStore;
 use Database\Seeders\DemoSeeder;
 use Illuminate\Database\QueryException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-/** 驗證關聯儲存、租戶外鍵與往返遷移；只使用記憶體資料庫。 */
+/** 驗證關聯儲存、租戶外鍵與往返遷移；只使用隔離 MySQL 測試庫。 */
 class RelationalStorageTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseMigrations, \Tests\Concerns\RelationalMigrationRoundTrip;
 
     /** 建立含留言、看板、待辦及重試結果的真實API資料。
      * @return RecordStore
@@ -95,7 +96,7 @@ class RelationalStorageTest extends TestCase
         $this->assertSame($issue->project_id, $issue->parent->project_id);
         $this->assertSame($issue->project_id, $issue->status->project_id);
         $this->assertNotNull($issue->assignee->user);
-        $this->assertSame(1, Board::firstOrFail()->issues()->count());
+        $this->assertSame(1, Board::whereHas('issues')->firstOrFail()->issues()->count());
         $this->assertTrue(Issue::whereHas('relatedIssues')->exists());
         $this->assertSame(1, User::findOrFail(DemoSeeder::USER_ID)->workspaces()->count());
         $this->assertSame(14, DB::table('issues')->count());
@@ -149,7 +150,7 @@ class RelationalStorageTest extends TestCase
                 $this->assertStringContainsString('FOREIGN KEY', $failure->getMessage());
             }
         }
-        $this->assertSame([], DB::select('PRAGMA foreign_key_check'));
+        $this->assertSame(1, (int) DB::selectOne('SELECT @@foreign_key_checks AS enabled')->enabled);
     }
 
     /** 回填保留所有DTO；回退前匯出最新資料，再升級仍保留修改。
@@ -161,10 +162,7 @@ class RelationalStorageTest extends TestCase
         DB::table('workspaces')->update(['timezone' => 'Asia/Taipei']);
         $before = $this->snapshot();
         $migration = require database_path('migrations/2026_11_04_000000_create_relational_business_tables.php');
-        (require database_path('migrations/2026_11_15_060000_create_project_tags.php'))->down();
-        Schema::dropIfExists('workspace_member_status_events'); // 後續資格事件先回退, 保留真實外鍵順序
-        Schema::dropIfExists('issue_external_refs'); // 後續migration的FK表；正常rollback會先撤它
-        (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->down();
+        $this->rollbackLaterMigrations();
         $migration->down();
         $this->assertFalse(Schema::hasTable('issues'));
         // 舊重試payload沒有id，真正識別碼位於records.id。
@@ -174,10 +172,7 @@ class RelationalStorageTest extends TestCase
         DB::table('records')->where('sequence', $receipt->sequence)->update(['payload' => json_encode($payload, JSON_THROW_ON_ERROR)]);
         $archive = DB::table('records')->orderBy('kind')->orderBy('id')->get()->toJson();
         $migration->up();
-        // TT-314：只重跑基礎migration時, 後來才加的建卡者欄位要靠後續migration補回（照真實升級順序）。
-        (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->up();
-        (require database_path('migrations/2026_11_15_050000_add_issue_planned_dates.php'))->up();
-        (require database_path('migrations/2026_11_16_000000_add_workspace_display_timezone.php'))->up();
+        $this->restoreLaterMigrations();
         $this->assertEquals($before, $this->snapshot());
         $this->assertSame($archive, DB::table('records')->orderBy('kind')->orderBy('id')->get()->toJson());
         $tenant = (new RecordStore)->forWorkspace(DemoSeeder::WORKSPACE_ID);
@@ -191,29 +186,23 @@ class RelationalStorageTest extends TestCase
         $this->assertSame($archive, DB::table('records')->orderBy('kind')->orderBy('id')->get()->toJson());
         $latest = $this->snapshot();
         // 照正確順序先撤後來的migration（它在issues加了外鍵）, 再撤基礎migration。
-        (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->down();
+        $this->rollbackLaterMigrations();
         $migration->down();
         $migration->up();
-        // TT-314：只重跑基礎migration時, 後來才加的建卡者欄位要靠後續migration補回（照真實升級順序）。
-        (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->up();
-        (require database_path('migrations/2026_11_15_050000_add_issue_planned_dates.php'))->up();
-        (require database_path('migrations/2026_11_16_000000_add_workspace_display_timezone.php'))->up();
+        $this->restoreLaterMigrations();
         $this->assertEquals($latest, $this->snapshot());
         $this->rpc('getWorkspace', []);
-        $this->assertSame([], DB::select('PRAGMA foreign_key_check'));
+        $this->assertSame(1, (int) DB::selectOne('SELECT @@foreign_key_checks AS enabled')->enabled);
     }
 
-    /** 無法回填的孤兒資料必須回滾整個migration，來源保持可恢復。
+    /** MySQL DDL 不隨交易回滾；孤兒資料匯入失敗時資料回滾, 來源保持可恢復。
      * @return void
      */
-    public function test_failed_backfill_rolls_back_schema_and_preserves_source(): void
+    public function test_failed_backfill_rolls_back_data_and_preserves_source(): void
     {
         $this->seedWorkspace();
         $migration = require database_path('migrations/2026_11_04_000000_create_relational_business_tables.php');
-        (require database_path('migrations/2026_11_15_060000_create_project_tags.php'))->down();
-        Schema::dropIfExists('workspace_member_status_events'); // 後續資格事件先回退, 保留真實外鍵順序
-        Schema::dropIfExists('issue_external_refs'); // 後續migration的FK表；正常rollback會先撤它
-        (require database_path('migrations/2026_11_13_140000_add_issue_creator_and_notification_kind.php'))->down();
+        $this->rollbackLaterMigrations();
         $migration->down();
         $archive = (new LegacyRecordStore)->forWorkspace(DemoSeeder::WORKSPACE_ID);
         $issue = $archive->all('issues')[1];
@@ -223,15 +212,17 @@ class RelationalStorageTest extends TestCase
         ]);
         $before = DB::table('records')->orderBy('kind')->orderBy('id')->get()->toJson();
         try {
-            DB::transaction(fn () => $migration->up());
+            $migration->up();
             $this->fail('孤兒資料不可靜默遺失');
         } catch (DomainError $failure) {
             $this->assertStringContainsString('關聯資料不存在', $failure->getMessage());
         }
-        $this->assertFalse(Schema::hasTable('workspaces'));
+        $this->assertTrue(Schema::hasTable('workspaces'));
+        $this->assertDatabaseCount('workspaces', 0);
         $this->assertSame($before, DB::table('records')->orderBy('kind')->orderBy('id')->get()->toJson());
         $archive->put('issues', $issue['id'], $issue);
-        $migration->up();
+        RelationalDataMigration::import();
+        $this->restoreLaterMigrations();
         $this->assertSame(14, DB::table('issues')->count());
     }
 }

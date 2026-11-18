@@ -69,7 +69,7 @@ class WriteContractTest extends TestCase
 
         $input = ['projectId' => $project['id'], 'title' => 'Extra', 'clientHint' => 'keep', 'requestId' => 'extra-key'];
         $first = $this->rpc('createIssue', $input)->assertOk()->json('data');
-        $this->assertSame($first, $this->rpc('createIssue', $input)->assertOk()->json('data'), '同輸入（含未知欄位）重播原結果');
+        $this->assertDtoSame($first, $this->rpc('createIssue', $input)->assertOk()->json('data'));
         $this->rpc('createIssue', [...$input, 'clientHint' => 'changed'])->assertStatus(409)->assertJsonPath('error.code', 'REQUEST_CONFLICT');
         $this->assertSame(1, Issue::where('title', 'Extra')->count());
 

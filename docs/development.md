@@ -31,11 +31,11 @@ shared 模式只啟動應用程式服務, 資料庫、Redis 與 Mailpit 由既�
 
 ```sh
 python3 tools/test-environment.py up --name tasktracker-tests --port 13029
-# 預設 artisan test 強制 memory SQLite, 不重設日常開發庫
+# artisan test 使用隔離 MySQL 測試庫, 未配置專用連線即拒絕執行
 python3 tools/test-environment.py down --name tasktracker-tests
 ```
 
-API 埠範圍為 13000–13999, MySQL 測試可在該實例執行 `docker compose -p tasktracker-tests --profile standalone exec -T backend php -d memory_limit=512M artisan test --filter MySql --do-not-cache-result`；包含另開 PHP 子程序的大套件需將 512M 寫入該測試容器的臨時 PHP ini
+API 埠範圍為 13000–13999, MySQL 測試可在該實例執行 `docker compose -p tasktracker-tests --profile standalone exec -T backend php -d memory_limit=512M artisan test --do-not-cache-result`；包含另開 PHP 子程序的大套件需先執行 `docker compose -p tasktracker-tests --profile standalone exec -T -u root backend sh -c 'echo memory_limit=512M > /usr/local/etc/php/conf.d/test-memory.ini'`
 
 這個工具使用同一份 root Compose 建立獨立測試實例, MySQL 測試只允許專用 test／import schema 與測試旗標。瀏覽器檢查透過 E2E_ISOLATED=1、E2E_API_URL 與 E2E_FRONTEND_PORT 指向這個實例, 不使用正式站
 
@@ -89,3 +89,5 @@ Dockerfile 會把選定產物放入既有 `/srv/frontend`, 沿用 Nginx／PHP-FP
 - 標準版 tag 發布流程仍使用合併目標。獨立 Pages 自動發布、兩站設定集中化及正式舊網址遷移, 由各自發布工作接續, 不因本地拆分通過而直接切正式站
 
 在 `frontend` 執行 `tools/split-site-check.js` 可驗本地拆分流程, 須先依上列命令以 `http://127.0.0.1:5200`／`http://127.0.0.1:5199` 建置兩站, 並將 `E2E_ISOLATED=1`、`E2E_API_URL=http://127.0.0.1:13199` 指向專用隔離 Laravel。此檢查會建立合成帳號, 不得指向正式服務
+
+PHP 映像沿用上游同版本的編譯選項, 建置時停用上游靜態內建的 SQLite drivers, 並檢查停用結果。開發與正式映像共用 `backend/docker/mysql-only-php.sh`, 不另下載 PHP 版本

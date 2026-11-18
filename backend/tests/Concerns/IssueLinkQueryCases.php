@@ -7,7 +7,7 @@ use App\Repositories\RecordStore;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-/** 驗證關聯寫入僅讀取目標與必要子項，供SQLite與獨立MySQL共用。 */
+/** 驗證關聯寫入僅讀取目標與必要子項，供隔離 MySQL。 */
 trait IssueLinkQueryCases
 {
     /**

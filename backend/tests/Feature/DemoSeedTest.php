@@ -155,7 +155,7 @@ class DemoSeedTest extends TestCase
     public function test_seed_refuses_production_and_test_database_is_always_memory(): void
     {
         $this->assertTrue(app()->environment('testing'));
-        $this->assertSame(':memory:', DB::connection()->getDatabaseName());
+        $this->assertTrue(isIsolatedTestConnection(DB::connection()->getDatabaseName(), config('database.connections.mysql.username'), config('database.connections.mysql.host')));
         foreach (['production', 'staging', 'development'] as $environment) {
             app()->instance('env', $environment);
             $this->artisan('tasktracker:seed-demo')->assertFailed();

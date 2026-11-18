@@ -21,6 +21,8 @@ ENV VITE_SITE_ORIGIN=$VITE_SITE_ORIGIN VITE_APP_ORIGIN=$VITE_APP_ORIGIN VITE_BUI
 RUN npm run build && if [ "$VITE_BUILD_TARGET" != "combined" ]; then mv "dist-$VITE_BUILD_TARGET" dist; fi
 
 FROM php:8.5.12-fpm-bookworm AS runtime
+COPY backend/docker/mysql-only-php.sh /tmp/mysql-only-php.sh
+RUN sh /tmp/mysql-only-php.sh && rm /tmp/mysql-only-php.sh
 RUN apt-get update && apt-get install -y --no-install-recommends nginx libicu-dev libzip-dev unzip curl \
     && docker-php-ext-install -j"$(nproc)" intl pdo_mysql pcntl bcmath zip \
     && rm -rf /var/lib/apt/lists/* /etc/nginx/sites-enabled /etc/nginx/conf.d/* \

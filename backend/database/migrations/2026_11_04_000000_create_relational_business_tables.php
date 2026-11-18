@@ -42,7 +42,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('code');
             $table->unsignedBigInteger('lead_id')->nullable();
-            $table->text('description')->default(DB::getDriverName() === 'mysql' ? DB::raw("('')") : '');
+            $table->text('description')->default(DB::raw("('')"));
             $table->string('color')->default('#8d83ed');
             $table->unsignedInteger('next_number')->default(1);
             $table->unsignedInteger('revision')->default(1);
@@ -76,7 +76,7 @@ return new class extends Migration
             $table->unsignedBigInteger('storage_position')->default(0);
             $table->index(['workspace_id', 'storage_position']);
             $table->string('title');
-            $table->text('description')->default(DB::getDriverName() === 'mysql' ? DB::raw("('')") : '');
+            $table->text('description')->default(DB::raw("('')"));
             $table->unsignedBigInteger('state_id');
             $table->string('priority')->default('normal');
             $table->string('type')->default('task');
@@ -159,7 +159,7 @@ return new class extends Migration
             $table->dateTime('created_at', 6)->nullable();
             $table->date('work_date');
             $table->unsignedInteger('minutes');
-            $table->text('note')->default(DB::getDriverName() === 'mysql' ? DB::raw("('')") : '');
+            $table->text('note')->default(DB::raw("('')"));
             $table->unsignedInteger('revision')->default(1);
             $table->dateTime('updated_at', 6)->nullable();
             $table->dateTime('voided_at', 6)->nullable();
@@ -181,7 +181,7 @@ return new class extends Migration
             $table->unsignedBigInteger('recipient_id');
             $table->string('email');
             $table->string('subject');
-            $table->text('body')->default(DB::getDriverName() === 'mysql' ? DB::raw("('')") : '');
+            $table->text('body')->default(DB::raw("('')"));
             $table->string('status')->default('preview');
             $table->dateTime('created_at', 6)->nullable();
             $table->json('legacy_attributes')->nullable();
@@ -197,7 +197,7 @@ return new class extends Migration
             $table->unique(['workspace_id', 'public_id'], 'todos_public_unique');
             $table->unique(['workspace_id', 'id'], 'todos_scope_unique');
             $table->string('title');
-            $table->text('note')->default(DB::getDriverName() === 'mysql' ? DB::raw("('')") : '');
+            $table->text('note')->default(DB::raw("('')"));
             $table->unsignedBigInteger('created_by_id');
             $table->string('creator_name');
             $table->unsignedBigInteger('assignee_id');
@@ -266,7 +266,7 @@ return new class extends Migration
             $table->unique(['workspace_id', 'id'], 'workspace_upgrades_scope_unique');
             $table->dateTime('applied_at', 6)->nullable();
             $table->string('actor');
-            $table->text('note')->default(DB::getDriverName() === 'mysql' ? DB::raw("('')") : '');
+            $table->text('note')->default(DB::raw("('')"));
             $table->json('role_changes')->nullable();
             $table->json('legacy_attributes')->nullable();
         });
@@ -366,7 +366,7 @@ return new class extends Migration
         Schema::dropIfExists('project_access_controls');
         Schema::dropIfExists('project_members');
         Schema::dropIfExists('boards');
-        // SQLite在DROP時仍檢查自我外鍵；最新內容已匯出，再由子到父移除。
+        // 最新內容已匯出, 再由子到父移除。
         DB::table('issues')->whereNotNull('parent_issue_id')->delete();
         DB::table('issues')->where('type', '!=', 'epic')->delete();
         Schema::dropIfExists('issues');

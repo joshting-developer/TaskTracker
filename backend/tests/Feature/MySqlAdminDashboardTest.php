@@ -7,15 +7,15 @@ use App\Repositories\AdminStatisticsRepository;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Tests\Concerns\AdminDashboardCases;
-use Tests\MySqlTestCase;
+use Tests\TestCase;
 
 /** 隔離MySQL的日期聚合與有界投影 */
-class MySqlAdminDashboardTest extends MySqlTestCase
+class MySqlAdminDashboardTest extends TestCase
 {
     use AdminDashboardCases, DatabaseTransactions;
 
     /**
-     * 加入無關歷史後驗期間索引及固定聚合查詢數, 不以SQLite代替目標引擎
+     * 加入無關歷史後驗期間索引及固定聚合查詢數, 使用目標引擎
      *
      * @return void
      */

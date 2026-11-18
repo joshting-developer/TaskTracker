@@ -11,10 +11,10 @@ use App\Services\WorkspaceService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
-use Tests\MySqlTestCase;
+use Tests\TestCase;
 
 /** 各worker真實獨立PDO，fixture先commit；不以單連線transaction假裝競態。 */
-class MySqlConcurrencyTest extends MySqlTestCase
+class MySqlConcurrencyTest extends TestCase
 {
     /**
      * 透過正式HTTP建立並提交競態測試用的帳號、專案及卡片。

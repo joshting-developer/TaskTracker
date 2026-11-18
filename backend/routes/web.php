@@ -169,7 +169,7 @@ foreach (['workspaces', 'switchWorkspace', 'acceptWorkspaceInvite', 'declineWork
 }
 
 // 同一Session切換與業務請求依序處理；MySQL由GuardedStartSession持有連線鎖至保存完成。
-// waitsFor仍為10秒；locksFor只供SQLite隔離快測的框架TTL鎖，不作MySQL最長請求時間。
+// waitsFor為10秒；MySQL命名鎖持有至請求結束, 不使用TTL。
 foreach (Route::getRoutes() as $route) {
     if ($route->uri() === 'api/csrf-cookie' || str_starts_with($route->uri(), 'api/v1/') || str_starts_with($route->uri(), 'api/rpc/') || str_starts_with($route->uri(), 'api/auth/') || str_starts_with($route->uri(), 'api/realtime/')) {
         $route->block(10, 10);

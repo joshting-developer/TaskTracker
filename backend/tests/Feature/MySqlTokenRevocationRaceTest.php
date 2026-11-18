@@ -9,10 +9,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
 use Tests\Concerns\PersonalTokenCases;
-use Tests\MySqlTestCase;
+use Tests\TestCase;
 
 /** 獨立程序／PDO確認鎖後撤銷重驗；fixture先提交，不以單連線模擬競態。 */
-class MySqlTokenRevocationRaceTest extends MySqlTestCase
+class MySqlTokenRevocationRaceTest extends TestCase
 {
     use PersonalTokenCases;
 

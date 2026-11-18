@@ -17,16 +17,6 @@ class SessionLockFactory
     public function __construct(private DatabaseManager $database) {}
 
     /**
-     * 目前Session資料庫是否支援命名鎖（MySQL才支援）。
-     *
-     * @return bool 正式MySQL用連線級鎖；SQLite僅沿用隔離快測的框架鎖。
-     */
-    public function supported(): bool
-    {
-        return $this->database->connection()->getDriverName() === 'mysql';
-    }
-
-    /**
      * 等候最多指定秒數；持有期間無TTL，程序或DB連線關閉即由MySQL釋放。
      *
      * @param  string  $sessionName  Cookie名稱

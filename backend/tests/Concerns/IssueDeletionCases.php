@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 
-/** TT-250：永久刪卡的版本／重播、阻擋條件、連帶清除與墓碑；SQLite與獨立MySQL共用。 */
+/** TT-250：永久刪卡的版本／重播、阻擋條件、連帶清除與墓碑；隔離 MySQL。 */
 trait IssueDeletionCases
 {
     /**

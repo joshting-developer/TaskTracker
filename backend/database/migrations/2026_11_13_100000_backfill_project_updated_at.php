@@ -27,7 +27,7 @@ return new class extends Migration
                         continue;
                     }
                     $latest = max(array_map(fn ($time) => CarbonImmutable::parse($time, 'UTC')->utc(), $times));
-                    $value = DB::getDriverName() === 'mysql' ? $latest->format('Y-m-d H:i:s.u') : $latest->toISOString();
+                    $value = $latest->format('Y-m-d H:i:s.u');
                     DB::table('projects')->where('id', $project->id)->whereNull('updated_at')->update(['updated_at' => $value]);
                 }
             });

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 
-/** TT-260：具名路由、回應後寫入、敏感欄位排除、失敗隔離、租戶與權限；SQLite與獨立MySQL共用。 */
+/** TT-260：具名路由、回應後寫入、敏感欄位排除、失敗隔離、租戶與權限；隔離 MySQL。 */
 trait HttpOperationLogCases
 {
     /**

@@ -32,8 +32,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('mail_deliveries', function (Blueprint $table) {
+            $table->dropForeign(['invitation_id']);
             $table->dropUnique('mail_deliveries_invitation_unique');
-            $table->dropConstrainedForeignId('invitation_id');
+            $table->dropColumn('invitation_id');
         });
         Schema::table('workspace_invitations', function (Blueprint $table) {
             $table->dropIndex('workspace_invites_pending');

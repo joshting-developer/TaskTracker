@@ -18,10 +18,10 @@ use Tests\Concerns\ProjectAclReadCases;
 use Tests\Concerns\RecordContextCases;
 use Tests\Concerns\StoredWriteResults;
 use Tests\Concerns\WorkspaceSettingsReadCases;
-use Tests\MySqlTestCase;
+use Tests\TestCase;
 
 /** 真實InnoDB驗證資料型別、DTO、關聯、receipt及作者／租戶邊界。 */
-class MySqlApiTest extends MySqlTestCase
+class MySqlApiTest extends TestCase
 {
     use BoardVersionCases;
     use DatabaseTransactions, StoredWriteResults, \Tests\Concerns\ProjectTimeReadCases, \Tests\Concerns\ProjectUtilityReadCases;
@@ -88,7 +88,7 @@ class MySqlApiTest extends MySqlTestCase
     }
 
     /**
-     * 原生MySQL確認literal LIKE與最小欄位投影，不以SQLite結果推論。
+     * 原生MySQL確認literal LIKE與最小欄位投影。
      *
      * @return void
      */

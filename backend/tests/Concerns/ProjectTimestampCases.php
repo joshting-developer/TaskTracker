@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 
-/** TT-274：專案建立／更新時間戳與「最近更新」列表順序，SQLite與獨立MySQL共用案例。 */
+/** TT-274：專案建立／更新時間戳與「最近更新」列表順序，隔離 MySQL案例。 */
 trait ProjectTimestampCases
 {
     /**

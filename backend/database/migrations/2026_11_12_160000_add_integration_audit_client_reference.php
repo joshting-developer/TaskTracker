@@ -28,6 +28,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // InnoDB 可能用新增索引取代原本的外鍵索引, 先恢復支撐外鍵的單欄索引。
+        if (! Schema::hasIndex('integration_audits', 'integration_audits_workspace_id_foreign')) {
+            Schema::table('integration_audits', fn (Blueprint $table) => $table->index('workspace_id', 'integration_audits_workspace_id_foreign'));
+        }
         Schema::table('integration_audits', function (Blueprint $table) {
             $table->dropIndex('integration_audit_resource');
             $table->dropColumn(['client_reference', 'resource_revision']);

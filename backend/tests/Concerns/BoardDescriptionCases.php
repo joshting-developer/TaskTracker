@@ -5,7 +5,7 @@ namespace Tests\Concerns;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 
-/** TT-309：看板簡述的建立、更新、保留與讀取；SQLite與獨立MySQL共用。 */
+/** TT-309：看板簡述的建立、更新、保留與讀取；隔離 MySQL。 */
 trait BoardDescriptionCases
 {
     /**

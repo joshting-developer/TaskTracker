@@ -12,22 +12,19 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
 /**
- * 隔離讀取效能取樣：只使用程序內SQLite與人造seed，拒絕沿用容器資料庫。
+ * 隔離讀取效能取樣：只使用隔離 MySQL 與人造seed，拒絕沿用容器資料庫。
  * 使用：docker compose exec -T backend php < backend/tools/profile-reads.php
  * 不測HTTP／Session耗時、不做併發壓測；SQL計數包含repository及授權成本。
  */
-foreach (['APP_ENV' => 'testing', 'DB_CONNECTION' => 'sqlite', 'DB_DATABASE' => ':memory:', 'DB_URL' => '', 'SESSION_DRIVER' => 'array', 'CACHE_STORE' => 'array', 'QUEUE_CONNECTION' => 'sync', 'BROADCAST_CONNECTION' => 'null'] as $key => $value) {
-    putenv($key.'='.$value);
-    $_ENV[$key] = $_SERVER[$key] = $value;
-}
-
 require getcwd().'/vendor/autoload.php';
+require getcwd().'/tools/isolated-test-connection.php';
+if (! isIsolatedTestConnection()) {
+    throw new RuntimeException('未確認隔離 MySQL 測試庫, 拒絕執行');
+}
 $app = require getcwd().'/bootstrap/app.php';
 $app->make(Kernel::class)->bootstrap();
-config(['database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:', 'database.connections.sqlite.url' => null, 'cache.default' => 'array', 'queue.default' => 'sync', 'broadcasting.default' => 'null']);
-DB::purge('sqlite');
-if (! $app->environment('testing') || config('database.connections.sqlite.database') !== ':memory:' || DB::selectOne('PRAGMA database_list')->file !== '') {
-    throw new RuntimeException('未確認記憶體隔離，拒絕執行');
+if (! isIsolatedTestConnection(config('database.connections.mysql.database'), config('database.connections.mysql.username'), config('database.connections.mysql.host'))) {
+    throw new RuntimeException('啟動後測試連線不符, 拒絕執行');
 }
 Artisan::call('migrate', ['--force' => true]);
 $app->make(DemoSeeder::class)->seed(password: bin2hex(random_bytes(16)));
@@ -85,7 +82,7 @@ for ($index = 0; $index < 20; $index++) {
 }
 sample('plus200.24members.workspace', $workspace);
 sample('plus200.24members.report2025', $report);
-echo json_encode(['isolation' => 'sqlite::memory:', 'projects' => DB::table('projects')->count(), 'members' => DB::table('workspace_members')->count(), 'entries' => DB::table('time_entries')->count()], JSON_THROW_ON_ERROR).PHP_EOL;
+echo json_encode(['isolation' => 'isolated-mysql', 'projects' => DB::table('projects')->count(), 'members' => DB::table('workspace_members')->count(), 'entries' => DB::table('time_entries')->count()], JSON_THROW_ON_ERROR).PHP_EOL;
 
 $issue = (array) DB::table('issues')->where('type', 'task')->first();
 unset($issue['id']);

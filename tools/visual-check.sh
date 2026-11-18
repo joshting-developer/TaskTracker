@@ -51,5 +51,5 @@ compose down
 compose up -d --build --wait backend mysql redis mailpit
 python3 -c "import importlib.util; s=importlib.util.spec_from_file_location('visual','tools/visual-baseline.py'); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); m.reset_calibration_fixtures()"
 # Test-only fixture safety is part of the same isolated topology, not a product HTTP endpoint.
-compose exec -T -e TASKTRACKER_MYSQL_TEST=0 backend php artisan test --filter=VisualFixtureGuardTest --do-not-cache-result
+compose exec -T backend php artisan test --filter=VisualFixtureGuardTest --do-not-cache-result
 python3 tools/visual-baseline.py "$mode"

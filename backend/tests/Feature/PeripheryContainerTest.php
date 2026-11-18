@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Console\Commands\ImportLegacy;
 use App\Events\ProjectChanged;
 use App\Factories\SmtpTransportFactory;
 use App\Factories\TodosFactory;
@@ -31,7 +30,7 @@ class PeripheryContainerTest extends TestCase
      */
     public function test_periphery_entry_points_resolve(): void
     {
-        foreach ([AccountService::class, WorkspaceMemberships::class, SmtpService::class, TodosFactory::class, ImportLegacy::class, DemoSeeder::class] as $class) {
+        foreach ([AccountService::class, WorkspaceMemberships::class, SmtpService::class, TodosFactory::class, DemoSeeder::class] as $class) {
             $this->assertInstanceOf($class, $this->app->make($class));
         }
     }

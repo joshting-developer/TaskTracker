@@ -9,12 +9,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Tests\Concerns\StoredWriteResults;
-use Tests\MySqlTestCase;
+use Tests\TestCase;
 
 /** TT-255：隔離MySQL量測gzip-v1對舊式完整receipt的儲存、編解碼CPU與程序內重播延遲影響（TT-178後新receipt已有界）。 */
-class ReceiptCodecMySqlTest extends MySqlTestCase
+class ReceiptCodecMySqlTest extends TestCase
 {
-    use StoredWriteResults, DatabaseTransactions;
+    use DatabaseTransactions, StoredWriteResults;
 
     /**
      * 透過正式HTTP寫入建立人造測試資料。

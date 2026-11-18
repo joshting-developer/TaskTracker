@@ -51,7 +51,7 @@ class ScopedReadApiTest extends TestCase
         DB::flushQueryLog();
         $response = $this->getJson('/api/v1/projects/'.$target['id'])->assertOk()->assertJsonPath('data.id', $target['id']);
         $this->assertSame($baseline, $response->getContent());
-        $references = array_values(array_filter(DB::getQueryLog(), fn ($q) => str_starts_with($q['query'], 'select "id", "workspace_id", "public_id" from "projects"')));
+        $references = array_values(array_filter(DB::getQueryLog(), fn ($q) => str_starts_with($q['query'], 'select `id`, `workspace_id`, `public_id` from `projects`')));
         $this->assertCount(1, $references);
         $this->assertSame([$actor['workspace']['id'], $target['id']], $references[0]['bindings']);
         $this->assertStringContainsString('limit 1', $references[0]['query']);
@@ -61,7 +61,7 @@ class ScopedReadApiTest extends TestCase
         $page = $this->getJson('/api/v1/projects?perPage=5')->assertOk()->assertJsonPath('data.total', 36)->json('data');
         $this->assertCount(5, $page['items']);
         $ids = array_column($page['items'], 'id');
-        $references = array_values(array_filter(DB::getQueryLog(), fn ($q) => str_starts_with($q['query'], 'select "id", "workspace_id", "public_id" from "projects"')));
+        $references = array_values(array_filter(DB::getQueryLog(), fn ($q) => str_starts_with($q['query'], 'select `id`, `workspace_id`, `public_id` from `projects`')));
         $this->assertCount(1, $references);
         $this->assertSame([$actor['workspace']['id'], ...$ids], $references[0]['bindings']);
         $this->assertStringContainsString('limit 5', $references[0]['query']);

@@ -13,9 +13,5 @@ if (! is_file($file)) {
     chmod($temporary, 0600);
     rename($temporary, $file);
 }
-$database = getenv('DB_DATABASE') ?: '/data/tasktracker.sqlite';
-if ((getenv('DB_CONNECTION') ?: 'sqlite') === 'sqlite' && ! is_file($database)) {
-    touch($database);
-}
 flock($handle, LOCK_UN);
 fclose($handle);

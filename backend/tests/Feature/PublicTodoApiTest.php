@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\PublicTodoApiCases;
 use Tests\TestCase;
 
-/** TT-311：SQLite memory驗證公開API小待辦。 */
+/** TT-311：隔離 MySQL驗證公開API小待辦。 */
 class PublicTodoApiTest extends TestCase
 {
     use PublicTodoApiCases, RefreshDatabase;

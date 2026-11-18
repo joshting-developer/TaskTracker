@@ -20,13 +20,8 @@ return new class extends Migration
     public function up(): void
     {
         if (! Schema::hasColumn('issues', 'created_by_id')) {
-            // SQLite（只用在測試）加複合外鍵要重建issues表, 表內有資料時會連帶刪掉留言等子表；這時只加欄位, 外鍵由MySQL與空表測試把關。
-            $foreignKey = Schema::getConnection()->getDriverName() !== 'sqlite' || ! DB::table('issues')->exists();
-            Schema::table('issues', function (Blueprint $table) use ($foreignKey): void {
+            Schema::table('issues', function (Blueprint $table): void {
                 $table->unsignedBigInteger('created_by_id')->nullable()->after('assignee_id');
-                if (! $foreignKey) {
-                    return;
-                }
                 $table->foreign(['workspace_id', 'created_by_id'], 'issues_created_by_id_fk')->references(['workspace_id', 'id'])->on('workspace_members')->restrictOnDelete();
             });
         }
@@ -102,12 +97,9 @@ return new class extends Migration
         Schema::table('issue_notifications', function (Blueprint $table): void {
             $table->dropColumn('kind');
         });
-        // SQLite（只用在測試）拿掉外鍵要重建issues表, 會連帶把留言、關聯等子表資料刪掉；所以SQLite只撤kind, 建卡者欄位留著, up再遇到就跳過。
-        if (Schema::getConnection()->getDriverName() !== 'sqlite') {
-            Schema::table('issues', function (Blueprint $table): void {
-                $table->dropForeign('issues_created_by_id_fk');
-                $table->dropColumn('created_by_id');
-            });
-        }
+        Schema::table('issues', function (Blueprint $table): void {
+            $table->dropForeign('issues_created_by_id_fk');
+            $table->dropColumn('created_by_id');
+        });
     }
 };

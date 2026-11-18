@@ -3,7 +3,6 @@
 namespace App\Http;
 
 use App\Data\WorkspaceContext;
-use App\Database\WorkspaceSqliteConnection;
 use App\Database\WriteLocks;
 use App\Domain\DomainError;
 use App\Http\Session\SessionLeaseGuard;
@@ -26,7 +25,7 @@ class WorkspaceTransaction
     public function __construct(private WorkspaceSession $session, private WriteLocks $locks, private SessionLeaseGuard $lease) {}
 
     /**
-     * 唯讀查詢：不取寫入鎖，SQLite使用唯讀交易。
+     * 唯讀查詢：在一致快照內讀取, 不取寫入鎖。
      *
      * @template T
      *
@@ -88,9 +87,6 @@ class WorkspaceTransaction
             return $use($context);
         };
         $connection = DB::connection();
-        if ($connection instanceof WorkspaceSqliteConnection && $mode === WorkspaceAccessMode::Read) {
-            return $connection->readTransaction(fn () => $this->lease->around($request, $execute));
-        }
 
         return $connection->transaction(fn () => $this->lease->around($request, $execute));
     }

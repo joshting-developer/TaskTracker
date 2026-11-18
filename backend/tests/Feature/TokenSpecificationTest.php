@@ -39,7 +39,8 @@ class TokenSpecificationTest extends TestCase
                 $this->assertSame(isset($operation['x-rate-limit']), isset($operation['responses']['429']));
                 if (str_starts_with($path, '/api/public/v1/')) {
                     $this->assertSame([['bearerPat' => []]], $operation['security']);
-                    $this->assertSame($method === 'get' ? 'read' : 'write', $operation['x-required-token-ability']);
+                    $ownTimeRead = in_array($operation['operationId'], ['listPublicOwnTimeEntries', 'listPublicIssueTimeEntries'], true);
+                    $this->assertSame($method === 'get' && ! $ownTimeRead ? 'read' : 'write', $operation['x-required-token-ability']);
                 } else {
                     $this->assertArrayHasKey('sessionCookie', $operation['security'][0]);
                 }
@@ -49,7 +50,7 @@ class TokenSpecificationTest extends TestCase
                     foreach ((new \ReflectionMethod($class, $action))->getParameters() as $parameter) {
                         $type = $parameter->getType()?->getName();
                         if ($type && is_subclass_of($type, FormRequest::class)) {
-                            $request = new $type;
+                            $request = $type::create('/', 'POST', [], [], [], ['CONTENT_TYPE' => 'application/json'], '{}');
                             $request->setRouteResolver(fn () => $route);
                             foreach ($request->rules() as $name => $rules) {
                                 if (! str_contains($name, '.') && in_array('required', is_array($rules) ? $rules : explode('|', $rules), true)) {
@@ -63,7 +64,7 @@ class TokenSpecificationTest extends TestCase
                     if (isset($schema['$ref'])) {
                         $schema = $spec['components']['schemas'][basename($schema['$ref'])];
                     }
-                    $documented = $schema['required'];
+                    $documented = $schema['required'] ?? [];
                     sort($documented);
                     sort($required);
                     $this->assertSame($required, $documented, 'FormRequest與OpenAPI必填欄位不一致');

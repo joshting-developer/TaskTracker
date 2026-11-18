@@ -57,8 +57,8 @@ class BackendArchitectureTest extends TestCase
             'id' => $project['id'], 'expectedRevision' => 1,
         ])->assertOk();
         $this->assertSame(['ok', 'data'], array_keys($response->json()));
-        $this->assertSame($saved, $response->json('data'));
-        $this->assertSame($saved, $store->require('projects', $project['id']));
+        $this->assertDtoSame($saved, $response->json('data'));
+        $this->assertDtoSame($saved, $store->require('projects', $project['id']));
         $this->postJson('/api/rpc/updateProject', [
             'requestId' => 'old-update', 'name' => 'Different',
             'id' => $project['id'], 'expectedRevision' => 1,
@@ -118,7 +118,7 @@ class BackendArchitectureTest extends TestCase
         $first->put('issues', 'same', $payload);
         $first->put('issues', 'next', [...$payload, 'id' => 'next', 'identifier' => 'FIXTURE-2']);
         $second->put('issues', 'same', [...$payload, 'title' => '另一空間']);
-        $this->assertSame($payload, $first->require('issues', 'same'));
+        $this->assertDtoSame($payload, $first->require('issues', 'same'));
         $this->assertSame('另一空間', $second->require('issues', 'same')['title']);
         $this->assertSame(['same', 'next'], array_column($first->all('issues'), 'id'));
         $first->put('issues', 'same', [...$payload, 'revision' => 2]);

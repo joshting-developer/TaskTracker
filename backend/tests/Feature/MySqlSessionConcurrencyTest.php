@@ -15,10 +15,10 @@ use Illuminate\Session\Store;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
-use Tests\MySqlTestCase;
+use Tests\TestCase;
 
 /** 真實四worker、共用DB Session與獨立CookieJar，驗證超過10秒時的Session順序。 */
-class MySqlSessionConcurrencyTest extends MySqlTestCase
+class MySqlSessionConcurrencyTest extends TestCase
 {
     private string $url;
 

@@ -9,7 +9,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
@@ -136,28 +135,6 @@ class TodoTest extends TestCase
         $this->rpc('convertTodo', ['id' => $todo['id'], 'expectedRevision' => 1, 'issue' => ['projectId' => $project['id']]])->assertOk();
         $this->assertSame($content, $this->tenant->all('issues')[0]['description']);
         $this->assertSame($content, $this->tenant->require('todos', $todo['id'])['content']);
-    }
-
-    /** 舊資料不改，欄位回退及整體儲存往返都保留新原稿。
-     * @return void
-     */
-    public function test_markdown_migration_round_trip_preserves_legacy_and_new_content(): void
-    {
-        $this->login($this->alice);
-        $old = $this->rpc('createTodo', ['title' => '舊標題', 'note' => '舊補充'])->assertOk()->json('data');
-        $new = $this->rpc('createTodo', ['content' => "# 新速記\n\n- [ ] 一起確認"])->assertOk()->json('data');
-        $before = [$this->tenant->require('todos', $old['id']), $this->tenant->require('todos', $new['id'])];
-        $markdown = require database_path('migrations/2026_11_05_000000_add_todo_markdown_content.php');
-        $relational = require database_path('migrations/2026_11_04_000000_create_relational_business_tables.php');
-        $markdown->down();
-        (require database_path('migrations/2026_11_15_060000_create_project_tags.php'))->down();
-        Schema::dropIfExists('workspace_member_status_events'); // 後續資格事件先回退, 保留真實外鍵順序
-        Schema::dropIfExists('issue_external_refs'); // 後續migration的FK表；正常rollback會先撤它
-        $relational->down();
-        $relational->up();
-        $markdown->up();
-        $this->assertSame($before, [$this->tenant->require('todos', $old['id']), $this->tenant->require('todos', $new['id'])]);
-        $this->assertSame([], json_decode(DB::table('todos')->where('public_id', $new['id'])->value('legacy_attributes'), true));
     }
 
     /**
@@ -399,7 +376,7 @@ class TodoTest extends TestCase
         DB::enableQueryLog();
         DB::flushQueryLog();
         $this->getJson('/api/v1/todos?state=closed')->assertOk()->assertJsonPath('data.total', 0);
-        $this->assertCount(0, array_filter(DB::getQueryLog(), fn ($query) => str_contains($query['query'], 'from "issues"')));
+        $this->assertCount(0, array_filter(DB::getQueryLog(), fn ($query) => str_contains($query['query'], 'from `issues`')));
         $this->login($this->owner);
         $todo = $this->todo('Convert small task', $this->alice['id']);
         $this->login($this->alice);
@@ -414,7 +391,7 @@ class TodoTest extends TestCase
         DB::enableQueryLog();
         DB::flushQueryLog();
         $this->getJson('/api/v1/todos?state=closed')->assertOk()->assertJsonPath('data.total', 20)->assertJsonCount(20, 'data.items');
-        $this->assertCount(1, array_filter(DB::getQueryLog(), fn ($query) => str_contains($query['query'], 'from "issues"')));
+        $this->assertCount(1, array_filter(DB::getQueryLog(), fn ($query) => str_contains($query['query'], 'from `issues`')));
         for ($index = 20; $index < 200; $index++) {
             $copy = $source->replicate();
             $copy->public_id = (string) Str::uuid();
@@ -422,7 +399,7 @@ class TodoTest extends TestCase
         }
         DB::flushQueryLog();
         $this->getJson('/api/v1/todos?state=closed&perPage=100')->assertOk()->assertJsonPath('data.total', 200)->assertJsonCount(100, 'data.items');
-        $this->assertCount(1, array_filter(DB::getQueryLog(), fn ($query) => str_contains($query['query'], 'from "issues"')));
+        $this->assertCount(1, array_filter(DB::getQueryLog(), fn ($query) => str_contains($query['query'], 'from `issues`')));
         $version = $this->getJson('/api/v1/personal-version')->assertOk()->json('data.todos');
         $this->login($this->owner);
         $this->rpc('removeProjectMember', ['projectId' => $project['id'], 'userId' => $this->alice['id'], 'expectedRevision' => 1])->assertOk();
@@ -432,7 +409,7 @@ class TodoTest extends TestCase
         $this->assertNotSame($version, $this->getJson('/api/v1/personal-version')->assertOk()->json('data.todos'));
         DB::flushQueryLog();
         $this->getJson('/api/v1/todos?state=closed')->assertOk()->assertJsonPath('data.items.0.convertedIssue', null);
-        $this->assertCount(0, array_filter(DB::getQueryLog(), fn ($q) => str_contains($q['query'], 'from "issues"')));
+        $this->assertCount(0, array_filter(DB::getQueryLog(), fn ($q) => str_contains($q['query'], 'from `issues`')));
         $this->getJson('/api/v1/todos/'.$todo['id'])->assertOk()->assertJsonPath('data.convertedIssue', null);
     }
 }

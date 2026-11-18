@@ -7,7 +7,7 @@ require __DIR__.'/../tests/Support/PhpDocInventory.php';
 $root = dirname(__DIR__);
 $scanner = new PhpDocInventory;
 // required保留原統計分組；reference自TT-261同樣須零缺漏，Feature／Unit／migration由PhpDocCoverageTest擋回歸。
-$required = ['app/', 'database/seeders/', 'database/factories/', 'tools/', 'tests/Support/', 'tests/Concerns/', 'tests/TestCase.php', 'tests/MySqlTestCase.php'];
+$required = ['app/', 'database/seeders/', 'database/factories/', 'tools/', 'tests/Support/', 'tests/Concerns/', 'tests/TestCase.php'];
 $reference = ['tests/Feature/', 'tests/Unit/', 'database/migrations/', 'routes/', 'config/', 'bootstrap/'];
 $files = [];
 $iterator = new RecursiveIteratorIterator(new RecursiveCallbackFilterIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),

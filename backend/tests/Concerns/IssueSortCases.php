@@ -6,7 +6,7 @@ use App\Database\DatabaseTimes;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-/** TT-306：任務列表四種排序與升降序、換頁穩定, 以及異動清單的方向與cursor；SQLite與獨立MySQL共用。 */
+/** TT-306：任務列表四種排序與升降序、換頁穩定, 以及異動清單的方向與cursor；隔離 MySQL。 */
 trait IssueSortCases
 {
     /**

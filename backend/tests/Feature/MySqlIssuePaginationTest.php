@@ -5,10 +5,10 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Tests\Concerns\IssuePaginationCases;
-use Tests\MySqlTestCase;
+use Tests\TestCase;
 
 /** 任務列表分頁界限HTTP回歸 */
-class MySqlIssuePaginationTest extends MySqlTestCase
+class MySqlIssuePaginationTest extends TestCase
 {
     use DatabaseTransactions, IssuePaginationCases;
 

@@ -159,7 +159,7 @@ class WorkspaceApiTest extends TestCase
         $this->assertSame('task', $converted['type']);
         $this->assertSame($legacy['revision'] + 1, $converted['revision']);
         $this->assertSame($legacy['history'], array_slice($converted['history'], 0, count($legacy['history'])));
-        $this->assertSame([['field' => 'type', 'before' => 'feature', 'after' => 'task']], $converted['history'][count($legacy['history'])]['changes']);
+        $this->assertDtoSame([['field' => 'type', 'before' => 'feature', 'after' => 'task']], $converted['history'][count($legacy['history'])]['changes']);
         foreach (array_diff(array_keys($legacy), ['type', 'revision', 'updatedAt', 'history']) as $field) {
             $this->assertSame($legacy[$field], $converted[$field], $field.' 不變');
         }
@@ -456,7 +456,7 @@ class WorkspaceApiTest extends TestCase
         $this->rpc('smtpStatus')->assertStatus(403);
         $retry = ['requestId' => 'member-retry', 'projectId' => $project['id'], 'title' => '自己的任務'];
         $this->rpc('createIssue', $retry)->assertOk();
-        DB::table('workspace_members')->where('user_id', $member['user']['id'])->update(['disabled_at' => now()->toISOString()]);
+        DB::table('workspace_members')->where('user_id', $member['user']['id'])->update(['disabled_at' => now()]);
         $this->rpc('createIssue', $retry)->assertStatus(401);
     }
 
@@ -481,7 +481,7 @@ class WorkspaceApiTest extends TestCase
         $data = $this->rpc('getWorkspace')->assertOk()->json('data');
         $this->assertArrayNotHasKey('savedViews', $data);
         $this->assertNotContains('savedView.writeOwn', $data['meta']['permissions']);
-        $this->assertSame($legacy, $store->require('savedViews', $legacy['id']));
+        $this->assertDtoSame($legacy, $store->require('savedViews', $legacy['id']));
     }
 
     /**
@@ -584,6 +584,6 @@ class WorkspaceApiTest extends TestCase
         $this->assertFalse(Fields::isClosed($old));
         ProjectStatusTypesUpgrade::run();
         $this->assertSame($upgraded, $tenant->require('projects', $project['id']));
-        $this->assertSame([], DB::select('PRAGMA foreign_key_check'));
+        $this->assertSame(1, (int) DB::selectOne('SELECT @@foreign_key_checks AS enabled')->enabled);
     }
 }

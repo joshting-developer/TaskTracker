@@ -2,13 +2,11 @@
 
 namespace App\Providers;
 
-use App\Database\WorkspaceSqliteConnection;
 use App\Events\MailDeliveryFailed;
 use App\Http\Middleware\GuardedStartSession;
 use App\Listeners\RecordMailDeliveryFailure;
 use App\Models\PersonalAccessToken;
 use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Database\Connection;
 use Illuminate\Http\Request;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Event;
@@ -29,7 +27,6 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(StartSession::class, GuardedStartSession::class);
-        Connection::resolverFor('sqlite', fn ($pdo, $database, $prefix, $config) => new WorkspaceSqliteConnection($pdo, $database, $prefix, $config));
     }
 
     /**

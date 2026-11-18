@@ -15,7 +15,7 @@ class WriteLocks
      */
     public function account(?string $userId): void
     {
-        if (DB::getDriverName() === 'mysql' && $userId) {
+        if ($userId) {
             DB::table('users')->where('id', $userId)->lockForUpdate()->first();
         }
     }
@@ -28,7 +28,7 @@ class WriteLocks
      */
     public function workspace(?string $workspaceId): void
     {
-        if (DB::getDriverName() === 'mysql' && $workspaceId) {
+        if ($workspaceId) {
             DB::table('workspaces')->where('public_id', $workspaceId)->lockForUpdate()->first();
         }
     }
@@ -43,7 +43,7 @@ class WriteLocks
      */
     public function authentication(string $operation, array $input, ?string $userId): void
     {
-        if (DB::getDriverName() !== 'mysql' || ! in_array($operation, ['register', 'login', 'acceptWorkspaceInvite', 'declineWorkspaceInvite'], true)) {
+        if (! in_array($operation, ['register', 'login', 'acceptWorkspaceInvite', 'declineWorkspaceInvite'], true)) {
             return;
         }
         DB::table('transaction_guards')->where('name', 'accounts')->lockForUpdate()->first();

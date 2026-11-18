@@ -9,12 +9,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Tests\Concerns\StoredWriteResults;
-use Tests\MySqlTestCase;
+use Tests\TestCase;
 
 /** 在隔離MySQL量測receipt容量（TT-178後為有界結果），並鎖定不可因精簡而破壞的重播契約。 */
-class ReceiptGrowthTest extends MySqlTestCase
+class ReceiptGrowthTest extends TestCase
 {
-    use StoredWriteResults, DatabaseTransactions;
+    use DatabaseTransactions, StoredWriteResults;
 
     /** 真實HTTP操作，每次預設建立獨立requestId，重播案例則明確指定。
      *

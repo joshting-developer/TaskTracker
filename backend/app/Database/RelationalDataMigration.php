@@ -2,11 +2,10 @@
 
 namespace App\Database;
 
-use App\Repositories\RelationalRecords;
-
 use App\Repositories\EntityDefinitions;
 use App\Repositories\LegacyRecordStore;
 use App\Repositories\RecordStore;
+use App\Repositories\RelationalRecords;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -90,14 +89,12 @@ class RelationalDataMigration
                     $store->put($kind, $value['id'], $value);
                 }
             }
-            if (DB::getDriverName() === 'sqlite' && DB::select('PRAGMA foreign_key_check')) {
-                throw new \RuntimeException('關聯式資料外鍵驗證失敗');
-            }
         });
     }
 
     /** 先匯出目前最新狀態，再容許migration移除關聯表。
      * 後來才加的欄位若已先被後續migration撤掉, 保留備份裡原本的值, 不用預設值蓋掉（TT-314）。
+     *
      * @return void
      */
     public static function export(): void

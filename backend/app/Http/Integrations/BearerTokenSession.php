@@ -3,7 +3,6 @@
 namespace App\Http\Integrations;
 
 use App\Data\TokenContext;
-use App\Database\WorkspaceSqliteConnection;
 use App\Database\WriteLocks;
 use App\Domain\DomainError;
 use App\Factories\ProjectAccessFactory;
@@ -196,9 +195,6 @@ class BearerTokenSession
             return $use(new TokenContext($workspace, (string) $token->id, $token->name, $token->abilities));
         };
         $connection = DB::connection();
-        if (! $write && $connection instanceof WorkspaceSqliteConnection) {
-            return $connection->readTransaction($execute);
-        }
 
         return $connection->transaction($execute);
     }

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-/** TT-315：公開API「我的通知」只回本人的任務通知、遞增續讀不重複不漏、撤專案權限後讀不到；SQLite與獨立MySQL共用。 */
+/** TT-315：公開API「我的通知」只回本人的任務通知、遞增續讀不重複不漏、撤專案權限後讀不到；隔離 MySQL。 */
 trait PublicNotificationCases
 {
     /**

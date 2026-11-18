@@ -11,10 +11,10 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Tests\MySqlTestCase;
+use Tests\TestCase;
 
 /** 必須明確開啟且只用隔離Bucket；finally只清本次隨機物件 */
-class MySqlR2AttachmentsTest extends MySqlTestCase
+class MySqlR2AttachmentsTest extends TestCase
 {
     use DatabaseTransactions;
 

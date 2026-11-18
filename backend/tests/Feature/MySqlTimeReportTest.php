@@ -8,11 +8,11 @@ use App\Models\WorkspaceMember;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Tests\MySqlTestCase;
 use Tests\Support\LegacyMemberTimeDetails;
+use Tests\TestCase;
 
 /** 原生MySQL大量工時驗證SQL聚合與雙層分頁，不接觸業務資料。 */
-class MySqlTimeReportTest extends MySqlTestCase
+class MySqlTimeReportTest extends TestCase
 {
     use DatabaseTransactions;
 

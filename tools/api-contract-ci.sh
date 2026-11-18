@@ -45,9 +45,9 @@ else:
 HEALTH
 "${OPENAPI_PYTHON:-.local/openapi-validation/bin/python}" tools/check_openapi.py
 "${OPENAPI_PYTHON:-.local/openapi-validation/bin/python}" tools/check_openapi_test.py
-# Full-suite fixtures retain more memory than a single HTTP request; keep this limit test-only.
-compose exec -T -e TASKTRACKER_MYSQL_TEST=0 backend php -d memory_limit=512M vendor/bin/phpunit --do-not-cache-result
-compose exec -T backend php -d memory_limit=512M vendor/bin/phpunit --filter='MySqlIssueChangesTest|MySqlPublicQueriesTest|MySqlPublicWritesTest|MySqlTokenRevocationRaceTest' --do-not-cache-result
+# Full-suite subprocesses also need the test-only memory limit.
+compose exec -T -u root backend sh -c 'echo memory_limit=512M > /usr/local/etc/php/conf.d/test-memory.ini'
+compose exec -T backend php -d memory_limit=512M vendor/bin/phpunit --do-not-cache-result
 python3 tools/documented_examples_check.py
 E2E_ISOLATED=1 python3 tools/public_attachment_acceptance.py
 python3 tools/public_client_acceptance.py

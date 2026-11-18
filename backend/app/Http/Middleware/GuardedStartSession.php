@@ -36,9 +36,6 @@ class GuardedStartSession extends StartSession
      */
     protected function handleRequestWhileBlocking(Request $request, $session, Closure $next)
     {
-        if (! $this->locks->supported()) {
-            return parent::handleRequestWhileBlocking($request, $session, $next);
-        }
         $lease = $this->locks->acquire($session->getName(), $session->getId(), $request->route()->waitsFor() ?? 10);
         $request->attributes->set(SessionLease::class, $lease);
         try {

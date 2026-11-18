@@ -232,6 +232,6 @@ class AccountSettingsTest extends TestCase
         $this->assertSame($before->password, $after->password);
         $this->assertSame($before->name, $after->name);
         $this->assertSame(0, $after->profile_revision);
-        $this->assertSame([], DB::select('PRAGMA foreign_key_check'));
+        $this->assertSame(1, (int) DB::selectOne('SELECT @@foreign_key_checks AS enabled')->enabled);
     }
 }

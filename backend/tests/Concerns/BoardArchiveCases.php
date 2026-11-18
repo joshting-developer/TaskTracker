@@ -5,7 +5,7 @@ namespace Tests\Concerns;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 
-/** TT-283：看板封存清單、唯讀查閱與還原；SQLite與獨立MySQL共用。 */
+/** TT-283：看板封存清單、唯讀查閱與還原；隔離 MySQL。 */
 trait BoardArchiveCases
 {
     /**

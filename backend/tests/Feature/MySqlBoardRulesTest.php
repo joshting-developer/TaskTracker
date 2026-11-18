@@ -5,10 +5,10 @@ namespace Tests\Feature;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\Concerns\BoardRuleCases;
-use Tests\MySqlTestCase;
+use Tests\TestCase;
 
 /** 真實隔離 MySQL 驗證相關子查詢及原子收錄 */
-class MySqlBoardRulesTest extends MySqlTestCase
+class MySqlBoardRulesTest extends TestCase
 {
     use BoardRuleCases;
 

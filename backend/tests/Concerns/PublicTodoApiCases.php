@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-/** TT-311：公開API小待辦的Token範圍、交辦、完成／退回、重送與有界列表；SQLite與獨立MySQL共用。 */
+/** TT-311：公開API小待辦的Token範圍、交辦、完成／退回、重送與有界列表；隔離 MySQL。 */
 trait PublicTodoApiCases
 {
     /**

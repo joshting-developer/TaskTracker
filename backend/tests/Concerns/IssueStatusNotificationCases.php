@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-/** TT-314：狀態調整通知負責人與建卡的人、重要狀態標示、去重與重送；SQLite與獨立MySQL共用。 */
+/** TT-314：狀態調整通知負責人與建卡的人、重要狀態標示、去重與重送；隔離 MySQL。 */
 trait IssueStatusNotificationCases
 {
     /**

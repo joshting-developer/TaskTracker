@@ -22,6 +22,12 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // InnoDB 可能在新增較長索引時移除原本的外鍵索引, 回退前先補回。
+        foreach (['created_by_id' => 'todos_created_by_id_fk', 'initial_assignee_id' => 'todos_initial_assignee_id_fk'] as $column => $index) {
+            if (! Schema::hasIndex('todos', $index)) {
+                Schema::table('todos', fn (Blueprint $table) => $table->index(['workspace_id', $column], $index));
+            }
+        }
         Schema::table('todos', function (Blueprint $table) {
             $table->dropIndex('todos_creator_scope');
             $table->dropIndex('todos_initial_handler_scope');
