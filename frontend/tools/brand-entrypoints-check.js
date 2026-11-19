@@ -15,7 +15,7 @@ try {
   const context = await browser.newContext({ locale: 'zh-TW' }), page = await context.newPage(), errors = [];
   page.on('pageerror', e => errors.push(e.message));
   const marks = new Set();
-  for (const path of ['/', '/features/tasks/', '/features/collaboration/', '/features/time/', '/features/integrations/', '/login']) {
+  for (const path of ['/', '/login']) {
     await page.goto(base + path); await page.locator('.guest-brand-mark').waitFor();
     const iconLinks = await page.locator('link[rel="icon"],link[rel="apple-touch-icon"]').evaluateAll(nodes => nodes.map(n => ({ type: n.type, href: n.href })));
     assert.equal(iconLinks.length, 6);
@@ -35,7 +35,7 @@ try {
       await page.setViewportSize({ width, height: 1000 }); await page.evaluate(() => document.fonts.ready);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, path + ' overflow ' + width);
       await page.locator('.guest-brand').focus(); assert.ok(await page.locator('.guest-brand').evaluate(el => el === document.activeElement));
-      if (['/', '/features/tasks/', '/login'].includes(path)) await page.screenshot({ path: `${out}/${path === '/' ? 'landing' : path === '/login' ? 'login' : 'feature'}-${width}.png`, fullPage: true });
+      await page.screenshot({ path: `${out}/${path === '/' ? 'landing' : 'login'}-${width}.png`, fullPage: true });
     }
   }
   const rpc = async (operation, input = {}, group = 'rpc') => {
@@ -58,5 +58,5 @@ try {
   }
   assert.equal(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length), 0, 'No Service Worker introduced');
   assert.deepEqual(errors, []);
-  console.log('PASS: six guest entries, one master SVG, HTTP icons and manifest, keyboard, isolated login and three widths; no offline PWA claim');
+  console.log('PASS: home and login guest entries, one master SVG, HTTP icons and manifest, keyboard, isolated login and three widths; no offline PWA claim');
 } finally { await browser?.close(); if (process.env.E2E_USE_DEV === '1') await server?.close(); else await new Promise(resolve => server ? server.httpServer.close(resolve) : resolve()); }

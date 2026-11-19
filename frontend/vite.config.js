@@ -16,8 +16,8 @@ export default defineConfig(({ mode }) => {
   if (siteOrigin && !/^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(siteOrigin)) throw new Error('VITE_SITE_ORIGIN必須是不含路徑的origin，例如https://tasks.example.com');
   if (publicOnly && siteOrigin === appOrigin) throw new Error('Public and app origins must differ');
   if ((publicOnly || appOnly) && !siteOrigin) throw new Error('Split build requires VITE_SITE_ORIGIN');
-  const featureSlugs = ['tasks', 'collaboration', 'time', 'integrations'];
-  const publicPaths = ['/', ...featureSlugs.map(slug => `/features/${slug}/`)];
+  // TT-437：功能子頁已移除, 公開頁只剩首頁；舊網址由 nginx 轉回首頁對應章節。
+  const publicPaths = ['/'];
   const deviceIconNames = ['pavenro-app-v1-192.png', 'pavenro-app-v1-512.png', 'pavenro-maskable-v1-512.png'];
   const brandBytes = name => readFileSync(fileURLToPath(new URL(`./public-assets/brand/${name}`, import.meta.url)));
   const manifest = JSON.stringify({ id: '/app/', name: 'Pavenro', short_name: 'Pavenro', start_url: '/app/', scope: '/',
@@ -41,14 +41,14 @@ export default defineConfig(({ mode }) => {
       }
       return html;
     },
-    // sitemap包含首頁與四個公開功能頁, 不收錄登入及工作區。
+    // sitemap只收錄首頁, 不收錄登入及工作區。
     generateBundle: { order: 'post', handler(_, bundle) {
       if (appOnly) {
         this.emitFile({ type: 'asset', fileName: 'index.html', source: bundle['app/index.html'].source });
       }
       if (publicOnly) {
         this.emitFile({ type: 'asset', fileName: '404.html', source: '<!doctype html><html lang="en"><meta charset="utf-8"><title>Page not found | Pavenro</title><h1>Page not found</h1><a href="/">Pavenro</a></html>' });
-        this.emitFile({ type: 'asset', fileName: '_redirects', source: `/login ${appOrigin}/login 302\n/login/ ${appOrigin}/login 302\n/app ${appOrigin}/app/ 302\n/app/* ${appOrigin}/app/:splat 302\n/admin ${appOrigin}/admin/ 302\n/admin/* ${appOrigin}/admin/:splat 302\n` });
+        this.emitFile({ type: 'asset', fileName: '_redirects', source: `/login ${appOrigin}/login 302\n/login/ ${appOrigin}/login 302\n/app ${appOrigin}/app/ 302\n/app/* ${appOrigin}/app/:splat 302\n/admin ${appOrigin}/admin/ 302\n/admin/* ${appOrigin}/admin/:splat 302\n${['tasks', 'collaboration', 'time', 'integrations'].map(slug => `/features/${slug} /#${slug} 301\n/features/${slug}/ /#${slug} 301\n`).join('')}/features/* / 301\n` });
       }
       for (const [path, asset] of Object.entries(staticAssets).filter(([path]) => !publicOnly || path !== '/site.webmanifest')) this.emitFile({ type: 'asset', fileName: path.slice(1), source: asset.source });
       this.emitFile({ type: 'asset', fileName: 'robots.txt', source: appOnly ? 'User-agent: *\nDisallow: /\n' : `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /app/\nDisallow: /admin/\n${siteOrigin ? `Sitemap: ${siteOrigin}/sitemap.xml\n` : ''}` });
@@ -95,7 +95,7 @@ export default defineConfig(({ mode }) => {
       // 兩個HTML入口會讓polyfill成為共用chunk而多一個請求；支援的瀏覽器皆原生支援modulepreload。
       modulePreload: { polyfill: false },
       // TT-297：首頁/是靜態產品介紹；/app/（亦服務/login）是工作空間SPA殼層；同一映像，不另做SSR。
-      rollupOptions: { input: { ...(!appOnly ? { landing: fileURLToPath(new URL('./index.html', import.meta.url)), ...Object.fromEntries(featureSlugs.map(slug => [slug, fileURLToPath(new URL(`./features/${slug}/index.html`, import.meta.url))])) } : {}), ...(!publicOnly ? { app: fileURLToPath(new URL('./app/index.html', import.meta.url)), admin: fileURLToPath(new URL('./admin/index.html', import.meta.url)) } : {}) } },
+      rollupOptions: { input: { ...(!appOnly ? { landing: fileURLToPath(new URL('./index.html', import.meta.url)) } : {}), ...(!publicOnly ? { app: fileURLToPath(new URL('./app/index.html', import.meta.url)), admin: fileURLToPath(new URL('./admin/index.html', import.meta.url)) } : {}) } },
     },
   };
 });

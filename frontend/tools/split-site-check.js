@@ -13,6 +13,11 @@ const publicFiles = await readdir('dist-public');
 assert.ok(publicFiles.includes('404.html') && publicFiles.includes('_redirects'));
 assert.ok(!publicFiles.some(name => ['app', 'admin', 'site.webmanifest'].includes(name)));
 assert.ok(!(await readdir('dist-app')).includes('features'));
+// TT-437：功能子頁已移除, Pages 也把舊網址轉回首頁對應章節
+assert.ok(!publicFiles.includes('features'));
+const redirects = await readFile('dist-public/_redirects','utf8');
+for (const slug of ['tasks', 'collaboration', 'time', 'integrations']) assert.match(redirects, new RegExp(`^/features/${slug}/ /#${slug} 301$`, 'm'));
+assert.match(redirects, /^\/features\/\* \/ 301$/m);
 assert.equal(await readFile('dist-app/index.html','utf8'), await readFile('dist-app/app/index.html','utf8'));
 assert.equal(await readFile('dist-app/robots.txt','utf8'), 'User-agent: *\nDisallow: /\n');
 for (const file of await readdir('dist-public/assets')) {
@@ -30,8 +35,8 @@ try {
     await context.route(app+'/**', route => route.abort());
     context.on('request', request => { if (new URL(request.url()).pathname.startsWith('/api/')) apiRequests.push(request.url()); });
     const page = await context.newPage(); page.on('pageerror', e => errors.push(e.message));
-    for (const slug of ['', 'tasks', 'collaboration', 'time', 'integrations']) {
-      const path = slug ? `/features/${slug}/` : '/';
+    for (const slug of ['']) {
+      const path = '/';
       const raw = await (await fetch(site+path)).text();
       assert.match(raw, /<h1/); assert.match(raw, /<meta name="description"/);
       assert.ok(!raw.includes('tasktracker:signed-in') && !raw.includes('auth-pending'));

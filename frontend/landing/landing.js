@@ -174,7 +174,10 @@ if (showcase && hero) {
   function syncMode() {
     const next = storyQuery.matches && !lowPower;
     if (next === story) return;
+    // 搬動 DOM 會讓原本的鍵盤焦點掉回 body, 切換後放回同一個元素
+    const focused = document.activeElement;
     if (next) enterStory(); else leaveStory();
+    if (focused && focused !== document.body && focused.isConnected && document.activeElement !== focused) focused.focus({ preventScroll: true });
     targetX = targetY = 0;
     schedule();
   }
@@ -194,11 +197,17 @@ if (showcase && hero) {
     const index = shots.indexOf(event.target.closest('.shot'));
     if (index >= 0) activate(index);
   });
-  railLinks.forEach((link, i) => link.addEventListener('click', event => {
-    if (!story) return;
-    event.preventDefault();
-    scrollToChapter(i);
-  }));
+  // 首屏功能列、上方選單與「探索功能」：首屏故事時捲到對應章節, 一般捲動照原本的錨點
+  document.querySelectorAll('a[href^="#"]').forEach(link => {
+    const target = link.getAttribute('href').slice(1);
+    const index = target === 'features' ? 0 : copies.findIndex(copy => copy.id === target);
+    if (index < 0) return;
+    link.addEventListener('click', event => {
+      if (!story) return;
+      event.preventDefault();
+      scrollToChapter(index);
+    });
+  });
   const hashIndex = () => copies.findIndex(copy => `#${copy.id}` === location.hash);
   addEventListener('hashchange', () => {
     const index = hashIndex();
@@ -212,9 +221,6 @@ if (showcase && hero) {
     if (story) scrollToChapter(hashIndex(), false);
     else { activate(hashIndex()); showcase.scrollIntoView(); }
   }
-}
-for (const link of document.querySelectorAll('.product-nav a')) {
-  if (new URL(link.href).pathname === location.pathname) link.setAttribute('aria-current', 'page');
 }
 
 initializePublicLocale();

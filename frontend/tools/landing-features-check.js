@@ -1,11 +1,16 @@
-// TT-355：靜態功能分頁、無JS閱讀與正式build入口；TT-435 首頁功能區改為鍵盤可操作的分頁。
+// TT-355：公開首頁、無JS閱讀與正式build入口；TT-435 首頁功能區改為鍵盤可操作的分頁；TT-437 移除功能子頁。
 import assert from 'node:assert/strict';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
 const port = Number(process.env.E2E_FRONTEND_PORT || 5199);
 const origin = `http://127.0.0.1:${port}`;
-const pages = ['/', '/features/tasks/', '/features/collaboration/', '/features/time/', '/features/integrations/'];
+const pages = ['/'];
+// TT-437：子頁不再建置, 舊網址交給正式 nginx 轉回首頁對應章節
+assert.equal(existsSync(new URL('../dist/features', import.meta.url)), false);
+const nginx = readFileSync(new URL('../../docker/production/nginx.conf', import.meta.url), 'utf8');
+assert.match(nginx, /location ~ \^\/features\/\(tasks\|collaboration\|time\|integrations\)\/\?\(index\\\.html\)\?\$ \{ return 301 \/#\$1; \}/);
+assert.match(nginx, /location ~ \^\/features\(\/\.\*\)\?\$ \{ return 301 \/; \}/);
 const folder = 'artifacts/tt355';
 mkdirSync(folder, { recursive: true });
 let server, browser;
@@ -31,7 +36,7 @@ try {
       await page.goto(origin + path);
       await page.waitForFunction(() => !document.documentElement.classList.contains('auth-pending'));
       assert.equal(await page.locator('h1').count(), 1);
-      // TT-432：首頁 header 改深色, 功能頁維持淺色；兩種都要符合 4.5 對比。
+      // TT-432：首頁 header 深色, 文字對比要 4.5 以上。
       const contrast = await page.locator('.product-nav a').first().evaluate(el => {
         const rgb = value => value.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number);
         const lum = ([r, g, b]) => [r, g, b].map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }).reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0);
@@ -44,7 +49,6 @@ try {
       await page.screenshot({ path: `${folder}/${name}-${width}.png`, fullPage: true, animations: 'disabled' });
       results.push({ path, width, title });
     }
-    if (path !== '/') assert.equal(await page.locator('.product-nav [aria-current="page"]').count(), 1);
   }
   // TT-435：功能區改成分頁＋3D 截圖堆疊, 方向鍵切換、Home／End 跳頭尾, 首屏功能列會切到對應分頁。
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -72,7 +76,9 @@ try {
   assert.equal(await page.locator('#collaboration').isVisible(), true);
   // 選中的截圖不可以歪, 文字才看得清楚
   assert.equal(await page.locator('.showcase-rig > .shot.is-front').evaluate(el => getComputedStyle(el).transform), 'none');
-  for (const link of await page.locator('[data-showcase] a[href^="/"]').all()) assert.equal((await fetch(origin + await link.getAttribute('href'))).status, 200);
+  // 上方選單都指到首頁上存在的章節
+  for (const link of await page.locator('.product-nav a').all()) assert.equal(await page.locator(await link.getAttribute('href')).count(), 1);
+  assert.equal(await page.locator('a[href*="/features/"]').count(), 0);
   const noJs = await browser.newPage({ locale: 'zh-TW', javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
   await noJs.goto(origin + '/');
   assert.equal(await noJs.locator('[data-aspect]:visible').count(), 4);
@@ -100,6 +106,10 @@ try {
   await motion.locator('.feature-rail a[href="#time"]').click();
   await motion.waitForFunction(() => document.querySelector('.feature-rail a.is-active')?.getAttribute('href') === '#time');
   await motion.locator('.hero-chapters #time').waitFor();
+  // 上方選單在首屏故事裡也捲到對應章節
+  await motion.locator('.product-nav a[href="#integrations"]').click();
+  await motion.waitForFunction(() => document.querySelector('.feature-rail a.is-active')?.getAttribute('href') === '#integrations');
+  await motion.locator('.hero-chapters #integrations').waitFor();
   assert.equal(await motion.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
   // 視窗縮小就回到一般捲動：選單、功能區與分頁都放回原位
   await motion.setViewportSize({ width: 1024, height: 900 });
@@ -109,12 +119,12 @@ try {
   assert.equal(await motion.locator('[data-showcase] [role="tabpanel"]').count(), 4);
   assert.equal(await motion.locator('[data-showcase] [role="tabpanel"]:visible').count(), 1);
   await motion.close();
-  // Already signed in: feature deep links stay readable, primary links return to the app.
+  // Already signed in: ?intro=1 stays on the introduction and the header links back to the app.
   await page.route('**/api/**', route => route.fulfill({ contentType: 'application/json', body: route.request().url().endsWith('csrf-cookie') ? '{"csrfToken":"synthetic"}' : '{"ok":true}' }));
-  await page.goto(origin + '/features/tasks/');
-  await page.getByRole('link', { name: '回到工作區', exact: true }).waitFor();
-  assert.equal(new URL(page.url()).pathname, '/features/tasks/');
+  await page.goto(origin + '/?intro=1');
+  await page.locator('.guest-topbar').getByRole('link', { name: '回到工作區', exact: true }).waitFor();
+  assert.equal(new URL(page.url()).pathname, '/');
   assert.deepEqual(errors, []);
   writeFileSync(`${folder}/result.json`, JSON.stringify({ passed: true, results, keyboard: true, noJs: true, syntheticAuth: true }, null, 2));
-  console.log('PASS: 5 static pages × 3 widths, unique SEO, links, keyboard feature tabs, hero scroll story, no JS, signed-in feature navigation');
+  console.log('PASS: home × 3 widths, no feature pages, nginx redirects, nav anchors, keyboard feature tabs, hero scroll story, no JS, signed-in intro');
 } finally { await browser?.close(); await server?.close(); }

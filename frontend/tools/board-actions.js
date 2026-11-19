@@ -7,7 +7,8 @@ export async function moveBoardCard(page, identifier, state, { settle = true } =
   // 模擬HTML5拖放偶爾在版面位移時漏掉drop事件（未送出任何寫入）；重新量測後最多再試一次。
   for (let attempt = 0; attempt < 2; attempt++) {
     await card.scrollIntoViewIfNeeded();
-    const sourceBox = await card.boundingBox(), targetBox = await target.boundingBox();
+    // TT-437：手機寬度捲動後版面還會移動一小段, 太快量位置會把卡片放錯地方；等兩個畫格位置不變再量。
+    const [sourceBox, targetBox] = await settledBoxes(page, card, target);
     // 長欄位在卡片旁邊落下，不要求拖回欄位最上方。
     const y = Math.max(5, Math.min(targetBox.height - 5, sourceBox.y + 10 - targetBox.y));
     await card.dragTo(target, { sourcePosition: { x: 10, y: 10 }, targetPosition: { x: 10, y } });
@@ -16,6 +17,18 @@ export async function moveBoardCard(page, identifier, state, { settle = true } =
     if (settle) await page.locator('.issue-card.moving').waitFor({ state: 'detached', timeout: 15000 });
     return;
   }
+}
+
+async function settledBoxes(page, ...locators) {
+  let previous = '';
+  for (let frame = 0; frame < 30; frame++) {
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const boxes = await Promise.all(locators.map(locator => locator.boundingBox()));
+    const key = JSON.stringify(boxes);
+    if (key === previous) return boxes;
+    previous = key;
+  }
+  return JSON.parse(previous);
 }
 
 // 手機／鍵盤替代途徑：進入詳細頁，用既有狀態操作後返回來源看板。

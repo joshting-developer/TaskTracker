@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "f48bf9295a3fe074a92cf4534420cecc558bea19e62c0752c4352e580d6478a4",
+  "harnessSha256": "ec784b7350066defded6eec48718ed92877fa8dc31f0a88eea3c23fc164cbd35",
   "profile": "darwin-arm64",
   "reviewer": "claude",
-  "note": "TT-428 看板預設自訂順序, 排序選單與拖曳後位置改變；TT-432 公開頁改版；TT-431 後 harness 重新綁定。Chrome 157 擷取, 逐張比對只有看板與公開頁不同；Josh 常設授權候選可直接核准",
-  "manifestSha256": "0a67507116e9b12f9cfebf19028d00b442fea782cf06b2aa3b54ae2a339fc5ba",
+  "note": "TT-437 移除四個功能子頁, 32～35 公開子頁截圖拿掉；board-actions.js 拖曳前先等版面位置穩定（手機捲動後太快量位置會放錯欄）。Chrome 157 擷取, 與前一版相比只有反鋸齒雜訊（每張最多 111 像素、色差 ≤4/255）；Josh 2026-11-20 放行",
+  "manifestSha256": "0c763c41b15fb64a8835629813e53dc96ba8a14d5f88fdb3cc0d50ffc3c73a30",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

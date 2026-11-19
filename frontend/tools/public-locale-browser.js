@@ -10,8 +10,9 @@ assert.equal(process.env.E2E_ISOLATED, '1');
 assert.ok(['http://127.0.0.1:13198', 'http://127.0.0.1:13199'].includes(process.env.E2E_API_URL));
 const frontendPort = Number(process.env.E2E_FRONTEND_PORT || 5199);
 const out = '../artifacts/tt365'; await mkdir(out, { recursive: true });
-const paths = ['/', '/features/tasks/', '/features/collaboration/', '/features/time/', '/features/integrations/'];
-const titles = ['Project management', 'Break work into trackable issues', 'Keep assignments and replies together', 'See where time goes', 'Let external tools work with issues'];
+// TT-437：功能子頁已移除, 公開頁只剩首頁
+const paths = ['/'];
+const titles = ['Project management'];
 // TT-432：介紹頁圖片延後載入, 整頁截圖前先載入並解碼目前語系看得到的圖, 基準才穩定。
 const settleImages = page => page.evaluate(async () => { for (const image of document.images) image.loading = 'eager'; await Promise.all([...document.images].filter(image => image.checkVisibility()).map(image => image.decode().catch(() => {}))); });
 let server, browser;
@@ -59,8 +60,8 @@ try {
   await page.getByRole('heading',{name:'Project management',exact:true}).waitFor();
   assert.equal(await page.locator('[data-public-locale]').inputValue(), 'en');
   const fallback = await browser.newPage({ locale: 'ja-JP' });
-  await fallback.goto(`http://127.0.0.1:${frontendPort}` + '/features/tasks/');
-  assert.equal(await fallback.locator('h1').innerText(), '把工作拆成可追蹤的任務');
+  await fallback.goto(`http://127.0.0.1:${frontendPort}` + '/?intro=1');
+  assert.equal(await fallback.locator('h1').innerText(), '專案管理平台');
   await fallback.close();
   const denied = await browser.newPage({ locale: 'en-US' });
   await denied.addInitScript(() => Object.defineProperty(window, 'localStorage', { get() { throw new DOMException('Denied', 'SecurityError'); } }));
@@ -69,12 +70,12 @@ try {
   assert.equal(await denied.locator('h1').innerText(), '專案管理平台'); await denied.close();
   assert.deepEqual(errors, []);
   await writeFile(`${out}/design-inspection.json`,JSON.stringify(findings,null,2));
-  await writeFile(`${out}/browser-summary.json`,JSON.stringify({passed:true, pages:5, widths:[1440,768,390], checks:['bilingual-complete-copy','no-overflow','browser-default','reload','cross-public-login','storage-denied','no-api-on-switch'], findings},null,2));
+  await writeFile(`${out}/browser-summary.json`,JSON.stringify({passed:true, pages:paths.length, widths:[1440,768,390], checks:['bilingual-complete-copy','no-overflow','browser-default','reload','cross-public-login','storage-denied','no-api-on-switch'], findings},null,2));
   if (process.env.PUBLIC_VISUAL_COMPARE === '1') {
     const baseline = JSON.parse(await readFile('../docs/visual-baselines/public-language-darwin-arm64.json', 'utf8'));
     assert.equal(baseline.approved, true);
     for (const row of baseline.files) assert.equal(createHash('sha256').update(await readFile(`${out}/${row.path}`)).digest('hex'), row.sha256, row.path);
-    console.log('PASS: thirty approved public screenshots match exactly');
+    console.log(`PASS: ${baseline.files.length} approved public screenshots match exactly`);
   }
-  console.log('PASS: five public pages, two languages, three widths, shared choice, no-storage fallback and no API on switch');
+  console.log('PASS: public home, two languages, three widths, shared choice, no-storage fallback and no API on switch');
 } finally { await browser?.close(); await new Promise(resolve => server ? server.httpServer.close(resolve) : resolve()); }
