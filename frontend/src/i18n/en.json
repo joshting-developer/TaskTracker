@@ -1018,5 +1018,15 @@
   "PDF/ZIP 單檔 {0} MB 以內": "PDF/ZIP up to {0} MB each",
   "重試下載{0}": "Retry downloading {0}",
   "刪除{0}": "Delete {0}",
-  "刪除": "Delete"
+  "刪除": "Delete",
+  "自訂順序": "Custom order",
+  "已經在最{0}": "Already at the {0}",
+  "上方": "top",
+  "下方": "bottom",
+  "{0} 移到第 {1} 張": "{0} moved to position {1}",
+  "{0} 上移": "Move {0} up",
+  "{0} 下移": "Move {0} down",
+  "有卡片已不在這個看板, 請重新整理後再排序": "Some cards are no longer on this board. Refresh and try again",
+  "一次最多排序 500 張卡片": "You can reorder up to 500 cards at once",
+  "排序的卡片不可重複": "Each card can appear only once in the order"
 }

@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "859426370e3d77189d7fd4a3c09d0f65d371a58e6be8d160509942a090603b6d",
+  "harnessSha256": "f48bf9295a3fe074a92cf4534420cecc558bea19e62c0752c4352e580d6478a4",
   "profile": "darwin-arm64",
   "reviewer": "claude",
-  "note": "TT-426 詳細頁附件分頁顯示數量; Josh 常設授權候選可直接核准",
-  "manifestSha256": "5a8906a3628487dc43942a5fa3fe7a3187ba3a89d7da4097e419ede3e7d613ae",
+  "note": "TT-428 看板預設自訂順序, 排序選單與拖曳後位置改變；TT-432 公開頁改版；TT-431 後 harness 重新綁定。Chrome 157 擷取, 逐張比對只有看板與公開頁不同；Josh 常設授權候選可直接核准",
+  "manifestSha256": "0a67507116e9b12f9cfebf19028d00b442fea782cf06b2aa3b54ae2a339fc5ba",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

@@ -7,7 +7,7 @@ import Icon from './Icon.vue';
 import PagedSelect from './PagedSelect.vue';
 import TagPicker from './TagPicker.vue';
 
-const props = defineProps({ lookup: Function, lookupContext: String, expanded: {type: Boolean, default: undefined},
+const props = defineProps({ lookup: Function, lookupContext: String, expanded: {type: Boolean, default: undefined}, manualSort: Boolean,
   states: { type: Array, required: true },
   members: { type: Array, required: true },
   issues: { type: Array, required: true },
@@ -34,7 +34,7 @@ const sort = computed({ get: () => model.value.sort, set: value => { model.value
 const DIRECTION_LABELS = { updated: { desc: t('新到舊'), asc: t('舊到新') }, created: { desc: t('新到舊'), asc: t('舊到新') }, priority: { asc: t('緊急到低'), desc: t('低到緊急') }, due: { asc: t('近到遠'), desc: t('遠到近') } };
 const currentDirection = computed(() => model.value.direction || defaultDirection(model.value.sort));
 const nextDirection = computed(() => currentDirection.value === 'asc' ? 'desc' : 'asc');
-const directionLabel = computed(() => t('目前{0}，切換為{1}', [t(DIRECTION_LABELS[model.value.sort][currentDirection.value]), t(DIRECTION_LABELS[model.value.sort][nextDirection.value])]));
+const directionLabel = computed(() => DIRECTION_LABELS[model.value.sort] ? t('目前{0}，切換為{1}', [t(DIRECTION_LABELS[model.value.sort][currentDirection.value]), t(DIRECTION_LABELS[model.value.sort][nextDirection.value])]) : '');
 function toggleDirection() { model.value = { ...model.value, direction: nextDirection.value === defaultDirection(model.value.sort) ? '' : nextDirection.value }; }
 
 // 狀態多選：focusout只處理鍵盤移出（relatedTarget在外）；點選項文字時relatedTarget為null，
@@ -67,9 +67,9 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOnOutside
         <Icon name="filter" :size="17" />{{ t('篩選') }}<span v-if="activeFilterChips.length" class="filter-count">{{ activeFilterChips.length }}</span>
       </button>
       <select v-model="sort" :aria-label="t('排序方式')">
-        <option value="updated">{{ t('更新時間') }}</option><option value="created">{{ t('建立日期') }}</option><option value="priority">{{ t('優先級') }}</option><option value="due">{{ t('到期日') }}</option>
+        <option v-if="manualSort" value="manual">{{ t('自訂順序') }}</option><option value="updated">{{ t('更新時間') }}</option><option value="created">{{ t('建立日期') }}</option><option value="priority">{{ t('優先級') }}</option><option value="due">{{ t('到期日') }}</option>
       </select>
-      <button type="button" class="icon-button sort-direction" :aria-label="directionLabel" :title="directionLabel" @click="toggleDirection"><Icon :name="currentDirection === 'desc' ? 'arrowDown' : 'arrowUp'" :size="17" /></button>
+      <button v-if="sort !== 'manual'" type="button" class="icon-button sort-direction" :aria-label="directionLabel" :title="directionLabel" @click="toggleDirection"><Icon :name="currentDirection === 'desc' ? 'arrowDown' : 'arrowUp'" :size="17" /></button>
     </div>
   </div>
   <div id="task-filters" v-show="filtersOpen" class="advanced-filters" role="group" :aria-label="t('任務篩選條件')">

@@ -110,6 +110,7 @@ export const api = {
   updateProject: (input) => callApi('updateProject', input),
   createIssue: (input) => callApi('createIssue', input),
   updateIssue: (input) => callApi('updateIssue', input),
+  reorderBoardCards: (input) => callApi('reorderBoardCards', input),
   addComment: (input) => callApi('addComment', input),
   /** @returns {Promise<IssueWriteResult>} 刪除前版本＋1；卡片已永久移除。 */
   deleteIssue: (input) => callApi('deleteIssue', input),

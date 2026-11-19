@@ -9,6 +9,7 @@ use App\Database\DatabaseTimes;
 use App\Domain\DomainError;
 use App\Models\Board;
 use App\Models\Project;
+use App\Repositories\BoardPositionRepository;
 use App\Repositories\BoardReadRepository;
 use App\Repositories\BoardSelectionRepository;
 use App\Repositories\IssueReadRepository;
@@ -22,10 +23,11 @@ class BoardReadService
      *
      * @param  ProjectReadService  $projects  單Project資格入口
      * @param  BoardReadRepository  $boards  有界看板讀取
+     * @param  BoardPositionRepository  $positions  看板手動排序（TT-428）
      * @param  BoardSelectionRepository  $selections  有界規則與手動例外
      * @param  IssueReadRepository  $issues  有界卡片讀取
      */
-    public function __construct(private ProjectReadService $projects, private BoardReadRepository $boards, private IssueReadRepository $issues, private BoardSelectionRepository $selections) {}
+    public function __construct(private ProjectReadService $projects, private BoardReadRepository $boards, private IssueReadRepository $issues, private BoardSelectionRepository $selections, private BoardPositionRepository $positions) {}
 
     /**
      * 回傳自訂看板分頁及獨立Default摘要，不傳任何卡片內容。
@@ -81,7 +83,14 @@ class BoardReadService
         $team = in_array('timeEntry.readTeam', $access->permissions, true);
         $own = in_array('timeEntry.readOwn', $access->permissions, true);
 
-        return $this->issues->page($project, $context->userId, $filters, $board?->id, $own ? $context->userId : null, $team);
+        $page = $this->issues->page($project, $context->userId, $filters, $board?->id, $own ? $context->userId : null, $team);
+        // TT-428：附上這張看板的手動位置, 沒排過的卡片明確給 null, 前端排在已排序卡片之後
+        $positions = $this->positions->positions($project, $board, array_map(fn ($issue) => (int) $issue->id, $page->items()));
+        foreach ($page->items() as $issue) {
+            $issue->setAttribute('board_position', $positions[(int) $issue->id] ?? null);
+        }
+
+        return $page;
     }
 
     /**
@@ -104,7 +113,7 @@ class BoardReadService
         $parts = $this->boards->versionParts($access->project, $own && ! $team ? $context->userId : null, $team);
 
         return ['projectId' => $access->project->public_id, 'boardId' => $board?->public_id ?? 'default',
-            'version' => hash('sha256', json_encode([$parts, $board?->revision ?? 0, $permissions], JSON_THROW_ON_ERROR))];
+            'version' => hash('sha256', json_encode([$parts, $board?->revision ?? 0, $permissions, $this->positions->versionParts($access->project, $board)], JSON_THROW_ON_ERROR))];
     }
 
     /**

@@ -7,12 +7,17 @@ import IssueContext from './IssueContext.vue';
 import { buildIssueIndex } from '../domain/issueIndex.js';
 import { isClosed, PRIORITIES, statusesFor, TYPES } from '../domain/model.js';
 
-const props = defineProps({ syncState: { type: String, default: 'polling' }, project: Object, issues: Array, visibleIssues: Array, entries: Array, members: Array, userId: String, moving: String, today: String, boardKey: String, includedEpicIds: Array, canWrite: { type: Boolean, default: true }, canCreate: { type: Boolean, default: true } });
-const emit = defineEmits(['open', 'move', 'create', 'drag']);
+const props = defineProps({ syncState: { type: String, default: 'polling' }, project: Object, issues: Array, visibleIssues: Array, entries: Array, members: Array, userId: String, moving: String, today: String, boardKey: String, includedEpicIds: Array, canWrite: { type: Boolean, default: true }, canCreate: { type: Boolean, default: true }, manual: Boolean });
+const emit = defineEmits(['open', 'move', 'create', 'drag', 'reorder']);
 const group = ref('type');
 const density = ref('comfortable');
 const collapsed = ref([]);
 const dragOver = ref('');
+// TT-428：自訂順序時拖曳要放到欄位內的哪個位置；index 是目標格放下後的位置（不含被拖的卡）
+const dropAt = ref({ cell: '', index: -1 });
+const announcement = ref('');
+const canReorder = computed(() => props.manual && props.canWrite && !props.moving);
+let draggedId = '';
 const states = computed(() => statusesFor(props.project));
 const preferenceKey = computed(() => `tasktracker-board:${props.userId}:${props.project.id}${props.boardKey && props.boardKey !== 'default' ? `:${props.boardKey}` : ''}`);
 watch(preferenceKey, () => {
@@ -83,8 +88,11 @@ const lanes = computed(() => {
 function creationDefaults(lane, state) {
   return { state, epicId: group.value === 'epic' ? lane.id : '', type: group.value === 'type' && lane.id === 'type:epic' ? 'epic' : 'task' };
 }
+// 按編輯開抽屜會讓版面移動, 雙擊的第二下可能落在卡片本體；剛按過編輯就不再導到完整頁
+let editClickedAt = -Infinity;
+function edit(issue) { editClickedAt = performance.now(); emit('open', issue, false); }
 function read(issue, event) {
-  if (props.moving || event?.target.closest('button:not(.card-title), select, label, a')) return;
+  if (props.moving || (event?.type === 'dblclick' && performance.now() - editClickedAt < 600) || event?.target.closest('button:not(.card-title), select, label, a')) return;
   emit('open', issue, true);
 }
 onBeforeUnmount(() => emit('drag', false));
@@ -92,11 +100,59 @@ function toggle(id) { collapsed.value = collapsed.value.includes(id) ? collapsed
 function memberName(id) { return membersById.value.get(id) || id || t('未指派'); }
 function option(items, id) { return items.find(item => item.id === id); }
 function overdue(issue) { return issue.dueDate && issue.dueDate < props.today && !isClosed(issue); }
-function startDrag(event, issue) { emit('drag', true); event.dataTransfer.setData('text/plain', issue.id); event.dataTransfer.effectAllowed = 'move'; }
+function startDrag(event, issue) { draggedId = issue.id; emit('drag', true); event.dataTransfer.setData('text/plain', issue.id); event.dataTransfer.effectAllowed = 'move'; }
+function endDrag() { dragOver.value = ''; dropAt.value = { cell: '', index: -1 }; draggedId = ''; emit('drag', false); }
+/** 依滑鼠高度找出要插在哪張卡前面；只算目前格子裡其他的卡 */
+function trackDrop(event, lane, state) {
+  dragOver.value = `${lane.id}:${state}`;
+  if (!props.manual || !renderingAll.value) return;
+  const cards = [...event.currentTarget.querySelectorAll(':scope > .issue-card')].filter(card => card.dataset.id !== draggedId);
+  const index = cards.findIndex(card => { const box = card.getBoundingClientRect(); return event.clientY < box.top + box.height / 2; });
+  dropAt.value = { cell: dragOver.value, index: index === -1 ? cards.length : index };
+}
+function dropBefore(lane, state, issue) {
+  const target = dropAt.value;
+  if (target.cell !== `${lane.id}:${state}` || target.index < 0) return false;
+  const others = (lane.columns.get(state) || []).filter(item => item.id !== draggedId);
+  return target.index < others.length ? others[target.index].id === issue.id : false;
+}
+function dropAtEnd(lane, state) {
+  const target = dropAt.value;
+  return target.cell === `${lane.id}:${state}` && target.index >= (lane.columns.get(state) || []).filter(item => item.id !== draggedId).length;
+}
+/** 拖曳能不能放到這一格：Epic／其他卡片分區不能互換 */
+function fieldsFor(issue, state, lane) {
+  if (group.value === 'type' && (issue.type === 'epic') !== (lane.id === 'type:epic')) return null;
+  const fields = { ...(issue.state !== state ? { state } : {}), ...(group.value === 'epic' && issue.type !== 'epic' && (issue.epicId || '') !== lane.id ? { epicId: lane.id } : {}) };
+  return fields;
+}
+/** 自訂順序：送出目標格放下後的完整順序；順序和欄位都沒變就不送 */
+function reorder(issue, state, lane, index) {
+  const fields = fieldsFor(issue, state, lane);
+  if (!fields) return;
+  const current = (lane.columns.get(state) || []).map(item => item.id);
+  const others = current.filter(id => id !== issue.id);
+  const orderedIds = [...others.slice(0, index), issue.id, ...others.slice(index)];
+  if (!Object.keys(fields).length && orderedIds.join() === current.join()) return;
+  emit('reorder', issue, { fields, orderedIds });
+  return orderedIds.indexOf(issue.id);
+}
+/** 鍵盤與觸控：在同一格內上移或下移一張 */
+function step(issue, state, lane, delta) {
+  if (!canReorder.value || !renderingAll.value) return;
+  const ids = (lane.columns.get(state) || []).map(item => item.id);
+  const from = ids.indexOf(issue.id), to = from + delta;
+  if (from < 0 || to < 0 || to >= ids.length) { announcement.value = t('已經在最{0}', [delta < 0 ? t('上方') : t('下方')]); return; }
+  reorder(issue, state, lane, to);
+  announcement.value = t('{0} 移到第 {1} 張', [issue.identifier, to + 1]);
+}
 function drop(event, state, lane) {
-  dragOver.value = '';
+  const index = dropAt.value.cell === `${lane.id}:${state}` ? dropAt.value.index : -1;
+  dragOver.value = ''; dropAt.value = { cell: '', index: -1 };
   const issue = !props.moving && props.canWrite && props.visibleIssues.find(item => item.id === event.dataTransfer.getData('text/plain'));
-  if (issue && (group.value !== 'type' || (issue.type === 'epic') === (lane.id === 'type:epic'))) emit('move', issue, { state, ...(group.value === 'epic' && issue.type !== 'epic' ? { epicId: lane.id } : {}) });
+  if (issue && props.manual && renderingAll.value && index >= 0) reorder(issue, state, lane, index);
+  else if (issue && (group.value !== 'type' || (issue.type === 'epic') === (lane.id === 'type:epic'))) emit('move', issue, { state, ...(group.value === 'epic' && issue.type !== 'epic' ? { epicId: lane.id } : {}) });
+  draggedId = '';
   // 先送move讓送出中狀態接手暫停，再解除拖曳；卡片被樂觀移動後dragend可能不會觸發。
   emit('drag', false);
 }
@@ -129,15 +185,16 @@ function drop(event, state, lane) {
                 </div>
               </div>
               <div class="lane-columns">
-                <div v-for="state in states" :key="state.id" class="board-cell" :class="{ 'drag-over': dragOver === `${lane.id}:${state.id}` }" :data-column="state.id" @dragover.prevent="dragOver = `${lane.id}:${state.id}`" @dragleave.self="dragOver = ''" @drop.prevent="drop($event, state.id, lane)">
-                  <article v-for="issue in lane.columns.get(state.id)" :key="issue.id" class="issue-card" :class="{ moving: moving === issue.id }" :draggable="canWrite && !moving" :data-issue="issue.identifier" :aria-label="`${issue.identifier} ${issue.title} · ${state.label}`" @dblclick="read(issue, $event)" @dragstart="startDrag($event, issue)" @dragend="dragOver = ''; emit('drag', false)">
-                    <div class="card-top"><span class="identifier">{{ issue.identifier }}</span><span class="type-tag">{{ option(TYPES, issue.type)?.label }}</span><span v-if="density === 'comfortable'" class="priority-label" :style="{ '--priority-color': option(PRIORITIES, issue.priority)?.color }" :title="t('優先級：{0}', [t(option(PRIORITIES, issue.priority)?.label)])"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span></span><button v-if="canWrite" type="button" class="icon-button card-edit" :aria-label="t('編輯 {0}', [issue.identifier])" :title="t('編輯任務')" :disabled="Boolean(moving)" @click.stop="emit('open', issue, false)" @dblclick.stop><Icon name="edit" :size="15" /></button></div>
-                    <button class="card-title" :title="issue.title" @click="$event.detail === 0 && read(issue, $event)">{{ issue.title }}</button>
+                <div v-for="state in states" :key="state.id" class="board-cell" :class="{ 'drag-over': dragOver === `${lane.id}:${state.id}` }" :data-column="state.id" @dragover.prevent="trackDrop($event, lane, state.id)" @dragleave.self="dragOver = ''; dropAt = { cell: '', index: -1 }" @drop.prevent="drop($event, state.id, lane)">
+                  <article v-for="issue in lane.columns.get(state.id)" :key="issue.id" class="issue-card" :class="{ moving: moving === issue.id, 'drop-before': dropBefore(lane, state.id, issue) }" :draggable="canWrite && !moving" :data-issue="issue.identifier" :data-id="issue.id" :aria-label="`${issue.identifier} ${issue.title} · ${state.label}`" @dblclick="read(issue, $event)" @dragstart="startDrag($event, issue)" @dragend="endDrag" @keydown.alt.up.prevent="step(issue, state.id, lane, -1)" @keydown.alt.down.prevent="step(issue, state.id, lane, 1)">
+                    <div class="card-top"><span class="identifier">{{ issue.identifier }}</span><span class="type-tag">{{ option(TYPES, issue.type)?.label }}</span><span v-if="density === 'comfortable'" class="priority-label" :style="{ '--priority-color': option(PRIORITIES, issue.priority)?.color }" :title="t('優先級：{0}', [t(option(PRIORITIES, issue.priority)?.label)])"><span class="priority-bars" :class="issue.priority"><i></i><i></i><i></i></span></span><button v-if="canWrite" type="button" class="icon-button card-edit" :aria-label="t('編輯 {0}', [issue.identifier])" :title="t('編輯任務')" :disabled="Boolean(moving)" @click.stop="edit(issue)" @dblclick.stop><Icon name="edit" :size="15" /></button></div>
+                    <button class="card-title" :aria-keyshortcuts="manual && canWrite ? 'Alt+ArrowUp Alt+ArrowDown' : undefined" :title="issue.title" @click="$event.detail === 0 && read(issue, $event)">{{ issue.title }}</button>
                     <p v-if="density === 'comfortable' && issue.description" class="board-card-description">{{ issue.description }}</p>
                     <TagLabels :tags="issue.tags || []" />
-                    <div class="card-bottom"><span v-if="density === 'comfortable' && issue.dueDate" :class="['due-date', { overdue: overdue(issue) }]"><Icon name="clock" :size="12" />{{ issue.dueDate.slice(5).replace('-', '/') }}</span><span v-if="density === 'comfortable' && (issue.commentCount ?? issue.comments?.length ?? 0)" class="comment-count"><Icon name="message" :size="13" />{{ (issue.commentCount ?? issue.comments?.length ?? 0) }}</span><span class="board-assignee" :title="memberName(issue.assignee)"><span v-if="issue.assignee" class="avatar small">{{ memberName(issue.assignee).slice(0, 1) }}</span>{{ memberName(issue.assignee) }}</span></div>
+                    <div class="card-bottom"><span v-if="manual && canWrite" class="order-buttons"><button type="button" class="icon-button" :aria-label="t('{0} 上移', [issue.identifier])" :disabled="!canReorder" @click.stop="step(issue, state.id, lane, -1)"><Icon name="arrowUp" :size="14" /></button><button type="button" class="icon-button" :aria-label="t('{0} 下移', [issue.identifier])" :disabled="!canReorder" @click.stop="step(issue, state.id, lane, 1)"><Icon name="arrowDown" :size="14" /></button></span><span v-if="density === 'comfortable' && issue.dueDate" :class="['due-date', { overdue: overdue(issue) }]"><Icon name="clock" :size="12" />{{ issue.dueDate.slice(5).replace('-', '/') }}</span><span v-if="density === 'comfortable' && (issue.commentCount ?? issue.comments?.length ?? 0)" class="comment-count"><Icon name="message" :size="13" />{{ (issue.commentCount ?? issue.comments?.length ?? 0) }}</span><span class="board-assignee" :title="memberName(issue.assignee)"><span v-if="issue.assignee" class="avatar small">{{ memberName(issue.assignee).slice(0, 1) }}</span>{{ memberName(issue.assignee) }}</span></div>
                     <IssueContext v-if="density === 'comfortable'" :issue="issue" :index="contextIndex" :can-read-time="project.permissions?.includes('timeEntry.readOwn')" @open="emit('open', $event, true)" />
                   </article>
+                  <div v-if="dropAtEnd(lane, state.id)" class="drop-line" aria-hidden="true"></div>
                   <button v-if="canCreate" class="lane-add" :aria-label="t('在{0}新增{1}任務', [lane.label, state.label])" :disabled="Boolean(moving) || !canWrite" @click="emit('create', creationDefaults(lane, state.id))"><Icon name="plus" :size="15" /><span>{{ t('新增卡片') }}</span></button>
                 </div>
               </div>
@@ -146,6 +203,7 @@ function drop(event, state, lane) {
         </section>
       </div>
     </div>
+    <p class="sr-only" role="status" aria-live="polite">{{ announcement }}</p>
     <p v-if="group !== 'type' && !visibleIssues.length" class="board-empty-note">{{ t('沒有符合條件的卡片') }}</p>
   </div>
 </template>
@@ -176,6 +234,12 @@ function drop(event, state, lane) {
 .lane-empty { display: flex; align-items: center; gap: 16px; padding: 12px; margin: 0; font-size: 13px; color: #5f6673; }
 .board-cell { padding: 9px; min-height: 115px; border-right: 1px solid #e3e5ec; border-bottom: 1px solid #e3e5ec; }
 .board-cell.drag-over { background: #eee7fb; box-shadow: inset 0 0 0 2px #b3a0dd; }
+/* TT-428：放下位置的提示線 */
+.issue-card.drop-before { box-shadow: 0 -3px 0 #6653bd, 0 1px 3px #262b3910; }
+.drop-line { height: 3px; margin: -4px 0 6px; border-radius: 2px; background: #6653bd; }
+/* 上移／下移按鈕給觸控裝置用, 滑鼠用拖曳、鍵盤用 Alt＋方向鍵 */
+.order-buttons { display: none; gap: 2px; margin-right: auto; }
+@media (pointer: coarse) { .order-buttons { display: inline-flex; } .order-buttons .icon-button { min-width: 44px; min-height: 44px; } }
 .issue-card { background: white; border: 1px solid #e0e3eb; border-radius: 5px; box-shadow: 0 1px 3px #262b3910; padding: 12px; margin-bottom: 9px; }
 .card-edit { min-width: 44px; min-height: 44px; margin: -8px -8px -8px auto; }
 .issue-card:focus-visible { outline: 2px solid #6653bd; outline-offset: 2px; }

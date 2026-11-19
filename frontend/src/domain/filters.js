@@ -40,11 +40,27 @@ export function filterIssues(issues, filters, { project, userId, members, today,
     // TT-306：跟後端同一套規則；sign=1是各排序的預設方向, 反向時整個主排序反過來（到期日沒填的也跟著換到最前）。
     const sign = filters.direction && filters.direction !== defaultDirection(filters.sort) ? -1 : 1;
     const tie = (b.updatedAt || '').localeCompare(a.updatedAt || '') || a.identifier.localeCompare(b.identifier);
+    // TT-428：看板自訂順序, 排過的依位置, 沒排過的放後面並照建立先後, 不受更新時間或優先級影響
+    if (filters.sort === 'manual') return manualOrder(a, b);
     if (filters.sort === 'priority') return sign * (PRIORITIES.findIndex(item => item.id === a.priority) - PRIORITIES.findIndex(item => item.id === b.priority)) || tie;
     if (filters.sort === 'due') return sign * (a.dueDate || '9999').localeCompare(b.dueDate || '9999') || tie;
     if (filters.sort === 'created') return sign * (b.createdAt || '').localeCompare(a.createdAt || '') || tie;
     return sign * (b.updatedAt || '').localeCompare(a.updatedAt || '') || a.identifier.localeCompare(b.identifier);
   });
+}
+
+/**
+ * 看板自訂順序的比較：有位置的在前依位置, 沒位置的照卡號數字由小到大。
+ *
+ * @param {{boardPosition?: number|null, identifier: string}} a 卡片
+ * @param {{boardPosition?: number|null, identifier: string}} b 卡片
+ * @returns {number} 排序比較值
+ */
+export function manualOrder(a, b) {
+  const pa = a.boardPosition ?? Infinity, pb = b.boardPosition ?? Infinity;
+  if (pa !== pb) return pa < pb ? -1 : 1;
+  const na = Number(a.identifier.split('-').pop()), nb = Number(b.identifier.split('-').pop());
+  return (na - nb) || a.identifier.localeCompare(b.identifier);
 }
 
 /**

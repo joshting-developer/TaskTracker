@@ -51,16 +51,49 @@ const filters = useIssueQuery({ remote: computed(() => props.mode === 'list'), p
 const filterInput = filters.filterInput;
 // TT-306：排序與方向依使用者／工作空間／專案存在這個分頁, 重新整理後還在；只存排序, 不存篩選內容。
 const sortKey = computed(() => contextKey(props.userId, props.workspaceId, props.project.id));
-const savedSort = readContext(sortKey.value).sort;
-if (savedSort && ['updated', 'created', 'priority', 'due'].includes(savedSort.by)) filterInput.value = { ...filterInput.value, sort: savedSort.by, direction: ['asc', 'desc'].includes(savedSort.direction) ? savedSort.direction : '' };
-watch(() => [filterInput.value.sort, filterInput.value.direction], ([by, direction]) => writeContext(sortKey.value, { sort: { by, direction } }));
+// TT-428：看板另存一組排序, 預設自訂順序；列表維持原本四種排序, 不會收到 manual。
+const LIST_SORTS = ['updated', 'created', 'priority', 'due'];
+function savedSortFor(view) {
+  const saved = readContext(sortKey.value)[view === 'board' ? 'boardSort' : 'sort'];
+  const allowed = view === 'board' ? ['manual', ...LIST_SORTS] : LIST_SORTS;
+  if (!saved || !allowed.includes(saved.by)) return { sort: view === 'board' ? 'manual' : 'updated', direction: '' };
+  return { sort: saved.by, direction: saved.by !== 'manual' && ['asc', 'desc'].includes(saved.direction) ? saved.direction : '' };
+}
+let sortView = pageView.value;
+filterInput.value = { ...filterInput.value, ...savedSortFor(sortView) };
+watch(pageView, view => { sortView = view; filterInput.value = { ...filterInput.value, ...savedSortFor(view) }; }, { flush: 'sync' });
+watch(() => [filterInput.value.sort, filterInput.value.direction], ([by, direction]) => writeContext(sortKey.value, { [sortView === 'board' ? 'boardSort' : 'sort']: { by, direction } }));
 const data = useProjectTaskQueries({ onDetail: loadDetail, detailMode: computed(() => Boolean(props.issueId && props.detailPage)), projectId: computed(() => props.project.id), boardId: computed(() => props.boardId), mode: computed(() => props.mode), context: scopeKey, rows, listQuery: computed(() => ({...filterInput.value, scope: props.scope, page: filters.page.value, perPage: 20})), blocked: computed(() => busy.value || dirty.value), hold: holdBackground, onProject: value => emit('project', value), onError: handleFailure, onSuccess: () => { error.value = ''; } });
 const { board, boardPage, issuePage, listPage, listSearch, listArchived, loading, loadingCards, pageVisible, reload } = data;
 const accessibleIssuePage = computed(() => issuePage.value?.accessibleLastPage ?? issuePage.value?.lastPage ?? 1);
 watch(issuePage, value => { if (value && filters.page.value > accessibleIssuePage.value) filters.page.value = accessibleIssuePage.value; });
 const transition = useIssueTransitions({ canWrite, contextKey: scopeKey, saved: async () => { await reload(); if (detail.value) await loadDetail(); }, refresh: async () => { await reload(); if (detail.value) await loadDetail(); }, onError: value => { error.value = value; }, apply: applyMove });
 const moving = transition.moving;
-watch([dragging, moving], () => { holdBackground.value = dragging.value || Boolean(moving.value); }, { flush: 'sync' });
+const reordering = shallowRef(false), reorderRequests = new Map();
+watch([dragging, moving, reordering], () => { holdBackground.value = dragging.value || Boolean(moving.value) || reordering.value; }, { flush: 'sync' });
+/** TT-428：先保存欄位內順序再改狀態；畫面先套用新位置, 失敗時只還原本次改過的位置。 */
+async function reorderCards(issue, { fields = {}, orderedIds }) {
+  if (!canWrite.value || reordering.value || moving.value) return;
+  const expected = scopeKey.value, board = props.boardId || 'default';
+  const signature = JSON.stringify([board, orderedIds]);
+  if (!reorderRequests.has(signature)) reorderRequests.set(signature, crypto.randomUUID());
+  const previous = new Map(rows.value.filter(row => orderedIds.includes(row.id)).map(row => [row.id, row.boardPosition ?? null]));
+  const positions = new Map(orderedIds.map((id, index) => [id, (index + 1) * 1024]));
+  rows.value = rows.value.map(row => positions.has(row.id) ? { ...row, boardPosition: positions.get(row.id) } : row);
+  reordering.value = true;
+  try {
+    await api.reorderBoardCards({ projectId: props.project.id, boardId: board, issueIds: orderedIds, requestId: reorderRequests.get(signature) });
+    reorderRequests.delete(signature);
+  } catch (failure) {
+    if (expected !== scopeKey.value) return;
+    rows.value = rows.value.map(row => previous.has(row.id) ? { ...row, boardPosition: previous.get(row.id) } : row);
+    error.value = failure.message;
+    if (failure.code === 'DATA_CHANGED') await reload();
+    return;
+  } finally { if (expected === scopeKey.value) reordering.value = false; }
+  const current = rows.value.find(row => row.id === issue.id);
+  if (current && Object.keys(fields).length) await transition.moveIssue(current, fields);
+}
 watch(scopeKey, () => { dragging.value = false; boardAction.value = null; });
 /** 拖曳放下即先移動卡片；失敗時若列仍是本次套用的版本才還原，避免覆蓋之後的伺服器資料。 */
 function applyMove(issue, fields) {
@@ -241,9 +274,9 @@ onBeforeUnmount(() => { alive = false; optionGeneration++; optionRequest?.abort(
       <section v-if="mode === 'board' && board" class="task-workspace">
         <header class="selected-board-heading"><div class="selected-board-identity"><button class="navigation-back" @click="emit('list')"><Icon name="chevron" :size="16" />{{ t('返回看板列表') }}</button><div class="selected-board-title"><h3>{{ board.name }}</h3><p v-if="board.description" class="selected-board-description">{{ board.description }}</p></div></div><div v-if="!board.isDefault && canManage && !board.archivedAt" class="selected-board-actions"><button class="button secondary" :aria-label="t('編輯看板')" @click="editBoard(board)">{{ t('編輯') }}</button><button class="text-button danger-text" @click="askBoardAction(board, 'archive')">{{ t('封存看板') }}</button></div></header>
         <div v-if="board.archivedAt" class="board-archived-note" role="status"><span>{{ t('這個看板已封存，只能查看；卡片本身沒有被封存，還是可以在任務列表裡編輯。') }}</span><button v-if="canManage" class="button secondary" :disabled="archiving" @click="askBoardAction(board, 'restore')">{{ t('還原看板') }}</button></div>
-        <IssueFilters v-model:expanded="filtersExpanded" :lookup="lookup" :lookup-context="project.id" @option="rememberOption" v-model="filterInput" :states="filters.projectStates.value" :members="memberNames" :issues="contextRows" :active-filter-chips="filters.activeFilterChips.value" :filter-warnings="[]" @remove="filters.removeFilter" @clear="filters.clearFilters" />
+        <IssueFilters v-model:expanded="filtersExpanded" :lookup="lookup" :lookup-context="project.id" @option="rememberOption" v-model="filterInput" :states="filters.projectStates.value" :members="memberNames" :issues="contextRows" :active-filter-chips="filters.activeFilterChips.value" :filter-warnings="[]" manual-sort @remove="filters.removeFilter" @clear="filters.clearFilters" />
         <p v-if="loadingCards" role="status">{{ t('載入卡片中…') }}</p>
-        <ProjectBoard v-if="!loadingCards || rows.length" :project="project" :issues="contextRows" :visible-issues="filters.visibleIssues.value" :entries="[]" :members="memberNames" :user-id="userId" :today="today" :board-key="boardId" :sync-state="realtime" :can-write="canWrite && !board.archivedAt" :can-create="canWrite && !board.archivedAt && (board.isDefault || canManage)" :moving="moving" @open="(issue, full) => emit('issue', issue, full)" @drag="value => { dragging = value; }" @move="transition.moveIssue" @create="defaults => prepareEditor(null, defaults)" />
+        <ProjectBoard v-if="!loadingCards || rows.length" :project="project" :issues="contextRows" :visible-issues="filters.visibleIssues.value" :entries="[]" :members="memberNames" :user-id="userId" :today="today" :board-key="boardId" :sync-state="realtime" :can-write="canWrite && !board.archivedAt" :can-create="canWrite && !board.archivedAt && (board.isDefault || canManage)" :moving="moving || (reordering ? 'reorder' : '')" :manual="filterInput.sort === 'manual'" @open="(issue, full) => emit('issue', issue, full)" @drag="value => { dragging = value; }" @move="transition.moveIssue" @reorder="reorderCards" @create="defaults => prepareEditor(null, defaults)" />
       </section>
     </template>
     <BoardLifecycleDialog v-if="boardAction" :board="boardAction.target" :action="boardAction.action" :busy="archiving" :error="boardActionError" @confirm="confirmBoardAction" @close="closeBoardAction" @reload="reloadBoardAction" />
