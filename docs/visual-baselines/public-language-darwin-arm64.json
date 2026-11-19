@@ -1,21 +1,21 @@
 {
   "approved": true,
-  "reviewer": "claude under Josh standing approval",
-  "note": "TT-432: JT-style dark hero and alternating feature rows with real product screenshots (synthetic data); images are loaded and decoded before each full-page capture. Thirty screenshots reviewed; no threshold relaxed.",
+  "reviewer": "claude under Josh approval (TT-435 wrap-up, 2026-11-20)",
+  "note": "TT-435: with reduced motion the homepage feature rows and scenario carousel become one tabbed screenshot stack; the large-screen hero scroll story is not part of these captures. Only the six homepage captures changed, the 24 feature-page captures are byte-identical. Thirty screenshots reviewed; no threshold relaxed.",
   "harnessSha256": "e78a351242fa480b5df34bda8a70ff0b5a0447412ebe9907e77398c6388cb936",
-  "manifestSha256": "86ae55905770aa8238e9fa3636847b9bd2f71bce05af02bbbec26c2be624f951",
+  "manifestSha256": "bfdcbdcd0477973e22c77843f8f9ec85e09ed3911d0dbfedd898868cded61688",
   "files": [
     {
       "path": "public-en-0-1440.png",
-      "sha256": "cf4fcf1268a15651abf67985b42b2027b58bddc50f31d3cf842787202aa8e99b"
+      "sha256": "6ba83d6437f1b480be1220eaa02ce89c09aaec3846c52086636d143e6b18d434"
     },
     {
       "path": "public-en-0-390.png",
-      "sha256": "bb6825a34b2365572492077ac080a66ef1627ee5c2c9309b68eabd015c93e977"
+      "sha256": "03c64a83f93ee60d14d1b4b1bfa5be3dfc48c677fb6527e06c38658f2e6b109f"
     },
     {
       "path": "public-en-0-768.png",
-      "sha256": "10c687a47aaff78ee4c8d54a5d3e42f39859a2ec32c2f1009c99d60c5e217f41"
+      "sha256": "7baddf0465ab06cbfe5172e986d534dcbc7c73adc8d67216c8c042ac064d4b6d"
     },
     {
       "path": "public-en-1-1440.png",
@@ -67,15 +67,15 @@
     },
     {
       "path": "public-zh-0-1440.png",
-      "sha256": "17f9e55de3315a0cf0ce49e98219eef008c75b7928f81a023b8d73aa270d9983"
+      "sha256": "cceae4c79d99f040d1548eb07780b7159878d253852e0b89629bae0949d7be18"
     },
     {
       "path": "public-zh-0-390.png",
-      "sha256": "e62e313c99ce78b8c2f23e87436a127fc1a52834435c63f6257771402b2ed6cd"
+      "sha256": "31b997a2525b9cda61cce61257e8949a665f007d46f330d8c4f86bebf5fbb5ae"
     },
     {
       "path": "public-zh-0-768.png",
-      "sha256": "d2e28c8248a799c546ce79955bcff74f7c00bbca83756b85228e9e23505bf93d"
+      "sha256": "88d360cbc89d8ead9842b0141ac06606dc39972164b6a76409ec7669b4f7371f"
     },
     {
       "path": "public-zh-1-1440.png",

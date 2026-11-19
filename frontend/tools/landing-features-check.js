@@ -1,4 +1,4 @@
-// TT-355：靜態功能分頁、鍵盤輪播、無JS閱讀與正式build入口。
+// TT-355：靜態功能分頁、無JS閱讀與正式build入口；TT-435 首頁功能區改為鍵盤可操作的分頁。
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { preview } from 'vite';
@@ -46,28 +46,69 @@ try {
     }
     if (path !== '/') assert.equal(await page.locator('.product-nav [aria-current="page"]').count(), 1);
   }
+  // TT-435：功能區改成分頁＋3D 截圖堆疊, 方向鍵切換、Home／End 跳頭尾, 首屏功能列會切到對應分頁。
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(origin + '/');
-  const counter = page.locator('[data-counter]');
-  assert.equal(await page.locator('[data-slide]:visible').count(), 1);
-  await page.getByRole('button', { name: '下一個情境' }).click();
-  assert.equal(await counter.innerText(), '2 / 3');
-  await page.getByRole('button', { name: '下一個情境' }).focus();
-  await page.keyboard.press('Enter');
-  assert.equal(await counter.innerText(), '3 / 3');
-  await page.keyboard.press('Space');
-  assert.equal(await counter.innerText(), '1 / 3');
-  await page.locator('.scenarios').focus();
-  await page.keyboard.press('ArrowLeft');
-  assert.equal(await counter.innerText(), '3 / 3');
-  await page.keyboard.press('ArrowRight');
-  assert.equal(await counter.innerText(), '1 / 3');
-  for (const link of await page.locator('.aspects a').all()) assert.equal((await fetch(origin + await link.getAttribute('href'))).status, 200);
+  const tabs = page.getByRole('tab');
+  const selected = () => page.locator('[role="tab"][aria-selected="true"]').innerText();
+  assert.equal(await tabs.count(), 4);
+  assert.equal(await page.locator('[role="tabpanel"]:visible').count(), 1);
+  assert.match(await selected(), /任務與看板/);
+  await page.getByRole('tab', { name: /工時分析/ }).click();
+  assert.match(await selected(), /工時分析/);
+  assert.equal(await page.locator('#time').isVisible(), true);
+  await page.keyboard.press('ArrowDown');
+  assert.match(await selected(), /API 與權限/);
+  assert.equal(await page.evaluate(() => document.activeElement.getAttribute('aria-selected')), 'true');
+  await page.keyboard.press('ArrowDown');
+  assert.match(await selected(), /任務與看板/);
+  await page.keyboard.press('End');
+  assert.match(await selected(), /API 與權限/);
+  await page.keyboard.press('Home');
+  assert.match(await selected(), /任務與看板/);
+  assert.equal(await page.locator('.showcase-rig > .shot[aria-hidden="false"]').count(), 1);
+  await page.locator('.feature-rail a[href="#collaboration"]').click();
+  await page.locator('#collaboration-tab[aria-selected="true"]').waitFor();
+  assert.equal(await page.locator('#collaboration').isVisible(), true);
+  // 選中的截圖不可以歪, 文字才看得清楚
+  assert.equal(await page.locator('.showcase-rig > .shot.is-front').evaluate(el => getComputedStyle(el).transform), 'none');
+  for (const link of await page.locator('[data-showcase] a[href^="/"]').all()) assert.equal((await fetch(origin + await link.getAttribute('href'))).status, 200);
   const noJs = await browser.newPage({ locale: 'zh-TW', javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
   await noJs.goto(origin + '/');
-  assert.equal(await noJs.locator('[data-slide]:visible').count(), 3);
-  assert.equal(await noJs.locator('.carousel-controls').isVisible(), false);
+  assert.equal(await noJs.locator('[data-aspect]:visible').count(), 4);
+  assert.equal(await noJs.locator('[data-aspect] img:visible').count(), 4);
+  assert.equal(await noJs.locator('[role="tab"]').count(), 0);
   assert.ok((await noJs.locator('main').innerText()).length > 500);
   await noJs.close();
+  // TT-435：大螢幕且沒有減少動態時改成首屏故事（參考 JT）：首屏固定, 往下捲換功能說明與截圖。
+  const motion = await browser.newPage({ locale: 'zh-TW', reducedMotion: 'no-preference', viewport: { width: 1440, height: 900 } });
+  await motion.route('**/api/**', route => route.fulfill({ status: 401, contentType: 'application/json', body: '{"ok":false}' }));
+  await motion.goto(origin + '/');
+  await motion.waitForFunction(() => !document.documentElement.classList.contains('auth-pending'));
+  assert.equal(await motion.locator('.hero.is-story').count(), 1);
+  assert.equal(await motion.locator('#features').isVisible(), false, '功能區內容搬進首屏, 不重複顯示');
+  assert.equal(await motion.locator('.hero-stage .guest-topbar').count(), 1);
+  const storyAt = async fraction => {
+    await motion.evaluate(fraction => { const h = document.querySelector('.hero'), s = document.querySelector('.hero-stage'); scrollTo({ top: h.getBoundingClientRect().top + scrollY + (h.offsetHeight - s.offsetHeight) * fraction, behavior: 'instant' }); }, fraction);
+    await motion.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    assert.equal(await motion.locator('.hero-stage').evaluate(el => el.getBoundingClientRect().top), 0);
+    return motion.evaluate(() => document.querySelector('.feature-rail a.is-active')?.getAttribute('href') || 'intro');
+  };
+  assert.deepEqual([await storyAt(0.05), await storyAt(0.26), await storyAt(0.43), await storyAt(0.61), await storyAt(0.78), await storyAt(0.26)], ['intro', '#tasks', '#collaboration', '#time', '#integrations', '#tasks']);
+  assert.equal(await motion.locator('.hero-chapters #tasks').isVisible(), true);
+  assert.equal(await motion.locator('.hero-rig > .shot.is-current').count(), 1);
+  await motion.locator('.feature-rail a[href="#time"]').click();
+  await motion.waitForFunction(() => document.querySelector('.feature-rail a.is-active')?.getAttribute('href') === '#time');
+  await motion.locator('.hero-chapters #time').waitFor();
+  assert.equal(await motion.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+  // 視窗縮小就回到一般捲動：選單、功能區與分頁都放回原位
+  await motion.setViewportSize({ width: 1024, height: 900 });
+  await motion.locator('.hero:not(.is-story)').waitFor({ state: 'attached' });
+  assert.equal(await motion.locator('body > .guest-topbar').count(), 1);
+  assert.equal(await motion.locator('#features').isVisible(), true);
+  assert.equal(await motion.locator('[data-showcase] [role="tabpanel"]').count(), 4);
+  assert.equal(await motion.locator('[data-showcase] [role="tabpanel"]:visible').count(), 1);
+  await motion.close();
   // Already signed in: feature deep links stay readable, primary links return to the app.
   await page.route('**/api/**', route => route.fulfill({ contentType: 'application/json', body: route.request().url().endsWith('csrf-cookie') ? '{"csrfToken":"synthetic"}' : '{"ok":true}' }));
   await page.goto(origin + '/features/tasks/');
@@ -75,5 +116,5 @@ try {
   assert.equal(new URL(page.url()).pathname, '/features/tasks/');
   assert.deepEqual(errors, []);
   writeFileSync(`${folder}/result.json`, JSON.stringify({ passed: true, results, keyboard: true, noJs: true, syntheticAuth: true }, null, 2));
-  console.log('PASS: 5 static pages × 3 widths, unique SEO, links, keyboard carousel, no JS, signed-in feature navigation');
+  console.log('PASS: 5 static pages × 3 widths, unique SEO, links, keyboard feature tabs, hero scroll story, no JS, signed-in feature navigation');
 } finally { await browser?.close(); await server?.close(); }

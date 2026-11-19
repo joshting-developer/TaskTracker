@@ -28,15 +28,15 @@ try {
       await page.evaluate(() => document.fonts.ready);
       assert.equal(await page.locator('h1').count(), 1);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-      assert.equal(await page.locator('[data-slide]:visible').count(), 1);
+      assert.equal(await page.locator('[role="tabpanel"]:visible').count(), 1);
       if (locale === 'en-US') assert.doesNotMatch((await page.locator('body').innerText()).replaceAll('繁體中文', ''), /\p{Script=Han}/u);
-      for (const selector of ['.guest-topbar', '.hero', '.scenario-section', '.site-footer']) {
+      for (const selector of ['.guest-topbar', '.hero', '.feature-section', '.site-footer']) {
         const bytes = await page.locator(selector).screenshot({ animations: 'disabled' });
         hashes[`${locale}-${width}-${selector}`] = createHash('sha256').update(bytes).digest('hex');
       }
       if (phase === 'after') {
         assert.equal(await page.locator('.story-section').count(), 1);
-        assert.equal(await page.locator('.aspect-copy > p').count(), 4);
+        assert.equal(await page.locator('.aspect-copy > p:not(.aspect-question)').count(), 4);
         const questions = page.locator('.faq-section details');
         assert.equal(await questions.count(), 5);
         if (locale === 'en-US') assert.doesNotMatch(await page.locator('.faq-section').textContent(), /\p{Script=Han}/u);
@@ -70,7 +70,7 @@ try {
     assert.match(await noJs.locator('.story-section').innerText(), /Josh/);
     await noJs.locator('.faq-section summary').first().click();
     assert.equal(await noJs.locator('.faq-section details').first().getAttribute('open'), '');
-    assert.equal(await noJs.locator('[data-slide]:visible').count(), 3);
+    assert.equal(await noJs.locator('[data-aspect]:visible').count(), 4);
     await noJs.close();
     if (process.env.E2E_VISUAL_COMPARE === '1') {
       const baseline = JSON.parse(await readFile('artifacts/tt374/before/unchanged-sections.json', 'utf8'));

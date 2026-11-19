@@ -73,17 +73,6 @@ p { margin-bottom: 24px; }
 .aspect ul { padding: 0; margin: 0 0 28px; list-style: none; color: var(--muted); font-size: 16px; }
 .aspect li { padding-block: 6px; }
 .aspect-link { display: inline-flex; justify-content: space-between; align-items: center; min-height: 44px; margin-top: auto; font-size: 15px; text-decoration: none; font-weight: 550; }
-.scenario-section { background: var(--lavender); }
-.section-heading { display: flex; justify-content: space-between; gap: 32px; align-items: start; }
-.carousel-controls { display: flex; gap: 16px; align-items: center; flex-shrink: 0; }
-.carousel-controls button { width: 48px; height: 48px; border: 1px solid var(--muted); border-radius: 50%; background: transparent; color: var(--ink); transition: background 160ms; }
-.carousel-controls button:hover { background: var(--paper); }
-.carousel-controls span { font-size: 14px; font-variant-numeric: tabular-nums; }
-.scenario { display: grid; grid-template-columns: 4fr 7fr; gap: 96px; align-items: center; min-height: 360px; }
-.scenario + .scenario { margin-top: 64px; }
-.scenarios.enhanced .scenario + .scenario { margin-top: 0; }
-.scenario-copy h3 { font-size: 29px; }
-.scenario-copy p { font-size: 18px; color: var(--muted); }
 figure { min-width: 0; margin: 0; }
 .time-demo table { border-collapse: collapse; width: 100%; font-size: 15px; }
 .time-demo caption { text-align: left; padding: 20px; font-weight: 600; }
@@ -129,9 +118,7 @@ figure { min-width: 0; margin: 0; }
   .hero-copy { padding-bottom: 20px; }
   .hero-preview { max-width: 780px; width: 100%; }
   .aspects { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; }
-  .scenario, .detail-layout { gap: 40px; grid-template-columns: 1fr; }
-  .scenario { min-height: 0; align-content: start; }
-  .scenario-copy { max-width: 34em; }
+  .detail-layout { gap: 40px; grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {
   .wrap { width: calc(100% - 40px); }
@@ -155,10 +142,6 @@ figure { min-width: 0; margin: 0; }
   .hero-preview .board-columns > div:last-child { display: none; }
   .aspects { grid-template-columns: 1fr; gap: 32px; }
   .aspect ul { margin-bottom: 12px; }
-  .section-heading { flex-direction: column; gap: 0; margin-bottom: 24px; }
-  .section-heading h2 { margin-bottom: 24px; }
-  .scenario { min-height: 0; gap: 24px; }
-  .scenario-copy h3 { font-size: 26px; }
   .start-content { display: block; }
   .start-content p { margin-bottom: 28px; }
   .site-footer { padding: 28px 20px; flex-direction: column; align-items: start; gap: 16px; }
@@ -235,7 +218,7 @@ html[lang="en"] .shot .zh, html:not([lang="en"]) .shot .en { display: none; }
 .aspect-copy h3 { font-size: clamp(24px, 2.2vw, 30px); }
 .aspect-copy > p { margin-bottom: 20px; font-size: 17px; color: var(--muted); }
 .aspect .aspect-link { margin-top: 8px; align-self: flex-start; }
-.scenario figure.shot figcaption, .aspect figcaption { margin-top: 12px; }
+.aspect figcaption { margin-top: 12px; }
 @media (max-width: 1100px) {
   body.home .hero > .wrap:first-child { grid-template-columns: 1fr; gap: 40px; }
   .feature-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -252,3 +235,80 @@ html[lang="en"] .shot .zh, html:not([lang="en"]) .shot .en { display: none; }
   .aspects { gap: 56px; }
 }
 body.home .hero > .wrap + .wrap { display: block; }
+
+/* TT-435：功能區分頁＋3D 截圖堆疊（只在 JS 加上 .enhanced 後套用）。
+   選中的那張 --depth 是 0, transform 為 none, 截圖文字保持清楚；後面幾張往右上、往後退。 */
+.aspect-question { margin-bottom: 12px; font-size: 15px; font-weight: 600; color: var(--accent); }
+.aspects.enhanced { display: grid; grid-template-columns: 5fr 7fr; grid-template-areas: "tabs stage" "panel stage"; grid-template-rows: auto 1fr; column-gap: 72px; row-gap: 32px; align-items: start; }
+.showcase-tabs { grid-area: tabs; display: grid; gap: 4px; }
+.showcase-tab { display: flex; gap: 14px; align-items: flex-start; width: 100%; min-height: 44px; padding: 14px 18px; border: 0; border-left: 3px solid transparent; border-radius: 0 10px 10px 0; background: transparent; color: var(--ink); text-align: left; transition: background 160ms, border-color 160ms; }
+.showcase-tab:hover { background: var(--ground); }
+.showcase-tab[aria-selected="true"] { background: var(--lavender); border-left-color: var(--accent); }
+.showcase-tab svg { flex: none; width: 24px; height: 24px; margin-top: 2px; fill: none; stroke: var(--accent); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.showcase-tab strong { display: block; font-size: 17px; font-weight: 600; }
+.showcase-tab small { display: block; margin-top: 2px; font-size: 14px; line-height: 1.5; color: var(--muted); }
+.showcase-panels { grid-area: panel; }
+.aspects.enhanced .aspect-copy { border-top: 0; padding: 0 0 0 21px; }
+.aspects.enhanced .aspect-copy h3 { display: none; }
+.aspects.enhanced .aspect-copy > p:not(.aspect-question) { margin-bottom: 12px; }
+.aspects.enhanced .aspect-copy ul { padding: 0; margin: 0 0 8px; list-style: none; color: var(--muted); font-size: 16px; }
+.aspects.enhanced .aspect-copy li { padding-block: 4px; }
+.aspects.enhanced .aspect-link { align-self: flex-start; gap: 8px; }
+.showcase-stage { grid-area: stage; padding: 9% 9% 0 0; perspective: 1800px; perspective-origin: 40% 30%; }
+.showcase-rig { display: grid; transform-style: preserve-3d; transform: rotateX(var(--tilt-y, 0deg)) rotateY(var(--tilt-x, 0deg)); transition: transform 400ms cubic-bezier(.2, .8, .2, 1); }
+.showcase-rig > .shot { --depth: 0; grid-area: 1 / 1; cursor: pointer; transform-origin: 50% 100%; z-index: calc(10 - var(--depth)); opacity: calc(1 - var(--depth) * .2); transform: translate3d(calc(var(--depth) * 4%), calc(var(--depth) * -5%), calc(var(--depth) * -70px)) rotateY(calc(var(--depth) * -4deg)); transition: transform 650ms cubic-bezier(.2, .8, .2, 1), opacity 450ms; }
+.showcase-rig > .shot.is-front { cursor: default; transform: none; }
+.showcase-rig > .shot:not(.is-front) figcaption { visibility: hidden; }
+.showcase-rig > .shot:not(.is-front) .frame { box-shadow: 0 10px 28px rgba(41, 38, 49, .10); }
+@media (max-width: 1100px) {
+  .aspects.enhanced { grid-template-columns: 1fr; grid-template-areas: "tabs" "stage" "panel"; grid-template-rows: auto; row-gap: 28px; }
+  .showcase-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .showcase-tab { border-left: 0; border-bottom: 3px solid transparent; border-radius: 10px 10px 0 0; }
+  .showcase-tab[aria-selected="true"] { border-bottom-color: var(--accent); }
+  .aspects.enhanced .aspect-copy { padding-left: 0; max-width: 40em; }
+  .showcase-stage { padding: 7% 7% 0 0; }
+}
+@media (max-width: 600px) {
+  .showcase-tab { padding: 12px; gap: 10px; }
+  .showcase-tab strong { font-size: 15px; }
+  .showcase-tab small { display: none; }
+  .showcase-stage { padding: 10% 12% 0 0; }
+  .showcase-rig > .shot { transform: translate3d(calc(var(--depth) * 4%), calc(var(--depth) * -3%), calc(var(--depth) * -40px)); }
+}
+
+/* TT-435：首屏故事（參考 JT）。只在 JS 判斷可固定時加 .is-story：
+   首屏拉長成 340svh, 裡面那層固定在畫面上；往下捲標題淡出換成功能說明, 截圖淡入切換,
+   整組截圖跟著 --progress 連續小幅轉動, 不再用甩出去的動畫。 */
+body.home .hero.is-story { height: 340svh; padding: 0; overflow: visible; background: var(--night); }
+.hero-stage { position: sticky; top: 0; height: 100svh; overflow: clip; display: flex; flex-direction: column; padding-bottom: 28px; background: radial-gradient(60% 70% at 78% 38%, rgba(99, 80, 189, .38), transparent 70%), var(--night); }
+.hero-stage > .wrap:not(:last-child) { flex: 1; min-height: 0; align-content: center; display: grid; grid-template-columns: 5fr 7fr; grid-template-areas: "copy preview"; align-items: center; gap: 64px; }
+.hero-stage > .wrap:last-child { display: block; }
+.is-settling *, .is-settling *::before { transition: none !important; }
+.hero-stage .feature-rail { margin-top: 36px; }
+.is-story .hero-copy, .is-story .hero-chapters { grid-area: copy; }
+.is-story .hero-preview { grid-area: preview; }
+.is-story .hero-copy, .is-story .hero-chapters, .is-story .hero-chapters .aspect-copy { transition: opacity 280ms ease, translate 420ms cubic-bezier(.2, .8, .2, 1), visibility 0s; }
+.is-story.is-unfolded .hero-copy { opacity: 0; translate: -24px 0; visibility: hidden; transition: opacity 280ms ease, translate 420ms cubic-bezier(.2, .8, .2, 1), visibility 0s 420ms; }
+.is-story:not(.is-unfolded) .hero-chapters { opacity: 0; visibility: hidden; transition: opacity 280ms ease, visibility 0s 280ms; }
+.hero-chapters { display: grid; grid-template-rows: auto auto; align-content: center; }
+.hero-chapters h2 { margin-bottom: 20px; font-size: 18px; letter-spacing: 0; color: var(--violet-light); }
+.hero-chapters .aspect-copy { grid-area: 2 / 1; border-top: 0; padding: 0; opacity: 0; translate: 0 16px; visibility: hidden; transition: opacity 240ms ease, translate 420ms cubic-bezier(.2, .8, .2, 1), visibility 0s 240ms; }
+.hero-chapters .aspect-copy.is-active { opacity: 1; translate: 0 0; visibility: visible; transition: opacity 240ms ease 120ms, translate 420ms cubic-bezier(.2, .8, .2, 1) 120ms, visibility 0s; }
+.hero-chapters .aspect-copy h3 { margin-bottom: 12px; font-size: clamp(30px, 2.8vw, 42px); color: var(--night-ink); }
+.hero-chapters .aspect-copy h3 a { color: inherit; text-decoration: none; }
+.hero-chapters .aspect-question { color: var(--violet-light); font-size: 16px; }
+.hero-chapters .aspect-copy > p:not(.aspect-question) { color: var(--night-soft); font-size: 18px; margin-bottom: 12px; }
+.hero-chapters .aspect-copy ul { padding: 0; margin: 0 0 8px; list-style: none; color: var(--night-soft); font-size: 16px; }
+.hero-chapters .aspect-copy li { padding-block: 3px; }
+.hero-chapters .aspect-link { align-self: flex-start; gap: 8px; margin-top: 8px; color: var(--night-ink); }
+.hero-chapters .aspect-link:hover { color: var(--violet-light); }
+.hero-stack { perspective: 1800px; perspective-origin: 50% 40%; }
+.hero-rig { display: grid; transform-style: preserve-3d; transform: rotateX(calc(3deg + var(--tilt-y, 0deg))) rotateY(calc(-5deg + var(--progress, 0) * 10deg + var(--tilt-x, 0deg))); }
+.hero-rig > .shot { grid-area: 1 / 1; opacity: 0; visibility: hidden; transform: translate3d(0, 36px, -90px); transition: opacity 200ms ease, transform 700ms cubic-bezier(.2, .8, .2, 1), visibility 0s 700ms; }
+.hero-rig > .shot.is-past { transform: translate3d(0, -36px, -90px); }
+.hero-rig > .shot.is-current { opacity: 1; visibility: visible; transform: none; transition: opacity 380ms ease 140ms, transform 700ms cubic-bezier(.2, .8, .2, 1), visibility 0s; }
+.hero-rig > .shot figcaption { display: none; }
+.hero-rig > .shot .frame { border-color: var(--night-line); background: #2a2535; box-shadow: 0 30px 80px rgba(12, 8, 24, .55), 0 0 0 1px rgba(185, 171, 255, .12); }
+.hero-rig > .shot .frame-bar { background: #2a2535; border-color: var(--night-line); }
+.hero-rig > .shot .frame-bar i { background: rgba(255, 255, 255, .22); }
+.is-story .feature-rail a.is-active { background: rgba(255, 255, 255, .1); box-shadow: inset 0 -2px 0 var(--violet-light); }
