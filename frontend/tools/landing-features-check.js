@@ -31,7 +31,14 @@ try {
       await page.goto(origin + path);
       await page.waitForFunction(() => !document.documentElement.classList.contains('auth-pending'));
       assert.equal(await page.locator('h1').count(), 1);
-      assert.ok(['rgb(41, 38, 49)', 'rgb(99, 80, 189)'].includes(await page.locator('.product-nav a').first().evaluate(el => getComputedStyle(el).color)), 'light header navigation stays readable, including current-page accent');
+      // TT-432：首頁 header 改深色, 功能頁維持淺色；兩種都要符合 4.5 對比。
+      const contrast = await page.locator('.product-nav a').first().evaluate(el => {
+        const rgb = value => value.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number);
+        const lum = ([r, g, b]) => [r, g, b].map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }).reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0);
+        const [a, b] = [lum(rgb(getComputedStyle(el).color)), lum(rgb(getComputedStyle(el.closest('.guest-topbar')).backgroundColor))];
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      });
+      assert.ok(contrast >= 4.5, `header navigation contrast ${contrast.toFixed(2)}`);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `${path} ${width} overflow`);
       const name = path === '/' ? 'home' : path.split('/')[2];
       await page.screenshot({ path: `${folder}/${name}-${width}.png`, fullPage: true, animations: 'disabled' });

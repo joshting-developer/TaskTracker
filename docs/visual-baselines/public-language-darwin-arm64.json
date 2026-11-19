@@ -1,129 +1,129 @@
 {
   "approved": true,
-  "reviewer": "Codex under Josh standing approval",
-  "note": "TT-365/366: fresh page per URL and width with fonts and two animation frames settled. Thirty full-page screenshots reviewed under standing approval. Prior full workspace approval archived separately; no threshold relaxed. Public locale controls and translated content preserve product layout.",
-  "harnessSha256": "4e31cb2ea9e7ab2d880bad92d8281839d1fa6fc1a95bd42d6ca118b6cbe2bd8b",
-  "manifestSha256": "5892ed5ce396c8864fa295c8067e93cb9e6efb73931795100d4e8f3ae07b333c",
+  "reviewer": "claude under Josh standing approval",
+  "note": "TT-432: JT-style dark hero and alternating feature rows with real product screenshots (synthetic data); images are loaded and decoded before each full-page capture. Thirty screenshots reviewed; no threshold relaxed.",
+  "harnessSha256": "e78a351242fa480b5df34bda8a70ff0b5a0447412ebe9907e77398c6388cb936",
+  "manifestSha256": "86ae55905770aa8238e9fa3636847b9bd2f71bce05af02bbbec26c2be624f951",
   "files": [
     {
       "path": "public-en-0-1440.png",
-      "sha256": "45a6d60f9c355ecc60f663f18c6981c5d6720d96c5a0ca0f3210f101033cc8cd"
+      "sha256": "cf4fcf1268a15651abf67985b42b2027b58bddc50f31d3cf842787202aa8e99b"
     },
     {
       "path": "public-en-0-390.png",
-      "sha256": "716c9be6852f1dde6eb5ef3b49daa7b5ac36c5ec3f9c0178de8079d89b9ea097"
+      "sha256": "bb6825a34b2365572492077ac080a66ef1627ee5c2c9309b68eabd015c93e977"
     },
     {
       "path": "public-en-0-768.png",
-      "sha256": "6031c42252ca4a8eaf62f157905142742597191833fcabfb89b59570f6b44e15"
+      "sha256": "10c687a47aaff78ee4c8d54a5d3e42f39859a2ec32c2f1009c99d60c5e217f41"
     },
     {
       "path": "public-en-1-1440.png",
-      "sha256": "d99886e93040989a68f3129f6893ee783113a7137624c06d5bc7d05926ac5942"
+      "sha256": "7c32645272d0a15831731909fc7a984acdcb5d0e0262d666b67b5b6b8eb119d9"
     },
     {
       "path": "public-en-1-390.png",
-      "sha256": "6cbbfbd5e25542debe6c94d965638128721fa605f4f180ea39a5941575de781d"
+      "sha256": "04f73216dc391ca03bf20ee22477d732724ab6de36ca43819b90d3f8a2f555f7"
     },
     {
       "path": "public-en-1-768.png",
-      "sha256": "5ca7c17a0aab81b8dd9c38f6b9847fe0e22a93983c6504ccd555714b1a54fe37"
+      "sha256": "59b322158e26b8262513519b968277387eb7bec6b51bd88a32583570558a587b"
     },
     {
       "path": "public-en-2-1440.png",
-      "sha256": "e7a8bd4f0e0236b91b5d088020151b0450df99af9ea05014dbe5aa593f180763"
+      "sha256": "3b19c8396bba3cc2bcdec7b88b879baebdd2e30b20ffb77debf9a1c69fd84ca4"
     },
     {
       "path": "public-en-2-390.png",
-      "sha256": "016e0cc4215c81cdfb4d3c37d57806b138a378cd77c1209412667ef9867297ce"
+      "sha256": "37497c3481594aed7fb6df03956fd9a70c5928d80ce8f3fd09cd7afd4260041d"
     },
     {
       "path": "public-en-2-768.png",
-      "sha256": "d0bca685e93087be03a521fdd0739c98538fe61e765f8d0a52eabd11e468487f"
+      "sha256": "f3c08d54f88ee7e667d75eda11904345e23ccd47b77b5298bbccf9a233918f96"
     },
     {
       "path": "public-en-3-1440.png",
-      "sha256": "b863dc087e5e448236e05bccd38787c6752cfb7de7674aa74e2187d363f2f669"
+      "sha256": "a4e358ceada6b04ac41543acd8fe7cea970ee36f486d85519b15e4051e2a3d91"
     },
     {
       "path": "public-en-3-390.png",
-      "sha256": "8a9343a1b0c109d539c49239d575eceff8ad55e3737101148632aeb68f8471ff"
+      "sha256": "b0fd12256a2cfb5de216d2cc3690b42c5e56ed42719c0b3304262ccacd583b90"
     },
     {
       "path": "public-en-3-768.png",
-      "sha256": "dcfcf69b3281c20547d78ec0efcfd95f67b338f1bb80a3254f71efa6521d6948"
+      "sha256": "6efde99dc8c3929a54dd8314bcb971ef1783dee904bab5a217fac22e0d6d9a8e"
     },
     {
       "path": "public-en-4-1440.png",
-      "sha256": "d581ccce9cb04974ded825657e8866359679fe3f08edf96559f3e21155426f2e"
+      "sha256": "c47e92fd382b3886e84aacc130be8d09e2de84551fdf377fc2bf2c6bb92a3d08"
     },
     {
       "path": "public-en-4-390.png",
-      "sha256": "9bdb5dd50dcf0b7bec3c3a4b0d24ccd83df8aecee62cbf8f893e9a49808e97e9"
+      "sha256": "487f977eabfd31d3e47625264d7c37c04903f9f32486b7cf5dcf349df549ba8b"
     },
     {
       "path": "public-en-4-768.png",
-      "sha256": "7f9917fdda71a8733c2a17cbc0619a451baf45b82ae8e98d9f1d4d56c07c4c57"
+      "sha256": "4f459ab7adbebf8b51fe506a96f32138b46889b7a7d514ccd7f6d229288e2273"
     },
     {
       "path": "public-zh-0-1440.png",
-      "sha256": "c8d762a5a419becfec99f06e086aa5aecd0138589d6f536ae97cbbca6c457f1f"
+      "sha256": "17f9e55de3315a0cf0ce49e98219eef008c75b7928f81a023b8d73aa270d9983"
     },
     {
       "path": "public-zh-0-390.png",
-      "sha256": "bd9f3b5b1c2127081811cacd3623e12b3f650fa6dbfc6d87d3648c708ce97ad5"
+      "sha256": "e62e313c99ce78b8c2f23e87436a127fc1a52834435c63f6257771402b2ed6cd"
     },
     {
       "path": "public-zh-0-768.png",
-      "sha256": "42deab433620abe7615db3aee4647a1d4173aad1e2418915b82ac2701616ac14"
+      "sha256": "d2e28c8248a799c546ce79955bcff74f7c00bbca83756b85228e9e23505bf93d"
     },
     {
       "path": "public-zh-1-1440.png",
-      "sha256": "6cbad1bdfc86294ec04e184261bada4ca1cab265b20bfd954ad07d52df8b2bab"
+      "sha256": "bb24f6cb63439b7d49b6d6bec29aa51b03db4f2cb7e1693179fa0b1618ebf5f7"
     },
     {
       "path": "public-zh-1-390.png",
-      "sha256": "5a305a29c0f967ef65690c0ad28637c0f10a0b0ebbc727cb9002858e20347ba4"
+      "sha256": "4c75385770efa789a73caee1c14083931ed2a32f8c170bf34c1809256257e233"
     },
     {
       "path": "public-zh-1-768.png",
-      "sha256": "a3c26de442c3686fb48a5521551588812433ae962972f6c5ceefa8c3d66c5e92"
+      "sha256": "49a603c5ec4f5415af6a471553b2726a7e00eafcdbd14636d4a7a0ceea617d7c"
     },
     {
       "path": "public-zh-2-1440.png",
-      "sha256": "3888c21ac37e392b93e1c36d86f28c08174f72a2ca8b6d68e1753da8e638193f"
+      "sha256": "3e9429d4cc9513286f16706ca76522e90c68182dfb56ef5cfb44ba786af7a413"
     },
     {
       "path": "public-zh-2-390.png",
-      "sha256": "d2df658cb0e7b9ddd166bddc0af775f697d1c3b9a270e4518427e43c087b6830"
+      "sha256": "519e2bd9b78551c8b03432efc0550b4f0dbc4cc106af65cf50887a6b5958cb12"
     },
     {
       "path": "public-zh-2-768.png",
-      "sha256": "f5494cae26cc87bf0b586ebe2c86ac61a4eaa9751534c50daa27979d458ea258"
+      "sha256": "d7ce9537b6d9e4a190fe2e1e929d2d4e6ada1a2791532b2f18d9105a3ca43fe2"
     },
     {
       "path": "public-zh-3-1440.png",
-      "sha256": "62708c35907229989932a41c12301e94a16c7d5cf293456cfab2544940f39549"
+      "sha256": "5fb1161755b5d29b655cb8060a71f162898ecea96001a87b6dbb3da11fe88b4b"
     },
     {
       "path": "public-zh-3-390.png",
-      "sha256": "1206b986f9eb42a66eb16cc3cc5ac2c0f7e86961c7fe04d395723b79cb1f77a3"
+      "sha256": "bd1f8cf4ba2b75899a6c238acf0a571700fc531c147c1726b47fea1bf90d9e61"
     },
     {
       "path": "public-zh-3-768.png",
-      "sha256": "850afed9d07833287a74857770879f5a5728a446ef69e5ca0b4c4ca0a066c733"
+      "sha256": "2aabc34db905bdfd7696797a860f8ffd962c2553365e40cd6c2c4175a9aae12d"
     },
     {
       "path": "public-zh-4-1440.png",
-      "sha256": "1d6b3ad94321718badd2a05ec14b7310ed8a2af580aa9d74473a5be593634839"
+      "sha256": "bb2f4592cf55e066c00280c6b411a5b1a8416617d0516bac5b3482048716a3ad"
     },
     {
       "path": "public-zh-4-390.png",
-      "sha256": "bd4c9756be718649d4ea025cc399672546db8dbed8d4e2c20a3079e0ffb33929"
+      "sha256": "b2a3c1330ec5275fcefe15b88b5f055b38d9c16441e1fc06022f176937a828fa"
     },
     {
       "path": "public-zh-4-768.png",
-      "sha256": "25e0ddc307e312549b17563e1b7138c83c0d2baff7d081c79f09062da42da806"
+      "sha256": "b84602716ccad93d1f8602a5c6180906f0b8d05901c422a0f59d07f820fabfc3"
     }
   ]
 }

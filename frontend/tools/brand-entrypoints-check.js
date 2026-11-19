@@ -4,7 +4,7 @@ import { createServer, preview } from 'vite';
 import { chromium } from 'playwright';
 import { fixtureResponse } from './fixtures/verification.js';
 const port = Number(process.env.E2E_FRONTEND_PORT || 5199);
-assert.equal(process.env.E2E_ISOLATED, '1'); assert.equal(process.env.E2E_API_URL, 'http://127.0.0.1:13199');
+assert.equal(process.env.E2E_ISOLATED, '1'); assert.ok(['http://127.0.0.1:13198', 'http://127.0.0.1:13199'].includes(process.env.E2E_API_URL));
 const base = `http://127.0.0.1:${port}`, out = '../artifacts/tt363'; await mkdir(out, { recursive: true });
 let server, browser;
 try {

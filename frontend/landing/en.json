@@ -145,5 +145,10 @@
   "能串接自己的程式或 AI 工具嗎？": "Can I connect my scripts or AI tools?",
   "可以使用個人 API Token 與公開 REST API 依契約串接。Token 仍受本人當下權限與指定工作空間限制, 不是每個畫面操作都有公開 API": "Use personal API tokens and the public REST API to build an integration against the documented contract. Tokens remain limited by your current access and their bound workspace. Not every UI action has a public API.",
   "如何開始使用？": "How do I get started?",
-  "註冊並驗證信箱後, 可以建立工作空間與專案；如果收到邀請, 先確認邀請再加入。已有帳號可從頁面上方登入": "Register and verify your email, then create a workspace and project. If you receive an invitation, confirm it before joining. Already have an account? Sign in at the top of the page."
+  "註冊並驗證信箱後, 可以建立工作空間與專案；如果收到邀請, 先確認邀請再加入。已有帳號可從頁面上方登入": "Register and verify your email, then create a workspace and project. If you receive an invitation, confirm it before joining. Already have an account? Sign in at the top of the page.",
+  "真實畫面 · 合成資料": "Actual product · sample data",
+  "依狀態與負責人追蹤工作": "Track work by status and assignee",
+  "小事用紙條, 正式工作轉成任務": "Quick notes first, issues when it matters",
+  "看回專案與成員的投入": "See time by project and member",
+  "讓自己的程式依權限串接": "Connect your own tools within permissions"
 }

@@ -4,12 +4,14 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
 assert.equal(process.env.E2E_ISOLATED, '1');
-assert.equal(process.env.E2E_API_URL, 'http://127.0.0.1:13199');
+// 各 Agent 用自己的隔離後端與前端埠
+assert.ok(['http://127.0.0.1:13198', 'http://127.0.0.1:13199'].includes(process.env.E2E_API_URL));
+const frontendPort = Number(process.env.E2E_FRONTEND_PORT || 5199);
 const phase = process.argv[2] || 'after';
 assert.ok(['before', 'after'].includes(phase));
 const output = `artifacts/tt374/${phase}`;
 await mkdir(output, { recursive: true });
-const server = await preview({ preview: { host: '127.0.0.1', port: 5199, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
+const server = await preview({ preview: { host: '127.0.0.1', port: frontendPort, strictPort: true, proxy: { '/api': process.env.E2E_API_URL } } });
 let browser;
 const hashes = {}, checks = [];
 try {
@@ -21,7 +23,7 @@ try {
     page.on('pageerror', error => errors.push(error.message));
     for (const width of [1440, 768, 390]) {
       await page.setViewportSize({ width, height: 1000 });
-      await page.goto('http://127.0.0.1:5199/?intro=1');
+      await page.goto(`http://127.0.0.1:${frontendPort}` + '/?intro=1');
       await page.locator('html:not(.auth-pending)').waitFor();
       await page.evaluate(() => document.fonts.ready);
       assert.equal(await page.locator('h1').count(), 1);
@@ -34,7 +36,7 @@ try {
       }
       if (phase === 'after') {
         assert.equal(await page.locator('.story-section').count(), 1);
-        assert.equal(await page.locator('.aspect > p').count(), 4);
+        assert.equal(await page.locator('.aspect-copy > p').count(), 4);
         const questions = page.locator('.faq-section details');
         assert.equal(await questions.count(), 5);
         if (locale === 'en-US') assert.doesNotMatch(await page.locator('.faq-section').textContent(), /\p{Script=Han}/u);
@@ -64,7 +66,7 @@ try {
   }
   if (phase === 'after') {
     const noJs = await browser.newPage({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
-    await noJs.goto('http://127.0.0.1:5199/?intro=1');
+    await noJs.goto(`http://127.0.0.1:${frontendPort}` + '/?intro=1');
     assert.match(await noJs.locator('.story-section').innerText(), /Josh/);
     await noJs.locator('.faq-section summary').first().click();
     assert.equal(await noJs.locator('.faq-section details').first().getAttribute('open'), '');

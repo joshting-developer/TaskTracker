@@ -190,3 +190,65 @@ figure { min-width: 0; margin: 0; }
 .faq-list details > p { margin: 16px 0 8px; max-width: 68ch; }
 @media (max-width: 1100px) { .story-layout { grid-template-columns: 1fr; gap: 32px; } }
 @media (max-width: 600px) { .faq-list details { padding-inline: 16px; } }
+
+/* TT-432：參考 JT 的呈現節奏, 深色主視覺加下緣功能列, 之後回到淺色區; 圖片一律是真實產品畫面（合成資料）。 */
+body.home { --night: #1e1a27; --night-line: rgba(255, 255, 255, .14); --night-ink: #f5f2fb; --night-soft: #c9c1d8; --violet-light: #b9abff; }
+body.home .guest-topbar { background: var(--night); color: var(--night-ink); }
+body.home .guest-brand, body.home .product-nav a, body.home .guest-nav a.guest-cta { color: var(--night-ink); }
+body.home .product-nav a:hover, body.home .guest-nav a.guest-cta:hover { color: var(--violet-light); }
+body.home .guest-nav a.guest-cta { border-color: var(--night-line); }
+body.home .public-locale { color: var(--night-ink); background: var(--night); border-color: var(--night-line); }
+body.home a:focus-visible, body.home button:focus-visible, body.home select:focus-visible { outline-color: var(--violet-light); }
+body.home .hero { background: radial-gradient(60% 70% at 78% 38%, rgba(99, 80, 189, .38), transparent 70%), var(--night); color: var(--night-ink); padding-top: 64px; padding-bottom: 56px; }
+body.home .hero > .wrap:first-child { grid-template-columns: 5fr 7fr; align-items: center; }
+body.home .hero-copy { padding-bottom: 0; }
+body.home .hero .lead { color: var(--night-soft); }
+body.home .hero .text-link { color: var(--night-ink); }
+body.home .hero .text-link:hover { color: var(--violet-light); }
+body.home .hero .preview-caption { color: var(--night-soft); padding-bottom: 0; }
+.cta.pill { border-radius: 999px; gap: 10px; padding-inline: 26px; }
+body.home .hero .cta.primary { background: var(--violet-light); color: var(--night); }
+body.home .hero .cta.primary:hover { background: #cfc5ff; }
+body.home .hero-preview { align-self: center; padding-top: 0; }
+.feature-rail { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 48px; padding: 8px; border: 1px solid var(--night-line); border-radius: 20px; background: rgba(255, 255, 255, .04); }
+.feature-rail a { display: flex; gap: 14px; align-items: flex-start; min-height: 44px; padding: 16px 18px; border-radius: 14px; text-decoration: none; color: var(--night-ink); transition: background 160ms; }
+.feature-rail a:hover { background: rgba(255, 255, 255, .08); color: var(--night-ink); }
+.feature-rail svg { flex: none; width: 24px; height: 24px; margin-top: 2px; fill: none; stroke: var(--violet-light); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.feature-rail strong { display: block; font-size: 16px; font-weight: 600; }
+.feature-rail small { display: block; margin-top: 2px; font-size: 14px; line-height: 1.5; color: var(--night-soft); }
+/* 真實畫面外框：只是瀏覽器視窗示意, 圖片本身沒有改動。 */
+.shot { margin: 0; min-width: 0; }
+.shot .frame { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); box-shadow: 0 18px 48px rgba(41, 38, 49, .14); } /* taste-skill-ignore: window frame around a real product screenshot */
+.frame-bar { display: flex; gap: 6px; padding: 10px 14px; background: var(--ground); border-bottom: 1px solid var(--line); } /* taste-skill-ignore: window frame around a real product screenshot */
+.frame-bar i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.shot img { display: block; width: 100%; height: auto; }
+html[lang="en"] .shot .zh, html:not([lang="en"]) .shot .en { display: none; }
+.hero-shot .frame { border-color: var(--night-line); background: #2a2535; box-shadow: 0 30px 80px rgba(12, 8, 24, .55), 0 0 0 1px rgba(185, 171, 255, .12); }
+.hero-shot .frame-bar { background: #2a2535; border-color: var(--night-line); }
+.hero-shot .frame-bar i { background: rgba(255, 255, 255, .22); }
+/* 功能區：JT 作品區的左右交錯排列。 */
+.aspects { grid-template-columns: 1fr; gap: 96px; }
+.aspect { display: grid; grid-template-columns: 5fr 7fr; gap: 72px; align-items: center; border-top: 0; padding-top: 0; }
+.aspect:nth-child(even) { grid-template-columns: 7fr 5fr; }
+.aspect:nth-child(even) .aspect-copy { order: 2; }
+.aspect-copy { display: flex; flex-direction: column; border-top: 3px solid var(--accent); padding-top: 25px; }
+.aspect-copy h3 { font-size: clamp(24px, 2.2vw, 30px); }
+.aspect-copy > p { margin-bottom: 20px; font-size: 17px; color: var(--muted); }
+.aspect .aspect-link { margin-top: 8px; align-self: flex-start; }
+.scenario figure.shot figcaption, .aspect figcaption { margin-top: 12px; }
+@media (max-width: 1100px) {
+  body.home .hero > .wrap:first-child { grid-template-columns: 1fr; gap: 40px; }
+  .feature-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .aspect, .aspect:nth-child(even) { grid-template-columns: 1fr; gap: 32px; }
+  .aspect:nth-child(even) .aspect-copy { order: 0; }
+  .aspects { gap: 72px; }
+}
+@media (max-width: 600px) {
+  body.home .hero { padding-top: 40px; padding-bottom: 40px; }
+  .feature-rail { grid-template-columns: 1fr; margin-top: 32px; padding: 6px; gap: 2px; }
+  .feature-rail a { padding: 12px 14px; }
+  /* 手機版用 390 寬的真實手機畫面, 只顯示上半部, 不讓單張圖佔掉整個螢幕。 */
+  .shot img { aspect-ratio: 4 / 5; object-fit: cover; object-position: top; }
+  .aspects { gap: 56px; }
+}
+body.home .hero > .wrap + .wrap { display: block; }
