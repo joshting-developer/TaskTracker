@@ -103,7 +103,6 @@ figure { min-width: 0; margin: 0; }
 .feature-name { font-size: 18px; color: var(--accent); font-weight: 600; margin-bottom: 20px; }
 .detail-hero h1 { font-size: clamp(36px, 4vw, 58px); max-width: 16em; }
 .detail-hero .lead { margin-bottom: 0; }
-.detail-layout { display: grid; grid-template-columns: 6fr 5fr; gap: 96px; align-items: start; }
 .detail-points article + article { margin-top: 44px; }
 .detail-points h2 { font-size: 24px; margin-bottom: 14px; }
 .detail-points p { font-size: 17px; color: var(--muted); margin: 0; }
@@ -118,7 +117,6 @@ figure { min-width: 0; margin: 0; }
   .hero-copy { padding-bottom: 20px; }
   .hero-preview { max-width: 780px; width: 100%; }
   .aspects { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; }
-  .detail-layout { gap: 40px; grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {
   .wrap { width: calc(100% - 40px); }
@@ -175,13 +173,13 @@ figure { min-width: 0; margin: 0; }
 @media (max-width: 600px) { .faq-list details { padding-inline: 16px; } }
 
 /* TT-432：參考 JT 的呈現節奏, 深色主視覺加下緣功能列, 之後回到淺色區; 圖片一律是真實產品畫面（合成資料）。 */
-body.home { --night: #1e1a27; --night-line: rgba(255, 255, 255, .14); --night-ink: #f5f2fb; --night-soft: #c9c1d8; --violet-light: #b9abff; }
-body.home .guest-topbar { background: var(--night); color: var(--night-ink); }
-body.home .guest-brand, body.home .product-nav a, body.home .guest-nav a.guest-cta { color: var(--night-ink); }
-body.home .product-nav a:hover, body.home .guest-nav a.guest-cta:hover { color: var(--violet-light); }
-body.home .guest-nav a.guest-cta { border-color: var(--night-line); }
-body.home .public-locale { color: var(--night-ink); background: var(--night); border-color: var(--night-line); }
-body.home a:focus-visible, body.home button:focus-visible, body.home select:focus-visible { outline-color: var(--violet-light); }
+body.dark-top { --night: #1e1a27; --night-line: rgba(255, 255, 255, .14); --night-ink: #f5f2fb; --night-soft: #c9c1d8; --violet-light: #b9abff; }
+body.dark-top .guest-topbar { background: var(--night); color: var(--night-ink); }
+body.dark-top .guest-brand, body.dark-top .product-nav a, body.dark-top .guest-nav a.guest-cta { color: var(--night-ink); }
+body.dark-top .product-nav a:hover, body.dark-top .guest-nav a.guest-cta:hover, body.dark-top .product-nav a[aria-current] { color: var(--violet-light); }
+body.dark-top .guest-nav a.guest-cta { border-color: var(--night-line); }
+body.dark-top .public-locale { color: var(--night-ink); background: var(--night); border-color: var(--night-line); }
+body.home a:focus-visible, body.home button:focus-visible, body.home select:focus-visible, body.dark-top .guest-topbar :focus-visible, body.dark-top .detail-hero :focus-visible, body.dark-top .related-section :focus-visible { outline-color: var(--violet-light); }
 body.home .hero { background: radial-gradient(60% 70% at 78% 38%, rgba(99, 80, 189, .38), transparent 70%), var(--night); color: var(--night-ink); padding-top: 64px; padding-bottom: 56px; }
 body.home .hero > .wrap:first-child { grid-template-columns: 5fr 7fr; align-items: center; }
 body.home .hero-copy { padding-bottom: 0; }
@@ -312,3 +310,31 @@ body.home .hero.is-story { height: 340svh; padding: 0; overflow: visible; backgr
 .hero-rig > .shot .frame-bar { background: #2a2535; border-color: var(--night-line); }
 .hero-rig > .shot .frame-bar i { background: rgba(255, 255, 255, .22); }
 .is-story .feature-rail a.is-active { background: rgba(255, 255, 255, .1); box-shadow: inset 0 -2px 0 var(--violet-light); }
+
+/* TT-436：功能子頁改用首頁同款深色頁首與功能列。頁首左文右圖, 中間說明維持淺色, 結尾「繼續了解」深色接頁尾。 */
+body.dark-top .detail-hero { background: radial-gradient(60% 70% at 78% 38%, rgba(99, 80, 189, .38), transparent 70%), var(--night); color: var(--night-ink); padding-top: 64px; }
+.detail-hero-grid { display: grid; grid-template-columns: 5fr 7fr; gap: 64px; align-items: center; }
+.detail-copy { min-width: 0; }
+body.dark-top .detail-hero .back-link { color: var(--night-soft); }
+body.dark-top .detail-hero .back-link:hover, body.dark-top .detail-hero .feature-name { color: var(--violet-light); }
+body.dark-top .detail-hero h1 { max-width: none; }
+body.dark-top .detail-hero .lead { color: var(--night-soft); }
+body.dark-top .detail-hero figcaption { color: var(--night-soft); }
+.hero-demo { margin: 0; min-width: 0; }
+.hero-demo .api-demo { box-shadow: 0 30px 80px rgba(12, 8, 24, .55); }
+.detail-points { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 48px; }
+.detail-points article + article { margin-top: 0; }
+.detail-points article { border-top: 3px solid var(--accent); padding-top: 24px; }
+body.dark-top .related-section { background: var(--dark); color: var(--night-ink); }
+.related-section .related-rail { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 32px; }
+.related-section .related-rail a { display: flex; align-items: flex-start; font-size: inherit; min-height: 44px; }
+body.dark-top .related-section .text-link { color: var(--night-ink); }
+body.dark-top .related-section .text-link:hover { color: var(--violet-light); }
+@media (max-width: 1100px) {
+  .detail-hero-grid { grid-template-columns: 1fr; gap: 40px; }
+  .detail-points { grid-template-columns: 1fr; gap: 36px; }
+  .related-section .related-rail { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  body.dark-top .detail-hero { padding-top: 40px; }
+}

@@ -1,9 +1,9 @@
 {
   "approved": true,
-  "reviewer": "claude under Josh approval (TT-435 wrap-up, 2026-11-20)",
-  "note": "TT-435: with reduced motion the homepage feature rows and scenario carousel become one tabbed screenshot stack; the large-screen hero scroll story is not part of these captures. Only the six homepage captures changed, the 24 feature-page captures are byte-identical. Thirty screenshots reviewed; no threshold relaxed.",
+  "reviewer": "claude under Josh approval (TT-436, 2026-11-20)",
+  "note": "TT-436: feature pages share the homepage dark header, a dark split hero with the page screenshot, a three-column light body and a dark feature rail for related pages. The 24 feature-page captures changed; the six homepage captures are byte-identical. Thirty screenshots reviewed; no threshold relaxed.",
   "harnessSha256": "e78a351242fa480b5df34bda8a70ff0b5a0447412ebe9907e77398c6388cb936",
-  "manifestSha256": "bfdcbdcd0477973e22c77843f8f9ec85e09ed3911d0dbfedd898868cded61688",
+  "manifestSha256": "7b73ab47f653d8f7a218cdfa2415e987545d1c34f5f7e46aacb784c4757d97e2",
   "files": [
     {
       "path": "public-en-0-1440.png",
@@ -19,51 +19,51 @@
     },
     {
       "path": "public-en-1-1440.png",
-      "sha256": "7c32645272d0a15831731909fc7a984acdcb5d0e0262d666b67b5b6b8eb119d9"
+      "sha256": "352b8c41f0fd84b5ec1ebd78ec7131cba81827c5b6f419915ca7d5d4d8a26b81"
     },
     {
       "path": "public-en-1-390.png",
-      "sha256": "04f73216dc391ca03bf20ee22477d732724ab6de36ca43819b90d3f8a2f555f7"
+      "sha256": "debc5041fbb3996749ae4ef8a84ec0942cb4ece8579384884a06649e99b033af"
     },
     {
       "path": "public-en-1-768.png",
-      "sha256": "59b322158e26b8262513519b968277387eb7bec6b51bd88a32583570558a587b"
+      "sha256": "732263a605bf5ae7bb55bf6c78ebf20ab15103832f75e3db55e8ec009251d042"
     },
     {
       "path": "public-en-2-1440.png",
-      "sha256": "3b19c8396bba3cc2bcdec7b88b879baebdd2e30b20ffb77debf9a1c69fd84ca4"
+      "sha256": "9411e4d35dc8f565163608b4752ef51f420af05450d884ebea3c923717d3cdda"
     },
     {
       "path": "public-en-2-390.png",
-      "sha256": "37497c3481594aed7fb6df03956fd9a70c5928d80ce8f3fd09cd7afd4260041d"
+      "sha256": "7ebf79393ae67fd9866afad6d20d6da1c36bcb2f50e083052e61e6cf8448e461"
     },
     {
       "path": "public-en-2-768.png",
-      "sha256": "f3c08d54f88ee7e667d75eda11904345e23ccd47b77b5298bbccf9a233918f96"
+      "sha256": "acbc70f00839062071f05d6f233fd967a28aaec318d9c5c86a301dcdb4566e20"
     },
     {
       "path": "public-en-3-1440.png",
-      "sha256": "a4e358ceada6b04ac41543acd8fe7cea970ee36f486d85519b15e4051e2a3d91"
+      "sha256": "dacb43b3ec731db927a4e4d53d7be0f015a24d07c111a5bfcc1541f717a4904b"
     },
     {
       "path": "public-en-3-390.png",
-      "sha256": "b0fd12256a2cfb5de216d2cc3690b42c5e56ed42719c0b3304262ccacd583b90"
+      "sha256": "1dc79617221398c571b3debed2ebaaf1715bf98c209c1f475b925e54e50ea319"
     },
     {
       "path": "public-en-3-768.png",
-      "sha256": "6efde99dc8c3929a54dd8314bcb971ef1783dee904bab5a217fac22e0d6d9a8e"
+      "sha256": "c3e231e4487e8f05463bcb321af5be4e7fa93c531373139f03bbad39260e5221"
     },
     {
       "path": "public-en-4-1440.png",
-      "sha256": "c47e92fd382b3886e84aacc130be8d09e2de84551fdf377fc2bf2c6bb92a3d08"
+      "sha256": "29903dea21e08ed271f9fe2a22843461c8d4680243836f42c121bfc3d409632b"
     },
     {
       "path": "public-en-4-390.png",
-      "sha256": "487f977eabfd31d3e47625264d7c37c04903f9f32486b7cf5dcf349df549ba8b"
+      "sha256": "37a6a7f704e408b856213054553190ef1f0b7c38142281c8919783c385bafa43"
     },
     {
       "path": "public-en-4-768.png",
-      "sha256": "4f459ab7adbebf8b51fe506a96f32138b46889b7a7d514ccd7f6d229288e2273"
+      "sha256": "57902c7332222c5d3398461c6cfdf10b8d8bb3cae3b5ca42b096a1b85028d31d"
     },
     {
       "path": "public-zh-0-1440.png",
@@ -79,51 +79,51 @@
     },
     {
       "path": "public-zh-1-1440.png",
-      "sha256": "bb24f6cb63439b7d49b6d6bec29aa51b03db4f2cb7e1693179fa0b1618ebf5f7"
+      "sha256": "25b81c164cf52b322d4e016bdf1b51fd8a08ead3af110badad8e50b5fb490fcd"
     },
     {
       "path": "public-zh-1-390.png",
-      "sha256": "4c75385770efa789a73caee1c14083931ed2a32f8c170bf34c1809256257e233"
+      "sha256": "d0e5760528423aceb0399adaf9c3b50238ff07472b72de7fcdfb077e11423836"
     },
     {
       "path": "public-zh-1-768.png",
-      "sha256": "49a603c5ec4f5415af6a471553b2726a7e00eafcdbd14636d4a7a0ceea617d7c"
+      "sha256": "734a04d491c476a6e14843b7f0c2e984cf6cc7d5124b2651cd56b4a3544808bd"
     },
     {
       "path": "public-zh-2-1440.png",
-      "sha256": "3e9429d4cc9513286f16706ca76522e90c68182dfb56ef5cfb44ba786af7a413"
+      "sha256": "fba28f761266788c37254335850cec8a159245baa1ece75b7fbb852020022669"
     },
     {
       "path": "public-zh-2-390.png",
-      "sha256": "519e2bd9b78551c8b03432efc0550b4f0dbc4cc106af65cf50887a6b5958cb12"
+      "sha256": "6017804abc55546b0a62c5ba29dcb30e2a41313c80c5aee77f82e0369d7fa77e"
     },
     {
       "path": "public-zh-2-768.png",
-      "sha256": "d7ce9537b6d9e4a190fe2e1e929d2d4e6ada1a2791532b2f18d9105a3ca43fe2"
+      "sha256": "b6ebcc3264008fa98d46d28ed27094373e6ab2ca91af2d67a5ed8cf931d4c889"
     },
     {
       "path": "public-zh-3-1440.png",
-      "sha256": "5fb1161755b5d29b655cb8060a71f162898ecea96001a87b6dbb3da11fe88b4b"
+      "sha256": "e022e446771beef59f0bcbf8707b6607b5ecca3a580b67dd405ddd3f9efd97cf"
     },
     {
       "path": "public-zh-3-390.png",
-      "sha256": "bd1f8cf4ba2b75899a6c238acf0a571700fc531c147c1726b47fea1bf90d9e61"
+      "sha256": "1017278262d29ca06051b297a3d23ea6cb9bf4386f7392d683d56532acf80719"
     },
     {
       "path": "public-zh-3-768.png",
-      "sha256": "2aabc34db905bdfd7696797a860f8ffd962c2553365e40cd6c2c4175a9aae12d"
+      "sha256": "89ea2255e60078a642187a835feaf64d7211ac5d827bfb2335ab8e6e346c80a7"
     },
     {
       "path": "public-zh-4-1440.png",
-      "sha256": "bb2f4592cf55e066c00280c6b411a5b1a8416617d0516bac5b3482048716a3ad"
+      "sha256": "c12613e60428cef9669ed93859e3cc16c6a0e43e8e31106aaa7047e1dbd865f0"
     },
     {
       "path": "public-zh-4-390.png",
-      "sha256": "b2a3c1330ec5275fcefe15b88b5f055b38d9c16441e1fc06022f176937a828fa"
+      "sha256": "d76cc805b058b83753311568cc929d18dde5cc5807f5b3d1558fe0301170ed64"
     },
     {
       "path": "public-zh-4-768.png",
-      "sha256": "b84602716ccad93d1f8602a5c6180906f0b8d05901c422a0f59d07f820fabfc3"
+      "sha256": "c915431cf35a7d4afb6208a3e04e61dc7c2aebfc5611400736fc283f6809d6c1"
     }
   ]
 }
