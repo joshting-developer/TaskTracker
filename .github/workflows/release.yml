@@ -83,7 +83,12 @@ jobs:
             --label org.opencontainers.image.revision="$SOURCE_SHA" \
             --label org.opencontainers.image.version="$VERSION" \
             -f docker/production/Dockerfile -t tasktracker-release:candidate .
-          sh tools/release-image-smoke.sh tasktracker-release:candidate
+          # TT-377：拆站時映像是 App 建置, smoke 改驗舊公開網址轉到介紹站
+          if [ "$(python3 tools/site_origins.py --field target)" = app ]; then
+            sh tools/release-image-smoke.sh tasktracker-release:candidate "$(python3 tools/site_origins.py --field site)"
+          else
+            sh tools/release-image-smoke.sh tasktracker-release:candidate
+          fi
       - name: Export tested image with content hashes
         id: export
         run: |
