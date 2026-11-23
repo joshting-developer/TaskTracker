@@ -59,6 +59,8 @@ export default defineConfig(({ mode }) => {
       }
       if (publicOnly) {
         this.emitFile({ type: 'asset', fileName: '404.html', source: '<!doctype html><html lang="en"><meta charset="utf-8"><title>Page not found | Pavenro</title><h1>Page not found</h1><a href="/">Pavenro</a></html>' });
+        // TT-376：Pages 回應標頭與正式 nginx 一致, 帶雜湊的資產長期快取, 版本檔每次重新驗證
+        this.emitFile({ type: 'asset', fileName: '_headers', source: '/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: same-origin\n/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n/brand/*\n  Cache-Control: public, max-age=31536000, immutable\n/version.json\n  Cache-Control: no-cache\n' });
         this.emitFile({ type: 'asset', fileName: '_redirects', source: `/login ${appOrigin}/login 302\n/login/ ${appOrigin}/login 302\n/app ${appOrigin}/app/ 302\n/app/* ${appOrigin}/app/:splat 302\n/admin ${appOrigin}/admin/ 302\n/admin/* ${appOrigin}/admin/:splat 302\n/about / 301\n/about/ / 301\n${['tasks', 'collaboration', 'time', 'integrations'].map(slug => `/features/${slug} /#${slug} 301\n/features/${slug}/ /#${slug} 301\n`).join('')}/features/* / 301\n` });
       }
       for (const [path, asset] of Object.entries(staticAssets).filter(([path]) => !publicOnly || path !== '/site.webmanifest')) this.emitFile({ type: 'asset', fileName: path.slice(1), source: asset.source });

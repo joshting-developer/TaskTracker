@@ -82,6 +82,25 @@ docker build -f docker/production/Dockerfile \
 
 Dockerfile 會把選定產物放入既有 `/srv/frontend`, 沿用 Nginx／PHP-FPM。省略 `VITE_BUILD_TARGET` 時維持合併建置。介紹站只上傳靜態目錄, 不把這個 PHP runtime 部署到 Pages
 
+### 介紹站自動發布（Cloudflare Pages）
+
+使用 Pages 官方 Git 整合, GitHub 不另存 Cloudflare Token。Fly 只在打 `v*` tag 時發布, Pages 只在介紹站相關檔案變動時建置, 兩邊互不觸發
+
+| Pages 設定 | 值 |
+| --- | --- |
+| Production branch | `main` |
+| Root directory | repository 根目錄 |
+| Build command | `sh tools/build-public-site.sh` |
+| Build output directory | `frontend/dist-public` |
+| 環境變數 | `NODE_VERSION=24` |
+| Build watch paths（include） | `frontend/index.html`、`frontend/landing/*`、`frontend/public-assets/*`、`frontend/vite.config.js`、`frontend/locale-preference.js`、`frontend/package.json`、`frontend/package-lock.json`、`deploy/origins.json`、`tools/build-public-site.sh` |
+
+- 建置腳本只讀 `deploy/origins.json`, `site` 與 `app` 還是同一個網址時直接失敗, 不會發布指向錯誤網域的頁面
+- 建置失敗時 Pages 保留上一個成功版本, 正式網址不受影響
+- 版本識別：`/version.json` 的 `commit` 對照 Pages 部署紀錄與 git
+- 回退：Pages 專案 → Deployments → 選上一個正常版本 → Rollback to this deployment, 再用 `/version.json` 確認。回退不會動到 Fly 工作區
+- 非 main 分支的預覽部署只在 `*.pages.dev`, Cloudflare 會加 noindex
+
 ### 新網域切換前
 
 先在對應平台確認 hostname／TLS, 保留舊網域與前一版映像, 再核對以下設定。這是切換清單, 不是建置或推送後自動執行的流程

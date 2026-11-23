@@ -12,6 +12,7 @@ const site = process.env.VITE_SITE_ORIGIN, app = process.env.VITE_APP_ORIGIN;
 const out = 'artifacts/tt375'; await mkdir(out, { recursive: true });
 const publicFiles = await readdir('dist-public');
 assert.ok(publicFiles.includes('404.html') && publicFiles.includes('_redirects'));
+assert.match(await readFile('dist-public/_headers','utf8'), /^\/assets\/\*\n  Cache-Control: public, max-age=31536000, immutable$/m);
 assert.ok(!publicFiles.some(name => ['app', 'admin', 'site.webmanifest'].includes(name)));
 assert.ok(!(await readdir('dist-app')).includes('features'));
 // TT-437：功能子頁已移除, Pages 也把舊網址轉回首頁對應章節
