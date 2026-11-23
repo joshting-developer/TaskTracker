@@ -100,6 +100,7 @@ Dockerfile 會把選定產物放入既有 `/srv/frontend`, 沿用 Nginx／PHP-FP
 - 版本識別：`/version.json` 的 `commit` 對照 Pages 部署紀錄與 git
 - 回退：Pages 專案 → Deployments → 選上一個正常版本 → Rollback to this deployment, 再用 `/version.json` 確認。回退不會動到 Fly 工作區
 - 非 main 分支的預覽部署只在 `*.pages.dev`, Cloudflare 會加 noindex
+- GitHub 的 Cloudflare Workers and Pages App 須開放本 repository, 否則 Pages 顯示 Git 中斷連線且 push 不會建置。後台「重試」只會重建同一個 commit, 要建最新 main 需推新的 commit
 
 ### 新網域切換前
 
