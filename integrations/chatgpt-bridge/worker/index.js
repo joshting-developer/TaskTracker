@@ -1,5 +1,6 @@
 import { TOOLS } from './contract.js';
 
+// TT-379：須與 deploy/origins.json 的 app 相同, 測試會比對；Worker 仍固定單一 HTTPS origin。
 export const ORIGIN = 'https://task-tracker.josh-ting.com';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const IDENTIFIER = /^[A-Z][A-Z0-9_]*-[1-9][0-9]*$/i;

@@ -4,8 +4,9 @@ from pathlib import Path
 import urllib.request
 
 source = (Path(__file__).resolve().parents[1] / 'worker/contract.js').read_text()
+origin = json.loads((Path(__file__).resolve().parents[3] / 'deploy/origins.json').read_text())['app']
 tools = json.loads(source.split('export const TOOLS = ', 1)[1].strip().removesuffix(';'))
-with urllib.request.urlopen('https://task-tracker.josh-ting.com/api/public/openapi.json', timeout=15) as response:
+with urllib.request.urlopen(origin + '/api/public/openapi.json', timeout=15) as response:
     spec = json.load(response)
 operations = {op['operationId']: (method.upper(), path)
               for path, methods in spec['paths'].items() if path.startswith('/api/public/v1/')

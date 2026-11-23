@@ -82,6 +82,9 @@ Dockerfile 會把選定產物放入既有 `/srv/frontend`, 沿用 Nginx／PHP-FP
 
 先在對應平台確認 hostname／TLS, 保留舊網域與前一版映像, 再核對以下設定。這是切換清單, 不是建置或推送後自動執行的流程
 
+介紹站與工作區網址集中在 `deploy/origins.json` 的 `site`／`app`, 發布流程、GPT Bridge 與部署前檢查都讀這份。兩者相同時發布合併建置, 不同時 Fly 只放工作區。私有 `fly.toml`（含 GitHub 的 `FLY_CONFIG_TOML`）的 `APP_URL` 須等於 `app`、`ALLOWED_ORIGINS` 須包含 `app`、`VITE_SITE_ORIGIN` 須等於 `site`, 不一致時 `tools/fly_config.py` 拒絕部署。換網域時先改這份檔案, 再同步私有設定與平台 hostname
+
+
 - Fly 的 `APP_URL` 及啟用信／邀請／重設密碼等連結改用新的 App origin, 不指向介紹站
 - 保持 App 與 `/api` 同源, 核對 `SESSION_DOMAIN`、Secure Cookie、Session／CSRF、WebSocket 與代理設定。介紹站不需要開放跨來源帶憑證存取 API
 - 不為換網域重設資料庫、PAT、密碼或應用程式金鑰。不同 hostname 的既有登入 Cookie 不會自然搬到新站, 上線時需驗重新登入

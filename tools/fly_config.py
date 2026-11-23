@@ -7,6 +7,8 @@ import re
 import tomllib
 from urllib.parse import urlsplit
 
+from site_origins import load_origins
+
 
 def validate_config(config):
     app = config.get('app', '')
@@ -20,6 +22,16 @@ def validate_config(config):
         raise ValueError('Production APP_URL must be an HTTPS origin')
     if environment.get('APP_ENV') != 'production':
         raise ValueError('Production environment required')
+    return config
+
+
+def check_origins(config, origins):
+    # TT-379：網域只在deploy/origins.json改一次；私有設定不一致就不部署。
+    environment = config.get('env', {})
+    allowed = [value.strip() for value in environment.get('ALLOWED_ORIGINS', origins['app']).split(',')]
+    site = config.get('build', {}).get('args', {}).get('VITE_SITE_ORIGIN', origins['site'])
+    if environment.get('APP_URL') != origins['app'] or origins['app'] not in allowed or site != origins['site']:
+        raise ValueError('Private config origins differ from deploy/origins.json')
     return config
 
 
@@ -46,10 +58,11 @@ def main():
             content = os.environ.get('FLY_CONFIG_TOML', '')
             if not content:
                 raise ValueError('Missing private config secret')
+            check_origins(tomllib.loads(content), load_origins())
             write_config(args.output, content)
             print('Private deployment config ready')
         else:
-            config = load_config(args.config)
+            config = check_origins(load_config(args.config), load_origins())
             if args.field:
                 print(config['app'] if args.field == 'app' else config['env']['APP_URL'])
     except (ValueError, OSError, TypeError):

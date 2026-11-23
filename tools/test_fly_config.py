@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from fly_config import load_config, main, validate_config, write_config
+from fly_config import check_origins, load_config, main, validate_config, write_config
 
 CONFIG = '''app = "example-tasktracker"
 primary_region = "nrt"
@@ -49,6 +49,14 @@ class PrivateFlyConfigTest(unittest.TestCase):
         for app in ['wrong/app', 'private\napp', '']:
             with self.assertRaises(ValueError):
                 validate_config({**valid, 'app': app})
+
+    def test_private_origins_must_match_central_file(self):
+        origins = {'site': 'https://www.example.test', 'app': 'https://app.example.test'}
+        valid = {'env': {'APP_URL': origins['app'], 'ALLOWED_ORIGINS': 'https://example.fly.dev,' + origins['app']}, 'build': {'args': {'VITE_SITE_ORIGIN': origins['site']}}}
+        self.assertEqual(check_origins(valid, origins), valid)
+        for changed in [{'env': {**valid['env'], 'APP_URL': origins['site']}}, {'env': {**valid['env'], 'ALLOWED_ORIGINS': 'https://example.fly.dev'}}, {'build': {'args': {'VITE_SITE_ORIGIN': origins['app']}}}]:
+            with self.subTest(changed=changed), self.assertRaises(ValueError):
+                check_origins({**valid, **changed}, origins)
 
     def test_public_example_is_independent_of_local_config(self):
         self.assertEqual(load_config('fly.toml.example')['app'], 'your-tasktracker-app')

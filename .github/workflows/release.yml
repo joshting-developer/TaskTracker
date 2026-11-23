@@ -75,8 +75,11 @@ jobs:
           VERSION: ${{ needs.validate.outputs.tag }}
           SOURCE_SHA: ${{ needs.validate.outputs.sha }}
         run: |
+          # TT-379：網域與建置目標只讀 deploy/origins.json
           docker buildx build --platform linux/amd64 --load \
-            --build-arg VITE_SITE_ORIGIN=https://task-tracker.josh-ting.com \
+            --build-arg VITE_SITE_ORIGIN="$(python3 tools/site_origins.py --field site)" \
+            --build-arg VITE_APP_ORIGIN="$(python3 tools/site_origins.py --field app)" \
+            --build-arg VITE_BUILD_TARGET="$(python3 tools/site_origins.py --field target)" \
             --label org.opencontainers.image.revision="$SOURCE_SHA" \
             --label org.opencontainers.image.version="$VERSION" \
             -f docker/production/Dockerfile -t tasktracker-release:candidate .

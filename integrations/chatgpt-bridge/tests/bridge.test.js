@@ -13,6 +13,10 @@ const identity = { userId: 'synthetic-user', workspaceId: workspace, abilities: 
 const page = items => ({ items, page: 1, perPage: 20, total: items.length, lastPage: 1 });
 const response = data => new Response(JSON.stringify({ ok: true, data }), { headers: { 'Content-Type': 'application/json' } });
 const issueRow = { id: issue, projectId: project, identifier: 'TT-1', title: 'Synthetic task', state: 'open', revision: 3 };
+test('fixed origin matches the central workspace origin', async () => {
+  const origins = JSON.parse(await readFile(new URL('../../../deploy/origins.json', import.meta.url), 'utf8'));
+  assert.equal(ORIGIN, origins.app);
+});
 const reject = code => error => error.code === code;
 function fake(data) {
   const calls = [];

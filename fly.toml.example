@@ -8,6 +8,7 @@ kill_timeout = "35s"
 [build]
   dockerfile = "docker/production/Dockerfile"
   [build.args]
+    # Must match deploy/origins.json; tools/fly_config.py refuses mismatched origins.
     VITE_SITE_ORIGIN = "https://tasks.example.com"
 
 # Migration runs in a disposable Machine before HTTP deployment (tools/fly-migrate.py).
