@@ -23,7 +23,7 @@ try {
     page.on('pageerror', error => errors.push(error.message));
     for (const width of [1440, 768, 390]) {
       await page.setViewportSize({ width, height: 1000 });
-      await page.goto(`http://127.0.0.1:${frontendPort}` + '/?intro=1');
+      await page.goto(`http://127.0.0.1:${frontendPort}` + (locale === 'en-US' ? '/en/?intro=1' : '/?intro=1'));
       await page.locator('html:not(.auth-pending)').waitFor();
       await page.evaluate(() => document.fonts.ready);
       assert.equal(await page.locator('h1').count(), 1);
@@ -50,8 +50,12 @@ try {
         }
         await questions.first().locator('summary').click();
         await page.locator('[data-public-locale]').selectOption(locale === 'en-US' ? 'zh-TW' : 'en');
-        assert.equal(await questions.first().getAttribute('open'), '');
+        await page.waitForURL(url => url.pathname === (locale === 'en-US' ? '/' : '/en/'));
+        await page.locator('[data-public-locale]').waitFor();
+        assert.equal(await page.locator('html').getAttribute('lang'), locale === 'en-US' ? 'zh-Hant' : 'en');
         await page.locator('[data-public-locale]').selectOption(locale === 'en-US' ? 'en' : 'zh-TW');
+        await page.waitForURL(url => url.pathname === (locale === 'en-US' ? '/en/' : '/'));
+        await questions.first().locator('summary').click();
         await page.locator('.faq-section').screenshot({ path: `${output}/faq-open-${locale}-${width}.png`, animations: 'disabled' });
         await questions.first().locator('summary').click();
         for (const section of ['story', 'faq']) await page.locator(`.${section}-section`).screenshot({ path: `${output}/${section}-${locale}-${width}.png`, animations: 'disabled' });

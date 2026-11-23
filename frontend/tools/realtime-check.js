@@ -64,7 +64,7 @@ try {
   await reader.locator(`[data-issue="${epic.identifier}"]`).waitFor({ timeout: 8000 });
   console.log('PASS: 真實Queue／Reverb雙使用者新增、狀態及標題同步，payload無業務資料');
 
-  await card.dblclick();
+  await card.locator('.card-edit').click();
   const editor = reader.locator('.issue-dialog'); await editor.waitFor();
   await editor.locator('[name="title"]').fill('尚未儲存的本機草稿');
   const beforeDraftSignal = signals.length;

@@ -79,7 +79,7 @@ export function useProjectTaskQueries({ onDetail, detailMode, projectId, boardId
   watch(listArchived, () => { listPage.value = 1; });
   watch([listPage, listSearch, listArchived], () => { clearTimeout(debounce); debounce = setTimeout(() => reload(), 250); });
   watch(() => mode.value === 'list' ? JSON.stringify(listQuery.value) : '', () => { if (mode.value !== 'list') return; clearTimeout(debounce); debounce = setTimeout(() => reload(), 250); });
-  watch(() => mode.value === 'board' ? JSON.stringify(listQuery.value.tagIds || []) : '', () => {
+  watch(() => JSON.stringify(listQuery.value.tagIds || []), () => {
     if (mode.value !== 'board') return;
     knownVersion = ''; // Tag 改變時, 相同看板版本仍需讀取新的 SQL 交集
     clearTimeout(debounce); debounce = setTimeout(() => reload(), 250);

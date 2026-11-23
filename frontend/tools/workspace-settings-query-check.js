@@ -1,4 +1,6 @@
 import { acceptInvitationFixture } from './fixtures/verification.js';
+import { ownedDefaultTopology } from './fixtures/owned-topology.js';
+import { execFileSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'vite';
@@ -38,15 +40,10 @@ try {
     }
     throw new Error('Fixture auth throttle did not recover');
   }
-  const email = `ws-owner-${crypto.randomUUID()}@example.test`, users = [];
-  await call(owner, 'register', { name: 'Owner', email, password: 'test-local-password', workspaceName: 'Workspace Read' }, 'auth');
-  for (let index = 0; index < 21; index++) {
-    const invite = await call(owner, 'inviteMember', { email: `ws-${crypto.randomUUID()}@example.test` });
-    const identity = await call(guest, 'register', { name: `Person ${String(index).padStart(3, '0')}`, email: invite.email, password: 'test-local-password', inviteToken: invite.token }, 'auth');
-    users.push(identity.user);
-    await call(guest, 'logout', {}, 'auth');
-    if (index % 5 === 4) console.log('Fixture members', index + 1);
-  }
+  const email = `ws-owner-${crypto.randomUUID()}@example.test`;
+  const identity = await call(owner, 'register', { name: 'Owner', email, password: 'test-local-password', workspaceName: 'Workspace Read' }, 'auth');
+  const [binary, args] = ownedDefaultTopology().command('exec', '-T', 'backend', 'php', 'tools/project-acl-fixture.php');
+  const users = JSON.parse(execFileSync(binary, args, { input: JSON.stringify({ userId: identity.user.id, workspaceId: identity.workspace.id, count: 21 }), encoding: 'utf8' }));
   requests.length = 0;
   await owner.goto(`http://127.0.0.1:${e2ePort}/app/#/workspace/settings`); await owner.reload();
   const settings = owner.getByRole('region', { name: '工作空間設定', exact: true });

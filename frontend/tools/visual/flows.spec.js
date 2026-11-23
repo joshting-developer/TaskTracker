@@ -25,6 +25,8 @@ async function navigation(page) {
   if (await toggle.isVisible() && await toggle.getAttribute('aria-expanded') !== 'true') await toggle.click();
 }
 async function shot(page, name) {
+  // Auth navigation depends on the registration policy; capture after it settles.
+  if (await page.locator('.auth-page').count()) await page.waitForLoadState('networkidle');
   // Detail/editor load attachment limits and relations independently; capture the settled screen.
   if (['07-detail', '08-editor'].includes(name)) await page.waitForLoadState('networkidle');
   if (name === '07-detail') {

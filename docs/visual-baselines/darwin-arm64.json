@@ -1,10 +1,10 @@
 {
   "approved": true,
-  "harnessSha256": "ec784b7350066defded6eec48718ed92877fa8dc31f0a88eea3c23fc164cbd35",
+  "harnessSha256": "a242aa4236a9bbe7fb8c8fc7e3365b870e2d2430cdd9db500a64803315e5b280",
   "profile": "darwin-arm64",
-  "reviewer": "claude",
-  "note": "TT-437 移除四個功能子頁, 32～35 公開子頁截圖拿掉；board-actions.js 拖曳前先等版面位置穩定（手機捲動後太快量位置會放錯欄）。Chrome 157 擷取, 與前一版相比只有反鋸齒雜訊（每張最多 111 像素、色差 ≤4/255）；Josh 2026-11-20 放行",
-  "manifestSha256": "0c763c41b15fb64a8835629813e53dc96ba8a14d5f88fdb3cc0d50ffc3c73a30",
+  "reviewer": "codex",
+  "note": "TT-440 依 Josh 持續授權核准候選：Chrome157 三尺寸完整流程6項通過, 登入相關頁加入品牌icon與頁尾dev為預期差異；擷取前等待註冊政策完成, 手機恢復密碼頁穩定顯示註冊入口。已檢視代表登入與恢復密碼畫面, 舊基準留本機封存, 比較與行為檢查另記。",
+  "manifestSha256": "70f6424113f6e6beb0079b7f50ed4235ca5bddffc7e9b56f4c239c722af5e7c2",
   "environment": {
     "origin": "http://127.0.0.1:5195",
     "platform": "darwin",

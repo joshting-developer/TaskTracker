@@ -36,6 +36,8 @@ try {
     assert.equal(response.status(), 200, await response.text());
     return (await fixtureResponse(context.request, response, input)).data;
   }
+  // Full backend tests recreate the isolated DB, invalidating saved browser sessions.
+  if (fixture && !(await context.request.get(base + `/api/v1/projects/${fixture.project.id}`)).ok()) fixture = null;
   if (!fixture) {
     await call('/api/auth/register', { name: '標籤查詢', email: `tag-filter-${crypto.randomUUID()}@example.test`, password: 'isolated-tag-filter-password', workspaceName: '標籤查詢' });
     const project = await call('/api/rpc/createProject', { name: '標籤查詢', code: 'TAGF' });

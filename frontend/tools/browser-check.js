@@ -20,7 +20,7 @@ async function openQuickIssue(page, name) {
   const title = page.getByRole('button', { name, exact: true });
   await title.waitFor();
   const card = page.locator('tr[data-issue], article.issue-card').filter({ has: title });
-  if (await card.evaluateAll(elements => elements.some(element => element.matches('article.issue-card')))) await title.dblclick();
+  if (await card.evaluateAll(elements => elements.some(element => element.matches('article.issue-card')))) await card.locator('.card-edit').click();
   else if (await card.count()) await card.getByRole('button', { name: /^快速編輯 / }).click();
   else await title.click(); // Epic／工時明細等既有來源入口
 }
@@ -588,7 +588,7 @@ async function checkCustomBoards(page) {
   await moveBoardCard(page, fixture.task.identifier, 'inprogress');
   await page.locator(`[data-column="inprogress"] [data-issue="${fixture.task.identifier}"]`).waitFor();
   assert.equal(await page.locator('.page-heading').getByRole('button', { name: /新增任務/ }).count(), 0);
-  await page.getByRole('button', { name: '新增待規劃任務', exact: true }).click();
+  await page.getByRole('button', { name: /^(?:新增|在其他卡片新增)待規劃任務$/ }).first().click();
   const editor = page.getByRole('dialog', { name: '新增一個任務', exact: true });
   await editor.getByLabel(/任務標題/).fill('由自訂看板建立');
   await editor.getByRole('button', { name: '建立任務', exact: true }).click();
@@ -905,7 +905,9 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   await page.getByRole('link', { name: '通知預覽', exact: true }).click();
   await page.locator('.notification-card').waitFor();
   await page.getByText(`收件人 ${memberEmail}`, { exact: true }).waitFor();
-  assert.equal(await page.getByRole('button', { name: '檢查 SMTP 連線' }).isDisabled(), true);
+  const smtpStatus = await page.evaluate(async () => (await import('/src/api/index.js')).api.smtpStatus());
+  await page.getByText(smtpStatus.configured ? '已設定 SMTP' : '尚未設定 SMTP', { exact: true }).waitFor();
+  assert.equal(await page.getByRole('button', { name: '檢查 SMTP 連線' }).isDisabled(), !smtpStatus.configured);
   await page.screenshot({ path: 'artifacts/notifications.png', fullPage: true });
 
   const concurrent = await page.context().newPage();
@@ -1076,7 +1078,7 @@ async function checkCollaboration(page, browser, failures, projectUrl) {
   console.log('PASS: two accounts, invitation, role checks, Epic links/acceptance/reopen, custom board state, personal time edits/team rollup/calendar, notifications without sending, background-refresh revision conflict, mobile calendar/settings and unsaved guard');
 }
 try {
-  vite = await createViteServer({ server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': apiTarget } } });
+  vite = await createViteServer({ server: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': apiTarget }, watch: { ignored: ['**/artifacts/**', '**/dist*/**'] } } });
   await vite.listen();
   browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}) });
   const ownerContext = await browser.newContext({ locale: 'zh-TW', viewport: { width: 1440, height: 1050 } });
@@ -1200,8 +1202,10 @@ try {
   await editor.getByLabel(/任務標題/).fill('搜尋流程已完成');
   await expandIssueProperties(editor);
   await editor.getByLabel('到期日', { exact: true }).fill('2026-10-20');
+  const savedIssueReload = page.waitForResponse(response => response.request().method() === 'GET' && /\/issues\/[^/]+$/.test(new URL(response.url()).pathname) && response.status() === 200);
   await editor.getByRole('button', { name: '儲存修改' }).click();
-  await page.getByRole('status').filter({ hasText: '已儲存' }).waitFor();
+  await savedIssueReload;
+  await editor.getByRole('status').filter({ hasText: '已儲存' }).waitFor();
   await editor.getByLabel('新增留言', { exact: true }).fill('清單與看板現在可以一起使用');
   await editor.getByRole('button', { name: '送出留言' }).click();
   await editor.getByText('清單與看板現在可以一起使用', { exact: true }).waitFor();

@@ -1,4 +1,6 @@
 import { acceptInvitationFixture } from './fixtures/verification.js';
+import { ownedDefaultTopology } from './fixtures/owned-topology.js';
+import { execFileSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { createServer } from 'vite';
@@ -39,18 +41,15 @@ try {
     throw new Error('Fixture auth throttle did not recover');
   }
   const ownerEmail = `acl-owner-${crypto.randomUUID()}@example.test`;
-  await call(page, 'register', { name: 'Owner', email: ownerEmail, password: 'test-local-password', workspaceName: 'ACL Read' }, 'auth');
+  const owner = await call(page, 'register', { name: 'Owner', email: ownerEmail, password: 'test-local-password', workspaceName: 'ACL Read' }, 'auth');
   const project = await call(page, 'createProject', { name: 'ACL Read', code: 'ACL' });
   const guest = await (await browser.newContext({ locale: 'zh-TW' })).newPage();
   await guest.goto(`http://127.0.0.1:${e2ePort}/login`);
-  const users = [];
+  const [binary, args] = ownedDefaultTopology().command('exec', '-T', 'backend', 'php', 'tools/project-acl-fixture.php');
+  const users = JSON.parse(execFileSync(binary, args, { input: JSON.stringify({ userId: owner.user.id, workspaceId: owner.workspace.id }), encoding: 'utf8' }));
   let revision = 0;
   for (let i = 0; i < 25; i++) {
-    const invite = await call(page, 'inviteMember', { email: `acl-${crypto.randomUUID()}@example.test` });
-    const identity = await call(guest, 'register', { name: `Person ${String(i).padStart(3, '0')}`, email: invite.email, password: 'test-local-password', inviteToken: invite.token }, 'auth');
-    users.push(identity.user);
-    await call(guest, 'logout', {}, 'auth');
-    const changed = await call(page, 'setProjectMember', { projectId: project.id, userId: identity.user.id, roleId: i === 0 ? 'maintainer' : 'developer', expectedRevision: revision });
+    const changed = await call(page, 'setProjectMember', { projectId: project.id, userId: users[i].id, roleId: i === 0 ? 'maintainer' : 'developer', expectedRevision: revision });
     revision = changed.revision;
     if (i % 5 === 4) console.log('Fixture members', i + 1);
   }

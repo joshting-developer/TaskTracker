@@ -63,7 +63,7 @@ class VisualFixtureGuardTest extends TestCase
      */
     public function test_admin_helpers_reject_non_test_database_before_bootstrap(): void
     {
-        foreach (['admin-dashboard-fixture.php', 'admin-dashboard-router.php'] as $helper) {
+        foreach (['admin-dashboard-fixture.php', 'admin-dashboard-router.php', 'project-acl-fixture.php'] as $helper) {
             foreach ([['production', '1', 'tasktracker_test'], ['testing', '0', 'tasktracker_test'], ['testing', '1', 'task_tracker']] as [$environment, $flag, $database]) {
                 $process = new Process([PHP_BINARY, base_path('tools/'.$helper)], base_path(), ['APP_ENV' => $environment, 'TASKTRACKER_MYSQL_TEST' => $flag, 'DB_DATABASE' => $database, 'DB_USERNAME' => 'tasktracker_test']);
                 $process->setTimeout(5);

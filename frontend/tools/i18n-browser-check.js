@@ -73,7 +73,8 @@ try {
     if (await tabs.isVisible()) {
       await tabs.getByRole('tab').first().focus(); await page.keyboard.press('End');
       const last = tabs.getByRole('tab').last(); assert.ok(await last.evaluate(el => el === document.activeElement));
-      await page.waitForFunction(() => { const item = document.activeElement, list = item.closest('[role=tablist]'); const a = item.getBoundingClientRect(), b = list.getBoundingClientRect(); return a.x >= b.x - 1 && a.right <= b.right + 1; });
+      // Compare rendered CSS pixels; scroll offsets round fractional glyph widths.
+      await page.waitForFunction(() => { const item = document.activeElement, list = item.closest('[role=tablist]'); const a = item.getBoundingClientRect(), b = list.getBoundingClientRect(); return Math.round(a.x) >= Math.round(b.x) - 1 && Math.round(a.right) <= Math.round(b.right) + 1; });
       await tabs.getByRole('tab').first().click();
     }
     await page.screenshot({ path: `${out}/detail-en-${width}.png`, fullPage: true });

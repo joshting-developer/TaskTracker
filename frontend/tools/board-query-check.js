@@ -55,7 +55,7 @@ try {
   assert.equal(await page.locator('.issue-card').count(),103);
   assert.ok(requests.some(r => new URL(r.url).pathname.endsWith(`/boards/${board.id}/issues`) && new URL(r.url).searchParams.get('page') === '2'));
   assert.equal(requests.filter(r => /\/(getWorkspace|getTodos)$/.test(new URL(r.url).pathname)).length,0);
-  await page.getByRole('button', { name: 'Visible task', exact: true }).dblclick();
+  await page.getByRole('button', { name: `編輯 ${issue.identifier}`, exact: true }).click();
   const editor = page.getByRole('dialog', { name: '任務詳細內容', exact: true });
   await editor.waitFor();
   await editor.locator('[name="title"]').fill('Edited title');
@@ -71,7 +71,7 @@ try {
   assert.equal(saved.description,'Preserve description');
   assert.deepEqual([...saved.relatedIssueIds].sort(),[other.id,remoteCandidate.id].sort());
   await editor.getByRole('button',{name:'關閉任務',exact:true}).click();
-  await page.getByRole('button', { name: 'Edited title', exact: true }).click();
+  await page.getByRole('button', { name: 'Edited title', exact: true }).press('Enter');
   await page.getByRole('region', {name:'任務完整頁',exact:true}).waitFor();
   await page.getByRole('tab', {name:/異動紀錄/}).click();
   await page.waitForResponse(r=>new URL(r.url()).pathname.endsWith('/history') && r.status()===200);
