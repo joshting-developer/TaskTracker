@@ -6,6 +6,9 @@ set -eu
 if [ "$#" -gt 0 ]; then exec "$@"; fi
 : "${APP_KEY:?必須以Secret提供APP_KEY}"
 sed "s/__PORT__/${PORT}/" /etc/nginx/nginx.conf > /tmp/nginx/nginx.conf
+# TT-377：工作區自己的網域取自APP_URL, 用來區分根路徑要進工作區還是轉到介紹站
+app_host=$(printf '%s' "${APP_URL:-}" | sed -E 's#^[a-z]+://##; s#[:/].*$##' | tr -cd 'A-Za-z0-9.-')
+sed "s/__APP_HOST__/${app_host}/" /etc/nginx/public-routes.conf > /tmp/nginx/public-routes.conf
 php artisan config:cache --no-interaction >/dev/null
 php artisan route:cache --no-interaction >/dev/null
 php-fpm --nodaemonize &

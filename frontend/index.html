@@ -15,6 +15,9 @@
     <meta name="description" content="Pavenro 是專案管理平台, 提供任務列表、主題看板、團隊交辦與工時分析, 透過專案權限與個人 API Token 讓成員和外部工具協作" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="__SITE_ORIGIN__/" />
+    <link rel="alternate" hreflang="zh-Hant" href="__SITE_ORIGIN__/" />
+    <link rel="alternate" hreflang="en" href="__SITE_ORIGIN__/en/" />
+    <link rel="alternate" hreflang="x-default" href="__SITE_ORIGIN__/" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="zh_TW" />
     <meta property="og:site_name" content="Pavenro" />
@@ -29,6 +32,8 @@
     <!-- TT-297：舊的/#/…深層連結（任務分享、邀請信）在顯示首頁前轉到/app/；曾登入的瀏覽器直接進工作空間（只是提示，/app/仍會驗證，未登入會回/login）。
          有JS時先隱藏訪客TopBar待確認登入狀態；無JS時不加class，TopBar照常顯示。 -->
     <script data-entry-redirect>(function () { var hint = false; try { hint = localStorage.getItem('tasktracker:signed-in') === '1'; } catch (e) {} var intro = /(?:^|[?&])intro=1(?:&|$)/.test(location.search.slice(1)); if (location.hash.indexOf('#/') === 0 || (hint && !intro)) { window.__tasktrackerRedirecting = true; location.replace('/app/' + location.hash); return; } document.documentElement.classList.add('auth-pending'); setTimeout(function () { document.documentElement.classList.remove('auth-pending'); }, 3000); })();</script>
+    <!-- TT-377：每個語言有自己的網址；只有明確選過英文才從中文首頁轉到 /en/, 不依瀏覽器語言自動轉址, 搜尋引擎與分享連結看到的語言固定 -->
+    <script data-locale-redirect>(function () { var choice = ''; try { choice = localStorage.getItem('tasktracker:locale'); } catch (e) {} if (choice === 'en' && !window.__tasktrackerRedirecting && location.hash.indexOf('#/') !== 0) location.replace('/en/' + location.search + location.hash); })();</script>
 
     <link rel="stylesheet" href="/landing/landing.css" />
     <script type="module" src="/landing/landing.js"></script>

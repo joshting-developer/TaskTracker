@@ -88,5 +88,7 @@
   "依狀態與負責人追蹤工作": "Track work by status and assignee",
   "小事用紙條, 正式工作轉成任務": "Quick notes first, issues when it matters",
   "看回專案與成員的投入": "See time by project and member",
-  "讓自己的程式依權限串接": "Connect your own tools within permissions"
+  "讓自己的程式依權限串接": "Connect your own tools within permissions",
+  "Pavenro 是專案管理平台, 提供任務列表、主題看板、團隊交辦與工時分析, 透過專案權限與個人 API Token 讓成員和外部工具協作": "Pavenro is a project management platform with issue lists, topic boards, team assignments and time analysis. Project permissions and personal API tokens let members and external tools work together",
+  "Pavenro 任務看板示意": "Example Pavenro issue board"
 }

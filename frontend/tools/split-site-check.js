@@ -4,7 +4,8 @@ import { preview } from 'vite';
 import { chromium } from 'playwright';
 import { fixtureResponse } from './fixtures/verification.js';
 assert.equal(process.env.E2E_ISOLATED, '1');
-assert.equal(process.env.E2E_API_URL, 'http://127.0.0.1:13199');
+// 各 Agent 用自己的隔離後端
+assert.ok(['http://127.0.0.1:13198', 'http://127.0.0.1:13199'].includes(process.env.E2E_API_URL));
 assert.equal(process.env.VITE_SITE_ORIGIN, 'http://127.0.0.1:5200');
 assert.equal(process.env.VITE_APP_ORIGIN, 'http://127.0.0.1:5199');
 const site = process.env.VITE_SITE_ORIGIN, app = process.env.VITE_APP_ORIGIN;
@@ -19,7 +20,12 @@ const redirects = await readFile('dist-public/_redirects','utf8');
 for (const slug of ['tasks', 'collaboration', 'time', 'integrations']) assert.match(redirects, new RegExp(`^/features/${slug}/ /#${slug} 301$`, 'm'));
 assert.match(redirects, /^\/features\/\* \/ 301$/m);
 assert.equal(await readFile('dist-app/index.html','utf8'), await readFile('dist-app/app/index.html','utf8'));
-assert.equal(await readFile('dist-app/robots.txt','utf8'), 'User-agent: *\nDisallow: /\n');
+// TT-377：工作區站要讓搜尋引擎看到舊公開網址的 301, 只擋工作區與 API
+assert.equal(await readFile('dist-app/robots.txt','utf8'), 'User-agent: *\nDisallow: /api/\nDisallow: /app/\nDisallow: /admin/\nDisallow: /login\n');
+assert.ok(publicFiles.includes('en') && (await readdir('dist-public/en')).includes('index.html'));
+assert.match(redirects, /^\/about \/ 301$/m);
+const sitemap = await readFile('dist-public/sitemap.xml','utf8');
+assert.deepEqual([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]), [site+'/', site+'/en/']);
 for (const file of await readdir('dist-public/assets')) {
   if (file.endsWith('.js')) assert.doesNotMatch(await readFile('dist-public/assets/'+file,'utf8'), /\/api\/auth\/current|\/api\/csrf-cookie|tasktracker:signed-in|createVuetify/);
 }
@@ -36,9 +42,15 @@ try {
     context.on('request', request => { if (new URL(request.url()).pathname.startsWith('/api/')) apiRequests.push(request.url()); });
     const page = await context.newPage(); page.on('pageerror', e => errors.push(e.message));
     for (const slug of ['']) {
-      const path = '/';
+      // TT-377：中文 /、英文 /en/ 各自是靜態頁, 初始 HTML 就是該語言
+      const path = locale === 'en-US' ? '/en/' : '/';
       const raw = await (await fetch(site+path)).text();
       assert.match(raw, /<h1/); assert.match(raw, /<meta name="description"/);
+      assert.match(raw, new RegExp(`<html lang="${locale === 'en-US' ? 'en' : 'zh-Hant'}">`));
+      assert.match(raw, new RegExp(`<link rel="canonical" href="${site}${path}" />`));
+      for (const [lang, href] of [['zh-Hant','/'],['en','/en/'],['x-default','/']]) assert.match(raw, new RegExp(`<link rel="alternate" hreflang="${lang}" href="${site}${href}" />`));
+      assert.match(raw, /<script type="application\/ld\+json">/);
+      if (locale === 'en-US') assert.doesNotMatch(raw.replace(/<script[\s\S]*?<\/script>|<!--[\s\S]*?-->|<select[\s\S]*?<\/select>/g, ''), /\p{Script=Han}/u, 'English HTML has no Chinese before JS');
       assert.ok(!raw.includes('tasktracker:signed-in') && !raw.includes('auth-pending'));
       assert.ok(!raw.includes('href="/login') && !raw.includes('rel="manifest"'));
       for (const width of [1440,768,390]) {
@@ -109,6 +121,6 @@ try {
   assert.equal(await page.locator('h1').innerText(),'專案管理平台');
   assert.deepEqual(errors,[]);
   await context.close();
-  await writeFile(`${out}/result.json`,JSON.stringify({passed:true,results,apiRequests,checks:['artifact-boundaries','no-api-with-app-offline','ignore-login-hint','bilingual-static-content','no-js','legacy-hash','isolated-app-login','app-intro-link']},null,2));
+  await writeFile(`${out}/result.json`,JSON.stringify({passed:true,results,apiRequests,checks:['artifact-boundaries','bilingual-urls-hreflang-sitemap','no-api-with-app-offline','ignore-login-hint','bilingual-static-content','no-js','legacy-hash','isolated-app-login','app-intro-link']},null,2));
   console.log('PASS: split artifacts, 30 public views with app offline and zero API requests, legacy hash, isolated app authentication and intro link');
 } finally { await browser?.close(); await publicServer?.close(); await appServer?.close(); }

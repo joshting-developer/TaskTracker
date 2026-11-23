@@ -18,6 +18,8 @@ ARG VITE_APP_ORIGIN=""
 ARG VITE_BUILD_TARGET=combined
 ENV VITE_SITE_ORIGIN=$VITE_SITE_ORIGIN VITE_APP_ORIGIN=$VITE_APP_ORIGIN VITE_BUILD_TARGET=$VITE_BUILD_TARGET
 RUN npm run build && if [ "$VITE_BUILD_TARGET" != "combined" ]; then mv "dist-$VITE_BUILD_TARGET" dist; fi
+COPY docker/production/public-routes.sh ./
+RUN sh public-routes.sh "$VITE_BUILD_TARGET" "$VITE_SITE_ORIGIN" > public-routes.conf
 
 FROM php:8.5.12-fpm-bookworm AS runtime
 COPY backend/docker/mysql-only-php.sh /tmp/mysql-only-php.sh
@@ -45,6 +47,7 @@ RUN composer dump-autoload --optimize --classmap-authoritative --no-dev --no-int
     && chown -R www-data:www-data storage bootstrap/cache
 COPY --from=frontend /build/dist /srv/frontend
 COPY docker/production/nginx.conf /etc/nginx/nginx.conf
+COPY --from=frontend /build/public-routes.conf /etc/nginx/public-routes.conf
 COPY docker/production/php-fpm.conf /usr/local/etc/php-fpm.d/zz-tasktracker.conf
 COPY docker/production/php.ini /usr/local/etc/php/conf.d/zz-tasktracker.ini
 COPY docker/production/entrypoint.sh /usr/local/bin/tasktracker-entrypoint

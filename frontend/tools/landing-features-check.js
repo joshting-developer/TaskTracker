@@ -1,6 +1,8 @@
 // TT-355：公開首頁、無JS閱讀與正式build入口；TT-435 首頁功能區改為鍵盤可操作的分頁；TT-437 移除功能子頁。
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { preview } from 'vite';
 import { chromium } from 'playwright';
 const port = Number(process.env.E2E_FRONTEND_PORT || 5199);
@@ -8,7 +10,8 @@ const origin = `http://127.0.0.1:${port}`;
 const pages = ['/'];
 // TT-437：子頁不再建置, 舊網址交給正式 nginx 轉回首頁對應章節
 assert.equal(existsSync(new URL('../dist/features', import.meta.url)), false);
-const nginx = readFileSync(new URL('../../docker/production/nginx.conf', import.meta.url), 'utf8');
+// TT-377：公開頁路由改由 public-routes.sh 依建置目標產生, 這裡驗合併建置的輸出
+const nginx = execFileSync('sh', [fileURLToPath(new URL('../../docker/production/public-routes.sh', import.meta.url)), 'combined'], { encoding: 'utf8' });
 assert.match(nginx, /location ~ \^\/features\/\(tasks\|collaboration\|time\|integrations\)\/\?\(index\\\.html\)\?\$ \{ return 301 \/#\$1; \}/);
 assert.match(nginx, /location ~ \^\/features\(\/\.\*\)\?\$ \{ return 301 \/; \}/);
 const folder = 'artifacts/tt355';

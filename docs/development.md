@@ -67,6 +67,10 @@ VITE_SITE_ORIGIN=https://www.example.com npm run build:app
 
 介紹站產物含 `404.html`, 避免未知路徑被當成工作區 SPA。`_redirects` 為舊的登入／工作區入口提供暫時轉址, 不代理 API 或搬動資料；永久舊公開網址遷移另由發布計畫處理。Cloudflare Pages 的輸出目錄選 `frontend/dist-public`（repository 根目錄作建置根時）, 或 `dist-public`（`frontend` 作建置根時）。規則格式依 [Cloudflare Pages redirects](https://developers.cloudflare.com/pages/configuration/redirects/)
 
+介紹頁有中文 `/` 與英文 `/en/` 兩個靜態網址, 由建置時依 `frontend/landing/en.json` 產生, 各自帶 canonical、hreflang、OG 與結構化資料, sitemap 同時列出兩個網址。只有明確選過英文才會從 `/` 轉到 `/en/`, 不依瀏覽器語言自動轉址
+
+App 建置的 Fly 映像會把舊公開網址（`/`、`/about`、`/features/*`、`/en/`、`/sitemap.xml`）301 到介紹站；`APP_URL` 網域的根路徑改 302 到 `/app/`, `/login`、`/app/`、`/admin/`、`/api/` 照常服務。規則由 `docker/production/public-routes.sh` 產生, 用 `sh tools/release-image-smoke.sh <image> <site origin>` 驗轉址表
+
 Fly runtime 可選擇 App 建置, 不需要新增 Node 後端：
 
 ```sh
