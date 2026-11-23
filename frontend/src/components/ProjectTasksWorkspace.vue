@@ -1,5 +1,5 @@
 <script setup>
-import { t } from '../i18n/index.js';
+import { t, resultCount } from '../i18n/index.js';
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { useLeaveGuard } from '../ui/leaveGuard.js';
@@ -265,7 +265,7 @@ onBeforeUnmount(() => { alive = false; optionGeneration++; optionRequest?.abort(
         <IssueFilters v-model:expanded="filtersExpanded" :lookup="lookup" :lookup-context="project.id" @option="rememberOption" v-model="filterInput" :states="filters.projectStates.value" :members="memberNames" :issues="detailRows" :active-filter-chips="filters.activeFilterChips.value" :filter-warnings="[]" @remove="filters.removeFilter" @clear="filters.clearFilters" />
         <IssueList :issues="rows" :states="filters.projectStates.value" :members="memberNames" :can-write="canWrite" :today="today" @open="(issue, full) => emit('issue', issue, full)" />
         <p v-if="issuePage && !issuePage.total && !loading" class="empty-state">{{ t('沒有符合條件的任務') }}</p>
-        <footer v-if="issuePage" class="table-footer"><span role="status">{{ issuePage.total }} {{ t('筆結果') }}<span v-if="accessibleIssuePage < issuePage.lastPage"> {{ t('· 請縮小篩選範圍以查看其餘結果') }}</span></span><div v-if="accessibleIssuePage > 1" class="pagination"><button class="icon-button previous" :aria-label="t('上一頁')" :disabled="filters.page.value <= 1 || loading" @click="filters.page.value--"><Icon name="chevron" :size="15" /></button><span>{{ issuePage.page }} / {{ accessibleIssuePage }}</span><button class="icon-button" :aria-label="t('下一頁')" :disabled="filters.page.value >= accessibleIssuePage || loading" @click="filters.page.value++"><Icon name="chevron" :size="15" /></button></div></footer>
+        <footer v-if="issuePage" class="table-footer"><span role="status">{{ resultCount(issuePage.total) }}<span v-if="accessibleIssuePage < issuePage.lastPage"> {{ t('· 請縮小篩選範圍以查看其餘結果') }}</span></span><div v-if="accessibleIssuePage > 1" class="pagination"><button class="icon-button previous" :aria-label="t('上一頁')" :disabled="filters.page.value <= 1 || loading" @click="filters.page.value--"><Icon name="chevron" :size="15" /></button><span>{{ issuePage.page }} / {{ accessibleIssuePage }}</span><button class="icon-button" :aria-label="t('下一頁')" :disabled="filters.page.value >= accessibleIssuePage || loading" @click="filters.page.value++"><Icon name="chevron" :size="15" /></button></div></footer>
       </section>
       <template v-if="mode === 'boards' && boardPage">
         <BoardList :boards="listArchived ? boardPage.items : [boardPage.defaultBoard, ...boardPage.items]" :issues="[]" :remote="true" :archived="listArchived" :can-manage="canManage" :loading="loading || archiving" @search="value => { listPage = 1; listSearch = value; }" @archived="value => { listArchived = value; }" @open="id => emit('board', id)" @create="editBoard()" @edit="editBoard" @restore="target => askBoardAction(target, 'restore')" @archive="target => askBoardAction(target, 'archive')" />

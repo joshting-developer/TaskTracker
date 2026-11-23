@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const storage = new Map();
 Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, value) } });
-const { locale, t, setLocale, setLocaleAccount, translateError, formatNumber, formatDate, projectRoleLabel } = await import('../src/i18n/index.js');
+const { locale, t, setLocale, setLocaleAccount, translateError, formatNumber, formatDate, projectRoleLabel, entryCount, resultCount } = await import('../src/i18n/index.js');
 const en = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url)));
 const zh = JSON.parse(readFileSync(new URL('../src/i18n/zh-TW.json', import.meta.url)));
 assert.deepEqual(Object.keys(en).sort(), Object.keys(zh).sort());
@@ -12,6 +12,7 @@ assert.equal(locale.value, 'zh-TW');
 assert.equal(setLocale('unsupported'), false);
 assert.equal(setLocale('en'), true);
 assert.equal(t('任務列表'), 'Issue list');
+for (const [count, entry, result] of [[0, '0 entries', '0 results'], [1, '1 entry', '1 result'], [2, '2 entries', '2 results']]) { assert.equal(entryCount(count), entry); assert.equal(resultCount(count), result); }
 assert.equal(t('進入專案：{0}', ['使用者中文專案']), 'Open project: 使用者中文專案');
 assert.equal(t('<img src=x onerror=alert(1)>'), '<img src=x onerror=alert(1)>');
 for (const key of ['__proto__', 'constructor', 'toString']) assert.equal(t(key), key);
@@ -25,6 +26,7 @@ assert.match(formatDate('2026-11-15T02:30:00Z', { month: 'long', day: 'numeric' 
 setLocaleAccount('account-a');
 assert.equal(locale.value, 'en', 'Guest choice is carried into a first sign-in');
 setLocale('zh-TW');
+for (const count of [0, 1, 2]) { assert.equal(entryCount(count), `${count} 筆`); assert.equal(resultCount(count), `${count} 筆結果`); }
 setLocaleAccount('');
 assert.equal(locale.value, 'zh-TW', 'Explicit browser choice follows the user back to public pages');
 setLocaleAccount('account-b');

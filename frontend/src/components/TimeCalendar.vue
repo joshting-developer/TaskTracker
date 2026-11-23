@@ -1,5 +1,5 @@
 <script setup>
-import { t } from '../i18n/index.js';
+import { t, entryCount } from '../i18n/index.js';
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { useLeaveGuard } from '../ui/leaveGuard.js';
@@ -155,7 +155,7 @@ async function voidEntry(entry) {
       <div class="calendar"><header class="calendar-toolbar"><div><button class="icon-button previous" :aria-label="t('上個月')" @click="moveMonth(-1)"><Icon name="chevron" /></button><input v-model="month" type="month" :aria-label="t('工時月份')" required /><button class="icon-button" :aria-label="t('下個月')" @click="moveMonth(1)"><Icon name="chevron" /></button></div><button class="text-button" @click="month = dateInTaipei().slice(0, 7); selectedDate = dateInTaipei()">{{ t('今天') }}</button></header>
         <p v-if="summaryLoading && !summary" role="status">{{ t('載入工時中…') }}</p>
         <div class="calendar-weekdays"><span v-for="day in [t('一'),t('二'),t('三'),t('四'),t('五'),t('六'),t('日')]" :key="day">{{ day }}</span></div>
-        <div class="calendar-grid"><button v-for="day in days" :key="day.date" :class="{ muted: !day.inMonth, selected: day.date === selectedDate, today: day.date === dateInTaipei() }" :aria-label="t('{0} 工時 {1}', [day.date, hours(day.minutes)])" :aria-pressed="day.date === selectedDate" :aria-haspopup="canWrite ? 'dialog' : undefined" @click="selectDay(day)"><span>{{ day.number }}</span><strong v-if="day.minutes">{{ hours(day.minutes) }}</strong><small v-if="day.count">{{ day.count }} {{ t('筆') }}</small></button></div>
+        <div class="calendar-grid"><button v-for="day in days" :key="day.date" :class="{ muted: !day.inMonth, selected: day.date === selectedDate, today: day.date === dateInTaipei() }" :aria-label="t('{0} 工時 {1}', [day.date, hours(day.minutes)])" :aria-pressed="day.date === selectedDate" :aria-haspopup="canWrite ? 'dialog' : undefined" @click="selectDay(day)"><span>{{ day.number }}</span><strong v-if="day.minutes">{{ hours(day.minutes) }}</strong><small v-if="day.count">{{ entryCount(day.count) }}</small></button></div>
       </div>
       <div class="time-day-summary"><span>{{ selectedDate }} · {{ hours(selectedTotal) }}</span><button class="button secondary" type="button" :aria-label="t('查看 {0} 工時明細', [selectedDate])" :aria-haspopup="'dialog'" @click="openDetails">{{ t('查看工時明細') }}</button></div>
     </div>
@@ -165,7 +165,7 @@ async function voidEntry(entry) {
         <p v-if="dayLoading && !dayResult" role="status">{{ t('載入明細中…') }}</p>
         <p v-else-if="!selectedEntries.length" class="subtle">{{ t('這天還沒有符合篩選條件的紀錄') }}</p>
         <details v-for="group in entryGroups" :key="group.id" class="time-entry-group" open>
-          <summary><span>{{ group.name }}{{ group.id === userId ? t('（我）') : '' }}</span><span>{{ hours(group.minutes) }} · {{ group.entries.length }} {{ t('筆') }}</span></summary>
+          <summary><span>{{ group.name }}{{ group.id === userId ? t('（我）') : '' }}</span><span>{{ hours(group.minutes) }} · {{ entryCount(group.entries.length) }}</span></summary>
           <article v-for="entry in group.entries" :key="entry.id" class="time-entry"><div><span class="identifier">{{ entry.issue.identifier }}</span><button class="text-button time-issue-link" @click="openIssue(entry.issue)">{{ entry.issue.title }}</button><p>{{ entry.note || t('未填說明') }}</p></div><div class="time-entry-end"><strong>{{ hours(entry.minutes) }}</strong><div v-if="canWrite && entry.userId === userId"><button class="text-button" :disabled="busy" :aria-label="t('修改工時 {0}', [entry.id])" @click="edit(entry)">{{ t('修改') }}</button><button class="text-button danger-text" :disabled="busy" :aria-label="t('作廢工時 {0}', [entry.id])" @click="voidEntry(entry)">{{ t('作廢') }}</button></div></div></article>
         </details>
         <div v-if="dayResult?.lastPage > 1" class="pagination" :aria-label="t('工時明細分頁')"><button class="text-button" :disabled="dayLoading || dayPage <= 1" @click="dayPage--">{{ t('上一頁') }}</button><span>{{ dayPage }} / {{ dayResult.lastPage }}</span><button class="text-button" :disabled="dayLoading || dayPage >= dayResult.lastPage" @click="dayPage++">{{ t('下一頁') }}</button></div>

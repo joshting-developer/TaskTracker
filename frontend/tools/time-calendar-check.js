@@ -54,7 +54,7 @@ try {
   await page.getByRole('link', { name: '工時月曆', exact: true }).waitFor();
   requests.length = 0;
   await page.getByRole('link', { name: '工時月曆', exact: true }).click();
-  const calendar = page.getByRole('region', { name: '工時月曆', exact: true });
+  const calendar = page.locator('.time-workspace');
   await calendar.waitFor();
   const october = page.waitForResponse(response => response.url().includes('/time-calendar') && new URL(response.url()).searchParams.get('month') === '2026-10');
   await calendar.getByLabel('工時月份', { exact: true }).fill('2026-10');
@@ -144,6 +144,14 @@ try {
   for (const width of [1440, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${width}無橫向溢位`);
+  }
+  await page.locator('select').filter({ has: page.locator('option[value="en"]') }).selectOption('en');
+  await calendar.locator('.calendar-grid button').filter({ hasText: '1 entry' }).first().waitFor();
+  assert.ok(await calendar.locator('.calendar-grid small').filter({ hasText: /^1 entry$/ }).count());
+  assert.ok(await calendar.locator('.calendar-grid small').filter({ hasText: /^25 entries$/ }).count());
+  for (const width of [1440, 768, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   }
   const bulk = requests.concat().filter(item => /\/(getWorkspace|getTodos)$/.test(item.path));
   assert.deepEqual(bulk.map(item => item.path), [], '月曆不讀整包Workspace');

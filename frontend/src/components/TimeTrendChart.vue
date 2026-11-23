@@ -1,5 +1,5 @@
 <script setup>
-import { t } from '../i18n/index.js';
+import { t, entryCount } from '../i18n/index.js';
 import { computed, shallowRef } from 'vue';
 import { hours } from '../domain/model.js';
 const props = defineProps({ days: { type: Array, required: true } });
@@ -26,7 +26,7 @@ function selectPoint(event) {
   <section class="trend-chart">
     <div class="chart-heading"><h2>{{ t('每日實際投入') }}</h2><span>{{ t('最高') }} {{ peak?.date }} · {{ hours(peak?.minutes || 0) }}</span></div>
     <div class="trend-selection">
-      <output aria-live="polite"><strong>{{ hours(selected?.minutes || 0) }}</strong><span>{{ selected?.date }} · {{ selected?.entryCount || 0 }} {{ t('筆') }}</span></output>
+      <output aria-live="polite"><strong>{{ hours(selected?.minutes || 0) }}</strong><span>{{ selected?.date }} · {{ entryCount(selected?.entryCount || 0) }}</span></output>
       <label class="point-picker">{{ t('工作日期') }}<select v-model="selectedDate" :aria-label="t('圖表工作日期')"><option v-for="day in days" :key="day.date" :value="day.date">{{ day.date }}</option></select></label>
     </div>
     <div class="trend-frame">

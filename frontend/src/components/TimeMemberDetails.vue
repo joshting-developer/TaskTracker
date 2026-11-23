@@ -1,5 +1,5 @@
 <script setup>
-import { t } from '../i18n/index.js';
+import { t, entryCount } from '../i18n/index.js';
 import { nextTick, onBeforeUnmount, shallowRef, useTemplateRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { hours } from '../domain/model.js';
@@ -68,7 +68,7 @@ onBeforeUnmount(() => { generation++; });
     <p v-if="loading" role="status">{{ t('正在載入工時明細…') }}</p>
     <div v-if="error" class="error-box" role="alert">{{ t(error) }} <button class="text-button" @click="load()">{{ t('重試') }}</button></div>
     <template v-else-if="report">
-      <p class="member-summary"><strong>{{ hours(report.summary.totalMinutes) }}</strong><span>{{ report.summary.entryCount }} {{ t('筆') }}</span><span>{{ report.summary.activeDays }} {{ t('天') }}</span></p>
+      <p class="member-summary"><strong>{{ hours(report.summary.totalMinutes) }}</strong><span>{{ entryCount(report.summary.entryCount) }}</span><span>{{ report.summary.activeDays }} {{ t('天') }}</span></p>
       <p v-if="!report.details.total" role="status">{{ t('尚無符合條件的工時紀錄') }}</p>
       <div v-else class="member-groups">
         <article v-for="(row, index) in report.details.rows" :key="row.key" class="member-row">

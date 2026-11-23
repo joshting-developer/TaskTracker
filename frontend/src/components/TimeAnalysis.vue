@@ -1,5 +1,5 @@
 <script setup>
-import { t } from '../i18n/index.js';
+import { t, entryCount } from '../i18n/index.js';
 import { computed, onBeforeUnmount, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { dateInTaipei, hours } from '../domain/model.js';
@@ -132,7 +132,7 @@ onBeforeUnmount(() => { generation++; });
       <template v-else-if="report">
         <p v-if="pendingFilters" class="analysis-pending" role="status">{{ t('篩選已調整，請按「套用範圍」更新報表。') }}</p>
         <div class="analysis-report-heading"><p class="analysis-period">{{ report.range.startDate }} — {{ report.range.endDate }}</p></div>
-        <dl class="analysis-totals"><div><dt>{{ t('實際投入') }}</dt><dd>{{ hours(total) }}</dd></div><div><dt>{{ t('工時紀錄') }}</dt><dd>{{ report.summary.entryCount }} <small>{{ t('筆') }}</small></dd></div><div><dt>{{ t('填報天數') }}</dt><dd>{{ report.summary.activeDays }} <small>{{ t('天') }}</small></dd></div></dl>
+        <dl class="analysis-totals"><div><dt>{{ t('實際投入') }}</dt><dd>{{ hours(total) }}</dd></div><div><dt>{{ t('工時紀錄') }}</dt><dd>{{ entryCount(report.summary.entryCount) }}</dd></div><div><dt>{{ t('填報天數') }}</dt><dd>{{ report.summary.activeDays }} <small>{{ t('天') }}</small></dd></div></dl>
         <p v-if="!report.summary.entryCount" class="analysis-empty" role="status">{{ t('尚無符合條件的工時紀錄') }}</p>
         <template v-else>
           <div class="analysis-chart-panel">

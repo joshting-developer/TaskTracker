@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
-import { t } from '../i18n/index.js';
+import { t, resultCount } from '../i18n/index.js';
 import TagDefinitionForm from './TagDefinitionForm.vue';
 import Icon from './Icon.vue';
 const props = defineProps({ project: Object });
@@ -35,7 +35,7 @@ defineExpose({ dirty: computed(() => Boolean(formTool.value?.dirty)), saving: co
       <tr v-for="tag in records.items" :key="tag.id"><td><button class="tag-name" @click="edit(tag, $event)"><i :style="{ backgroundColor: tag.color }" aria-hidden="true"></i>{{ tag.name }}</button></td><td>{{ tag.description || '—' }}</td><td><button class="icon-button" :aria-label="t('編輯標籤 {0}', [tag.name])" @click="edit(tag, $event)"><Icon name="edit" :size="16" /></button></td></tr>
     </tbody></table>
     <p v-else-if="records && !loading" class="quiet-message">{{ t('尚無標籤') }}</p>
-    <footer v-if="records"><span>{{ records.total }} {{ t('筆結果') }}</span><div v-if="records.lastPage > 1" class="pagination"><button class="button secondary" :disabled="loading || page <= 1" @click="page--">{{ t('上一頁') }}</button><span>{{ page }} / {{ records.lastPage }}</span><button class="button secondary" :disabled="loading || page >= records.lastPage" @click="page++">{{ t('下一頁') }}</button></div></footer>
+    <footer v-if="records"><span>{{ resultCount(records.total) }}</span><div v-if="records.lastPage > 1" class="pagination"><button class="button secondary" :disabled="loading || page <= 1" @click="page--">{{ t('上一頁') }}</button><span>{{ page }} / {{ records.lastPage }}</span><button class="button secondary" :disabled="loading || page >= records.lastPage" @click="page++">{{ t('下一頁') }}</button></div></footer>
     <TagDefinitionForm v-if="editor" ref="formTool" :project-id="project.id" :tag="editor.tag" @close="close" @saved="saved" />
   </section>
 </template>

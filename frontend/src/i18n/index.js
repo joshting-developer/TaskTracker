@@ -44,6 +44,8 @@ export function t(key, values = []) {
   const dictionary = dictionaries[current.value];
   return interpolate(Object.hasOwn(dictionary, canonical) ? dictionary[canonical] : key, values);
 }
+export function entryCount(count) { return count === 1 ? t('1 筆') : t('{0} 筆', [count]); }
+export function resultCount(count) { return count === 1 ? t('1 筆結果') : t('{0} 筆結果', [count]); }
 export function formatNumber(value, options = {}) { return new Intl.NumberFormat(current.value, options).format(value); }
 export function formatDate(value, options = {}) {
   return new Intl.DateTimeFormat(current.value, { timeZone: workspaceZone.value, ...options }).format(new Date(value));
