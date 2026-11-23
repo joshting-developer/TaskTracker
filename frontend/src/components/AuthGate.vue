@@ -3,6 +3,7 @@ import { t } from '../i18n/index.js';
 import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import GuestTopBar from './GuestTopBar.vue';
+import BrandMark from './BrandMark.vue';
 import PasswordRecovery from './PasswordRecovery.vue';
 const resetMatch = /^#\/reset-password\/([a-f0-9]{64})(?:\?(.*))?$/.exec(location.hash);
 const recovery = ref(Boolean(resetMatch));
@@ -116,7 +117,7 @@ async function backToLogin() {
 <template>
   <GuestTopBar :current="mode" :signup-available="Boolean(registration?.publicRegistration && !verification && !activationToken)" />
   <main class="auth-page">
-    <div class="auth-story"><h1>Pavenro</h1></div>
+    <div class="auth-story"><BrandMark class="auth-story-mark" /><h1>Pavenro</h1></div>
     <v-card class="auth-card" elevation="0" rounded="0">
 
       <PasswordRecovery v-if="recovery" :token="resetToken" :email="resetEmail" @back="recovery = false; resetToken = ''; form.password = ''" />
@@ -158,6 +159,11 @@ async function backToLogin() {
 </template>
 
 <style scoped>
+.auth-story-mark { width: clamp(112px, 12vw, 176px); height: auto; aspect-ratio: 1; }
+@media (max-width: 700px) {
+  .auth-story { flex-direction: row; align-items: center; justify-content: flex-start; gap: 16px; }
+  .auth-story-mark { width: 48px; }
+}
 .registration-notice { margin: 0 0 16px; font-size: 14px; color: #424b5c; }
 .verification-recipient { margin: 16px 0 24px; overflow-wrap: anywhere; line-height: 1.7; }
 .verification-actions { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 16px 0; }
