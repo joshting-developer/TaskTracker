@@ -42,7 +42,7 @@ for (const [name, args, data] of [
   ['get_issue', { project, issue }, issueRow],
   ['list_issue_comments', { project, issue }, page([{ id: 'comment', author: 'Synthetic', content: 'Comment' }])],
   ['list_boards', { project }, { ...page([{ id: board, name: 'Synthetic board' }]), defaultBoard: { id: 'default' } }],
-  ['get_board', { project, board }, { id: board, name: 'Synthetic', selectedIssueIds: ['must-not-return'] }],
+  ['get_board', { project, board }, { id: board, name: 'Synthetic', selectedIssueIds: [issue] }],
   ['list_board_issues', { project, board: 'default' }, page([issueRow])],
   ['get_project', { project }, { id: project, name: 'Synthetic', permissions: ['issue.write'], statuses: [{ id: 'open', label: 'Open', color: '#333' }] }],
   ['list_project_members', { project }, page([{ id: 'synthetic-user', name: 'Synthetic' }])],
@@ -261,7 +261,7 @@ test('overlarge header, streamed body, invalid JSON and too many rows are reject
 test('MCP discovery and list expose the read-only contract and no environment', async () => {
   const listed = await (await handle(request('tools/list'), env)).json();
   assert.equal(listed.result.tools.length, Object.keys(TOOLS).length);
-  assert.equal(listed.result.tools.filter(t => t.annotations.readOnlyHint).length, 26);
+  assert.equal(listed.result.tools.filter(t => t.annotations.readOnlyHint).length, 29);
   assert.doesNotMatch(JSON.stringify(listed), /synthetic-private-token|owner@example/);
   const discovered = await (await handle(request('server/discover'), env)).json();
   assert.deepEqual(discovered.result.supportedVersions, ['2026-07-28']);

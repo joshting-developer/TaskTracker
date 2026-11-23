@@ -15,11 +15,11 @@ npm run build
 
 ## 已接入功能
 
-共47個工具, 對應正式OpenAPI 0.24.0全部PAT業務操作；未公開工時、工作區管理、多人OAuth與尚未部署API不在此範圍
+共53個工具, 對應正式OpenAPI 0.26.0全部PAT業務操作；工作區管理、多人OAuth與尚未公開API不在此範圍
 
-讀取（26個）：who_am_i, list_projects, search_issues, get_issue, list_issue_comments, list_boards, get_board, list_board_issues, get_project, list_project_members, list_project_statuses, list_todos, get_todo, list_todo_assignees, list_todo_comments, list_todo_handoffs, get_external_issue, list_issue_changes, list_issue_deletions, list_notifications, get_attachment_limits, get_attachment, list_issue_attachments, get_attachment_content
+讀取（29個）：who_am_i, list_projects, search_issues, get_issue, list_issue_comments, list_boards, get_board, list_board_issues, get_project, list_project_members, list_project_statuses, list_todos, get_todo, list_todo_assignees, list_todo_comments, list_todo_handoffs, get_external_issue, list_issue_changes, list_issue_deletions, list_notifications, get_attachment_limits, get_attachment, list_issue_attachments, get_attachment_content, list_tags, get_tag, list_time_entries, list_issue_time_entries, preview_board
 
-寫入（21個）：create_issue, update_issue, comment_issue, create_todo, update_todo, complete_todo, reopen_todo, return_todo, comment_todo, forward_todo, create_board, update_board, delete_issue, upsert_external_issue, batch_upsert_issues, bind_attachment, upload_attachment
+寫入（24個）：create_issue, update_issue, comment_issue, create_todo, update_todo, complete_todo, reopen_todo, return_todo, comment_todo, forward_todo, create_board, update_board, delete_issue, upsert_external_issue, batch_upsert_issues, bind_attachment, upload_attachment, create_tag, update_tag, delete_tag, update_issue_tags, create_time_entry, update_time_entry, void_time_entry
 
 ## 寫入流程
 
@@ -48,3 +48,11 @@ Site的TASKTRACKER_PAT以原生Secret保存, TASKTRACKER_OWNER_EMAIL為已驗證
 ## 標籤
 
 新增 list_tags、get_tag、create_tag、update_tag、delete_tag、update_issue_tags。定義查詢保留 description, 應先讀取再判斷用途；內容不等於執行授權。卡片查詢、列表與增量保留 tags, 並由正式 tags 衍生 tagIds。update_issue_tags 只接受 addTagIds／removeTagIds, 保留未列出的既有標籤, 沿用 expectedRevision 與 requestId, 直接執行。不在 update_issue 增加整包 tagIds 替換。刪除標籤須明確確認, 預覽說明退役定義與移除關聯但保留卡片歷史
+
+## 工時與看板條件
+
+工時提供 list_time_entries、list_issue_time_entries、create_time_entry、update_time_entry、void_time_entry, 作者由 PAT 決定；日期依 Asia/Taipei, 更新完整取代日期／分鐘與備註, 省略備註會清空。更新與作廢帶 expectedRevision, 每次異動使用唯一 requestId, 重試沿用原值。作廢保留歷史, 不刪除資料
+
+preview_board 為唯讀 POST, 不需 requestId 或第二次確認, 首頁最多20筆；使用 read PAT 仍須具備當下 board.manage。create_board／update_board 支援 autoInclude 與差量排除／還原, get_board 提供手動收錄、規則與排除清單。一般列表每頁最多20筆, 不自動續讀
+
+`E2E_ISOLATED=1 E2E_AGENT=codex E2E_API_URL=http://127.0.0.1:13199 python3 scripts/time-http-fixture.py` 使用明確 Agent 的隔離 MySQL 後端, 驗六個工具、作者與租戶限制、重播／版本衝突, 並由網頁 API 讀回同筆工時總數。Claude 使用自己的 Agent 與 13198, 不接受正式服務位址。單元測試會核對所有 PAT operation 恰有一個工具, 新端點未接入即失敗

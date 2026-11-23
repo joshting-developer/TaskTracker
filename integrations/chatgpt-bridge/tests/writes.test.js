@@ -157,6 +157,6 @@ test('mutation payload contracts match official schemas with requestId required 
     schema.additionalProperties = false;
     if (tool.annotations.destructiveHint) schema.required = schema.required.filter(k => k !== 'requestId');
     assert.deepEqual(tool.inputSchema.properties.body, schema);
-    assert.equal(tool.annotations.readOnlyHint, false);
+    assert.equal(tool.annotations.readOnlyHint, op.operationId === 'previewPublicBoard');
   }
 });
