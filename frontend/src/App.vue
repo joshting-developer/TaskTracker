@@ -18,6 +18,7 @@ import { provideLeaveGuards } from './ui/leaveGuard.js';
 import { buildHash, parseHash, settingsHash } from './ui/hashRoutes.js';
 import WorkspaceSwitcher from './components/WorkspaceSwitcher.vue';
 import UploadTray from './components/UploadTray.vue';
+const buildVersion = import.meta.env.VITE_APP_VERSION || 'dev';
 
 const ProjectDialog = lazyFeature(() => import('./components/ProjectDialog.vue'));
 const ProjectTasksWorkspace = lazyFeature(() => import('./components/ProjectTasksWorkspace.vue'));
@@ -492,7 +493,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
         <ProjectMembers @access="refresh" v-if="section === 'members' && can('project.members.manage')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" />
         <NotificationPreview ref="workspaceTool" v-if="section === 'notifications' && notificationPreviewEnabled" :project="selectedProject" :permissions="workspace.meta.permissions || []" @open="openIssue" @access="refresh" />
         </template>
-        <footer class="page-footer"><span>Pavenro <b>v0.2</b></span></footer>
+        <footer class="page-footer"><span>Pavenro <b>{{ buildVersion }}</b></span></footer>
       </div>
     </main>
     <WorkspaceInvitation v-if="workspaceInviteToken" :key="workspaceInviteToken" :token="workspaceInviteToken" :email="workspace.members.find(member => member.id === currentUserId)?.email" :accept="token => changeWorkspace('', token)" @close="closeInvitation" @logout="loginForInvitation" />

@@ -77,6 +77,7 @@ jobs:
         run: |
           # TT-379：網域與建置目標只讀 deploy/origins.json
           docker buildx build --platform linux/amd64 --load \
+            --build-arg VITE_APP_VERSION="$VERSION" \
             --build-arg VITE_SITE_ORIGIN="$(python3 tools/site_origins.py --field site)" \
             --build-arg VITE_APP_ORIGIN="$(python3 tools/site_origins.py --field app)" \
             --build-arg VITE_BUILD_TARGET="$(python3 tools/site_origins.py --field target)" \

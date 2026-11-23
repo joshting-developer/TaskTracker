@@ -45,6 +45,7 @@ try {
   };
   await rpc('register', { name: '品牌檢查', email: `brand-${crypto.randomUUID()}@example.test`, password: 'isolated-brand-password', workspaceName: '品牌檢查' }, 'auth');
   await page.goto(base + '/app/#/projects'); await page.locator('.app-shell').waitFor();
+  assert.equal(await page.locator('.page-footer b').textContent(), process.env.E2E_EXPECTED_VERSION || 'dev');
   marks.add(await page.locator('.brand-mark').evaluate(async image => { await image.decode(); return image.src; })); assert.equal(marks.size, 1, 'All entrypoints use the same SVG');
   await page.evaluate(() => { window.__brandDocument = document; });
   await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).focus(); await page.keyboard.press('Enter');
