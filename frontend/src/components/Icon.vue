@@ -19,6 +19,7 @@ const paths = {
   folder: 'M3 7V4h6l3 3h9v13H3z',
   user: 'M20 21v-2a7 7 0 0 0-14 0v2 M17 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
   users: 'M17 21v-2a5 5 0 0 0-10 0v2 M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0 M21 21v-1.5a4 4 0 0 0-3-3.9 M16 3.2a3 3 0 0 1 0 5.6',
+  gantt: 'M4 5h9 M8 12h10 M6 19h8 M3 3v18',
   calendar: 'M3 5h18v16H3z M3 10h18 M8 3v4M16 3v4',
   clock: 'M12 8v5l3 2 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
   filter: 'M4 7h16M7 12h10M10 17h4',

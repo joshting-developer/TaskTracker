@@ -23,7 +23,7 @@ class ScheduleController extends Controller
     public function __construct(private WorkspaceTransaction $workspace, private ScheduleService $schedule) {}
 
     /**
-     * 讀取與區間重疊的當頁卡片及未排程數。
+     * 讀取與區間重疊的當頁卡片、未排程數及當頁引用的Epic。
      *
      * @param  ScheduleQueryRequest  $request  已驗證區間、承辦者與分頁
      * @param  string  $project  Project公開ID
@@ -33,6 +33,6 @@ class ScheduleController extends Controller
     {
         $data = $this->workspace->read($request, fn (WorkspaceContext $context) => $this->schedule->index($context, $project, $request->schedule()));
 
-        return new ApiResponse([...PageResource::wrap($data['page'], ScheduleIssueResource::collection($data['page']->items())->resolve()), 'unscheduled' => $data['unscheduled']]);
+        return new ApiResponse([...PageResource::wrap($data['page'], ScheduleIssueResource::collection($data['page']->items())->resolve()), 'unscheduled' => $data['unscheduled'], 'epics' => ScheduleIssueResource::epics($data['page']->items())]);
     }
 }

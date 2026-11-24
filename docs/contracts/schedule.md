@@ -18,7 +18,7 @@ Session `GET /api/v1/projects/{project}/schedule` 供人員排程、週曆與甘
 
 ## 回應
 
-沿用 `ok/data` 及 `items/page/perPage/total/lastPage`, 另加 `unscheduled`。單筆只有 `id/identifier/title/type/priority/state/stateLabel/assignee/assigneeName/assigneeDisabled/startDate/endDate/dueDate/revision`, 日期或承辦未填為空字串, 不含描述、留言或工時
+沿用 `ok/data` 及 `items/page/perPage/total/lastPage`, 另加 `unscheduled` 與 `epics`。單筆只有 `id/identifier/title/type/priority/state/stateLabel/assignee/assigneeName/assigneeDisabled/startDate/endDate/dueDate/epicId/revision`, 日期、承辦或 Epic 未填為空字串, 不含描述、留言或工時。`epics` 是當頁卡片引用的同 Project Epic 摘要 `id/identifier/title`, 依卡號排序, Epic 本身沒有日期也有名稱（TT-386）
 
 查詢限單一 Project, issues 沒有日期索引, 依 Project 範圍掃描；跨 Project 的人員排程需要時另評估
 
@@ -28,8 +28,12 @@ Session `GET /api/v1/projects/{project}/schedule` 供人員排程、週曆與甘
 
 ## 週曆（TT-385）
 
-專案側欄「週曆」, 網址 `#/projects/{project}/schedule`, 需要 `issue.read`。週一起算, 一次只讀當週, 切週、承辦人或頁碼才重讀, 不輪詢。跨週卡片以虛線邊標示延續；條狀左緣用專案狀態色, 計畫結束日早於台北今天且未關閉標為逾期, 「全部成員」時顯示承辦人縮寫；拖曳改期留給甘特視圖統一設計, 週曆不提供；窄螢幕改逐日清單, 跨日卡片每天都列出。點卡片開既有詳情, 改期在卡片編輯完成。所選週與承辦人只存在目前分頁的 sessionStorage
+專案側欄「週曆」, 網址 `#/projects/{project}/schedule`, 需要 `issue.read`。週一起算, 一次只讀當週, 切週、承辦人或頁碼才重讀, 不輪詢。跨週卡片以虛線邊標示延續；條狀左緣用專案狀態色, 計畫結束日早於台北今天且未關閉標為逾期, 「全部成員」時顯示承辦人縮寫；依賴箭頭與拖曳改期未授權, 三視圖都不提供；窄螢幕改逐日清單, 跨日卡片每天都列出。點卡片開既有詳情, 改期在卡片編輯完成。所選週與承辦人只存在目前分頁的 sessionStorage
 
 ## 人員排程（TT-384）
 
 專案側欄「人員排程」, 網址 `#/projects/{project}/people`, 需要 `issue.read`。每位成員一列（成員選項每頁 100 人）, 沒有排程的成員也列出, 結果中不在分頁的承辦人（例如已停用）與未指派另成一列；篩選承辦人時只留該列。期間 2／4 週、週一起算, 同一天同時進行 3 張以上標為負荷高（schedule 回應不含估時, 以張數判斷）。4 週時兩天以內的條狀只留狀態色塊。窄螢幕改依成員分組清單。期間、週與承辦人只存在目前分頁的 sessionStorage；條狀樣式與週曆共用 `frontend/src/composables/useScheduleBars.js`
+
+## 專案甘特（TT-386）
+
+專案側欄「專案甘特」, 網址 `#/projects/{project}/gantt`, 需要 `issue.read`。Project → Epic → 卡片三層, 一張卡一列；Epic 有日期用自己的條狀, 沒有時依當頁子卡推算（虛線）, 沒有 Epic 的卡片放「未歸入 Epic」群組不隱藏。到期日以菱形標在該卡列上, 計畫結束日晚於到期日改警示色。期間 4／12 週（12 週 84 天, 在 92 天上限內）, 4 週逐日、12 週標每週一並另列月份。Epic 群組可收合, 期間、週與收合只存在目前分頁的 sessionStorage。窄螢幕改依 Epic 分組清單

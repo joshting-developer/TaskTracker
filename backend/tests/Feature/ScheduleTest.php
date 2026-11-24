@@ -63,7 +63,8 @@ class ScheduleTest extends TestCase
         $this->assertSame('', $data['items'][2]['endDate']);
         $this->assertSame('', $data['items'][3]['startDate']);
         $this->assertArrayNotHasKey('description', $data['items'][0]);
-        $this->assertSame(['id', 'identifier', 'title', 'type', 'priority', 'state', 'stateLabel', 'assignee', 'assigneeName', 'assigneeDisabled', 'startDate', 'endDate', 'dueDate', 'revision'], array_keys($data['items'][0]));
+        $this->assertSame(['id', 'identifier', 'title', 'type', 'priority', 'state', 'stateLabel', 'assignee', 'assigneeName', 'assigneeDisabled', 'startDate', 'endDate', 'dueDate', 'epicId', 'revision'], array_keys($data['items'][0]));
+        $this->assertSame([], $data['epics']);
     }
 
     /** 換頁不重複不漏, 承辦者篩選同時套用到未排程數
@@ -123,5 +124,22 @@ class ScheduleTest extends TestCase
         $this->getJson($url)->assertOk();
         $this->postJson('/api/auth/createWorkspace', ['workspaceName' => 'Another', 'requestId' => (string) Str::uuid()])->assertOk();
         $this->getJson($url)->assertStatus(404);
+    }
+
+    /** 甘特分組：卡片帶同Project Epic公開ID, 回應附當頁引用的Epic摘要；Epic沒有日期也有名稱（跨Project由外鍵阻擋）
+     * @return void
+     */
+    public function test_epic_grouping_summary(): void
+    {
+        [, $project] = $this->fixture();
+        $epic = $this->issue($project, ['type' => 'epic', 'title' => '會員Epic']);
+        $child = $this->issue($project, ['start_date' => '2026-12-01', 'end_date' => '2026-12-03', 'epic_id' => $epic->id]);
+        $loose = $this->issue($project, ['start_date' => '2026-12-02']);
+
+        $data = $this->getJson('/api/v1/projects/'.$project['id'].'/schedule?from=2026-11-30&to=2026-12-06')->assertOk()->json('data');
+        $byId = array_column($data['items'], 'epicId', 'id');
+        $this->assertSame($epic->public_id, $byId[$child->public_id]);
+        $this->assertSame('', $byId[$loose->public_id]);
+        $this->assertSame([['id' => $epic->public_id, 'identifier' => $epic->identifier, 'title' => '會員Epic']], $data['epics']);
     }
 }

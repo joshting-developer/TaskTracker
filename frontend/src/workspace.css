@@ -431,3 +431,43 @@
   .people-schedule .schedule-range { font-size: 12px; white-space: nowrap; }
   .people-tools { justify-content: space-between; }
 }
+
+/* TT-386：甘特一張卡一列, 名稱欄固定；到期日菱形與計畫條分開, 計畫晚於到期改警示色；Epic 沒有日期時以虛線推算 */
+.gantt-grid { --name: 260px; min-width: calc(var(--name) + var(--days) * 10px); }
+.gantt-body { list-style: none; margin: 0; padding: 0; }
+.gantt-row { display: grid; grid-template-columns: var(--name) minmax(0, 1fr); border-bottom: 1px solid #f0ebf6; }
+.gantt-track { position: relative; display: grid; grid-template-columns: repeat(var(--days), minmax(0, 1fr)); align-items: center; min-height: 36px; }
+.gantt-track > * { grid-row: 1; }
+.gantt-name { position: sticky; left: 0; z-index: 2; display: flex; align-items: center; gap: 6px; min-width: 0; padding: 6px 12px; background: #fff; font-size: 12px; color: #4e4560; border-right: 1px solid #eee8f5; }
+.gantt-months, .gantt-head { background: #faf8fd; }
+.gantt-months .gantt-name, .gantt-head .gantt-name { background: #faf8fd; color: #8f819c; font-size: 11px; }
+.gantt-month { padding: 6px 8px; font-size: 11px; font-weight: 550; color: #5e5470; border-left: 1px solid #eee8f5; white-space: nowrap; overflow: hidden; }
+.gantt-tick { padding: 4px 0; font-size: 10px; color: #8f819c; text-align: center; font-variant-numeric: tabular-nums; align-self: stretch; }
+.gantt-tick.weekend { background: #f6f4f9; }
+.gantt-tick.today { color: var(--accent); font-weight: 650; background: #f3eefe; }
+.gantt-today { align-self: stretch; width: 2px; justify-self: center; background: #c9b8f5; }
+.gantt-project .gantt-name strong { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gantt-project .gantt-name small { margin-left: auto; flex-shrink: 0; font-size: 10px; }
+.gantt-summary { height: 8px; border-radius: 4px; background: #5e5470; opacity: .55; }
+.gantt-epic { background: #fcfbfe; }
+.gantt-epic .gantt-name { background: #fcfbfe; font-weight: 550; }
+.gantt-toggle { width: 22px; height: 22px; flex-shrink: 0; transition: transform .15s; }
+.gantt-toggle[aria-expanded="true"] { transform: rotate(90deg); }
+.gantt-link { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 0; color: inherit; text-align: left; font: inherit; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.gantt-link:not(.static):hover { color: var(--accent); }
+.gantt-link .identifier { flex-shrink: 0; font-size: 11px; font-weight: 400; }
+.gantt-item .gantt-name { padding-left: 40px; }
+.gantt-count { margin-left: auto; flex-shrink: 0; padding: 0 6px; border-radius: 4px; background: #efebf6; color: #7a6f8c; font-size: 10px; font-weight: 400; }
+.gantt-track .schedule-bar { min-height: 0; height: 18px; padding: 0; margin: 0 1px; border-radius: 4px; }
+.gantt-track .gantt-epic-bar { height: 12px; background: #d9cff0; }
+.gantt-derived { height: 10px; margin: 0 1px; border: 1px dashed #a898d4; border-radius: 4px; background: repeating-linear-gradient(135deg, #f1ecfc 0 4px, #fff 4px 8px); }
+.gantt-derived.before { border-left: 0; border-radius: 0 4px 4px 0; }
+.gantt-derived.after { border-right: 0; border-radius: 4px 0 0 4px; }
+.gantt-due { z-index: 1; justify-self: center; width: 10px; height: 10px; transform: rotate(45deg); background: #fff; border: 2px solid #5e5470; }
+.gantt-due.late { border-color: #d9534f; background: #fdf0f0; }
+.gantt-agenda h3 small { font-weight: 400; }
+.gantt-agenda .late { color: #b83b37; font-weight: 550; }
+@media (max-width: 700px) {
+  .gantt-schedule .calendar-toolbar { flex-wrap: wrap; row-gap: 8px; }
+  .gantt-schedule .schedule-range { font-size: 12px; white-space: nowrap; }
+}

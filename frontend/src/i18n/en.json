@@ -1066,5 +1066,22 @@
   "負荷高": "Heavy load",
   "成員排程清單": "Schedule by member",
   "這段期間沒有排程": "Nothing scheduled in this range",
-  "成員分頁": "Member pagination"
+  "成員分頁": "Member pagination",
+  "專案甘特": "Project Gantt",
+  "依 Epic 分組顯示計畫期間, 菱形是到期日": "Planned dates grouped by Epic. Diamonds mark due dates",
+  "往前": "Earlier",
+  "往後": "Later",
+  "{0}年{1}月": "{1}/{0}",
+  "項目": "Item",
+  "甘特項目": "Gantt items",
+  "依本頁任務推算": "Derived from tasks on this page",
+  "{0}：{1}張卡片": "{0}: {1} cards",
+  "未歸入 Epic": "No Epic",
+  "依子卡片推算": "Derived from child cards",
+  "甘特清單": "Gantt list",
+  "推算": "Derived",
+  "到期 {0}": "Due {0}",
+  "到期日 {0}": "Due date {0}",
+  "到期日 {0}, 計畫晚於到期日": "Due date {0}, planned end is after the due date",
+  "到期 {0}, 計畫較晚": "Due {0}, planned later"
 }

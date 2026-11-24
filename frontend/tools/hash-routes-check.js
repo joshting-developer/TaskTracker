@@ -6,7 +6,7 @@ const roundTrips = [
   '#/', '#/notes', '#/projects', '#/time-analysis', '#/time-analysis/members', '#/workspace/settings', '#/workspace/settings/members',
   '#/projects/p1', '#/projects/p1/boards', '#/projects/p1/board', '#/projects/p1/board/b%2F1',
   '#/projects/p1/issues/i1', '#/projects/p1/issues/i1?detail=1', '#/projects/p1/board/b1/issues/i1?detail=1',
-  '#/projects/p1/tags', '#/projects/p1/time', '#/projects/p1/schedule', '#/projects/p1/people', '#/projects/p1/settings', '#/projects/p1/members', '#/projects/p1/notifications',
+  '#/projects/p1/tags', '#/projects/p1/time', '#/projects/p1/schedule', '#/projects/p1/people', '#/projects/p1/gantt', '#/projects/p1/settings', '#/projects/p1/members', '#/projects/p1/notifications',
 ];
 for (const hash of roundTrips) assert.equal(buildHash(parseHash(hash)), hash, hash);
 
