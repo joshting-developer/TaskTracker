@@ -10,6 +10,8 @@ export function callApi(operation, input = {}, group = 'rpc') {
 // 寫入回固定結果；表單不以此當read model或新草稿基準，資料由目前畫面按需GET。
 export const api = {
   personalDashboard: (filters, options) => queryApi('personal-dashboard', filters, options),
+  dashboardPreferences: options => queryApi('personal-dashboard/preferences', {}, options),
+  saveDashboardPreferences: input => requestJson('/api/v1/personal-dashboard/preferences', { method: 'PUT', input }),
   personalTokens: filters => queryApi('personal-tokens', filters),
   createPersonalToken: input => requestJson('/api/v1/personal-tokens', { method: 'POST', input }),
   revokePersonalToken: id => requestJson(`/api/v1/personal-tokens/${encodeURIComponent(id)}/revoke`, { method: 'POST', input: {} }),

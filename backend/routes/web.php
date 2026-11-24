@@ -125,6 +125,9 @@ Route::prefix('/api/v1')->group(function () {
     Route::get('/operation-logs', [OperationLogsController::class, 'index'])->name('v1.operation-logs');
     Route::get('/workspace/member-roles', [WorkspaceSettingsController::class, 'roles'])->name('v1.workspace.member-roles');
     Route::get('/personal-dashboard', [\App\Http\Controllers\Queries\PersonalDashboardController::class, 'index'])->name('v1.personal-dashboard');
+    // TT-186：首頁小工具順序與顯示, 以工作區成員保存
+    Route::get('/personal-dashboard/preferences', [\App\Http\Controllers\DashboardPreferenceController::class, 'show'])->name('v1.personal-dashboard.preferences');
+    Route::put('/personal-dashboard/preferences', [\App\Http\Controllers\DashboardPreferenceController::class, 'update'])->name('v1.personal-dashboard.preferences.update');
     Route::get('/personal-version', [TodosController::class, 'versions'])->name('v1.personal-version');
     Route::get('/todos/counts', [TodosController::class, 'counts'])->name('v1.todos.counts');
     Route::get('/todos', [TodosController::class, 'index'])->name('v1.todos');

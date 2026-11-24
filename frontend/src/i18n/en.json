@@ -1083,5 +1083,18 @@
   "到期 {0}": "Due {0}",
   "到期日 {0}": "Due date {0}",
   "到期日 {0}, 計畫晚於到期日": "Due date {0}, planned end is after the due date",
-  "到期 {0}, 計畫較晚": "Due {0}, planned later"
+  "到期 {0}, 計畫較晚": "Due {0}, planned later",
+  "首頁設定已儲存": "Home settings saved",
+  "恢復預設": "Restore defaults",
+  "自訂": "Customize",
+  "可加入的小工具": "Widgets you can add",
+  "加入小工具": "Add widgets",
+  "首頁沒有顯示任何小工具, 可按「自訂」加入": "No widgets on Home. Use Customize to add some",
+  "調整{0}": "Adjust {0}",
+  "上移": "Move up",
+  "下移": "Move down",
+  "隱藏": "Hide",
+  "首頁設定已在其他地方更新, 請重新載入": "Home settings were updated elsewhere. Reload to continue",
+  "首頁設定格式不正確": "Home settings are not valid",
+  "首頁設定包含不支援的欄位": "Home settings include unsupported fields"
 }
