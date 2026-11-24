@@ -15,3 +15,7 @@
 附件沿用 `useAttachmentUpload`：貼上、拖放、選檔共用上傳狀態與檢查, 未完成或失敗上傳阻擋送出, 可取消／重試；圖片引用不存Base64, PDF／ZIP綁定卡片後提供下載。圖片預覽／縮圖／放大與撤權由既有 `AttachmentImage`／附件讀取API負責。紙條不能以Project可讀資格借用附件權限
 
 草稿目前只在元件記憶體內保留並由離頁確認保護, 不承諾重新載入／關閉瀏覽器後復原, 不將私人內容寫入localStorage。附件保留既有pending TTL與冪等綁定, 不在本契約重做R2或新增儲存服務
+
+## 紙條私有圖片（TT-294, 後端已提供, 前端接線中）
+
+獨立 `todo_attachments` 表, 不放寬 Issue 附件的 Project 外鍵。Session 端點 `GET /api/v1/todo-attachments/limits`、`POST /api/v1/todo-attachments`（只收圖片, requestId 冪等）、`GET /api/v1/todo-attachments/{id}/content`。暫存只給上傳者、24 小時逾期由既有清理流程清除；建立紙條、建立人改內容與經手者附言在同交易依 `attachment:` 引用綁定, 只能綁自己的暫存。已綁定圖片只給能讀該紙條的經手者（建立人、原承辦、目前承辦、曾經手）, Project 讀權或工作區管理角色不能借用。含圖紙條轉卡在圖片複製完成前明確拒絕

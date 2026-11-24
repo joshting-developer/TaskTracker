@@ -21,8 +21,9 @@ class TodoCollaborationService
     /** 注入協作資料入口與既有防重播用例
      * @param  TodoCollaborationRepository  $todos  單筆有界資料入口
      * @param  RequestReplay  $replay  同requestId及原始輸入重播
+     * @param  TodoAttachmentService  $attachments  附言的紙條圖片綁定
      */
-    public function __construct(private TodoCollaborationRepository $todos, private RequestReplay $replay) {}
+    public function __construct(private TodoCollaborationRepository $todos, private RequestReplay $replay, private TodoAttachmentService $attachments) {}
 
     /** 重新驗證經手資格, 用於通知讀取及相容寫入邊界
      * @param  array<string,mixed>  $identity  可信工作區身分
@@ -133,6 +134,7 @@ class TodoCollaborationService
             $at = now()->toISOString();
             $actor = $identity['user']['name'];
             if ($reply !== '') {
+                $this->attachments->bindMarkdownReferences($identity, $todo->public_id, $reply);
                 $this->todos->append('todo_comments', ['public_id' => (string) Str::uuid(), 'workspace_id' => $todo->workspace_id, 'todo_id' => $todo->id, 'author_id' => $context->memberId, 'author_name' => $actor, 'content' => $reply, 'created_at' => $at]);
             }
             $changes = [];

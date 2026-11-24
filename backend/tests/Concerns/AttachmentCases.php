@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Models\WorkspaceMember;
 use App\Repositories\AttachmentRepository;
+use App\Repositories\TodoAttachmentRepository;
 use App\Services\AttachmentCleanupService;
 use App\Services\AttachmentStorage;
 use Illuminate\Database\Eloquent\Builder;
@@ -399,7 +400,7 @@ trait AttachmentCases
                 return $this->fail ? false : parent::delete($disk, $key);
             }
         };
-        $cleanup = new AttachmentCleanupService(app(AttachmentRepository::class), $fault);
+        $cleanup = new AttachmentCleanupService(app(AttachmentRepository::class), $fault, app(TodoAttachmentRepository::class));
         $this->travel(25)->hours();
         $cleaned = $cleanup->run();
         $this->assertGreaterThanOrEqual(1, $cleaned['failed']);

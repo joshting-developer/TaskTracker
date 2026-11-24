@@ -3,6 +3,7 @@
 namespace App\Http\Responses;
 
 use App\Models\Attachment;
+use App\Models\TodoAttachment;
 use App\Services\AttachmentStorage;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -16,11 +17,11 @@ class AttachmentContentResponse
     public function __construct(private AttachmentStorage $storage) {}
 
     /** 不redirect儲存URL, 以串流固定內容型別與安全下載檔名
-     * @param  Attachment  $row  Service已授權的metadata, 不觸發查詢
+     * @param  Attachment|TodoAttachment  $row  Service已授權的metadata, 不觸發查詢
      * @param  bool  $download  是否強制下載
      * @return StreamedResponse 私有no-store圖片串流
      */
-    public function make(Attachment $row, bool $download): StreamedResponse
+    public function make(Attachment|TodoAttachment $row, bool $download): StreamedResponse
     {
         $stream = $this->storage->read($row->storage_disk, $row->storage_key);
 

@@ -29,8 +29,9 @@ class Todos
      * @param  RequestReplay  $replay  防重複提交與原結果重播
      * @param  WorkspaceService  $workspaces  轉成正式卡片時沿用的RPC寫入入口
      * @param  TodoCollaborationService  $collaboration  留言與交接用例
+     * @param  TodoAttachmentService  $attachments  紙條圖片綁定
      */
-    public function __construct(private array $workspaceSession, private RecordStore $store, private ProjectAccess $access, private RequestReplay $replay, private WorkspaceService $workspaces, private TodoCollaborationService $collaboration)
+    public function __construct(private array $workspaceSession, private RecordStore $store, private ProjectAccess $access, private RequestReplay $replay, private WorkspaceService $workspaces, private TodoCollaborationService $collaboration, private TodoAttachmentService $attachments)
     {
         $this->userId = $workspaceSession['user']['id'];
     }
@@ -266,6 +267,7 @@ class Todos
         ];
         $this->store->put('todos', $id, $todo);
         $this->collaboration->initialize($this->workspaceSession, $id);
+        $this->attachments->bindMarkdownReferences($this->workspaceSession, $id, $todo['content'] ?? '');
         $this->notify($todo, $assigneeId, 'assigned');
 
         return [
@@ -293,6 +295,10 @@ class Todos
         }
         $at = $this->now();
         if ($operation === 'convertTodo') {
+            // TT-294：紙條圖片複製到Issue尚未提供, 先明確拒絕, 不讓Issue端以找不到附件失敗。
+            if (preg_match('/\]\(attachment:/i', $todo['content'] ?? '')) {
+                DomainError::fail('INVALID_INPUT', '紙條含圖片時暫不支援轉卡, 請先移除圖片');
+            }
             $fields = $input['issue'] ?? null;
             if (! is_array($fields) || array_is_list($fields)) {
                 DomainError::fail('INVALID_INPUT', '請填寫正式卡片資料');
@@ -351,6 +357,9 @@ class Todos
             ],
         ];
         $this->store->put('todos', $todo['id'], $updated);
+        if ($operation === 'updateTodo') {
+            $this->attachments->bindMarkdownReferences($this->workspaceSession, $todo['id'], $updated['content'] ?? '');
+        }
         $recipient = $todo['createdBy'] === $this->userId ? $todo['assigneeId'] : $todo['createdBy'];
         $this->notify($updated, $recipient, $event);
 

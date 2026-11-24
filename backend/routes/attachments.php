@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\TodoAttachmentController;
 use Illuminate\Support\Facades\Route;
 
 // Loaded inside the existing Session v1 group; never a public PAT capability.
@@ -10,3 +11,7 @@ Route::get('/projects/{project}/issues/{issue}/attachments', [AttachmentControll
 Route::get('/projects/{project}/attachments/{attachment}/content', [AttachmentController::class, 'content'])->name('v1.attachments.content');
 Route::post('/projects/{project}/attachments/{attachment}/bind', [AttachmentController::class, 'bind'])->name('v1.attachments.bind');
 Route::delete('/projects/{project}/attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('v1.attachments.destroy');
+// TT-294：紙條私有圖片, 讀取依紙條經手者, 不經Project
+Route::get('/todo-attachments/limits', [TodoAttachmentController::class, 'limits'])->name('v1.todo-attachments.limits');
+Route::post('/todo-attachments', [TodoAttachmentController::class, 'upload'])->middleware('throttle:30,1')->name('v1.todo-attachments.upload');
+Route::get('/todo-attachments/{attachment}/content', [TodoAttachmentController::class, 'content'])->name('v1.todo-attachments.content');

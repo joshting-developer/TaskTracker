@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Queries;
 
+use App\Models\Issue;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,7 +29,7 @@ class ScheduleIssueResource extends JsonResource
     /**
      * 當頁卡片引用的Epic, 依卡號排序去重；甘特群組標題用, Epic本身沒有日期時也有名稱。
      *
-     * @param  array<int,\App\Models\Issue>  $issues  已預載同Project Epic的當頁卡片
+     * @param  array<int,Issue>  $issues  已預載同Project Epic的當頁卡片
      * @return array<int,array{id:string,identifier:string,title:string}> Epic摘要
      */
     public static function epics(array $issues): array

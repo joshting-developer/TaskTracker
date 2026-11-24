@@ -3,6 +3,7 @@
 namespace App\Factories;
 
 use App\Services\RequestReplay;
+use App\Services\TodoAttachmentService;
 use App\Services\TodoCollaborationService;
 use App\Services\Todos;
 use App\Services\WorkspaceService;
@@ -19,8 +20,9 @@ class TodosFactory
      * @param  WorkspaceServicesFactory  $services  依可信Session建立限定Store與ProjectAccess
      * @param  RequestReplay  $replay  防重複提交與原結果重播
      * @param  TodoCollaborationService  $collaboration  留言與交接用例
+     * @param  TodoAttachmentService  $attachments  紙條圖片綁定
      */
-    public function __construct(private WorkspaceService $workspaces, private WorkspaceServicesFactory $services, private RequestReplay $replay, private TodoCollaborationService $collaboration) {}
+    public function __construct(private WorkspaceService $workspaces, private WorkspaceServicesFactory $services, private RequestReplay $replay, private TodoCollaborationService $collaboration, private TodoAttachmentService $attachments) {}
 
     /**
      * 建立本次操作專用的待辦用例。
@@ -32,6 +34,6 @@ class TodosFactory
     {
         $services = $this->services->forSession($workspaceSession);
 
-        return new Todos($workspaceSession, $services->store, $services->access(), $this->replay, $this->workspaces, $this->collaboration);
+        return new Todos($workspaceSession, $services->store, $services->access(), $this->replay, $this->workspaces, $this->collaboration, $this->attachments);
     }
 }
