@@ -2,8 +2,9 @@
 import { t } from '../i18n/index.js';
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
-import { dateInTaipei, isClosed, statusesFor } from '../domain/model.js';
-import { addDays, layoutBars, scheduleSpan, weekOf } from '../domain/schedule.js';
+import { dateInTaipei } from '../domain/model.js';
+import { addDays, layoutBars, weekOf } from '../domain/schedule.js';
+import { useScheduleBars } from '../composables/useScheduleBars.js';
 import { readContext, writeContext } from '../ui/workContext.js';
 import Icon from './Icon.vue';
 import PagedSelect from './PagedSelect.vue';
@@ -16,10 +17,9 @@ const anchor = ref(validDay(saved.week) ? saved.week : dateInTaipei()), assignee
 const result = shallowRef(null), loading = ref(false), error = ref(''), page = ref(1);
 let generation = 0, request;
 const week = computed(() => weekOf(anchor.value));
-const today = dateInTaipei();
+const { today, barClass, barStyle, barLabel, initials } = useScheduleBars(() => props.project);
 const weekdays = [t('一'), t('二'), t('三'), t('四'), t('五'), t('六'), t('日')];
 const bars = computed(() => layoutBars(result.value?.items || [], week.value.from, week.value.to));
-const statuses = computed(() => new Map(statusesFor(props.project).map(status => [status.id, status])));
 const lanes = computed(() => Math.max(1, ...bars.value.map(bar => bar.lane + 1)));
 // 窄螢幕改逐日清單, 跨日卡片在每一天都列出。
 const agenda = computed(() => week.value.days.map((date, index) => ({ date, index, bars: bars.value.filter(bar => bar.start <= index && bar.end >= index) })));
@@ -48,17 +48,6 @@ defineExpose({ refresh: load });
 function lookupMembers(filters, options) { return api.members(props.project.id, filters, options); }
 function open(issue) { emit('open', { id: issue.id, projectId: props.project.id }); }
 function label(date) { return `${Number(date.slice(5, 7))}/${Number(date.slice(8))}`; }
-// 計畫結束日已過仍未關閉視為逾期, 和工具列「今天」同一個台北日期。
-function overdue(issue) { return !isClosed(issue) && scheduleSpan(issue).end < today; }
-function stateLabel(issue) { return issue.stateLabel || statuses.value.get(issue.state)?.label || issue.state; }
-function barClass(bar, continued = true) { return { closed: isClosed(bar.issue), overdue: overdue(bar.issue), before: continued && bar.continuesBefore, after: continued && bar.continuesAfter }; }
-function barStyle(issue) { return { '--status-color': statuses.value.get(issue.state)?.color || '#9a9da9' }; }
-function initials(name) { return Array.from(name.trim())[0]?.toUpperCase() || ''; }
-function barLabel(bar) {
-  const { issue } = bar, range = issue.startDate && issue.endDate && issue.startDate !== issue.endDate ? `${issue.startDate} – ${issue.endDate}` : issue.startDate || issue.endDate;
-  const state = overdue(issue) ? `${stateLabel(issue)}, ${t('已逾期')}` : stateLabel(issue);
-  return t('{0} {1}, {2}, {3}, {4}', [issue.identifier, issue.title, state, range, issue.assigneeName || t('未指派')]);
-}
 </script>
 
 <template>

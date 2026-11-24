@@ -10,7 +10,7 @@ export function parseHash(hash) {
   const [path, query = ''] = hash.split('?');
   const params = new URLSearchParams(query);
   const route = path.match(/^#\/projects\/([^/]+)(?:\/(board|boards)(?:\/((?!issues(?:\/|$))[^/]+))?)?(?:\/issues\/([^/]+))?$/);
-  const featureRoute = path.match(/^#\/projects\/([^/]+)\/(epics|time|schedule|settings|members|notifications|tags)$/);
+  const featureRoute = path.match(/^#\/projects\/([^/]+)\/(epics|time|schedule|people|settings|members|notifications|tags)$/);
   const legacyId = path.match(/^#\/issue\/([^/]+)$/)?.[1];
   let project = '', issue = '', board = 'default', malformed = false;
   try {
