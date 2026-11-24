@@ -1,0 +1,127 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Issue;
+use App\Models\ProjectMember;
+use App\Models\WorkspaceMember;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Tests\TestCase;
+
+/** 用隔離MySQL驗證時程區間重疊、單端日期、未排程計數、分頁與撤權。 */
+class ScheduleTest extends TestCase
+{
+    use RefreshDatabase;
+
+    /** 建立已驗證本人與專案
+     * @return array{array,array} 身分與專案
+     */
+    private function fixture(): array
+    {
+        $identity = $this->postJson('/api/auth/register', ['name' => 'Schedule', 'email' => Str::uuid().'@example.test', 'password' => 'schedule-password', 'workspaceName' => 'Schedule'])->assertOk()->json('data');
+        $project = $this->postJson('/api/rpc/createProject', ['name' => 'Plan', 'code' => 'PLAN', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+
+        return [$identity, $project];
+    }
+
+    /** 建立任務後保留真實外鍵, 日期與指派由fixture設定
+     * @param  array  $project  專案
+     * @param  array  $fields  合成資料
+     * @return Issue 已保存任務
+     */
+    private function issue(array $project, array $fields = []): Issue
+    {
+        $row = $this->postJson('/api/rpc/createIssue', ['projectId' => $project['id'], 'title' => '排程 '.Str::uuid(), 'description' => 'must-not-read-description', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $issue = Issue::where('public_id', $row['id'])->firstOrFail();
+        $issue->update($fields);
+
+        return $issue;
+    }
+
+    /** 區間首尾都算重疊, 單端視為單日, 到期日不參與, 兩端皆空只計數
+     * @return void
+     */
+    public function test_overlap_single_ended_and_unscheduled(): void
+    {
+        [, $project] = $this->fixture();
+        $url = '/api/v1/projects/'.$project['id'].'/schedule?from=2026-11-30&to=2026-12-06';
+        $across = $this->issue($project, ['start_date' => '2026-11-20', 'end_date' => '2026-12-31']);
+        $endsOnFrom = $this->issue($project, ['start_date' => '2026-11-25', 'end_date' => '2026-11-30']);
+        $startsOnTo = $this->issue($project, ['start_date' => '2026-12-06', 'end_date' => '2026-12-09']);
+        $onlyStart = $this->issue($project, ['start_date' => '2026-12-01']);
+        $onlyEnd = $this->issue($project, ['end_date' => '2026-12-02']);
+        $this->issue($project, ['start_date' => '2026-11-01', 'end_date' => '2026-11-29']);
+        $this->issue($project, ['start_date' => '2026-12-07']);
+        $this->issue($project, ['end_date' => '2026-11-29']);
+        $this->issue($project, ['due_date' => '2026-12-01']);
+        $this->issue($project);
+
+        $data = $this->getJson($url)->assertOk()->json('data');
+        $this->assertSame([$across->public_id, $endsOnFrom->public_id, $onlyStart->public_id, $onlyEnd->public_id, $startsOnTo->public_id], array_column($data['items'], 'id'));
+        $this->assertSame(2, $data['unscheduled']);
+        $this->assertSame('', $data['items'][2]['endDate']);
+        $this->assertSame('', $data['items'][3]['startDate']);
+        $this->assertArrayNotHasKey('description', $data['items'][0]);
+        $this->assertSame(['id', 'identifier', 'title', 'type', 'priority', 'state', 'stateLabel', 'assignee', 'assigneeName', 'assigneeDisabled', 'startDate', 'endDate', 'dueDate', 'revision'], array_keys($data['items'][0]));
+    }
+
+    /** 換頁不重複不漏, 承辦者篩選同時套用到未排程數
+     * @return void
+     */
+    public function test_stable_pagination_and_assignee_filter(): void
+    {
+        [$identity, $project] = $this->fixture();
+        $member = WorkspaceMember::where('user_id', $identity['user']['id'])->firstOrFail();
+        $ids = [];
+        foreach (range(1, 5) as $index) {
+            $ids[] = $this->issue($project, ['start_date' => '2026-02-28', 'end_date' => '2026-03-01', 'assignee_id' => $index <= 2 ? $member->id : null])->public_id;
+        }
+        $this->issue($project, ['assignee_id' => $member->id]);
+        $url = '/api/v1/projects/'.$project['id'].'/schedule?from=2026-02-01&to=2026-03-31&perPage=2';
+        $seen = [];
+        foreach (range(1, 3) as $page) {
+            $seen = [...$seen, ...array_column($this->getJson($url.'&page='.$page)->assertOk()->json('data.items'), 'id')];
+        }
+        $this->assertSame(Issue::whereIn('public_id', $ids)->orderBy('identifier')->pluck('public_id')->all(), $seen);
+        $mine = $this->getJson($url.'&assignee='.$identity['user']['id'])->assertOk()->json('data');
+        $this->assertSame(2, $mine['total']);
+        $this->assertSame(1, $mine['unscheduled']);
+        $this->assertSame($identity['user']['id'], $mine['items'][0]['assignee']);
+    }
+
+    /** 跨度、格式與順序在查詢前拒絕
+     * @return void
+     */
+    public function test_range_validation(): void
+    {
+        [, $project] = $this->fixture();
+        $base = '/api/v1/projects/'.$project['id'].'/schedule';
+        $this->getJson($base.'?from=2026-01-01&to=2026-04-02')->assertOk();
+        $this->getJson($base.'?from=2026-01-01&to=2026-04-03')->assertStatus(400);
+        $this->getJson($base.'?from=2026-03-02&to=2026-03-01')->assertStatus(400);
+        $this->getJson($base.'?from=2026-02-30&to=2026-03-01')->assertStatus(400);
+        $this->getJson($base.'?from=2026-03-01')->assertStatus(400);
+        $this->getJson($base.'?from=2026-03-01&to=2026-03-02&perPage=201')->assertStatus(400);
+    }
+
+    /** 移除專案資格後立即不可讀, 切工作區不帶出舊租戶
+     * @return void
+     */
+    public function test_permission_revocation_and_workspace_isolation(): void
+    {
+        [$identity, $project] = $this->fixture();
+        $member = WorkspaceMember::where('user_id', $identity['user']['id'])->firstOrFail();
+        $issue = $this->issue($project, ['start_date' => '2026-05-01']);
+        $url = '/api/v1/projects/'.$project['id'].'/schedule?from=2026-05-01&to=2026-05-07';
+        $member->update(['role' => 'member']);
+        ProjectMember::create(['public_id' => $project['id'].':'.$member->user_id, 'workspace_id' => $member->workspace_id, 'project_id' => $issue->project_id, 'member_id' => $member->id, 'role_id' => 'developer', 'revision' => 1]);
+        $this->getJson($url)->assertOk()->assertJsonPath('data.total', 1);
+        ProjectMember::where('member_id', $member->id)->update(['removed_at' => now()]);
+        $this->assertContains($this->getJson($url)->status(), [403, 404]);
+        $member->update(['role' => 'owner']);
+        $this->getJson($url)->assertOk();
+        $this->postJson('/api/auth/createWorkspace', ['workspaceName' => 'Another', 'requestId' => (string) Str::uuid()])->assertOk();
+        $this->getJson($url)->assertStatus(404);
+    }
+}

@@ -17,6 +17,7 @@ use App\Http\Controllers\Queries\ProjectMembersController;
 use App\Http\Controllers\Queries\ProjectNotificationsController;
 use App\Http\Controllers\Queries\ProjectsController;
 use App\Http\Controllers\Queries\ProjectTimeController;
+use App\Http\Controllers\Queries\ScheduleController;
 use App\Http\Controllers\Queries\TimeReportsController;
 use App\Http\Controllers\Queries\TodosController;
 use App\Http\Controllers\Queries\WorkspaceSettingsController;
@@ -149,6 +150,7 @@ Route::prefix('/api/v1')->group(function () {
     Route::get('/projects/{project}/notifications/{notification}', [ProjectNotificationsController::class, 'show'])->name('v1.projects.notifications.show');
     Route::get('/projects/{project}/time-calendar', [ProjectTimeController::class, 'calendar'])->name('v1.projects.time-calendar');
     Route::get('/projects/{project}/time-entries', [ProjectTimeController::class, 'day'])->name('v1.projects.time-entries');
+    Route::get('/projects/{project}/schedule', [ScheduleController::class, 'index'])->name('v1.projects.schedule');
     Route::get('/projects/{project}/acl', [ProjectMembersController::class, 'metadata'])->name('v1.projects.acl');
     Route::get('/projects/{project}/acl/members', [ProjectMembersController::class, 'index'])->name('v1.projects.acl.members');
     Route::get('/projects/{project}/acl/candidates', [ProjectMembersController::class, 'candidates'])->name('v1.projects.acl.candidates');
