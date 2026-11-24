@@ -32,6 +32,9 @@ try {
   await call(page, 'createIssue', { projectId: project.id, title: '只填結束日', endDate: week.days[4] });
   await call(page, 'createIssue', { projectId: project.id, title: '下週才開始', startDate: addDays(week.to, 1) });
   await call(page, 'createIssue', { projectId: project.id, title: '只有到期日', dueDate: week.days[2] });
+  // 逾期：計畫結束日在今天之前且未關閉；週一當天沒有本週的過去日, 改放上週結束（不在畫面上）。
+  const overdueEnd = addDays(today, -1), overdueVisible = overdueEnd >= week.from;
+  await call(page, 'createIssue', { projectId: project.id, title: '逾期未完成', startDate: addDays(week.from, -1), endDate: overdueEnd });
   mkdirSync('artifacts/schedule-week', { recursive: true });
   if (process.env.SCHEDULE_BEFORE === '1') {
     await page.goto(`http://127.0.0.1:${port}/app/#/projects/${project.id}`);
@@ -51,7 +54,17 @@ try {
     // 重疊卡片不互相遮蓋：同一天的兩個條狀上下分開。
     const boxes = await Promise.all(['週二單日', '週二到週四'].map(title => grid.getByRole('button', { name: new RegExp(title) }).boundingBox()));
     assert.ok(boxes[0].y + boxes[0].height <= boxes[1].y || boxes[1].y + boxes[1].height <= boxes[0].y, JSON.stringify(boxes));
+    if (overdueVisible) {
+      const late = grid.getByRole('button', { name: /逾期未完成/ });
+      assert.equal(await late.evaluate(el => el.classList.contains('overdue')), true);
+      assert.match(await late.getAttribute('aria-label'), /已逾期/);
+    }
+    assert.equal(await grid.locator('.schedule-bar.overdue').count(), overdueVisible ? 1 : 0, '只有過期未關閉的卡片標逾期');
     const longBar = grid.getByRole('button', { name: /跨週的長任務/ });
+    // 狀態色取專案狀態設定；全部成員時顯示承辦人縮寫, 未指派不顯示。
+    assert.equal(await longBar.evaluate(el => getComputedStyle(el).getPropertyValue('--status-color').trim()), '#9a9da9');
+    assert.equal(await longBar.locator('.avatar').textContent(), '週');
+    assert.equal(await grid.getByRole('button', { name: /週二單日/ }).locator('.avatar').count(), 0);
     assert.equal(await longBar.evaluate(el => el.classList.contains('before') && el.classList.contains('after')), true);
     const schedule = reads.filter(url => url.includes('/schedule?')).map(url => new URL(url).searchParams);
     assert.equal(schedule.length, 1); assert.equal(schedule[0].get('from'), week.from); assert.equal(schedule[0].get('to'), week.to);
@@ -77,6 +90,7 @@ try {
     await assigneeSelect.focus(); await assigneeSelect.locator(`option[value="${identity.user.id}"]`).waitFor({ state: 'attached' });
     await assigneeSelect.selectOption(identity.user.id); await scheduleReady(page);
     assert.equal(await grid.getByRole('button').count(), 1);
+    assert.equal(await grid.locator('.schedule-bar .avatar').count(), 0, '篩選單一承辦人時不重複顯示縮寫');
     assert.equal(new URL(reads.findLast(url => url.includes('/schedule?'))).searchParams.get('assignee'), identity.user.id);
     await page.reload(); await scheduleReady(page);
     assert.equal(await grid.getByRole('button').count(), 1, '承辦人篩選在分頁重新整理後保留');
@@ -86,6 +100,6 @@ try {
     assert.equal(await page.getByRole('alert').count(), 0);
     await page.getByRole('button', { name: '本週' }).click(); await scheduleReady(page);
     await longBar.click(); await page.getByRole('dialog').getByText(across.identifier || across.title.slice(0, 6)).first().waitFor();
-    assert.deepEqual(errors, []); console.log('PASS Schedule week: planned-date bars, single-ended, unscheduled count, non-overlapping lanes, week navigation, assignee filter, retry, mobile agenda and three widths');
+    assert.deepEqual(errors, []); console.log('PASS Schedule week: planned-date bars, status color, overdue, assignee initials, single-ended, unscheduled count, non-overlapping lanes, week navigation, assignee filter, retry, mobile agenda and three widths');
   }
 } finally { await browser?.close(); await new Promise(resolve => server ? server.httpServer.close(resolve) : resolve()); }

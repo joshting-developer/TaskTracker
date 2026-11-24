@@ -2,8 +2,8 @@
 import { t } from '../i18n/index.js';
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
-import { dateInTaipei } from '../domain/model.js';
-import { addDays, layoutBars, weekOf } from '../domain/schedule.js';
+import { dateInTaipei, isClosed, statusesFor } from '../domain/model.js';
+import { addDays, layoutBars, scheduleSpan, weekOf } from '../domain/schedule.js';
 import { readContext, writeContext } from '../ui/workContext.js';
 import Icon from './Icon.vue';
 import PagedSelect from './PagedSelect.vue';
@@ -19,6 +19,7 @@ const week = computed(() => weekOf(anchor.value));
 const today = dateInTaipei();
 const weekdays = [t('一'), t('二'), t('三'), t('四'), t('五'), t('六'), t('日')];
 const bars = computed(() => layoutBars(result.value?.items || [], week.value.from, week.value.to));
+const statuses = computed(() => new Map(statusesFor(props.project).map(status => [status.id, status])));
 const lanes = computed(() => Math.max(1, ...bars.value.map(bar => bar.lane + 1)));
 // 窄螢幕改逐日清單, 跨日卡片在每一天都列出。
 const agenda = computed(() => week.value.days.map((date, index) => ({ date, index, bars: bars.value.filter(bar => bar.start <= index && bar.end >= index) })));
@@ -47,9 +48,16 @@ defineExpose({ refresh: load });
 function lookupMembers(filters, options) { return api.members(props.project.id, filters, options); }
 function open(issue) { emit('open', { id: issue.id, projectId: props.project.id }); }
 function label(date) { return `${Number(date.slice(5, 7))}/${Number(date.slice(8))}`; }
+// 計畫結束日已過仍未關閉視為逾期, 和工具列「今天」同一個台北日期。
+function overdue(issue) { return !isClosed(issue) && scheduleSpan(issue).end < today; }
+function stateLabel(issue) { return issue.stateLabel || statuses.value.get(issue.state)?.label || issue.state; }
+function barClass(bar, continued = true) { return { closed: isClosed(bar.issue), overdue: overdue(bar.issue), before: continued && bar.continuesBefore, after: continued && bar.continuesAfter }; }
+function barStyle(issue) { return { '--status-color': statuses.value.get(issue.state)?.color || '#9a9da9' }; }
+function initials(name) { return Array.from(name.trim())[0]?.toUpperCase() || ''; }
 function barLabel(bar) {
   const { issue } = bar, range = issue.startDate && issue.endDate && issue.startDate !== issue.endDate ? `${issue.startDate} – ${issue.endDate}` : issue.startDate || issue.endDate;
-  return t('{0} {1}, {2}, {3}', [issue.identifier, issue.title, range, issue.assigneeName || t('未指派')]);
+  const state = overdue(issue) ? `${stateLabel(issue)}, ${t('已逾期')}` : stateLabel(issue);
+  return t('{0} {1}, {2}, {3}, {4}', [issue.identifier, issue.title, state, range, issue.assigneeName || t('未指派')]);
 }
 </script>
 
@@ -63,10 +71,10 @@ function barLabel(bar) {
       <div class="schedule-grid" :style="{ gridTemplateRows: `auto repeat(${lanes}, 38px) minmax(24px, 1fr)` }">
         <div v-for="(date, index) in week.days" :key="date" class="schedule-day" :class="{ today: date === today }" :style="{ gridColumn: index + 1, gridRow: 1 }"><span>{{ weekdays[index] }}</span><strong>{{ label(date) }}</strong></div>
         <div v-for="(date, index) in week.days" :key="`${date}:column`" class="schedule-column" :class="{ today: date === today }" :style="{ gridColumn: index + 1, gridRow: '2 / -1' }" aria-hidden="true"></div>
-        <button v-for="bar in bars" :key="bar.issue.id" class="schedule-bar" :class="{ closed: bar.issue.state === 'closed', before: bar.continuesBefore, after: bar.continuesAfter }" :style="{ gridColumn: `${bar.start + 1} / ${bar.end + 2}`, gridRow: bar.lane + 2 }" :aria-label="barLabel(bar)" :title="barLabel(bar)" @click="open(bar.issue)"><span class="identifier">{{ bar.issue.identifier }}</span><span class="schedule-title">{{ bar.issue.title }}</span></button>
+        <button v-for="bar in bars" :key="bar.issue.id" class="schedule-bar" :class="barClass(bar)" :style="{ ...barStyle(bar.issue), gridColumn: `${bar.start + 1} / ${bar.end + 2}`, gridRow: bar.lane + 2 }" :aria-label="barLabel(bar)" :title="barLabel(bar)" @click="open(bar.issue)"><span class="identifier">{{ bar.issue.identifier }}</span><span class="schedule-title">{{ bar.issue.title }}</span><span v-if="!assignee && bar.issue.assigneeName" class="avatar small" aria-hidden="true">{{ initials(bar.issue.assigneeName) }}</span></button>
       </div>
       <ol class="schedule-agenda" :aria-label="t('本週每日任務')">
-        <li v-for="day in agenda" :key="day.date" :class="{ today: day.date === today }"><h3>{{ weekdays[day.index] }} {{ label(day.date) }}</h3><p v-if="!day.bars.length" class="subtle">{{ t('沒有排程') }}</p><button v-for="bar in day.bars" :key="bar.issue.id" class="schedule-bar" :class="{ closed: bar.issue.state === 'closed' }" :aria-label="barLabel(bar)" @click="open(bar.issue)"><span class="identifier">{{ bar.issue.identifier }}</span><span class="schedule-title">{{ bar.issue.title }}</span></button></li>
+        <li v-for="day in agenda" :key="day.date" :class="{ today: day.date === today }"><h3>{{ weekdays[day.index] }} {{ label(day.date) }}</h3><p v-if="!day.bars.length" class="subtle">{{ t('沒有排程') }}</p><button v-for="bar in day.bars" :key="bar.issue.id" class="schedule-bar" :class="barClass(bar, false)" :style="barStyle(bar.issue)" :aria-label="barLabel(bar)" @click="open(bar.issue)"><span class="identifier">{{ bar.issue.identifier }}</span><span class="schedule-title">{{ bar.issue.title }}</span><span v-if="!assignee && bar.issue.assigneeName" class="avatar small" aria-hidden="true">{{ initials(bar.issue.assigneeName) }}</span></button></li>
       </ol>
       <p v-if="result && !bars.length" class="schedule-status subtle">{{ t('這週沒有排程的任務') }}</p>
     </div>
