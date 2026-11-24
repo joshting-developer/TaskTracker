@@ -2,6 +2,7 @@ import { t } from '../i18n/index.js';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { queryApi, requestJson, requestUpload } from '../api/http.js';
 import { releaseUploads, trackUploads } from './useUploadTray.js';
+import { attachmentRoot, TODO_ATTACHMENTS } from '../api/attachments.js';
 
 // Windows reports ZIP under older names; the server still sniffs the real content.
 const ZIP_ALIASES = ['application/x-zip-compressed', 'application/x-zip'];
@@ -19,12 +20,12 @@ export function useAttachmentUpload({ projectId, source, insert, maxlength, allo
   const pendingFiles = computed(() => rows.value.filter(row => row.kind === 'file' && row.state === 'uploaded'));
   let generation = 0, limitsRequest, binding = false;
   const controllers = new Map(), owner = Symbol('attachment-upload');
-  const root = () => `/api/v1/projects/${encodeURIComponent(projectId.value)}/attachments`;
+  const root = () => attachmentRoot(projectId.value);
   function clear() { releaseUploads(owner); generation++; limitsRequest?.abort(); for (const value of controllers.values()) value.abort(); controllers.clear(); rows.value = []; limits.value = null; error.value = ''; }
   watch(projectId, async project => {
     clear(); if (!project) return;
     limitsRequest = new AbortController(); const captured = generation;
-    try { const result = await queryApi(`projects/${encodeURIComponent(project)}/attachments/limits`, {}, { signal: limitsRequest.signal }); if (generation === captured) limits.value = result; }
+    try { const result = await queryApi(`${attachmentRoot(project).replace(/^\/api\/v1\//, '')}/limits`, {}, { signal: limitsRequest.signal }); if (generation === captured) limits.value = result; }
     catch (failure) { if (captured === generation) error.value = failure.message; }
   }, { immediate: true });
   // A reloaded issue count already includes what this editor finished, so stop counting those rows twice.
@@ -41,7 +42,8 @@ export function useAttachmentUpload({ projectId, source, insert, maxlength, allo
   function cancel(row) {
     controllers.get(row.id)?.abort();
     // shortcut: best-effort cleanup, an unbound upload also expires after limits.pendingHours.
-    if (row.state === 'uploaded') requestJson(`${root()}/${encodeURIComponent(row.upload.id)}`, { method: 'DELETE', input: { requestId: crypto.randomUUID(), expectedRevision: row.upload.revision } }).catch(() => {});
+    // 紙條暫存沒有刪除端點, 交給逾期清理。
+    if (row.state === 'uploaded' && projectId.value !== TODO_ATTACHMENTS) requestJson(`${root()}/${encodeURIComponent(row.upload.id)}`, { method: 'DELETE', input: { requestId: crypto.randomUUID(), expectedRevision: row.upload.revision } }).catch(() => {});
     row.state = 'canceled'; row.error = '';
   }
   async function upload(row) {

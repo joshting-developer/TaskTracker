@@ -8,12 +8,17 @@ import MarkdownEditor from './MarkdownEditor.vue';
 import TodoConversation from './TodoConversation.vue';
 import TodoActions from './TodoActions.vue';
 import { todoSource } from '../domain/todoContent.js';
+import { TODO_ATTACHMENTS } from '../api/attachments.js';
 const props = defineProps({ item: Object, busy: Boolean, error: String, workspaceId: String, loadMembers: Function, perform: Function, canConvert: Boolean });
 const emit = defineEmits(['close', 'convert', 'open-issue']);
 const dialog = ref(null), id = useId();
 const defaultRecipient = () => props.item.capabilities.return ? '__previous__' : '';
 const reply = shallowRef(''), recipient = shallowRef(defaultRecipient()), revision = shallowRef(props.item.revision), editing = shallowRef(false), content = shallowRef('');
-const dirty = computed(() => Boolean(reply.value.trim() || editing.value));
+const contentEditor = ref(null), replyEditor = ref(null);
+const dirty = computed(() => Boolean(reply.value.trim() || editing.value || replyEditor.value?.attachmentDirty));
+// TT-294：圖片還在上傳或失敗時不送出, 避免引用尚未完成的暫存。
+function uploadPending(editor) { return Boolean(editor?.uploadBusy || editor?.attachmentBlocked); }
+
 const stale = computed(() => revision.value !== props.item.revision);
 const labels = { open: t('待處理'), done: t('已完成'), canceled: t('已取消'), converted: t('已轉卡') };
 let opener;
@@ -24,7 +29,7 @@ function close() {
 }
 function latest() { revision.value = props.item.revision; }
 async function send(operation) {
-  if (props.busy || stale.value) return;
+  if (props.busy || stale.value || uploadPending(operation === 'updateTodo' ? contentEditor.value : replyEditor.value)) return;
   const fields = { id: props.item.id, expectedRevision: revision.value };
   if (operation === 'forwardTodo') {
     if (recipient.value === '__previous__') { if (!props.item.capabilities.return || !reply.value.trim()) return; operation = 'returnTodo'; }
@@ -51,13 +56,13 @@ onBeforeUnmount(() => { dialog.value?.close(); if (opener?.isConnected) opener.f
     <div class="note-drawer-body">
       <p v-if="error" class="error-box" role="alert">{{ t(error) }}</p>
       <p v-if="stale" class="note-conflict" role="status">{{ t('紙條已更新, 草稿已保留') }} <button class="text-button" :disabled="busy" @click="latest">{{ t('使用最新版本繼續') }}</button></p>
-      <form v-if="editing" @submit.prevent="send('updateTodo')"><MarkdownEditor v-model="content" :label="t('編輯紙條內容')" :maxlength="6000" :rows="5" :disabled="busy" required /><button class="button primary" :disabled="busy || stale || !content.trim()">{{ t('儲存修改') }}</button><button type="button" class="text-button note-cancel-edit" :disabled="busy" @click="editing = false">{{ t('取消修改') }}</button></form>
-      <template v-else><MarkdownContent issue-references class="note-content" :source="todoSource(item)" /></template>
+      <form v-if="editing" @submit.prevent="send('updateTodo')"><MarkdownEditor ref="contentEditor" v-model="content" :label="t('編輯紙條內容')" :maxlength="6000" :rows="5" :disabled="busy" required allow-attachments :project-id="TODO_ATTACHMENTS" /><button class="button primary" :disabled="busy || stale || !content.trim()">{{ t('儲存修改') }}</button><button type="button" class="text-button note-cancel-edit" :disabled="busy" @click="editing = false">{{ t('取消修改') }}</button></form>
+      <template v-else><MarkdownContent issue-references class="note-content" :source="todoSource(item)" :project-id="TODO_ATTACHMENTS" /></template>
       <button v-if="item.convertedIssue" class="text-button" @click="emit('open-issue', item.convertedIssue)">{{ item.convertedIssue.identifier }} ↗</button>
       <TodoConversation :item="item" />
     </div>
     <form v-if="item.capabilities.forward && !editing" class="note-transfer" @submit.prevent="send('forwardTodo')">
-      <MarkdownEditor v-model="reply" :label="t('回覆內容')" :rows="3" :maxlength="2000" :disabled="busy" :placeholder="t('輸入回覆…')" />
+      <MarkdownEditor ref="replyEditor" v-model="reply" :label="t('回覆內容')" :rows="3" :maxlength="2000" :disabled="busy" :placeholder="t('輸入回覆…')" allow-attachments :project-id="TODO_ATTACHMENTS" />
       <div class="note-transfer-actions"><PagedSelect v-model="recipient" :label="t('要傳給誰')" :context="workspaceId" :load="loadMembers" :fixed-options="[...(item.capabilities.return ? [{ id: '__previous__', name: t('回覆上一手') }] : []), { id: item.createdBy, name: item.creatorName }, { id: item.initialAssigneeId, name: item.initialAssigneeName || item.assigneeName }]" :disabled="busy" autoload required :empty-label="t('選擇承辦人')" /><button class="button primary" :disabled="busy || stale || !recipient || recipient === item.assigneeId || (recipient === '__previous__' && (!item.capabilities.return || !reply.trim()))">{{ t('傳遞') }}</button></div>
     </form>
   </dialog>

@@ -7,13 +7,17 @@ import MarkdownEditor from './MarkdownEditor.vue';
 import TodoDetailDrawer from './TodoDetailDrawer.vue';
 import PagedSelect from './PagedSelect.vue';
 import { todoDate } from '../domain/todoContent.js';
+import { TODO_ATTACHMENTS } from '../api/attachments.js';
 const props = defineProps({ remote: Boolean, scope: String, counts: Object, moreHistory: Function, loadItem: Function, loadMembers: Function, workspaceId: String, data: Object, userId: String, canWrite: Boolean, canAssign: Boolean, canConvert: Boolean, refresh: Function });
 const emit = defineEmits(['convert', 'open-issue', 'scope', 'tab']);
 const content = shallowRef(''), assigneeId = shallowRef(props.userId), tab = shallowRef('mine');
 const busy = shallowRef(false), error = shallowRef(''), success = shallowRef(''), selected = shallowRef(null);
 const quickInput = ref(null), drawer = ref(null), tabId = useId();
 const tabs = [{ id: 'create', label: t('建立') }, { id: 'mine', label: t('待處理') }, { id: 'sent', label: t('我交辦的') }, { id: 'involved', label: t('我經手的') }];
-const dirty = computed(() => Boolean(content.value.trim() || drawer.value?.dirty));
+const dirty = computed(() => Boolean(content.value.trim() || quickInput.value?.attachmentDirty || drawer.value?.dirty));
+// TT-294：圖片還在上傳或失敗時不送出, 避免引用尚未完成的暫存。
+function uploadPending(editor) { return Boolean(editor?.uploadBusy || editor?.attachmentBlocked); }
+
 const items = computed(() => props.data.todos.filter(item => tab.value === 'mine' ? item.assigneeId === props.userId && item.state === 'open' : tab.value === 'sent' ? item.createdBy === props.userId : true));
 const labels = { open: t('待處理'), done: t('已完成'), canceled: t('已取消'), converted: t('已轉卡') };
 let pending;
@@ -52,7 +56,7 @@ async function run(operation, payload) {
     return false;
   } finally { busy.value = false; }
 }
-async function create() { if (content.value.trim() && await run('createTodo', { content: content.value, assigneeId: assigneeId.value })) { content.value = ''; assigneeId.value = props.userId; choose('mine'); success.value = t('紙條已建立'); } }
+async function create() { if (uploadPending(quickInput.value)) return; if (content.value.trim() && await run('createTodo', { content: content.value, assigneeId: assigneeId.value })) { content.value = ''; assigneeId.value = props.userId; choose('mine'); success.value = t('紙條已建立'); } }
 async function convert(item) { emit('convert', item); selected.value = null; }
 </script>
 <template>
@@ -64,7 +68,7 @@ async function convert(item) { emit('convert', item); selected.value = null; }
     <p v-if="error" class="error-box" role="alert">{{ t(error) }}</p><p v-if="success" class="notes-success" role="status">{{ success }}</p>
     <div :id="`${tabId}-panel`" role="tabpanel" :aria-labelledby="`${tabId}-${tab}`">
       <form v-if="canWrite && tab === 'create'" class="notes-create" @submit.prevent="create">
-        <MarkdownEditor ref="quickInput" v-model="content" :label="t('紙條內容')" :placeholder="t('輸入紙條內容…')" :maxlength="6000" :rows="5" :disabled="busy" required />
+        <MarkdownEditor ref="quickInput" v-model="content" :label="t('紙條內容')" :placeholder="t('輸入紙條內容…')" :maxlength="6000" :rows="5" :disabled="busy" required allow-attachments :project-id="TODO_ATTACHMENTS" />
         <div class="notes-create-actions"><PagedSelect v-if="canAssign && loadMembers" v-model="assigneeId" :label="t('交給誰')" :fixed-options="[{ id: userId, name: t('自己') }]" :context="workspaceId" :load="loadMembers" :disabled="busy" autoload required :empty-label="t('選擇承辦人')" /><button class="button primary" :disabled="busy || !content.trim() || !assigneeId">{{ t('建立紙條') }}</button></div>
       </form>
       <template v-if="tab !== 'create'">

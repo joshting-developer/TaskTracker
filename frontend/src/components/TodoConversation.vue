@@ -3,6 +3,7 @@ import { displayTimeZone, locale, t } from '../i18n/index.js';
 import { onBeforeUnmount, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import MarkdownContent from './MarkdownContent.vue';
+import { TODO_ATTACHMENTS } from '../api/attachments.js';
 const props = defineProps({ item: Object });
 const loading = shallowRef(false), error = shallowRef('');
 const comments = shallowRef(null), handoffs = shallowRef(null);
@@ -31,7 +32,7 @@ onBeforeUnmount(() => { generation++; controller?.abort(); });
       <h3>{{ t('歷程') }}</h3>
       <p v-if="loading" role="status">{{ t('載入中…') }}</p>
       <div v-if="error" role="alert">{{ t(error) }} <button class="text-button" :disabled="loading" @click="history">{{ t('重試') }}</button></div>
-      <section v-if="comments"><h4>{{ t('留言') }}</h4><p v-if="!comments.total">{{ t('尚無留言') }}</p><ol><li v-for="entry in comments.items" :key="entry.id"><div>{{ entry.author }} <time>{{ stamp(entry.createdAt) }}</time></div><MarkdownContent issue-references :source="entry.content" /></li></ol><button v-if="comments.page < comments.lastPage" class="text-button" :disabled="loading" @click="load('comments', true)">{{ t('載入更多留言') }}</button></section>
+      <section v-if="comments"><h4>{{ t('留言') }}</h4><p v-if="!comments.total">{{ t('尚無留言') }}</p><ol><li v-for="entry in comments.items" :key="entry.id"><div>{{ entry.author }} <time>{{ stamp(entry.createdAt) }}</time></div><MarkdownContent issue-references :source="entry.content" :project-id="TODO_ATTACHMENTS" /></li></ol><button v-if="comments.page < comments.lastPage" class="text-button" :disabled="loading" @click="load('comments', true)">{{ t('載入更多留言') }}</button></section>
       <section v-if="handoffs"><h4>{{ t('交接紀錄') }}</h4><p class="initial-handoff">{{ item.creatorName }} → {{ item.initialAssigneeName || item.assigneeName }} {{ t('· 建立交辦') }} <time>{{ stamp(item.createdAt) }}</time></p><ol><li v-for="entry in handoffs.items" :key="entry.id">{{ entry.from }} → {{ entry.to }} · {{ entry.kind === 'returned' ? t('退回') : t('傳遞') }} <time>{{ stamp(entry.createdAt) }}</time></li></ol><button v-if="handoffs.page < handoffs.lastPage" class="text-button" :disabled="loading" @click="load('handoffs', true)">{{ t('載入更多交接') }}</button></section>
     </section>
   </div>
