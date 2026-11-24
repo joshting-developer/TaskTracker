@@ -1032,5 +1032,16 @@
   "1 筆": "1 entry",
   "{0} 筆": "{0} entries",
   "1 筆結果": "1 result",
-  "{0} 筆結果": "{0} results"
+  "{0} 筆結果": "{0} results",
+  "我的工作": "My work",
+  "我的未結案任務": "My open tasks",
+  "七天內到期與逾期": "Due within 7 days or overdue",
+  "七天內開始": "Starting within 7 days",
+  "最近更新": "Recently updated",
+  "待處理紙條": "Pending notes",
+  "查看紙條": "View notes",
+  "尚無待處理紙條": "No pending notes",
+  "此範圍沒有任務": "No tasks in this view",
+  "個人工作摘要": "Personal work summary",
+  "{0}分頁": "{0} pagination"
 }

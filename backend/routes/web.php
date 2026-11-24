@@ -123,6 +123,7 @@ Route::prefix('/api/v1')->group(function () {
     Route::get('/workspace/members', [WorkspaceSettingsController::class, 'members'])->name('v1.workspace.members');
     Route::get('/operation-logs', [OperationLogsController::class, 'index'])->name('v1.operation-logs');
     Route::get('/workspace/member-roles', [WorkspaceSettingsController::class, 'roles'])->name('v1.workspace.member-roles');
+    Route::get('/personal-dashboard', [\App\Http\Controllers\Queries\PersonalDashboardController::class, 'index'])->name('v1.personal-dashboard');
     Route::get('/personal-version', [TodosController::class, 'versions'])->name('v1.personal-version');
     Route::get('/todos/counts', [TodosController::class, 'counts'])->name('v1.todos.counts');
     Route::get('/todos', [TodosController::class, 'index'])->name('v1.todos');

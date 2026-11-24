@@ -31,6 +31,8 @@ const TimeAnalysis = lazyFeature(() => import('./components/TimeAnalysis.vue'));
 const ProjectTags = lazyFeature(() => import('./components/ProjectTags.vue'));
 const ProjectStatusWorkspace = lazyFeature(() => import('./components/ProjectStatusWorkspace.vue'));
 const ProjectMembers = lazyFeature(() => import('./components/ProjectMembers.vue'));
+const PersonalDashboard = lazyFeature(() => import('./components/PersonalDashboard.vue'));
+const dashboardTool = shallowRef(null);
 const PersonalWorkspace = lazyFeature(() => import('./components/PersonalWorkspace.vue'));
 const ProjectDirectory = lazyFeature(() => import('./components/ProjectDirectory.vue'));
 const TodoConversion = lazyFeature(() => import('./components/TodoConversion.vue'));
@@ -127,6 +129,7 @@ async function refreshCurrent() {
   await projectTasksTool.value?.refresh(false);
   await projectDirectoryTool.value?.refresh();
   await todoTool.value?.refresh();
+  await dashboardTool.value?.refresh();
   await workspaceTool.value?.refresh?.();
   await teamTool.value?.refresh?.();
   await personalSync.refresh();
@@ -475,12 +478,13 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
         <TimeAnalysis :key="workspace.meta.workspace?.id" v-if="!selectedProject && landing === 'analysis' && canAnalyze" :mode="analysisMode" :workspace-version="analysisVersion" @navigate="goAnalysis" />
         <div v-if="!(isTaskRoute && selectedId) && (selectedProject || landing === 'projects')" class="page-heading"><div><h1>{{ title }}</h1><p v-if="selectedProject && section !== 'tasks' && selectedProject.description">{{ selectedProject.description }}</p></div><div class="heading-actions"><button v-if="showNewIssueAction" class="button primary" :disabled="loading || (isTaskRoute && !projectTasksTool)" @click="newIssue"><Icon name="plus" :size="18" />{{ t('新增任務') }}</button><button v-else-if="!selectedProject && workspace.meta.permissions?.includes('project.create')" class="button primary" :disabled="loading" @click="creatingProject = true"><Icon name="plus" :size="18" />{{ t('建立專案') }}</button></div></div>
         <div v-if="!selectedProject && ['home', 'notes', 'projects'].includes(landing)" :key="workspace.meta.workspace?.id" :class="landing === 'home' ? 'home-layout' : 'project-list-page'">
-        <h1 v-if="landing === 'home'" class="sr-only">{{ t('首頁') }}</h1>
+        <h1 v-if="landing === 'home' && !workspace.meta.workspace" class="sr-only">{{ t('首頁') }}</h1>
         <section v-if="landing === 'home' && !workspace.meta.workspace" class="empty-state" :aria-label="t('無隸屬工作區首頁')">
           <h2>{{ workspace.meta.hasWorkspaces ? t('選擇工作區') : t('無隸屬工作區') }}</h2>
           <button class="button primary" @click="workspaceSwitcher?.open()"><Icon :name="workspace.meta.hasWorkspaces ? 'folder' : 'plus'" :size="18" />{{ workspace.meta.hasWorkspaces ? t('選擇工作區') : t('建立工作區') }}</button>
         </section>
         <div v-if="landing === 'home' && error" class="error-box" role="alert">{{ t(error) }}<button class="text-button" @click="refresh({ join: true })">{{ t('重新載入') }}</button></div>
+        <PersonalDashboard v-if="landing === 'home' && workspace.meta.workspace" ref="dashboardTool" :permissions="workspace.meta.permissions || []" @access="refresh({ join: true })" />
         <ProjectDirectory v-if="landing === 'projects'" ref="projectDirectoryTool" :workspace-id="workspace.meta.workspace?.id" :can-create="workspace.meta.permissions?.includes('project.create')" @create="creatingProject = true" @edit="editingProject = $event" @open="id => navigate('all', id)" />
         <PersonalWorkspace v-if="landing === 'notes' && workspace.meta.permissions?.includes('todo.read')" ref="todoTool" :workspace-id="workspace.meta.workspace.id" :permissions="workspace.meta.permissions" :versions="personalSync.versions.value" :resumed="personalSync.resumed.value" :user-id="currentUserId"     @convert="convertTodo" @open-issue="openTodoIssue"  @access="refresh({join:true})"/>
         </div>

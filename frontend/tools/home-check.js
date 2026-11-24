@@ -18,7 +18,8 @@ try {
   page.on('request', r => { if (r.url().includes('/api/')) reads.push(new URL(r.url()).pathname); });
   await page.reload(); await page.locator('.app-shell').waitFor();
   assert.equal(await page.locator('.notes-page,.todo-home,.project-home,.page-heading').count(), 0);
-  assert.equal(reads.some(p => p.startsWith('/api/v1/todos')), false);
+  await page.getByRole('heading', { name: '我的工作', exact: true }).waitFor();
+  assert.ok(reads.some(p => p === '/api/v1/personal-dashboard'));
   await page.getByRole('link', { name: '紙條', exact: true }).click(); await page.getByRole('heading', { name: '紙條', exact: true }).waitFor();
   assert.equal(new URL(page.url()).hash, '#/notes'); await page.reload(); await page.getByRole('heading', { name: '紙條', exact: true }).waitFor();
   await openProjectList(page); await page.getByRole('button', { name: '建立專案', exact: true }).click();
@@ -27,9 +28,9 @@ try {
   await page.getByRole('button', { name: '進入專案：獨立專案入口', exact: true }).click(); await page.getByRole('link', { name: '任務列表', exact: true }).waitFor();
   for (const width of [1440, 768, 390]) {
     await page.setViewportSize({ width, height: 900 }); await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).evaluate(el => el.click());
-    await page.getByRole('heading', { name: '首頁', exact: true }).waitFor();
+    await page.getByRole('heading', { name: '我的工作', exact: true }).waitFor();
     assert.equal(await page.locator('.notes-page,.todo-home,.project-home').count(), 0); assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await openProjectList(page); await page.getByRole('button', { name: '進入專案：獨立專案入口', exact: true }).click();
   }
-  assert.deepEqual(errors, []); console.log('PASS empty home without note reads, independent notes deep link, project creation and three-width navigation');
+  assert.deepEqual(errors, []); console.log('PASS personal dashboard home, independent notes deep link, project creation and three-width navigation');
 } finally { await browser?.close(); await new Promise(resolve => server ? server.httpServer.close(resolve) : resolve()); }
