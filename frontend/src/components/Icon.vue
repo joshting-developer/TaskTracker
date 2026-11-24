@@ -18,6 +18,7 @@ const paths = {
   arrowUp: 'M12 19V5M6 11l6-6 6 6',
   folder: 'M3 7V4h6l3 3h9v13H3z',
   user: 'M20 21v-2a7 7 0 0 0-14 0v2 M17 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
+  calendar: 'M3 5h18v16H3z M3 10h18 M8 3v4M16 3v4',
   clock: 'M12 8v5l3 2 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
   filter: 'M4 7h16M7 12h10M10 17h4',
   menu: 'M4 6h16M4 12h16M4 18h16',

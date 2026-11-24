@@ -25,3 +25,7 @@ Session `GET /api/v1/projects/{project}/schedule` 供人員排程、週曆與甘
 ## 前端共用
 
 `frontend/src/domain/schedule.js` 提供日期位移、週一起算的週範圍、單端區間及不遮蓋的分列排版, 三視圖共用, 檢查在 `frontend/tools/schedule-domain-check.js`
+
+## 週曆（TT-385）
+
+專案側欄「週曆」, 網址 `#/projects/{project}/schedule`, 需要 `issue.read`。週一起算, 一次只讀當週, 切週、承辦人或頁碼才重讀, 不輪詢。跨週卡片以虛線邊標示延續；窄螢幕改逐日清單, 跨日卡片每天都列出。點卡片開既有詳情, 改期在卡片編輯完成。所選週與承辦人只存在目前分頁的 sessionStorage

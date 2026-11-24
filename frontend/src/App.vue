@@ -27,6 +27,7 @@ const PersonalTokensDialog = lazyFeature(() => import('./components/PersonalToke
 const tokensOpen = shallowRef(false);
 const ProfileDialog = lazyFeature(() => import('./components/ProfileDialog.vue'));
 const TimeCalendar = lazyFeature(() => import('./components/TimeCalendar.vue'));
+const ScheduleWeek = lazyFeature(() => import('./components/ScheduleWeek.vue'));
 const TimeAnalysis = lazyFeature(() => import('./components/TimeAnalysis.vue'));
 const ProjectTags = lazyFeature(() => import('./components/ProjectTags.vue'));
 const ProjectStatusWorkspace = lazyFeature(() => import('./components/ProjectStatusWorkspace.vue'));
@@ -53,7 +54,7 @@ const canManageWorkspace = computed(() => workspace.value.meta.permissions?.incl
 const profileOpen = shallowRef(false), accountMenu = useTemplateRef('accountMenu');
 let settingsOpener;
 const section = shallowRef('tasks');
-const sectionPermissions = { tags: 'project.tags.manage', settings: 'project.statuses.update', members: 'project.members.manage', time: 'timeEntry.readOwn' };
+const sectionPermissions = { tags: 'project.tags.manage', settings: 'project.statuses.update', members: 'project.members.manage', time: 'timeEntry.readOwn', schedule: 'issue.read' };
 // TT-314：通知預覽只在local／testing開放, 由後端目前身分的features決定, 正式環境隱藏入口。
 const notificationPreviewEnabled = shallowRef(false);
 const workspaceTool = useTemplateRef('workspaceTool');
@@ -81,7 +82,7 @@ const refresh = useRefreshQueue({
   scope: () => `${refreshScope}:${authenticated.value}:${switchingWorkspace.value}:${workspace.value.meta.workspace?.id || ''}:${projectId.value}:${view.value}:${section.value}`,
   load: refreshWorkspace,
 });
-const isScopedRoute=computed(()=>isTaskRoute.value || (projectId.value && ['settings','notifications','time','members','tags'].includes(section.value)) || (!projectId.value && ['home','notes','projects','settings','analysis'].includes(landing.value)));
+const isScopedRoute=computed(()=>isTaskRoute.value || (projectId.value && ['settings','notifications','time','schedule','members','tags'].includes(section.value)) || (!projectId.value && ['home','notes','projects','settings','analysis'].includes(landing.value)));
 const personalSync=usePersonalSync({active:computed(()=>authenticated.value&&!switchingWorkspace.value&&workspace.value.meta.permissions?.includes('todo.read')),context:computed(()=>`${workspace.value.meta.userId}:${workspace.value.meta.workspace?.id}`),onError:failure=>{if(['UNAUTHENTICATED','FORBIDDEN','WORKSPACE_CHANGED'].includes(failure.code))refresh({join:true});}});
 const today = useWorkspaceClock({ active: computed(() => authenticated.value && !switchingWorkspace.value && Boolean(workspace.value.meta.workspace) && !isScopedRoute.value), refresh: () => refresh({ join: true }) });
 let refreshGeneration = 0, refreshScope = 0;
@@ -122,7 +123,7 @@ const analysisVersion = computed(() => [workspace.value.meta.workspace?.id || ''
 const title = computed(() => selectedProject.value?.name || t('專案列表'));
 const currentFeature = computed(() => section.value === 'tasks'
   ? view.value === 'boards' ? t('看板列表') : view.value === 'board' ? t('任務看板') : scope.value === 'mine' ? t('我的任務') : t('任務列表')
-  : { tags: t('標籤管理'), time: t('工時月曆'), settings: t('狀態設定'), members: t('專案成員'), notifications: t('通知預覽') }[section.value]);
+  : { tags: t('標籤管理'), time: t('工時月曆'), schedule: t('週曆'), settings: t('狀態設定'), members: t('專案成員'), notifications: t('通知預覽') }[section.value]);
 async function refreshCurrent() {
   manualRefresh.value++;
   await refresh({ join: true });
@@ -451,6 +452,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
           <a :href="sectionHref('tasks')" class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'all' }" :aria-current="section === 'tasks' && view === 'list' && scope === 'all' ? 'page' : undefined" :aria-label="t('任務列表')" @click="follow($event, () => navigate('all'))"><Icon name="list" :size="18" />{{ t('任務列表') }}</a>
           <a :href="sectionHref('boards')" class="nav-item" :class="{ active: section === 'tasks' && (view === 'board' || view === 'boards') }" :aria-current="section === 'tasks' && (view === 'board' || view === 'boards') ? 'page' : undefined" :aria-label="t('任務看板')" @click="follow($event, () => navigate('all', projectId, 'boards'))"><Icon name="board" :size="18" />{{ t('任務看板') }}</a>
           <a :href="sectionHref('mine')" class="nav-item" :class="{ active: section === 'tasks' && view === 'list' && scope === 'mine' }" @click="follow($event, () => navigate('mine'))"><Icon name="user" :size="18" />{{ t('我的任務') }}</a>
+          <a :href="sectionHref('schedule')" v-if="can('issue.read')" class="nav-item" :class="{ active: section === 'schedule' }" :aria-current="section === 'schedule' ? 'page' : undefined" @click="follow($event, () => changeSection('schedule'))"><Icon name="calendar" :size="18" />{{ t('週曆') }}</a>
           <a :href="sectionHref('time')" v-if="can('timeEntry.readOwn')" class="nav-item" :class="{ active: section === 'time' }" :aria-current="section === 'time' ? 'page' : undefined" @click="follow($event, () => changeSection('time'))"><Icon name="clock" :size="18" />{{ t('工時月曆') }}</a>
           <a :href="sectionHref('tags')" v-if="can('project.tags.manage')" class="nav-item" :class="{ active: section === 'tags' }" :aria-current="section === 'tags' ? 'page' : undefined" @click="follow($event, () => changeSection('tags'))"><Icon name="tag" :size="18" />{{ t('標籤管理') }}</a>
           <a :href="sectionHref('settings')" v-if="can('project.statuses.update')" class="nav-item" :class="{ active: section === 'settings' }" :aria-current="section === 'settings' ? 'page' : undefined" @click="follow($event, () => changeSection('settings'))"><Icon name="filter" :size="18" />{{ t('狀態設定') }}</a>
@@ -492,6 +494,7 @@ onBeforeUnmount(() => { ++refreshGeneration; ++refreshScope; window.removeEventL
         <template v-else-if="selectedProject">
         <div v-if="error && section !== 'tasks'" class="error-box" role="alert">{{ t(error) }}</div>
         <TimeCalendar :can-write="can('timeEntry.writeOwn')" v-if="section === 'time' && can('timeEntry.readOwn')" ref="workspaceTool" :key="workContextKey" :context-key="workContextKey" :project="selectedProject" :can-read-team="can('timeEntry.readTeam')" :user-id="currentUserId" @updated="toolUpdated" @open="openIssue" @access="refresh" />
+        <ScheduleWeek v-if="section === 'schedule' && can('issue.read')" ref="workspaceTool" :key="workContextKey" :context-key="workContextKey" :project="selectedProject" @open="openIssue" @access="refresh" />
         <ProjectTags v-if="section === 'tags' && can('project.tags.manage')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" @access="refresh" />
         <ProjectStatusWorkspace v-if="section === 'settings' && can('project.statuses.update')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" @access="refresh" />
         <ProjectMembers @access="refresh" v-if="section === 'members' && can('project.members.manage')" ref="workspaceTool" :project="selectedProject" @updated="toolUpdated" />
