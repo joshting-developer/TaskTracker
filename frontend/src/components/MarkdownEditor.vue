@@ -15,7 +15,7 @@ const formats = [
   { id: 'italic', label: t('斜體'), before: '*', after: '*', sample: t('斜體文字') },
   { id: 'list', label: t('清單'), prefix: '- ', sample: t('清單項目') },
   { id: 'checklist', label: t('待辦'), prefix: '- [ ] ', sample: t('待辦項目') },
-  { id: 'link', label: t('連結'), before: '[', after: '](https://example.com)', sample: t('連結文字') },
+  { id: 'link', label: t('連結'), before: '[', after: '](https://example.com)', sample: t('連結文字') }, // taste-skill-ignore: editable Markdown link template, not product data
   { id: 'code', label: t('程式碼'), before: '```\n', after: '\n```', sample: t('程式碼') },
 ];
 let undoFormat = null, redoFormat = null;
@@ -64,28 +64,29 @@ async function insertAttachment(text, anchor) {
   return true;
 }
 function addFiles(files) {
-  if (props.disabled || !props.allowAttachments) return;
+  if (props.disabled) return;
+  if (!props.allowAttachments) { message.value = t('此處尚未開放圖片或附件, 文字草稿已保留'); return; }
   uploads.add([...files], input.value?.selectionStart ?? props.modelValue.length);
 }
 function pasteFiles(event) {
   const files = [...(event.clipboardData?.files || [])];
-  if (!props.allowAttachments || !files.length) return;
+  if (!files.length) return;
   event.preventDefault(); addFiles(files);
 }
 // Count enter/leave pairs because dragging across the toolbar and textarea fires both.
 const dragging = ref(false);
 let dragDepth = 0;
-function carriesFiles(event) { return props.allowAttachments && event.dataTransfer?.types.includes('Files'); }
-function dragEnter(event) { if (!carriesFiles(event)) return; dragDepth++; dragging.value = !props.disabled; }
+function carriesFiles(event) { return event.dataTransfer?.types.includes('Files'); }
+function dragEnter(event) { if (!carriesFiles(event)) return; dragDepth++; dragging.value = props.allowAttachments && !props.disabled; }
 function dragLeave(event) { if (carriesFiles(event) && --dragDepth <= 0) { dragDepth = 0; dragging.value = false; } }
 function dropFiles(event) {
   dragDepth = 0; dragging.value = false;
-  if (!props.allowAttachments || !event.dataTransfer?.files.length) return;
+  if (!event.dataTransfer?.files.length) return;
   event.preventDefault(); addFiles(event.dataTransfer.files);
 }
 // A file dropped beside the editor must not replace the page and lose the draft.
 function guardWindow(event) { if (event.dataTransfer?.types.includes('Files')) event.preventDefault(); }
-onMounted(() => { if (props.allowAttachments) { window.addEventListener('dragover', guardWindow); window.addEventListener('drop', guardWindow); } });
+onMounted(() => { window.addEventListener('dragover', guardWindow); window.addEventListener('drop', guardWindow); });
 onBeforeUnmount(() => { window.removeEventListener('dragover', guardWindow); window.removeEventListener('drop', guardWindow); });
 
 async function replace(next, start, end) {

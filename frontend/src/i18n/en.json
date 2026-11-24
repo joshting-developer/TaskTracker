@@ -1043,5 +1043,6 @@
   "尚無待處理紙條": "No pending notes",
   "此範圍沒有任務": "No tasks in this view",
   "個人工作摘要": "Personal work summary",
-  "{0}分頁": "{0} pagination"
+  "{0}分頁": "{0} pagination",
+  "此處尚未開放圖片或附件, 文字草稿已保留": "Images and attachments are not available here. Your text draft has been kept."
 }

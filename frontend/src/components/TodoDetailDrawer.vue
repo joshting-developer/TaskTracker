@@ -57,7 +57,7 @@ onBeforeUnmount(() => { dialog.value?.close(); if (opener?.isConnected) opener.f
       <TodoConversation :item="item" />
     </div>
     <form v-if="item.capabilities.forward && !editing" class="note-transfer" @submit.prevent="send('forwardTodo')">
-      <label :for="`${id}-reply`">{{ t('回覆內容') }}</label><textarea :id="`${id}-reply`" v-model="reply" rows="3" maxlength="2000" :disabled="busy" :placeholder="t('輸入回覆…')" />
+      <MarkdownEditor v-model="reply" :label="t('回覆內容')" :rows="3" :maxlength="2000" :disabled="busy" :placeholder="t('輸入回覆…')" />
       <div class="note-transfer-actions"><PagedSelect v-model="recipient" :label="t('要傳給誰')" :context="workspaceId" :load="loadMembers" :fixed-options="[...(item.capabilities.return ? [{ id: '__previous__', name: t('回覆上一手') }] : []), { id: item.createdBy, name: item.creatorName }, { id: item.initialAssigneeId, name: item.initialAssigneeName || item.assigneeName }]" :disabled="busy" autoload required :empty-label="t('選擇承辦人')" /><button class="button primary" :disabled="busy || stale || !recipient || recipient === item.assigneeId || (recipient === '__previous__' && (!item.capabilities.return || !reply.trim()))">{{ t('傳遞') }}</button></div>
     </form>
   </dialog>
@@ -74,8 +74,7 @@ onBeforeUnmount(() => { dialog.value?.close(); if (opener?.isConnected) opener.f
 .note-drawer-body h3 { font-size: 18px; margin: 0 0 16px; overflow-wrap: anywhere; }
 .note-content { font-size: 14px; line-height: 1.8; overflow-wrap: anywhere; }
 .note-transfer { flex: none; border-top: 1px solid #daddE5; padding: 16px 24px 24px; max-height: 48dvh; overflow-y: auto; }
-.note-transfer > label { display: block; font-size: 13px; margin-bottom: 6px; }
-.note-transfer textarea { width: 100%; border: 1px solid #bfc6d2; border-radius: 6px; padding: 10px 12px; font: inherit; font-size: 14px; resize: vertical; max-height: 18dvh; }
+.note-transfer :deep(textarea) { max-height: 18dvh; }
 .note-transfer-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: start; margin-top: 12px; }
 .note-transfer-actions :deep(.field) { margin: 0; min-width: 0; }
 .note-transfer-actions .button { height: 44px; }
