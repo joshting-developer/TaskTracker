@@ -26,8 +26,9 @@ class TodoAttachmentService
      * @param  TodoAttachmentRepository  $attachments  紙條附件SQL
      * @param  TodoCollaborationRepository  $todos  成員與經手資格
      * @param  AttachmentStorage  $storage  私有儲存
+     * @param  AttachmentService  $issueAttachments  轉卡時建立Issue暫存
      */
-    public function __construct(private TodoAttachmentRepository $attachments, private TodoCollaborationRepository $todos, private AttachmentStorage $storage) {}
+    public function __construct(private TodoAttachmentRepository $attachments, private TodoCollaborationRepository $todos, private AttachmentStorage $storage, private AttachmentService $issueAttachments) {}
 
     /** 編輯器取得與後端一致的限制
      * @param  WorkspaceContext  $context  可信資格
@@ -156,6 +157,36 @@ class TodoAttachmentService
             }
             $this->attachments->bind($todo, $pending);
         }
+    }
+
+    /** TT-294：轉卡前把引用的紙條圖片複製成目標Project暫存並改寫引用；只接受屬於這張紙條的有效圖片
+     * @param  array  $identity  轉卡者可信身分
+     * @param  string  $todoId  紙條公開ID
+     * @param  string  $projectId  目標Project公開ID
+     * @param  string  $markdown  紙條內容
+     * @return string 引用改指向新Issue暫存的Markdown
+     */
+    public function copyForIssue(array $identity, string $todoId, string $projectId, string $markdown): string
+    {
+        preg_match_all(self::REFERENCE, $markdown, $matches);
+        $ids = array_values(array_unique(array_map('strtolower', $matches[1])));
+        if (! $ids) {
+            return $markdown;
+        }
+        $member = $this->todos->member($identity['workspace']['id'], $identity['user']['id']) ?? DomainError::fail('UNAUTHENTICATED', '工作空間資格已失效');
+        $todo = $this->attachments->todo($member->workspace_id, $todoId) ?? DomainError::fail('NOT_FOUND', '找不到待辦');
+        $rows = $this->attachments->lockMany($member->workspace_id, $ids);
+        $context = new WorkspaceContext($identity);
+        $replace = [];
+        foreach ($ids as $id) {
+            $row = $rows[$id] ?? null;
+            if (! $row || $row->status !== 'active' || $row->todo_id !== $todo->id) {
+                DomainError::fail('NOT_FOUND', '找不到可用附件');
+            }
+            $replace['attachment:'.$id] = 'attachment:'.$this->issueAttachments->adoptTodoImage($context, $projectId, $row);
+        }
+
+        return preg_replace_callback('/attachment:([a-f0-9-]{36})/i', fn ($m) => $replace['attachment:'.strtolower($m[1])] ?? $m[0], $markdown);
     }
 
     /** 重驗有效成員與權限

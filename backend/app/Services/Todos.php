@@ -295,10 +295,6 @@ class Todos
         }
         $at = $this->now();
         if ($operation === 'convertTodo') {
-            // TT-294：紙條圖片複製到Issue尚未提供, 先明確拒絕, 不讓Issue端以找不到附件失敗。
-            if (preg_match('/\]\(attachment:/i', $todo['content'] ?? '')) {
-                DomainError::fail('INVALID_INPUT', '紙條含圖片時暫不支援轉卡, 請先移除圖片');
-            }
             $fields = $input['issue'] ?? null;
             if (! is_array($fields) || array_is_list($fields)) {
                 DomainError::fail('INVALID_INPUT', '請填寫正式卡片資料');
@@ -306,8 +302,10 @@ class Todos
             // 與待辦狀態同交易, 失敗不留半張卡；衍生 requestId 不與業務操作共用
             $issue = $this->workspaces->execute($this->workspaceSession, 'createIssue', [
                 'title' => $todo['title'],
-                'description' => $todo['content'] ?? $todo['note'],
                 ...$fields,
+                // TT-294：紙條圖片先複製成目標Project暫存並改寫引用, 建卡交易照常綁定；紙條原檔維持私有。
+                // 表單描述優先（使用者可能已修改）, 否則沿用紙條內容。
+                'description' => $this->attachments->copyForIssue($this->workspaceSession, $todo['id'], Fields::text($fields['projectId'] ?? null, '專案', 100, true), is_string($fields['description'] ?? null) ? $fields['description'] : ($todo['content'] ?? $todo['note'])),
                 'requestId' => 'todo-convert:'.hash('sha256', $todo['id'].':'.$input['requestId']),
             ]);
         }

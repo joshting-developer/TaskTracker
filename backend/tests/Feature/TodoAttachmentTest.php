@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Issue;
 use App\Models\TodoAttachment;
 use App\Models\User;
 use App\Models\WorkspaceMember;
@@ -125,7 +126,7 @@ class TodoAttachmentTest extends TestCase
         $this->assertSame('pending', TodoAttachment::where('public_id', $ownerDraft['id'])->value('status'), '失敗的附言不綁定');
     }
 
-    /** 修改內容綁定新圖；Issue附件端點讀不到紙條圖片；含圖轉卡先明確拒絕
+    /** 修改內容綁定新圖；Issue附件端點讀不到紙條圖片；轉卡複製圖片且不能借用別張紙條的圖
      * @return void
      */
     public function test_update_binds_and_issue_endpoints_and_convert_do_not_leak(): void
@@ -136,7 +137,23 @@ class TodoAttachmentTest extends TestCase
         $this->assertSame('active', TodoAttachment::where('public_id', $image['id'])->value('status'));
         $project = $this->rpc('createProject', ['name' => 'Leak', 'code' => 'LEAK'])->assertOk()->json('data');
         $this->get('/api/v1/projects/'.$project['id'].'/attachments/'.$image['id'].'/content')->assertStatus(404);
-        $this->rpc('convertTodo', ['id' => $todo['id'], 'expectedRevision' => 2, 'issue' => ['projectId' => $project['id']]])->assertStatus(400)->assertJsonPath('error.message', '紙條含圖片時暫不支援轉卡, 請先移除圖片');
+        // 引用別張紙條的圖片不能借轉卡帶進 Issue。
+        $other = $this->rpc('createTodo', ['content' => '另一張'])->assertOk()->json('data');
+        $foreign = $this->upload()->assertOk()->json('data');
+        $this->rpc('updateTodo', ['id' => $other['id'], 'content' => "![y](attachment:{$foreign['id']})", 'expectedRevision' => 1])->assertOk();
+        $this->rpc('convertTodo', ['id' => $todo['id'], 'expectedRevision' => 2, 'issue' => ['projectId' => $project['id'], 'description' => "![y](attachment:{$foreign['id']})"]])->assertStatus(404);
+
+        // 含圖轉卡：複製成 Issue 附件並改寫引用, 紙條原檔維持私有。
+        $this->rpc('convertTodo', ['id' => $todo['id'], 'expectedRevision' => 2, 'issue' => ['projectId' => $project['id']]])->assertOk();
+        $description = Issue::whereHas('project', fn ($q) => $q->where('public_id', $project['id']))->latest('id')->value('description');
+        preg_match('/attachment:([0-9a-f-]{36})/', $description, $match);
+        $this->assertNotEmpty($match);
+        $this->assertNotSame($image['id'], $match[1], 'Issue 引用新複本, 不是紙條原檔');
+        $this->get('/api/v1/projects/'.$project['id'].'/attachments/'.$match[1].'/content')->assertOk();
+        $this->assertSame('active', TodoAttachment::where('public_id', $image['id'])->value('status'));
+        $this->login($this->manager);
+        $this->get('/api/v1/projects/'.$project['id'].'/attachments/'.$match[1].'/content')->assertOk();
+        $this->get('/api/v1/todo-attachments/'.$image['id'].'/content')->assertStatus(404);
     }
 
     /** 逾期暫存由既有清理流程清除, 已綁定不受影響

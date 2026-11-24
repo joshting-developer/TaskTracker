@@ -62,9 +62,14 @@ function resetForm() {
   conflict.value = false;
   pending = null; titleError.value = '';
 }
+// TT-294：轉卡時紙條原有的圖片由後端複製到選定的 Project, 只有本面板新傳、已綁定某 Project 的圖片才阻擋換專案。
+function foreignReferences(text) {
+  const own = new Set(props.todo ? [...(props.todo.content || '').matchAll(/attachment:([a-f0-9-]{36})/gi)].map(match => match[1].toLowerCase()) : []);
+  return [...text.matchAll(/attachment:([a-f0-9-]{36})/gi)].some(match => !own.has(match[1].toLowerCase()));
+}
 const projectModel = computed({ get: () => form.projectId, set: value => {
   if (value === form.projectId) return;
-  if (descriptionEditor.value?.attachmentDirty || /attachment:[a-f0-9-]+/i.test(form.description || '')) { conflict.value = false; error.value = t('描述仍有圖片或未完成上傳, 請先處理圖片再切換專案'); nextTick(() => saveError.value?.focus()); return; }
+  if (descriptionEditor.value?.attachmentDirty || foreignReferences(form.description || '')) { conflict.value = false; error.value = t('描述仍有圖片或未完成上傳, 請先處理圖片再切換專案'); nextTick(() => saveError.value?.focus()); return; }
   form.projectId = value; error.value = '';
 } });
 const availableProjects = computed(() => [...new Map([...props.projects, ...pickedProjects.value].map(project=>[project.id,project])).values()]);

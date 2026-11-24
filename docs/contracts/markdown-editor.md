@@ -8,7 +8,7 @@
 | Issue留言（完整頁／快速編輯） | 2000 | 共用編輯器 | 圖片嵌入內文, PDF／ZIP隨送出綁定 | 留言元件保留文字與上傳, 失敗不清稿 |
 | 紙條建立／內容編輯 | 6000 | 共用編輯器 | 圖片嵌入內文（紙條私有, TT-294）, PDF／ZIP不接受且保留文字 | TodoHome／TodoDetailDrawer保留記憶體草稿與離頁確認 |
 | 紙條回覆／傳遞／完成附言 | 2000 | 共用編輯器 | 同上, 只能引用自己上傳的圖片 | TodoDetailDrawer保留reply, 傳遞失敗保留草稿 |
-| 紙條轉卡 | 6000 | IssuePanel沿用Markdown原文 | 含圖紙條在圖片複製完成前明確拒絕轉卡, 不因選Project開放紙條附件 | 沿用既有單向轉卡與revision／requestId |
+| 紙條轉卡 | 6000 | IssuePanel沿用Markdown原文 | 引用的紙條圖片複製成目標Project的Issue附件並改寫引用, 紙條原檔維持私有；不能引用別張紙條的圖片 | 沿用既有單向轉卡與revision／requestId |
 
 所有可編輯場景支援粗體、斜體、清單、待辦、連結與程式碼, Ctrl／Command+B、I、格式復原／重做。IME組字時不套格式, 預覽切換不清除原文。錯誤使用可讀提示, 不以格式文字或失敗上傳覆寫草稿
 
@@ -18,4 +18,4 @@
 
 ## 紙條私有圖片（TT-294）
 
-獨立 `todo_attachments` 表, 不放寬 Issue 附件的 Project 外鍵。Session 端點 `GET /api/v1/todo-attachments/limits`、`POST /api/v1/todo-attachments`（只收圖片, requestId 冪等）、`GET /api/v1/todo-attachments/{id}/content`。暫存只給上傳者、24 小時逾期由既有清理流程清除；建立紙條、建立人改內容與經手者附言在同交易依 `attachment:` 引用綁定, 只能綁自己的暫存。已綁定圖片只給能讀該紙條的經手者（建立人、原承辦、目前承辦、曾經手）, Project 讀權或工作區管理角色不能借用。含圖紙條轉卡在圖片複製完成前明確拒絕。前端以 `TODO_ATTACHMENTS` 範圍沿用 `useAttachmentUpload`／`AttachmentImage`／`MarkdownContent`, 上傳中或失敗時不送出
+獨立 `todo_attachments` 表, 不放寬 Issue 附件的 Project 外鍵。Session 端點 `GET /api/v1/todo-attachments/limits`、`POST /api/v1/todo-attachments`（只收圖片, requestId 冪等）、`GET /api/v1/todo-attachments/{id}/content`。暫存只給上傳者、24 小時逾期由既有清理流程清除；建立紙條、建立人改內容與經手者附言在同交易依 `attachment:` 引用綁定, 只能綁自己的暫存。已綁定圖片只給能讀該紙條的經手者（建立人、原承辦、目前承辦、曾經手）, Project 讀權或工作區管理角色不能借用。轉卡時只複製屬於該紙條的有效圖片到目標 Project（轉卡者需 `issue.write` 與附件配額）, 描述改指向新複本；IssuePanel 不因紙條原有圖片阻擋選專案。前端以 `TODO_ATTACHMENTS` 範圍沿用 `useAttachmentUpload`／`AttachmentImage`／`MarkdownContent`, 上傳中或失敗時不送出

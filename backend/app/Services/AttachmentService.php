@@ -8,6 +8,7 @@ use App\Domain\DomainError;
 use App\Factories\RecordStoreFactory;
 use App\Models\Attachment;
 use App\Models\Project;
+use App\Models\TodoAttachment;
 use App\Repositories\AttachmentRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
@@ -112,6 +113,30 @@ class AttachmentService
             'uploaded_by' => $context->userId, 'storage_disk' => config('attachments.disk'), 'storage_key' => $context->workspaceId.'/'.$projectId.'/'.$id,
             'mime_type' => $file->mime, 'byte_size' => $file->bytes, 'original_name' => $file->name, 'checksum' => $file->checksum,
             'status' => 'uploading', 'upload_request_id' => $file->requestId, 'upload_signature' => $signature, 'expires_at' => now()->addHours(config('attachments.pending_hours'))]);
+    }
+
+    /** TT-294：紙條圖片轉卡時複製成目標Project的本人暫存, 再由建卡交易依引用綁定；紙條原檔不動
+     * @param  WorkspaceContext  $context  轉卡者可信資格
+     * @param  string  $projectId  目標Project公開ID
+     * @param  TodoAttachment  $source  已確認屬於該紙條的有效圖片
+     * @return string 新附件公開ID
+     */
+    public function adoptTodoImage(WorkspaceContext $context, string $projectId, TodoAttachment $source): string
+    {
+        $project = $this->projects->require($context, $projectId, 'issue.write');
+        $quota = $this->attachments->quota($project, $context->userId);
+        if (config('attachments.workspace_bytes') < $quota['bytes'] + $source->byte_size || $quota['pending'] >= config('attachments.pending_per_user')) {
+            DomainError::fail('INVALID_INPUT', '附件配額已滿, 請清理暫存圖片');
+        }
+        $id = (string) Str::uuid();
+        $key = $context->workspaceId.'/'.$projectId.'/'.$id;
+        $this->storage->copy($source->storage_disk, $source->storage_key, $key);
+        $this->attachments->create(['public_id' => $id, 'workspace_id' => $project->workspace_id, 'project_id' => $project->id,
+            'uploaded_by' => $context->userId, 'storage_disk' => $source->storage_disk, 'storage_key' => $key, 'mime_type' => $source->mime_type,
+            'byte_size' => $source->byte_size, 'original_name' => $source->original_name, 'checksum' => $source->checksum, 'status' => 'pending',
+            'upload_request_id' => (string) Str::uuid(), 'upload_signature' => hash('sha256', 'todo:'.$source->public_id.':'.$id), 'expires_at' => now()->addHours(config('attachments.pending_hours'))]);
+
+        return $id;
     }
 
     /** IO完成後再驗資格, 不使過期或已綁定檔案倒退狀態

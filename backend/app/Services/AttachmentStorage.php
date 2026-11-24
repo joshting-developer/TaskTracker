@@ -100,4 +100,22 @@ class AttachmentStorage
             return false;
         }
     }
+
+    /** 同disk複製私有物件（TT-294紙條圖片轉卡）, 來源保留
+     * @param  string  $disk  私有disk
+     * @param  string  $from  來源key
+     * @param  string  $to  新的隨機key
+     * @return void
+     */
+    public function copy(string $disk, string $from, string $to): void
+    {
+        $this->assertConfigured($disk);
+        try {
+            if ($this->files->disk($disk)->copy($from, $to)) {
+                return;
+            }
+        } catch (Throwable) {
+        }
+        DomainError::fail('STORAGE_ERROR', '圖片暫時無法複製, 請重試');
+    }
 }
