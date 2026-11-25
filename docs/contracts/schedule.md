@@ -7,6 +7,7 @@ Session `GET /api/v1/projects/{project}/schedule` 供人員排程、週曆與甘
 - 條狀只看計畫開始日 `startDate` 與結束日 `endDate`, 到期日 `dueDate` 獨立顯示, 不參與排程
 - 只填一端時視為單日；兩端皆空是未排程, 不回傳列, 只在 `unscheduled` 回同條件的卡片數
 - 改期沿用既有 Issue 更新與 revision, 三視圖讀同一組欄位, 不另存排程副本
+- 提早開始：狀態離開「待規劃」（開工或直接結案）時, 晚於台北今天的開始日會由伺服器改成今天（OpenAPI 0.28.0）, 結束日不動
 
 ## Query
 

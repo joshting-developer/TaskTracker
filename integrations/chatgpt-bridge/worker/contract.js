@@ -607,7 +607,7 @@ export const TOOLS = {
                   "type": "null"
                 }
               ],
-              "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+              "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates. When a write moves the issue out of the open state (starting or closing it) and startDate is after today in Asia/Taipei, the server moves startDate to that date."
             },
             "endDate": {
               "anyOf": [
@@ -747,7 +747,7 @@ export const TOOLS = {
                   "type": "null"
                 }
               ],
-              "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+              "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates. When a write moves the issue out of the open state (starting or closing it) and startDate is after today in Asia/Taipei, the server moves startDate to that date."
             },
             "endDate": {
               "anyOf": [
@@ -1852,7 +1852,7 @@ export const TOOLS = {
                   "type": "null"
                 }
               ],
-              "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+              "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates. When a write moves the issue out of the open state (starting or closing it) and startDate is after today in Asia/Taipei, the server moves startDate to that date."
             },
             "endDate": {
               "anyOf": [
@@ -2046,7 +2046,7 @@ export const TOOLS = {
                         "type": "null"
                       }
                     ],
-                    "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+                    "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates. When a write moves the issue out of the open state (starting or closing it) and startDate is after today in Asia/Taipei, the server moves startDate to that date."
                   },
                   "endDate": {
                     "anyOf": [

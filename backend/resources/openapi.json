@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Pavenro API",
-    "version": "0.27.0",
+    "version": "0.28.0",
     "description": "公開Bearer v1提供卡片查建改、留言、刪除、外部識別與批次, 紙條協作、本人通知、私有附件, 以及看板讀取、建立和差量收錄。Session個人憑證管理獨立, 不提供公開看板封存／還原。[HTTP契約](/api/public/contract.md) 工時API提供本人工時寫入、查詢、修改與作廢, 沿用現有權限與每日上限。"
   },
   "servers": [
@@ -18472,7 +18472,7 @@
                 "const": ""
               }
             ],
-            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates. When a write moves the issue out of the open state (starting or closing it) and startDate is after today in Asia/Taipei, the server moves startDate to that date."
           },
           "endDate": {
             "anyOf": [
@@ -18615,7 +18615,7 @@
                 "type": "null"
               }
             ],
-            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates. When a write moves the issue out of the open state (starting or closing it) and startDate is after today in Asia/Taipei, the server moves startDate to that date."
           },
           "endDate": {
             "anyOf": [
@@ -18725,7 +18725,7 @@
                 "type": "null"
               }
             ],
-            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates. When a write moves the issue out of the open state (starting or closing it) and startDate is after today in Asia/Taipei, the server moves startDate to that date."
           },
           "endDate": {
             "anyOf": [
@@ -18887,7 +18887,7 @@
                 "type": "null"
               }
             ],
-            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates. When a write moves the issue out of the open state (starting or closing it) and startDate is after today in Asia/Taipei, the server moves startDate to that date."
           },
           "endDate": {
             "anyOf": [
@@ -19077,7 +19077,7 @@
                 "type": "null"
               }
             ],
-            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates."
+            "description": "Optional planned calendar date (1000-01-01 through 9999-12-31), independent of dueDate. Empty string or null clears input; omission on PATCH preserves it. When both are set, endDate must not precede startDate. Responses use an empty string for unset dates. When a write moves the issue out of the open state (starting or closing it) and startDate is after today in Asia/Taipei, the server moves startDate to that date."
           },
           "endDate": {
             "anyOf": [

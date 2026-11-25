@@ -39,6 +39,25 @@ class IssueService
     }
 
     /**
+     * 提早開工或提早完成時, 計畫開始日改成實際開始的台北今天；只在狀態離開「待規劃」或改變時套用, 網頁、PAT 與 GPT Plugin 共用。
+     *
+     * @param  array|null  $current  更新前的任務, 建立時為 null
+     * @param  array  $input  合併後準備驗證的欄位
+     * @return array 必要時調整 startDate 的欄位
+     */
+    private function startedEarly(?array $current, array $input): array
+    {
+        $state = (string) ($input['state'] ?? 'open');
+        $changed = $current === null || $state !== ($current['state'] ?? 'open');
+        $today = now('Asia/Taipei')->toDateString();
+        if ($state !== 'open' && $changed && is_string($input['startDate'] ?? null) && $input['startDate'] !== '' && $input['startDate'] > $today) {
+            $input['startDate'] = $today;
+        }
+
+        return $input;
+    }
+
+    /**
      * 產生不依賴用戶輸入的紀錄識別碼。
      *
      * @return string
@@ -57,7 +76,7 @@ class IssueService
     public function createIssue(array $input): array
     {
         $project = $this->store->require('projects', $input['projectId'] ?? '');
-        $fields = Fields::issue($input, $project);
+        $fields = Fields::issue($this->startedEarly(null, $input), $project);
         $this->validateLinks($project, $fields);
         $issue = [
             'id' => $this->id(),
@@ -299,7 +318,7 @@ class IssueService
         $current = $this->store->require('issues', $input['id'] ?? '');
         RecordRevision::assertCurrent($current, $input);
         $project = $this->store->require('projects', $current['projectId']);
-        $fields = Fields::issue([...$current, ...$input], $project);
+        $fields = Fields::issue($this->startedEarly($current, [...$current, ...$input]), $project);
         $this->validateLinks($project, $fields, $current);
         $issue = $this->writeIssue($current, $fields);
         if ($fields['description'] !== $current['description']) {

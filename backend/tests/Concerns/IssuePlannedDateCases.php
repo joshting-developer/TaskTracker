@@ -2,6 +2,7 @@
 
 namespace Tests\Concerns;
 
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -72,6 +73,39 @@ trait IssuePlannedDateCases
         $fields = collect($events)->flatMap(fn ($event) => $event['changes'] ?? [])->pluck('field')->all();
         $this->assertContains('startDate', $fields);
         $this->assertContains('endDate', $fields);
+    }
+
+    /** 提早開工或提早結案時, 未來的計畫開始日改成實際開始的台北今天；維持待規劃或狀態沒變時不動
+     * @return void
+     */
+    public function test_starting_or_closing_early_moves_future_start_date_to_today(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-26 07:00:00', 'Asia/Taipei'));
+        [, $project, $token] = $this->plannedDateFixture();
+        $rpc = fn (array $input) => $this->postJson('/api/rpc/'.(isset($input['id']) ? 'updateIssue' : 'createIssue'), [...$input, 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $read = fn (array $issue) => $this->getJson('/api/v1/projects/'.$project['id'].'/issues/'.$issue['id'])->assertOk()->json('data');
+
+        $planned = $rpc(['projectId' => $project['id'], 'title' => 'Planned next week', 'startDate' => '2026-12-01', 'endDate' => '2026-12-03']);
+        $planned = $rpc(['id' => $planned['id'], 'title' => 'Still planned', 'expectedRevision' => $planned['revision']]);
+        $this->assertSame('2026-12-01', $read($planned)['startDate'], '仍是待規劃不改');
+        $started = $rpc(['id' => $planned['id'], 'state' => 'inprogress', 'expectedRevision' => $planned['revision']]);
+        $this->assertSame(['2026-11-26', '2026-12-03'], [$read($started)['startDate'], $read($started)['endDate']], '台北今天, 結束日不動');
+        $moved = $rpc(['id' => $planned['id'], 'startDate' => '2026-11-28', 'expectedRevision' => $started['revision']]);
+        $this->assertSame('2026-11-28', $read($moved)['startDate'], '狀態沒變時尊重使用者改的日期');
+
+        $direct = $rpc(['projectId' => $project['id'], 'title' => 'Created in progress', 'state' => 'inprogress', 'startDate' => '2026-12-10']);
+        $this->assertSame('2026-11-26', $read($direct)['startDate']);
+        $past = $rpc(['projectId' => $project['id'], 'title' => 'Started earlier', 'startDate' => '2026-11-20']);
+        $past = $rpc(['id' => $past['id'], 'state' => 'inprogress', 'expectedRevision' => $past['revision']]);
+        $this->assertSame('2026-11-20', $read($past)['startDate'], '已過的開始日不動');
+
+        // PAT 一次送 closed 與結束日今天, 開始日還在未來也能結案
+        Auth::forgetGuards();
+        $headers = ['Authorization' => 'Bearer '.$token['plainTextToken']];
+        $base = '/api/public/v1/projects/'.$project['id'].'/issues';
+        $early = $this->postJson($base, ['title' => 'Done early', 'startDate' => '2026-12-05', 'endDate' => '2026-12-06', 'requestId' => (string) Str::uuid()], $headers)->assertOk()->json('data');
+        $this->patchJson($base.'/'.$early['id'], ['state' => 'closed', 'endDate' => '2026-11-26', 'expectedRevision' => $early['revision'], 'requestId' => (string) Str::uuid()], $headers)->assertOk();
+        $this->getJson($base.'/'.$early['id'], $headers)->assertOk()->assertJsonPath('data.state', 'closed')->assertJsonPath('data.startDate', '2026-11-26')->assertJsonPath('data.endDate', '2026-11-26');
     }
 
     /** 日期欄位不提供權限捷徑, read Token 不能改, 其他租戶不能讀

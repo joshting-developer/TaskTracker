@@ -15,7 +15,7 @@ npm run build
 
 ## 已接入功能
 
-共53個工具, 對應正式OpenAPI 0.26.0全部PAT業務操作；工作區管理、多人OAuth與尚未公開API不在此範圍
+共53個工具, 對應正式OpenAPI 0.28.0全部PAT業務操作；工作區管理、多人OAuth與尚未公開API不在此範圍
 
 讀取（29個）：who_am_i, list_projects, search_issues, get_issue, list_issue_comments, list_boards, get_board, list_board_issues, get_project, list_project_members, list_project_statuses, list_todos, get_todo, list_todo_assignees, list_todo_comments, list_todo_handoffs, get_external_issue, list_issue_changes, list_issue_deletions, list_notifications, get_attachment_limits, get_attachment, list_issue_attachments, get_attachment_content, list_tags, get_tag, list_time_entries, list_issue_time_entries, preview_board
 
