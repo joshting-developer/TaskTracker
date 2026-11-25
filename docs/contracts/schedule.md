@@ -21,7 +21,7 @@ Session `GET /api/v1/projects/{project}/schedule` 供人員排程、週曆與甘
 
 沿用 `ok/data` 及 `items/page/perPage/total/lastPage`, 另加 `unscheduled` 與 `epics`。單筆只有 `id/identifier/title/type/priority/state/stateLabel/assignee/assigneeName/assigneeDisabled/startDate/endDate/dueDate/epicId/revision`, 日期、承辦或 Epic 未填為空字串, 不含描述、留言或工時。`epics` 是當頁卡片引用的同 Project Epic 摘要 `id/identifier/title`, 依卡號排序, Epic 本身沒有日期也有名稱（TT-386）
 
-查詢限單一 Project, issues 沒有日期索引, 依 Project 範圍掃描；跨 Project 的人員排程需要時另評估
+查詢限單一 Project。單端日期以 stored generated column `schedule_start`／`schedule_end`（COALESCE 兩端）比較, 並以 `issues_schedule_state_range`／`issues_schedule_range` 範圍索引讀取, 不掃整個工作區（TT-449, 60k 張卡本週 p50 約 13–17ms）；跨 Project 的人員排程需要時另評估
 
 ## 未排程清單（TT-446）
 
