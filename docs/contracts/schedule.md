@@ -39,7 +39,7 @@ Session `GET /api/v1/projects/{project}/schedule/unscheduled` 列出兩端日期
 
 ## 人員排程（TT-384）
 
-專案側欄「人員排程」, 網址 `#/projects/{project}/people`, 需要 `issue.read`。每位成員一列（成員選項每頁 100 人）, 沒有排程的成員也列出, 結果中不在分頁的承辦人（例如已停用）與未指派另成一列；篩選承辦人時只留該列。期間 2／4 週、週一起算, 同一天同時進行 3 張以上標為負荷高（schedule 回應不含估時, 以張數判斷）。4 週時兩天以內的條狀只留狀態色塊。窄螢幕改依成員分組清單。期間、週與承辦人只存在目前分頁的 sessionStorage；條狀樣式與週曆共用 `frontend/src/composables/useScheduleBars.js`
+專案側欄「人員排程」, 網址 `#/projects/{project}/people`, 需要 `issue.read`。每位成員一列（成員選項每頁 100 人）, 沒有排程的成員也列出, 結果中不在分頁的承辦人（例如已停用）與未指派另成一列；篩選承辦人時只留該列。期間 2／4 週、週一起算, 同一天同時進行 3 張以上未關閉卡片標為負荷高, 已關閉卡片照常顯示但不計負荷（TT-445；schedule 回應不含估時, 以張數判斷）。4 週時兩天以內的條狀只留狀態色塊。窄螢幕改依成員分組清單。期間、週與承辦人只存在目前分頁的 sessionStorage；條狀樣式與週曆共用 `frontend/src/composables/useScheduleBars.js`
 
 ## 專案甘特（TT-386）
 
