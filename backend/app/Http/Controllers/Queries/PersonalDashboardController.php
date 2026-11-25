@@ -14,7 +14,12 @@ use App\Services\PersonalDashboardService;
 /** Session首頁摘要入口, 與公開PAT介面分開。 */
 class PersonalDashboardController extends Controller
 {
-    /** 注入可信工作區邊界與摘要用例, 建構時不查資料。 */
+    /**
+     * 注入可信工作區邊界與摘要用例, 建構時不查資料。
+     *
+     * @param  WorkspaceTransaction  $workspace  工作區交易邊界
+     * @param  PersonalDashboardService  $dashboard  首頁摘要用例
+     */
     public function __construct(private WorkspaceTransaction $workspace, private PersonalDashboardService $dashboard) {}
 
     /**

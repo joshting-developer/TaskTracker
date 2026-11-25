@@ -17,7 +17,11 @@ class DashboardPreferenceTest extends TestCase
     /** 偏好端點 */
     private const URL = '/api/v1/personal-dashboard/preferences';
 
-    /** 尺寸偏好保存與邊界驗證。 */
+    /**
+     * 尺寸偏好保存與邊界驗證。
+     *
+     * @return void
+     */
     public function test_widget_dimensions_round_trip(): void
     {
         $this->postJson('/api/auth/register', ['name' => 'Resize', 'email' => 'resize@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Resize'])->assertOk();
@@ -29,7 +33,11 @@ class DashboardPreferenceTest extends TestCase
         $this->putJson(self::URL, ['widgets' => [array_merge($widget, ['height' => 800])], 'expectedRevision' => 0])->assertStatus(409);
     }
 
-    /** 新欄位與小尺寸可保存, 舊設定不被重寫。 */
+    /**
+     * 新欄位與小尺寸可保存, 舊設定不被重寫。
+     *
+     * @return void
+     */
     public function test_twelve_column_layout_preserves_legacy_widgets(): void
     {
         $this->postJson('/api/auth/register', ['name' => 'Columns', 'email' => 'columns@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Columns'])->assertOk();

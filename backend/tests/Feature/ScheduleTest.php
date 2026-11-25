@@ -15,7 +15,11 @@ class ScheduleTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** includeClosed 與上限都限制在已授權單一 Project。 */
+    /**
+     * includeClosed 與上限都限制在已授權單一 Project。
+     *
+     * @return void
+     */
     public function test_closed_filter_limit_and_project_scope(): void
     {
         [, $project] = $this->fixture();

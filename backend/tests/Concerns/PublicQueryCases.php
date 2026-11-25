@@ -20,7 +20,11 @@ trait PublicQueryCases
 {
     use PersonalTokenCases;
 
-    /** 列表日期與單卡一致, 另一租戶日期不得洩漏。 */
+    /**
+     * 列表日期與單卡一致, 另一租戶日期不得洩漏。
+     *
+     * @return void
+     */
     public function test_public_list_planned_dates_and_tenant_isolation(): void
     {
         [, $project, $issue, $token] = $this->publicFixture();

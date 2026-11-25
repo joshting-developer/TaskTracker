@@ -1128,5 +1128,12 @@
   "任務要有計畫開始或結束日才會出現在這裡, 可以按下方「{0} 張任務尚未排程」補上日期": "Tasks appear here once they have a planned start or end date. Use “{0} tasks are not scheduled yet” below to add dates",
   "儲存": "Save",
   "顯示已完成": "Show completed",
-  "任務超過 1000 張, 請縮短期間或加篩選": "More than 1000 tasks. Shorten the range or add a filter"
+  "任務超過 1000 張, 請縮短期間或加篩選": "More than 1000 tasks. Shorten the range or add a filter",
+  "日期": "Date",
+  "查看全部": "View all",
+  "全部": "All",
+  "開始": "Start",
+  "說明": "Description",
+  "操作": "Actions",
+  "日期格式不正確": "Invalid date format"
 }

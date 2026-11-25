@@ -70,7 +70,13 @@ class DashboardPreferenceService
         return ['widgets' => $this->filterWidgets($widgets, $available), 'available' => $available, 'revision' => $revision];
     }
 
-    /** 依種類與實例識別過濾偏好, 相容舊版字串設定。 */
+    /**
+     * 依種類與實例識別過濾偏好, 相容舊版字串設定。
+     *
+     * @param  array  $widgets  已保存或送入的小工具設定
+     * @param  array  $available  目前權限可用的種類
+     * @return array<int,mixed> 過濾後的小工具設定
+     */
     private function filterWidgets(array $widgets, array $available): array
     {
         $seen = [];

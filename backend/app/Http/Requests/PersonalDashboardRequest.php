@@ -5,7 +5,12 @@ namespace App\Http\Requests;
 /** 限制首頁摘要種類、頁數與每頁資料量, 不接受操作者或工作區條件。 */
 class PersonalDashboardRequest extends PageQueryRequest
 {
-    /** 任務小工具可保存與查詢的條件, 不接受操作者或工作區。 */
+    /**
+     * 任務小工具可保存與查詢的條件, 不接受操作者或工作區。
+     *
+     * @param  string  $prefix  巢狀欄位前綴, 空字串代表頂層
+     * @return array<string,mixed> 驗證規則
+     */
     public static function filterRules(string $prefix = ''): array
     {
         return [

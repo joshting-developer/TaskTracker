@@ -41,7 +41,11 @@ class PersonalDashboardTest extends TestCase
         return $issue;
     }
 
-    /** 自訂條件在SQL交集篩選, 不跨工作區或忽略成員資格。 */
+    /**
+     * 自訂條件在SQL交集篩選, 不跨工作區或忽略成員資格。
+     *
+     * @return void
+     */
     public function test_custom_task_filters_are_bounded_and_scoped(): void
     {
         [$identity, $project] = $this->fixture();

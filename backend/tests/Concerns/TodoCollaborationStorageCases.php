@@ -86,7 +86,7 @@ trait TodoCollaborationStorageCases
             DB::transaction(fn () => $repo->append('todo_comments', ['public_id' => (string) Str::uuid(), 'workspace_id' => $context->workspaceId + 1000000, 'todo_id' => $todo->id, 'author_id' => $context->memberId, 'author_name' => 'Other', 'content' => 'Forbidden', 'created_at' => now()]));
             $this->fail('Cross-workspace reference accepted');
         } catch (QueryException) {
-            $this->assertSame(0,DB::table('todo_comments')->where('todo_id',$todo->id)->count());
+            $this->assertSame(0, DB::table('todo_comments')->where('todo_id', $todo->id)->count());
         }
     }
 }

@@ -11,8 +11,8 @@ use App\Http\Requests\PageQueryRequest;
 use App\Http\Resources\ApiResponse;
 use App\Http\Resources\Queries\IssueDetailResource;
 use App\Http\Resources\Queries\IssueListPageResource;
-use App\Http\Resources\Queries\PublicIssueListResource;
 use App\Http\Resources\Queries\PageResource;
+use App\Http\Resources\Queries\PublicIssueListResource;
 use App\Services\IssueReadService;
 use Illuminate\Http\Request;
 

@@ -6,7 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /** 單端日期視為單日, 以範圍索引支援重疊範圍與未排程計數。 */
+    /**
+     * 單端日期視為單日, 以範圍索引支援重疊範圍與未排程計數。
+     *
+     * @return void
+     */
     public function up(): void
     {
         Schema::table('issues', function (Blueprint $table) {
@@ -17,7 +21,11 @@ return new class extends Migration
         });
     }
 
-    /** 移除衍生欄位前先移除索引。 */
+    /**
+     * 移除衍生欄位前先移除索引。
+     *
+     * @return void
+     */
     public function down(): void
     {
         // MySQL 可能以新複合索引取代隱含的外鍵索引, 回退前先補回。

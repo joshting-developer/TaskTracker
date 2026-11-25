@@ -36,15 +36,18 @@ try {
   } else {
     const mine = page.getByRole('region', { name: '我的未結案任務', exact: true });
     await mine.getByRole('link', { name: /摘要任務/ }).first().waitFor();
-    assert.equal(await mine.getByRole('link', { name: /摘要任務/ }).count(), 5);
+    // TT-442 起每頁筆數依小工具尺寸計算, 從實際請求讀出再驗分頁, 不寫死筆數
+    const perPage = Number(new URL(reads.find(url => url.includes('/personal-dashboard?') && url.includes('kind=mine'))).searchParams.get('perPage'));
+    const lastPage = Math.ceil(7 / perPage), lastCount = 7 - perPage * (lastPage - 1);
+    assert.ok(perPage >= 2 && perPage <= 20 && lastPage > 1, String(perPage));
+    assert.equal(await mine.getByRole('link', { name: /摘要任務/ }).count(), perPage);
     assert.equal(await page.getByText('不屬於我的任務', { exact: true }).count(), 0);
-    await mine.getByRole('button', { name: '下一頁' }).click();
-    await page.waitForFunction(() => document.querySelector('[aria-label="我的未結案任務"]')?.getAttribute('aria-busy') === 'false' && document.querySelector('[aria-label="我的未結案任務"]')?.textContent.includes('2 / 2'));
-    assert.equal(await mine.getByRole('link', { name: /摘要任務/ }).count(), 2);
-    await mine.getByRole('button', { name: '上一頁' }).click();
-    await page.waitForFunction(() => document.querySelector('[aria-label="我的未結案任務"]')?.getAttribute('aria-busy') === 'false' && document.querySelector('[aria-label="我的未結案任務"]')?.textContent.includes('1 / 2'));
+    const pageText = text => page.waitForFunction(value => document.querySelector('[aria-label="我的未結案任務"]')?.getAttribute('aria-busy') === 'false' && document.querySelector('[aria-label="我的未結案任務"]')?.textContent.includes(value), text);
+    for (let n = 2; n <= lastPage; n++) { await mine.getByRole('button', { name: '下一頁' }).click(); await pageText(`${n} / ${lastPage}`); }
+    assert.equal(await mine.getByRole('link', { name: /摘要任務/ }).count(), lastCount);
+    for (let n = lastPage - 1; n >= 1; n--) { await mine.getByRole('button', { name: '上一頁' }).click(); await pageText(`${n} / ${lastPage}`); }
     assert.equal(reads.some(url => /\/projects\/[^/]+\/issues/.test(url)), false);
-    for (const url of reads.filter(url => url.includes('/personal-dashboard?'))) assert.equal(new URL(url).searchParams.get('perPage'), '5');
+    for (const url of reads.filter(url => url.includes('/personal-dashboard?'))) assert.ok(Number(new URL(url).searchParams.get('perPage')) <= 20, '每頁仍有上限');
     for (const width of [1440, 768, 390]) { await page.setViewportSize({ width, height: 900 }); if (width === 390) await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1); assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false); await page.screenshot({ path: `artifacts/personal-dashboard/after-${width}.png`, fullPage: true }); }
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.route('**/api/v1/personal-dashboard?**', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ ok: false, error: { code: 'INTERNAL_ERROR', message: '暫時無法讀取摘要' } }) }));

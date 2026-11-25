@@ -13,7 +13,11 @@ use Illuminate\Support\Carbon;
 /** 依當次權限與台北工作日協調本人工作摘要。 */
 class PersonalDashboardService
 {
-    /** 注入首頁專用有界投影, 不在建構時取得身分或查詢。 */
+    /**
+     * 注入首頁專用有界投影, 不在建構時取得身分或查詢。
+     *
+     * @param  PersonalDashboardRepository  $dashboard  首頁摘要查詢
+     */
     public function __construct(private PersonalDashboardRepository $dashboard) {}
 
     /**
