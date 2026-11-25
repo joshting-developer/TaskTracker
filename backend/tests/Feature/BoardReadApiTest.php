@@ -57,7 +57,7 @@ class BoardReadApiTest extends TestCase
         $this->getJson($path.'/'.$board['id'].'/issues')->assertOk()->assertJsonPath('data.total', 2);
         $source = Issue::where('public_id', $child['id'])->firstOrFail();
         for ($i = 0; $i < 105; $i++) {
-            $copy = $source->replicate();
+            $copy = $source->replicate(['schedule_start', 'schedule_end']);
             $copy->public_id = (string) Str::uuid();
             $copy->identifier = 'FIRST-X'.$i;
             $copy->save();

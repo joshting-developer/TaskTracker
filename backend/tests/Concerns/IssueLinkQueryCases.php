@@ -28,7 +28,7 @@ trait IssueLinkQueryCases
         $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => 'Before'])->assertOk();
         $before = $hydrated;
         $row = Issue::where('public_id', $source['id'])->firstOrFail()->getAttributes();
-        unset($row['id']);
+        unset($row['id'], $row['schedule_start'], $row['schedule_end']);
         for ($i = 0; $i < 120; $i++) {
             DB::table('issues')->insert([...$row, 'public_id' => (string) Str::uuid(), 'identifier' => 'OTHER-'.($i + 2), 'storage_position' => $i + 2]);
         }
@@ -89,7 +89,7 @@ trait IssueLinkQueryCases
         $target = $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => 'Target'])->assertOk()->json('data');
         $source = Issue::where('public_id', $target['id'])->firstOrFail();
         $row = $source->getAttributes();
-        unset($row['id']);
+        unset($row['id'], $row['schedule_start'], $row['schedule_end']);
         $firstId = '';
         for ($i = 0; $i < 200; $i++) {
             $id = (string) Str::uuid();
@@ -129,7 +129,7 @@ trait IssueLinkQueryCases
         $parent = $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => 'Parent'])->assertOk()->json('data');
         $source = Issue::where('public_id', $parent['id'])->firstOrFail();
         $row = $source->getAttributes();
-        unset($row['id']);
+        unset($row['id'], $row['schedule_start'], $row['schedule_end']);
         for ($i = 0; $i < 102; $i++) {
             DB::table('issues')->insert([...$row, 'public_id' => (string) Str::uuid(), 'parent_issue_id' => $source->id, 'identifier' => 'BATCH-'.($i + 3), 'storage_position' => $i + 3]);
         }

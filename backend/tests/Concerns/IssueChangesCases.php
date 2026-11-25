@@ -33,7 +33,7 @@ trait IssueChangesCases
         $member = WorkspaceMember::where('user_id', $identity['user']['id'])->sole();
         $model->update(['priority' => 'high', 'assignee_id' => $member->id, 'updated_at' => DatabaseTimes::store($time)]);
         for ($n = 2; $n <= 6; $n++) {
-            $row = $model->replicate();
+            $row = $model->replicate(['schedule_start', 'schedule_end']);
             $row->public_id = (string) Str::uuid();
             $row->identifier = 'CHG-'.$n;
             $row->type = $n === 6 ? 'bug' : 'task';
@@ -45,7 +45,7 @@ trait IssueChangesCases
         $other = $this->postJson('/api/rpc/createProject', ['name' => 'unrelated', 'code' => 'OTH', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
         $otherIssue = $this->postJson('/api/rpc/createIssue', ['projectId' => $other['id'], 'title' => 'unrelated', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
         $attributes = Issue::where('public_id', $otherIssue['id'])->sole()->getAttributes();
-        unset($attributes['id']);
+        unset($attributes['id'], $attributes['schedule_start'], $attributes['schedule_end']);
         $batch = [];
         for ($n = 2; $n <= 1001; $n++) {
             $batch[] = [...$attributes, 'public_id' => (string) Str::uuid(), 'identifier' => 'OTH-'.$n];
@@ -119,7 +119,7 @@ trait IssueChangesCases
         }
         $this->assertCount(5, $ids);
         $this->assertCount(5, array_unique($ids));
-        $boundary = $model->replicate();
+        $boundary = $model->replicate(['schedule_start', 'schedule_end']);
         $boundary->public_id = (string) Str::uuid();
         $boundary->identifier = 'CHG-7';
         $boundary->updated_at = DatabaseTimes::store($first['syncUntil']);

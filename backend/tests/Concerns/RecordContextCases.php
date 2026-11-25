@@ -24,7 +24,7 @@ trait RecordContextCases
         $peer = $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => 'Peer'])->assertOk()->json('data');
         $issue = $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => 'Current', 'assignee' => $identity['user']['id'], 'relatedIssueIds' => [$peer['id']]])->assertOk()->json('data');
         $row = Issue::where('public_id', $peer['id'])->firstOrFail()->getAttributes();
-        unset($row['id']);
+        unset($row['id'], $row['schedule_start'], $row['schedule_end']);
         for ($i = 0; $i < 80; $i++) {
             DB::table('issues')->insert([...$row, 'public_id' => (string) Str::uuid(), 'identifier' => 'CTX-'.($i + 3), 'storage_position' => $i + 3]);
         }
@@ -91,7 +91,7 @@ trait RecordContextCases
         $source = $this->rpc('createIssue', ['projectId' => $project['id'], 'title' => 'Source'])->assertOk()->json('data');
         $model = Issue::where('public_id', $source['id'])->firstOrFail();
         $row = $model->getAttributes();
-        unset($row['id']);
+        unset($row['id'], $row['schedule_start'], $row['schedule_end']);
         $expected = [];
         for ($i = 0; $i < 105; $i++) {
             $id = (string) Str::uuid();

@@ -20,7 +20,7 @@ class MySqlBoardRulesTest extends TestCase
         [, $project, $base] = $this->ruleFixture();
         $issue = $this->ruleRpc('createIssue', ['projectId' => $project['id'], 'title' => 'Bulk source'])->assertOk()->json('data');
         $source = (array) DB::table('issues')->where('public_id', $issue['id'])->first();
-        unset($source['id']);
+        unset($source['id'], $source['schedule_start'], $source['schedule_end']);
         for ($batch = 0; $batch < 10; $batch++) {
             $rows = [];
             for ($index = 0; $index < 100; $index++) {

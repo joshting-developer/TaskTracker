@@ -22,7 +22,7 @@ trait IssueSearchCases
         $two = $rpc('createIssue', ['projectId' => $project['id'], 'title' => '文件提到 SRC-1', 'description' => 'literal marker']);
         $model = Project::where('public_id', $project['id'])->sole();
         $source = (array) DB::table('issues')->where('public_id', $one['id'])->first();
-        unset($source['id']);
+        unset($source['id'], $source['schedule_start'], $source['schedule_end']);
         DB::table('issues')->insert([...$source, 'public_id' => (string) Str::uuid(), 'identifier' => 'SRC-10', 'title' => 'Prefix result', 'description' => '', 'storage_position' => 10]);
         $root = '/api/v1/projects/'.$project['id'].'/issues?search=';
         $query = fn ($term) => $this->getJson($root.rawurlencode($term))->assertOk()->json('data');

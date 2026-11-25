@@ -28,7 +28,7 @@ trait IssueChildrenEpicCases
         $parent = $rpc('createIssue', ['projectId' => $project['id'], 'title' => 'Parent']);
         $model = Issue::where('public_id', $parent['id'])->firstOrFail();
         $template = $model->getAttributes();
-        unset($template['id']);
+        unset($template['id'], $template['schedule_start'], $template['schedule_end']);
         $ids = [];
         $events = [];
         $comments = [];
@@ -63,7 +63,7 @@ trait IssueChildrenEpicCases
         foreach ([1, 20, 100] as $count) {
             $fixture = $this->childrenFixture($count);
             extract($fixture);
-            $unrelated = DB::table('issues')->insertGetId([...array_diff_key($model->getAttributes(), ['id' => true]), 'public_id' => (string) Str::uuid(), 'identifier' => 'OTHER-PARENT', 'parent_issue_id' => null]);
+            $unrelated = DB::table('issues')->insertGetId([...array_diff_key($model->getAttributes(), ['id' => true, 'schedule_start' => true, 'schedule_end' => true]), 'public_id' => (string) Str::uuid(), 'identifier' => 'OTHER-PARENT', 'parent_issue_id' => null]);
             $before = DB::table('audit_events')->whereIn('entity_id', $ids)->where('entity_type', 'issues')->orderBy('id')->pluck('event_data')->all();
             $repo = app(IssueChildrenRepository::class);
             $scope = $repo->scope($identity['workspace']['id'], $project['id'], $parent['id'], $epic['id']);

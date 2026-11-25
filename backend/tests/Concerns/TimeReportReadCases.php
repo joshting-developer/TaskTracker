@@ -87,7 +87,7 @@ trait TimeReportReadCases
         }
         $issueTemplate = DB::table('issues')->where('public_id', $issue['id'])->first();
         $issueTemplate = (array) $issueTemplate;
-        unset($issueTemplate['id']);
+        unset($issueTemplate['id'], $issueTemplate['schedule_start'], $issueTemplate['schedule_end']);
         $statusTemplate = (array) DB::table('project_statuses')->where('id', $issueTemplate['state_id'])->first();
         unset($statusTemplate['id']);
         $entries = [];
