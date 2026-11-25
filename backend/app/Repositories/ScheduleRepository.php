@@ -6,8 +6,8 @@ use App\Data\ScheduleQueryData;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\ProjectStatus;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 
 /** 時程視圖的SQL投影, 只讀單一已授權Project內與區間重疊的卡片。 */
 class ScheduleRepository
@@ -47,6 +47,22 @@ class ScheduleRepository
     public function unscheduled(Project $project, ScheduleQueryData $filters): int
     {
         return $this->scope($project, $filters)->whereNull('schedule_end')->count();
+    }
+
+    /**
+     * TT-446：未排程卡片的有界清單, 條件與 unscheduled() 計數相同, 最近更新優先。
+     *
+     * @param  Project  $project  已授權Project
+     * @param  ScheduleQueryData  $filters  承辦者、已關閉條件與分頁, 日期區間不使用
+     * @return LengthAwarePaginator<Issue> 當頁未排程卡片
+     */
+    public function unscheduledPage(Project $project, ScheduleQueryData $filters): LengthAwarePaginator
+    {
+        return $this->scope($project, $filters)->whereNull('schedule_end')
+            ->with(['status:id,code,label', 'assignee:id,user_id,disabled_at', 'assignee.user:id,name',
+                'epic' => fn ($q) => $q->where('workspace_id', $project->workspace_id)->where('project_id', $project->id)->select(['id', 'public_id', 'identifier', 'title'])])
+            ->orderByDesc('updated_at')->orderBy('public_id')
+            ->paginate($filters->page->perPage, self::COLUMNS, 'page', $filters->page->page);
     }
 
     /**

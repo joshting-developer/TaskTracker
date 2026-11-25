@@ -7,6 +7,7 @@ import { addDays, layoutBars, weekOf } from '../domain/schedule.js';
 import { useScheduleBars } from '../composables/useScheduleBars.js';
 import { readContext, writeContext } from '../ui/workContext.js';
 import Icon from './Icon.vue';
+import ScheduleUnscheduled from './ScheduleUnscheduled.vue';
 import PagedSelect from './PagedSelect.vue';
 // TT-384：每位成員一列, 沒有任務的成員也列出, 才看得出誰有空；同一天同時進行 HEAVY 張以上標為負荷高。
 const HEAVY = 3, SPANS = [14, 28];
@@ -96,9 +97,10 @@ function rangeText(issue) { const start = issue.startDate || issue.endDate, end 
         <li v-for="row in rows" :key="row.id || 'unassigned'"><h3>{{ row.name }}<small v-if="row.heavy" class="people-heavy">{{ t('負荷高') }}</small></h3><p v-if="!row.bars.length" class="subtle">{{ t('這段期間沒有排程') }}</p><button v-for="bar in row.bars" :key="bar.issue.id" class="schedule-bar" :class="barClass(bar, false)" :style="barStyle(bar.issue)" :aria-label="barLabel(bar)" @click="open(bar.issue)"><span class="identifier">{{ bar.issue.identifier }}</span><span class="schedule-title">{{ bar.issue.title }}</span><small class="people-range">{{ rangeText(bar.issue) }}</small></button></li>
       </ol>
       <p v-if="result && !hasBars" class="schedule-status subtle">{{ t('這段期間沒有排程') }}</p>
+      <p v-if="result && !hasBars && result.unscheduled" class="schedule-status subtle schedule-empty-hint">{{ t('任務要有計畫開始或結束日才會出現在這裡, 可以按下方「{0} 張任務尚未排程」補上日期', [result.unscheduled]) }}</p>
     </div>
     <p v-if="result?.total > 1000" role="alert" class="schedule-status">{{ t('任務超過 1000 張, 請縮短期間或加篩選') }}</p>
-    <footer class="schedule-footer"><span v-if="result?.unscheduled" class="subtle">{{ t('{0} 張任務尚未排程', [result.unscheduled]) }}</span>
+    <footer class="schedule-footer"><ScheduleUnscheduled :project="project" :count="result?.unscheduled" :assignee="assignee" :include-closed="includeClosed" @saved="load" @open="open" @access="emit('access')" />
       <div v-if="!assignee && members?.lastPage > 1" class="pagination" :aria-label="t('成員分頁')"><button class="text-button" :disabled="loading || memberPage <= 1" @click="memberPage--">{{ t('上一頁') }}</button><span>{{ memberPage }} / {{ members.lastPage }}</span><button class="text-button" :disabled="loading || memberPage >= members.lastPage" @click="memberPage++">{{ t('下一頁') }}</button></div>
 
     </footer>

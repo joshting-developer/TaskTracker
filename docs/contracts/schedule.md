@@ -22,6 +22,12 @@ Session `GET /api/v1/projects/{project}/schedule` 供人員排程、週曆與甘
 
 查詢限單一 Project, issues 沒有日期索引, 依 Project 範圍掃描；跨 Project 的人員排程需要時另評估
 
+## 未排程清單（TT-446）
+
+Session `GET /api/v1/projects/{project}/schedule/unscheduled` 列出兩端日期皆空的卡片, 權限與工作區邊界同上。Query 只收 `assignee`、`includeClosed`、`page`（最多1000）與 `perPage`（預設20、最多50）, 不收日期區間；條件與 `unscheduled` 計數相同, 最近更新優先、公開ID次排序。單筆欄位與時程相同
+
+三視圖底部的「N 張任務尚未排程」是按鈕, 打開共用對話框 `ScheduleUnscheduled.vue`, 沿用目前視圖的承辦人與「顯示已完成」。每列可填計畫開始／結束日（只填一端視為單日）, 存檔走既有 `updateIssue` 與 `expectedRevision`；revision 衝突時不覆蓋, 重讀最新內容請使用者確認後再存。存完重讀視圖, 卡片移出清單並出現在時程上。沒有 `issue.write` 只能查看。期間內沒有排程但有未排程卡片時, 空狀態會說明原因與補日期的入口。不做拖曳改期與多選批次, 檢查在 `frontend/tools/schedule-unscheduled-check.js`
+
 ## 前端共用
 
 `frontend/src/domain/schedule.js` 提供日期位移、週一起算的週範圍、單端區間及不遮蓋的分列排版, 三視圖共用, 檢查在 `frontend/tools/schedule-domain-check.js`

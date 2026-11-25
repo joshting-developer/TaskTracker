@@ -7,6 +7,7 @@ import { addDays, daysBetween, layoutBars, scheduleSpan, weekOf } from '../domai
 import { useScheduleBars } from '../composables/useScheduleBars.js';
 import { readContext, writeContext } from '../ui/workContext.js';
 import Icon from './Icon.vue';
+import ScheduleUnscheduled from './ScheduleUnscheduled.vue';
 // TT-386：Project → Epic → 卡片三層, 一張卡一列；到期日用菱形標記與計畫條分開。依賴箭頭與拖曳改期未授權, 不提供。
 const SPANS = [28, 84];
 const props = defineProps({ project: Object, contextKey: String });
@@ -128,8 +129,9 @@ function barColumns(bar) { return `${bar.start + 1} / ${bar.end + 2}`; }
         <li v-for="group in groups" :key="groupKey(group)"><h3>{{ group.epic ? `${group.epic.identifier} ${group.epic.title}` : t('未歸入 Epic') }}<small v-if="group.bar" class="people-range">{{ group.derived ? t('推算') : '' }} {{ label(addDays(range.from, group.bar.start)) }} – {{ label(addDays(range.from, group.bar.end)) }}</small></h3><button v-for="issue in group.children" :key="issue.id" class="schedule-bar" :class="place(issue) ? barClass(place(issue), false) : {}" :style="barStyle(issue)" :aria-label="place(issue) ? barLabel(place(issue)) : issue.title" @click="open(issue)"><span class="identifier">{{ issue.identifier }}</span><span class="schedule-title">{{ issue.title }}</span><small class="people-range">{{ rangeText(issue) }}<template v-if="issue.dueDate"> · <span :class="{ late: isLate(issue) }">{{ isLate(issue) ? t('到期 {0}, 計畫較晚', [label(issue.dueDate)]) : t('到期 {0}', [label(issue.dueDate)]) }}</span></template></small></button></li>
       </ol>
       <p v-if="empty" class="schedule-status subtle">{{ t('這段期間沒有排程') }}</p>
+      <p v-if="empty && result.unscheduled" class="schedule-status subtle schedule-empty-hint">{{ t('任務要有計畫開始或結束日才會出現在這裡, 可以按下方「{0} 張任務尚未排程」補上日期', [result.unscheduled]) }}</p>
     </div>
     <p v-if="result?.total > 1000" role="alert" class="schedule-status">{{ t('任務超過 1000 張, 請縮短期間或加篩選') }}</p>
-    <footer class="schedule-footer"><span v-if="result?.unscheduled" class="subtle">{{ t('{0} 張任務尚未排程', [result.unscheduled]) }}</span></footer>
+    <footer class="schedule-footer"><ScheduleUnscheduled :project="project" :count="result?.unscheduled" :include-closed="includeClosed" @saved="load" @open="open" @access="emit('access')" /></footer>
   </section>
 </template>

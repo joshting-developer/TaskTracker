@@ -7,6 +7,7 @@ import { addDays, layoutBars, weekOf } from '../domain/schedule.js';
 import { useScheduleBars } from '../composables/useScheduleBars.js';
 import { readContext, writeContext } from '../ui/workContext.js';
 import Icon from './Icon.vue';
+import ScheduleUnscheduled from './ScheduleUnscheduled.vue';
 import PagedSelect from './PagedSelect.vue';
 // TT-385：只讀目前Project當週與計畫日期重疊的卡片；改期仍在卡片編輯, 不另存排程。
 const props = defineProps({ project: Object, contextKey: String });
@@ -67,8 +68,9 @@ function label(date) { return `${Number(date.slice(5, 7))}/${Number(date.slice(8
         <li v-for="day in agenda" :key="day.date" :class="{ today: day.date === today }"><h3>{{ weekdays[day.index] }} {{ label(day.date) }}</h3><p v-if="!day.bars.length" class="subtle">{{ t('沒有排程') }}</p><button v-for="bar in day.bars" :key="bar.issue.id" class="schedule-bar" :class="barClass(bar, false)" :style="barStyle(bar.issue)" :aria-label="barLabel(bar)" @click="open(bar.issue)"><span class="identifier">{{ bar.issue.identifier }}</span><span class="schedule-title">{{ bar.issue.title }}</span><span v-if="!assignee && bar.issue.assigneeName" class="avatar small" aria-hidden="true">{{ initials(bar.issue.assigneeName) }}</span></button></li>
       </ol>
       <p v-if="result && !bars.length" class="schedule-status subtle">{{ t('這週沒有排程的任務') }}</p>
+      <p v-if="result && !bars.length && result.unscheduled" class="schedule-status subtle schedule-empty-hint">{{ t('任務要有計畫開始或結束日才會出現在這裡, 可以按下方「{0} 張任務尚未排程」補上日期', [result.unscheduled]) }}</p>
     </div>
     <p v-if="result?.total > 1000" role="alert" class="schedule-status">{{ t('任務超過 1000 張, 請縮短期間或加篩選') }}</p>
-    <footer class="schedule-footer"><span v-if="result?.unscheduled" class="subtle">{{ t('{0} 張任務尚未排程', [result.unscheduled]) }}</span></footer>
+    <footer class="schedule-footer"><ScheduleUnscheduled :project="project" :count="result?.unscheduled" :assignee="assignee" :include-closed="includeClosed" @saved="load" @open="open" @access="emit('access')" /></footer>
   </section>
 </template>

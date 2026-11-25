@@ -1115,5 +1115,16 @@
   "寬度": "Width",
   "高度（px）": "Height (px)",
   "拖曳或使用方向鍵調整大小": "Drag or use arrow keys to resize",
-  "任務範圍": "Task scope"
+  "任務範圍": "Task scope",
+  "尚未排程的任務": "Unscheduled tasks",
+  "填上計畫開始或結束日後, 任務就會出現在週曆、人員排程與甘特；只填一端視為單日": "Add a planned start or end date and the task appears in the week, people and Gantt views. A single date counts as one day",
+  "你沒有這個專案的編輯權限, 只能查看": "You can view but not edit tasks in this project",
+  "所有任務都已排程": "All tasks are scheduled",
+  "請填開始日或結束日": "Enter a start or end date",
+  "{0} 已排進時程": "{0} is now scheduled",
+  "{0} 剛被其他人修改, 已重新讀取最新內容, 請確認後再存": "{0} was just changed by someone else. The latest version is loaded, please check and save again",
+  "儲存 {0} 的日期": "Save dates for {0}",
+  "未排程分頁": "Unscheduled pages",
+  "任務要有計畫開始或結束日才會出現在這裡, 可以按下方「{0} 張任務尚未排程」補上日期": "Tasks appear here once they have a planned start or end date. Use “{0} tasks are not scheduled yet” below to add dates",
+  "儲存": "Save"
 }

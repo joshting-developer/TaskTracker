@@ -124,6 +124,47 @@ class ScheduleTest extends TestCase
         $this->assertSame($identity['user']['id'], $mine['items'][0]['assignee']);
     }
 
+    /** TT-446：未排程清單與計數同條件, 只回列表欄位, 補日期後離開清單並出現在時程, 撤權即不可讀
+     * @return void
+     */
+    public function test_unscheduled_list_matches_count_and_access(): void
+    {
+        [$identity, $project] = $this->fixture();
+        $member = WorkspaceMember::where('user_id', $identity['user']['id'])->firstOrFail();
+        $other = $this->postJson('/api/rpc/createProject', ['name' => 'Other', 'code' => 'OTHER', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $this->issue($other);
+        $mine = $this->issue($project, ['assignee_id' => $member->id]);
+        $loose = $this->issue($project);
+        $closed = $this->issue($project);
+        $closed->update(['state_id' => ProjectStatus::where('project_id', $closed->project_id)->where('code', 'closed')->value('id')]);
+        $this->issue($project, ['start_date' => '2026-05-01']);
+        $this->issue($project, ['due_date' => '2026-05-02']);
+        $base = '/api/v1/projects/'.$project['id'];
+
+        $data = $this->getJson($base.'/schedule/unscheduled')->assertOk()->json('data');
+        $this->assertEqualsCanonicalizing([$mine->public_id, $loose->public_id, Issue::where('project_id', $mine->project_id)->whereNotNull('due_date')->value('public_id')], array_column($data['items'], 'id'));
+        $this->assertSame($this->getJson($base.'/schedule?from=2026-05-01&to=2026-05-07')->json('data.unscheduled'), $data['total']);
+        $this->assertSame(['id', 'identifier', 'title', 'type', 'priority', 'state', 'stateLabel', 'assignee', 'assigneeName', 'assigneeDisabled', 'startDate', 'endDate', 'dueDate', 'epicId', 'revision'], array_keys($data['items'][0]));
+        $this->assertCount(4, $this->getJson($base.'/schedule/unscheduled?includeClosed=1')->json('data.items'));
+        $this->assertSame([$mine->public_id], array_column($this->getJson($base.'/schedule/unscheduled?assignee='.$identity['user']['id'])->json('data.items'), 'id'));
+        $paged = $this->getJson($base.'/schedule/unscheduled?perPage=2&page=2')->assertOk()->json('data');
+        $this->assertSame([2, 2, 3], [$paged['page'], $paged['lastPage'], $paged['total']]);
+        $this->getJson($base.'/schedule/unscheduled?perPage=51')->assertStatus(400);
+        $this->getJson($base.'/schedule/unscheduled?workspaceId=x&from=2026-01-01')->assertOk();
+
+        // 沿用既有卡片更新與 revision 衝突處理, 補日期後從清單移到時程
+        $this->postJson('/api/rpc/updateIssue', ['id' => $loose->public_id, 'startDate' => '2026-05-03', 'endDate' => '2026-05-04', 'expectedRevision' => $loose->fresh()->revision + 1, 'requestId' => (string) Str::uuid()])->assertJsonPath('error.code', 'REVISION_CONFLICT');
+        $this->postJson('/api/rpc/updateIssue', ['id' => $loose->public_id, 'startDate' => '2026-05-03', 'endDate' => '2026-05-04', 'expectedRevision' => $loose->fresh()->revision, 'requestId' => (string) Str::uuid()])->assertOk();
+        $this->assertNotContains($loose->public_id, array_column($this->getJson($base.'/schedule/unscheduled')->json('data.items'), 'id'));
+        $this->assertContains($loose->public_id, array_column($this->getJson($base.'/schedule?from=2026-05-01&to=2026-05-07')->json('data.items'), 'id'));
+
+        $member->update(['role' => 'member']);
+        $this->assertContains($this->getJson($base.'/schedule/unscheduled')->status(), [403, 404]);
+        $member->update(['role' => 'owner']);
+        $this->postJson('/api/auth/createWorkspace', ['workspaceName' => 'Another', 'requestId' => (string) Str::uuid()])->assertOk();
+        $this->getJson($base.'/schedule/unscheduled')->assertStatus(404);
+    }
+
     /** 跨度、格式與順序在查詢前拒絕
      * @return void
      */

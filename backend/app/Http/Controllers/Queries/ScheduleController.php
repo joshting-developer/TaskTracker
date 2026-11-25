@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Queries;
 use App\Data\WorkspaceContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ScheduleQueryRequest;
+use App\Http\Requests\ScheduleUnscheduledRequest;
 use App\Http\Resources\ApiResponse;
 use App\Http\Resources\Queries\PageResource;
 use App\Http\Resources\Queries\ScheduleIssueResource;
@@ -34,5 +35,19 @@ class ScheduleController extends Controller
         $data = $this->workspace->read($request, fn (WorkspaceContext $context) => $this->schedule->index($context, $project, $request->schedule()));
 
         return new ApiResponse([...PageResource::wrap($data['page'], ScheduleIssueResource::collection($data['page']->items())->resolve()), 'unscheduled' => $data['unscheduled'], 'epics' => ScheduleIssueResource::epics($data['page']->items())]);
+    }
+
+    /**
+     * TT-446：讀取同條件的未排程卡片分頁, 供時程視圖補日期。
+     *
+     * @param  ScheduleUnscheduledRequest  $request  已驗證承辦者、已關閉切換與分頁
+     * @param  string  $project  Project公開ID
+     * @return ApiResponse 未排程分頁
+     */
+    public function unscheduled(ScheduleUnscheduledRequest $request, string $project): ApiResponse
+    {
+        $page = $this->workspace->read($request, fn (WorkspaceContext $context) => $this->schedule->unscheduled($context, $project, $request->filters()));
+
+        return new ApiResponse(PageResource::wrap($page, ScheduleIssueResource::collection($page->items())->resolve()));
     }
 }

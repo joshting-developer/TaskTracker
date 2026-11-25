@@ -24,6 +24,7 @@ export const api = {
   timeCalendar: (project, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/time-calendar`, filters, options),
   timeEntries: (project, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/time-entries`, filters, options),
   schedule: (project, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/schedule`, filters, options),
+  scheduleUnscheduled: (project, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/schedule/unscheduled`, filters, options),
   issueLocation: (id, options) => queryApi(`issue-locations/${encodeURIComponent(id)}`, {}, options),
   projectAcl: (project, options) => queryApi(`projects/${encodeURIComponent(project)}/acl`, {}, options),
   projectAclMembers: (project, filters, options) => queryApi(`projects/${encodeURIComponent(project)}/acl/members`, filters, options),

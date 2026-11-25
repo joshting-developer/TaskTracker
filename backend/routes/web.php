@@ -154,6 +154,7 @@ Route::prefix('/api/v1')->group(function () {
     Route::get('/projects/{project}/time-calendar', [ProjectTimeController::class, 'calendar'])->name('v1.projects.time-calendar');
     Route::get('/projects/{project}/time-entries', [ProjectTimeController::class, 'day'])->name('v1.projects.time-entries');
     Route::get('/projects/{project}/schedule', [ScheduleController::class, 'index'])->name('v1.projects.schedule');
+    Route::get('/projects/{project}/schedule/unscheduled', [ScheduleController::class, 'unscheduled'])->name('v1.projects.schedule.unscheduled');
     Route::get('/projects/{project}/acl', [ProjectMembersController::class, 'metadata'])->name('v1.projects.acl');
     Route::get('/projects/{project}/acl/members', [ProjectMembersController::class, 'index'])->name('v1.projects.acl.members');
     Route::get('/projects/{project}/acl/candidates', [ProjectMembersController::class, 'candidates'])->name('v1.projects.acl.candidates');
