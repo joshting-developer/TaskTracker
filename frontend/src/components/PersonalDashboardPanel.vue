@@ -2,7 +2,7 @@
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { formatDate, t } from '../i18n/index.js';
-const props = defineProps({ kind: String, title: String, refreshKey: Number });
+const props = defineProps({ kind: String, title: String, refreshKey: Number, perPage: { type: Number, default: 5 } });
 const emit = defineEmits(['access']);
 const page = ref(1), result = shallowRef(null), loading = ref(false), error = ref('');
 const notes = computed(() => props.kind === 'notes');
@@ -12,7 +12,7 @@ async function refresh() {
   controller?.abort(); controller = new AbortController();
   loading.value = true; error.value = '';
   try {
-    const filters = { page: page.value, perPage: 5 };
+    const filters = { page: page.value, perPage: props.perPage };
     const data = notes.value
       ? await api.todos({ ...filters, scope: 'mine', state: 'open' }, { signal: controller.signal })
       : await api.personalDashboard({ ...filters, kind: props.kind }, { signal: controller.signal });
@@ -29,6 +29,7 @@ async function refresh() {
 }
 function href(item) { return notes.value ? '#/notes' : `#/projects/${encodeURIComponent(item.projectId)}/issues/${encodeURIComponent(item.id)}?detail=1`; }
 watch([page, () => props.refreshKey], refresh, { immediate: true });
+watch(() => props.perPage, () => { if (page.value !== 1) page.value = 1; else refresh(); });
 onScopeDispose(() => { generation++; controller?.abort(); });
 </script>
 <template>
@@ -49,7 +50,7 @@ onScopeDispose(() => { generation++; controller?.abort(); });
   </section>
 </template>
 <style scoped>
-.dashboard-panel { min-width: 0; border: 1px solid #e2e3eb; border-radius: 8px; background: #fff; padding: 20px; }
+.dashboard-panel { height: 100%; overflow: auto; box-sizing: border-box; min-width: 0; border: 1px solid #e2e3eb; border-radius: 8px; background: #fff; padding: 20px; }
 header { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; }
 h2 { font-size: 17px; margin: 0; } h2 span { color: #6653bd; font-size: 15px; margin-left: 8px; font-variant-numeric: tabular-nums; }
 .dashboard-rows { padding: 0; margin: 8px 0 0; list-style: none; }

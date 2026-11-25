@@ -1096,5 +1096,6 @@
   "隱藏": "Hide",
   "首頁設定已在其他地方更新, 請重新載入": "Home settings were updated elsewhere. Reload to continue",
   "首頁設定格式不正確": "Home settings are not valid",
-  "首頁設定包含不支援的欄位": "Home settings include unsupported fields"
+  "首頁設定包含不支援的欄位": "Home settings include unsupported fields",
+  "調整小工具大小": "Resize widget"
 }

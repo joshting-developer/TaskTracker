@@ -20,6 +20,13 @@ try {
   assert.equal(await page.locator('.notes-page,.todo-home,.project-home,.page-heading').count(), 0);
   await page.getByRole('heading', { name: '我的工作', exact: true }).waitFor();
   assert.ok(reads.some(p => p === '/api/v1/personal-dashboard'));
+  await page.getByRole('button', { name: '自訂', exact: true }).click();
+  const handle = page.getByRole('button', { name: '調整小工具大小' }).first();
+  await handle.focus(); await handle.press('ArrowRight'); await handle.press('ArrowDown');
+  await page.getByRole('button', { name: '儲存', exact: true }).click();
+  await page.getByText('首頁設定已儲存', { exact: true }).waitFor();
+  await page.reload(); await page.getByRole('heading', { name: '我的工作', exact: true }).waitFor();
+  await page.waitForFunction(() => document.querySelector('.dashboard-slot')?.style.gridColumn === 'span 2');
   await page.getByRole('link', { name: '紙條', exact: true }).click(); await page.getByRole('heading', { name: '紙條', exact: true }).waitFor();
   assert.equal(new URL(page.url()).hash, '#/notes'); await page.reload(); await page.getByRole('heading', { name: '紙條', exact: true }).waitFor();
   await openProjectList(page); await page.getByRole('button', { name: '建立專案', exact: true }).click();

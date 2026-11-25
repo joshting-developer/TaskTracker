@@ -17,6 +17,18 @@ class DashboardPreferenceTest extends TestCase
     /** 偏好端點 */
     private const URL = '/api/v1/personal-dashboard/preferences';
 
+    /** 尺寸偏好保存與邊界驗證。 */
+    public function test_widget_dimensions_round_trip(): void
+    {
+        $this->postJson('/api/auth/register', ['name' => 'Resize', 'email' => 'resize@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Resize'])->assertOk();
+        $widget = ['id' => 'mine', 'kind' => 'mine', 'width' => 2, 'height' => 700];
+        $this->putJson(self::URL, ['widgets' => [$widget], 'expectedRevision' => 0])->assertOk()->assertJsonPath('data.widgets.0.width', 2);
+        $this->getJson(self::URL)->assertOk()->assertJsonPath('data.widgets.0.height', 700);
+        $this->putJson(self::URL, ['widgets' => [array_merge($widget, ['width' => 4])], 'expectedRevision' => 1])->assertStatus(400);
+        $this->putJson(self::URL, ['widgets' => [$widget, $widget], 'expectedRevision' => 1])->assertStatus(400);
+        $this->putJson(self::URL, ['widgets' => [array_merge($widget, ['height' => 800])], 'expectedRevision' => 0])->assertStatus(409);
+    }
+
     /** 預設、保存、重送、衝突、白名單與成員隔離
      * @return void
      */

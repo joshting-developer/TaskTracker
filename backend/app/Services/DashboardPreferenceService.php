@@ -43,7 +43,7 @@ class DashboardPreferenceService
     public function update(WorkspaceContext $context, array $widgets, int $expectedRevision): array
     {
         $member = $this->member($context);
-        $widgets = array_values(array_intersect($widgets, $this->available($context)));
+        $widgets = $this->filterWidgets($widgets, $this->available($context));
         $current = $this->preferences->find($member, true);
         $revision = $current?->revision ?? 0;
         if ($revision !== $expectedRevision) {
@@ -67,7 +67,20 @@ class DashboardPreferenceService
     {
         $available = $this->available($context);
 
-        return ['widgets' => array_values(array_intersect(array_unique($widgets), $available)), 'available' => $available, 'revision' => $revision];
+        return ['widgets' => $this->filterWidgets($widgets, $available), 'available' => $available, 'revision' => $revision];
+    }
+
+    /** 依種類與實例識別過濾偏好, 相容舊版字串設定。 */
+    private function filterWidgets(array $widgets, array $available): array
+    {
+        $seen = [];
+        return array_values(array_filter($widgets, function ($widget) use ($available, &$seen) {
+            $kind = is_string($widget) ? $widget : ($widget['kind'] ?? '');
+            $id = is_string($widget) ? $widget : ($widget['id'] ?? '');
+            if (! in_array($kind, $available, true) || isset($seen[$id])) { return false; }
+            $seen[$id] = true;
+            return true;
+        }));
     }
 
     /** 目前身分可用的小工具；紙條需 todo.read
