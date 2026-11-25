@@ -5,8 +5,9 @@ namespace App\Repositories;
 use App\Data\ScheduleQueryData;
 use App\Models\Issue;
 use App\Models\Project;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use App\Models\ProjectStatus;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /** 時程視圖的SQL投影, 只讀單一已授權Project內與區間重疊的卡片。 */
 class ScheduleRepository
@@ -23,15 +24,17 @@ class ScheduleRepository
      */
     public function page(Project $project, ScheduleQueryData $filters): LengthAwarePaginator
     {
-        return $this->scope($project, $filters)
-            // 單端卡片的另一端以已填日期代替, 與前端條狀計算一致。
-            ->where(fn ($q) => $q->where('start_date', '<=', $filters->to)->orWhere(fn ($q) => $q->whereNull('start_date')->where('end_date', '<=', $filters->to)))
-            ->where(fn ($q) => $q->where('end_date', '>=', $filters->from)->orWhere(fn ($q) => $q->whereNull('end_date')->where('start_date', '>=', $filters->from)))
-            ->with(['status:id,code,label', 'assignee:id,user_id,disabled_at', 'assignee.user:id,name',
-                // TT-386：Epic只取同租戶同Project, 甘特依此分組；不回其他Project的標題。
-                'epic' => fn ($q) => $q->where('workspace_id', $project->workspace_id)->where('project_id', $project->id)->select(['id', 'public_id', 'identifier', 'title'])])
-            ->orderByRaw('COALESCE(start_date, end_date)')->orderByRaw('COALESCE(end_date, start_date)')->orderBy('identifier')->orderBy('public_id')
-            ->paginate($filters->page->perPage, self::COLUMNS, 'page', $filters->page->page);
+        $query = $this->scope($project, $filters)
+            ->where('schedule_start', '<=', $filters->to)
+            ->where('schedule_end', '>=', $filters->from);
+        // title 必填且非索引欄位, 讓 COUNT 也用 ICP 過濾後才讀列。
+        $total = (clone $query)->count('title');
+
+        return $query->with(['status:id,code,label', 'assignee:id,user_id,disabled_at', 'assignee.user:id,name',
+            // TT-386：Epic只取同租戶同Project, 甘特依此分組；不回其他Project的標題。
+            'epic' => fn ($q) => $q->where('workspace_id', $project->workspace_id)->where('project_id', $project->id)->select(['id', 'public_id', 'identifier', 'title'])])
+            ->orderBy('schedule_start')->orderBy('schedule_end')->orderBy('identifier')->orderBy('public_id')
+            ->paginate($filters->page->perPage, self::COLUMNS, 'page', $filters->page->page, $total);
     }
 
     /**
@@ -43,7 +46,7 @@ class ScheduleRepository
      */
     public function unscheduled(Project $project, ScheduleQueryData $filters): int
     {
-        return $this->scope($project, $filters)->whereNull('start_date')->whereNull('end_date')->count();
+        return $this->scope($project, $filters)->whereNull('schedule_end')->count();
     }
 
     /**
@@ -55,8 +58,9 @@ class ScheduleRepository
      */
     private function scope(Project $project, ScheduleQueryData $filters): Builder
     {
-        return Issue::where('workspace_id', $project->workspace_id)->where('project_id', $project->id)
-            ->when(! $filters->includeClosed, fn ($q) => $q->whereHas('status', fn ($q) => $q->where('code', '!=', 'closed')))
+        // 避免 ORDER BY/LIMIT 誘使最佳化器改掃整個工作區。
+        return Issue::forceIndex($filters->includeClosed ? 'issues_schedule_range' : 'issues_schedule_state_range')->where('workspace_id', $project->workspace_id)->where('project_id', $project->id)
+            ->when(! $filters->includeClosed, fn ($q) => $q->whereIn('state_id', ProjectStatus::where('project_id', $project->id)->where('code', '!=', 'closed')->pluck('id')))
             ->when($filters->assignee !== '', fn ($q) => $q->whereHas('assignee', fn ($q) => $q->where('user_id', $filters->assignee)));
     }
 }

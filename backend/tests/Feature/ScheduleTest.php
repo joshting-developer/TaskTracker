@@ -33,7 +33,7 @@ class ScheduleTest extends TestCase
         $rows = [];
         for ($i = 0; $i < 1000; $i++) {
             $row = $open->getAttributes();
-            unset($row['id']);
+            unset($row['id'], $row['schedule_start'], $row['schedule_end']);
             $row['public_id'] = (string) Str::uuid();
             $row['identifier'] = 'PLAN-'.(100 + $i);
             $rows[] = $row;
