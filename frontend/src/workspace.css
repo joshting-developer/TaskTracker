@@ -471,3 +471,10 @@
   .gantt-schedule .calendar-toolbar { flex-wrap: wrap; row-gap: 8px; }
   .gantt-schedule .schedule-range { font-size: 12px; white-space: nowrap; }
 }
+
+.calendar-toolbar .schedule-completed { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.calendar-toolbar .schedule-completed input { width: auto; margin: 0; }
+@media (max-width: 600px) {
+  .schedule-workspace .calendar-toolbar { flex-wrap: wrap; gap: 8px; }
+  .schedule-workspace .schedule-range { white-space: nowrap; }
+}

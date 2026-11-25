@@ -17,8 +17,9 @@ readonly class ScheduleQueryData
      * @param  string  $to  結束日（含）
      * @param  string  $assignee  承辦者User ID, 空字串不限
      * @param  PageQueryData  $page  有界分頁
+     * @param  bool  $includeClosed  是否包含已關閉卡片
      */
-    public function __construct(public string $from, public string $to, public string $assignee, public PageQueryData $page) {}
+    public function __construct(public string $from, public string $to, public string $assignee, public PageQueryData $page, public bool $includeClosed = false) {}
 
     /**
      * 驗證日期格式、先後與跨度上限。
@@ -27,9 +28,10 @@ readonly class ScheduleQueryData
      * @param  string  $to  結束日
      * @param  string  $assignee  承辦者User ID
      * @param  PageQueryData  $page  有界分頁
+     * @param  bool  $includeClosed  是否包含已關閉卡片
      * @return self 時程條件
      */
-    public static function range(string $from, string $to, string $assignee, PageQueryData $page): self
+    public static function range(string $from, string $to, string $assignee, PageQueryData $page, bool $includeClosed = false): self
     {
         foreach ([$from, $to] as $date) {
             if (! preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $parts) || ! checkdate((int) $parts[2], (int) $parts[3], (int) $parts[1])) {
@@ -41,6 +43,6 @@ readonly class ScheduleQueryData
             DomainError::fail('INVALID_INPUT', '時程區間最多'.self::MAX_DAYS.'天且結束日不可早於開始日');
         }
 
-        return new self($from, $to, $assignee, $page);
+        return new self($from, $to, $assignee, $page, $includeClosed);
     }
 }

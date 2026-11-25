@@ -15,7 +15,8 @@ const saved = readContext(props.contextKey).gantt || {};
 const validDay = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
 const anchor = ref(validDay(saved.week) ? saved.week : dateInTaipei()), span = ref(SPANS.includes(saved.span) ? saved.span : SPANS[0]);
 const collapsed = ref(Array.isArray(saved.collapsed) ? saved.collapsed.filter(id => typeof id === 'string').slice(0, 200) : []);
-const result = shallowRef(null), loading = ref(false), error = ref(''), page = ref(1);
+const includeClosed = ref(saved.includeClosed === true);
+const result = shallowRef(null), loading = ref(false), error = ref('');
 const { today, barClass, barStyle, barLabel } = useScheduleBars(() => props.project);
 let generation = 0, request;
 const range = computed(() => { const from = weekOf(anchor.value).from, to = addDays(from, span.value - 1); return { from, to, days: Array.from({ length: span.value }, (_, index) => addDays(from, index)) }; });
@@ -62,18 +63,18 @@ async function load() {
   request?.abort(); request = new AbortController();
   loading.value = true;
   try {
-    const data = await api.schedule(props.project.id, { from: range.value.from, to: range.value.to, page: page.value, perPage: 200 }, { signal: request.signal });
+    const data = await api.schedule(props.project.id, { from: range.value.from, to: range.value.to, includeClosed: includeClosed.value ? 1 : 0, perPage: 1000 }, { signal: request.signal });
     if (current !== generation) return;
-    result.value = data; error.value = '';
+    result.value = data.total > 1000 ? { ...data, items: [], epics: [] } : data; error.value = '';
   } catch (failure) {
     if (current !== generation || ['ABORTED', 'STALE_RESPONSE'].includes(failure.code)) return;
     error.value = failure.message;
     if (['NOT_FOUND', 'FORBIDDEN', 'WORKSPACE_CHANGED', 'UNAUTHENTICATED'].includes(failure.code)) { result.value = null; emit('access'); }
   } finally { if (current === generation) loading.value = false; }
 }
-watch([() => props.project.id, () => range.value.from, span], () => { result.value = null; if (page.value !== 1) page.value = 1; else load(); }, { immediate: true });
-watch(page, load);
-watch([anchor, span, collapsed], () => writeContext(props.contextKey, { gantt: { week: anchor.value, span: span.value, collapsed: collapsed.value } }), { flush: 'post', deep: true });
+watch([() => props.project.id, () => range.value.from, span, includeClosed], () => { result.value = null; load(); }, { immediate: true });
+
+watch([anchor, span, collapsed, includeClosed], () => writeContext(props.contextKey, { gantt: { includeClosed: includeClosed.value, week: anchor.value, span: span.value, collapsed: collapsed.value } }), { flush: 'post', deep: true });
 onScopeDispose(() => { generation++; request?.abort(); });
 defineExpose({ refresh: load });
 
@@ -94,7 +95,7 @@ function barColumns(bar) { return `${bar.start + 1} / ${bar.end + 2}`; }
     <header class="section-title"><div><h2>{{ t('專案甘特') }}</h2><p class="subtle">{{ t('依 Epic 分組顯示計畫期間, 菱形是到期日') }}</p></div></header>
     <div v-if="error" class="error-box" role="alert">{{ t(error) }}<button class="text-button" @click="load">{{ t('重試') }}</button></div>
     <div class="calendar schedule-week">
-      <header class="calendar-toolbar"><div><button class="icon-button previous" :aria-label="t('往前')" @click="shift(-1)"><Icon name="chevron" /></button><strong class="schedule-range">{{ range.from }} – {{ range.to }}</strong><button class="icon-button" :aria-label="t('往後')" @click="shift(1)"><Icon name="chevron" /></button></div><div class="people-tools"><div class="segmented" role="group" :aria-label="t('顯示期間')"><button v-for="option in SPANS" :key="option" type="button" :aria-pressed="span === option" :class="{ active: span === option }" @click="span = option">{{ t('{0} 週', [option / 7]) }}</button></div><button class="text-button" @click="anchor = dateInTaipei()">{{ t('本週') }}</button></div></header>
+      <header class="calendar-toolbar"><label class="schedule-completed"><input v-model="includeClosed" type="checkbox"> {{ t('顯示已完成') }}</label><div><button class="icon-button previous" :aria-label="t('往前')" @click="shift(-1)"><Icon name="chevron" /></button><strong class="schedule-range">{{ range.from }} – {{ range.to }}</strong><button class="icon-button" :aria-label="t('往後')" @click="shift(1)"><Icon name="chevron" /></button></div><div class="people-tools"><div class="segmented" role="group" :aria-label="t('顯示期間')"><button v-for="option in SPANS" :key="option" type="button" :aria-pressed="span === option" :class="{ active: span === option }" @click="span = option">{{ t('{0} 週', [option / 7]) }}</button></div><button class="text-button" @click="anchor = dateInTaipei()">{{ t('本週') }}</button></div></header>
       <p v-if="loading && !result" class="schedule-status" role="status">{{ t('載入時程中…') }}</p>
       <div class="people-scroll">
         <div class="gantt-grid" :style="{ '--days': span }">
@@ -128,6 +129,7 @@ function barColumns(bar) { return `${bar.start + 1} / ${bar.end + 2}`; }
       </ol>
       <p v-if="empty" class="schedule-status subtle">{{ t('這段期間沒有排程') }}</p>
     </div>
-    <footer class="schedule-footer"><span v-if="result?.unscheduled" class="subtle">{{ t('{0} 張任務尚未排程', [result.unscheduled]) }}</span><div v-if="result?.lastPage > 1" class="pagination" :aria-label="t('時程分頁')"><button class="text-button" :disabled="loading || page <= 1" @click="page--">{{ t('上一頁') }}</button><span>{{ page }} / {{ result.lastPage }}</span><button class="text-button" :disabled="loading || page >= result.lastPage" @click="page++">{{ t('下一頁') }}</button></div></footer>
+    <p v-if="result?.total > 1000" role="alert" class="schedule-status">{{ t('任務超過 1000 張, 請縮短期間或加篩選') }}</p>
+    <footer class="schedule-footer"><span v-if="result?.unscheduled" class="subtle">{{ t('{0} 張任務尚未排程', [result.unscheduled]) }}</span></footer>
   </section>
 </template>

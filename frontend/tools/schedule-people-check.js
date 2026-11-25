@@ -95,14 +95,25 @@ try {
   await row('排程負責人').getByRole('button', { name: /週三單日/ }).click(); await page.getByRole('dialog').getByText(/PPL-3/).first().waitFor();
   const closedProject = await call(page, 'createProject', { name: '已完成負荷', code: 'DONE' });
   for (const title of ['已完成A', '已完成B', '已完成C']) await call(page, 'createIssue', { projectId: closedProject.id, title, assignee: owner.user.id, startDate: week.days[2], state: 'closed' });
-  await page.goto(`${base}/app/#/projects/${closedProject.id}/people`); await ready(page);
+  await page.goto(`${base}/app/#/projects/${closedProject.id}/people`); await page.reload(); await ready(page);
   const closedRow = page.getByRole('table', { name: '人員排程' }).locator('.people-row').filter({ hasText: '排程負責人' });
+  assert.equal(await closedRow.getByRole('button').count(), 0, '預設隱藏已關閉');
+  await page.getByRole('checkbox', { name: '顯示已完成' }).check(); await ready(page);
   await closedRow.getByRole('button', { name: /已完成A/ }).waitFor();
+  await page.reload(); await ready(page);
+  assert.equal(await page.getByRole('checkbox', { name: '顯示已完成' }).isChecked(), true, '顯示已完成設定保留');
   await page.screenshot({ path: `artifacts/schedule-people/closed-${process.env.SCHEDULE_BEFORE === '1' ? 'before' : 'after'}.png`, fullPage: true });
   assert.equal(await closedRow.getByRole('button').count(), 3, '已關閉條狀仍顯示');
   if (process.env.SCHEDULE_BEFORE !== '1') {
     assert.equal(await closedRow.getByText('負荷高').count(), 0, '同一天三張已關閉卡不算負荷高');
     assert.equal(await closedRow.locator('.people-cell.busy').count(), 0, '已關閉卡不計入每日負荷');
   }
+  await page.route('**/api/v1/projects/*/schedule?**', async route => {
+    const response = await route.fetch(), body = await response.json();
+    body.data.total = 1001; await route.fulfill({ response, json: body });
+  });
+  await page.goto(`http://127.0.0.1:${port}/app/#/projects/${closedProject.id}/people`); await page.reload(); await ready(page);
+  await page.getByRole('alert').getByText('任務超過 1000 張, 請縮短期間或加篩選').waitFor();
+  assert.equal(await page.locator('.schedule-bar').count(), 0, '超限不呈現片段推算');
   assert.deepEqual(errors, []); console.log('PASS People schedule: idle members listed, unassigned row, heavy-load day, non-overlapping lanes, 2/4-week range, navigation, assignee filter, retry, detail, mobile agenda and three widths');
 } finally { await browser?.close(); await new Promise(resolve => server ? server.httpServer.close(resolve) : resolve()); }

@@ -56,6 +56,7 @@ class ScheduleRepository
     private function scope(Project $project, ScheduleQueryData $filters): Builder
     {
         return Issue::where('workspace_id', $project->workspace_id)->where('project_id', $project->id)
+            ->when(! $filters->includeClosed, fn ($q) => $q->whereHas('status', fn ($q) => $q->where('code', '!=', 'closed')))
             ->when($filters->assignee !== '', fn ($q) => $q->whereHas('assignee', fn ($q) => $q->where('user_id', $filters->assignee)));
     }
 }

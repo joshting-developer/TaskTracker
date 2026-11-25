@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Issue;
 use App\Models\ProjectMember;
+use App\Models\ProjectStatus;
 use App\Models\WorkspaceMember;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -13,6 +14,38 @@ use Tests\TestCase;
 class ScheduleTest extends TestCase
 {
     use RefreshDatabase;
+
+    /** includeClosed 與上限都限制在已授權單一 Project。 */
+    public function test_closed_filter_limit_and_project_scope(): void
+    {
+        [, $project] = $this->fixture();
+        $other = $this->postJson('/api/rpc/createProject', ['name' => 'Other', 'code' => 'OTHER', 'requestId' => (string) Str::uuid()])->assertOk()->json('data');
+        $foreign = $this->issue($other, ['start_date' => '2026-11-25']);
+        $open = $this->issue($project, ['start_date' => '2026-11-25']);
+        $closed = $this->issue($project, ['start_date' => '2026-11-25']);
+        $closedState = ProjectStatus::where('project_id', $closed->project_id)->where('code', 'closed')->firstOrFail();
+        $closed->update(['state_id' => $closedState->id]);
+        $url = '/api/v1/projects/'.$project['id'].'/schedule?from=2026-11-23&to=2026-11-29';
+        $this->assertSame([$open->public_id], array_column($this->getJson($url)->assertOk()->json('data.items'), 'id'));
+        $included = $this->getJson($url.'&includeClosed=1')->assertOk()->json('data.items');
+        $this->assertCount(2, $included);
+        $this->assertNotContains($foreign->public_id, array_column($included, 'id'));
+        $rows = [];
+        for ($i = 0; $i < 1000; $i++) {
+            $row = $open->getAttributes();
+            unset($row['id']);
+            $row['public_id'] = (string) Str::uuid();
+            $row['identifier'] = 'PLAN-'.(100 + $i);
+            $rows[] = $row;
+        }
+        foreach (array_chunk($rows, 100) as $chunk) {
+            Issue::insert($chunk);
+        }
+        $data = $this->getJson($url.'&perPage=1000')->assertOk()->json('data');
+        $this->assertCount(1000, $data['items']);
+        $this->assertSame(1001, $data['total']);
+        $this->getJson($url.'&perPage=1001')->assertStatus(400);
+    }
 
     /** 建立已驗證本人與專案
      * @return array{array,array} 身分與專案
@@ -103,7 +136,7 @@ class ScheduleTest extends TestCase
         $this->getJson($base.'?from=2026-03-02&to=2026-03-01')->assertStatus(400);
         $this->getJson($base.'?from=2026-02-30&to=2026-03-01')->assertStatus(400);
         $this->getJson($base.'?from=2026-03-01')->assertStatus(400);
-        $this->getJson($base.'?from=2026-03-01&to=2026-03-02&perPage=201')->assertStatus(400);
+        $this->getJson($base.'?from=2026-03-01&to=2026-03-02&perPage=1001')->assertStatus(400);
     }
 
     /** 移除專案資格後立即不可讀, 切工作區不帶出舊租戶

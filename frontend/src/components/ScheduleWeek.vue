@@ -14,7 +14,8 @@ const emit = defineEmits(['open', 'access']);
 const saved = readContext(props.contextKey).schedule || {};
 const validDay = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
 const anchor = ref(validDay(saved.week) ? saved.week : dateInTaipei()), assignee = ref(typeof saved.assignee === 'string' && saved.assignee.length <= 100 ? saved.assignee : '');
-const result = shallowRef(null), loading = ref(false), error = ref(''), page = ref(1);
+const includeClosed = ref(saved.includeClosed === true);
+const result = shallowRef(null), loading = ref(false), error = ref('');
 let generation = 0, request;
 const week = computed(() => weekOf(anchor.value));
 const { today, barClass, barStyle, barLabel, initials } = useScheduleBars(() => props.project);
@@ -30,18 +31,18 @@ async function load() {
   request?.abort(); request = new AbortController();
   loading.value = true;
   try {
-    const data = await api.schedule(props.project.id, { from: week.value.from, to: week.value.to, assignee: assignee.value, page: page.value, perPage: 200 }, { signal: request.signal });
+    const data = await api.schedule(props.project.id, { from: week.value.from, to: week.value.to, assignee: assignee.value, includeClosed: includeClosed.value ? 1 : 0, perPage: 1000 }, { signal: request.signal });
     if (current !== generation) return;
-    result.value = data; error.value = '';
+    result.value = data.total > 1000 ? { ...data, items: [], epics: [] } : data; error.value = '';
   } catch (failure) {
     if (current !== generation || ['ABORTED', 'STALE_RESPONSE'].includes(failure.code)) return;
     error.value = failure.message;
     if (['NOT_FOUND', 'FORBIDDEN', 'WORKSPACE_CHANGED', 'UNAUTHENTICATED'].includes(failure.code)) { result.value = null; emit('access'); }
   } finally { if (current === generation) loading.value = false; }
 }
-watch([() => props.project.id, () => week.value.from, assignee], () => { result.value = null; if (page.value !== 1) page.value = 1; else load(); }, { immediate: true });
-watch(page, load);
-watch([anchor, assignee], () => writeContext(props.contextKey, { schedule: { week: anchor.value, assignee: assignee.value } }), { flush: 'post' });
+watch([() => props.project.id, () => week.value.from, assignee, includeClosed], () => { result.value = null; load(); }, { immediate: true });
+
+watch([anchor, assignee, includeClosed], () => writeContext(props.contextKey, { schedule: { includeClosed: includeClosed.value, week: anchor.value, assignee: assignee.value } }), { flush: 'post' });
 onScopeDispose(() => { generation++; request?.abort(); });
 defineExpose({ refresh: load });
 
@@ -55,7 +56,7 @@ function label(date) { return `${Number(date.slice(5, 7))}/${Number(date.slice(8
     <header class="section-title"><div><h2>{{ t('週曆') }}</h2><p class="subtle">{{ t('依計畫開始與結束日顯示, 到期日不列入') }}</p></div><div class="member-filter"><PagedSelect v-model="assignee" :label="t('承辦人')" :context="`${project.id}:schedule-assignee`" :fixed-options="assigneeOptions" :load="lookupMembers" :empty-label="t('全部成員')" /></div></header>
     <div v-if="error" class="error-box" role="alert">{{ t(error) }}<button class="text-button" @click="load">{{ t('重試') }}</button></div>
     <div class="calendar schedule-week">
-      <header class="calendar-toolbar"><div><button class="icon-button previous" :aria-label="t('上一週')" @click="anchor = addDays(week.from, -7)"><Icon name="chevron" /></button><strong class="schedule-range">{{ week.from }} – {{ week.to }}</strong><button class="icon-button" :aria-label="t('下一週')" @click="anchor = addDays(week.from, 7)"><Icon name="chevron" /></button></div><button class="text-button" @click="anchor = dateInTaipei()">{{ t('本週') }}</button></header>
+      <header class="calendar-toolbar"><label class="schedule-completed"><input v-model="includeClosed" type="checkbox"> {{ t('顯示已完成') }}</label><div><button class="icon-button previous" :aria-label="t('上一週')" @click="anchor = addDays(week.from, -7)"><Icon name="chevron" /></button><strong class="schedule-range">{{ week.from }} – {{ week.to }}</strong><button class="icon-button" :aria-label="t('下一週')" @click="anchor = addDays(week.from, 7)"><Icon name="chevron" /></button></div><button class="text-button" @click="anchor = dateInTaipei()">{{ t('本週') }}</button></header>
       <p v-if="loading && !result" class="schedule-status" role="status">{{ t('載入時程中…') }}</p>
       <div class="schedule-grid" :style="{ gridTemplateRows: `auto repeat(${lanes}, 38px) minmax(24px, 1fr)` }">
         <div v-for="(date, index) in week.days" :key="date" class="schedule-day" :class="{ today: date === today }" :style="{ gridColumn: index + 1, gridRow: 1 }"><span>{{ weekdays[index] }}</span><strong>{{ label(date) }}</strong></div>
@@ -67,6 +68,7 @@ function label(date) { return `${Number(date.slice(5, 7))}/${Number(date.slice(8
       </ol>
       <p v-if="result && !bars.length" class="schedule-status subtle">{{ t('這週沒有排程的任務') }}</p>
     </div>
-    <footer class="schedule-footer"><span v-if="result?.unscheduled" class="subtle">{{ t('{0} 張任務尚未排程', [result.unscheduled]) }}</span><div v-if="result?.lastPage > 1" class="pagination" :aria-label="t('時程分頁')"><button class="text-button" :disabled="loading || page <= 1" @click="page--">{{ t('上一頁') }}</button><span>{{ page }} / {{ result.lastPage }}</span><button class="text-button" :disabled="loading || page >= result.lastPage" @click="page++">{{ t('下一頁') }}</button></div></footer>
+    <p v-if="result?.total > 1000" role="alert" class="schedule-status">{{ t('任務超過 1000 張, 請縮短期間或加篩選') }}</p>
+    <footer class="schedule-footer"><span v-if="result?.unscheduled" class="subtle">{{ t('{0} 張任務尚未排程', [result.unscheduled]) }}</span></footer>
   </section>
 </template>

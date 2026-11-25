@@ -16,7 +16,8 @@ const saved = readContext(props.contextKey).people || {};
 const validDay = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
 const anchor = ref(validDay(saved.week) ? saved.week : dateInTaipei()), span = ref(SPANS.includes(saved.span) ? saved.span : SPANS[0]);
 const assignee = ref(typeof saved.assignee === 'string' && saved.assignee.length <= 100 ? saved.assignee : '');
-const result = shallowRef(null), members = shallowRef(null), loading = ref(false), error = ref(''), page = ref(1), memberPage = ref(1);
+const includeClosed = ref(saved.includeClosed === true);
+const result = shallowRef(null), members = shallowRef(null), loading = ref(false), error = ref(''), memberPage = ref(1);
 const { today, barClass, barStyle, barLabel, initials } = useScheduleBars(() => props.project);
 let generation = 0, request;
 const range = computed(() => { const from = weekOf(anchor.value).from, to = addDays(from, span.value - 1); return { from, to, days: Array.from({ length: span.value }, (_, index) => addDays(from, index)) }; });
@@ -44,21 +45,21 @@ async function load() {
   loading.value = true;
   try {
     const [data, people] = await Promise.all([
-      api.schedule(props.project.id, { from: range.value.from, to: range.value.to, assignee: assignee.value, page: page.value, perPage: 200 }, { signal: request.signal }),
+      api.schedule(props.project.id, { from: range.value.from, to: range.value.to, assignee: assignee.value, includeClosed: includeClosed.value ? 1 : 0, perPage: 1000 }, { signal: request.signal }),
       // 篩選承辦人時仍讀成員分頁, 沒有排程的成員才有名稱可顯示。
       api.members(props.project.id, { page: memberPage.value, perPage: 100 }, { signal: request.signal }),
     ]);
     if (current !== generation) return;
-    result.value = data; members.value = people; error.value = '';
+    result.value = data.total > 1000 ? { ...data, items: [], epics: [] } : data; members.value = people; error.value = '';
   } catch (failure) {
     if (current !== generation || ['ABORTED', 'STALE_RESPONSE'].includes(failure.code)) return;
     error.value = failure.message;
     if (['NOT_FOUND', 'FORBIDDEN', 'WORKSPACE_CHANGED', 'UNAUTHENTICATED'].includes(failure.code)) { result.value = null; emit('access'); }
   } finally { if (current === generation) loading.value = false; }
 }
-watch([() => props.project.id, () => range.value.from, span, assignee], () => { result.value = null; if (page.value !== 1) page.value = 1; else load(); }, { immediate: true });
-watch([page, memberPage], load);
-watch([anchor, span, assignee], () => writeContext(props.contextKey, { people: { week: anchor.value, span: span.value, assignee: assignee.value } }), { flush: 'post' });
+watch([() => props.project.id, () => range.value.from, span, assignee, includeClosed], () => { result.value = null; load(); }, { immediate: true });
+watch(memberPage, load);
+watch([anchor, span, assignee, includeClosed], () => writeContext(props.contextKey, { people: { includeClosed: includeClosed.value, week: anchor.value, span: span.value, assignee: assignee.value } }), { flush: 'post' });
 onScopeDispose(() => { generation++; request?.abort(); });
 defineExpose({ refresh: load });
 
@@ -77,7 +78,7 @@ function rangeText(issue) { const start = issue.startDate || issue.endDate, end 
     <header class="section-title"><div><h2>{{ t('人員排程') }}</h2><p class="subtle">{{ t('每位成員一列, 同一天同時進行 {0} 張以上標為負荷高', [HEAVY]) }}</p></div><div class="member-filter"><PagedSelect v-model="assignee" :label="t('承辦人')" :context="`${project.id}:people-assignee`" :fixed-options="assigneeOptions" :load="lookupMembers" :empty-label="t('全部成員')" /></div></header>
     <div v-if="error" class="error-box" role="alert">{{ t(error) }}<button class="text-button" @click="load">{{ t('重試') }}</button></div>
     <div class="calendar schedule-week">
-      <header class="calendar-toolbar"><div><button class="icon-button previous" :aria-label="t('上一週')" @click="shift(-1)"><Icon name="chevron" /></button><strong class="schedule-range">{{ range.from }} – {{ range.to }}</strong><button class="icon-button" :aria-label="t('下一週')" @click="shift(1)"><Icon name="chevron" /></button></div><div class="people-tools"><div class="segmented" role="group" :aria-label="t('顯示期間')"><button v-for="option in SPANS" :key="option" type="button" :aria-pressed="span === option" :class="{ active: span === option }" @click="span = option">{{ t('{0} 週', [option / 7]) }}</button></div><button class="text-button" @click="anchor = dateInTaipei()">{{ t('本週') }}</button></div></header>
+      <header class="calendar-toolbar"><label class="schedule-completed"><input v-model="includeClosed" type="checkbox"> {{ t('顯示已完成') }}</label><div><button class="icon-button previous" :aria-label="t('上一週')" @click="shift(-1)"><Icon name="chevron" /></button><strong class="schedule-range">{{ range.from }} – {{ range.to }}</strong><button class="icon-button" :aria-label="t('下一週')" @click="shift(1)"><Icon name="chevron" /></button></div><div class="people-tools"><div class="segmented" role="group" :aria-label="t('顯示期間')"><button v-for="option in SPANS" :key="option" type="button" :aria-pressed="span === option" :class="{ active: span === option }" @click="span = option">{{ t('{0} 週', [option / 7]) }}</button></div><button class="text-button" @click="anchor = dateInTaipei()">{{ t('本週') }}</button></div></header>
       <p v-if="loading && !result" class="schedule-status" role="status">{{ t('載入時程中…') }}</p>
       <div class="people-scroll">
         <div class="people-grid" role="table" :aria-label="t('人員排程')" :style="{ '--days': span }">
@@ -96,9 +97,10 @@ function rangeText(issue) { const start = issue.startDate || issue.endDate, end 
       </ol>
       <p v-if="result && !hasBars" class="schedule-status subtle">{{ t('這段期間沒有排程') }}</p>
     </div>
+    <p v-if="result?.total > 1000" role="alert" class="schedule-status">{{ t('任務超過 1000 張, 請縮短期間或加篩選') }}</p>
     <footer class="schedule-footer"><span v-if="result?.unscheduled" class="subtle">{{ t('{0} 張任務尚未排程', [result.unscheduled]) }}</span>
       <div v-if="!assignee && members?.lastPage > 1" class="pagination" :aria-label="t('成員分頁')"><button class="text-button" :disabled="loading || memberPage <= 1" @click="memberPage--">{{ t('上一頁') }}</button><span>{{ memberPage }} / {{ members.lastPage }}</span><button class="text-button" :disabled="loading || memberPage >= members.lastPage" @click="memberPage++">{{ t('下一頁') }}</button></div>
-      <div v-if="result?.lastPage > 1" class="pagination" :aria-label="t('時程分頁')"><button class="text-button" :disabled="loading || page <= 1" @click="page--">{{ t('上一頁') }}</button><span>{{ page }} / {{ result.lastPage }}</span><button class="text-button" :disabled="loading || page >= result.lastPage" @click="page++">{{ t('下一頁') }}</button></div>
+
     </footer>
   </section>
 </template>

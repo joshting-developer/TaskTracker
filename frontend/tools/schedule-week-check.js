@@ -72,6 +72,12 @@ try {
     const schedule = reads.filter(url => url.includes('/schedule?')).map(url => new URL(url).searchParams);
     assert.equal(schedule.length, 1); assert.equal(schedule[0].get('from'), week.from); assert.equal(schedule[0].get('to'), week.to);
     assert.equal(reads.some(url => /\/projects\/[^/]+\/issues\?/.test(url)), false, '週曆不讀任務列表');
+    assert.equal(await page.getByRole('checkbox', { name: '顯示已完成' }).isChecked(), false);
+    await page.getByRole('checkbox', { name: '顯示已完成' }).check(); await scheduleReady(page);
+    await page.reload(); await scheduleReady(page);
+    assert.equal(await page.getByRole('checkbox', { name: '顯示已完成' }).isChecked(), true);
+    assert.equal(new URL(reads.findLast(url => url.includes('/schedule?'))).searchParams.get('perPage'), '1000');
+    assert.equal(await page.locator('[aria-label="時程分頁"]').count(), 0);
     for (const width of [1440, 768, 390]) {
       await page.setViewportSize({ width, height: 900 });
       if (width === 390) await page.waitForFunction(() => document.querySelector('.sidebar').getBoundingClientRect().right <= 1);
@@ -103,6 +109,13 @@ try {
     assert.equal(await page.getByRole('alert').count(), 0);
     await page.getByRole('button', { name: '本週' }).click(); await scheduleReady(page);
     await longBar.click(); await page.getByRole('dialog').getByText(across.identifier || across.title.slice(0, 6)).first().waitFor();
+    await page.route('**/api/v1/projects/*/schedule?**', async route => {
+      const response = await route.fetch(), body = await response.json();
+      body.data.total = 1001; await route.fulfill({ response, json: body });
+    });
+    await page.goto(`http://127.0.0.1:${port}/app/#/projects/${project.id}/schedule`); await page.reload(); await scheduleReady(page);
+    await page.getByRole('alert').getByText('任務超過 1000 張, 請縮短期間或加篩選').waitFor();
+    assert.equal(await page.locator('.schedule-bar').count(), 0, '超限不呈現片段推算');
     assert.deepEqual(errors, []); console.log('PASS Schedule week: planned-date bars, status color, overdue, assignee initials, single-ended, unscheduled count, non-overlapping lanes, week navigation, assignee filter, retry, mobile agenda and three widths');
   }
 } finally { await browser?.close(); await new Promise(resolve => server ? server.httpServer.close(resolve) : resolve()); }
