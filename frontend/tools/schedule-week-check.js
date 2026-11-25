@@ -20,12 +20,15 @@ try {
   server = await preview({ preview: { host: '127.0.0.1', port, strictPort: true, proxy: { '/api': apiUrl } } });
   browser = await chromium.launch({ headless: true, executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH });
   const page = await browser.newPage({ locale: 'zh-TW', viewport: { width: 1440, height: 900 } });
+  // 固定台灣週一, 避免週二等 fixture 隨執行日變成逾期。
+  const now = new Date('2026-11-23T12:00:00+08:00');
+  await page.clock.setFixedTime(now);
   page.setDefaultTimeout(15000);
   const errors = [], reads = []; page.on('pageerror', e => errors.push(e.message));
   await page.goto(`http://127.0.0.1:${port}/login`);
   const identity = await call(page, 'register', { name: '週曆驗證', email: `schedule-${crypto.randomUUID()}@example.test`, password: 'schedule-isolated-password', workspaceName: '排程' }, 'auth');
   const project = await call(page, 'createProject', { name: '產品排程', code: 'WEEK' });
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(new Date()), week = weekOf(today);
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(now), week = weekOf(today);
   const across = await call(page, 'createIssue', { projectId: project.id, title: '跨週的長任務名稱用來確認條狀標題會截斷而不撐破版面', assignee: identity.user.id, startDate: addDays(week.from, -3), endDate: addDays(week.to, 2) });
   await call(page, 'createIssue', { projectId: project.id, title: '週二單日', startDate: week.days[1] });
   await call(page, 'createIssue', { projectId: project.id, title: '週二到週四', startDate: week.days[1], endDate: week.days[3] });
