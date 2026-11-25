@@ -41,6 +41,21 @@ class PersonalDashboardTest extends TestCase
         return $issue;
     }
 
+    /** 自訂條件在SQL交集篩選, 不跨工作區或忽略成員資格。 */
+    public function test_custom_task_filters_are_bounded_and_scoped(): void
+    {
+        [$identity, $project] = $this->fixture();
+        $matching = $this->issue($project, ['priority' => 'high', 'due_date' => '2026-12-01']);
+        $this->issue($project, ['priority' => 'low', 'due_date' => '2026-12-01']);
+        $query = '/api/v1/personal-dashboard?kind=tasks&assignee=all&priority=high&dueFrom=2026-12-01&dueTo=2026-12-01&projectId='.$project['id'];
+        $this->assertSame([$matching->public_id], array_column($this->getJson($query)->assertOk()->json('data.items'), 'id'));
+        $this->getJson($query.'&state=closed')->assertOk()->assertJsonPath('data.total', 0);
+        $this->getJson('/api/v1/personal-dashboard?kind=tasks&dueFrom=bad')->assertStatus(400);
+        $this->getJson('/api/v1/personal-dashboard?kind=tasks&projectId='.Str::uuid())->assertOk()->assertJsonPath('data.total', 0);
+        $this->postJson('/api/auth/createWorkspace', ['workspaceName' => 'Another', 'requestId' => (string) Str::uuid()])->assertOk();
+        $this->getJson($query)->assertOk()->assertJsonPath('data.total', 0);
+    }
+
     /** 只讀本人, 日期不混用到期與開始, SQL分頁不輸出描述
      * @return void
      */
@@ -87,6 +102,7 @@ class PersonalDashboardTest extends TestCase
         ProjectMember::where('member_id', $member->id)->update(['removed_at' => now()]);
         $this->getJson('/api/v1/personal-dashboard?kind=mine')->assertOk()->assertJsonPath('data.total', 0);
         $this->getJson('/api/v1/personal-dashboard?kind=recent')->assertOk()->assertJsonPath('data.total', 0);
+        $this->getJson('/api/v1/personal-dashboard?kind=tasks&assignee=all')->assertOk()->assertJsonPath('data.total', 0);
     }
 
     /** 切工作區不能帶出舊租戶任務, 舊標頭亦不能跨分頁誤讀

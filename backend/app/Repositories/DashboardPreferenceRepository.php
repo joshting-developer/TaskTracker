@@ -31,7 +31,7 @@ class DashboardPreferenceRepository
     /** 建立或更新偏好並遞增版本
      * @param  WorkspaceMember  $member  有效成員
      * @param  DashboardPreference|null  $current  已鎖定的既有偏好
-     * @param  array<int,string>  $widgets  已驗證的小工具順序
+     * @param  array<int,string|array>  $widgets  已驗證的小工具順序
      * @return DashboardPreference 保存後偏好
      */
     public function save(WorkspaceMember $member, ?DashboardPreference $current, array $widgets): DashboardPreference

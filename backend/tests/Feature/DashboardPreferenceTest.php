@@ -21,7 +21,7 @@ class DashboardPreferenceTest extends TestCase
     public function test_widget_dimensions_round_trip(): void
     {
         $this->postJson('/api/auth/register', ['name' => 'Resize', 'email' => 'resize@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Resize'])->assertOk();
-        $widget = ['id' => 'mine', 'kind' => 'mine', 'width' => 2, 'height' => 700];
+        $widget = ['id' => 'mine', 'kind' => 'mine', 'width' => 2, 'height' => 700, 'title' => '高優先', 'filters' => ['priority' => 'high', 'assignee' => 'all']];
         $this->putJson(self::URL, ['widgets' => [$widget], 'expectedRevision' => 0])->assertOk()->assertJsonPath('data.widgets.0.width', 2);
         $this->getJson(self::URL)->assertOk()->assertJsonPath('data.widgets.0.height', 700);
         $this->putJson(self::URL, ['widgets' => [array_merge($widget, ['width' => 4])], 'expectedRevision' => 1])->assertStatus(400);
@@ -40,7 +40,7 @@ class DashboardPreferenceTest extends TestCase
         $saved = $this->putJson(self::URL, ['widgets' => ['due', 'notes', 'mine'], 'expectedRevision' => 0])->assertOk()->json('data');
         $this->assertSame(['due', 'notes', 'mine'], $saved['widgets']);
         $this->assertSame(1, $saved['revision']);
-        $this->assertSame(['mine', 'due', 'starting', 'recent', 'notes'], $saved['available'], '隱藏的仍列在可加入');
+        $this->assertSame(['mine', 'due', 'starting', 'recent', 'notes', 'tasks'], $saved['available'], '隱藏的仍列在可加入');
         $this->putJson(self::URL, ['widgets' => ['due', 'notes', 'mine'], 'expectedRevision' => 0])->assertOk()->assertJsonPath('data.revision', 1);
         $this->putJson(self::URL, ['widgets' => ['recent'], 'expectedRevision' => 0])->assertStatus(409);
         $this->putJson(self::URL, ['widgets' => [], 'expectedRevision' => 1])->assertOk()->assertJsonPath('data.widgets', [])->assertJsonPath('data.revision', 2);

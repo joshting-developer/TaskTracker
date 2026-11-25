@@ -15,7 +15,7 @@ use App\Repositories\DashboardPreferenceRepository;
 class DashboardPreferenceService
 {
     /** 可用小工具與預設順序 */
-    public const WIDGETS = ['mine', 'due', 'starting', 'recent', 'notes'];
+    public const WIDGETS = ['mine', 'due', 'starting', 'recent', 'notes', 'tasks'];
 
     /** 注入偏好資料入口
      * @param  DashboardPreferenceRepository  $preferences  偏好SQL
@@ -24,21 +24,21 @@ class DashboardPreferenceService
 
     /** 目前偏好；過時或無權限的項目過濾後回傳
      * @param  WorkspaceContext  $context  可信資格
-     * @return array{widgets:array<int,string>,available:array<int,string>,revision:int} 偏好
+     * @return array{widgets:array<int,string|array>,available:array<int,string>,revision:int} 偏好
      */
     public function show(WorkspaceContext $context): array
     {
         $member = $this->member($context);
         $current = $this->preferences->find($member);
 
-        return $this->present($context, $current?->widgets ?? self::WIDGETS, $current?->revision ?? 0);
+        return $this->present($context, $current?->widgets ?? array_values(array_diff(self::WIDGETS, ['tasks'])), $current?->revision ?? 0);
     }
 
     /** 整份覆寫順序與顯示；同內容重送視為成功, 版本不符且內容不同回衝突
      * @param  WorkspaceContext  $context  可信資格
-     * @param  array<int,string>  $widgets  已驗證白名單內的順序
+     * @param  array<int,string|array>  $widgets  已驗證白名單內的順序
      * @param  int  $expectedRevision  讀到的版本
-     * @return array{widgets:array<int,string>,available:array<int,string>,revision:int} 保存後偏好
+     * @return array{widgets:array<int,string|array>,available:array<int,string>,revision:int} 保存後偏好
      */
     public function update(WorkspaceContext $context, array $widgets, int $expectedRevision): array
     {
@@ -59,9 +59,9 @@ class DashboardPreferenceService
 
     /** 依權限過濾並附上可加入的項目
      * @param  WorkspaceContext  $context  可信資格
-     * @param  array<int,string>  $widgets  儲存的順序
+     * @param  array<int,string|array>  $widgets  儲存的順序
      * @param  int  $revision  版本
-     * @return array{widgets:array<int,string>,available:array<int,string>,revision:int} 回應
+     * @return array{widgets:array<int,string|array>,available:array<int,string>,revision:int} 回應
      */
     private function present(WorkspaceContext $context, array $widgets, int $revision): array
     {
@@ -74,11 +74,15 @@ class DashboardPreferenceService
     private function filterWidgets(array $widgets, array $available): array
     {
         $seen = [];
+
         return array_values(array_filter($widgets, function ($widget) use ($available, &$seen) {
             $kind = is_string($widget) ? $widget : ($widget['kind'] ?? '');
             $id = is_string($widget) ? $widget : ($widget['id'] ?? '');
-            if (! in_array($kind, $available, true) || isset($seen[$id])) { return false; }
+            if (! in_array($kind, $available, true) || isset($seen[$id])) {
+                return false;
+            }
             $seen[$id] = true;
+
             return true;
         }));
     }

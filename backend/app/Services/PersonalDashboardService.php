@@ -22,14 +22,15 @@ class PersonalDashboardService
      * @param  WorkspaceContext  $context  交易內重驗的工作區身分
      * @param  string  $kind  已驗證的摘要種類
      * @param  PageQueryData  $page  有界分頁
+     * @param  array{projectId?:string,state?:string,priority?:string,assignee?:string,tagId?:string,dueFrom?:string,dueTo?:string}  $filters  已驗證的小工具條件
      * @return LengthAwarePaginator<Issue> 本人且有權讀取的任務摘要
      */
-    public function index(WorkspaceContext $context, string $kind, PageQueryData $page): LengthAwarePaginator
+    public function index(WorkspaceContext $context, string $kind, PageQueryData $page, array $filters = []): LengthAwarePaginator
     {
         $roles = array_column(array_filter(ProjectAccess::roles(), fn ($role) => in_array('issue.read', $role['permissions'], true)), 'id');
         $today = Carbon::now('Asia/Taipei')->startOfDay();
 
         return $this->dashboard->page($context->workspaceId, $context->userId, in_array('issue.readAny', $context->permissions, true),
-            $roles, $kind, $today->toDateString(), $today->copy()->addDays(7)->toDateString(), $page);
+            $roles, $kind, $today->toDateString(), $today->copy()->addDays(7)->toDateString(), $page, $filters);
     }
 }

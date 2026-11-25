@@ -2,21 +2,22 @@
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue';
 import { t } from '../i18n/index.js';
 import { api } from '../api/index.js';
+import DashboardWidgetSettings from './DashboardWidgetSettings.vue';
 import DashboardWidgetFrame from './DashboardWidgetFrame.vue';
 import PersonalDashboardPanel from './PersonalDashboardPanel.vue';
 const props = defineProps({ permissions: Array });
 const emit = defineEmits(['access']);
 const refreshKey = ref(0);
 defineExpose({ refresh: () => { refreshKey.value++; } });
-const PANELS = { mine: '我的未結案任務', due: '七天內到期與逾期', starting: '七天內開始', recent: '最近更新', notes: '待處理紙條' };
-const DEFAULTS = Object.keys(PANELS);
+const PANELS = { mine: '我的未結案任務', due: '七天內到期與逾期', starting: '七天內開始', recent: '最近更新', tasks: '任務', notes: '待處理紙條' };
+const DEFAULTS = Object.keys(PANELS).filter(kind => kind !== 'tasks');
 // TT-186：順序與顯示存在伺服器（以工作區成員為單位）；讀取失敗時仍用預設顯示, 不擋住摘要。
 const preferences = shallowRef(null), draft = ref(null), saving = ref(false), message = ref('');
 let controller;
 const available = computed(() => preferences.value?.available || DEFAULTS.filter(kind => kind !== 'notes' || props.permissions?.includes('todo.read')));
 const normalize = item => typeof item === 'string' ? { id: item, kind: item, width: 1, height: 560 } : item;
 const visible = computed(() => (draft.value || preferences.value?.widgets || DEFAULTS).map(normalize).filter(item => available.value.includes(item.kind)));
-const hidden = computed(() => available.value.filter(kind => !visible.value.some(item => item.kind === kind)));
+const hidden = computed(() => available.value);
 async function load() {
   controller?.abort(); controller = new AbortController();
   try { preferences.value = await api.dashboardPreferences({ signal: controller.signal }); message.value = ''; }
@@ -28,7 +29,7 @@ function customize() { draft.value = visible.value.map(item => ({ ...item })); m
 function cancel() { draft.value = null; message.value = ''; }
 function move(index, step) { const list = [...draft.value]; [list[index], list[index + step]] = [list[index + step], list[index]]; draft.value = list; }
 function hide(kind) { draft.value = draft.value.filter(item => item.id !== kind.id); }
-function add(kind) { draft.value = [...draft.value, normalize(kind)]; }
+function add(kind) { draft.value = [...draft.value, { ...normalize(kind), id: crypto.randomUUID() }]; }
 async function save(widgets = draft.value) {
   saving.value = true;
   try { preferences.value = await api.saveDashboardPreferences({ widgets, expectedRevision: preferences.value?.revision ?? 0 }); draft.value = null; message.value = t('首頁設定已儲存'); }
@@ -45,13 +46,14 @@ async function save(widgets = draft.value) {
       </div>
     </header>
     <p v-if="message" class="dashboard-message" role="status">{{ t(message) }}</p>
-    <section v-if="draft && hidden.length" class="dashboard-hidden" :aria-label="t('可加入的小工具')"><span>{{ t('加入小工具') }}</span><button v-for="kind in hidden" :key="kind" type="button" class="button" :disabled="saving" @click="add(kind)">＋ {{ t(PANELS[kind]) }}</button></section>
+    <section v-if="draft && visible.length < 20 && hidden.length" class="dashboard-hidden" :aria-label="t('可加入的小工具')"><span>{{ t('加入小工具') }}</span><button v-for="kind in hidden" :key="kind" type="button" class="button" :disabled="saving" @click="add(kind)">＋ {{ t(PANELS[kind]) }}</button></section>
     <p v-if="!visible.length" class="dashboard-empty subtle">{{ t('首頁沒有顯示任何小工具, 可按「自訂」加入') }}</p>
     <div class="dashboard-grid">
       <div v-for="(widget, index) in visible" :key="widget.id" :style="{ gridColumn: `span ${widget.width}` }" class="dashboard-slot" :class="{ editing: draft }">
         <div v-if="draft" class="dashboard-tools" role="group" :aria-label="t('調整{0}', [t(PANELS[widget.kind])])"><button type="button" class="text-button" :disabled="saving || index === 0" @click="move(index, -1)">{{ t('上移') }}</button><button type="button" class="text-button" :disabled="saving || index === visible.length - 1" @click="move(index, 1)">{{ t('下移') }}</button><button type="button" class="text-button" :disabled="saving" @click="hide(widget)">{{ t('隱藏') }}</button></div>
+        <DashboardWidgetSettings v-if="draft" :widget="widget" :disabled="saving" @update="Object.assign(widget, $event)" />
         <DashboardWidgetFrame :width="widget.width" :height="widget.height" :editing="!!draft && !saving" @resize="Object.assign(widget, $event)">
-        <PersonalDashboardPanel :kind="widget.kind" :title="PANELS[widget.kind]" :per-page="Math.min(20, Math.max(2, Math.floor((widget.height - 140) / 100)))" :refresh-key="refreshKey" @access="emit('access')" />
+        <PersonalDashboardPanel :kind="widget.kind" :title="widget.title || t(PANELS[widget.kind])" :filters="widget.filters || {}" :per-page="Math.min(20, Math.max(2, Math.floor((widget.height - 140) / 100)))" :refresh-key="refreshKey" @access="emit('access')" />
         </DashboardWidgetFrame>
       </div>
     </div>

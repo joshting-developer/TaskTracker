@@ -22,11 +22,25 @@ try {
   assert.ok(reads.some(p => p === '/api/v1/personal-dashboard'));
   await page.getByRole('button', { name: '自訂', exact: true }).click();
   const handle = page.getByRole('button', { name: '調整小工具大小' }).first();
+  const rect = await handle.boundingBox();
+  await page.mouse.move(rect.x + 22, rect.y + 22); await page.mouse.down(); await page.mouse.move(rect.x + 22, rect.y + 62, { steps: 4 }); await page.mouse.up();
   await handle.focus(); await handle.press('ArrowRight'); await handle.press('ArrowDown');
   await page.getByRole('button', { name: '儲存', exact: true }).click();
   await page.getByText('首頁設定已儲存', { exact: true }).waitFor();
   await page.reload(); await page.getByRole('heading', { name: '我的工作', exact: true }).waitFor();
   await page.waitForFunction(() => document.querySelector('.dashboard-slot')?.style.gridColumn === 'span 2');
+  await page.getByRole('button', { name: '自訂', exact: true }).click();
+  await page.getByRole('button', { name: '＋ 任務', exact: true }).click();
+  const custom = page.locator('.dashboard-slot').last();
+  await custom.locator('summary').click();
+  await custom.getByLabel('名稱', { exact: true }).fill('高優先工作');
+  await custom.getByLabel('名稱', { exact: true }).press('Tab');
+  await custom.getByLabel('優先級', { exact: true }).selectOption('high');
+  await custom.getByLabel('承辦人', { exact: true }).selectOption('all');
+  await page.getByRole('button', { name: '儲存', exact: true }).click();
+  await page.getByText('首頁設定已儲存', { exact: true }).waitFor();
+  await page.reload(); await page.getByRole('heading', { name: '高優先工作' }).waitFor();
+  assert.equal(await page.locator('.dashboard-slot').count(), 6);
   await page.getByRole('link', { name: '紙條', exact: true }).click(); await page.getByRole('heading', { name: '紙條', exact: true }).waitFor();
   assert.equal(new URL(page.url()).hash, '#/notes'); await page.reload(); await page.getByRole('heading', { name: '紙條', exact: true }).waitFor();
   await openProjectList(page); await page.getByRole('button', { name: '建立專案', exact: true }).click();
@@ -37,6 +51,11 @@ try {
     await page.setViewportSize({ width, height: 900 }); await page.getByRole('link', { name: 'Pavenro 返回首頁', exact: true }).evaluate(el => el.click());
     await page.getByRole('heading', { name: '我的工作', exact: true }).waitFor();
     assert.equal(await page.locator('.notes-page,.todo-home,.project-home').count(), 0); assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    await page.getByRole('heading', { name: '高優先工作' }).waitFor();
+    await page.waitForFunction(() => [...document.querySelectorAll('.dashboard-panel')].every(el => el.getAttribute('aria-busy') === 'false'));
+    const toggle = page.getByRole('button', { name: '開啟導覽', exact: true });
+    if (await toggle.isVisible() && await toggle.getAttribute('aria-expanded') === 'true') await toggle.click();
+    await page.screenshot({ path: `../.local/dashboard-${width}.png`, fullPage: true });
     await openProjectList(page); await page.getByRole('button', { name: '進入專案：獨立專案入口', exact: true }).click();
   }
   assert.deepEqual(errors, []); console.log('PASS personal dashboard home, independent notes deep link, project creation and three-width navigation');

@@ -2,7 +2,7 @@
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { formatDate, t } from '../i18n/index.js';
-const props = defineProps({ kind: String, title: String, refreshKey: Number, perPage: { type: Number, default: 5 } });
+const props = defineProps({ filters: { type: Object, default: () => ({}) }, kind: String, title: String, refreshKey: Number, perPage: { type: Number, default: 5 } });
 const emit = defineEmits(['access']);
 const page = ref(1), result = shallowRef(null), loading = ref(false), error = ref('');
 const notes = computed(() => props.kind === 'notes');
@@ -15,7 +15,7 @@ async function refresh() {
     const filters = { page: page.value, perPage: props.perPage };
     const data = notes.value
       ? await api.todos({ ...filters, scope: 'mine', state: 'open' }, { signal: controller.signal })
-      : await api.personalDashboard({ ...filters, kind: props.kind }, { signal: controller.signal });
+      : await api.personalDashboard({ ...filters, ...props.filters, kind: props.kind }, { signal: controller.signal });
     if (current !== generation) return;
     result.value = data;
     if (page.value > data.lastPage) page.value = data.lastPage;
@@ -29,12 +29,13 @@ async function refresh() {
 }
 function href(item) { return notes.value ? '#/notes' : `#/projects/${encodeURIComponent(item.projectId)}/issues/${encodeURIComponent(item.id)}?detail=1`; }
 watch([page, () => props.refreshKey], refresh, { immediate: true });
+watch(() => JSON.stringify([props.kind, props.filters]), () => { result.value = null; if (page.value !== 1) page.value = 1; else refresh(); });
 watch(() => props.perPage, () => { if (page.value !== 1) page.value = 1; else refresh(); });
 onScopeDispose(() => { generation++; controller?.abort(); });
 </script>
 <template>
-  <section class="dashboard-panel" :aria-label="t(title)" :aria-busy="loading">
-    <header><h2>{{ t(title) }} <span v-if="result">{{ result.total }}</span></h2><a v-if="notes" href="#/notes" class="text-button">{{ t('查看紙條') }}</a></header>
+  <section class="dashboard-panel" :aria-label="title" :aria-busy="loading">
+    <header><h2>{{ title }} <span v-if="result">{{ result.total }}</span></h2><a v-if="notes" href="#/notes" class="text-button">{{ t('查看紙條') }}</a></header>
     <p v-if="error" class="error-box" role="alert">{{ t(error) }} <button class="text-button" @click="refresh">{{ t('重試') }}</button></p>
     <p v-else-if="loading && !result" class="dashboard-empty" role="status">{{ t('載入中…') }}</p>
     <template v-else-if="result">
@@ -45,7 +46,7 @@ onScopeDispose(() => { generation++; controller?.abort(); });
           <span class="dashboard-meta" v-else>{{ t('來自') }} {{ item.creatorName }}</span>
         </a>
       </li></ul>
-      <nav v-if="result.lastPage > 1" class="dashboard-pagination" :aria-label="t('{0}分頁', [t(title)])"><button class="text-button" :disabled="page <= 1 || loading" @click="page--">{{ t('上一頁') }}</button><span>{{ page }} / {{ result.lastPage }}</span><button class="text-button" :disabled="page >= result.lastPage || page >= 501 || loading" @click="page++">{{ t('下一頁') }}</button></nav>
+      <nav v-if="result.lastPage > 1" class="dashboard-pagination" :aria-label="t('{0}分頁', [title])"><button class="text-button" :disabled="page <= 1 || loading" @click="page--">{{ t('上一頁') }}</button><span>{{ page }} / {{ result.lastPage }}</span><button class="text-button" :disabled="page >= result.lastPage || page >= 501 || loading" @click="page++">{{ t('下一頁') }}</button></nav>
     </template>
   </section>
 </template>

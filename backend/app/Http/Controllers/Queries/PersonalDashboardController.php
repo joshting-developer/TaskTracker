@@ -25,7 +25,7 @@ class PersonalDashboardController extends Controller
      */
     public function index(PersonalDashboardRequest $request): ApiResponse
     {
-        $data = $this->workspace->read($request, fn (WorkspaceContext $context) => ['page' => $this->dashboard->index($context, $request->validated('kind'), $request->pagination())]);
+        $data = $this->workspace->read($request, fn (WorkspaceContext $context) => ['page' => $this->dashboard->index($context, $request->validated('kind'), $request->pagination(), $request->safe()->except(['kind', 'page', 'perPage']))]);
 
         return new ApiResponse(PageResource::wrap($data['page'], PersonalDashboardResource::collection($data['page']->items())->resolve()));
     }

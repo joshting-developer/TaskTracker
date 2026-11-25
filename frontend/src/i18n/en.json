@@ -1097,5 +1097,12 @@
   "首頁設定已在其他地方更新, 請重新載入": "Home settings were updated elsewhere. Reload to continue",
   "首頁設定格式不正確": "Home settings are not valid",
   "首頁設定包含不支援的欄位": "Home settings include unsupported fields",
-  "調整小工具大小": "Resize widget"
+  "調整小工具大小": "Resize widget",
+  "設定小工具": "Widget settings",
+  "指定成員": "Specific member",
+  "到期日起": "Due from",
+  "到期日迄": "Due through",
+  "日期範圍": "Date range",
+  "未結案": "Not closed",
+  "我": "Me"
 }

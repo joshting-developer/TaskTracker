@@ -28,10 +28,25 @@ class DashboardPreferenceRequest extends JsonOperationRequest
     {
         return ['widgets' => ['present', 'array', 'list', 'max:20', function ($attribute, $value, $fail) {
             $ids = array_map(fn ($item) => is_array($item) ? ($item['id'] ?? '') : $item, $value);
-            if (count(array_unique($ids, SORT_REGULAR)) !== count($ids)) { $fail('Duplicate widget'); }
+            if (count(array_unique($ids, SORT_REGULAR)) !== count($ids)) {
+                $fail('Duplicate widget');
+            }
         }], 'widgets.*' => [function ($attribute, $value, $fail) {
-            if (is_string($value) && in_array($value, DashboardPreferenceService::WIDGETS, true)) { return; }
-            if (! is_array($value) || array_diff(array_keys($value), ['id', 'kind', 'width', 'height']) || ! is_string($value['id'] ?? null) || ! preg_match('/^[a-zA-Z0-9-]{1,64}$/', $value['id']) || ! in_array($value['kind'] ?? '', DashboardPreferenceService::WIDGETS, true) || ! is_int($value['width'] ?? null) || $value['width'] < 1 || $value['width'] > 3 || ! is_int($value['height'] ?? null) || $value['height'] < 300 || $value['height'] > 1000) { $fail('Invalid widget'); }
+            if (is_string($value) && in_array($value, DashboardPreferenceService::WIDGETS, true)) {
+                return;
+            }
+            $rules = [
+                'id' => ['required', 'string', 'regex:/^[a-zA-Z0-9-]{1,64}$/'],
+                'kind' => ['required', 'in:'.implode(',', DashboardPreferenceService::WIDGETS)],
+                'width' => ['required', 'integer', 'between:1,3'],
+                'height' => ['required', 'integer', 'between:300,1000'],
+                'title' => ['sometimes', 'nullable', 'string', 'max:100'],
+                'filters' => ['sometimes', 'array:projectId,state,priority,assignee,tagId,dueFrom,dueTo'],
+                ...PersonalDashboardRequest::filterRules('filters.'),
+            ];
+            if (! is_array($value) || array_diff(array_keys($value), array_keys(array_filter($rules, fn ($key) => ! str_contains($key, '.'), ARRAY_FILTER_USE_KEY))) || \Illuminate\Support\Facades\Validator::make($value, $rules)->fails()) {
+                $fail('Invalid widget');
+            }
         }], 'expectedRevision' => ['required', 'integer', 'min:0']];
     }
 
