@@ -93,5 +93,16 @@ try {
   assert.equal(await page.getByRole('alert').count(), 0);
   await page.getByRole('button', { name: '本週' }).click(); await ready(page);
   await row('排程負責人').getByRole('button', { name: /週三單日/ }).click(); await page.getByRole('dialog').getByText(/PPL-3/).first().waitFor();
+  const closedProject = await call(page, 'createProject', { name: '已完成負荷', code: 'DONE' });
+  for (const title of ['已完成A', '已完成B', '已完成C']) await call(page, 'createIssue', { projectId: closedProject.id, title, assignee: owner.user.id, startDate: week.days[2], state: 'closed' });
+  await page.goto(`${base}/app/#/projects/${closedProject.id}/people`); await ready(page);
+  const closedRow = page.getByRole('table', { name: '人員排程' }).locator('.people-row').filter({ hasText: '排程負責人' });
+  await closedRow.getByRole('button', { name: /已完成A/ }).waitFor();
+  await page.screenshot({ path: `artifacts/schedule-people/closed-${process.env.SCHEDULE_BEFORE === '1' ? 'before' : 'after'}.png`, fullPage: true });
+  assert.equal(await closedRow.getByRole('button').count(), 3, '已關閉條狀仍顯示');
+  if (process.env.SCHEDULE_BEFORE !== '1') {
+    assert.equal(await closedRow.getByText('負荷高').count(), 0, '同一天三張已關閉卡不算負荷高');
+    assert.equal(await closedRow.locator('.people-cell.busy').count(), 0, '已關閉卡不計入每日負荷');
+  }
   assert.deepEqual(errors, []); console.log('PASS People schedule: idle members listed, unassigned row, heavy-load day, non-overlapping lanes, 2/4-week range, navigation, assignee filter, retry, detail, mobile agenda and three widths');
 } finally { await browser?.close(); await new Promise(resolve => server ? server.httpServer.close(resolve) : resolve()); }

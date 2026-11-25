@@ -2,7 +2,7 @@
 import { t } from '../i18n/index.js';
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
-import { dateInTaipei } from '../domain/model.js';
+import { dateInTaipei, isClosed } from '../domain/model.js';
 import { addDays, layoutBars, weekOf } from '../domain/schedule.js';
 import { useScheduleBars } from '../composables/useScheduleBars.js';
 import { readContext, writeContext } from '../ui/workContext.js';
@@ -30,7 +30,7 @@ const rows = computed(() => {
   if (!assignee.value && items.some(item => !item.assignee)) list.set('', { id: '', name: t('未指派'), disabled: false });
   return [...list.values()].map(row => {
     const bars = layoutBars(items.filter(item => (item.assignee || '') === row.id), range.value.from, range.value.to);
-    const load = range.value.days.map((_, index) => bars.filter(bar => bar.start <= index && bar.end >= index).length);
+    const load = range.value.days.map((_, index) => bars.filter(bar => !isClosed(bar.issue) && bar.start <= index && bar.end >= index).length);
     return { ...row, bars, load, lanes: Math.max(1, ...bars.map(bar => bar.lane + 1)), heavy: load.some(count => count >= HEAVY) };
   });
 });
