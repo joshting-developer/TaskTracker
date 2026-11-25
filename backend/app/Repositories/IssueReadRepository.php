@@ -105,7 +105,7 @@ class IssueReadRepository
             $this->boardScope->apply($q, $boardId);
         }
         if ($listOnly) {
-            $q->select(['id', 'workspace_id', 'public_id', 'project_id', 'identifier', 'title', 'type', 'state_id', 'priority', 'assignee_id', 'due_date', 'revision', 'created_at', 'updated_at']);
+            $q->select(['id', 'workspace_id', 'public_id', 'project_id', 'identifier', 'title', 'type', 'state_id', 'priority', 'assignee_id', 'due_date', 'start_date', 'end_date', 'revision', 'created_at', 'updated_at']);
         } else {
             $this->timeProjection($q, $timeUser, $teamTime);
         }
@@ -243,7 +243,7 @@ class IssueReadRepository
      */
     public function changes(Project $project, string $userId, IssueQueryData $filters, ?string $since, string $until, ?array $after): Collection
     {
-        $q = $this->query($project)->select(['id', 'workspace_id', 'public_id', 'project_id', 'identifier', 'title', 'type', 'state_id', 'priority', 'assignee_id', 'due_date', 'revision', 'created_at', 'updated_at'])
+        $q = $this->query($project)->select(['id', 'workspace_id', 'public_id', 'project_id', 'identifier', 'title', 'type', 'state_id', 'priority', 'assignee_id', 'due_date', 'start_date', 'end_date', 'revision', 'created_at', 'updated_at'])
             ->with(['tags', 'project:id,public_id', 'status:id,code', 'assignee:id,user_id,disabled_at', 'assignee.user:id,name']);
         $this->applyFilters($q, $userId, $filters);
         $q->where(fn ($q) => $q->where('updated_at', '<=', DatabaseTimes::store($until))->orWhereNull('updated_at'));

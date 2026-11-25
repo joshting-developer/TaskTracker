@@ -4,6 +4,7 @@ namespace Tests\Concerns;
 
 use App\Authorization\ProjectAccess;
 use App\Models\IntegrationAudit;
+use App\Models\Issue;
 use App\Models\PersonalAccessToken;
 use App\Models\Project;
 use App\Models\ProjectMember;
@@ -18,6 +19,27 @@ use Opis\JsonSchema\CompliantValidator;
 trait PublicQueryCases
 {
     use PersonalTokenCases;
+
+    /** 列表日期與單卡一致, 另一租戶日期不得洩漏。 */
+    public function test_public_list_planned_dates_and_tenant_isolation(): void
+    {
+        [, $project, $issue, $token] = $this->publicFixture();
+        $url = '/projects/'.$project['id'].'/issues';
+        $list = $this->publicRead($token['plainTextToken'], $url, '/projects/{project}/issues')['data']['items'];
+        $this->assertSame('', $list[0]['startDate']);
+        $this->assertSame('', $list[0]['endDate']);
+        Issue::where('public_id', $issue['id'])->update(['start_date' => '2026-11-25', 'end_date' => '2026-11-27']);
+        [, $foreignProject, $foreignIssue] = $this->publicFixture();
+        Issue::where('public_id', $foreignIssue['id'])->update(['start_date' => '2099-01-01']);
+        $list = $this->publicRead($token['plainTextToken'], $url, '/projects/{project}/issues')['data']['items'];
+        $detail = $this->publicRead($token['plainTextToken'], $url.'/'.$issue['id'], '/projects/{project}/issues/{issue}')['data'];
+        $this->assertCount(1, $list);
+        $this->assertSame('2026-11-25', $list[0]['startDate']);
+        $this->assertSame('2026-11-27', $list[0]['endDate']);
+        $this->assertSame($detail['startDate'], $list[0]['startDate']);
+        $this->assertSame($detail['endDate'], $list[0]['endDate']);
+        $this->publicRead($token['plainTextToken'], '/projects/'.$foreignProject['id'].'/issues', '/projects/{project}/issues', 404);
+    }
 
     /**
      * 以純Bearer讀取並驗證正式Schema，不將秘密回應輸出到日誌。

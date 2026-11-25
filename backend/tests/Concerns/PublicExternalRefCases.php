@@ -233,7 +233,7 @@ trait PublicExternalRefCases
         $this->assertTrue($until->lessThan(CarbonImmutable::parse($items[$linked['id']]['updatedAt'])), '水位比本輪最新項目早，留有settle緩衝');
 
         // 模擬較晚提交：時間戳落在水位與上一輪讀取時間之間的寫入，上一輪看不到，下一輪仍會讀到。
-        $late = Issue::where('public_id', $plainCard['id'])->firstOrFail()->replicate();
+        $late = Issue::where('public_id', $plainCard['id'])->firstOrFail()->replicate(['schedule_start', 'schedule_end']);
         $late->public_id = (string) Str::uuid();
         $late->identifier = 'SYN-99';
         $late->updated_at = DatabaseTimes::store($until->addSeconds(3)->toISOString());

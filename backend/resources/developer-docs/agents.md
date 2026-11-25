@@ -145,3 +145,9 @@ Issue詳細新增activityCounts.comments／history／time, 為SQL總數, 不附�
 明確排除優先於手動加入、手動選取 Epic 所帶子卡與規則命中。要隱藏自動命中的卡, 在 PATCH 帶 `excludeIssueIds`；要恢復其正常判斷帶 `unexcludeIssueIds`, 不能只移除明確加入清單。兩個差量各最多 200 個, 同次不能重疊, 並帶最新 expectedRevision 與 requestId。自動命中的 Epic 不會額外展開子卡, 手動選取 Epic 則保留原本動態展開
 
 未帶規則保留現值, `autoInclude:null` 停用規則, 空物件明確代表全 Project。Tag 被刪除後舊規則不自動放寬, 需管理者修改；建立新規則不能使用已移除或其他 Project 的 Tag。正式更新前先跑 migration, 不因本地 API 已提供就宣稱 Plugin／Host 工具已支援
+
+## 0.27.0：列表計畫日期
+
+`listPublicIssues` 每筆新增 `startDate`／`endDate`, 未填時為空字串, 與單卡 GET 一致。這是新增欄位, 既有欄位與篩選／租戶授權保持相容；客戶端應忽略不認識的欄位。日期是計畫日, 不等於 `dueDate`
+
+計畫日期可透過既有建立／更新卡片操作寫入, 不需新的時程端點。伺服器不自動推估日期；Agent 工作流可在領取本人卡片時補缺值（台北當天、依每天 480 分鐘估算結束日）, 已有日期保留, 結案時再更新實際結案日。更新仍須最新 `expectedRevision` 與 `requestId`, 不得改動他人承辦卡片

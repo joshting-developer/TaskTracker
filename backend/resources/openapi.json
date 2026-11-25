@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Pavenro API",
-    "version": "0.26.0",
+    "version": "0.27.0",
     "description": "公開Bearer v1提供卡片查建改、留言、刪除、外部識別與批次, 紙條協作、本人通知、私有附件, 以及看板讀取、建立和差量收錄。Session個人憑證管理獨立, 不提供公開看板封存／還原。[HTTP契約](/api/public/contract.md) 工時API提供本人工時寫入、查詢、修改與作廢, 沿用現有權限與每日上限。"
   },
   "servers": [
@@ -2710,7 +2710,9 @@
                         "createdAt": "2026-11-12T00:00:00Z",
                         "updatedAt": "2026-11-12T00:00:00Z",
                         "assigneeDisabled": false,
-                        "tags": []
+                        "tags": [],
+                        "startDate": "",
+                        "endDate": ""
                       }
                     ],
                     "page": 1,
@@ -5067,7 +5069,9 @@
                         "externalRefs": [],
                         "lastWrite": null,
                         "assigneeDisabled": false,
-                        "tags": []
+                        "tags": [],
+                        "startDate": "",
+                        "endDate": ""
                       }
                     ],
                     "perPage": 20,
@@ -13564,7 +13568,9 @@
                         "createdAt": "2026-11-12T00:00:00Z",
                         "updatedAt": "2026-11-12T00:00:00Z",
                         "assigneeDisabled": false,
-                        "tags": []
+                        "tags": [],
+                        "startDate": "",
+                        "endDate": ""
                       }
                     ],
                     "page": 1,
@@ -18116,7 +18122,9 @@
           "createdAt",
           "updatedAt",
           "assigneeDisabled",
-          "tags"
+          "tags",
+          "startDate",
+          "endDate"
         ],
         "additionalProperties": false,
         "properties": {
@@ -18187,6 +18195,16 @@
             "items": {
               "$ref": "#/components/schemas/TagSummary"
             }
+          },
+          "startDate": {
+            "type": "string",
+            "pattern": "^(\\d{4}-\\d{2}-\\d{2}|)$",
+            "description": "Planned calendar date; empty string when unset"
+          },
+          "endDate": {
+            "type": "string",
+            "pattern": "^(\\d{4}-\\d{2}-\\d{2}|)$",
+            "description": "Planned calendar date; empty string when unset"
           }
         }
       },
@@ -19229,7 +19247,9 @@
           "externalRefs",
           "lastWrite",
           "assigneeDisabled",
-          "tags"
+          "tags",
+          "startDate",
+          "endDate"
         ],
         "additionalProperties": false,
         "properties": {
@@ -19348,6 +19368,16 @@
             "items": {
               "$ref": "#/components/schemas/TagSummary"
             }
+          },
+          "startDate": {
+            "type": "string",
+            "pattern": "^(\\d{4}-\\d{2}-\\d{2}|)$",
+            "description": "Planned calendar date; empty string when unset"
+          },
+          "endDate": {
+            "type": "string",
+            "pattern": "^(\\d{4}-\\d{2}-\\d{2}|)$",
+            "description": "Planned calendar date; empty string when unset"
           }
         },
         "description": "增量摘要項目：列表欄位加externalRefs"

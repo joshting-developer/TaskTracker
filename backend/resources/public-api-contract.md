@@ -281,3 +281,7 @@ PDF／ZIP與圖片共用既有附件路由及授權, 但一般附件只能下載
 - `POST .../boards/preview` 為純唯讀：body 只接受 `autoInclude`、`selectedIssueIds`、`excludedIssueIds`, 兩個手動清單各最多 1000 個；回精確 `total` 與首 20 張的 id／identifier／title／type, 不建立暫存看板、不寫 receipt／audit, 不需要 requestId。需要 read PAT ability 及本人即時 `board.manage`；Session 對應入口為 `POST /api/v1/projects/{project}/board-preview`
 - 規則、手動 ID 與排除只能指向目前已授權 Project。新規則含已移除 Tag 或未知狀態拒絕整筆；既有規則所需 Tag 被刪除後保留條件並無法命中, 不默默放寬。看板仍不是權限邊界；儲存沿用 Workspace 交易、revision／requestId、重播前授權與封存唯讀限制
 - API JSON body 上限仍為 50000 bytes；大型差量請分批並每次重讀版本, 不放寬上限。看板規則與排除的新增資料表由 migration 建立, 正式發布需先遷移；回退此 migration 會移除新設定, 不改既有手動收錄或卡片
+
+## 0.27.0：列表計畫日期
+
+`listPublicIssues` 每筆新增 `startDate`／`endDate`, 未填時為空字串, 與單卡 GET 一致。這是新增欄位, 既有欄位與篩選／租戶授權保持相容；客戶端應忽略不認識的欄位。日期是計畫日, 不等於 `dueDate`
