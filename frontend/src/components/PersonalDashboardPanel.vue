@@ -3,7 +3,7 @@ import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { api } from '../api/index.js';
 import { formatDate, t } from '../i18n/index.js';
 const props = defineProps({ filters: { type: Object, default: () => ({}) }, kind: String, title: String, refreshKey: Number, perPage: { type: Number, default: 5 } });
-const emit = defineEmits(['access']);
+const emit = defineEmits(['access', 'empty']);
 const page = ref(1), result = shallowRef(null), loading = ref(false), error = ref('');
 const notes = computed(() => props.kind === 'notes');
 let generation = 0, controller;
@@ -17,7 +17,7 @@ async function refresh() {
       ? await api.todos({ ...filters, scope: 'mine', state: 'open' }, { signal: controller.signal })
       : await api.personalDashboard({ ...filters, ...props.filters, kind: props.kind }, { signal: controller.signal });
     if (current !== generation) return;
-    result.value = data;
+    result.value = data; emit('empty', data.total === 0);
     if (page.value > data.lastPage) page.value = data.lastPage;
   } catch (failure) {
     if (current !== generation || ['ABORTED', 'STALE_RESPONSE'].includes(failure.code)) return;
@@ -43,7 +43,8 @@ onScopeDispose(() => { generation++; controller?.abort(); });
       <ul v-else class="dashboard-rows"><li v-for="item in result.items" :key="item.id">
         <a :href="href(item)"><span class="dashboard-identity" v-if="!notes">{{ item.identifier }} · {{ item.projectName }}</span><strong>{{ item.title }}</strong>
           <span class="dashboard-meta" v-if="!notes">{{ t(item.stateLabel) }}<template v-if="kind === 'starting'"> · {{ t('開始') }} {{ item.startDate }}</template><template v-else-if="kind === 'recent'"> · {{ t('更新時間') }} {{ formatDate(item.updatedAt, { dateStyle: 'short', timeStyle: 'short' }) }}</template><template v-else-if="item.dueDate"> · {{ t('到期') }} {{ item.dueDate }}</template></span>
-          <span class="dashboard-meta" v-else>{{ t('來自') }} {{ item.creatorName }}</span>
+          <span v-if="!notes" class="dashboard-updated">{{ t('更新時間') }} {{ formatDate(item.updatedAt, { dateStyle: 'short' }) }}</span>
+          <span class="dashboard-meta" v-if="notes">{{ t('來自') }} {{ item.creatorName }}</span>
         </a>
       </li></ul>
       <nav v-if="result.lastPage > 1" class="dashboard-pagination" :aria-label="t('{0}分頁', [title])"><button class="text-button" :disabled="page <= 1 || loading" @click="page--">{{ t('上一頁') }}</button><span>{{ page }} / {{ result.lastPage }}</span><button class="text-button" :disabled="page >= result.lastPage || page >= 501 || loading" @click="page++">{{ t('下一頁') }}</button></nav>
@@ -63,4 +64,11 @@ h2 { font-size: 17px; margin: 0; } h2 span { color: #6653bd; font-size: 15px; ma
 .dashboard-empty { color: #5f6673; padding: 16px 0; }
 .dashboard-pagination { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; margin-top: 8px; }
 .dashboard-pagination button { min-height: 44px; }
+.dashboard-updated { display: none; font-size: 13px; color: #5f6673; }
+@container (min-width: 620px) {
+  .dashboard-rows a { grid-template-columns: minmax(120px, 1fr) minmax(160px, 2fr) minmax(120px, 1fr); align-items: center; gap: 8px 16px; }
+  .dashboard-rows strong { grid-column: 2; grid-row: 1 / span 2; }
+  .dashboard-meta { grid-column: 3; grid-row: 1; }
+  .dashboard-updated { display: block; grid-column: 3; grid-row: 2; }
+}
 </style>

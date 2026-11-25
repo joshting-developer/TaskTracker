@@ -1104,5 +1104,16 @@
   "到期日迄": "Due through",
   "日期範圍": "Date range",
   "未結案": "Not closed",
-  "我": "Me"
+  "我": "Me",
+  "符合以下所有條件": "Match all of these conditions",
+  "新增條件": "Add condition",
+  "選擇條件": "Choose condition",
+  "移除條件 {0}": "Remove condition {0}",
+  "請先選擇專案": "Choose a project first",
+  "套用": "Apply",
+  "加入": "Add",
+  "寬度": "Width",
+  "高度（px）": "Height (px)",
+  "拖曳或使用方向鍵調整大小": "Drag or use arrow keys to resize",
+  "任務範圍": "Task scope"
 }

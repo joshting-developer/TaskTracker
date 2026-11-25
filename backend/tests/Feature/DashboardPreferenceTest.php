@@ -29,6 +29,18 @@ class DashboardPreferenceTest extends TestCase
         $this->putJson(self::URL, ['widgets' => [array_merge($widget, ['height' => 800])], 'expectedRevision' => 0])->assertStatus(409);
     }
 
+    /** 新欄位與小尺寸可保存, 舊設定不被重寫。 */
+    public function test_twelve_column_layout_preserves_legacy_widgets(): void
+    {
+        $this->postJson('/api/auth/register', ['name' => 'Columns', 'email' => 'columns@example.test', 'password' => 'test-local-password', 'workspaceName' => 'Columns'])->assertOk();
+        $widget = ['id' => 'new-widget', 'kind' => 'tasks', 'width' => 1, 'columns' => 7, 'height' => 200];
+        $this->putJson(self::URL, ['widgets' => ['mine', $widget], 'expectedRevision' => 0])->assertOk()->assertJsonPath('data.widgets.0', 'mine')->assertJsonPath('data.widgets.1.columns', 7);
+        $this->getJson(self::URL)->assertOk()->assertJsonPath('data.widgets.1.height', 200);
+        foreach ([['columns' => 13], ['columns' => 2], ['height' => 179], ['filters' => ['actorId' => 'other']]] as $bad) {
+            $this->putJson(self::URL, ['widgets' => [array_merge($widget, $bad)], 'expectedRevision' => 1])->assertStatus(400);
+        }
+    }
+
     /** 預設、保存、重送、衝突、白名單與成員隔離
      * @return void
      */
