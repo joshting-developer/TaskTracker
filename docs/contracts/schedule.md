@@ -12,7 +12,8 @@ Session `GET /api/v1/projects/{project}/schedule` 供人員排程、週曆與甘
 
 - `from`、`to` 必填, `YYYY-MM-DD`, 含首尾, `to` 不可早於 `from`, 最多 92 天
 - `assignee` 選填, 承辦者 User ID
-- `page` 預設1、最多1000, `perPage` 預設100、最多200
+- `includeClosed` 選填, 預設不含已關閉卡片（TT-448）, `unscheduled` 計數也套用
+- `page` 預設1、最多1000, `perPage` 預設1000、最多1000。三視圖一次讀完整期間不分頁；`total` 超過1000時畫面提示縮短期間或加篩選, 不呈現片段的條狀、負荷與 Epic 推算
 
 卡片區間與 `[from, to]` 有任一天重疊即列入, 跨月、跨年都以日期比較。排序依開始日、結束日、卡號、公開ID, 換頁不重複不漏
 
@@ -42,4 +43,4 @@ Session `GET /api/v1/projects/{project}/schedule/unscheduled` 列出兩端日期
 
 ## 專案甘特（TT-386）
 
-專案側欄「專案甘特」, 網址 `#/projects/{project}/gantt`, 需要 `issue.read`。Project → Epic → 卡片三層, 一張卡一列；Epic 有日期用自己的條狀, 沒有時依當頁子卡推算（虛線）, 沒有 Epic 的卡片放「未歸入 Epic」群組不隱藏。到期日以菱形標在該卡列上, 計畫結束日晚於到期日改警示色。期間 4／12 週（12 週 84 天, 在 92 天上限內）, 4 週逐日、12 週標每週一並另列月份。Epic 群組可收合, 期間、週與收合只存在目前分頁的 sessionStorage。窄螢幕改依 Epic 分組清單
+專案側欄「專案甘特」, 網址 `#/projects/{project}/gantt`, 需要 `issue.read`。Project → Epic → 卡片三層, 一張卡一列；Epic 有日期用自己的條狀, 沒有時依期間內子卡推算（虛線）, 沒有 Epic 的卡片放「未歸入 Epic」群組不隱藏。到期日以菱形標在該卡列上, 計畫結束日晚於到期日改警示色。期間 4／12 週（12 週 84 天, 在 92 天上限內）, 4 週逐日、12 週標每週一並另列月份。Epic 群組可收合, 期間、週與收合只存在目前分頁的 sessionStorage。窄螢幕改依 Epic 分組清單

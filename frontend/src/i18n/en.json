@@ -1126,5 +1126,7 @@
   "儲存 {0} 的日期": "Save dates for {0}",
   "未排程分頁": "Unscheduled pages",
   "任務要有計畫開始或結束日才會出現在這裡, 可以按下方「{0} 張任務尚未排程」補上日期": "Tasks appear here once they have a planned start or end date. Use “{0} tasks are not scheduled yet” below to add dates",
-  "儲存": "Save"
+  "儲存": "Save",
+  "顯示已完成": "Show completed",
+  "任務超過 1000 張, 請縮短期間或加篩選": "More than 1000 tasks. Shorten the range or add a filter"
 }
