@@ -13,7 +13,7 @@ use App\Http\Resources\ApiResponse;
 use App\Http\Resources\Queries\BoardPreviewResource;
 use App\Http\Resources\Queries\BoardSummaryResource;
 use App\Http\Resources\Queries\IssueListPageResource;
-use App\Http\Resources\Queries\IssueListResource;
+use App\Http\Resources\Queries\PublicIssueListResource;
 use App\Http\Resources\Queries\PageResource;
 use App\Services\BoardReadService;
 use App\Services\BoardSelectionService;
@@ -76,7 +76,7 @@ class PublicBoardsController extends Controller
         return new ApiResponse($this->tokens->read($request, function (TokenContext $token) use ($request, $project, $board) {
             $page = $this->boards->issues($token->workspace, $project, $board, $request->toDto());
 
-            return IssueListPageResource::wrap($page, IssueListResource::collection($page->items())->resolve());
+            return IssueListPageResource::wrap($page, PublicIssueListResource::collection($page->items())->resolve());
         }));
     }
 

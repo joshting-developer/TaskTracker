@@ -5,7 +5,7 @@ namespace App\Http\Resources\Queries;
 use Illuminate\Http\Request;
 
 /** TT-173：增量摘要＝列表欄位＋外部識別；不改Web列表DTO。 */
-class IssueChangeResource extends IssueListResource
+class IssueChangeResource extends PublicIssueListResource
 {
     /**
      * 列表欄位加上已預載的外部識別，不另查DB。

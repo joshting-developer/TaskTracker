@@ -24,7 +24,6 @@ class IssueListResource extends JsonResource
             'state' => $issue->getRelation('status')->code, 'priority' => $issue->priority,
             'assignee' => $issue->getRelation('assignee')?->user_id ?? '',
             'assigneeName' => $issue->getRelation('assignee')?->getRelation('user')?->name ?? '', 'assigneeDisabled' => $issue->getRelation('assignee')?->disabled_at !== null,
-            'startDate' => $issue->start_date ?? '', 'endDate' => $issue->end_date ?? '',
             'dueDate' => $issue->due_date ?? '', 'revision' => (int) $issue->revision,
             'createdAt' => DatabaseTimes::public($issue->created_at), 'updatedAt' => DatabaseTimes::public($issue->updated_at)];
     }

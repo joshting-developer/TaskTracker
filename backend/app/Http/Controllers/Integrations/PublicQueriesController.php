@@ -11,7 +11,7 @@ use App\Http\Requests\PageQueryRequest;
 use App\Http\Resources\ApiResponse;
 use App\Http\Resources\Queries\IssueDetailResource;
 use App\Http\Resources\Queries\IssueListPageResource;
-use App\Http\Resources\Queries\IssueListResource;
+use App\Http\Resources\Queries\PublicIssueListResource;
 use App\Http\Resources\Queries\PageResource;
 use App\Services\IssueReadService;
 use Illuminate\Http\Request;
@@ -39,7 +39,7 @@ class PublicQueriesController extends Controller
         return new ApiResponse($this->tokens->read($request, function (TokenContext $token) use ($request, $project) {
             $page = $this->issues->index($token->workspace, $project, $request->toDto());
 
-            return IssueListPageResource::wrap($page, IssueListResource::collection($page->items())->resolve());
+            return IssueListPageResource::wrap($page, PublicIssueListResource::collection($page->items())->resolve());
         }));
     }
 
